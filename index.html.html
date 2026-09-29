@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Duty Chart – September 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&display=swap" rel="stylesheet">
+<style id="css">
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#EEF2F8; --surface:#FFFFFF; --ink:#18213A; --muted:#5B6479; --line:#DCE2EE;
+  --gate:#E4572E; --transport:#D99A00; --floor:#12907C; --disc:#6D4BD8; --time:#2F6FDE; --stay:#D6336C; --sports:#2E9E48;
+  --chip:#F2F4F9; --tile:#FFF6D6; --tileInk:#5A4300;
+  --head:'Baloo 2', 'Trebuchet MS', system-ui, sans-serif;
+  --body:'Nunito Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#10152A; --surface:#1A2140; --ink:#EDF1FA; --muted:#A3ACC4; --line:#2C3558;
+    --chip:#242C4E; --tile:#3A3212; --tileInk:#FFE08A;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#10152A; --surface:#1A2140; --ink:#EDF1FA; --muted:#A3ACC4; --line:#2C3558;
+  --chip:#242C4E; --tile:#3A3212; --tileInk:#FFE08A;
+}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 150px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;-webkit-text-size-adjust:100%}
+.wrap{max-width:760px;margin:0 auto;padding:0 14px 40px}
+
+/* header */
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--bg);padding:12px 0 10px;border-bottom:1px solid var(--line)}
+.titlerow{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+h1{font-family:var(--head);font-weight:800;font-size:1.75rem;line-height:1;margin:0;letter-spacing:-.01em}
+.month{font-family:var(--head);font-weight:600;color:var(--muted);font-size:1rem}
+.search{margin-top:10px;position:relative}
+.search input{width:100%;font:inherit;font-size:16px;padding:11px 40px 11px 14px;border-radius:14px;border:2px solid var(--line);background:var(--surface);color:var(--ink);outline:none}
+.search input:focus{border-color:var(--time)}
+.search button{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--muted);font-size:20px;width:32px;height:32px;cursor:pointer;display:none}
+.tabs{display:flex;gap:6px;margin-top:10px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:1 0 auto;border:0;cursor:pointer;font-family:var(--head);font-weight:700;font-size:.95rem;padding:8px 12px 6px;border-radius:12px;background:var(--surface);color:var(--muted);line-height:1.1;text-align:left}
+.tab small{display:block;font-family:var(--body);font-weight:600;font-size:.72rem;opacity:.85}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--bg)}
+.tab:focus-visible,.jump a:focus-visible{outline:3px solid var(--time);outline-offset:2px}
+.now{display:inline-block;margin-left:6px;font-size:.62rem;background:var(--stay);color:#fff;border-radius:6px;padding:1px 5px;vertical-align:2px}
+
+/* zone jump */
+.jump{display:flex;gap:6px;overflow-x:auto;padding:12px 0 4px;scrollbar-width:none}
+.jump::-webkit-scrollbar{display:none}
+.jump a{flex:0 0 auto;text-decoration:none;color:var(--ink);font-size:.8rem;font-weight:600;padding:5px 10px;border-radius:999px;background:var(--surface);border:1.5px solid var(--c)}
+
+/* cards */
+.card{background:var(--surface);border-radius:16px;margin-top:12px;overflow:hidden;border:1px solid var(--line)}
+.card-h{display:flex;align-items:center;gap:10px;padding:10px 14px;background:color-mix(in srgb,var(--c) 14%,var(--surface));border-bottom:1px solid color-mix(in srgb,var(--c) 30%,var(--line))}
+.dot{width:12px;height:12px;border-radius:4px;background:var(--c);flex:0 0 auto}
+.card-h h2{font-family:var(--head);font-weight:700;font-size:1.08rem;margin:0;line-height:1.15;flex:1}
+.when{font-size:.75rem;font-weight:700;color:var(--c);white-space:nowrap}
+.card-b{padding:12px 14px;display:flex;flex-wrap:wrap;gap:7px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--chip);border-radius:10px;padding:6px 10px;font-weight:600;font-size:.92rem}
+.chip i{font-style:normal;font-size:.7rem;font-weight:700;color:#fff;background:var(--c);border-radius:6px;padding:1px 6px}
+.sub{width:100%;font-size:.75rem;font-weight:700;color:var(--muted);margin-top:4px}
+.sub:first-child{margin-top:0}
+
+/* bus tiles */
+.buses{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;padding:12px 14px}
+.bus{background:var(--tile);color:var(--tileInk);border-radius:12px;padding:8px 10px;border:1.5px dashed color-mix(in srgb,var(--transport) 60%,transparent)}
+.bus b{display:block;font-family:var(--head);font-weight:800;font-size:1.25rem;line-height:1}
+.bus span{font-weight:700;font-size:.88rem;color:var(--ink)}
+.bus small{display:block;font-size:.68rem;font-weight:700;opacity:.8}
+
+mark{background:#FFE14D;color:#18213A;border-radius:4px;padding:0 2px}
+.hit{outline:2.5px solid var(--time);outline-offset:1px}
+
+/* search results */
+.results{margin-top:14px}
+.results h3{font-family:var(--head);font-size:1.1rem;margin:4px 0 8px}
+.rtable{width:100%;border-collapse:separate;border-spacing:0;background:var(--surface);border-radius:14px;overflow:hidden;border:1px solid var(--line)}
+.rtable th{font-size:.72rem;text-align:left;color:var(--muted);padding:8px 10px;background:var(--chip)}
+.rtable td{padding:9px 10px;border-top:1px solid var(--line);vertical-align:top;font-size:.9rem}
+.rtable td:first-child{font-weight:700;white-space:nowrap}
+.rtable .zone{display:inline-block;width:8px;height:8px;border-radius:3px;background:var(--c);margin-right:6px}
+.empty{background:var(--surface);border-radius:14px;padding:18px;color:var(--muted);border:1px dashed var(--line)}
+
+.grid2{display:grid;grid-template-columns:1fr;gap:0 14px}
+@media (min-width:640px){.grid2{grid-template-columns:1fr 1fr}}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;font-size:.78rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend span::before{content:"";width:10px;height:10px;border-radius:3px;background:var(--c)}
+
+/* leave marks */
+s.off{text-decoration:line-through;text-decoration-thickness:2px;opacity:.55}
+.chip i.lv,.bus i.lv{background:var(--gate);color:#fff;font-style:normal;font-size:.7rem;font-weight:700;border-radius:6px;padding:1px 6px}
+.bus i.lv{display:inline-block;margin-top:4px}
+.chip.has-lv,.bus.has-lv{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--gate) 55%,transparent)}
+.lvbanner{background:color-mix(in srgb,var(--gate) 14%,var(--surface));border:1px solid color-mix(in srgb,var(--gate) 40%,var(--line));border-radius:12px;padding:10px 12px;font-weight:700;margin-bottom:10px}
+tr.cov td{background:color-mix(in srgb,var(--sports) 10%,transparent)}
+
+/* daily panel */
+.notice{background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--gate);border-radius:16px;margin-top:12px;padding:12px 14px}
+.nhead{display:flex;align-items:center;gap:8px}
+.ntitle{flex:1;text-align:center}
+.ntitle h2{font-family:var(--head);font-size:1.15rem;margin:0;line-height:1.1}
+.ntitle small{color:var(--muted);font-weight:600;font-size:.75rem}
+.nav{border:0;background:var(--chip);color:var(--ink);width:38px;height:38px;border-radius:12px;font-size:22px;cursor:pointer;flex:0 0 auto}
+.notice table{width:100%;border-collapse:collapse;font-size:.9rem}
+.notice td,.notice th{padding:6px 8px;border-top:1px solid var(--line);text-align:left;vertical-align:top}
+.notice th{font-size:.72rem;color:var(--muted);background:var(--chip);border-top:0}
+.notice td:first-child{font-weight:700;white-space:nowrap}
+.notice em{font-style:normal;color:var(--muted);font-size:.82rem}
+.notice h3{font-family:var(--head);font-size:.95rem;margin:12px 0 4px;display:flex;align-items:center;gap:6px}
+.cnt{background:var(--gate);color:#fff;border-radius:999px;font-size:.7rem;padding:0 7px;font-family:var(--body)}
+.none{color:var(--muted);margin:10px 0 4px}
+.nbtns{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.btn{font:inherit;font-weight:700;border:0;border-radius:12px;padding:10px 14px;background:var(--ink);color:var(--bg);cursor:pointer;flex:1 1 auto}
+.btn.ghost{background:var(--chip);color:var(--ink)}
+.btn.warn{background:transparent;color:var(--gate);border:1.5px solid var(--gate)}
+.btn:disabled{opacity:.6}
+
+/* editor sheet */
+.ed{position:fixed;inset:0;z-index:50;background:rgba(10,14,30,.55);display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--bg);width:100%;max-width:760px;max-height:94vh;overflow:auto;border-radius:20px 20px 0 0;padding:14px 16px calc(18px + env(safe-area-inset-bottom,0px))}
+.sheet-h{display:flex;align-items:center;gap:10px;position:sticky;top:-14px;background:var(--bg);padding:6px 0 8px;z-index:2}
+.sheet-h h2{font-family:var(--head);margin:0;flex:1;font-size:1.3rem}
+.sheet section{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-top:10px}
+.sheet h3{font-family:var(--head);font-size:1rem;margin:0 0 6px;display:flex;justify-content:space-between;align-items:center}
+.sheet h3 button{font:inherit;font-size:.85rem;font-weight:700;border:0;background:var(--chip);color:var(--ink);border-radius:10px;padding:5px 10px;cursor:pointer}
+.sheet input,.sheet select,.sheet textarea{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;min-width:0}
+.sheet textarea{width:100%;min-height:120px;resize:vertical}
+.erow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:6px 0;border-top:1px solid var(--line)}
+.erow:first-child{border-top:0}
+.erow input:not([type=checkbox]){flex:1 1 120px}
+.erow select{flex:0 1 auto}
+.half{display:flex;align-items:center;gap:4px;font-size:.85rem;font-weight:600}
+.half input{width:18px;height:18px}
+.x{border:0;background:none;color:var(--gate);font-size:22px;width:34px;height:34px;cursor:pointer}
+.hint{font-size:.78rem;color:var(--muted);margin:4px 0 8px}
+.sheet .foot{display:flex;gap:8px;margin-top:12px;position:sticky;bottom:-18px;background:var(--bg);padding:10px 0}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:700;z-index:60;max-width:calc(100% - 32px);text-align:center}
+/* staff picker */
+.ptabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:2px 0 8px}
+.ptabs::-webkit-scrollbar{display:none}
+.ptab{flex:0 0 auto;font:inherit;font-size:.82rem;font-weight:700;border:0;border-radius:999px;padding:6px 11px;background:var(--chip);color:var(--muted);cursor:pointer}
+.ptab[aria-selected="true"]{background:var(--ink);color:var(--bg)}
+.ptab b{background:var(--gate);color:#fff;border-radius:999px;padding:0 6px;font-size:.7rem;margin-left:2px}
+#pickQ{width:100%;margin-bottom:8px}
+.picklist{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px;max-height:260px;overflow:auto;padding:2px}
+.pk{font:inherit;text-align:left;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;padding:7px 9px;cursor:pointer;line-height:1.2}
+.pk b{display:block;font-size:.88rem}
+.pk small{display:block;font-size:.7rem;color:var(--muted);margin-top:2px}
+.pk.on{border-color:var(--gate);background:color-mix(in srgb,var(--gate) 14%,var(--bg))}
+.pk.on b::after{content:" ✓";color:var(--gate)}
+.who-n{flex:1 1 150px;line-height:1.2}
+.who-n small{display:block;color:var(--muted);font-size:.72rem}
+.selh{font-size:.8rem;font-weight:700;color:var(--muted);margin:12px 0 2px}
+.who{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:9px 12px;margin-bottom:10px;font-size:.9rem}
+.who span{display:inline-block;margin-left:4px;font-size:.72rem;font-weight:700;background:var(--chip);border-radius:6px;padding:1px 6px}
+/* quick adjustment */
+.fl{display:flex;flex-direction:column;gap:4px;font-size:.8rem;font-weight:700;color:var(--muted);margin-bottom:10px;flex:1 1 140px}
+.fl input,.fl select{width:100%}
+.frow{display:flex;gap:10px;flex-wrap:wrap}
+#qaSheet[data-m="adj"] .m-cover,#qaSheet[data-m="adj"] .m-act,#qaSheet[data-m="cover"] .m-cls,#qaSheet[data-m="cover"] .m-act,#qaSheet[data-m="act"] .m-cover{display:none}
+.sgh{width:100%;font-size:.72rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin:6px 0 0}
+.sgh:first-child{margin-top:0}
+.pseg{grid-column:1/-1;font-size:.75rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin-top:6px}
+.actg{display:inline-block;font-size:.72rem;font-weight:700;background:var(--chip);border-radius:6px;padding:0 6px}
+.qbtns .btn{flex:1 1 30%;font-size:.85rem;padding:9px 8px}
+.notice table.adjt{table-layout:fixed}
+.adjt th:nth-child(1),.adjt td:nth-child(1){width:30%}
+.adjt th:nth-child(2),.adjt td:nth-child(2){width:32%}
+.adjt td{overflow-wrap:break-word;hyphens:auto}
+.notice .adjt td:first-child{white-space:normal;overflow-wrap:normal;hyphens:none;font-size:.86rem}
+.notice .adjt td.duty{font-weight:600;font-size:.82rem}
+.adjt b.by{display:block;font-weight:700}
+.adjt small.tm{display:block;font-size:.72rem;color:var(--muted);font-weight:600;line-height:1.25;margin-top:1px}
+.adjt .dim{color:var(--muted)}
+.notice tr[data-qa] td:last-child b.by::after{content:" ✎";color:var(--muted);font-weight:400;font-size:.8rem}
+.ctg{display:inline-block;font-size:.66rem;font-weight:800;background:color-mix(in srgb,var(--time) 16%,transparent);color:var(--time);border-radius:5px;padding:0 5px;vertical-align:1px}
+.pend{margin:12px 0 4px;padding:10px;border-radius:12px;background:color-mix(in srgb,var(--gate) 10%,var(--surface));border:1px dashed color-mix(in srgb,var(--gate) 50%,var(--line));display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.pend>b{width:100%;font-size:.8rem;color:var(--gate)}
+.pendb{font:inherit;font-size:.85rem;font-weight:800;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:5px 9px;cursor:pointer;text-align:left}
+.pendb span{font-weight:600;color:var(--muted);font-size:.78rem}
+.pendb i{font-style:normal;color:var(--gate);font-size:.75rem;font-weight:800}
+.cnt.k2{background:var(--time)}.cnt.k3{background:var(--sports)}.cnt.k4{background:var(--disc)}
+.sugh{font-size:.75rem;font-weight:700;color:var(--muted);margin:-2px 0 6px}
+.sug{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;max-height:170px;overflow:auto}
+.sg{font:inherit;font-size:.85rem;font-weight:700;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;padding:5px 9px;cursor:pointer;text-align:left;line-height:1.15}
+.sg small{display:block;font-size:.66rem;font-weight:600;color:var(--muted)}
+.notice tr[data-qa]{cursor:pointer}
+u.lt{text-decoration:underline wavy var(--transport);text-underline-offset:3px}
+.chip i.lvl,.bus i.lvl{background:var(--transport);color:#fff;font-style:normal;font-size:.7rem;font-weight:700;border-radius:6px;padding:1px 6px}
+.bus i.lvl{display:inline-block;margin-top:4px}
+.st{flex:0 0 auto}.lt-in{flex:0 1 110px!important}
+body.can-edit .chip,body.can-edit .bus{cursor:pointer}
+/* check-in */
+.cihead{margin-top:12px}
+.cihead h2{font-family:var(--head);font-size:1.15rem;margin:0}
+.cihead small{color:var(--muted);font-weight:600;font-size:.78rem}
+.cistats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
+.cistats .s{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 6px;text-align:center;font-size:.7rem;font-weight:700;color:var(--muted)}
+.cistats .s b{display:block;font-family:var(--head);font-size:1.4rem;line-height:1.1}
+.cistats .r b{color:var(--sports)}.cistats .l b{color:var(--transport)}.cistats .a b{color:var(--gate)}.cistats .p b{color:var(--muted)}
+.cilist{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.cl{background:var(--surface);border-radius:10px;padding:5px 9px;font-weight:700;font-size:.85rem;border-left:4px solid var(--transport)}
+.cl.a{border-left-color:var(--gate)}
+.cl small{display:block;font-size:.68rem;color:var(--muted);font-weight:600}
+.ciarea.tap{cursor:pointer}
+.chip.ci-r{background:color-mix(in srgb,var(--sports) 14%,var(--surface))}
+.chip.ci-r i{background:var(--sports)}
+.chip.ci-l{background:color-mix(in srgb,var(--transport) 18%,var(--surface))}
+.chip.ci-l i{background:var(--transport)}
+.chip.ci-a{background:color-mix(in srgb,var(--gate) 14%,var(--surface))}
+.chip.ci-a i{background:var(--gate)}
+.chip.ci-lv{opacity:.5;text-decoration:line-through}
+.chip.ci-lv i{background:var(--muted);text-decoration:none}
+.chip.ci-p{color:var(--muted);border:1px dashed var(--line);background:transparent}
+.ciedit{width:100%;font-size:.8rem;font-weight:800;color:var(--time);margin-top:2px}
+.ciby{width:100%;font-size:.7rem;color:var(--muted);font-weight:600}
+.cibar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;justify-content:space-between;margin-bottom:6px}
+.cibar b{flex:1 1 100%}
+.ciby-in,.ci-h2{display:none}
+.editing .ciby-in,.editing .ci-h2{display:flex}
+.editing .ci-h2{display:block}.editing .ci-h1,.editing #ciAll{display:none}
+.rm{font:inherit;font-size:.78rem;font-weight:800;border:1.5px solid var(--gate);color:var(--gate);background:transparent;border-radius:9px;padding:6px 10px;cursor:pointer}
+.cibar .btn{flex:0 0 auto;padding:7px 10px;font-size:.82rem}
+.cirow{display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--line)}
+.cirow.dim{opacity:.55}
+.cin{flex:1;min-width:0;line-height:1.15}
+.cin small{display:block;font-size:.7rem;color:var(--muted);font-weight:600}
+.seg{display:flex;gap:4px;flex:0 0 auto}
+.sgb{font:inherit;font-size:.74rem;font-weight:800;border:1.5px solid var(--line);background:var(--bg);color:var(--muted);border-radius:9px;padding:7px 7px;cursor:pointer}
+.sgb.r.on{background:var(--sports);border-color:var(--sports);color:#fff}
+.sgb.l.on{background:var(--transport);border-color:var(--transport);color:#fff}
+.sgb.a.on{background:var(--gate);border-color:var(--gate);color:#fff}
+.ciaddrow{display:flex;gap:6px;margin-top:8px}
+.ciaddrow input{flex:1}
+.ciaddrow .btn{flex:0 0 auto}
+.ciline{display:block;width:100%;text-align:left;font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--chip);color:var(--ink);border-radius:12px;padding:8px 10px;margin-top:10px;cursor:pointer}
+.ciline .lt2{color:var(--transport);font-weight:700}.ciline .ab2{color:var(--gate);font-weight:700}
+.ciline small{display:block;color:var(--muted);font-size:.74rem;margin-top:2px}
+.ciseg{margin-top:12px}
+.ciseg .ptab{flex:1 1 0;font-size:.85rem;padding:8px 10px}
+.ciseg .ptab b.n{background:transparent;color:inherit;opacity:.7;font-size:.72rem}
+.card-h h2 small.secs{display:block;font-family:var(--body);font-size:.7rem;font-weight:700;color:var(--muted)}
+.chip b.sec,.cin .sec{font-size:.68rem;font-weight:800;background:color-mix(in srgb,var(--time) 16%,transparent);color:var(--time);border-radius:5px;padding:0 5px}
+.whobar{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin-top:8px;font-size:.8rem;font-weight:700;color:var(--muted)}
+.whobar select{font:inherit;font-size:16px;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:4px 8px;margin-left:4px;max-width:210px}
+.whobar small{font-size:.74rem;color:var(--time)}
+.ciarea.mine{border:2px solid var(--time)}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:no-preference){.card{animation:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="titlerow">
+      <h1>Duty Chart</h1>
+      <span class="month">September 2026</span>
+    </div>
+    <div class="search">
+      <input id="q" type="search" placeholder="Type a name to see all their duties" list="names" autocomplete="off" aria-label="Search by name">
+      <datalist id="names"></datalist>
+      <datalist id="duties"></datalist>
+      <datalist id="staffnames"></datalist>
+      <datalist id="classes"></datalist>
+      <button id="clear" aria-label="Clear search">×</button>
+    </div>
+    <nav class="tabs" role="tablist" id="tabs"></nav>
+    <div class="whobar" id="whobar" hidden=""></div>
+  </header>
+  <section class="notice" id="notice"></section>
+  <main id="main"></main>
+  <section id="results" class="results" hidden=""></section>
+  <div class="legend" id="legend"></div>
+</div>
+<div class="ed" id="ed" hidden="">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="edTitle">
+    <div class="sheet-h"><h2 id="edTitle">Update leave</h2><button class="x" id="edClose" aria-label="Close" style="color:var(--ink)">×</button></div>
+    <section>
+      <h3>Date</h3>
+      <input type="date" id="edDate" style="width:100%">
+    </section>
+    <section>
+      <h3>On leave <span id="leaveCnt" style="font-size:.8rem;color:var(--gate)"></span></h3>
+      <div class="ptabs" id="pickTabs"></div>
+      <input id="pickQ" type="search" placeholder="Search any staff name" autocomplete="off">
+      <div class="picklist" id="pickList"></div>
+      <div class="selh">Selected <button data-add="leave" style="float:right;font:inherit;font-size:.8rem;font-weight:700;border:0;background:var(--chip);color:var(--ink);border-radius:10px;padding:4px 9px;cursor:pointer">+ Name not in list</button></div>
+      <div id="edLeave"></div>
+    </section>
+    <section>
+      <h3>Paste WhatsApp note</h3>
+      <p class="hint">Paste your usual “Staff ON Leave / Adjustment” message and tap Read. Names, half days, class adjustments and the date are filled in below. Write a cover as “Poonam Gaur for Upender”.</p>
+      <textarea id="paste" placeholder="Staff ON Leave
+Teacher
+* Swati
+* Khushi ( Half Day )
+CM -
+* Komal
+
+Saturday Adjustment - 26/09
+7A - Tripti Ma’am (7-7:30 &amp; Lunch)"></textarea>
+      <button class="btn ghost" id="readNote" style="width:100%;margin-top:8px">Read note</button>
+    </section>
+    <section><h3>Class adjustment <button data-add="adj">+ Add</button></h3><div id="edAdj"></div></section>
+    <section><h3>Activity adjustment <button data-add="act">+ Add</button></h3><div id="edAct"></div></section>
+    <section><h3>Duty cover <button data-add="cover">+ Add</button></h3><div id="edCover"></div></section>
+    <div class="foot"><button class="btn warn" id="edDelete">Clear day</button><button class="btn" id="edSave">Save</button></div>
+  </div>
+</div>
+<div class="ed" id="qa" hidden="">
+  <div class="sheet" id="qaSheet" role="dialog" aria-modal="true" aria-labelledby="qaTitle" data-m="adj">
+    <div class="sheet-h"><h2 id="qaTitle">Quick adjustment</h2><button class="x" id="qaClose" aria-label="Close" style="color:var(--ink)">×</button></div>
+    <div class="ptabs"><button type="button" class="ptab" data-qmode="adj">Class adjustment</button><button type="button" class="ptab" data-qmode="act">Activity adjustment</button><button type="button" class="ptab" data-qmode="cover">Duty cover</button></div>
+    <section>
+      <label class="fl m-act">Activity<select id="qA"></select></label>
+      <label class="fl m-cls">Class / group<input id="qC" list="classes" placeholder="e.g. 7A" autocomplete="off"></label>
+      <label class="fl m-cover">Duty<input id="qD" list="duties" placeholder="e.g. Bus Duty (Morning)" autocomplete="off"></label>
+      <label class="fl">Absent / late teacher<input id="qF" list="staffnames" placeholder="Name (optional for class)" autocomplete="off"></label>
+      <div class="frow">
+        <label class="fl">Mark them as<select id="qSt"><option value="">Not marked</option><option value="leave">On leave</option><option value="half">Half day</option><option value="late">Late</option></select></label>
+        <label class="fl" id="qLtWrap" hidden="">Late till<input id="qLt" placeholder="e.g. 8:00" inputmode="numeric"></label>
+      </div>
+      <label class="fl"><span class="m-cls">Adjusted by</span><span class="m-cover">Covering</span><input id="qB" list="staffnames" placeholder="Replacement name" autocomplete="off"></label>
+      <div class="sugh">Suggestions – tap to pick</div>
+      <div class="sug" id="qSug"></div>
+      <label class="fl m-cls">Time / period<input id="qT" placeholder="e.g. 7:00–7:30, Period 2, Lunch" autocomplete="off"></label>
+    </section>
+    <div class="foot"><button class="btn warn" id="qDel" hidden="">Remove</button><button class="btn" id="qSave">Save</button></div>
+  </div>
+</div>
+<div class="ed" id="ci" hidden="">
+  <div class="sheet" id="ciSheet" role="dialog" aria-modal="true" aria-labelledby="ciTitle">
+    <div class="sheet-h"><h2 id="ciTitle">Check-in</h2><button class="x" id="ciClose" aria-label="Close" style="color:var(--ink)">×</button></div>
+    <section>
+      <div class="cibar"><b id="ciCount"></b><button type="button" class="btn ghost" id="ciAll">✓ Mark rest reached</button><button type="button" class="btn ghost" id="ciEdit">✎ Edit names</button></div>
+      <label class="fl ciby-in">Incharge<input id="ciBy" list="staffnames" autocomplete="off"></label>
+      <div id="ciRows"></div>
+      <div class="ciaddrow"><input id="ciAdd" list="staffnames" placeholder="Add another name" autocomplete="off"><button type="button" class="btn ghost" id="ciAddBtn">Add</button></div>
+      <p class="hint ci-h1">Tap Reached / Late / Absent. The time is noted when you tap. Tap again to clear.</p><p class="hint ci-h2">Editing the name list for this group – removed or added names stay for every day. Tap Save.</p>
+    </section>
+    <div class="foot"><button class="btn ghost" id="ciCopyOne">Copy for WhatsApp</button><button class="btn" id="ciSave">Save</button></div>
+  </div>
+</div>
+<div class="toast" id="toast" hidden="" role="status"></div>
+<template id="bodytpl">
+<div class="wrap">
+  <header class="top">
+    <div class="titlerow">
+      <h1>Duty Chart</h1>
+      <span class="month">September 2026</span>
+    </div>
+    <div class="search">
+      <input id="q" type="search" placeholder="Type a name to see all their duties" list="names" autocomplete="off" aria-label="Search by name">
+      <datalist id="names"></datalist>
+      <datalist id="duties"></datalist>
+      <datalist id="staffnames"></datalist>
+      <datalist id="classes"></datalist>
+      <button id="clear" aria-label="Clear search">×</button>
+    </div>
+    <nav class="tabs" role="tablist" id="tabs"></nav>
+    <div class="whobar" id="whobar" hidden=""></div>
+  </header>
+  <section class="notice" id="notice"></section>
+  <main id="main"></main>
+  <section id="results" class="results" hidden=""></section>
+  <div class="legend" id="legend"></div>
+</div>
+<div class="ed" id="ed" hidden="">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="edTitle">
+    <div class="sheet-h"><h2 id="edTitle">Update leave</h2><button class="x" id="edClose" aria-label="Close" style="color:var(--ink)">×</button></div>
+    <section>
+      <h3>Date</h3>
+      <input type="date" id="edDate" style="width:100%">
+    </section>
+    <section>
+      <h3>On leave <span id="leaveCnt" style="font-size:.8rem;color:var(--gate)"></span></h3>
+      <div class="ptabs" id="pickTabs"></div>
+      <input id="pickQ" type="search" placeholder="Search any staff name" autocomplete="off">
+      <div class="picklist" id="pickList"></div>
+      <div class="selh">Selected <button data-add="leave" style="float:right;font:inherit;font-size:.8rem;font-weight:700;border:0;background:var(--chip);color:var(--ink);border-radius:10px;padding:4px 9px;cursor:pointer">+ Name not in list</button></div>
+      <div id="edLeave"></div>
+    </section>
+    <section>
+      <h3>Paste WhatsApp note</h3>
+      <p class="hint">Paste your usual “Staff ON Leave / Adjustment” message and tap Read. Names, half days, class adjustments and the date are filled in below. Write a cover as “Poonam Gaur for Upender”.</p>
+      <textarea id="paste" placeholder="Staff ON Leave
+Teacher
+* Swati
+* Khushi ( Half Day )
+CM -
+* Komal
+
+Saturday Adjustment - 26/09
+7A - Tripti Ma’am (7-7:30 &amp; Lunch)"></textarea>
+      <button class="btn ghost" id="readNote" style="width:100%;margin-top:8px">Read note</button>
+    </section>
+    <section><h3>Class adjustment <button data-add="adj">+ Add</button></h3><div id="edAdj"></div></section>
+    <section><h3>Activity adjustment <button data-add="act">+ Add</button></h3><div id="edAct"></div></section>
+    <section><h3>Duty cover <button data-add="cover">+ Add</button></h3><div id="edCover"></div></section>
+    <div class="foot"><button class="btn warn" id="edDelete">Clear day</button><button class="btn" id="edSave">Save</button></div>
+  </div>
+</div>
+<div class="ed" id="qa" hidden="">
+  <div class="sheet" id="qaSheet" role="dialog" aria-modal="true" aria-labelledby="qaTitle" data-m="adj">
+    <div class="sheet-h"><h2 id="qaTitle">Quick adjustment</h2><button class="x" id="qaClose" aria-label="Close" style="color:var(--ink)">×</button></div>
+    <div class="ptabs"><button type="button" class="ptab" data-qmode="adj">Class adjustment</button><button type="button" class="ptab" data-qmode="act">Activity adjustment</button><button type="button" class="ptab" data-qmode="cover">Duty cover</button></div>
+    <section>
+      <label class="fl m-act">Activity<select id="qA"></select></label>
+      <label class="fl m-cls">Class / group<input id="qC" list="classes" placeholder="e.g. 7A" autocomplete="off"></label>
+      <label class="fl m-cover">Duty<input id="qD" list="duties" placeholder="e.g. Bus Duty (Morning)" autocomplete="off"></label>
+      <label class="fl">Absent / late teacher<input id="qF" list="staffnames" placeholder="Name (optional for class)" autocomplete="off"></label>
+      <div class="frow">
+        <label class="fl">Mark them as<select id="qSt"><option value="">Not marked</option><option value="leave">On leave</option><option value="half">Half day</option><option value="late">Late</option></select></label>
+        <label class="fl" id="qLtWrap" hidden="">Late till<input id="qLt" placeholder="e.g. 8:00" inputmode="numeric"></label>
+      </div>
+      <label class="fl"><span class="m-cls">Adjusted by</span><span class="m-cover">Covering</span><input id="qB" list="staffnames" placeholder="Replacement name" autocomplete="off"></label>
+      <div class="sugh">Suggestions – tap to pick</div>
+      <div class="sug" id="qSug"></div>
+      <label class="fl m-cls">Time / period<input id="qT" placeholder="e.g. 7:00–7:30, Period 2, Lunch" autocomplete="off"></label>
+    </section>
+    <div class="foot"><button class="btn warn" id="qDel" hidden="">Remove</button><button class="btn" id="qSave">Save</button></div>
+  </div>
+</div>
+<div class="ed" id="ci" hidden="">
+  <div class="sheet" id="ciSheet" role="dialog" aria-modal="true" aria-labelledby="ciTitle">
+    <div class="sheet-h"><h2 id="ciTitle">Check-in</h2><button class="x" id="ciClose" aria-label="Close" style="color:var(--ink)">×</button></div>
+    <section>
+      <div class="cibar"><b id="ciCount"></b><button type="button" class="btn ghost" id="ciAll">✓ Mark rest reached</button><button type="button" class="btn ghost" id="ciEdit">✎ Edit names</button></div>
+      <label class="fl ciby-in">Incharge<input id="ciBy" list="staffnames" autocomplete="off"></label>
+      <div id="ciRows"></div>
+      <div class="ciaddrow"><input id="ciAdd" list="staffnames" placeholder="Add another name" autocomplete="off"><button type="button" class="btn ghost" id="ciAddBtn">Add</button></div>
+      <p class="hint ci-h1">Tap Reached / Late / Absent. The time is noted when you tap. Tap again to clear.</p><p class="hint ci-h2">Editing the name list for this group – removed or added names stay for every day. Tap Save.</p>
+    </section>
+    <div class="foot"><button class="btn ghost" id="ciCopyOne">Copy for WhatsApp</button><button class="btn" id="ciSave">Save</button></div>
+  </div>
+</div>
+<div class="toast" id="toast" hidden="" role="status"></div>
+</template>
+<script>
+/* ============ SET THIS ONCE: your Apps Script web app URL (ends in /exec) ============ */
+const API_URL = 'https://script.google.com/macros/s/AKfycbyxWYwmvDDlIR6VjS2W4209yu-72ex0vfNlRThchzInQ_pCIWO1ACbH31iuOdk410_JkA/exec';
+/* ===================================================================================== */
+(function(){
+  const api = new URLSearchParams(location.search).get('api') || API_URL;
+  const call = (fn, args) => fetch(api, {method:'POST', redirect:'follow', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({fn, args: args || []})})
+    .then(r => r.json()).then(j => { if (!j.ok) throw new Error(j.err || 'error'); return j.v; });
+  window.google = {script:{get run(){
+    let ok = () => {}, bad = () => {};
+    const p = new Proxy({}, {get: (t, k) => k === 'withSuccessHandler' ? (h => { ok = h; return p; })
+      : k === 'withFailureHandler' ? (h => { bad = h; return p; })
+      : (...a) => { call(k, a).then(ok, bad); }});
+    return p;
+  }}};
+  const status = t => { const m = document.getElementById('main') || document.body; m.insertAdjacentHTML('afterbegin', '<div id="bootmsg" style="margin:16px;padding:14px;border-radius:12px;background:#fff;border:1px dashed #ccc;font-family:system-ui">' + t + '</div>'); };
+  const start = () => call('boot').then(b => {
+    window.__B = b;
+    document.getElementById('daily').textContent = JSON.stringify(b.daily || {});
+    document.getElementById('roster').textContent = JSON.stringify(b.roster || {});
+    const m = document.getElementById('bootmsg'); if (m) m.remove();
+    const sc = document.createElement('script'); sc.id = 'app'; sc.textContent = document.getElementById('appsrc').textContent;
+    document.body.appendChild(sc);
+  }).catch(e => { const m = document.getElementById('bootmsg'); if (m) m.remove(); status('Could not load the duty chart. Check your internet and reload. <button onclick="location.reload()">Reload</button>'); });
+  if (!/^https:\/\/script\.google\.com\//.test(api)) { document.addEventListener('DOMContentLoaded', () => status('Set API_URL at the top of this file to your Apps Script web app link.')); return; }
+  document.addEventListener('DOMContentLoaded', () => { status('Loading duty chart…'); start(); });
+})();
+</script>
+<script type="text/plain" id="headmeta">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Duty Chart – September 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&display=swap" rel="stylesheet">
+</script>
+<script type="application/json" id="daily">{}</script>
+<script type="application/json" id="roster">{}</script>
+<script type="text/plain" id="appsrc">
+const Z = {gate:'Gate & entry',transport:'Transport',disc:'Discipline & rooms',floor:'Corridors',time:'Late comers & free staff',stay:'Stayback',sports:'Sports'};
+const COL = {gate:'var(--gate)',transport:'var(--transport)',disc:'var(--disc)',floor:'var(--floor)',time:'var(--time)',stay:'var(--stay)',sports:'var(--sports)'};
+const CATS = ['Teacher','Admin & PL','CM','Floor Manager','Activity'];
+const CAT_LABEL = {'Teacher':'Teachers','Admin & PL':'Admin & PL','CM':'Class Managers','Floor Manager':'Floor Managers','Activity':'Coaches & Instructors'};
+/* [full name, designation, category] – from the Members list, 25 Sep 2026 */
+const STAFF_LIST = [["Ajita Upadhyay", "Hindi Teacher", "Teacher"], ["Akash Gurjar", "Wushu Coach", "Activity"], ["Amit Sanwal", "Mathematics Teacher", "Teacher"], ["Anamika Shrimali", "Teacher", "Teacher"], ["Anita Sharma", "Hindi Teacher", "Teacher"], ["Anuradha Chaudhary", "Teacher", "Teacher"], ["Archana Choudhary", "German Teacher", "Teacher"], ["Asha Rao", "Floor Manager", "Floor Manager"], ["Ashok Suthar", "Content Designer", "Admin & PL"], ["Bhagyashree Rathore", "Assistant Teacher", "Teacher"], ["Bharti Ratawa", "Hindi Teacher", "Teacher"], ["Bhavyadeep Soni", "Keyboard Instructor", "Activity"], ["Bhawishya Joshi", "Lawn Tennis Coach", "Activity"], ["Bhupendra Yogi", "Acting Instructor", "Activity"], ["Bhuwan Bhatt", "Ukulele & Guitar Instructor", "Activity"], ["Chandan Soni", "Store Incharge", "Admin & PL"], ["Chandani Chayal", "Class Manager", "CM"], ["Chhavi Vinaik", "Teacher", "Teacher"], ["Deepali Tiwari", "Teacher", "Teacher"], ["Deepmala Rathore", "Teacher", "Teacher"], ["Devanshi Saini", "Teacher", "Teacher"], ["Diksha Singh Raghuwanshi", "Floor Manager", "Floor Manager"], ["Dilshad", "Teacher", "Teacher"], ["Divyanshi Jain", "Floor Manager", "Floor Manager"], ["Dr. Garima Khatri", "Program Leader", "Admin & PL"], ["Gauri Adhana", "Teacher", "Teacher"], ["Geeta Panwar", "Hindi Teacher", "Teacher"], ["Harsh Yadav", "Transport Manager", "Admin & PL"], ["Harshvardhan Soni", "Parents Relation Officer", "Admin & PL"], ["Himanshi Negi", "Computer Teacher", "Teacher"], ["Himanshu Singh Bhadoria", "Faculty – Informatics Practices", "Teacher"], ["Ishita", "Social Science Teacher", "Teacher"], ["Jai Pandla", "Operational Manager", "Admin & PL"], ["Jatin Sankhla", "Social Science Teacher", "Teacher"], ["Jitendra Karwa", "Karate Coach", "Activity"], ["Jitesh Mehendiratta", "Faculty – Accountancy", "Teacher"], ["Juhi Ahuja", "Teacher", "Teacher"], ["Jyotshna Jayan", "English Teacher", "Teacher"], ["Kanhaiya Lal Swami", "Cricket Coach", "Activity"], ["Kanika Gahlot", "Teacher", "Teacher"], ["Karishma Suthar", "Class Manager", "CM"], ["Kavita Gupta", "Abacus Instructor", "Activity"], ["Khushi Bhadani", "Assistant Teacher", "Teacher"], ["Komal Damani", "Teacher", "Teacher"], ["Komal Suthar", "Class Manager", "CM"], ["Kritika Pareek", "Wushu Coach", "Activity"], ["Lohit Tailong", "Taekwondo Coach", "Activity"], ["Madhu Mathur", "Mathematics Teacher", "Teacher"], ["Mahak Chaudhary", "Teacher", "Teacher"], ["Manisha Chauhan", "Class Manager", "CM"], ["Manisha Sharma", "Faculty – Economics", "Teacher"], ["Manmohan Singh", "Skating Coach", "Activity"], ["Mansi Singh Panwar", "Classical Dance Instructor", "Activity"], ["Mansi Soni", "Class Manager", "CM"], ["Mansi Yadav", "Teacher", "Teacher"], ["Megha Shekhawat", "Parents Relation Officer", "Admin & PL"], ["Monika Navani", "Program Leader", "Admin & PL"], ["Monika Rajpurohit", "Social Science Teacher", "Teacher"], ["Mukul Jangid", "Accountant", "Admin & PL"], ["Mukul Parihar", "Photography Instructor & Cinematographer", "Activity"], ["Nahida", "Head of Co-Curricular Activities", "Admin & PL"], ["Nandini Shekhawat", "Teacher", "Teacher"], ["Narendra Dara", "Office Exceutive", "Admin & PL"], ["Neelam Rajwani", "Culinary Skills Instructor", "Activity"], ["Neetu Dara", "Floor Manager", "Floor Manager"], ["Neha Kumari", "Mathematics Teacher", "Teacher"], ["Neha Sethia", "Program Leader", "Admin & PL"], ["Nisha", "Science Teacher", "Teacher"], ["Nishant Harsh", "Manager", "Admin & PL"], ["Niviya Singh Bhati", "Table Tennis Coach", "Activity"], ["Pallavi Joshi", "Science Teacher", "Teacher"], ["Pooja Chauhan", "Class Manager", "CM"], ["Pooja Sharma", "Teacher", "Teacher"], ["Poojal Shekhawat", "Teacher", "Teacher"], ["Poonam Gaur", "Hindi Teacher", "Teacher"], ["Poonam Rathore", "Teacher", "Teacher"], ["Poonam Sharda", "Program Leader", "Admin & PL"], ["Prashant Devra", "Graphic Designer", "Admin & PL"], ["Prashant Verma", "Basketball Coach", "Activity"], ["Preeti", "Hindi Teacher", "Teacher"], ["Preeti Jain", "Parents Relation Officer", "Admin & PL"], ["Priya Bagri", "Teacher", "Teacher"], ["Priya Shekhawat", "Teacher", "Teacher"], ["Priyanka Bhargava", "Medical Officer", "Admin & PL"], ["Priyanka Sand", "Teacher", "Teacher"], ["Priyanshi Bhojak", "English Teacher", "Teacher"], ["Radha Soni", "Social Science Teacher", "Teacher"], ["Raj Vyas", "Archery Coach", "Activity"], ["Rajeev Nagal", "Content Designer", "Admin & PL"], ["Ram Singh Rathore", "French Teacher", "Teacher"], ["Rashmi Rathore", "Program Leader", "Admin & PL"], ["Rashmi Singh", "Class Manager", "CM"], ["Reema Tiwari", "Teacher", "Teacher"], ["Rekha", "Teacher", "Teacher"], ["Renu Harsh", "English Teacher", "Teacher"], ["Renuka Tak", "Art Teacher", "Activity"], ["Richa Sharma", "Computer Teacher", "Teacher"], ["Ritanshu Sharma", "Cricket Coach", "Activity"], ["Ritika Purohit", "Science Teacher", "Teacher"], ["Saba Panwar", "Class Manager", "CM"], ["Sahil Kumar", "Shooting Coach", "Activity"], ["Sakil Gouri", "Western Dance Instructor", "Activity"], ["Sanjana Sarswat", "Floor Manager", "Floor Manager"], ["Sarita Saini", "Program Leader", "Admin & PL"], ["Saroj", "Teacher", "Teacher"], ["Shaan Siddiqui", "English Teacher", "Teacher"], ["Shailesh Joshi", "Social Science Teacher", "Teacher"], ["Shally Taneja", "Teacher", "Teacher"], ["Shikha Sharma", "Art Teacher", "Activity"], ["Shivangi Gupta", "Teacher", "Teacher"], ["Shivika Ranjan", "Arts & Textile Desigining Instructor", "Activity"], ["Shobha Sharma", "Hindi Teacher", "Teacher"], ["Shreya", "Science Teacher", "Teacher"], ["Shubhangi", "Dean - Academics", "Admin & PL"], ["Sonika Lalwani", "Teacher", "Teacher"], ["Sourabh Tripathi", "Floor Manager", "Floor Manager"], ["Suman Bishnoi", "Floor Manager", "Floor Manager"], ["Sunita Nirban", "Teacher", "Teacher"], ["Surender Yadav", "Chairperson", "Admin & PL"], ["Swati Sehgal", "English Teacher", "Teacher"], ["Tanushree Purohit", "Class Manager", "CM"], ["Tina Sangtani", "Teacher", "Teacher"], ["Tripti", "Hindi Teacher", "Teacher"], ["Upender Singh Shekhawat", "Class Manager", "CM"], ["Vahnisvari Bika", "Teacher", "Teacher"], ["Vaibhav Pandey", "Tabla Instructor", "Activity"], ["Vaishali Rathore", "Parents Relation Officer", "Admin & PL"], ["Vijay Raj Soni", "Class Manager", "CM"], ["Vipul Vijay", "Mathematics Teacher", "Teacher"], ["Yashika Gupta", "Class Manager", "CM"], ["Yavnika Dembla", "English Teacher", "Teacher"], ["Yogesh Purohit", "Harmonium Instructor", "Activity"]];
+/* Co-curricular segments: [segment, [[activity, [staff…]], …]] */
+const SEGS = [
+ ['Sports', [['Skating',['Manmohan Singh']],['Cricket',['Kanhaiya Lal Swami','Ritanshu Sharma']],['Table Tennis',['Niviya Singh Bhati']],['Archery',['Raj Vyas']],['Shooting',['Sahil Kumar']],['Lawn Tennis',['Bhawishya Joshi']],['Basketball',[]]]],
+ ['Fitness', [['Wushu',['Akash Gurjar','Kritika Pareek']],['Karate',['Jitendra Karwa']],['Taekwondo',['Lohit Tailong']],['Yoga',['Neelam Rajwani']]]],
+ ['Dance', [['Western',['Sakil Gouri']],['Classical',['Mansi Singh Panwar']]]],
+ ['Music', [['Tabla',['Vaibhav Pandey']],['Keyboard',['Bhavyadeep Soni']],['Guitar',['Bhuwan Bhatt']],['Harmonium',['Yogesh Purohit']]]],
+ ['Skill course', [['Cooking',['Neelam Rajwani']],['Pottery',['Sundar']],['Photography',['Mukul Parihar']],['Textile',['Shivika Ranjan']],['Agriculture',['Nahida']],['Abacus / Vedic Math',['Kavita Gupta']],['Acting',['Bhupendra Yogi']]]],
+ ['Foreign language', [['French',['Ram Singh Rathore']],['German',['Archana Choudhary']]]]
+];
+/* Class teachers (sections 1A–11) */
+const CT = {'1A':'Sunita Nirban','1B':'Priyanshi Bhojak','1C':'Kanika Gahlot','2A':'Deepmala Rathore','2B':'Deepali Tiwari','2C':'Chhavi Vinaik','3A':'Tina Sangtani','3B':'Vahnisvari Bika','3C':'Saroj',
+ '4A':'Pooja Sharma','4B':'Priya Shekhawat','4C':'Gauri Adhana','5A':'Anuradha Chaudhary','5B':'Reema Tiwari','5C':'Devanshi Saini','6A':'Shailesh Joshi','6B':'Ishita','6C':'Monika Rajpurohit',
+ '7A':'Swati Sehgal','7B':'Yavnika Dembla','7C':'Jyotshna Jayan','8A':'Pallavi Joshi','8B':'Shreya','8C':'Ritika Purohit','9A':'Shaan Siddiqui','9B':'Nisha','10A':'Jatin Sankhla','10B':'Radha Soni','11':'Jitesh Mehendiratta'};
+const normCls = c => String(c||'').toUpperCase().replace(/\s+/g,'');
+const ctOf = c => CT[normCls(c)] || '';
+const clsOf = n => { const k = Object.keys(CT).find(c => key(CT[c]) === key(n) || sameName(CT[c], n) || sameName(n, CT[c])); return k || ''; };
+const ACTS = SEGS.flatMap(([seg, list]) => list.map(([a, ns]) => ({seg, a, ns})));
+const segsOf = n => ACTS.filter(x => x.ns.some(m => key(m) === key(n) || sameName(n, m)));
+const subjOf = st => { if (!st) return ''; const m = st[1].match(/^(.*?)\s*Teacher$|^Faculty\s*[–-]\s*(.*)$/i); const r = m ? (m[1] || m[2] || '').trim() : ''; return /^assistant$/i.test(r) ? '' : r; };
+
+/* "Name|tag" — tag optional. Rows: {s:'sub-heading'} */
+const TABS = window.__B.tabs;
+
+/* every "A – B", "A, B", "A & B" is separate people: give each their own chip (same tag) */
+(function splitPairs(){
+  const SPL = /\s*[–,&]\s*|\s+-\s+/;
+  const fix = arr => { const out = []; arr.forEach(x => {
+    if (typeof x !== 'string') { out.push(x); return; }
+    const [n, ...rest] = x.split('|'); const parts = n.split(SPL).map(v => v.trim()).filter(Boolean);
+    (parts.length > 1 ? parts.map(v => [v, ...rest].join('|')) : [x]).forEach(v => { if (!out.includes(v)) out.push(v); });
+  }); return out; };
+  TABS.forEach(t => { (t.cards || []).forEach(c => { if (!c.bus) c.p = fix(c.p); }); (t.cols || []).forEach(col => col.groups.forEach(g => g.p = fix(g.p))); });
+})();
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g,'-');
+const SEP = /(\s*[–\-\/,&+]\s*)/;
+
+/* ---------- daily leave data ---------- */
+let DAILY = {};
+try { DAILY = JSON.parse($('#daily').textContent) || {}; } catch(e){ DAILY = {}; }
+/* per-area name lists edited from the page: {areaId: {p:[names], by:'incharge'}} */
+let ROSTER = {};
+try { const el = document.getElementById('roster'); ROSTER = el ? (JSON.parse(el.textContent) || {}) : {}; } catch(e){ ROSTER = {}; }
+
+/* spelling-tolerant key: Upender = Upinder, Sourabh = Saurabh, Ma'am dropped */
+const kw = w => w.replace(/(.)\1+/g,'$1').replace(/ou/g,'au').replace(/sh/g,'s').replace(/e/g,'i').replace(/y/g,'i').replace(/w/g,'v').replace(/(.)\1+/g,'$1');
+const clean = s => String(s||'').toLowerCase().replace(/\b(ma['’]?am|mam|madam|sir|mr|mrs|ms|dr)\b\.?/g,' ').replace(/\(.*?\)/g,' ');
+function key(s){ return clean(s).replace(/[^a-z ]/g,'').trim().split(/\s+/).filter(Boolean).map(kw).join(' '); }
+/* words with an "abbreviated" flag: "Poonam G." -> [{k:'punam'},{k:'g',ab:true}] */
+const words = s => clean(s).replace(/[^a-z. ]/g,' ').trim().split(/\s+/).filter(w => w && w !== '.').map(w => { const ab = /\.$/.test(w) || w.replace('.','').length === 1; return {k: kw(w.replace(/\./g,'')), ab}; });
+/* does a short chart name ("Komal", "Poonam G.") refer to this full name? */
+function sameName(shortN, fullN){
+  const a = words(shortN), b = words(fullN);
+  if (!a.length || a.length > b.length) return false;
+  return a.every((w,i) => w.ab ? b[i].k.startsWith(w.k) : b[i].k === w.k);
+}
+const STAFF_BY = new Map(STAFF_LIST.map(s => [key(s[0]), s]));
+/* resolve a typed name to the full staff name; `cat` breaks ties (two Komals) */
+function resolve(n, cat){
+  const exact = STAFF_BY.get(key(n)); if (exact) return exact;
+  let c = STAFF_LIST.filter(s => sameName(n, s[0]));
+  if (c.length > 1 && cat) { const f = c.filter(s => s[2] === cat); if (f.length) c = f; }
+  return c.length === 1 ? c[0] : null;
+}
+const pad = n => String(n).padStart(2,'0');
+const ymd = d => d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const fromYmd = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
+const addDays = (s, n) => { const d = fromYmd(s); d.setDate(d.getDate()+n); return ymd(d); };
+const nice = s => fromYmd(s).toLocaleDateString('en-IN',{weekday:'short', day:'numeric', month:'short'});
+
+function pickDay(){
+  const now = new Date(), today = ymd(now), tmr = addDays(today,1);
+  if (now.getHours() >= 14 && DAILY[tmr]) return tmr;
+  if (DAILY[today]) return today;
+  const next = Object.keys(DAILY).sort().find(d => d > today);
+  return next || today;
+}
+let DAY = pickDay();
+const dayData = () => DAILY[DAY] || {leave:[], cover:[], adj:[]};
+
+function leaveMap(){
+  const d = dayData(), list = (d.leave||[]).map(l => ({...l}));
+  (d.cover||[]).forEach(c => { const l = list.find(x => key(x.n) === key(c.f) || sameName(c.f, x.n)); if (l) (l.by = l.by || []).push(c.n); });
+  return { get: tok => list.find(l => sameName(tok, l.n) || key(tok) === key(l.n)) };
+}
+let LV = leaveMap();
+const stLabel = l => l.late ? 'Late' + (typeof l.late === 'string' ? ' till ' + l.late : '') : l.half ? 'Half day' : 'Leave';
+const stKey = l => l.late ? 'late' : l.half ? 'half' : '';
+
+/* ---------- chart ---------- */
+function nameHTML(n){
+  const hits = [];
+  const html = n.split(SEP).map(tok => {
+    if (SEP.test(tok) && !/[a-z]/i.test(tok)) return esc(tok);
+    const l = LV.get(key(tok));
+    if (!l) return esc(tok);
+    hits.push(l);
+    return l.late ? `<u class="lt">${esc(tok)}</u>` : `<s class="off">${esc(tok)}</s>`;
+  }).join('');
+  const tags = hits.map(l => `<i class="${l.late?'lvl':'lv'}">${esc(stLabel(l))}${l.by?' → '+esc(l.by.join(', ')):''}</i>`).join('');
+  return {html, tags, hit: hits.length > 0};
+}
+function chipHTML(x, c){
+  if (typeof x === 'object') return `<div class="sub">${esc(x.s)}</div>`;
+  const [n, tag] = x.split('|');
+  const r = nameHTML(n);
+  return `<span class="chip${r.hit?' has-lv':''}" style="--c:${COL[c]}" data-n="${esc(n)}">${r.html}${tag?`<i>${esc(tag)}</i>`:''}${r.tags}</span>`;
+}
+function cardHTML(card, prefix, shift){
+  const id = prefix + '-' + slug(card.t);
+  let body;
+  if (card.bus){
+    body = `<div class="buses">` + card.p.map(x => {
+      const [r, n, tag] = x.split('|');
+      const nm = nameHTML(n);
+      return `<div class="bus${nm.hit?' has-lv':''}" data-n="${esc(n)}"><small>Bus</small><b>${esc(r)}</b><span>${nm.html}</span>${tag?` <small>${esc(tag)}</small>`:''}${nm.tags?`<div>${nm.tags}</div>`:''}</div>`;
+    }).join('') + `</div>`;
+  } else {
+    body = `<div class="card-b">${card.p.length ? card.p.map(x=>chipHTML(x, card.c)).join('') : '<span style="color:var(--muted)">No one assigned</span>'}</div>`;
+  }
+  return `<section class="card" id="${id}" style="--c:${COL[card.c]}" data-duty="${esc(card.t + (card.bus ? '' : '') + ' (' + shift + ')')}" data-shift="${esc(shift)}">
+    <div class="card-h"><span class="dot"></span><h2>${esc(card.t)}</h2>${card.w?`<span class="when">${esc(card.w)}</span>`:''}</div>${body}</section>`;
+}
+let TAB = null;
+function render(tabId){
+  TAB = tabId;
+  const tab = TABS.find(t => t.id === tabId);
+  let html = '';
+  $('#notice').hidden = !!tab.checkin;
+  if (tab.checkin){ try { sessionStorage.setItem('dutyTab', tabId); } catch(e){} $('#main').innerHTML = checkinHTML(); document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', b.dataset.id === tabId)); return; }
+  if (tab.extra){
+    html = `<div class="grid2">` + tab.cols.map(col =>
+      `<div><h3 style="font-family:var(--head);margin:16px 0 0;font-size:1.25rem">${col.h}</h3>` +
+      col.groups.map(g => cardHTML(g, tab.id + '-' + slug(col.h), 'Extra – ' + col.h)).join('') + `</div>`).join('') + `</div>`;
+  } else {
+    html = `<nav class="jump" aria-label="Jump to duty">` +
+      tab.cards.map(c => `<a href="#${tab.id}-${slug(c.t)}" style="--c:${COL[c.c]}">${esc(c.t)}</a>`).join('') + `</nav>` +
+      tab.cards.map(c => cardHTML(c, tab.id, tab.label)).join('');
+  }
+  $('#main').innerHTML = html;
+  document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', b.dataset.id === tabId));
+  try { sessionStorage.setItem('dutyTab', tabId); } catch(e){}
+}
+
+/* ---------- today's leave panel ---------- */
+function renderNotice(){
+  const d = dayData(), lv = d.leave||[], cv = d.cover||[], adj = d.adj||[];
+  const today = ymd(new Date());
+  const rel = DAY === today ? 'Today' : DAY === addDays(today,1) ? 'Tomorrow' : DAY === addDays(today,-1) ? 'Yesterday' : '';
+  let body = '';
+  const ciLine = ciSummaryLine();
+  if (!lv.length && !cv.length && !adj.length){
+    body = `<p class="none">No leave or adjustments entered for this day.</p>`;
+  } else {
+    const byCat = CATS.concat([...new Set(lv.map(l=>l.k).filter(k=>!CATS.includes(k)))]);
+    body += `<h3>Staff on leave <span class="cnt">${lv.length}</span></h3><table><thead><tr><th>Category</th><th>Staff</th></tr></thead><tbody>` +
+      byCat.map(k => { const ps = lv.filter(l => (l.k||'Teacher') === k);
+        return `<tr><td>${esc(CAT_LABEL[k]||k)}</td><td>${ps.length ? ps.map(l => esc(l.n) + (clsOf(l.n)?` <span class="ctg">CT ${esc(clsOf(l.n))}</span>`:'') + (stKey(l)?' <em>('+esc(stLabel(l))+')</em>':'')).join(', ') : '—'}</td></tr>`; }).join('') + `</tbody></table>`;
+    const ed = (m,i) => CAN_ALL() ? ` data-qa="${m}:${i}"` : '';
+    const cls = adj.map((a,i) => [a,i]).filter(([a]) => !a.a), act = adj.map((a,i) => [a,i]).filter(([a]) => a.a);
+    const by = (n, t) => `<b class="by">${esc(n)}</b>${t?`<small class="tm">${esc(t)}</small>`:''}`;
+    const ab = n => n ? esc(n) : '<span class="dim">—</span>';
+    const done = new Set(cls.map(([a]) => normCls(a.c)));
+    const pending = lv.filter(l => !l.late && clsOf(l.n) && !done.has(clsOf(l.n))).map(l => [clsOf(l.n), l]);
+    if (pending.length) body += `<div class="pend"><b>Class not adjusted yet</b>` + pending.map(([c,l]) => `<button type="button" class="pendb" data-pend="${esc(c)}">${esc(c)} <span>${esc(l.n)}${l.half?' · half day':''}</span>${CAN_ALL()?' <i>+ Adjust</i>':''}</button>`).join('') + `</div>`;
+    if (cls.length) body += `<h3>Class adjustment <span class="cnt k2">${cls.length}</span></h3><table class="adjt"><thead><tr><th>Class</th><th>Absent</th><th>Adjusted by</th></tr></thead><tbody>` +
+      cls.map(([a,i]) => `<tr${ed('adj',i)}><td>${esc(a.c)}</td><td>${a.f ? ab(a.f) : ctOf(a.c) ? `${esc(ctOf(a.c))}<small class="tm">Class teacher</small>` : ab('')}</td><td>${by(a.b, a.t)}</td></tr>`).join('') + `</tbody></table>`;
+    if (act.length) body += `<h3>Activity adjustment <span class="cnt k3">${act.length}</span></h3><table class="adjt"><thead><tr><th>Activity</th><th>Absent</th><th>Adjusted by</th></tr></thead><tbody>` +
+      act.map(([a,i]) => `<tr${ed('adj',i)}><td>${esc(a.a)}${a.c?`<small class="tm">${esc(a.c)}</small>`:''}</td><td>${ab(a.f)}</td><td>${by(a.b, a.t)}</td></tr>`).join('') + `</tbody></table>`;
+    if (cv.length) body += `<h3>Duty cover <span class="cnt k4">${cv.length}</span></h3><table class="adjt"><thead><tr><th>Duty</th><th>Absent</th><th>Covered by</th></tr></thead><tbody>` +
+      cv.map((c,i) => `<tr${ed('cover',i)}><td class="duty">${esc(c.d||'All duties')}</td><td>${ab(c.f)}</td><td>${by(c.n)}</td></tr>`).join('') + `</tbody></table>`;
+  }
+  $('#notice').innerHTML = `
+    <div class="nhead">
+      <button class="nav" id="prevDay" aria-label="Previous day">‹</button>
+      <div class="ntitle"><h2>${rel?rel+' · ':''}${esc(nice(DAY))}</h2><small>Leave &amp; adjustments</small></div>
+      <button class="nav" id="nextDay" aria-label="Next day">›</button>
+    </div>
+    ${ciLine}${body}
+    <div class="nbtns qbtns" ${CAN_ALL()?'':'hidden'}>
+      <button class="btn ghost" data-qnew="adj">+ Class adjustment</button>
+      <button class="btn ghost" data-qnew="act">+ Activity adjustment</button>
+      <button class="btn ghost" data-qnew="cover">+ Duty cover</button>
+    </div>
+    ${CAN_ALL() && (cv.length || adj.length) ? '<p class="hint" style="margin:6px 0 0">Tap a row to change or remove it. Tap any name on the chart to replace them.</p>' : ''}
+    <div class="nbtns">
+      <button class="btn ghost" id="copyWa">Copy for WhatsApp</button>
+      <button class="btn" id="openEd" ${CAN_ALL()?'':'hidden'}>✎ Update leave</button>
+    </div>`;
+  $('#prevDay').onclick = () => setDay(addDays(DAY,-1));
+  $('#nextDay').onclick = () => setDay(addDays(DAY,1));
+  $('#copyWa').onclick = copyWa;
+  $('#openEd').onclick = () => openEditor(DAY);
+  const cil = $('#notice').querySelector('[data-goci]'); if (cil) cil.onclick = () => { render('checkin'); window.scrollTo({top:0}); };
+  $('#notice').querySelectorAll('[data-pend]').forEach(b => b.onclick = () => { if (CAN_ALL()) openQA({mode:'adj', c: b.dataset.pend, f: ctOf(b.dataset.pend)}); });
+  $('#notice').querySelectorAll('[data-qnew]').forEach(b => b.onclick = () => openQA({mode: b.dataset.qnew}));
+  $('#notice').querySelectorAll('[data-qa]').forEach(r => r.onclick = () => { const [m,i] = r.dataset.qa.split(':'); openQA({mode: m, idx: +i}); });
+}
+function setDay(d){ DAY = d; LV = leaveMap(); renderNotice(); render(TAB); doSearch(); }
+
+function waText(){
+  const d = dayData(), lv = d.leave||[];
+  let t = `*Staff ON Leave* – ${nice(DAY)}\n`;
+  CATS.concat([...new Set(lv.map(l=>l.k).filter(k=>!CATS.includes(k)))]).forEach(k => {
+    const ps = lv.filter(l => (l.k||'Teacher') === k);
+    t += `\n${k} -\n` + (ps.length ? ps.map(l => `* ${l.n}${stKey(l)?' ( '+stLabel(l)+' )':''}`).join('\n') : '* ') + '\n';
+  });
+  const cls = (d.adj||[]).filter(a => !a.a), act = (d.adj||[]).filter(a => a.a);
+  if (cls.length) t += `\n*Class Adjustment*\n` + cls.map(a => `${a.c} - ${a.f ? a.f+' - ' : ctOf(a.c) ? ctOf(a.c)+' (CT) - ' : ''}${a.b}${a.t?' ('+a.t+')':''}`).join('\n') + '\n';
+  if (act.length) t += `\n*Activity Adjustment*\n` + act.map(a => `${a.a}${a.c?' ('+a.c+')':''} - ${a.f?a.f+' - ':''}${a.b}${a.t?' ('+a.t+')':''}`).join('\n') + '\n';
+  if ((d.cover||[]).length) t += `\n*Duty Cover*\n` + d.cover.map(c => `* ${c.n} for ${c.f}${c.d?' – '+c.d:''}`).join('\n') + '\n';
+  return t;
+}
+async function copyWa(){
+  try { await navigator.clipboard.writeText(waText()); toast('Copied – paste it in WhatsApp'); }
+  catch(e){ toast('Could not copy on this device'); }
+}
+
+/* ---------- tabs, legend ---------- */
+function autoTab(){
+  const d = new Date(), m = d.getHours()*60 + d.getMinutes();
+  if (m < 11*60) return 'morning';
+  if (m < 14*60 + 20) return 'departure';
+  if (m < 18*60 + 30) return 'stayback';
+  return 'morning';
+}
+const nowTab = autoTab();
+$('#tabs').innerHTML = TABS.map(t =>
+  `<button class="tab" role="tab" data-id="${t.id}">${t.label}${t.id===nowTab?'<span class="now">Now</span>':''}<small>${t.when}</small></button>`).join('');
+$('#tabs').addEventListener('click', e => {
+  const b = e.target.closest('.tab'); if (!b) return;
+  $('#q').value = ''; doSearch(); render(b.dataset.id); window.scrollTo({top:0});
+});
+$('#legend').innerHTML = Object.keys(Z).map(k => `<span style="--c:${COL[k]}">${Z[k]}</span>`).join('');
+
+/* ---------- name index & search ---------- */
+const norm = s => s.toLowerCase().replace(/sourabh/g,'saurabh').replace(/\s+/g,' ').trim();
+const entries = [];
+TABS.forEach(tab => {
+  const push = (card, shift) => card.p.forEach(x => {
+    if (typeof x === 'object') return;
+    const parts = x.split('|');
+    const name = card.bus ? parts[1] : parts[0];
+    const tag = card.bus ? ('Bus ' + parts[0] + (parts[2] ? ' (' + parts[2] + ')' : '')) : (parts[1] || '');
+    entries.push({shift, when: card.w || tab.when, duty: card.t, c: card.c, name, tag});
+  });
+  if (tab.extra) tab.cols.forEach(col => col.groups.forEach(g => push(g, 'Extra – ' + col.h)));
+  else tab.cards.forEach(card => push(card, tab.label));
+});
+const nameSet = new Set();
+entries.forEach(e => e.name.split(/[–\-\/,&+]/).forEach(n => {
+  n = n.trim().replace(/\s+/g,' ');
+  if (n.length > 2 && !/^(pre|guards|sports|staff|teachers)/i.test(n)) nameSet.add(n);
+}));
+STAFF_LIST.forEach(s => nameSet.add(s[0]));
+const STAFF = [...nameSet].sort();
+$('#names').innerHTML = STAFF.map(n => `<option value="${esc(n)}">`).join('');
+
+function doSearch(){
+  const raw = $('#q').value, q = norm(raw);
+  $('#clear').style.display = q ? 'block' : 'none';
+  const res = $('#results');
+  if (q.length < 2){ res.hidden = true; $('#main').hidden = false; $('#notice').hidden = TAB === 'checkin'; return; }
+  $('#notice').hidden = true;
+  const tokHit = n => n.split(SEP).some(t => /[a-z]/i.test(t) && sameName(t, raw));
+  let hits = entries.filter(e => norm(e.name).includes(q) || tokHit(e.name)).map(h => ({...h}));
+  const who = resolve(raw);
+  (dayData().cover||[]).forEach(c => {
+    if (!norm(c.n).includes(q)) return;
+    entries.filter(e => e.name.split(SEP).some(t => /[a-z]/i.test(t) && (key(t) === key(c.f) || sameName(t, c.f)))).forEach(e =>
+      hits.push({...e, name: c.n, tag: 'Cover for ' + c.f + ' · ' + nice(DAY), cover: true}));
+  });
+  const ql = raw.trim().length > 2 ? LV.get(raw) : null;
+  $('#main').hidden = true; res.hidden = false;
+  const hl = s => esc(s).replace(new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')','ig'), '<mark>$1</mark>');
+  res.innerHTML = (who ? `<div class="who"><b>${esc(who[0])}</b> · ${esc(who[1])} <span>${esc(CAT_LABEL[who[2]])}</span>${clsOf(who[0])?` <span>Class teacher ${esc(clsOf(who[0]))}</span>`:''}</div>` : '') + (ql ? `<div class="lvbanner">${esc(ql.n)} is ${ql.late?esc(stLabel(ql).toLowerCase()):'on '+(ql.half?'half-day ':'')+'leave'} on ${esc(nice(DAY))}${ql.by?' · covered by '+esc(ql.by.join(', ')):''}</div>` : '') + (hits.length
+    ? `<h3>${hits.length} dut${hits.length>1?'ies':'y'} for “${esc(raw.trim())}”</h3>
+       <div style="overflow-x:auto"><table class="rtable"><thead><tr><th>Time</th><th>Duty</th><th>Assigned as</th></tr></thead><tbody>` +
+       hits.map(h => `<tr style="--c:${COL[h.c]}"${h.cover?' class="cov"':''}><td>${esc(h.when)}<br><span style="font-weight:600;color:var(--muted);font-size:.75rem">${esc(h.shift)}</span></td>
+         <td><span class="zone"></span>${esc(h.duty)}</td><td>${hl(h.name)}${h.tag?` <span style="color:var(--muted);font-size:.8rem">(${esc(h.tag)})</span>`:''}</td></tr>`).join('') +
+       `</tbody></table></div>`
+    : `<div class="empty">No duty found for “${esc(raw.trim())}”. Check the spelling or try the first few letters.</div>`);
+}
+$('#q').addEventListener('input', doSearch);
+$('#clear').addEventListener('click', () => { $('#q').value=''; doSearch(); $('#q').focus(); });
+
+/* ---------- toast ---------- */
+let tt;
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(tt); tt = setTimeout(() => t.hidden = true, 3200); }
+
+/* ---------- quick adjustment ---------- */
+let QA = null;
+function freeStaff(shift){
+  const pools = [], sh = /morning/i.test(shift||'') ? 'Morning' : /departure/i.test(shift||'') ? 'Departure' : '';
+  TABS.forEach(t => {
+    if (t.extra) t.cols.forEach(c => { if (!sh || c.h === sh) c.groups.forEach(g => pools.push(...g.p)); });
+    else if (!sh || t.label === sh) t.cards.filter(c => /free staff/i.test(c.t)).forEach(c => pools.push(...c.p));
+  });
+  const busy = new Set([...(dayData().cover||[]).map(c => key(c.n)), ...(dayData().adj||[]).map(a => key(a.b))]);
+  const out = new Map();
+  pools.forEach(x => typeof x === 'string' && x.split('|')[0].split(SEP).forEach(t => {
+    t = t.trim(); if (!/[a-z]{3}/i.test(t) || /^(pre|staff|teachers)/i.test(t) || /\d/.test(t)) return;
+    if (LV.get(t)) return;
+    const st = resolve(t), n = st ? st[0] : t;
+    if (!busy.has(key(n))) out.set(key(n), {n, d: st ? st[1] : ''});
+  }));
+  return [...out.values()];
+}
+/* suggestions in order of relevance: same activity segment → same subject → same role → free staff */
+function relevant(F, shift, act){
+  const d = dayData(), seen = new Set();
+  const busy = new Set([...(d.cover||[]).map(c => key(c.n)), ...(d.adj||[]).map(a => key(a.b))]);
+  const Fst = F ? resolve(F) : null, Fk = Fst ? key(Fst[0]) : key(F);
+  const ok = n => { const k = key(n); if (!k || k === Fk || seen.has(k) || busy.has(k) || LV.get(n)) return false; seen.add(k); return true; };
+  const item = n => { const st = STAFF_BY.get(key(n)); const a = segsOf(n).map(x => x.a).join(', '); return {n, d: a ? a + (st ? ' · ' + st[1] : '') : st ? st[1] : ''}; };
+  const out = [];
+  const segs = act ? [act] : F ? segsOf(Fst ? Fst[0] : F) : [];
+  if (segs.length){
+    const segNames = [...new Set(segs.map(x => x.seg))];
+    const list = ACTS.filter(x => segNames.includes(x.seg)).flatMap(x => x.ns).filter(ok).map(item);
+    if (list.length) out.push({h: 'Same segment · ' + segNames.join(', '), list});
+  }
+  const grade = QA && QA.mode === 'adj' ? (normCls($('#qC').value).match(/^\d+/) || [])[0] : '';
+  if (grade){
+    const list = Object.keys(CT).filter(c => c.match(/^\d+/)[0] === grade && c !== normCls($('#qC').value)).map(c => CT[c]).filter(ok).map(item);
+    if (list.length) out.push({h: 'Same grade class teachers · ' + grade, list});
+  }
+  const sub = subjOf(Fst);
+  if (sub){
+    const list = STAFF_LIST.filter(s => subjOf(s) === sub).map(s => s[0]).filter(ok).map(item);
+    if (list.length) out.push({h: 'Same subject · ' + sub, list});
+  }
+  if (Fst && ['CM','Floor Manager'].includes(Fst[2])){
+    const list = STAFF_LIST.filter(s => s[2] === Fst[2]).map(s => s[0]).filter(ok).map(item);
+    if (list.length) out.push({h: 'Other ' + CAT_LABEL[Fst[2]], list});
+  }
+  const free = freeStaff(shift).map(s => s.n).filter(ok).map(item);
+  if (free.length) out.push({h: 'Free staff' + (shift ? ' · ' + shift : ''), list: free});
+  return out;
+}
+function openQA(o){
+  const d = dayData();
+  QA = {mode: o.mode || 'adj', idx: o.idx ?? -1, shift: o.shift || ''};
+  const cur = QA.idx >= 0 ? (QA.mode === 'adj' ? d.adj[QA.idx] : d.cover[QA.idx]) : null;
+  const f = cur ? (cur.f || '') : (o.f || '');
+  $('#qC').value = (QA.mode === 'adj' || QA.mode === 'act') && cur ? cur.c || '' : (o.c || '');
+  $('#qT').value = (QA.mode === 'adj' || QA.mode === 'act') && cur ? cur.t || '' : '';
+  $('#qD').value = QA.mode === 'cover' ? (cur ? cur.d || '' : o.d || '') : '';
+  $('#qF').value = f;
+  $('#qB').value = cur ? (QA.mode === 'adj' ? cur.b : cur.n) || '' : '';
+  const l = f ? LV.get(f) : null;
+  $('#qSt').value = l ? (stKey(l) || 'leave') : (o.f ? 'leave' : '');
+  $('#qLt').value = l && typeof l.late === 'string' ? l.late : '';
+  QA.actSet = null; $('#qF').dataset.touched = f ? '1' : '';
+  const ai = cur && cur.a ? ACTS.findIndex(x => x.a === cur.a) : -1;
+  $('#qA').value = ai >= 0 ? String(ai) : '';
+  if (QA.mode === 'adj' && cur && cur.a) QA.mode = 'act';
+  if (QA.mode === 'act' && cur) QA.actSet = $('#qA').value;
+  $('#qDel').hidden = QA.idx < 0;
+  $('#qaTitle').textContent = (QA.idx >= 0 ? 'Change ' : 'Add ') + (QA.mode === 'adj' ? 'class adjustment' : QA.mode === 'act' ? 'activity adjustment' : 'duty cover') + ' · ' + nice(DAY);
+  drawQA();
+  $('#qa').hidden = false; document.body.style.overflow = 'hidden';
+  setTimeout(() => (QA.mode === 'adj' && !$('#qC').value ? $('#qC') : !$('#qF').value ? $('#qF') : $('#qB')).focus(), 50);
+}
+function drawQA(){
+  $('#qaSheet').dataset.m = QA.mode;
+  document.querySelectorAll('[data-qmode]').forEach(b => b.setAttribute('aria-selected', b.dataset.qmode === QA.mode));
+  $('#qLtWrap').hidden = $('#qSt').value !== 'late';
+  if (QA.mode === 'act'){ const x = ACTS[+$('#qA').value]; if (x && QA.actSet !== $('#qA').value){ QA.actSet = $('#qA').value; $('#qF').value = x.ns[0] || ''; } }
+  const groups = relevant($('#qF').value.trim(), QA.mode === 'cover' ? ($('#qD').value.match(/\(([^)]+)\)\s*$/) || [])[1] || QA.shift : '', QA.mode === 'act' ? ACTS[+$('#qA').value] : null);
+  $('#qSug').innerHTML = groups.length ? groups.map(g => `<div class="sgh">${esc(g.h)}</div>` + g.list.map(s => `<button type="button" class="sg" data-sg="${esc(s.n)}">${esc(s.n)}${s.d?`<small>${esc(s.d)}</small>`:''}</button>`).join('')).join('') : '<span class="none">No suggestions – type a name.</span>';
+}
+function closeQA(){ $('#qa').hidden = true; if ($('#ed').hidden) document.body.style.overflow = ''; QA = null; }
+$('#qa').addEventListener('click', e => {
+  const m = e.target.closest('[data-qmode]'); if (m){ QA.mode = m.dataset.qmode; QA.idx = -1; QA.actSet = null; $('#qDel').hidden = true; drawQA(); return; }
+  const sg = e.target.closest('[data-sg]'); if (sg){ $('#qB').value = sg.dataset.sg; return; }
+  if (e.target === $('#qa')) closeQA();
+});
+$('#qSt').addEventListener('change', drawQA);
+$('#qD').addEventListener('change', drawQA);
+$('#qA').addEventListener('change', drawQA);
+$('#qC').addEventListener('input', () => { if (QA && QA.mode === 'adj' && !$('#qF').dataset.touched){ const t = ctOf($('#qC').value); $('#qF').value = t; if (t && LV.get(t)) $('#qSt').value = stKey(LV.get(t)) || 'leave'; clearTimeout(qfT); qfT = setTimeout(drawQA, 250); } });
+$('#qF').addEventListener('input', () => { $('#qF').dataset.touched = $('#qF').value ? '1' : ''; if (QA && QA.mode === 'adj' && !$('#qC').value){ const c = clsOf($('#qF').value); if (c) $('#qC').value = c; } });
+let qfT; $('#qF').addEventListener('input', () => { clearTimeout(qfT); qfT = setTimeout(drawQA, 250); });
+$('#qA').innerHTML = '<option value="">Choose activity…</option>' + SEGS.map(([seg, list]) => `<optgroup label="${esc(seg)}">` + list.map(([a, ns]) => `<option value="${ACTS.findIndex(x => x.a === a && x.seg === seg)}">${esc(a)}${ns.length ? ' – ' + esc(ns.map(n => n.split(' ')[0]).join(' & ')) : ' – NA'}</option>`).join('') + '</optgroup>').join('');
+$('#qaClose').onclick = closeQA;
+function qaApply(del){
+  const next = JSON.parse(JSON.stringify(DAILY));
+  const d = next[DAY] = next[DAY] || blank(); ['leave','cover','adj'].forEach(k => d[k] = d[k] || []);
+  const arr = QA.mode === 'cover' ? d.cover : d.adj;
+  if (del){ if (QA.idx >= 0) arr.splice(QA.idx, 1); }
+  else {
+    const F = $('#qF').value.trim(), B = $('#qB').value.trim(), st = $('#qSt').value;
+    if (QA.mode !== 'cover'){
+      const C = $('#qC').value.trim(), T = $('#qT').value.trim(), A = QA.mode === 'act' ? ACTS[+$('#qA').value] : null;
+      if (QA.mode === 'act' && !A){ toast('Pick the activity'); return null; }
+      if ((!C && !A) || !B){ toast(A ? 'Pick who is replacing' : 'Enter the class and who is replacing'); return null; }
+      const it = {c: C ? C.toUpperCase().replace(/\s+/g,'') : '', ...(A?{a:A.a}:{}), b: canon(B), ...(T?{t:T}:{}), ...(F?{f:canon(F)}:{})};
+      if (QA.idx >= 0) arr[QA.idx] = it; else arr.push(it);
+    } else {
+      const D = $('#qD').value.trim();
+      if (!F || !B){ toast('Enter who is absent and who is covering'); return null; }
+      const it = {n: canon(B), f: canon(F), ...(D?{d:D}:{})};
+      if (QA.idx >= 0) arr[QA.idx] = it; else arr.push(it);
+    }
+    if (F && st){
+      const n = canon(F), i = d.leave.findIndex(l => key(l.n) === key(n) || sameName(F, l.n));
+      const lt = $('#qLt').value.trim();
+      const e = {n: i >= 0 ? d.leave[i].n : n, k: i >= 0 ? d.leave[i].k : catOfName(n), ...(st==='half'?{half:true}:{}), ...(st==='late'?{late: lt || true}:{})};
+      if (i >= 0) d.leave[i] = e; else d.leave.push(e);
+    }
+  }
+  if (!d.leave.length && !d.cover.length && !d.adj.length && !d.att) delete next[DAY];
+  return next;
+}
+$('#qSave').onclick = () => { const n = qaApply(false); if (n) save(n, DAY, $('#qSave')); };
+$('#qDel').onclick = () => { const n = qaApply(true); if (n) save(n, DAY, $('#qDel')); };
+$('#main').addEventListener('click', e => {
+  if (!CAN_ALL()) return;
+  const chip = e.target.closest('.chip[data-n], .bus[data-n]'); if (!chip) return;
+  const card = chip.closest('.card'), n = chip.dataset.n;
+  const toks = n.split(SEP).filter(t => /[a-z]/i.test(t) && !SEP.test(t)).map(t => t.trim());
+  const off = toks.find(t => LV.get(t)) || toks[0];
+  const who = (LV.get(off) || {}).n || (resolve(off) || [off])[0];
+  const d = dayData(), duty = card.dataset.duty;
+  const ci = (d.cover||[]).findIndex(c => (key(c.f) === key(who) || sameName(off, c.f)) && (!c.d || c.d === duty));
+  openQA(ci >= 0 ? {mode:'cover', idx: ci} : {mode:'cover', f: who, d: duty, shift: card.dataset.shift});
+});
+
+/* ---------- duty check-in (reached / late / absent) ---------- */
+const AREAS = [
+ {id:'gf',  t:'Ground Floor',  by:'Nahida',     p:['Harshvardhan','Shivika','Poonam Rathore','Madhu','Sanjana','Poojal','Nahida','Chandani','Suman','Priyanka','Nandini','Rekha']},
+ {id:'ff',  t:'First Floor',   by:'Neetu',      p:['Neetu','Diksha','Karishma','Divyanshi','Shally','Himanshi','Richa','Geeta','Preeti']},
+ {id:'sf',  t:'Second Floor',  by:'Sarita',     p:['Tanushree','Ajita','Garima','Poonam Sharda','Renu Harsh','Saba','Sarita','Asha','Tripti','Bharti','Neha','Mansi']},
+ {id:'tf',  t:'Third Floor',   by:'Upender',    p:['Upender','Jatin','Shobha','Poonam Gaur']},
+ {id:'out', t:'Outer Area',    by:'Jay Pandla', p:['Anoop','Sourabh','Kamal','Vishwabandhu','Kanhaiya Lal','Radheshyam','Jatan','Navratan','Jai']},
+ {id:'fo',  t:'Front Office',  by:'Vaishali',   p:['Vaishali','Preeti Jain','Megha','Narendra','Harshvardhan']},
+ {id:'bus', t:'Transport',     by:'Harsh',      p:['Harsh','Amit','Anita','Juhi','Priyanka S.','Mansi','Komal','Bhagyashree','Ram','Chandan','Rashmi','Renuka','Vijay','Yashika','Pooja','Vipul','Himanshu']}
+];
+/* Teachers segment: class-wise groups, marked by the class PL / incharge. Starts with the class teachers of each section. */
+const CLASS_GROUPS = [['c12','Class 1–2',['1','2'],'Shally / Sanjana'],['c3','Class 3',['3'],'Neetu'],['c4','Class 4',['4'],'Divyanshi'],['c5','Class 5',['5'],'Diksha'],
+ ['c67','Class 6–7',['6','7'],'Poonam Sharda'],['c89','Class 8–9',['8','9'],'Garima'],['c1011','Class 10–11',['10','11'],'Renu Harsh']];
+CLASS_GROUPS.forEach(([id, t, gr, by]) => { const secs = Object.keys(CT).filter(c => gr.includes(c.match(/^\d+/)[0]));
+  AREAS.push({id, t, by, seg:'cls', secs, p: secs.map(c => CT[c])}); });
+AREAS.forEach(a => { a.seg = a.seg || 'duty'; });
+let CI_SEG = 'duty';
+/* who may change what (screen-level: shows or hides the edit buttons) */
+const ADMINS = ['Karishma Suthar','Sharda Santosh','Sarita Saini','Nahida','Jai Pandla','Harsh Yadav','Anoop','Sourabh Tripathi','Saba Panwar'];
+const EXTRA_NAMES = ['Sharda Santosh','Anoop'];
+let IS_OWNER = false, WHO = '';
+try { WHO = localStorage.getItem('dutyWho') || ''; } catch(e){}
+const sameP = (a, b) => a && b && (key(a) === key(b) || sameName(a, b) || sameName(b, a));
+const byParts = ar => String(areaBy(ar) || '').split(/\s*[\/,&]\s*/).filter(Boolean);
+/* full power: owner, the named list, every Floor Manager, and every class / floor incharge */
+const isAdmin = () => IS_OWNER || (WHO && (ADMINS.some(a => sameP(WHO, a)) || (STAFF_BY.get(key(WHO)) || [])[2] === 'Floor Manager' || AREAS.some(ar => byParts(ar).some(b => sameP(WHO, b)))));
+const myAreas = () => WHO ? AREAS.filter(ar => byParts(ar).some(b => sameP(WHO, b))).map(ar => ar.id) : [];
+const CAN_ALL = () => CAN_EDIT && isAdmin();
+const canArea = id => CAN_EDIT && (isAdmin() || myAreas().includes(id));
+const secTag = n => { const c = clsOf(n); return c ? c : ''; };
+const areaNames = ar => (ROSTER[ar.id] && ROSTER[ar.id].p) || ar.p;
+const areaBy = ar => (ROSTER[ar.id] && ROSTER[ar.id].by) || ar.by;
+const ST_LABEL = {r:'Reached', l:'Late', a:'Absent'};
+const nowHM = () => { const d = new Date(); return d.getHours() + ':' + pad(d.getMinutes()); };
+function areaState(ar){
+  const rec = ((dayData().att || {})[ar.id]) || {s:{}};
+  const base = areaNames(ar);
+  const names = [...base, ...Object.keys(rec.s || {}).filter(n => !base.some(x => key(x) === key(n)))];
+  return {rec, rows: names.map(n => { const lv = LV.get(n); const r = (rec.s || {})[n]; return {n, st: r ? r.st : (lv && !lv.late ? 'lv' : ''), t: r ? r.t || '' : '', lv}; })};
+}
+function ciCounts(seg){
+  let r = 0, l = 0, a = 0, pend = 0; const late = [], abs = [], notPosted = [];
+  AREAS.filter(ar => !seg || ar.seg === seg).forEach(ar => { const {rec, rows} = areaState(ar); if (!rec.at) notPosted.push(ar.t);
+    rows.forEach(x => { if (x.st === 'r') r++; else if (x.st === 'l'){ l++; late.push([x.n, ar.t, x.t]); } else if (x.st === 'a'){ a++; abs.push([x.n, ar.t]); } else if (!x.st) pend++; }); });
+  return {r, l, a, pend, late, abs, notPosted};
+}
+function ciSummaryLine(){
+  const att = dayData().att; if (!att || !Object.keys(att).length) return '';
+  const c = ciCounts();
+  return `<button type="button" class="ciline" data-goci="1"><b>Check-in</b> ${c.r} reached · <span class="lt2">${c.l} late</span> · <span class="ab2">${c.a} absent</span>${c.late.length || c.abs.length ? `<small>${esc([...c.late.map(x => x[0] + ' (late)'), ...c.abs.map(x => x[0] + ' (absent)')].join(', '))}</small>` : ''}</button>`;
+}
+function checkinHTML(){
+  const c = ciCounts(CI_SEG), cd = ciCounts('duty'), cc = ciCounts('cls');
+  let h = `<div class="cihead nhead"><button class="nav" data-cinav="-1" aria-label="Previous day">‹</button><div class="ntitle"><h2>Check-in · ${esc(nice(DAY))}</h2><small>${CAN_ALL() ? 'Tap an area to mark reached / late / absent' : myAreas().length && CAN_EDIT ? 'Tap your group to mark reached / late / absent' : 'Who reached on duty'}</small></div><button class="nav" data-cinav="1" aria-label="Next day">›</button></div>
+  <div class="ptabs ciseg"><button type="button" class="ptab" data-ciseg="duty" aria-selected="${CI_SEG==='duty'}">Duty areas <b class="n">${cd.r}/${cd.r+cd.l+cd.a+cd.pend}</b></button><button type="button" class="ptab" data-ciseg="cls" aria-selected="${CI_SEG==='cls'}">Teachers · class-wise <b class="n">${cc.r}/${cc.r+cc.l+cc.a+cc.pend}</b></button></div>
+  <div class="cistats"><span class="s r"><b>${c.r}</b>Reached</span><span class="s l"><b>${c.l}</b>Late</span><span class="s a"><b>${c.a}</b>Absent</span><span class="s p"><b>${c.pend}</b>Not marked</span></div>`;
+  if (c.late.length || c.abs.length) h += `<div class="cilist">${c.late.map(x => `<span class="cl l">${esc(x[0])}<small>${esc(x[1])}${x[2]?' · '+esc(x[2]):''}</small></span>`).join('')}${c.abs.map(x => `<span class="cl a">${esc(x[0])}<small>${esc(x[1])} · absent</small></span>`).join('')}</div>`;
+  if (c.notPosted.length) h += `<p class="hint">Not posted yet: ${esc(c.notPosted.join(', '))}</p>`;
+  h += AREAS.filter(ar => ar.seg === CI_SEG).sort((x, y) => myAreas().includes(y.id) - myAreas().includes(x.id)).map(ar => { const {rec, rows} = areaState(ar);
+    const done = rows.filter(x => x.st === 'r').length, tot = rows.filter(x => x.st !== 'lv').length;
+    return `<section class="card ciarea${canArea(ar.id)?' tap':''}${myAreas().includes(ar.id)?' mine':''}" data-area="${ar.id}" style="--c:${rec.at ? 'var(--sports)' : 'var(--muted)'}">
+      <div class="card-h"><span class="dot"></span><h2>${esc(ar.t)}${ar.secs ? `<small class="secs">${esc(ar.secs.join(' · '))}</small>` : ''}</h2><span class="when">${rec.at ? `${done}/${tot} · ${esc(rec.at)}` : 'Not posted'}</span></div>
+      <div class="card-b">${rows.map(x => `<span class="chip ci-${x.st || 'p'}">${ar.seg === 'cls' && secTag(x.n) ? `<b class="sec">${esc(secTag(x.n))}</b>` : ''}${esc(x.n)}${x.st && x.st !== 'lv' ? `<i>${x.st==='r' ? '✓' : ST_LABEL[x.st]}${x.t?' '+esc(x.t):''}</i>` : x.st === 'lv' ? '<i>On leave</i>' : ''}</span>`).join('')}
+      ${canArea(ar.id) ? `<span class="ciedit">✎ ${rec.at ? 'Update' : 'Mark check-in'}</span>` : ''}<small class="ciby">${areaBy(ar) ? 'Incharge: ' + esc(areaBy(ar)) : (ar.seg === 'cls' ? 'PL / incharge not set – tap, then ✎ Edit names' : '')} · ${areaNames(ar).length} names</small></div></section>`; }).join('');
+  if (CI_SEG === 'cls') h = h.replace('<p class="hint">Not posted', '<p class="hint">Starts with each section\'s class teacher – add subject teachers with ✎ Edit names. Not posted');
+  h += `<div class="nbtns"><button class="btn ghost" id="ciCopy">Copy all for WhatsApp</button></div>`;
+  return h;
+}
+function areaWa(ar){
+  const {rows} = areaState(ar);
+  const r = rows.filter(x => x.st === 'r'), la = rows.filter(x => x.st === 'l' || x.st === 'a');
+  const nm = x => (ar.seg === 'cls' && secTag(x.n) ? secTag(x.n) + ' – ' : '') + x.n;
+  return `*${ar.t.toUpperCase()} – Reached*\n` + (r.map(x => `• ${nm(x)}${x.t?' ('+x.t+')':''}`).join('\n') || '• —') +
+    `\n\n*Late/Absent:*\n` + (la.map(x => `• ${nm(x)} (${ST_LABEL[x.st]}${x.t?' '+x.t:''})`).join('\n') || 'None') + '\n';
+}
+let CI = null;
+function openCI(id){
+  const ar = AREAS.find(a => a.id === id); if (!ar) return;
+  const {rows} = areaState(ar);
+  CI = {ar, rows: rows.map(x => ({...x})), list: [...areaNames(ar)], by: areaBy(ar), edit: false, dirty: false};
+  $('#ciTitle').textContent = ar.t + ' · ' + nice(DAY);
+  if (ar.seg === 'cls' && !CI.by && isAdmin()) CI.edit = true;
+  $('#ciAdd').value = ''; $('#ciBy').value = CI.by;
+  drawCI(); $('#ci').hidden = false; document.body.style.overflow = 'hidden';
+}
+function drawCI(){
+  $('#ciSheet').classList.toggle('editing', CI.edit);
+  $('#ciEdit').textContent = CI.edit ? '✓ Done editing' : '✎ Edit names';
+  $('#ciAdd').placeholder = CI.edit ? 'Add a name to this list' : 'Add another name (today only)';
+  $('#ciRows').innerHTML = CI.rows.map((x,i) => `<div class="cirow${x.st==='lv'?' dim':''}"><div class="cin"><b>${CI.ar.seg === 'cls' && secTag(x.n) ? `<span class="sec">${esc(secTag(x.n))}</span> ` : ''}${esc(x.n)}</b>${x.t?`<small>${esc(x.t)}</small>`:''}${x.st==='lv'?'<small>On leave today</small>':''}${CI.edit && !CI.list.some(n => key(n) === key(x.n)) ? '<small>Today only</small>' : ''}</div>
+    ${CI.edit ? `<button type="button" class="rm" data-cirm="${i}">× Remove</button>` : `<div class="seg">${['r','l','a'].map(k => `<button type="button" class="sgb ${k}${x.st===k?' on':''}" data-ci="${i}:${k}">${ST_LABEL[k]}</button>`).join('')}</div>`}</div>`).join('');
+  const c = CI.rows.filter(x => x.st === 'r').length;
+  $('#ciCount').textContent = `${c} of ${CI.rows.filter(x => x.st !== 'lv').length} reached`;
+}
+function closeCI(){ $('#ci').hidden = true; document.body.style.overflow = ''; CI = null; }
+$('#ci').addEventListener('click', e => {
+  const b = e.target.closest('[data-ci]');
+  const rm = e.target.closest('[data-cirm]');
+  if (rm){ const x = CI.rows[+rm.dataset.cirm]; CI.rows.splice(+rm.dataset.cirm, 1); CI.list = CI.list.filter(n => key(n) !== key(x.n)); CI.dirty = true; drawCI(); return; }
+  if (b){ const [i,k] = b.dataset.ci.split(':'); const x = CI.rows[+i];
+    if (x.st === k){ x.st = x.lv && !x.lv.late ? 'lv' : ''; x.t = ''; } else { x.st = k; x.t = k === 'a' ? '' : (x.t || nowHM()); }
+    drawCI(); return; }
+  if (e.target === $('#ci')) closeCI();
+});
+$('#ciAll').onclick = () => { const t = nowHM(); CI.rows.forEach(x => { if (!x.st) { x.st = 'r'; x.t = t; } }); drawCI(); };
+$('#ciAddBtn').onclick = () => { const n = $('#ciAdd').value.trim(); if (!n) return;
+  if (CI.edit){ if (!CI.list.some(x => key(x) === key(n))){ CI.list.push(n); CI.dirty = true; } if (!CI.rows.some(x => key(x.n) === key(n))) CI.rows.push({n, st:'', t:''}); }
+  else if (!CI.rows.some(x => key(x.n) === key(n))) CI.rows.push({n, st:'r', t:nowHM()});
+  $('#ciAdd').value = ''; drawCI(); };
+$('#ciEdit').onclick = () => { CI.edit = !CI.edit; drawCI(); };
+$('#ciBy').addEventListener('input', () => { CI.by = $('#ciBy').value.trim(); CI.dirty = true; });
+$('#ciClose').onclick = closeCI;
+function attPatch(day, id, rows){
+  const s = {}; rows.forEach(x => { if (x.st && x.st !== 'lv') s[x.n] = {st: x.st, ...(x.t ? {t: x.t} : {})}; });
+  return {day, id, rec: {s, at: nowHM()}};
+}
+function applyAtt(base, pt){
+  const next = JSON.parse(JSON.stringify(base));
+  const d = next[pt.day] = next[pt.day] || blank(); d.att = d.att || {}; d.att[pt.id] = pt.rec;
+  return next;
+}
+$('#ciSave').onclick = async () => {
+  const pt = attPatch(DAY, CI.ar.id, CI.rows);
+  if (CI.dirty) pt.roster = {p: CI.list, by: CI.by || CI.ar.by || ''};
+  try { sessionStorage.setItem('dutyPendingAtt', JSON.stringify(pt)); } catch(e){}
+  await save(applyAtt(DAILY, pt), DAY, $('#ciSave'), pt.roster ? {...ROSTER, [pt.id]: pt.roster} : null);
+};
+$('#ciCopyOne').onclick = async () => { const tmp = {...DAILY}; const pt = attPatch(DAY, CI.ar.id, CI.rows); const keep = DAILY; DAILY = applyAtt(DAILY, pt); const t = areaWa(CI.ar); DAILY = keep;
+  try { await navigator.clipboard.writeText(t); toast('Copied – paste it in WhatsApp'); } catch(e){ toast('Could not copy on this device'); } };
+$('#main').addEventListener('click', async e => {
+  if (e.target.closest('#ciCopy')){ const t = `*${CI_SEG === 'cls' ? 'Teachers check-in' : 'Duty check-in'} – ${nice(DAY)}*\n\n` + AREAS.filter(a => a.seg === CI_SEG).map(areaWa).join('\n');
+    try { await navigator.clipboard.writeText(t); toast('Copied – paste it in WhatsApp'); } catch(err){ toast('Could not copy on this device'); } return; }
+  const sg = e.target.closest('[data-ciseg]'); if (sg){ CI_SEG = sg.dataset.ciseg; try { sessionStorage.setItem('dutyCiSeg', CI_SEG); } catch(err){} render('checkin'); return; }
+  const nv = e.target.closest('[data-cinav]'); if (nv){ setDay(addDays(DAY, +nv.dataset.cinav)); return; }
+  const a = e.target.closest('.ciarea'); if (a && canArea(a.dataset.area)) openCI(a.dataset.area);
+}, true);
+
+function whoBar(){
+  const el = $('#whobar'); if (!el) return;
+  if (!CAN_EDIT){
+    el.hidden = false;
+    el.innerHTML = `<label>Edit PIN <input id="pinIn" type="password" inputmode="numeric" autocomplete="off" style="width:7em"></label> <button type="button" class="btn ghost" id="pinBtn">Unlock editing</button> <small>Staff can view. In-charges enter the PIN to edit.</small>`;
+    const go = async () => { const v = $('#pinIn').value.trim(); if (!v) return; $('#pinBtn').textContent = 'Checking…';
+      try { if (await GS.unlock(v)) { await gsEnable(); toast('Editing unlocked on this phone'); } else { toast('Wrong PIN'); whoBar(); } } catch(e){ toast('Could not check PIN. Try again.'); whoBar(); } };
+    $('#pinBtn').onclick = go; $('#pinIn').onkeydown = e => { if (e.key === 'Enter') go(); };
+    return;
+  }
+  if (IS_OWNER){ el.hidden = true; return; }
+  el.hidden = false;
+  const role = isAdmin() ? 'Can change everything' : myAreas().length ? 'Can mark: ' + AREAS.filter(a => myAreas().includes(a.id)).map(a => a.t).join(', ') : WHO ? 'View only' : '';
+  el.innerHTML = `<label>You are <select id="whoSel"><option value="">Select your name…</option>${[...STAFF_LIST.map(x => x[0]), ...EXTRA_NAMES].sort().map(n => `<option${sameP(WHO, n) && key(WHO) === key(n) ? ' selected' : ''}>${esc(n)}</option>`).join('')}</select></label>${role ? `<small>${esc(role)}</small>` : '<small>Pick your name to see your edit buttons</small>'}`;
+  $('#whoSel').onchange = e => { WHO = e.target.value; try { localStorage.setItem('dutyWho', WHO); } catch(err){}
+    if (myAreas().some(id => AREAS.find(a => a.id === id).seg === 'cls') && !myAreas().some(id => AREAS.find(a => a.id === id).seg === 'duty')) CI_SEG = 'cls';
+    whoBar(); renderNotice(); render(TAB); };
+}
+
+/* ---------- WhatsApp note parser ---------- */
+function canon(n, cat){
+  n = n.replace(/\(.*?\)/g,'').replace(/\b(ma['’]?am|mam|madam|sir)\b\.?/ig,'').replace(/[*_~]/g,'').replace(/\s+/g,' ').trim();
+  const s = resolve(n, cat); return s ? s[0] : n;
+}
+const catOfName = (n, fallback) => { const s = resolve(n, fallback); return s ? s[2] : (fallback || 'Teacher'); };
+function parseNote(txt){
+  const out = {date:null, leave:[], cover:[], adj:[]};
+  let sec = null, cat = 'Teacher', LATE_SEC = false;
+  const catOf = s => /teach/i.test(s) ? 'Teacher' : /admin|\bpl\b/i.test(s) ? 'Admin & PL' : /^\W*cm\b|class\s*manager/i.test(s) ? 'CM' : /floor/i.test(s) ? 'Floor Manager' : /coach|instructor|sport|music|dance/i.test(s) ? 'Activity' : /activit/i.test(s) ? 'Activity' : null;
+  const addLeave = raw => raw.split(/,|\band\b/i).forEach(p => {
+    const half = /half/i.test(p), lm = p.match(/\blate\b(?:[^0-9)]*(\d{1,2}[:.]\d{2}|\d{1,2}\s*(?:am|pm)))?/i), n = canon(p.replace(/^[\s*•\-–·]+/,'').replace(/\b(late|till|upto|up to|by|arriv\w*|coming)\b.*$/i,'').replace(/\d.*$/,'').replace(/[\-–:]+\s*$/,''), cat);
+    const tm2 = p.match(/(\d{1,2}[:.]\d{2}|\d{1,2}\s*(?:am|pm))/i);
+    const late = lm ? (lm[1] ? lm[1].replace('.',':').replace(/\s+/g,'') : true) : LATE_SEC ? (tm2 ? tm2[1].replace('.',':').replace(/\s+/g,'') : true) : null;
+    if (n.length > 1 && !out.leave.some(l => key(l.n) === key(n))) out.leave.push({n, k:catOfName(n, cat), ...(half?{half:true}:{}), ...(late?{late}:{})});
+  });
+  txt.split(/\r?\n/).forEach(line0 => {
+    const line = line0.replace(/[*_~]/g,'').trim();
+    if (!line) return;
+    const dm = line.match(/(\d{1,2})\s*[\/.\-]\s*(\d{1,2})(?:\s*[\/.\-]\s*(\d{2,4}))?/);
+    if (dm && !out.date && (/adjust|leave|date|mon|tue|wed|thu|fri|sat|sun/i.test(line) || !/^\s*\d{1,2}\s*[a-z]/i.test(line))){
+      const y = dm[3] ? (dm[3].length === 2 ? 2000 + +dm[3] : +dm[3]) : new Date().getFullYear();
+      if (+dm[2] >= 1 && +dm[2] <= 12 && +dm[1] >= 1 && +dm[1] <= 31) out.date = y + '-' + pad(dm[2]) + '-' + pad(dm[1]);
+    }
+    if (/on\s*leave/i.test(line)){ sec = 'leave'; LATE_SEC = false; return; }
+    if (/^late\s*(comers?|staff|arrivals?)?\s*[:\-–]?\s*$/i.test(line)){ sec = 'leave'; cat = 'Teacher'; LATE_SEC = true; return; }
+    if (/adjust|absentee/i.test(line)){ sec = 'adj'; return; }
+    if (/cover/i.test(line) && !/for/i.test(line)){ sec = 'cover'; return; }
+    const cov = line.match(/^[\s*•\-–·]*(.+?)\s+(?:for|in place of|instead of)\s+(.+?)(?:\s*[–:\-]\s*(.+))?$/i);
+    if (cov && sec !== 'adj'){ out.cover.push({n:canon(cov[1]), f:canon(cov[2]), ...(cov[3]?{d:cov[3].trim()}:{})}); return; }
+    if (sec === 'leave'){
+      const c = catOf(line);
+      if (c){ cat = c; const rest = line.replace(/^[^\-–—:]*[\-–—:]\s*/, ''); if (rest !== line && /[a-z]/i.test(rest)) addLeave(rest); return; }
+      if (/^[\s*•\-–·]+$/.test(line)) return;
+      if (/[\-–—:]\s*$/.test(line)){ cat = line.replace(/[\-–—:]+\s*$/,'').trim(); return; }
+      addLeave(line); return;
+    }
+    if (sec === 'adj'){
+      const m = line.match(/^[\s*•·]*([0-9]{1,2}\s*[a-z]?\b[^\-–:]*?)\s*[\-–:]\s*(.+)$/i);
+      if (!m) return;
+      let cls = m[1].replace(/\s+/g,'').toUpperCase(), rest = m[2], time = '';
+      const tm = rest.match(/\((.*?)\)/); if (tm){ time = tm[1].replace(/\s*&\s*/g,' & ').replace(/(\d)\s*-\s*(\d)/g,'$1–$2').trim(); rest = rest.replace(tm[0],''); }
+      const parts = rest.split(/\s+[\-–]\s+|\s*→\s*/).map(s => s.trim()).filter(Boolean);
+      if (parts.length >= 2) out.adj.push({c:cls, b:canon(parts[parts.length-1]), f:canon(parts[0]), t:time});
+      else out.adj.push({c:cls, b:parts[0] ? parts[0].replace(/\s+/g,' ').trim() : '', t:time});
+    }
+  });
+  return out;
+}
+
+/* ---------- editor ---------- */
+let CAN_EDIT = false, ART = null, ED = null;
+const blank = () => ({leave:[], cover:[], adj:[]});
+function openEditor(day){
+  ED = {date: day, ...JSON.parse(JSON.stringify(DAILY[day] || blank()))};
+  ['leave','cover','adj'].forEach(k => ED[k] = ED[k] || []);
+  $('#ed').hidden = false; document.body.style.overflow = 'hidden';
+  $('#paste').value = ''; $('#pickQ').value = ''; PICK_CAT = 'Teacher';
+  drawEditor();
+}
+function closeEditor(){ $('#ed').hidden = true; document.body.style.overflow = ''; ED = null; }
+function row(kind, i, fields){
+  return `<div class="erow" data-k="${kind}" data-i="${i}">${fields}<button class="x" data-del="${kind}:${i}" aria-label="Remove">×</button></div>`;
+}
+const inp = (f, v, ph, list) => `<input data-f="${f}" value="${esc(v||'')}" placeholder="${ph}" ${list?`list="${list}"`:''} autocomplete="off">`;
+let PICK_CAT = 'Teacher';
+function drawPicker(){
+  $('#pickTabs').innerHTML = CATS.map(c => { const n = ED.leave.filter(l => (resolve(l.n, l.k)||[])[2] === c).length;
+    return `<button type="button" class="ptab" data-cat="${esc(c)}" aria-selected="${c===PICK_CAT}">${esc(CAT_LABEL[c])}${n?` <b>${n}</b>`:''}</button>`; }).join('') +
+    `<button type="button" class="ptab" data-cat="SEG" aria-selected="${PICK_CAT==='SEG'}">Co-curricular</button>`;
+  const f = key($('#pickQ').value);
+  const onKeys = new Set(ED.leave.map(l => key(l.n)));
+  const pk = n => { const st = STAFF_BY.get(key(n)); return `<button type="button" class="pk${onKeys.has(key(n))?' on':''}" data-pick="${esc(n)}"><b>${esc(n)}</b><small>${esc(st?st[1]:'Co-curricular')}</small></button>`; };
+  if (!f && PICK_CAT === 'SEG'){
+    $('#pickList').innerHTML = SEGS.map(([seg, list]) => `<div class="pseg">${esc(seg)}</div>` + list.filter(([,ns]) => ns.length).map(([a, ns]) => ns.map(n => pk(n).replace('<small>', `<small>${esc(a)} · `)).join('')).join('')).join('');
+    return;
+  }
+  const list = STAFF_LIST.filter(s => f ? key(s[0]).includes(f) : s[2] === PICK_CAT);
+  $('#pickList').innerHTML = list.map(s => `<button type="button" class="pk${onKeys.has(key(s[0]))?' on':''}" data-pick="${esc(s[0])}"><b>${esc(s[0])}</b><small>${esc(s[1])}</small></button>`).join('') || '<p class="none">No match.</p>';
+}
+function drawEditor(){
+  $('#edDate').value = ED.date;
+  drawPicker();
+  $('#edLeave').innerHTML = ED.leave.map((l,i) => { const st = resolve(l.n, l.k);
+    return st && key(st[0]) === key(l.n)
+      ? row('leave', i, `<input type="hidden" data-f="n" value="${esc(l.n)}"><input type="hidden" data-f="k" value="${esc(st[2])}"><div class="who-n"><b>${esc(l.n)}</b><small>${esc(st[1])} · ${esc(CAT_LABEL[st[2]])}</small></div>` +
+          `<select data-f="st" class="st">${[['','Full day'],['half','Half day'],['late','Late']].map(([v,t]) => `<option value="${v}"${stKey(l)===v?' selected':''}>${t}</option>`).join('')}</select>` + (l.late ? `<input data-f="lt" class="lt-in" value="${esc(typeof l.late==='string'?l.late:'')}" placeholder="till e.g. 8:00" inputmode="numeric">` : ''))
+      : row('leave', i, inp('n', l.n, 'Name', 'staffnames') +
+          `<select data-f="k">${CATS.concat(CATS.includes(l.k)||!l.k?[]:[l.k]).map(c => `<option value="${esc(c)}"${c===(l.k||'Teacher')?' selected':''}>${esc(CAT_LABEL[c]||c)}</option>`).join('')}</select>` +
+          `<select data-f="st" class="st">${[['','Full day'],['half','Half day'],['late','Late']].map(([v,t]) => `<option value="${v}"${stKey(l)===v?' selected':''}>${t}</option>`).join('')}</select>` + (l.late ? `<input data-f="lt" class="lt-in" value="${esc(typeof l.late==='string'?l.late:'')}" placeholder="till e.g. 8:00" inputmode="numeric">` : '')); }).join('') || '<p class="none">No one selected yet – tap names above.</p>';
+  $('#leaveCnt').textContent = ED.leave.length ? ED.leave.length + ' selected' : '';
+  $('#edCover').innerHTML = ED.cover.map((c,i) => row('cover', i,
+    inp('n', c.n, 'Covering (name)', 'staffnames') + inp('f', c.f, 'For (on leave)', 'staffnames') + inp('d', c.d, 'Duty (optional)', 'duties'))).join('') || '<p class="none">No covers yet.</p>';
+  const actSel = a => `<select data-f="a">${SEGS.map(([seg, list]) => `<optgroup label="${esc(seg)}">` + list.map(([x]) => `<option${x===a.a?' selected':''}>${esc(x)}</option>`).join('') + '</optgroup>').join('')}</select>`;
+  $('#edAct').innerHTML = ED.adj.map((a,i) => a.a ? row('adj', i, actSel(a) + inp('b', a.b, 'Adjusted by', 'staffnames') + inp('c', a.c, 'Class / group') + inp('t', a.t, 'Time') + inp('f', a.f, 'For (optional)', 'staffnames')) : '').join('') || '<p class="none">No activity adjustments yet.</p>';
+  $('#edAdj').innerHTML = ED.adj.map((a,i) => a.a ? '' : row('adj', i,
+    inp('c', a.c, 'Class') + inp('b', a.b, 'Adjusted by', 'staffnames') + inp('t', a.t, 'Time') + inp('f', a.f, 'For (optional)', 'staffnames'))).join('') || '<p class="none">No class adjustments yet.</p>';
+}
+function readEditor(){
+  ED.date = $('#edDate').value || ED.date;
+  document.querySelectorAll('#ed .erow').forEach(r => {
+    const o = ED[r.dataset.k][+r.dataset.i]; if (!o) return;
+    r.querySelectorAll('[data-f]').forEach(el => {
+      const f = el.dataset.f;
+      if (f === 'st'){ const v = el.value; delete o.half; if (v === 'half') o.half = true; if (v === 'late') o.late = o.late || true; else delete o.late; return; }
+      if (f === 'lt'){ if (o.late) o.late = el.value.trim() || true; return; }
+      if (el.type === 'checkbox'){ if (el.checked) o[f] = true; else delete o[f]; }
+      else { const v = el.value.trim(); if (v) o[f] = v; else delete o[f]; }
+    });
+  });
+}
+$('#ed').addEventListener('click', e => {
+  const pt = e.target.closest('[data-cat]');
+  if (pt){ PICK_CAT = pt.dataset.cat; $('#pickQ').value = ''; drawPicker(); return; }
+  const pk = e.target.closest('[data-pick]');
+  if (pk){ readEditor(); const n = pk.dataset.pick, i = ED.leave.findIndex(l => key(l.n) === key(n));
+    if (i >= 0) ED.leave.splice(i,1); else ED.leave.push({n, k: (STAFF_BY.get(key(n)) || [,, 'Activity'])[2]});
+    drawEditor(); return; }
+  const del = e.target.closest('[data-del]');
+  if (del){ readEditor(); const [k,i] = del.dataset.del.split(':'); ED[k].splice(+i,1); drawEditor(); return; }
+  const add = e.target.closest('[data-add]');
+  if (add){ readEditor(); const t = add.dataset.add, k = t === 'act' ? 'adj' : t; ED[k].push(t==='leave'?{n:'',k:'Teacher'}:t==='act'?{a:ACTS[0].a}:{}); drawEditor();
+    const rows = document.querySelectorAll(t === 'act' ? '#edAct .erow' : t === 'adj' ? '#edAdj .erow' : `#ed .erow[data-k="${k}"]`); rows[rows.length-1]?.querySelector('input')?.focus(); }
+});
+$('#edClose').onclick = closeEditor;
+$('#pickQ').addEventListener('input', drawPicker);
+$('#ed').addEventListener('change', e => { if (e.target.matches('select.st')){ readEditor(); drawEditor(); } });
+$('#edDate').addEventListener('change', () => {
+  readEditor(); const d = $('#edDate').value;
+  const hasTyped = ED.leave.length || ED.cover.length || ED.adj.length;
+  if (!hasTyped && DAILY[d]) { ED = {date:d, ...JSON.parse(JSON.stringify(DAILY[d]))}; drawEditor(); }
+});
+$('#readNote').onclick = () => {
+  const p = parseNote($('#paste').value);
+  if (!p.leave.length && !p.adj.length && !p.cover.length){ toast('Could not find names in that note'); return; }
+  readEditor();
+  if (p.date && p.date !== ED.date) ED = {date: p.date, ...JSON.parse(JSON.stringify(DAILY[p.date] || blank()))};
+  ['leave','cover','adj'].forEach(k => ED[k] = ED[k] || []);
+  const merge = (arr, items, k) => items.forEach(it => { if (!arr.some(x => k(x) === k(it))) arr.push(it); });
+  merge(ED.leave, p.leave, x => key(x.n));
+  merge(ED.cover, p.cover, x => key(x.n)+'>'+key(x.f));
+  merge(ED.adj, p.adj, x => x.c+'>'+key(x.b));
+  drawEditor();
+  toast(`Read ${p.leave.length} on leave, ${p.adj.length} adjustments${p.cover.length?', '+p.cover.length+' covers':''}. Check and save.`);
+};
+$('#edDelete').onclick = () => { if (!ED) return; ED.leave = []; ED.cover = []; ED.adj = []; drawEditor(); toast('Cleared – press Save to apply'); };
+$('#edSave').onclick = async () => {
+  readEditor();
+  const clean = {
+    leave: ED.leave.filter(l => l.n).map(l => { const n = canon(l.n, l.k); return {n, k: resolve(n) ? resolve(n)[2] : (l.k||'Teacher'), ...(l.half?{half:true}:{}), ...(l.late?{late:l.late}:{})}; }),
+    cover: ED.cover.filter(c => c.n && c.f).map(c => ({n:canon(c.n), f:canon(c.f, (ED.leave.find(l => sameName(c.f, l.n))||{}).k), ...(c.d?{d:c.d}:{})})),
+    adj: ED.adj.filter(a => a.c || a.b || a.a).map(a => ({c:a.c||'', ...(a.a?{a:a.a}:{}), b:a.b||'', ...(a.t?{t:a.t}:{}), ...(a.f?{f:canon(a.f)}:{})}))
+  };
+  const next = {...DAILY};
+  const att = (DAILY[ED.date] || {}).att; if (att) clean.att = att;
+  if (clean.leave.length || clean.cover.length || clean.adj.length || att) next[ED.date] = clean; else delete next[ED.date];
+  const cutoff = addDays(ymd(new Date()), -60);
+  Object.keys(next).forEach(d => { if (d < cutoff) delete next[d]; });
+  await save(next, ED.date, $('#edSave'));
+};
+async function save(next, day, btn, roster){
+  if (!ART){ toast('Enter the edit PIN to save'); return; }
+  btn = btn || $('#edSave'); const label = btn.textContent; btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    try { sessionStorage.setItem('dutyDay', day); } catch(e){}
+    await ART.publish(next, roster || ROSTER);
+    if (roster) ROSTER = roster;
+    try { sessionStorage.removeItem('dutyPendingAtt'); } catch(e){}
+    DAILY = next; closeEditor(); closeQA(); if (CI) closeCI(); setDay(day); toast('Saved for everyone');
+  } catch(e){
+    const c = e && e.code;
+    if (c === 'conflict') { GS.refresh(true); } if (c === 'conflict') toast(sessionStorage.getItem('dutyPendingAtt') ? 'Someone else saved at the same time – your check-in will be saved again after reload.' : 'Someone else saved just now – reloading. Please check and save again.');
+    else if (c === 'not_writer' || c === 'not_granted' || c === 'not_declared' || c === 'consent_required' || c === 'capability_disabled'){ CAN_EDIT = false; whoBar(); closeEditor(); closeQA(); renderNotice(); toast('You can view this chart but not edit it.'); }
+    else if (c === 'rate_limited') toast('Too many saves – wait a minute and try again.');
+    else { try { sessionStorage.removeItem('dutyPendingAtt'); } catch(e2){} toast('Could not save. Try again.'); }
+  } finally { btn.disabled = false; btn.textContent = label; }
+}
+function buildPage(data, roster){
+  const json = JSON.stringify(data).replace(/</g,'\\u003c');
+  const S = '<' + '/script>';
+  return '<!DOCTYPE html>\n<html lang="en">\n<head>\n' + $('#headmeta').textContent.trim() + '\n<style id="css">' + $('#css').textContent + '</style>\n</head>\n<body>\n' +
+    $('#bodytpl').innerHTML.trim() + '\n<template id="bodytpl">' + $('#bodytpl').innerHTML + '</template>\n<script type="text/plain" id="headmeta">' + $('#headmeta').textContent + S +
+    '\n<script type="application/json" id="daily">' + json + S + '\n<script type="application/json" id="roster">' + JSON.stringify(roster || {}).replace(/</g,'\\u003c') + S + '\n<script id="app">' + $('#app').textContent + S + '\n</body>\n</html>\n';
+}
+
+$('#staffnames').innerHTML = STAFF_LIST.map(s => `<option value="${esc(s[0])}">${esc(s[1])}</option>`).join('');
+$('#classes').innerHTML = Object.keys(CT).map(c => `<option value="${c}">${esc(CT[c])}</option>`).join('');
+$('#duties').innerHTML = [...new Set(entries.map(e => e.duty + ' (' + e.shift + ')'))].map(d => `<option value="${esc(d)}">`).join('');
+
+/* ---------- boot ---------- */
+try { const sg = sessionStorage.getItem('dutyCiSeg'); if (sg === 'cls' || sg === 'duty') CI_SEG = sg; } catch(e){}
+let bootTab = nowTab; try { if (sessionStorage.getItem('dutyTab') === 'checkin') bootTab = 'checkin'; } catch(e){}
+try { const d = sessionStorage.getItem('dutyDay'); if (d && /^\d{4}-\d\d-\d\d$/.test(d)) { DAY = d; LV = leaveMap(); sessionStorage.removeItem('dutyDay'); } } catch(e){}
+renderNotice();
+render(bootTab);
+
+/* ---------- Google Sheet connection (Apps Script) ---------- */
+const GS = (() => {
+  const run = (fn, ...args) => new Promise((ok, bad) => google.script.run.withSuccessHandler(ok).withFailureHandler(e => {
+    const m = String(e && e.message || e); const err = new Error(m);
+    err.code = /conflict/i.test(m) ? 'conflict' : /pin/i.test(m) ? 'not_writer' : 'error'; bad(err); })[fn](...args));
+  let VER = window.__B.ver, PIN = '';
+  try { PIN = localStorage.getItem('dutyPin') || ''; } catch(e){}
+  const api = {
+    run,
+    publish: async (daily, roster) => { const r = await run('saveAll', daily, roster, VER, PIN); VER = r.ver; return r; },
+    async refresh(force){
+      try {
+        if (!force && (!$('#ed').hidden || !$('#qa').hidden || !$('#ci').hidden)) return;
+        const v = await run('getVer'); if (!force && v === VER) return;
+        const all = await run('getAll'); VER = all.ver; DAILY = all.daily || {}; ROSTER = all.roster || {};
+        setDay(DAY);
+      } catch(e){}
+    },
+    async unlock(pin){
+      const ok = await run('checkPin', pin);
+      if (ok){ PIN = pin; try { localStorage.setItem('dutyPin', pin); } catch(e){} }
+      return ok;
+    },
+    lock(){ PIN = ''; try { localStorage.removeItem('dutyPin'); } catch(e){} ART = null; CAN_EDIT = false; document.body.classList.remove('can-edit'); whoBar(); renderNotice(); render(TAB); },
+    get pin(){ return PIN; }
+  };
+  return api;
+})();
+async function gsEnable(){
+  ART = GS; CAN_EDIT = true;
+  whoBar();
+  document.body.classList.toggle('can-edit', CAN_ALL()); renderNotice(); render(TAB);
+  let pt = null; try { pt = JSON.parse(sessionStorage.getItem('dutyPendingAtt') || 'null'); } catch(e){}
+  if (pt && pt.day && pt.id){ toast('Re-saving your check-in…'); await save(applyAtt(DAILY, pt), pt.day, $('#ciSave'), pt.roster ? {...ROSTER, [pt.id]: pt.roster} : null); if (pt.day === DAY) render('checkin'); }
+}
+(async () => {
+  const st = window.__B.settings || {};
+  if (st.Title) { const h = document.querySelector('h1'); if (h) h.textContent = st.Title; }
+  if (st.Month) { const m = document.querySelector('.month'); if (m) m.textContent = st.Month; }
+  whoBar();
+  if (GS.pin) { try { if (await GS.unlock(GS.pin)) await gsEnable(); else GS.lock(); } catch(e){} }
+  setInterval(() => { if (!document.hidden) GS.refresh(false); }, 45000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) GS.refresh(false); });
+})();
+</script>
+</body>
+</html>
