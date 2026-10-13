@@ -296,7 +296,7 @@ body.can-edit .chip,body.can-edit .bus{cursor:pointer}
     </section>
     <section>
       <h3>Paste WhatsApp note</h3>
-      <p class="hint">Paste your usual “Staff ON Leave / Adjustment” message and tap Read. Names, half days, class adjustments and the date are filled in below. Write a cover as “Poonam Gaur for Upender”.</p>
+      <p class="hint">Paste WhatsApp messages and tap Read – the usual “Staff ON Leave / Adjustment” note, messages sent from this chart, and floor / class check-in reports (“Reached … Late/Absent”). You can paste several at once. Then tap Save.</p>
       <textarea id="paste" placeholder="Staff ON Leave
 Teacher
 * Swati
@@ -389,7 +389,7 @@ Saturday Adjustment - 26/09
     </section>
     <section>
       <h3>Paste WhatsApp note</h3>
-      <p class="hint">Paste your usual “Staff ON Leave / Adjustment” message and tap Read. Names, half days, class adjustments and the date are filled in below. Write a cover as “Poonam Gaur for Upender”.</p>
+      <p class="hint">Paste WhatsApp messages and tap Read – the usual “Staff ON Leave / Adjustment” note, messages sent from this chart, and floor / class check-in reports (“Reached … Late/Absent”). You can paste several at once. Then tap Save.</p>
       <textarea id="paste" placeholder="Staff ON Leave
 Teacher
 * Swati
@@ -450,7 +450,7 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbyxWYwmvDDlIR6VjS2W4209
 (function(){
   const api = new URLSearchParams(location.search).get('api') || API_URL;
   const call = (fn, args) => fetch(api, {method:'POST', redirect:'follow', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({fn, args: args || []})})
-    .then(r => r.json()).then(j => { if (!j.ok) throw new Error(j.err || 'error'); return j.v; });
+    .then(r => r.text()).then(t => { try { return JSON.parse(t); } catch(x){ const m = t.replace(/<style[\s\S]*?<\/style>/gi,'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().slice(0,160); throw new Error('Google replied: ' + (m || 'empty page')); } }).then(j => { if (!j.ok) throw new Error(j.err || 'error'); return j.v; });
   window.google = {script:{get run(){
     let ok = () => {}, bad = () => {};
     const p = new Proxy({}, {get: (t, k) => k === 'withSuccessHandler' ? (h => { ok = h; return p; })
@@ -466,7 +466,7 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbyxWYwmvDDlIR6VjS2W4209
     const m = document.getElementById('bootmsg'); if (m) m.remove();
     const sc = document.createElement('script'); sc.id = 'app'; sc.textContent = document.getElementById('appsrc').textContent;
     document.body.appendChild(sc);
-  }).catch(e => { const m = document.getElementById('bootmsg'); if (m) m.remove(); status('Could not load the duty chart. Check your internet and reload. <button onclick="location.reload()">Reload</button>'); });
+  }).catch(e => { const m = document.getElementById('bootmsg'); if (m) m.remove(); const why = String(e && e.message || e).replace(/[<>&]/g,''); status('Could not load the duty chart. <button onclick="location.reload()">Reload</button><br><small style="color:#888">Reason: ' + why + '</small>'); });
   if (!/^https:\/\/script\.google\.com\//.test(api)) { document.addEventListener('DOMContentLoaded', () => status('Set API_URL at the top of this file to your Apps Script web app link.')); return; }
   document.addEventListener('DOMContentLoaded', () => { status('Loading duty chart…'); start(); });
 })();
@@ -487,7 +487,7 @@ const COL = {gate:'var(--gate)',transport:'var(--transport)',disc:'var(--disc)',
 const CATS = ['Teacher','Admin & PL','CM','Floor Manager','Activity'];
 const CAT_LABEL = {'Teacher':'Teachers','Admin & PL':'Admin & PL','CM':'Class Managers','Floor Manager':'Floor Managers','Activity':'Coaches & Instructors'};
 /* [full name, designation, category] – from the Members list, 25 Sep 2026 */
-const STAFF_LIST = [["Ajita Upadhyay", "Hindi Teacher", "Teacher"], ["Akash Gurjar", "Wushu Coach", "Activity"], ["Amit Sanwal", "Mathematics Teacher", "Teacher"], ["Anamika Shrimali", "Teacher", "Teacher"], ["Anita Sharma", "Hindi Teacher", "Teacher"], ["Anuradha Chaudhary", "Teacher", "Teacher"], ["Archana Choudhary", "German Teacher", "Teacher"], ["Asha Rao", "Floor Manager", "Floor Manager"], ["Ashok Suthar", "Content Designer", "Admin & PL"], ["Bhagyashree Rathore", "Assistant Teacher", "Teacher"], ["Bharti Ratawa", "Hindi Teacher", "Teacher"], ["Bhavyadeep Soni", "Keyboard Instructor", "Activity"], ["Bhawishya Joshi", "Lawn Tennis Coach", "Activity"], ["Bhupendra Yogi", "Acting Instructor", "Activity"], ["Bhuwan Bhatt", "Ukulele & Guitar Instructor", "Activity"], ["Chandan Soni", "Store Incharge", "Admin & PL"], ["Chandani Chayal", "Class Manager", "CM"], ["Chhavi Vinaik", "Teacher", "Teacher"], ["Deepali Tiwari", "Teacher", "Teacher"], ["Deepmala Rathore", "Teacher", "Teacher"], ["Devanshi Saini", "Teacher", "Teacher"], ["Diksha Singh Raghuwanshi", "Floor Manager", "Floor Manager"], ["Dilshad", "Teacher", "Teacher"], ["Divyanshi Jain", "Floor Manager", "Floor Manager"], ["Dr. Garima Khatri", "Program Leader", "Admin & PL"], ["Gauri Adhana", "Teacher", "Teacher"], ["Geeta Panwar", "Hindi Teacher", "Teacher"], ["Harsh Yadav", "Transport Manager", "Admin & PL"], ["Harshvardhan Soni", "Parents Relation Officer", "Admin & PL"], ["Himanshi Negi", "Computer Teacher", "Teacher"], ["Himanshu Singh Bhadoria", "Faculty – Informatics Practices", "Teacher"], ["Ishita", "Social Science Teacher", "Teacher"], ["Jai Pandla", "Operational Manager", "Admin & PL"], ["Jatin Sankhla", "Social Science Teacher", "Teacher"], ["Jitendra Karwa", "Karate Coach", "Activity"], ["Jitesh Mehendiratta", "Faculty – Accountancy", "Teacher"], ["Juhi Ahuja", "Teacher", "Teacher"], ["Jyotshna Jayan", "English Teacher", "Teacher"], ["Kanhaiya Lal Swami", "Cricket Coach", "Activity"], ["Kanika Gahlot", "Teacher", "Teacher"], ["Karishma Suthar", "Class Manager", "CM"], ["Kavita Gupta", "Abacus Instructor", "Activity"], ["Khushi Bhadani", "Assistant Teacher", "Teacher"], ["Komal Damani", "Teacher", "Teacher"], ["Komal Suthar", "Class Manager", "CM"], ["Kritika Pareek", "Wushu Coach", "Activity"], ["Lohit Tailong", "Taekwondo Coach", "Activity"], ["Madhu Mathur", "Mathematics Teacher", "Teacher"], ["Mahak Chaudhary", "Teacher", "Teacher"], ["Manisha Chauhan", "Class Manager", "CM"], ["Manisha Sharma", "Faculty – Economics", "Teacher"], ["Manmohan Singh", "Skating Coach", "Activity"], ["Mansi Singh Panwar", "Classical Dance Instructor", "Activity"], ["Mansi Soni", "Class Manager", "CM"], ["Mansi Yadav", "Teacher", "Teacher"], ["Megha Shekhawat", "Parents Relation Officer", "Admin & PL"], ["Monika Navani", "Program Leader", "Admin & PL"], ["Monika Rajpurohit", "Social Science Teacher", "Teacher"], ["Mukul Jangid", "Accountant", "Admin & PL"], ["Mukul Parihar", "Photography Instructor & Cinematographer", "Activity"], ["Nahida", "Head of Co-Curricular Activities", "Admin & PL"], ["Nandini Shekhawat", "Teacher", "Teacher"], ["Narendra Dara", "Office Exceutive", "Admin & PL"], ["Neelam Rajwani", "Culinary Skills Instructor", "Activity"], ["Neetu Dara", "Floor Manager", "Floor Manager"], ["Neha Kumari", "Mathematics Teacher", "Teacher"], ["Neha Sethia", "Program Leader", "Admin & PL"], ["Nisha", "Science Teacher", "Teacher"], ["Nishant Harsh", "Manager", "Admin & PL"], ["Niviya Singh Bhati", "Table Tennis Coach", "Activity"], ["Pallavi Joshi", "Science Teacher", "Teacher"], ["Pooja Chauhan", "Class Manager", "CM"], ["Pooja Sharma", "Teacher", "Teacher"], ["Poojal Shekhawat", "Teacher", "Teacher"], ["Poonam Gaur", "Hindi Teacher", "Teacher"], ["Poonam Rathore", "Teacher", "Teacher"], ["Poonam Sharda", "Program Leader", "Admin & PL"], ["Prashant Devra", "Graphic Designer", "Admin & PL"], ["Prashant Verma", "Basketball Coach", "Activity"], ["Preeti", "Hindi Teacher", "Teacher"], ["Preeti Jain", "Parents Relation Officer", "Admin & PL"], ["Priya Bagri", "Teacher", "Teacher"], ["Priya Shekhawat", "Teacher", "Teacher"], ["Priyanka Bhargava", "Medical Officer", "Admin & PL"], ["Priyanka Sand", "Teacher", "Teacher"], ["Priyanshi Bhojak", "English Teacher", "Teacher"], ["Radha Soni", "Social Science Teacher", "Teacher"], ["Raj Vyas", "Archery Coach", "Activity"], ["Rajeev Nagal", "Content Designer", "Admin & PL"], ["Ram Singh Rathore", "French Teacher", "Teacher"], ["Rashmi Rathore", "Program Leader", "Admin & PL"], ["Rashmi Singh", "Class Manager", "CM"], ["Reema Tiwari", "Teacher", "Teacher"], ["Rekha", "Teacher", "Teacher"], ["Renu Harsh", "English Teacher", "Teacher"], ["Renuka Tak", "Art Teacher", "Activity"], ["Richa Sharma", "Computer Teacher", "Teacher"], ["Ritanshu Sharma", "Cricket Coach", "Activity"], ["Ritika Purohit", "Science Teacher", "Teacher"], ["Saba Panwar", "Class Manager", "CM"], ["Sahil Kumar", "Shooting Coach", "Activity"], ["Sakil Gouri", "Western Dance Instructor", "Activity"], ["Sanjana Sarswat", "Floor Manager", "Floor Manager"], ["Sarita Saini", "Program Leader", "Admin & PL"], ["Saroj", "Teacher", "Teacher"], ["Shaan Siddiqui", "English Teacher", "Teacher"], ["Shailesh Joshi", "Social Science Teacher", "Teacher"], ["Shally Taneja", "Teacher", "Teacher"], ["Shikha Sharma", "Art Teacher", "Activity"], ["Shivangi Gupta", "Teacher", "Teacher"], ["Shivika Ranjan", "Arts & Textile Desigining Instructor", "Activity"], ["Shobha Sharma", "Hindi Teacher", "Teacher"], ["Shreya", "Science Teacher", "Teacher"], ["Shubhangi", "Dean - Academics", "Admin & PL"], ["Sonika Lalwani", "Teacher", "Teacher"], ["Sourabh Tripathi", "Floor Manager", "Floor Manager"], ["Suman Bishnoi", "Floor Manager", "Floor Manager"], ["Sunita Nirban", "Teacher", "Teacher"], ["Surender Yadav", "Chairperson", "Admin & PL"], ["Swati Sehgal", "English Teacher", "Teacher"], ["Tanushree Purohit", "Class Manager", "CM"], ["Tina Sangtani", "Teacher", "Teacher"], ["Tripti", "Hindi Teacher", "Teacher"], ["Upender Singh Shekhawat", "Class Manager", "CM"], ["Vahnisvari Bika", "Teacher", "Teacher"], ["Vaibhav Pandey", "Tabla Instructor", "Activity"], ["Vaishali Rathore", "Parents Relation Officer", "Admin & PL"], ["Vijay Raj Soni", "Class Manager", "CM"], ["Vipul Vijay", "Mathematics Teacher", "Teacher"], ["Yashika Gupta", "Class Manager", "CM"], ["Yavnika Dembla", "English Teacher", "Teacher"], ["Yogesh Purohit", "Harmonium Instructor", "Activity"]];
+const STAFF_LIST = [["Ajita Upadhyay", "Hindi Teacher", "Teacher"], ["Akash Gurjar", "Wushu Coach", "Activity"], ["Amit Sanwal", "Mathematics Teacher", "Teacher"], ["Anamika Shrimali", "Teacher", "Teacher"], ["Anita Sharma", "Hindi Teacher", "Teacher"], ["Anuradha Chaudhary", "Teacher", "Teacher"], ["Archana Choudhary", "German Teacher", "Teacher"], ["Asha Rao", "Floor Manager", "Floor Manager"], ["Ashok Suthar", "Content Designer", "Admin & PL"], ["Bhagyashree Rathore", "Assistant Teacher", "Teacher"], ["Bharti Ratawa", "Hindi Teacher", "Teacher"], ["Bhavyadeep Soni", "Keyboard Instructor", "Activity"], ["Bhawishya Joshi", "Lawn Tennis Coach", "Activity"], ["Bhupendra Yogi", "Acting Instructor", "Activity"], ["Bhuwan Bhatt", "Ukulele & Guitar Instructor", "Activity"], ["Chandan Soni", "Store Incharge", "Admin & PL"], ["Chandani Chayal", "Class Manager", "CM"], ["Chhavi Vinaik", "Teacher", "Teacher"], ["Deepali Tiwari", "Teacher", "Teacher"], ["Deepmala Rathore", "Teacher", "Teacher"], ["Devanshi Saini", "Teacher", "Teacher"], ["Diksha Singh Raghuwanshi", "Floor Manager", "Floor Manager"], ["Dilshad", "Teacher", "Teacher"], ["Divyanshi Jain", "Floor Manager", "Floor Manager"], ["Dr. Garima Khatri", "Program Leader", "Admin & PL"], ["Gauri Adhana", "Teacher", "Teacher"], ["Geeta Panwar", "Hindi Teacher", "Teacher"], ["Harsh Yadav", "Transport Manager", "Admin & PL"], ["Harshvardhan Soni", "Parents Relation Officer", "Admin & PL"], ["Himanshi Negi", "Computer Teacher", "Teacher"], ["Himanshu Singh Bhadoria", "Faculty – Informatics Practices", "Teacher"], ["Ishita", "Social Science Teacher", "Teacher"], ["Jai Pandla", "Operational Manager", "Admin & PL"], ["Jatin Sankhla", "Social Science Teacher", "Teacher"], ["Jitendra Karwa", "Karate Coach", "Activity"], ["Jitesh Mehendiratta", "Faculty – Accountancy", "Teacher"], ["Juhi Ahuja", "Teacher", "Teacher"], ["Jyotshna Jayan", "English Teacher", "Teacher"], ["Kanhaiya Lal Swami", "Cricket Coach", "Activity"], ["Kanika Gahlot", "Teacher", "Teacher"], ["Karishma Suthar", "Class Manager", "CM"], ["Kavita Gupta", "Abacus Instructor", "Activity"], ["Khushi Bhadani", "Assistant Teacher", "Teacher"], ["Komal Damani", "Teacher", "Teacher"], ["Komal Suthar", "Class Manager", "CM"], ["Kritika Pareek", "Wushu Coach", "Activity"], ["Lohit Tailong", "Taekwondo Coach", "Activity"], ["Madhu Mathur", "Mathematics Teacher", "Teacher"], ["Mahak Chaudhary", "Teacher", "Teacher"], ["Manisha Chauhan", "Class Manager", "CM"], ["Manisha Sharma", "Faculty – Economics", "Teacher"], ["Manmohan Singh", "Skating Coach", "Activity"], ["Mansi Singh Panwar", "Classical Dance Instructor", "Activity"], ["Mansi Soni", "Class Manager", "CM"], ["Mansi Yadav", "Teacher", "Teacher"], ["Megha Shekhawat", "Parents Relation Officer", "Admin & PL"], ["Monika Navani", "Program Leader", "Admin & PL"], ["Monika Rajpurohit", "Social Science Teacher", "Teacher"], ["Mukul Jangid", "Accountant", "Admin & PL"], ["Mukul Parihar", "Photography Instructor & Cinematographer", "Activity"], ["Nahida", "Head of Co-Curricular Activities", "Admin & PL"], ["Nandini Shekhawat", "Teacher", "Teacher"], ["Narendra Dara", "Office Exceutive", "Admin & PL"], ["Neelam Rajwani", "Culinary Skills Instructor", "Activity"], ["Neetu Dara", "Floor Manager", "Floor Manager"], ["Neha Kumari", "Mathematics Teacher", "Teacher"], ["Neha Sethia", "Program Leader", "Admin & PL"], ["Nisha", "Science Teacher", "Teacher"], ["Nishant Harsh", "Manager", "Admin & PL"], ["Niviya Singh Bhati", "Table Tennis Coach", "Activity"], ["Pallavi Joshi", "Science Teacher", "Teacher"], ["Pooja Chauhan", "Class Manager", "CM"], ["Pooja Sharma", "Teacher", "Teacher"], ["Poojal Shekhawat", "Teacher", "Teacher"], ["Poonam Gaur", "Hindi Teacher", "Teacher"], ["Poonam Rathore", "Teacher", "Teacher"], ["Poonam Sharda", "Program Leader", "Admin & PL"], ["Prashant Devra", "Graphic Designer", "Admin & PL"], ["Prashant Verma", "Basketball Coach", "Activity"], ["Preeti", "Hindi Teacher", "Teacher"], ["Preeti Jain", "Parents Relation Officer", "Admin & PL"], ["Priya Bagri", "Teacher", "Teacher"], ["Priya Shekhawat", "Teacher", "Teacher"], ["Priyanka Bhargava", "Medical Officer", "Admin & PL"], ["Priyanka Sand", "Teacher", "Teacher"], ["Priyanshi Bhojak", "English Teacher", "Teacher"], ["Radha Soni", "Social Science Teacher", "Teacher"], ["Rahul Yadav", "Staff", "Admin & PL"], ["Raj Vyas", "Archery Coach", "Activity"], ["Rajeev Nagal", "Content Designer", "Admin & PL"], ["Ram Singh Rathore", "French Teacher", "Teacher"], ["Rashmi Rathore", "Program Leader", "Admin & PL"], ["Rashmi Singh", "Class Manager", "CM"], ["Reema Tiwari", "Teacher", "Teacher"], ["Rekha", "Teacher", "Teacher"], ["Renu Harsh", "English Teacher", "Teacher"], ["Renuka Tak", "Art Teacher", "Activity"], ["Richa Sharma", "Computer Teacher", "Teacher"], ["Ritanshu Sharma", "Cricket Coach", "Activity"], ["Ritika Purohit", "Science Teacher", "Teacher"], ["Saba Panwar", "Class Manager", "CM"], ["Sahil Kumar", "Shooting Coach", "Activity"], ["Sakil Gouri", "Western Dance Instructor", "Activity"], ["Sanjana Sarswat", "Floor Manager", "Floor Manager"], ["Santosh Yadav", "Staff", "Admin & PL"], ["Sarita Saini", "Program Leader", "Admin & PL"], ["Saroj", "Teacher", "Teacher"], ["Shaan Siddiqui", "English Teacher", "Teacher"], ["Shailesh Joshi", "Social Science Teacher", "Teacher"], ["Shally Taneja", "Teacher", "Teacher"], ["Sharda Yadav", "Staff", "Admin & PL"], ["Shikha Sharma", "Art Teacher", "Activity"], ["Shivangi Gupta", "Teacher", "Teacher"], ["Shivika Ranjan", "Arts & Textile Desigining Instructor", "Activity"], ["Shobha Sharma", "Hindi Teacher", "Teacher"], ["Shreya", "Science Teacher", "Teacher"], ["Shubhangi", "Dean - Academics", "Admin & PL"], ["Sonika Lalwani", "Teacher", "Teacher"], ["Sourabh Tripathi", "Floor Manager", "Floor Manager"], ["Suman Bishnoi", "Floor Manager", "Floor Manager"], ["Sunita Nirban", "Teacher", "Teacher"], ["Surender Yadav", "Chairperson", "Admin & PL"], ["Swati Sehgal", "English Teacher", "Teacher"], ["Tanushree Purohit", "Class Manager", "CM"], ["Tina Sangtani", "Teacher", "Teacher"], ["Tripti", "Hindi Teacher", "Teacher"], ["Upender Singh Shekhawat", "Class Manager", "CM"], ["Vahnisvari Bika", "Teacher", "Teacher"], ["Vaibhav Pandey", "Tabla Instructor", "Activity"], ["Vaishali Rathore", "Parents Relation Officer", "Admin & PL"], ["Vijay Raj Soni", "Class Manager", "CM"], ["Vipul Vijay", "Mathematics Teacher", "Teacher"], ["Yashika Gupta", "Class Manager", "CM"], ["Yavnika Dembla", "English Teacher", "Teacher"], ["Yogesh Purohit", "Harmonium Instructor", "Activity"]];
 /* Co-curricular segments: [segment, [[activity, [staff…]], …]] */
 const SEGS = [
  ['Sports', [['Skating',['Manmohan Singh']],['Cricket',['Kanhaiya Lal Swami','Ritanshu Sharma']],['Table Tennis',['Niviya Singh Bhati']],['Archery',['Raj Vyas']],['Shooting',['Sahil Kumar']],['Lawn Tennis',['Bhawishya Joshi']],['Basketball',[]]]],
@@ -647,13 +647,13 @@ function renderNotice(){
     body += `<h3>Staff on leave <span class="cnt">${lv.length}</span></h3><table><thead><tr><th>Category</th><th>Staff</th></tr></thead><tbody>` +
       byCat.map(k => { const ps = lv.filter(l => (l.k||'Teacher') === k);
         return `<tr><td>${esc(CAT_LABEL[k]||k)}</td><td>${ps.length ? ps.map(l => esc(l.n) + (clsOf(l.n)?` <span class="ctg">CT ${esc(clsOf(l.n))}</span>`:'') + (stKey(l)?' <em>('+esc(stLabel(l))+')</em>':'')).join(', ') : '—'}</td></tr>`; }).join('') + `</tbody></table>`;
-    const ed = (m,i) => CAN_ALL() ? ` data-qa="${m}:${i}"` : '';
+    const ed = (m,i) => CAN_UI() ? ` data-qa="${m}:${i}"` : '';
     const cls = adj.map((a,i) => [a,i]).filter(([a]) => !a.a), act = adj.map((a,i) => [a,i]).filter(([a]) => a.a);
     const by = (n, t) => `<b class="by">${esc(n)}</b>${t?`<small class="tm">${esc(t)}</small>`:''}`;
     const ab = n => n ? esc(n) : '<span class="dim">—</span>';
     const done = new Set(cls.map(([a]) => normCls(a.c)));
     const pending = lv.filter(l => !l.late && clsOf(l.n) && !done.has(clsOf(l.n))).map(l => [clsOf(l.n), l]);
-    if (pending.length) body += `<div class="pend"><b>Class not adjusted yet</b>` + pending.map(([c,l]) => `<button type="button" class="pendb" data-pend="${esc(c)}">${esc(c)} <span>${esc(l.n)}${l.half?' · half day':''}</span>${CAN_ALL()?' <i>+ Adjust</i>':''}</button>`).join('') + `</div>`;
+    if (pending.length) body += `<div class="pend"><b>Class not adjusted yet</b>` + pending.map(([c,l]) => `<button type="button" class="pendb" data-pend="${esc(c)}">${esc(c)} <span>${esc(l.n)}${l.half?' · half day':''}</span>${CAN_UI()?' <i>+ Adjust</i>':''}</button>`).join('') + `</div>`;
     if (cls.length) body += `<h3>Class adjustment <span class="cnt k2">${cls.length}</span></h3><table class="adjt"><thead><tr><th>Class</th><th>Absent</th><th>Adjusted by</th></tr></thead><tbody>` +
       cls.map(([a,i]) => `<tr${ed('adj',i)}><td>${esc(a.c)}</td><td>${a.f ? ab(a.f) : ctOf(a.c) ? `${esc(ctOf(a.c))}<small class="tm">Class teacher</small>` : ab('')}</td><td>${by(a.b, a.t)}</td></tr>`).join('') + `</tbody></table>`;
     if (act.length) body += `<h3>Activity adjustment <span class="cnt k3">${act.length}</span></h3><table class="adjt"><thead><tr><th>Activity</th><th>Absent</th><th>Adjusted by</th></tr></thead><tbody>` +
@@ -668,22 +668,22 @@ function renderNotice(){
       <button class="nav" id="nextDay" aria-label="Next day">›</button>
     </div>
     ${ciLine}${body}
-    <div class="nbtns qbtns" ${CAN_ALL()?'':'hidden'}>
+    <div class="nbtns qbtns" ${CAN_UI()?'':'hidden'}>
       <button class="btn ghost" data-qnew="adj">+ Class adjustment</button>
       <button class="btn ghost" data-qnew="act">+ Activity adjustment</button>
       <button class="btn ghost" data-qnew="cover">+ Duty cover</button>
     </div>
-    ${CAN_ALL() && (cv.length || adj.length) ? '<p class="hint" style="margin:6px 0 0">Tap a row to change or remove it. Tap any name on the chart to replace them.</p>' : ''}
+    ${CAN_UI() && (cv.length || adj.length) ? '<p class="hint" style="margin:6px 0 0">Tap a row to change or remove it. Tap any name on the chart to replace them.</p>' : ''}
     <div class="nbtns">
       <button class="btn ghost" id="copyWa">Copy for WhatsApp</button>
-      <button class="btn" id="openEd" ${CAN_ALL()?'':'hidden'}>✎ Update leave</button>
+      <button class="btn" id="openEd" ${CAN_UI()?'':'hidden'}>${CAN_EDIT ? '✎ Update leave' : '✎ Fill leave → WhatsApp'}</button>
     </div>`;
   $('#prevDay').onclick = () => setDay(addDays(DAY,-1));
   $('#nextDay').onclick = () => setDay(addDays(DAY,1));
   $('#copyWa').onclick = copyWa;
   $('#openEd').onclick = () => openEditor(DAY);
   const cil = $('#notice').querySelector('[data-goci]'); if (cil) cil.onclick = () => { render('checkin'); window.scrollTo({top:0}); };
-  $('#notice').querySelectorAll('[data-pend]').forEach(b => b.onclick = () => { if (CAN_ALL()) openQA({mode:'adj', c: b.dataset.pend, f: ctOf(b.dataset.pend)}); });
+  $('#notice').querySelectorAll('[data-pend]').forEach(b => b.onclick = () => { if (CAN_UI()) openQA({mode:'adj', c: b.dataset.pend, f: ctOf(b.dataset.pend)}); });
   $('#notice').querySelectorAll('[data-qnew]').forEach(b => b.onclick = () => openQA({mode: b.dataset.qnew}));
   $('#notice').querySelectorAll('[data-qa]').forEach(r => r.onclick = () => { const [m,i] = r.dataset.qa.split(':'); openQA({mode: m, idx: +i}); });
 }
@@ -691,7 +691,7 @@ function setDay(d){ DAY = d; LV = leaveMap(); renderNotice(); render(TAB); doSea
 
 function waText(){
   const d = dayData(), lv = d.leave||[];
-  let t = `*Staff ON Leave* – ${nice(DAY)}\n`;
+  let t = `*Staff ON Leave* – ${nice(DAY)} (${dm(DAY)})\n`;
   CATS.concat([...new Set(lv.map(l=>l.k).filter(k=>!CATS.includes(k)))]).forEach(k => {
     const ps = lv.filter(l => (l.k||'Teacher') === k);
     t += `\n${k} -\n` + (ps.length ? ps.map(l => `* ${l.n}${stKey(l)?' ( '+stLabel(l)+' )':''}`).join('\n') : '* ') + '\n';
@@ -849,6 +849,7 @@ function openQA(o){
   if (QA.mode === 'act' && cur) QA.actSet = $('#qA').value;
   $('#qDel').hidden = QA.idx < 0;
   $('#qaTitle').textContent = (QA.idx >= 0 ? 'Change ' : 'Add ') + (QA.mode === 'adj' ? 'class adjustment' : QA.mode === 'act' ? 'activity adjustment' : 'duty cover') + ' · ' + nice(DAY);
+  $('#qSave').textContent = CAN_EDIT ? 'Save' : 'Send on WhatsApp ➤';
   drawQA();
   $('#qa').hidden = false; document.body.style.overflow = 'hidden';
   setTimeout(() => (QA.mode === 'adj' && !$('#qC').value ? $('#qC') : !$('#qF').value ? $('#qF') : $('#qB')).focus(), 50);
@@ -907,7 +908,7 @@ function qaApply(del){
 $('#qSave').onclick = () => { const n = qaApply(false); if (n) save(n, DAY, $('#qSave')); };
 $('#qDel').onclick = () => { const n = qaApply(true); if (n) save(n, DAY, $('#qDel')); };
 $('#main').addEventListener('click', e => {
-  if (!CAN_ALL()) return;
+  if (!CAN_UI()) return;
   const chip = e.target.closest('.chip[data-n], .bus[data-n]'); if (!chip) return;
   const card = chip.closest('.card'), n = chip.dataset.n;
   const toks = n.split(SEP).filter(t => /[a-z]/i.test(t) && !SEP.test(t)).map(t => t.trim());
@@ -936,8 +937,8 @@ CLASS_GROUPS.forEach(([id, t, gr, by]) => { const secs = Object.keys(CT).filter(
 AREAS.forEach(a => { a.seg = a.seg || 'duty'; });
 let CI_SEG = 'duty';
 /* who may change what (screen-level: shows or hides the edit buttons) */
-const ADMINS = ['Karishma Suthar','Sharda Santosh','Sarita Saini','Nahida','Jai Pandla','Harsh Yadav','Anoop','Sourabh Tripathi','Saba Panwar'];
-const EXTRA_NAMES = ['Sharda Santosh','Anoop'];
+const ADMINS = ['Karishma Suthar','Sharda Yadav','Santosh Yadav','Rahul Yadav','Sarita Saini','Nahida','Jai Pandla','Harsh Yadav','Anoop','Sourabh Tripathi','Saba Panwar'];
+const EXTRA_NAMES = ['Anoop'];
 let IS_OWNER = false, WHO = '';
 try { WHO = localStorage.getItem('dutyWho') || ''; } catch(e){}
 const sameP = (a, b) => a && b && (key(a) === key(b) || sameName(a, b) || sameName(b, a));
@@ -946,7 +947,9 @@ const byParts = ar => String(areaBy(ar) || '').split(/\s*[\/,&]\s*/).filter(Bool
 const isAdmin = () => IS_OWNER || (WHO && (ADMINS.some(a => sameP(WHO, a)) || (STAFF_BY.get(key(WHO)) || [])[2] === 'Floor Manager' || AREAS.some(ar => byParts(ar).some(b => sameP(WHO, b)))));
 const myAreas = () => WHO ? AREAS.filter(ar => byParts(ar).some(b => sameP(WHO, b))).map(ar => ar.id) : [];
 const CAN_ALL = () => CAN_EDIT && isAdmin();
-const canArea = id => CAN_EDIT && (isAdmin() || myAreas().includes(id));
+/* view-only visitors can still fill everything – their Save becomes "Send on WhatsApp" */
+const CAN_UI = () => !CAN_EDIT || isAdmin();
+const canArea = id => !CAN_EDIT || isAdmin() || myAreas().includes(id);
 const secTag = n => { const c = clsOf(n); return c ? c : ''; };
 const areaNames = ar => (ROSTER[ar.id] && ROSTER[ar.id].p) || ar.p;
 const areaBy = ar => (ROSTER[ar.id] && ROSTER[ar.id].by) || ar.by;
@@ -971,7 +974,7 @@ function ciSummaryLine(){
 }
 function checkinHTML(){
   const c = ciCounts(CI_SEG), cd = ciCounts('duty'), cc = ciCounts('cls');
-  let h = `<div class="cihead nhead"><button class="nav" data-cinav="-1" aria-label="Previous day">‹</button><div class="ntitle"><h2>Check-in · ${esc(nice(DAY))}</h2><small>${CAN_ALL() ? 'Tap an area to mark reached / late / absent' : myAreas().length && CAN_EDIT ? 'Tap your group to mark reached / late / absent' : 'Who reached on duty'}</small></div><button class="nav" data-cinav="1" aria-label="Next day">›</button></div>
+  let h = `<div class="cihead nhead"><button class="nav" data-cinav="-1" aria-label="Previous day">‹</button><div class="ntitle"><h2>Check-in · ${esc(nice(DAY))}</h2><small>${!CAN_EDIT ? 'Tap your area, mark it, then Send on WhatsApp' : CAN_ALL() ? 'Tap an area to mark reached / late / absent' : myAreas().length && CAN_EDIT ? 'Tap your group to mark reached / late / absent' : 'Who reached on duty'}</small></div><button class="nav" data-cinav="1" aria-label="Next day">›</button></div>
   <div class="ptabs ciseg"><button type="button" class="ptab" data-ciseg="duty" aria-selected="${CI_SEG==='duty'}">Duty areas <b class="n">${cd.r}/${cd.r+cd.l+cd.a+cd.pend}</b></button><button type="button" class="ptab" data-ciseg="cls" aria-selected="${CI_SEG==='cls'}">Teachers · class-wise <b class="n">${cc.r}/${cc.r+cc.l+cc.a+cc.pend}</b></button></div>
   <div class="cistats"><span class="s r"><b>${c.r}</b>Reached</span><span class="s l"><b>${c.l}</b>Late</span><span class="s a"><b>${c.a}</b>Absent</span><span class="s p"><b>${c.pend}</b>Not marked</span></div>`;
   if (c.late.length || c.abs.length) h += `<div class="cilist">${c.late.map(x => `<span class="cl l">${esc(x[0])}<small>${esc(x[1])}${x[2]?' · '+esc(x[2]):''}</small></span>`).join('')}${c.abs.map(x => `<span class="cl a">${esc(x[0])}<small>${esc(x[1])} · absent</small></span>`).join('')}</div>`;
@@ -1001,6 +1004,7 @@ function openCI(id){
   $('#ciTitle').textContent = ar.t + ' · ' + nice(DAY);
   if (ar.seg === 'cls' && !CI.by && isAdmin()) CI.edit = true;
   $('#ciAdd').value = ''; $('#ciBy').value = CI.by;
+  $('#ciSave').textContent = CAN_EDIT ? 'Save' : 'Send on WhatsApp ➤';
   drawCI(); $('#ci').hidden = false; document.body.style.overflow = 'hidden';
 }
 function drawCI(){
@@ -1042,7 +1046,7 @@ function applyAtt(base, pt){
 $('#ciSave').onclick = async () => {
   const pt = attPatch(DAY, CI.ar.id, CI.rows);
   if (CI.dirty) pt.roster = {p: CI.list, by: CI.by || CI.ar.by || ''};
-  try { sessionStorage.setItem('dutyPendingAtt', JSON.stringify(pt)); } catch(e){}
+  if (CAN_EDIT) try { sessionStorage.setItem('dutyPendingAtt', JSON.stringify(pt)); } catch(e){}
   await save(applyAtt(DAILY, pt), DAY, $('#ciSave'), pt.roster ? {...ROSTER, [pt.id]: pt.roster} : null);
 };
 $('#ciCopyOne').onclick = async () => { const tmp = {...DAILY}; const pt = attPatch(DAY, CI.ar.id, CI.rows); const keep = DAILY; DAILY = applyAtt(DAILY, pt); const t = areaWa(CI.ar); DAILY = keep;
@@ -1059,7 +1063,7 @@ function whoBar(){
   const el = $('#whobar'); if (!el) return;
   if (!CAN_EDIT){
     el.hidden = false;
-    el.innerHTML = `<label>Edit PIN <input id="pinIn" type="password" inputmode="numeric" autocomplete="off" style="width:7em"></label> <button type="button" class="btn ghost" id="pinBtn">Unlock editing</button> <small>Staff can view. In-charges enter the PIN to edit.</small>`;
+    el.innerHTML = `<label>Edit PIN <input id="pinIn" type="password" inputmode="numeric" autocomplete="off" style="width:7em"></label> <button type="button" class="btn ghost" id="pinBtn">Unlock editing</button> <small>Anyone can view and send leave on WhatsApp. In-charges enter the PIN to save.</small>`;
     const go = async () => { const v = $('#pinIn').value.trim(); if (!v) return; $('#pinBtn').textContent = 'Checking…';
       try { if (await GS.unlock(v)) { await gsEnable(); toast('Editing unlocked on this phone'); } else { toast('Wrong PIN'); whoBar(); } } catch(e){ toast('Could not check PIN. Try again.'); whoBar(); } };
     $('#pinBtn').onclick = go; $('#pinIn').onkeydown = e => { if (e.key === 'Enter') go(); };
@@ -1080,6 +1084,46 @@ function canon(n, cat){
   const s = resolve(n, cat); return s ? s[0] : n;
 }
 const catOfName = (n, fallback) => { const s = resolve(n, fallback); return s ? s[2] : (fallback || 'Teacher'); };
+/* check-in reports pasted from WhatsApp – the chart's own "✅ Check-in" messages or the usual floor posts */
+function areaOfHeader(line){
+  const l = line.replace(/[*_~✅]/g,'').trim();
+  if (!l || /^[•\-–·]/.test(l) || l.length > 70) return null;
+  const tests = [['gf',/\b(gf|ground\s*floor)\b/i],['ff',/first\s*floor|1st\s*floor/i],['sf',/second\s*floor|2nd\s*floor/i],['tf',/third\s*floor|3rd\s*floor/i],['out',/\bouter\b/i],['fo',/front\s*office/i],['bus',/\btransport\b|\bbus\b/i]];
+  for (const [id, re] of tests) if (re.test(l)) return id;
+  const byTitle = AREAS.find(a => l.toLowerCase().includes(a.t.toLowerCase())); if (byTitle) return byTitle.id;
+  const m = l.match(/class\s*(\d{1,2})/i); if (m){ const g = AREAS.find(a => a.seg === 'cls' && a.secs.some(c => c.match(/^\d+/)[0] === m[1])); if (g) return g.id; }
+  return null;
+}
+function parseCheckins(txt){
+  const out = {}, rest = []; let cur = null, mode = 'r', date = null, gap = false;
+  txt.split(/\r?\n/).forEach(raw => {
+    const line0 = raw.replace(/^\s*\[[^\]]*\]\s*[^:]{1,40}:\s*/, '');   /* WhatsApp "[time] Name:" prefix */
+    const line = line0.replace(/[*_~]/g,'').trim();
+    const id = areaOfHeader(line0);
+    if (id && (/reach|check|duty|by\b|^\W*(outer|gf|ground|first|second|third|front|transport|class)/i.test(line) || /✅/.test(line0))){
+      cur = id; mode = 'r'; out[cur] = out[cur] || {};
+      const dmm = line.match(/(\d{1,2})\s*\/\s*(\d{1,2})/); if (dmm) date = new Date().getFullYear() + '-' + pad(dmm[2]) + '-' + pad(dmm[1]);
+      return;
+    }
+    if (cur && /on\s*leave|adjust|absentee|duty\s*cover/i.test(line)) cur = null;
+    if (!cur){ rest.push(line0); return; }
+    if (!line){ gap = true; return; }
+    const isHead = /^(late|absent|late\s*\/\s*absent)/i.test(line) || /^reached\b/i.test(line);
+    const bullet = /^\s*[•\-·*]/.test(line0);
+    if (gap && !isHead && !bullet && !/^(na|none|nil)$/i.test(line)){ cur = null; gap = false; rest.push(line0); return; }  /* sender name / next message */
+    gap = false;
+    if (isHead){ mode = /^reached/i.test(line) ? 'r' : 'la'; return; }
+    if (/^(na|none|nil|no|-|—)$/i.test(line.replace(/^[•\-·\s]+/,''))) return;
+    const tm = line.match(/(\d{1,2}[:.]\d{2})/);
+    const st = /absent/i.test(line) ? 'a' : /late/i.test(line) ? 'l' : mode === 'la' ? 'l' : 'r';
+    let n = line.replace(/^[•\-·\s]+/,'').replace(/\(.*?\)/g,' ').replace(/\d{1,2}[:.]\d{2}/g,' ').replace(/\b(late|absent|reached|ma['’]?am|mam|sir)\b/ig,' ').replace(/^\d{1,2}[a-z]?\s*[–-]\s*/i,'').replace(/\s+/g,' ').trim();
+    if (n.length < 2) return;
+    const ar = AREAS.find(a => a.id === cur);
+    n = areaNames(ar).find(x => sameP(n, x)) || n;
+    out[cur][n] = {st, ...(tm ? {t: tm[1].replace('.',':')} : st !== 'a' ? {t: nowHM()} : {})};
+  });
+  return {att: out, date, rest: rest.join('\n')};
+}
 function parseNote(txt){
   const out = {date:null, leave:[], cover:[], adj:[]};
   let sec = null, cat = 'Teacher', LATE_SEC = false;
@@ -1132,6 +1176,7 @@ function openEditor(day){
   ['leave','cover','adj'].forEach(k => ED[k] = ED[k] || []);
   $('#ed').hidden = false; document.body.style.overflow = 'hidden';
   $('#paste').value = ''; $('#pickQ').value = ''; PICK_CAT = 'Teacher';
+  $('#edSave').textContent = CAN_EDIT ? 'Save' : 'Send on WhatsApp ➤';
   drawEditor();
 }
 function closeEditor(){ $('#ed').hidden = true; document.body.style.overflow = ''; ED = null; }
@@ -1207,17 +1252,21 @@ $('#edDate').addEventListener('change', () => {
   if (!hasTyped && DAILY[d]) { ED = {date:d, ...JSON.parse(JSON.stringify(DAILY[d]))}; drawEditor(); }
 });
 $('#readNote').onclick = () => {
-  const p = parseNote($('#paste').value);
-  if (!p.leave.length && !p.adj.length && !p.cover.length){ toast('Could not find names in that note'); return; }
+  const ci = parseCheckins($('#paste').value);
+  const p = parseNote(ci.rest);
+  const nCi = Object.keys(ci.att).length;
+  if (!p.leave.length && !p.adj.length && !p.cover.length && !nCi){ toast('Could not find names in that note'); return; }
   readEditor();
-  if (p.date && p.date !== ED.date) ED = {date: p.date, ...JSON.parse(JSON.stringify(DAILY[p.date] || blank()))};
+  const date = p.date || ci.date;
+  if (date && date !== ED.date) ED = {date, ...JSON.parse(JSON.stringify(DAILY[date] || blank()))};
   ['leave','cover','adj'].forEach(k => ED[k] = ED[k] || []);
+  if (nCi){ ED.att = ED.att || {}; Object.entries(ci.att).forEach(([id, s]) => { ED.att[id] = {s: {...((ED.att[id] || {}).s || {}), ...s}, at: nowHM()}; }); }
   const merge = (arr, items, k) => items.forEach(it => { if (!arr.some(x => k(x) === k(it))) arr.push(it); });
   merge(ED.leave, p.leave, x => key(x.n));
   merge(ED.cover, p.cover, x => key(x.n)+'>'+key(x.f));
   merge(ED.adj, p.adj, x => x.c+'>'+key(x.b));
   drawEditor();
-  toast(`Read ${p.leave.length} on leave, ${p.adj.length} adjustments${p.cover.length?', '+p.cover.length+' covers':''}. Check and save.`);
+  toast(`Read ${p.leave.length} on leave, ${p.adj.length} adjustments${p.cover.length?', '+p.cover.length+' covers':''}${nCi?', '+nCi+' check-in area'+(nCi>1?'s':''):''}. Check and save.`);
 };
 $('#edDelete').onclick = () => { if (!ED) return; ED.leave = []; ED.cover = []; ED.adj = []; drawEditor(); toast('Cleared – press Save to apply'); };
 $('#edSave').onclick = async () => {
@@ -1228,13 +1277,26 @@ $('#edSave').onclick = async () => {
     adj: ED.adj.filter(a => a.c || a.b || a.a).map(a => ({c:a.c||'', ...(a.a?{a:a.a}:{}), b:a.b||'', ...(a.t?{t:a.t}:{}), ...(a.f?{f:canon(a.f)}:{})}))
   };
   const next = {...DAILY};
-  const att = (DAILY[ED.date] || {}).att; if (att) clean.att = att;
+  const att = ED.att || (DAILY[ED.date] || {}).att; if (att) clean.att = att;
   if (clean.leave.length || clean.cover.length || clean.adj.length || att) next[ED.date] = clean; else delete next[ED.date];
   const cutoff = addDays(ymd(new Date()), -60);
   Object.keys(next).forEach(d => { if (d < cutoff) delete next[d]; });
   await save(next, ED.date, $('#edSave'));
 };
+/* ---------- view-only: send on WhatsApp instead of saving ---------- */
+const dm = d => { const [y,m,dd] = d.split('-'); return dd + '/' + m; };
+function withData(data, day, fn){ const kD = DAILY, kY = DAY, kL = LV; DAILY = data; DAY = day; LV = leaveMap(); try { return fn(); } finally { DAILY = kD; DAY = kY; LV = kL; } }
+async function sendWa(t){
+  let copied = false; try { await navigator.clipboard.writeText(t); copied = true; } catch(e){}
+  let w = null; try { w = window.open('https://wa.me/?text=' + encodeURIComponent(t), '_blank'); } catch(e){}
+  toast(w ? 'Opening WhatsApp – choose the staff group and send' : copied ? 'Copied – open WhatsApp and paste in the group' : 'Could not open WhatsApp on this device');
+}
 async function save(next, day, btn, roster){
+  if (!CAN_EDIT){
+    const t = btn && btn.id === 'ciSave' && CI ? withData(next, day, () => `✅ Check-in · ${CI.ar.t} · ${dm(day)}\n` + areaWa(CI.ar).replace(/^\*[^\n]*\n/, '*Reached*\n'))
+                                            : withData(next, day, waText);
+    await sendWa(t); closeEditor(); closeQA(); if (CI) closeCI(); return;
+  }
   if (!ART){ toast('Enter the edit PIN to save'); return; }
   btn = btn || $('#edSave'); const label = btn.textContent; btn.disabled = true; btn.textContent = 'Saving…';
   try {
@@ -1277,7 +1339,7 @@ const GS = (() => {
     err.code = /conflict/i.test(m) ? 'conflict' : /pin/i.test(m) ? 'not_writer' : 'error'; bad(err); })[fn](...args));
   let VER = window.__B.ver, PIN = '';
   try { PIN = localStorage.getItem('dutyPin') || ''; } catch(e){}
-  const api = {
+  return {
     run,
     publish: async (daily, roster) => { const r = await run('saveAll', daily, roster, VER, PIN); VER = r.ver; return r; },
     async refresh(force){
@@ -1296,7 +1358,6 @@ const GS = (() => {
     lock(){ PIN = ''; try { localStorage.removeItem('dutyPin'); } catch(e){} ART = null; CAN_EDIT = false; document.body.classList.remove('can-edit'); whoBar(); renderNotice(); render(TAB); },
     get pin(){ return PIN; }
   };
-  return api;
 })();
 async function gsEnable(){
   ART = GS; CAN_EDIT = true;
@@ -1308,7 +1369,7 @@ async function gsEnable(){
 (async () => {
   const st = window.__B.settings || {};
   if (st.Title) { const h = document.querySelector('h1'); if (h) h.textContent = st.Title; }
-  if (st.Month) { const m = document.querySelector('.month'); if (m) m.textContent = st.Month; }
+  if (st.Month) { const m = document.querySelector('.month'); if (m) m.textContent = st.Month; document.title = (st.Title || 'Duty Chart') + ' – ' + st.Month; }
   whoBar();
   if (GS.pin) { try { if (await GS.unlock(GS.pin)) await gsEnable(); else GS.lock(); } catch(e){} }
   setInterval(() => { if (!document.hidden) GS.refresh(false); }, 45000);
