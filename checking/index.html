@@ -1,0 +1,920 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Checking Tracker 6–8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: one page, tab bar on top — Dashboard (school-wide comparison of every subject teacher) + one board per subject (teacher scorecards, then deadline-date grid with sections A | B | C side by side) */
+:root{
+  --bg:#f4f6f7; --card:#ffffff; --ink:#1c2a38; --muted:#5b6977; --line:#d8e0e4; --zebra:#f8fafb;
+  --accent:#2a4f8f;
+  --ok:#1f8a4c; --ok-bg:#d6f0df; --ok-ink:#0e5a2f;
+  --late:#9a6a00; --late-bg:#fbeec8;
+  --tod:#b86a00; --tod-bg:#ffe7c2;
+  --over:#c0392b; --over-bg:#fbdcd8; --over-ink:#8e2318;
+  --hand:#2a4f8f; --hand-bg:#e2eaf7;
+  --idle-bg:#eef2f4; --shade:rgba(15,25,35,.45);
+  --f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#10171e; --card:#17212b; --ink:#e5ecf1; --muted:#98a6b3; --line:#283642; --zebra:#1a2530; --accent:#8fb0ea;
+  --ok:#3fc178; --ok-bg:#163b29; --ok-ink:#aeeec9; --late:#e7be5c; --late-bg:#3a3014;
+  --tod:#f0a83c; --tod-bg:#3d2b10; --over:#f07a6c; --over-bg:#421d19; --over-ink:#ffc2b9;
+  --hand:#8fb0ea; --hand-bg:#1e2d44; --idle-bg:#1e2934; --shade:rgba(0,0,0,.6); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#10171e; --card:#17212b; --ink:#e5ecf1; --muted:#98a6b3; --line:#283642; --zebra:#1a2530; --accent:#8fb0ea;
+  --ok:#3fc178; --ok-bg:#163b29; --ok-ink:#aeeec9; --late:#e7be5c; --late-bg:#3a3014;
+  --tod:#f0a83c; --tod-bg:#3d2b10; --over:#f07a6c; --over-bg:#421d19; --over-ink:#ffc2b9;
+  --hand:#8fb0ea; --hand-bg:#1e2d44; --idle-bg:#1e2934; --shade:rgba(0,0,0,.6); color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 60px}
+.wrap{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:10px}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+h1{font-family:var(--f-display);font-weight:800;font-size:clamp(22px,4vw,30px);margin:2px 0 0;line-height:1.1;text-wrap:balance}
+h2{font-family:var(--f-display);font-size:19px;margin:0;line-height:1.2}
+.sec-h{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px}
+.sec-h p{margin:0;font-size:13px;color:var(--muted)}
+.status{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.status .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.status.live .dot{background:var(--ok)} .status.off .dot{background:var(--tod)}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.banner{background:var(--tod-bg);border:1px solid var(--tod);border-radius:10px;padding:10px 12px;font-size:13.5px}
+.notice{background:var(--card);border:1px dashed var(--line);border-radius:12px;padding:16px;color:var(--muted);font-size:14px}
+
+/* tabs */
+.tabs{display:flex;gap:4px;overflow-x:auto;border-bottom:1px solid var(--line);scrollbar-width:thin}
+.tab{font:inherit;font-weight:700;font-size:14px;background:none;border:0;border-bottom:3px solid transparent;color:var(--muted);padding:10px 12px;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tab .bdg{font-size:11px;font-weight:700;min-width:18px;padding:0 5px;border-radius:9px;background:var(--over);color:var(--card);text-align:center;line-height:18px}
+
+/* KPI tiles */
+.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-width:0}
+.kpi .l{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.kpi .v{font-family:var(--f-display);font-size:26px;font-weight:800;line-height:1.15;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:12px;color:var(--muted)}
+.kpi.over .v{color:var(--over)} .kpi.tod .v{color:var(--tod)} .kpi.hand .v{color:var(--hand)} .kpi.ok .v{color:var(--ok)}
+
+/* scorecards */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.sc{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.sc-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.sc-name{font-family:var(--f-display);font-size:20px;font-weight:800}
+.sc-secs{font-size:12.5px;color:var(--muted);text-align:right}
+.sc-big{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
+.sc-big b{font-family:var(--f-display);font-size:32px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.sc-big span{font-size:13px;color:var(--muted)}
+.bar{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--idle-bg);min-width:60px}
+.bar i{display:block;height:100%}
+.b-ok{background:var(--ok)} .b-late{background:var(--late)} .b-over{background:var(--over)}
+.sc-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.m{background:var(--zebra);border-radius:8px;padding:6px 8px;min-width:0}
+.m .l{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.m .v{font-family:var(--f-display);font-weight:800;font-size:18px;font-variant-numeric:tabular-nums}
+.m.over .v{color:var(--over)} .m.late .v{color:var(--late)} .m.ok .v{color:var(--ok)}
+
+/* filters */
+.toolbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.toolbar .lab{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-right:2px}
+.chip{font:inherit;font-size:13.5px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:6px 12px;border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--card)}
+.sep{width:1px;height:22px;background:var(--line);margin:0 6px}
+
+/* tables */
+.tw{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow-x:auto}
+table{border-collapse:separate;border-spacing:0;width:100%}
+th,td{padding:7px 9px;text-align:left;vertical-align:middle;border-bottom:1px solid var(--line)}
+thead th{position:sticky;top:0;background:var(--card);z-index:2;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding-block:10px;white-space:nowrap}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+tbody tr:last-child td{border-bottom:0}
+.num-over{color:var(--over);font-weight:700} .num-late{color:var(--late);font-weight:700} .num-ok{color:var(--ok);font-weight:700}
+.subj-pill{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:6px;background:var(--idle-bg);color:var(--ink);white-space:nowrap}
+tr.clickable{cursor:pointer} tr.clickable:hover td{background:var(--zebra)}
+.pctcell{display:flex;align-items:center;gap:8px;min-width:130px}
+.pctcell b{font-variant-numeric:tabular-nums;min-width:38px;text-align:right}
+.pctcell .bar{flex:1}
+tr.grp td{border-top:2px solid var(--line)}
+
+/* class x subject heat */
+.heat{min-width:640px}
+.heat td.hc{padding:3px;width:12%}
+.hbtn{font:inherit;width:100%;min-height:40px;border:0;border-radius:8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15;background:var(--idle-bg);color:var(--muted)}
+.hbtn b{font-size:13px} .hbtn span{font-size:11px;font-variant-numeric:tabular-nums}
+.hbtn.over{background:var(--over-bg);color:var(--over-ink);box-shadow:inset 0 0 0 2px var(--over)}
+.hbtn.tod{background:var(--tod-bg);color:var(--tod)}
+.hbtn.ok{background:var(--ok-bg);color:var(--ok-ink)}
+.hbtn.hand{background:var(--hand-bg);color:var(--hand)}
+.hbtn.none{background:transparent;box-shadow:inset 0 0 0 1px var(--line);cursor:default}
+td.secname{font-family:var(--f-display);font-weight:800;font-size:16px;width:60px}
+
+/* subject grid */
+.grid{min-width:660px}
+.grid thead th.t{font-family:var(--f-display);font-size:15px;letter-spacing:0;text-transform:none;color:var(--ink);text-align:center}
+.grid thead th.t small{display:block;font-family:var(--f-body);font-size:11.5px;color:var(--muted);font-weight:400}
+td.date{width:64px;text-align:center;border-right:1px solid var(--line);background:var(--zebra)}
+td.date .dn{font-family:var(--f-display);font-size:24px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+td.date .dw{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+td.date.today{background:var(--tod-bg)} td.date.today .dw{color:var(--tod)}
+td.recv{width:66px;text-align:center;border-right:1px solid var(--line)}
+td.recv .rn{font-family:var(--f-display);font-weight:800;font-size:15px;white-space:nowrap;font-variant-numeric:tabular-nums}
+td.recv .rw{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+td.recv.today .rw{color:var(--tod)}
+td.job{min-width:170px}
+.kind{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:1px 6px;border-radius:5px;background:var(--idle-bg);color:var(--muted);margin-right:4px;vertical-align:1px}
+.kind.test{background:var(--over-bg);color:var(--over-ink)}
+td.job b{font-size:14px}
+td.job .jm{font-size:11.5px;color:var(--muted)}
+td.c{width:20%;padding:4px}
+.cell{font:inherit;width:100%;min-height:44px;border:0;border-radius:8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px 6px;background:var(--idle-bg);color:var(--muted);line-height:1.2}
+.cell .s1{font-weight:700;font-size:13px;white-space:nowrap}
+.cell .s2,.cell .s3{font-size:11.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cell .s3{opacity:.8}
+.cell.ok{background:var(--ok-bg);color:var(--ok-ink)}
+.cell.late{background:var(--late-bg);color:var(--late)}
+.cell.tod{background:var(--tod-bg);color:var(--tod);box-shadow:inset 0 0 0 2px var(--tod)}
+.cell.over{background:var(--over-bg);color:var(--over-ink);box-shadow:inset 0 0 0 2px var(--over)}
+.cell.hand{background:var(--hand-bg);color:var(--hand)}
+.cell.idle{background:transparent;color:var(--muted);box-shadow:inset 0 0 0 1px var(--line)}
+.cell:hover,.hbtn:not(.none):hover{filter:brightness(.96)}
+tr.split td{border-top:2px solid var(--ink)}
+.empty{color:var(--muted);padding:24px;text-align:center}
+
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--muted)}
+.sw{display:inline-block;width:13px;height:13px;border-radius:4px;vertical-align:-2px;margin-right:5px}
+.rules{font-size:13px;color:var(--muted);max-width:80ch;margin:0}
+.rules b{color:var(--ink)}
+
+/* report sheet */
+.shade{position:fixed;inset:0;background:var(--shade);z-index:20;display:flex;align-items:flex-end;justify-content:center;padding:16px;padding-bottom:max(16px,env(safe-area-inset-bottom,0px))}
+.sheet{background:var(--card);color:var(--ink);border-radius:16px;width:100%;max-width:440px;padding:18px;display:flex;flex-direction:column;gap:14px;max-height:90vh;overflow:auto}
+@media (min-width:700px){.shade{align-items:center}}
+.sheet h3{font-family:var(--f-display);font-size:20px;margin:0;line-height:1.2}
+.sheet .sub{font-size:13px;color:var(--muted);margin-top:2px}
+.fld{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.fld label{font-weight:700}
+.fld label small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+.step{display:flex;align-items:center;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.step button{font:inherit;font-size:20px;width:42px;height:42px;border:0;background:var(--idle-bg);color:var(--ink);cursor:pointer}
+.step input{width:56px;height:42px;border:0;text-align:center;font:inherit;font-size:18px;font-weight:700;background:var(--card);color:var(--ink)}
+textarea{font:inherit;width:100%;min-height:60px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--card);color:var(--ink);resize:vertical}
+.acts{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:inherit;font-weight:700;border-radius:10px;padding:11px 14px;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.btn.primary{background:var(--ok);border-color:var(--ok);color:var(--card);flex:1}
+.btn.undo{color:var(--over)}
+.who{font-size:12.5px;color:var(--muted)}
+
+/* login bar */
+.acct{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:14px}
+.acct .hint{flex-basis:100%}
+.loginform{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.loginform input.sel{min-width:0;width:200px}
+.sel{font:inherit;font-size:14px;border:1px solid var(--line);border-radius:10px;padding:7px 10px;background:var(--card);color:var(--ink);max-width:100%}
+
+/* editing */
+.editbtn{font:inherit;font-size:12px;font-weight:700;border:1px solid var(--line);background:var(--card);color:var(--accent);border-radius:6px;padding:1px 7px;cursor:pointer;margin-left:6px;vertical-align:1px}
+.addbtn{font:inherit;font-weight:700;font-size:14px;border:0;background:var(--accent);color:var(--card);border-radius:999px;padding:7px 14px;cursor:pointer}
+.tag-ed{font-size:10.5px;font-weight:700;color:var(--accent);margin-left:4px;letter-spacing:.04em;text-transform:uppercase}
+.tag-new{font-size:10.5px;font-weight:700;color:var(--ok);margin-left:4px;letter-spacing:.04em;text-transform:uppercase}
+.form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px}
+.form .full{grid-column:1/-1}
+.form label.lb{display:flex;flex-direction:column;gap:4px;font-weight:700;font-size:13.5px;min-width:0}
+.form input[type=text],.form input[type=password],.form input[type=date],.form select{font:inherit;font-weight:400;font-size:15px;width:100%;min-width:0;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--card);color:var(--ink)}
+.form select:disabled,.form input:disabled{opacity:.65}
+.checks{display:flex;gap:8px;flex-wrap:wrap}
+.checks label{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-weight:700;cursor:pointer}
+.toggle{display:flex;align-items:center;gap:10px;background:var(--zebra);border-radius:10px;padding:10px 12px;font-weight:700;cursor:pointer}
+.toggle input{width:20px;height:20px}
+.toggle small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+.hint{font-size:12.5px;color:var(--muted)}
+.err{font-size:13px;color:var(--over);font-weight:700}
+.btn.danger{color:var(--over);border-color:var(--over)}
+.removed{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px;color:var(--muted)}
+.removed button{font:inherit;font-size:12.5px;border:1px dashed var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:4px 10px;cursor:pointer}
+
+@media (max-width:860px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:480px){.form{grid-template-columns:1fr}}
+@media (max-width:480px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">Flourish International School · Classes 6–8</div>
+      <h1>Checking Tracker</h1>
+    </div>
+    <div class="status" id="status"><span class="dot"></span><span id="statusText">Connecting…</span></div>
+  </header>
+
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Board"></nav>
+  <div class="acct" id="acct"></div>
+  <div id="banner" class="banner" hidden></div>
+
+  <div id="view" style="display:flex;flex-direction:column;gap:16px"></div>
+
+  <div class="legend">
+    <span><i class="sw" style="background:var(--ok-bg);box-shadow:inset 0 0 0 1px var(--ok)"></i>Checked on time</span>
+    <span><i class="sw" style="background:var(--late-bg);box-shadow:inset 0 0 0 1px var(--late)"></i>Checked late</span>
+    <span><i class="sw" style="background:var(--over-bg);box-shadow:inset 0 0 0 2px var(--over)"></i>Overdue</span>
+    <span><i class="sw" style="background:var(--tod-bg);box-shadow:inset 0 0 0 2px var(--tod)"></i>Deadline today</span>
+    <span><i class="sw" style="background:var(--hand-bg)"></i>In hand</span>
+    <span><i class="sw" style="box-shadow:inset 0 0 0 1px var(--line)"></i>Not received yet</span>
+    <span>D = defaulters · A = absentees</span>
+  </div>
+  <p class="rules"><b>Deadlines.</b> Notebook, Assignment and Book are checked before the next class of the same subject in that class (Hindi-1 and Hindi-2 count as one Hindi class). The test notebook is due before the 2nd test of any subject after it, because students alternate two test notebooks, so test notebooks are priority. A lesson spread over several days is received on its last day. Dates come from the Academic Planner (Classes 6–8): 15–20 Oct from the October planner, 21–31 Oct from the revised planner, including Maths (Class 6 homework notebook and assignments, and Maths tests; Classes 7–8 written work is the CM’s content notebook). <b>Teachers</b> tap their own box in a subject tab, enter Defaulters and Absentees (when the task asks for them), and save. <b>Logins:</b> each teacher sets their own password once and a manager approves it once. Reports are accepted only from that teacher (or a manager) for their own sections, carry their name and the server time, and lock at the end of the day. Every change is logged in the Google Sheet. Only managers (Editors) can add, edit or remove tasks. <b>Editing:</b> “+ Add task” adds any notebook, test, assignment, checking material, extra task, preparation, class or school task for chosen sections. “Edit” on any job changes its name, dates, sections, teacher and whether a Defaulter/Absentee report applies, or removes it. Removed planner jobs can be restored from the bottom of the subject tab.</p>
+</div>
+
+<div class="shade" id="shade" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="shTitle">
+    <div><h3 id="shTitle"></h3><div class="sub" id="shSub"></div></div>
+    <div id="daFields" style="display:flex;flex-direction:column;gap:14px">
+    <div class="fld"><label for="inDef">Defaulters<small>Not submitted / work not done</small></label>
+      <div class="step"><button type="button" data-t="inDef" data-d="-1" aria-label="Less">−</button><input id="inDef" type="number" min="0" max="60" inputmode="numeric"><button type="button" data-t="inDef" data-d="1" aria-label="More">+</button></div></div>
+    <div class="fld"><label for="inAbs">Absentees<small>Absent on the day</small></label>
+      <div class="step"><button type="button" data-t="inAbs" data-d="-1" aria-label="Less">−</button><input id="inAbs" type="number" min="0" max="60" inputmode="numeric"><button type="button" data-t="inAbs" data-d="1" aria-label="More">+</button></div></div>
+    </div>
+    <div><label for="inNote" style="font-weight:700;display:block;margin-bottom:4px">Remarks <small style="font-weight:400;color:var(--muted)">(optional, e.g. roll nos.)</small></label>
+      <textarea id="inNote" maxlength="400"></textarea></div>
+    <div class="who" id="shWho"></div>
+    <div class="acts">
+      <button type="button" class="btn primary" id="btnSave">Save &amp; mark checked</button>
+      <button type="button" class="btn" id="btnCancel">Cancel</button>
+      <button type="button" class="btn undo" id="btnUndo" hidden>Undo checked</button>
+    </div>
+  </div>
+</div>
+
+<div class="shade" id="pwShade" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="pwH">
+    <h3 id="pwH">Change password</h3>
+    <div class="form">
+      <label class="lb full">Current password<input id="pwOld" type="password" autocomplete="current-password"></label>
+      <label class="lb">New password<input id="pwNew" type="password" autocomplete="new-password"></label>
+      <label class="lb">New password again<input id="pwNew2" type="password" autocomplete="new-password"></label>
+    </div>
+    <div class="err" id="pwErr" hidden></div>
+    <div class="acts"><button type="button" class="btn primary" id="pwSave">Change password</button><button type="button" class="btn" id="pwCancel">Cancel</button></div>
+  </div>
+</div>
+
+<div class="shade" id="edShade" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="edTitleH" style="max-width:520px">
+    <div><h3 id="edTitleH">Add task</h3><div class="sub" id="edSub"></div></div>
+    <div class="form">
+      <label class="lb">Subject<select id="edSubj"></select></label>
+      <label class="lb">Type<select id="edKind"></select></label>
+      <label class="lb full">Task / lesson<input id="edTitle" type="text" maxlength="120" placeholder="e.g. English-1 L-8 notebook, Diwali card, Lab file"></label>
+      <label class="lb">Class<select id="edClass"><option value="6">Class 6</option><option value="7">Class 7</option><option value="8">Class 8</option><option value="all">Classes 6, 7 and 8</option></select></label>
+      <div class="lb"><span>Sections</span><div class="checks">
+        <label><input type="checkbox" id="edSecA" value="A"> A</label>
+        <label><input type="checkbox" id="edSecB" value="B"> B</label>
+        <label><input type="checkbox" id="edSecC" value="C"> C</label></div></div>
+      <label class="lb">Received / start date<input id="edRecv" type="date"></label>
+      <label class="lb">Deadline<input id="edDue" type="date"></label>
+      <label class="toggle full"><input type="checkbox" id="edDA"><span>Defaulter / Absentee report applicable<small>Off = teacher just marks it done, no counts asked</small></span></label>
+      <label class="lb full">Assigned to <span class="hint" style="font-weight:400">— leave blank for the subject teacher of each section</span><input id="edWho" type="text" maxlength="40" list="teacherList" placeholder="Subject teacher of each section"></label>
+      <label class="lb full">Note<input id="edNote" type="text" maxlength="160" placeholder="Optional instruction for the teacher"></label>
+    </div>
+    <datalist id="teacherList"></datalist>
+    <div class="err" id="edErr" hidden></div>
+    <div class="acts">
+      <button type="button" class="btn primary" id="edSave">Save task</button>
+      <button type="button" class="btn" id="edCancel">Cancel</button>
+      <button type="button" class="btn danger" id="edRemove" hidden>Remove task</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============ SET THIS ONCE: your Apps Script web app URL (ends in /exec) ============ */
+const API_URL = new URLSearchParams(location.search).get('api') || '';
+/* ===================================================================================== */
+
+
+// Academic Planner Classes 6ABC/7ABC/8ABC: 1–20 Oct from the October planner, 21–31 Oct from the revised planner (incl. Maths): L = lessons [date, subject, name], T = tests [date, subject, name]
+const PLAN={"6":{"L":[["2026-10-03","SCI","Science L-8"],["2026-10-03","GK","GK Pg 33-34"],["2026-10-05","SCI","Science L-8"],["2026-10-06","HIN","Hindi-1 L-11"],["2026-10-07","HIN","Hindi-2 L-13"],["2026-10-08","ENG","English-1 L-6"],["2026-10-09","SKT","Sanskrit L-9"],["2026-10-10","ENG","English-2 L-7"],["2026-10-12","SST","S.St L-5"],["2026-10-13","SST","S.St L-5"],["2026-10-14","ENG","English Poem-4"],["2026-10-16","HIN","Hindi-1 L-12"],["2026-10-21","SKT","Sanskrit L-10"],["2026-10-21","MATH","Maths Written FIO Pg 126-127 (Q.3,4,6,7)"],["2026-10-22","HIN","Hindi-1 L-13"],["2026-10-22","MATH","Maths Assignment-5"],["2026-10-23","GK","GK Pg 33-36, 49, 55"],["2026-10-23","MATH","Maths Assignment-5"],["2026-10-26","SCI","Science L-9"],["2026-10-26","MATH","Maths Assignment-5"],["2026-10-27","SCI","Science L-9"],["2026-10-27","MATH","Maths L-6 Exp. Pg 129-131,132 (FIO Q.1-2)"],["2026-10-28","HIN","Hindi-2 L-14"],["2026-10-28","SKT","Sanskrit L-11"],["2026-10-28","MATH","Maths Exp. Pg 132 (FIO Q3-6), Pg 133 (FIO Q.1-3)"],["2026-10-29","ENG","English-1 L-7"],["2026-10-29","MATH","Maths Written FIO Pg 132 (Q1(a,b), Q3,4,5)"],["2026-10-30","SST","S.St L-14"],["2026-10-30","MATH","Maths Exp. Pg 134,135,136"],["2026-10-31","SST","S.St L-14"],["2026-10-31","MATH","Maths Exp. Pg 137, 138 FIO (Q.1-4)"]],"T":[["2026-10-06","SCI","Science L-8"],["2026-10-07","HIN","Hindi-1 L-11"],["2026-10-08","HIN","Hindi-2 L-13"],["2026-10-09","ENG","English-1 L-6"],["2026-10-10","SKT","Sanskrit L-9"],["2026-10-12","ENG","English-2 L-7"],["2026-10-14","SST","S.St L-5"],["2026-10-15","ENG","English Poem-4"],["2026-10-17","HIN","Hindi-1 L-12"],["2026-10-22","SKT","Sanskrit L-10"],["2026-10-23","HIN","Hindi-1 L-13"],["2026-10-27","MATH","Maths L-5"],["2026-10-28","SCI","Science L-9"],["2026-10-29","HIN","Hindi-2 L-13"],["2026-10-30","ENG","English-1 L-7"]]},"7":{"L":[["2026-10-03","ENG","English-2 L-7"],["2026-10-05","HIN","Hindi-2 L-11"],["2026-10-06","SKT","Sanskrit L-9"],["2026-10-07","SST","S.St L-7"],["2026-10-08","SST","S.St L-7"],["2026-10-09","ENG","English-1 L-6"],["2026-10-10","HIN","Hindi-1 L-10"],["2026-10-12","SKT","Sanskrit L-10"],["2026-10-13","SCI","Science L-8"],["2026-10-14","SCI","Science L-8"],["2026-10-15","SST","S.St L-8"],["2026-10-16","SST","S.St L-8"],["2026-10-16","GK","GK Pg 33-36"],["2026-10-21","ENG","English-1 L-7"],["2026-10-21","MATH","Maths Written FIO Pg 144 (Q.2,4,6,9)"],["2026-10-22","ENG","English-2 L-8"],["2026-10-22","MATH","Maths Revision Lesson-6"],["2026-10-23","HIN","Hindi-2 L-11"],["2026-10-23","SKT","Sanskrit L-11"],["2026-10-23","MATH","Maths L-7 Exp. Pg 146-150"],["2026-10-26","HIN","Hindi-2 L-13"],["2026-10-26","MATH","Maths Exp. FIO Pg 150,151 (Q.1,2) & Pg 152,153"],["2026-10-27","SST","S.St L-12"],["2026-10-27","MATH","Maths Written Pg 150 ((a) Construction) + FIO (Q.1,2) Pg 150-151"],["2026-10-28","SST","S.St L-12"],["2026-10-28","MATH","Maths Exp. Pg 154 (FIO Q.1-3) + Pg 155,156 (FIO Q.1) + Exp. Pg 157-159"],["2026-10-29","HIN","Hindi-1 L-11"],["2026-10-29","MATH","Maths Written Pg 154 (FIO Q.1) + Pg 156 FIO (Q.1(a,e,f,g))"],["2026-10-30","SCI","Science L-9"],["2026-10-30","MATH","Maths Exp. Pg 159 (FIO Q.1-3) + Pg 160,161 (FIO Q.1)"],["2026-10-31","SCI","Science L-9"],["2026-10-31","MATH","Maths Written Pg 159 FIO (Q.1-2) + Written Pg 161 FIO (Q.1(b,c))"]],"T":[["2026-10-05","ENG","English-2 L-7"],["2026-10-06","HIN","Hindi-2 L-11"],["2026-10-07","SKT","Sanskrit L-9"],["2026-10-09","SST","S.St L-7"],["2026-10-10","ENG","English-1 L-6"],["2026-10-12","HIN","Hindi-1 L-10"],["2026-10-13","SKT","Sanskrit L-10"],["2026-10-15","SCI","Science L-8"],["2026-10-17","SST","S.St L-8"],["2026-10-22","ENG","English-1 L-7"],["2026-10-23","ENG","English-2 L-7"],["2026-10-23","MATH","Maths L-6"],["2026-10-26","SKT","Sanskrit L-10"],["2026-10-27","HIN","Hindi-2 L-11"],["2026-10-29","SST","S.St L-12"],["2026-10-30","HIN","Hindi-1 L-11"]]},"8":{"L":[["2026-10-03","HIN","Hindi-2 L-11"],["2026-10-05","SST","S.St Part-2 L-2"],["2026-10-06","SST","S.St Part-2 L-2"],["2026-10-06","GK","GK Pg 29-30"],["2026-10-07","HIN","Hindi-1 L-9"],["2026-10-08","SCI","Science L-8"],["2026-10-09","SCI","Science L-8"],["2026-10-10","SKT","Sanskrit L-9"],["2026-10-12","ENG","English-1 L-6"],["2026-10-13","ENG","English-2 L-8"],["2026-10-14","HIN","Hindi-2 L-12"],["2026-10-15","HIN","Hindi-1 L-10"],["2026-10-21","SST","S.St Part-2 L-3"],["2026-10-21","MATH","Maths Exp. Pg 167-170, 171 FIO (Q.1,2)"],["2026-10-22","SST","S.St Part-2 L-3"],["2026-10-22","MATH","Maths Written FIO Q.1,2 (Pg 170-171)"],["2026-10-23","SKT","Sanskrit L-11"],["2026-10-23","MATH","Maths Exp. Pg 171-175"],["2026-10-26","ENG","English-2 L-9"],["2026-10-26","MATH","Maths Exp. (Pg 175) FIO Q.1-5"],["2026-10-27","ENG","English-1 L-7"],["2026-10-27","MATH","Maths Written FIO Q.1,2,3,5 (Pg 175)"],["2026-10-28","SCI","Science L-9"],["2026-10-28","MATH","Maths Exp. Pg 175,176,177 (FIO Q.1-7)"],["2026-10-29","SCI","Science L-9"],["2026-10-29","GK","GK Pg 32-33"],["2026-10-29","MATH","Maths Written FIO Q.2,3,4,5,6,7 (Pg 176-177)"],["2026-10-30","HIN","Hindi-1 L-11"],["2026-10-30","MATH","Maths Exp. Pg 177 FIO Q.8-12"],["2026-10-31","HIN","Hindi-2 L-13"],["2026-10-31","MATH","Maths Written FIO Pg 175 (Q.8,9,10,11,12)"]],"T":[["2026-10-05","HIN","Hindi-2 L-11"],["2026-10-07","SST","S.St Part-2 L-2"],["2026-10-08","HIN","Hindi-1 L-9"],["2026-10-10","SCI","Science L-8"],["2026-10-12","SKT","Sanskrit L-9"],["2026-10-13","ENG","English-1 L-6"],["2026-10-14","ENG","English-2 L-8"],["2026-10-15","HIN","Hindi-2 L-12"],["2026-10-16","HIN","Hindi-1 L-10"],["2026-10-23","SST","S.St Part-2 L-3"],["2026-10-26","SKT","Sanskrit L-9"],["2026-10-27","ENG","English-2 L-8"],["2026-10-28","ENG","English-1 L-7"],["2026-10-30","SCI","Science L-9"],["2026-10-31","HIN","Hindi-1 L-11"]]}};
+const START="2026-10-15";
+const CLASSES=["6","7","8"], LET=["A","B","C"];
+const SECS=CLASSES.flatMap(c=>LET.map(l=>c+l));
+const SUBJ=[
+  {id:"ENG",tab:"english",name:"English"},
+  {id:"SCI",tab:"science",name:"Science"},
+  {id:"SST",tab:"sst",name:"S.St"},
+  {id:"MATH",tab:"maths",name:"Maths"},
+  {id:"HIN",tab:"hindi",name:"Hindi"},
+  {id:"SKT",tab:"sanskrit",name:"Sanskrit"},
+  {id:"GK",tab:"gk",name:"GK"},
+  {id:"GEN",tab:"general",name:"General"},
+];
+const SNAME=Object.fromEntries(SUBJ.map(s=>[s.id,s.name]));
+const BYL={ENG:{A:"Swati",B:"Yavnika",C:"Jyotsna"},SCI:{A:"Pallavi",B:"Shreya",C:"Ritika"},SST:{A:"Shailesh",B:"Ishita",C:"Monika"},HIN:{A:"Tripti",B:"Ajita",C:"Bharti"}};
+BYL.SKT=BYL.HIN;
+const MATHS={"6A":"Amit","6B":"Madhu","6C":"Neha","7A":"Vipul","7B":"Madhu","7C":"Neha","8A":"Vipul","8B":"Amit","8C":"Neha"};
+function defTeacher(s,sec){
+  if(s==="GEN")return "Unassigned";
+  if(s==="MATH")return MATHS[sec];
+  if(s==="GK")return (sec[0]==="8"?BYL.SCI:BYL.SST)[sec[1]]; // GK assessment sits with S.St (6, 7) and Science (8)
+  return BYL[s][sec[1]];
+}
+const tOf=(j,sec)=>j.assignee||defTeacher(j.s,sec);
+const ALL_TEACHERS=[...new Set([...Object.values(BYL).flatMap(o=>Object.values(o)),...Object.values(MATHS)])].sort();
+
+const KIND={test:"Test NB",nb:"Notebook",asg:"Assignment",book:"Book",mat:"Checking material",task:"Extra task",prep:"Preparation",cls:"Class task",sch:"School task"};
+const KIND_LONG={test:"Test notebook",nb:"Notebook",asg:"Assignment",book:"Book",mat:"Checking material",task:"Additional task",prep:"Preparation task",cls:"Class task",sch:"School task"};
+const ORDER={test:0,nb:1,book:2,asg:3,mat:4,task:5,prep:6,cls:7,sch:8};
+const DA_DEFAULT={test:true,nb:true,book:true,asg:true,mat:true,task:false,prep:false,cls:false,sch:false};
+const IS_CHECK={test:1,nb:1,book:1,asg:1,mat:1}; // copies physically received from students
+function kindsFor(s,name,c){
+  if(s==="MATH"){if(/Assignment/.test(name))return ["asg"];if(/Written/.test(name)&&c==="6")return ["nb"];return []} // Class 6 maths mentor checks homework NB; 7-8 written work is the CM's content NB
+  if(s==="SKT"||s==="GK")return ["book"];
+  if(s==="HIN")return /Hindi-2/.test(name)?["book","asg"]:["nb","asg"];
+  return ["nb","asg"];
+}
+const slug=s=>s.toLowerCase().replace(/english-?/,"e").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+
+// planner jobs (fixed base; manager edits are stored separately as overrides)
+const BASE=[];
+for(const c of CLASSES){
+  const {L,T}=PLAN[c];
+  for(const s of SUBJ.map(x=>x.id)){
+    const merged=[];
+    L.filter(x=>x[1]===s).forEach(([d,,n])=>{const last=merged[merged.length-1];if(last&&last.name===n)last.end=d;else merged.push({name:n,start:d,end:d})});
+    merged.forEach((m,i)=>{
+      if(m.end<START)return;
+      const nx=merged[i+1];
+      kindsFor(s,m.name,c).forEach(k=>{const lid=slug(m.name);BASE.push({key:`${c}_${s}_${lid}_${k}`,src:"plan",c,s,k,lesson:m.name,lid,recv:m.end,due:nx?nx.start:null,
+        why:nx?"before next "+SNAME[s]+" class":"before 1st "+SNAME[s]+" class in Nov",da:true,secs:LET})});
+    });
+  }
+  T.forEach(([d,s,n],i)=>{
+    if(d<START)return;
+    const second=T[i+2],lid=slug(n);
+    BASE.push({key:`${c}_${s}_${lid}_test`,src:"plan",c,s,k:"test",lesson:n+" Test",lid,recv:d,due:second?second[0]:null,
+      why:second?"before "+second[2]+" test":"2nd test after it, Nov planner",da:true,secs:LET});
+  });
+}
+const docId=(sec,j)=>`${sec}_${j.lid}_${j.k}`; // English ids kept from the first version
+
+
+// Data comes from the Google Sheet through the Apps Script web app. The server checks every change.
+let reports={}, overrides={}, tasks={}, users=[], me=null, serverToday=null;
+function getRec(j,sec){return reports[docId(sec,j)]||null}
+const myProfile=()=>me;
+const isManager=()=>!!me&&me.role==="manager";
+const canMark=(j,sec)=>!!me&&(me.role==="manager"||me.name===tOf(j,sec));
+
+let JOBS=[];
+function buildJobs(){
+  const out=[];
+  BASE.forEach(b=>{
+    const o=overrides[b.key];
+    if(o&&o.removed)return;
+    const j={...b};
+    if(o){
+      if(o.lesson)j.lesson=o.lesson;
+      if(o.recv)j.recv=o.recv;
+      if("due" in o&&o.due!==b.due){j.due=o.due||null;j.why=o.due?"deadline set by manager":"no deadline set"}
+      if(typeof o.da==="boolean")j.da=o.da;
+      if(Array.isArray(o.secs)&&o.secs.length)j.secs=o.secs;
+      if(o.assignee)j.assignee=o.assignee;
+      if(o.note)j.note=o.note;
+      j.edited=true;
+    }
+    out.push(j);
+  });
+  Object.entries(tasks).forEach(([id,t])=>{
+    if(!t||!t.k||!t.s||!t.recv)return;
+    const cls=t.c==="all"?CLASSES:[t.c];
+    cls.forEach(c=>out.push({key:"x_"+id+"_"+c,src:"custom",id,c,s:t.s,k:t.k,lesson:t.title||KIND_LONG[t.k],lid:"x-"+id,recv:t.recv,due:t.due||null,
+      why:t.note||"added task",da:!!t.da,secs:Array.isArray(t.secs)&&t.secs.length?t.secs:LET,assignee:t.assignee||"",note:t.note||"",allClasses:t.c==="all"}));
+  });
+  out.sort((a,b)=>((a.due||"9")<(b.due||"9")?-1:(a.due||"9")>(b.due||"9")?1:0)||ORDER[a.k]-ORDER[b.k]||a.c.localeCompare(b.c)||a.lesson.localeCompare(b.lesson));
+  return out;
+}
+
+let tab="dash", fClass="all", fKind="all", fWhen="week", sortBy="subject";
+let canWrite=true,isAdmin=false;
+const busy=new Set();
+try{const s=JSON.parse(localStorage.getItem("chk68-v1")||"{}");if(s.tab)tab=s.tab;if(s.fWhen)fWhen=s.fWhen;if(s.sortBy)sortBy=s.sortBy}catch(e){}
+const h=(location.hash||"").slice(1);if(h&&(["dash","my","logins"].includes(h)||SUBJ.some(s=>s.tab===h)))tab=h;
+const saveView=()=>{try{localStorage.setItem("chk68-v1",JSON.stringify({tab,fWhen,sortBy}))}catch(e){}};
+
+const pad=n=>String(n).padStart(2,"0");
+const isoOf=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const todayISO=()=>isoOf(new Date());
+const D=iso=>new Date(iso.slice(0,10)+"T00:00:00");
+const fmt=iso=>D(iso).toLocaleDateString("en-IN",{day:"numeric",month:"short"});
+const wd=iso=>D(iso).toLocaleDateString("en-IN",{weekday:"short"});
+const daysBetween=(a,b)=>Math.round((D(b)-D(a))/864e5);
+const $=id=>document.getElementById(id);
+function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
+
+function st(j,rec,t){
+  if(rec){const done=isoOf(new Date(rec.at));return (j.due&&done>j.due)?{s:"late",late:daysBetween(j.due,done)}:{s:"ok"}}
+  if(j.recv>t) return {s:"idle"};
+  if(j.due&&j.due<t) return {s:"over",late:daysBetween(j.due,t)};
+  if(j.due===t) return {s:"tod"};
+  return {s:"hand"};
+}
+function metrics(pairs,t){
+  const m={dueSoFar:0,ok:0,late:0,over:0,tod:0,hand:0,def:0,abs:0,lateDays:0,total:0};
+  pairs.forEach(([j,sec])=>{
+    const rec=getRec(j,sec),x=st(j,rec,t);m.total++;
+    if(rec&&j.da){m.def+=rec.def||0;m.abs+=rec.abs||0}
+    if(j.due&&j.due<=t)m.dueSoFar++;
+    if(x.s==="ok"&&j.due&&j.due<=t)m.ok++;
+    if(x.s==="late"){m.late++;m.lateDays+=x.late}
+    if(x.s==="over")m.over++;
+    if(x.s==="tod")m.tod++;
+    if(x.s==="hand")m.hand++;
+  });
+  m.pct=m.dueSoFar?Math.round(m.ok/m.dueSoFar*100):null;
+  return m;
+}
+const pairsWhere=fn=>{const out=[];JOBS.forEach(j=>j.secs.forEach(l=>{const sec=j.c+l;if(fn(j,sec))out.push([j,sec])}));return out};
+function teachersOf(s){
+  const map=new Map();const add=(n,sec)=>{if(!map.has(n))map.set(n,new Set());map.get(n).add(sec)};
+  if(s!=="GEN")SECS.forEach(sec=>add(defTeacher(s,sec),sec));
+  JOBS.filter(j=>j.s===s).forEach(j=>j.secs.forEach(l=>add(tOf(j,j.c+l),j.c+l)));
+  return [...map].map(([name,set])=>({name,secs:[...set].sort()}));
+}
+function barEl(m){const b=el("div","bar");const w=n=>m.dueSoFar?(n/m.dueSoFar*100)+"%":"0";[["b-ok",m.ok],["b-late",m.late],["b-over",m.over]].forEach(([k,n])=>{const i=el("i",k);i.style.width=w(n);b.append(i)});return b}
+function goTab(id,cls){tab=id;fClass=cls||"all";fKind="all";saveView();history.replaceState(null,"","#"+id);render();window.scrollTo({top:0})}
+function addBtn(subj){const b=el("button","addbtn","+ Add task");b.type="button";b.id="add-"+(subj||"any");b.onclick=()=>openEditor(null,subj);if(!isAdmin)b.hidden=true;return b}
+
+function renderTabs(t){
+  const nav=$("tabs");nav.replaceChildren();
+  const mk=(id,label,badge)=>{const b=el("button","tab",label);b.type="button";b.id="tab-"+id;b.setAttribute("role","tab");b.setAttribute("aria-selected",tab===id);
+    if(badge)b.append(el("span","bdg",String(badge)));b.onclick=()=>goTab(id);nav.append(b)};
+  mk("dash","Dashboard");
+  const p=myProfile();
+  if(p&&p.role==="teacher")mk("my","My work",metrics(pairsWhere((j,sec)=>tOf(j,sec)===p.name),t).over);
+  SUBJ.forEach(s=>{const o=metrics(pairsWhere(j=>j.s===s.id),t).over;mk(s.tab,s.name,o)});
+  if(isAdmin)mk("logins","Teacher logins",users.filter(u=>u.status==="pending").length);
+}
+
+/* ---------- Dashboard ---------- */
+function renderDash(view,t){
+  const all=metrics(pairsWhere(()=>true),t);
+  const cap=el("div","sec-h");const left=el("div");left.append(el("h2",null,"All subjects · till "+D(t).toLocaleDateString("en-IN",{weekday:"short",day:"numeric",month:"short"})),el("p",null,"Tap a teacher, a class box or an overdue job to open it."));
+  cap.append(left,addBtn(null));view.append(cap);
+  const k=el("div","kpis");
+  [["ok","On time",all.pct==null?"—":all.pct+"%",all.ok+" of "+all.dueSoFar+" due"],["over","Overdue",all.over,"not done, past deadline"],["tod","Due today",all.tod,"deadline today"],["hand","In hand",all.hand,"received, not due yet"],["","Done late",all.late,all.lateDays+" days late in all"],["","Defaulters · Absent",all.def+" · "+all.abs,"from reports entered"]].forEach(([c,l,v,s])=>{
+    const d=el("div","kpi "+c);d.append(el("div","l",l),el("div","v",String(v)),el("div","s",s));k.append(d)});
+  view.append(k);
+
+  const h1=el("div","sec-h");h1.append(el("h2",null,"Teacher comparison"));
+  const sorts=el("div","toolbar");sorts.append(el("span","lab","Sort"));
+  [["subject","By subject"],["over","Most overdue"],["pct","Lowest on-time"]].forEach(([v,txt])=>{const b=el("button","chip",txt);b.type="button";b.id="sort-"+v;b.setAttribute("aria-pressed",sortBy===v);b.onclick=()=>{sortBy=v;saveView();render()};sorts.append(b)});
+  h1.append(sorts);view.append(h1);
+  const rows=[];
+  SUBJ.forEach(s=>teachersOf(s.id).forEach(T=>{const m=metrics(pairsWhere((j,sec)=>j.s===s.id&&tOf(j,sec)===T.name),t);if(s.id==="GEN"&&!m.total)return;rows.push({s,T,m})}));
+  if(sortBy==="over")rows.sort((a,b)=>b.m.over-a.m.over||(a.m.pct??101)-(b.m.pct??101));
+  if(sortBy==="pct")rows.sort((a,b)=>(a.m.pct??101)-(b.m.pct??101)||b.m.over-a.m.over);
+  const tw=el("div","tw"),tb=el("table");tb.style.minWidth="760px";
+  const th=el("thead"),hr=el("tr");
+  [["Subject",""],["Teacher",""],["Sections",""],["On-time %",""],["Due so far","n"],["On time","n"],["Late","n"],["Overdue","n"],["Due today","n"],["In hand","n"],["D","n"],["A","n"]].forEach(([x,c])=>hr.append(el("th",c,x)));
+  th.append(hr);tb.append(th);
+  const body=el("tbody");let prev=null;
+  rows.forEach(({s,T,m})=>{
+    const tr=el("tr","clickable"+(sortBy==="subject"&&prev&&prev!==s.id?" grp":""));prev=s.id;
+    tr.tabIndex=0;tr.onclick=()=>goTab(s.tab);tr.onkeydown=e=>{if(e.key==="Enter")goTab(s.tab)};
+    const sp=el("td");sp.append(el("span","subj-pill",s.name));tr.append(sp);
+    const tn=el("td");tn.append(el("b",null,T.name));tr.append(tn);
+    tr.append(el("td",null,T.secs.join(" ")));
+    const pc=el("td"),pw=el("div","pctcell");
+    if(!m.total)pw.append(el("span","num-late",s.id==="MATH"?"Add tasks or share planner":"No work yet"));
+    else pw.append(el("b",m.pct==null?"":m.pct>=80?"num-ok":m.pct>=50?"num-late":"num-over",m.pct==null?"—":m.pct+"%"),barEl(m));
+    pc.append(pw);tr.append(pc);
+    [[m.dueSoFar,""],[m.ok,"num-ok"],[m.late,m.late?"num-late":""],[m.over,m.over?"num-over":""],[m.tod,""],[m.hand,""],[m.def,""],[m.abs,""]].forEach(([v,c])=>{const td=el("td","n");td.append(el("span",c,String(v)));tr.append(td)});
+    body.append(tr);
+  });
+  tb.append(body);tw.append(tb);view.append(tw);
+
+  const subjCols=SUBJ.filter(s=>s.id!=="GEN"||JOBS.some(j=>j.s==="GEN"));
+  const h2=el("div","sec-h");h2.append(el("h2",null,"Class × subject"),el("p",null,"Red = overdue · amber = due today · green = all due work done"));view.append(h2);
+  const tw2=el("div","tw"),t2=el("table","heat"),th2=el("thead"),hr2=el("tr");hr2.append(el("th",null,"Section"));
+  subjCols.forEach(s=>hr2.append(el("th",null,s.name)));th2.append(hr2);t2.append(th2);
+  const b2=el("tbody");
+  SECS.forEach(sec=>{
+    const tr=el("tr");tr.append(el("td","secname",sec));
+    subjCols.forEach(s=>{
+      const m=metrics(pairsWhere((j,x)=>j.s===s.id&&x===sec),t);
+      const td=el("td","hc"),b=el("button","hbtn");b.type="button";b.id="h-"+sec+"-"+s.id;
+      let c,l1,l2;const done=(m.ok+m.late)+"/"+m.total+" done";
+      if(!m.total){c="none";l1="—";l2="no work"}
+      else if(m.over){c="over";l1=m.over+" overdue";l2=done}
+      else if(m.tod){c="tod";l1=m.tod+" due today";l2=done}
+      else if(m.dueSoFar&&m.ok+m.late>=m.dueSoFar){c="ok";l1="✓ up to date";l2=done}
+      else if(m.hand){c="hand";l1=m.hand+" in hand";l2=done}
+      else{c="";l1="Not received";l2="0/"+m.total}
+      b.className="hbtn "+c;b.append(el("b",null,l1),el("span",null,l2));
+      b.setAttribute("aria-label",`${sec} ${s.name}: ${l1}, ${l2}`);
+      if(c==="none")b.disabled=true;else b.onclick=()=>goTab(s.tab,sec[0]);
+      td.append(b);tr.append(td);
+    });
+    b2.append(tr);
+  });
+  t2.append(b2);tw2.append(t2);view.append(tw2);
+
+  const od=[];pairsWhere(()=>true).forEach(([j,sec])=>{const x=st(j,getRec(j,sec),t);if(x.s==="over"||x.s==="tod")od.push({j,sec,x})});
+  od.sort((a,b)=>(b.x.late||0)-(a.x.late||0)||ORDER[a.j.k]-ORDER[b.j.k]);
+  const h3=el("div","sec-h");h3.append(el("h2",null,"Overdue and due today"),el("p",null,od.length?od.length+" jobs to chase":""));view.append(h3);
+  if(!od.length){view.append(el("div","notice","Nothing is overdue or due today."));return}
+  const tw3=el("div","tw"),t3=el("table");t3.style.minWidth="640px";
+  const h3r=el("tr");["Status","Section","Subject","Job","Teacher","Received","Deadline"].forEach(x=>h3r.append(el("th",null,x)));
+  const th3=el("thead");th3.append(h3r);t3.append(th3);const b3=el("tbody");
+  od.forEach(({j,sec,x})=>{
+    const tr=el("tr","clickable");tr.tabIndex=0;
+    const go=()=>openSheet(sec,j);tr.onclick=go;tr.onkeydown=e=>{if(e.key==="Enter")go()};
+    tr.append(el("td",x.s==="over"?"num-over":"num-late",x.s==="over"?x.late+"d overdue":"Due today"));
+    const sc=el("td");sc.append(el("b",null,sec));tr.append(sc);
+    const sp=el("td");sp.append(el("span","subj-pill",SNAME[j.s]));tr.append(sp);
+    const jd=el("td");jd.append(el("span","kind"+(j.k==="test"?" test":""),KIND[j.k]),document.createTextNode(j.lesson));tr.append(jd);
+    tr.append(el("td",null,tOf(j,sec)),el("td",null,fmt(j.recv)),el("td",null,j.due?fmt(j.due):"—"));
+    b3.append(tr);
+  });
+  t3.append(b3);tw3.append(t3);view.append(tw3);
+}
+
+/* ---------- Subject board ---------- */
+function renderSubject(view,t,S){
+  const head=el("div","sec-h");head.append(el("h2",null,S.name+" · till "+D(t).toLocaleDateString("en-IN",{weekday:"short",day:"numeric",month:"short"})),addBtn(S.id));view.append(head);
+  const jobsS=JOBS.filter(j=>j.s===S.id);
+  if(S.id==="MATH"&&!jobsS.length)view.append(el("div","notice","Maths runs on its own planner, so nothing is loaded yet. Use “+ Add task” to enter Maths notebooks, tests and assignments, or share the Maths planner to load October automatically."));
+  if(S.id==="GEN"&&!jobsS.length)view.append(el("div","notice","Class tasks and school tasks that are not tied to one subject go here. Use “+ Add task”, choose the class and sections, and type the teacher’s name in “Assigned to”."));
+  const pass=j=>(fClass==="all"||j.c===fClass)&&(fKind==="all"||j.k===fKind);
+  const tlist=teachersOf(S.id);
+  if(tlist.length){
+    const cards=el("div","cards");
+    tlist.forEach(T=>{
+      const m=metrics(pairsWhere((j,sec)=>j.s===S.id&&tOf(j,sec)===T.name&&pass(j)),t);
+      const c=el("div","sc");
+      const top=el("div","sc-top");top.append(el("span","sc-name",T.name),el("span","sc-secs",T.secs.join(" · ")));
+      const big=el("div","sc-big");big.append(el("b",null,m.pct==null?"—":m.pct+"%"),el("span",null,"on time · "+m.ok+" of "+m.dueSoFar+" due so far"));
+      const g=el("div","sc-grid");
+      [["over","Overdue",m.over],["late","Late",m.late+(m.late?" ("+m.lateDays+"d)":"")],["","In hand",m.hand+m.tod],["","Defaulters",m.def],["","Absentees",m.abs],["ok","Done",m.ok+m.late]].forEach(([k,l,v])=>{const d=el("div","m "+k);d.append(el("div","l",l),el("div","v",String(v)));g.append(d)});
+      c.append(top,big,barEl(m),g);cards.append(c);
+    });
+    view.append(cards);
+  }
+  const removed=BASE.filter(b=>b.s===S.id&&overrides[b.key]&&overrides[b.key].removed);
+  if(jobsS.length){
+    const tb=el("div","toolbar");
+    const grp=(lab,opts,cur,set)=>{tb.append(el("span","lab",lab));opts.forEach(([v,txt])=>{const b=el("button","chip",txt);b.type="button";b.id="f-"+lab+"-"+v;b.setAttribute("aria-pressed",cur===v);b.onclick=()=>{set(v);saveView();render()};tb.append(b)})};
+    grp("Show",[["due","Due till today"],["week","+ next 7 days"],["all","Whole month"]],fWhen,v=>fWhen=v);
+    tb.append(el("span","sep"));
+    grp("Class",[["all","All"],["6","6"],["7","7"],["8","8"]],fClass,v=>fClass=v);
+    const kinds=[...new Set(jobsS.map(j=>j.k))].sort((a,b)=>ORDER[a]-ORDER[b]);
+    if(kinds.length>1){tb.append(el("span","sep"));grp("Type",[["all","All"],...kinds.map(k=>[k,KIND[k]])],fKind,v=>fKind=v)}
+    view.append(tb);
+
+    const sameByLetter=LET.map(l=>{const n=new Set(jobsS.filter(j=>j.secs.includes(l)).map(j=>tOf(j,j.c+l)));if(S.id!=="GEN")CLASSES.forEach(c=>n.add(defTeacher(S.id,c+l)));return n.size===1?[...n][0]:null});
+    const tw=el("div","tw"),tbl=el("table","grid");
+    const thead=el("thead"),hr=el("tr");
+    hr.append(el("th",null,"Deadline"),el("th",null,"Received"),el("th",null,"Job"));
+    LET.forEach((l,i)=>{const th=el("th","t",sameByLetter[i]||("Section "+l));th.append(el("small",null,sameByLetter[i]?"Section "+l:"teacher shown in box"));hr.append(th)});
+    thead.append(hr);tbl.append(thead);
+    const wk=isoOf(new Date(D(t).getTime()+7*864e5));
+    const rows=jobsS.filter(pass).filter(j=>{if(fWhen==="all")return true;const lim=fWhen==="due"?t:wk;return j.due?j.due<=lim:j.recv<=lim});
+    const body=el("tbody");
+    if(!rows.length){const tr=el("tr"),td=el("td","empty",fWhen==="due"?"Nothing due till today. Choose “+ next 7 days” or “Whole month” to see what is coming.":"No jobs in this view.");td.colSpan=6;tr.append(td);body.append(tr)}
+    let i=0;
+    while(i<rows.length){
+      const key=rows[i].due||"open";let n=0;while(i+n<rows.length&&(rows[i+n].due||"open")===key)n++;
+      for(let k=0;k<n;k++){
+        const j=rows[i+k],tr=el("tr");
+        if(k===0){tr.className="split";const td=el("td","date"+(key===t?" today":""));td.rowSpan=n;
+          if(key==="open")td.append(el("div","dn","—"),el("div","dw","No date"));
+          else td.append(el("div","dn",String(D(key).getDate())),el("div","dw",key===t?"Today":wd(key)));
+          tr.append(td)}
+        const rd=el("td","recv"+(j.recv===t?" today":""));rd.append(el("div","rn",fmt(j.recv)),el("div","rw",j.recv===t?"Today":wd(j.recv)));tr.append(rd);
+        const jd=el("td","job");
+        jd.append(el("span","kind"+(j.k==="test"?" test":""),KIND[j.k]),el("b",null,j.c+" · "+j.lesson));
+        if(j.src==="custom")jd.append(el("span","tag-new","added"));else if(j.edited)jd.append(el("span","tag-ed","edited"));
+        const eb=el("button","editbtn","Edit");eb.type="button";eb.id="e-"+j.key;eb.setAttribute("aria-label","Edit "+j.lesson);eb.onclick=()=>openEditor(j);if(!isAdmin)eb.hidden=true;jd.append(eb);
+        jd.append(el("div","jm",(j.due?"Deadline "+fmt(j.due)+", ":"")+j.why+(j.da?"":" · no D/A report")));
+        tr.append(jd);
+        LET.forEach((l,li)=>{
+          const td=el("td","c");
+          if(!j.secs.includes(l)){td.append(el("div","hint","—"));td.style.textAlign="center";tr.append(td);return}
+          const sec=j.c+l,id=docId(sec,j),rec=getRec(j,sec),x=st(j,rec,t);
+          const b=el("button","cell "+x.s);b.type="button";b.id="c-"+id;
+          let s1,s2="";
+          if(rec){s1=x.s==="late"?"Late "+x.late+"d":"✓ "+fmt(rec.at);s2=j.da?"D "+(rec.def??0)+" · A "+(rec.abs??0):"Done"}
+          else if(x.s==="over"){s1="Overdue";s2=x.late+" day"+(x.late>1?"s":"")}
+          else if(x.s==="tod")s1="Due today";
+          else if(x.s==="hand")s1=IS_CHECK[j.k]?"In hand":"To do";
+          else s1="—";
+          b.append(el("span","s1",s1));if(s2)b.append(el("span","s2",s2));
+          if(sameByLetter[li]!==tOf(j,sec))b.append(el("span","s3",sec+" · "+tOf(j,sec)));
+          b.setAttribute("aria-label",`${tOf(j,sec)}, ${sec}, ${KIND_LONG[j.k]} ${j.lesson}: ${s1} ${s2}`);
+          b.onclick=()=>openSheet(sec,j);
+          td.append(b);tr.append(td);
+        });
+        body.append(tr);
+      }
+      i+=n;
+    }
+    tbl.append(body);tw.append(tbl);view.append(tw);
+  }
+  if(removed.length){
+    const r=el("div","removed");r.append(el("span",null,"Removed planner jobs — tap to restore:"));
+    removed.forEach(b=>{const btn=el("button",null,"↺ "+b.c+" · "+KIND[b.k]+" · "+b.lesson);btn.type="button";btn.id="r-"+b.key;btn.disabled=!isAdmin;btn.onclick=()=>restoreJob(b.key);r.append(btn)});
+    view.append(r);
+  }
+}
+
+async function render(){
+  JOBS=buildJobs();
+  isAdmin=isManager();
+  const t=todayISO();
+  if(tab==="logins"&&!isAdmin)tab="dash";
+  if(tab==="my"&&!(me&&me.role==="teacher"))tab="dash";
+  renderTabs(t);renderAcct();
+  const view=$("view");view.replaceChildren();
+  if(tab==="dash")renderDash(view,t);
+  else if(tab==="my")renderMy(view,t);
+  else if(tab==="logins")renderLogins(view);
+  else renderSubject(view,t,SUBJ.find(s=>s.tab===tab)||SUBJ[0]);
+}
+
+/* ---------- report sheet ---------- */
+let cur=null;
+function jobCtx(j,sec){return j.src==="custom"?{taskId:j.id,sec}:{jobKey:j.key,sec}}
+function openSheet(sec,j){
+  const rec=getRec(j,sec);
+  const own=rec&&me&&rec.by===me.name, sameDay=rec&&isoOf(new Date(rec.at))===todayISO();
+  const editable=canMark(j,sec)&&(!rec||isManager()||(own&&sameDay));
+  cur={sec,j,id:docId(sec,j),rec,editable};
+  $("shTitle").textContent=`${tOf(j,sec)} · ${sec} · ${SNAME[j.s]} ${KIND_LONG[j.k]}`;
+  $("shSub").textContent=`${j.lesson} · received ${fmt(j.recv)}`+(j.due?` · deadline ${fmt(j.due)}`:" · no deadline")+(j.note?" · "+j.note:"");
+  $("daFields").hidden=!j.da;
+  $("inDef").value=rec?.def??0;$("inAbs").value=rec?.abs??0;$("inNote").value=rec?.note??"";
+  let info=rec?`Reported on ${fmt(rec.at)} by ${rec.by}${rec.editedBy?" · corrected by "+rec.editedBy:""}${rec.note?" · "+rec.note:""}`:"";
+  if(!editable){
+    info+=(info?" — ":"")+(!me?"Log in (top of the page) to report.":!canMark(j,sec)?`Only ${tOf(j,sec)} or a manager can report this.`:"Locked: reports can be changed only on the day they are entered. Ask a manager to correct it.");
+  }
+  $("shWho").textContent=info;
+  $("btnUndo").hidden=!rec||!editable;$("btnSave").hidden=!editable;
+  [$("inDef"),$("inAbs"),$("inNote")].forEach(x=>x.disabled=!editable);
+  $("btnSave").textContent=rec?"Update":(j.da?"Save & mark checked":"Mark done");
+  $("btnUndo").textContent=j.da?"Undo checked":"Undo done";
+  $("shade").hidden=false;if(editable)(j.da?$("inDef"):$("inNote")).focus();
+}
+function closeSheet(){$("shade").hidden=true;const c=cur&&$("c-"+cur.id);cur=null;if(c)c.focus()}
+document.querySelectorAll(".step button").forEach(b=>b.onclick=()=>{const i=$(b.dataset.t);i.value=Math.max(0,Math.min(60,(parseInt(i.value)||0)+ +b.dataset.d))});
+$("btnCancel").onclick=closeSheet;
+$("shade").addEventListener("click",e=>{if(e.target.id==="shade")closeSheet()});
+const num=v=>Math.max(0,Math.min(60,parseInt(v)||0));
+$("btnSave").onclick=()=>{
+  if(!cur||!cur.editable)return;const {j,sec,id,rec}=cur;
+  const payload={...jobCtx(j,sec),lesson:j.lesson,due:j.due||"",da:j.da,note:$("inNote").value.trim().slice(0,400)};
+  if(j.da){payload.def=num($("inDef").value);payload.abs=num($("inAbs").value)}
+  const opt={sec,subject:j.s,kind:j.k,lesson:j.lesson,note:payload.note,at:rec?rec.at:new Date().toISOString(),by:rec?rec.by:me.name};
+  if(j.da){opt.def=payload.def;opt.abs=payload.abs}
+  closeSheet();
+  apiWrite("saveReport",[token,payload],()=>{reports[id]=opt});
+};
+$("btnUndo").onclick=()=>{
+  if(!cur||!cur.editable||!cur.rec)return;const {j,sec,id}=cur;closeSheet();
+  apiWrite("deleteReport",[token,jobCtx(j,sec)],()=>{delete reports[id]});
+};
+
+/* ---------- task editor ---------- */
+let ed=null; // {job|null}
+SUBJ.forEach(s=>{const o=el("option",null,s.name);o.value=s.id;$("edSubj").append(o)});
+Object.keys(KIND).sort((a,b)=>ORDER[a]-ORDER[b]).forEach(k=>{const o=el("option",null,KIND_LONG[k]);o.value=k;$("edKind").append(o)});
+ALL_TEACHERS.forEach(n=>{const o=document.createElement("option");o.value=n;$("teacherList").append(o)});
+$("edKind").onchange=()=>{if(!ed.job)$("edDA").checked=DA_DEFAULT[$("edKind").value]};
+function openEditor(job,subj){
+  ed={job};const isPlan=job&&job.src==="plan",isCustom=job&&job.src==="custom";
+  const t=isCustom?tasks[job.id]:null;
+  $("edTitleH").textContent=job?"Edit task":"Add task";
+  $("edSub").textContent=isPlan?"From the Academic Planner. Subject, type and class stay fixed; remove it and add a new task to change those.":isCustom?"Added task"+(t&&t.c==="all"?" · applies to Classes 6, 7 and 8":""):"Any checking job, extra task, preparation, class or school task.";
+  const s=job?job.s:(subj||"GEN");
+  $("edSubj").value=s;$("edKind").value=job?job.k:(s==="GEN"?"cls":"task");
+  $("edClass").value=isCustom&&t?t.c:job?job.c:(fClass!=="all"?fClass:"6");
+  const secs=job?job.secs:LET;
+  LET.forEach(l=>$("edSec"+l).checked=secs.includes(l));
+  $("edTitle").value=job?job.lesson:"";
+  $("edRecv").value=job?job.recv:todayISO();
+  $("edDue").value=job&&job.due?job.due:"";
+  $("edDA").checked=job?job.da:DA_DEFAULT[$("edKind").value];
+  $("edWho").value=job?job.assignee||"":"";
+  $("edNote").value=job?job.note||"":"";
+  ["edSubj","edKind","edClass"].forEach(id=>$(id).disabled=!!isPlan);
+  $("edRemove").hidden=!job;$("edRemove").textContent="Remove task";$("edRemove").dataset.arm="";
+  $("edErr").hidden=true;
+  $("edShade").hidden=false;$("edTitle").focus();
+}
+function closeEditor(){$("edShade").hidden=true;ed=null}
+$("edCancel").onclick=closeEditor;
+$("edShade").addEventListener("click",e=>{if(e.target.id==="edShade")closeEditor()});
+document.addEventListener("keydown",e=>{if(e.key!=="Escape")return;if(!$("edShade").hidden)closeEditor();else if(!$("shade").hidden)closeSheet();else if(!$("pwShade").hidden)$("pwShade").hidden=true});
+function edError(m){$("edErr").textContent=m;$("edErr").hidden=false}
+$("edSave").onclick=()=>{
+  const title=$("edTitle").value.trim(),recv=$("edRecv").value,due=$("edDue").value,secs=LET.filter(l=>$("edSec"+l).checked);
+  if(!title)return edError("Type the task or lesson name.");
+  if(!recv)return edError("Pick the received / start date.");
+  if(!secs.length)return edError("Tick at least one section.");
+  if(due&&due<recv)return edError("The deadline is before the received date.");
+  const common={recv,due:due||null,da:$("edDA").checked,secs,assignee:$("edWho").value.trim().slice(0,40),note:$("edNote").value.trim().slice(0,160)};
+  const job=ed.job;
+  if(job&&job.src==="plan"){const o={...common,lesson:title.slice(0,120)};apiWrite("saveOverride",[token,job.key,o],()=>{overrides[job.key]=o})}
+  else{
+    const id=job?job.id:(Date.now().toString(36)+Math.random().toString(36).slice(2,6));
+    const t={...common,s:$("edSubj").value,k:$("edKind").value,c:$("edClass").value,title:title.slice(0,120)};
+    apiWrite("saveTask",[token,id,t],()=>{tasks[id]=t});
+  }
+  const s=job?job.s:$("edSubj").value;closeEditor();
+  if(!job&&tab!=="dash"&&SUBJ.find(x=>x.tab===tab)&&SUBJ.find(x=>x.tab===tab).id!==s)goTab(SUBJ.find(x=>x.id===s).tab);
+};
+$("edRemove").onclick=()=>{
+  const b=$("edRemove");
+  if(!b.dataset.arm){b.dataset.arm="1";b.textContent="Tap again to remove";return}
+  const job=ed.job;
+  if(job.src==="plan")apiWrite("saveOverride",[token,job.key,{removed:true}],()=>{overrides[job.key]={removed:true}});
+  else apiWrite("deleteTask",[token,job.id],()=>{delete tasks[job.id]});
+  closeEditor();
+};
+function restoreJob(key){apiWrite("deleteOverride",[token,key],()=>{delete overrides[key]})}
+
+/* ---------- login ---------- */
+function teacherNames(){return [...new Set([...ALL_TEACHERS,...Object.values(tasks).map(t=>t&&t.assignee).filter(Boolean)])].sort()}
+let acctMode="login"; // login | setup
+function renderAcct(){
+  const a=$("acct");a.replaceChildren();
+  if(!API_URL){a.append(el("span",null,"Setup needed: paste the Apps Script web app URL into API_URL at the top of the page script."));return}
+  if(me){
+    const b=el("span");b.append(document.createTextNode("Logged in as "),el("b",null,me.name),document.createTextNode(me.role==="manager"?" · Manager":" · Teacher"));a.append(b);
+    const cp=el("button","chip","Change password");cp.type="button";cp.id="pwBtn";cp.onclick=()=>{["pwOld","pwNew","pwNew2"].forEach(i=>$(i).value="");$("pwErr").hidden=true;$("pwShade").hidden=false;$("pwOld").focus()};
+    const lo=el("button","chip","Log out");lo.type="button";lo.id="logout";lo.onclick=()=>{setToken("");me=null;refresh()};
+    a.append(cp,lo);
+    a.append(el("span","hint",me.role==="teacher"?"You can report only your own sections. A report can be changed on the day it is entered; after that only a manager can correct it.":"Managers can report or correct any job, add, edit and remove tasks, and approve teacher logins."));
+    return;
+  }
+  const f=document.createElement("form");f.className="loginform";f.id="loginForm";
+  const sel=document.createElement("select");sel.id="lgName";sel.className="sel";sel.setAttribute("aria-label","Your name");
+  const o0=el("option",null,acctMode==="setup"?"Choose your name":"Your name");o0.value="";sel.append(o0);
+  teacherNames().forEach(n=>{const o=el("option",null,n);o.value=n;sel.append(o)});
+  const mgrNames=users.filter(u=>u.role==="manager"&&!teacherNames().includes(u.name)).map(u=>u.name);
+  mgrNames.forEach(n=>{const o=el("option",null,n+" (manager)");o.value=n;sel.append(o)});
+  const om=el("option",null,"Manager — type name below");om.value="__mgr";sel.append(om);
+  const mgr=document.createElement("input");mgr.type="text";mgr.id="lgMgr";mgr.className="sel";mgr.placeholder="Manager name";mgr.maxLength=40;mgr.hidden=true;mgr.autocomplete="username";
+  sel.onchange=()=>{mgr.hidden=sel.value!=="__mgr";if(!mgr.hidden)mgr.focus()};
+  const pw=document.createElement("input");pw.type="password";pw.id="lgPw";pw.className="sel";pw.placeholder=acctMode==="setup"?"Set a password (6+ characters)":"Password";pw.autocomplete=acctMode==="setup"?"new-password":"current-password";pw.setAttribute("aria-label","Password");
+  const go=el("button","addbtn",acctMode==="setup"?"Create login":"Log in");go.type="submit";go.id="lgGo";
+  const sw=el("button","chip",acctMode==="setup"?"I already have a password":"First time? Set password");sw.type="button";sw.id="lgSwitch";sw.onclick=()=>{acctMode=acctMode==="setup"?"login":"setup";renderAcct()};
+  f.append(el("b",null,acctMode==="setup"?"First-time setup:":"Log in:"),sel,mgr,pw,go,sw);
+  f.onsubmit=async e=>{
+    e.preventDefault();
+    const name=sel.value==="__mgr"?mgr.value.trim():sel.value;
+    if(!name){banner("Choose your name.");return}
+    if(!pw.value){banner("Enter your password.");return}
+    go.disabled=true;banner("");
+    try{
+      if(acctMode==="setup"){
+        const r=await api("setup",[name,pw.value,sel.value==="__mgr"||mgrNames.includes(name)]);
+        if(r.token){setToken(r.token);applyState(r.state);banner("")}
+        else{applyState(r.state);acctMode="login";banner("Password set for "+name+". A manager needs to approve your login once — then log in with this password.")}
+      }else{
+        const r=await api("login",[name,pw.value]);setToken(r.token);applyState(r.state);
+      }
+    }catch(err){banner(err.message)}
+    go.disabled=false;
+  };
+  a.append(f);
+  a.append(el("span","hint",acctMode==="setup"?"Set your own password. A manager approves your login once; nobody else can see or change your password.":"Not logged in: you can view the tracker but not report."));
+}
+$("pwSave").onclick=async()=>{
+  const o=$("pwOld").value,n=$("pwNew").value,n2=$("pwNew2").value;
+  const err=m=>{$("pwErr").textContent=m;$("pwErr").hidden=false};
+  if(n.length<6)return err("New password must be at least 6 characters.");
+  if(n!==n2)return err("The two new passwords don't match.");
+  try{const r=await api("changePassword",[token,o,n]);setToken(r.token);applyState(r.state);$("pwShade").hidden=true;banner("Password changed.")}catch(e){err(e.message)}
+};
+$("pwCancel").onclick=()=>$("pwShade").hidden=true;
+
+/* ---------- Teacher logins (manager) ---------- */
+function renderLogins(view){
+  const head=el("div","sec-h");head.append(el("h2",null,"Teacher logins"),el("p",null,"Each person sets their own password. Approve each login once; after that they just log in."));view.append(head);
+  const pend=users.filter(u=>u.status==="pending");
+  view.append(el("h2",null,"Waiting for approval"+(pend.length?" ("+pend.length+")":"")));
+  if(!pend.length)view.append(el("div","notice","No login requests. Teachers open the link, tap “First time? Set password”, choose their name and set a password."));
+  else{
+    const tw=el("div","tw"),tb=el("table");tb.style.minWidth="560px";
+    const hr=el("tr");["Name","Asked on","Role",""].forEach(x=>hr.append(el("th",null,x)));const th=el("thead");th.append(hr);tb.append(th);
+    const body=el("tbody");
+    pend.forEach(u=>{
+      const tr=el("tr");const n=el("td");n.append(el("b",null,u.name));tr.append(n);
+      tr.append(el("td",null,u.requestedAt?fmt(u.requestedAt)+" "+new Date(u.requestedAt).toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"}):"—"));
+      const s2=document.createElement("select");s2.className="sel";s2.id="ap-r-"+slug(u.name);[["teacher","Teacher"],["manager","Manager"]].forEach(([v,x])=>{const o=el("option",null,x);o.value=v;s2.append(o)});s2.value=u.role||"teacher";
+      const td2=el("td");td2.append(s2);tr.append(td2);
+      const td3=el("td");
+      const ok=el("button","addbtn","Approve");ok.type="button";ok.id="ap-ok-"+slug(u.name);ok.onclick=()=>apiWrite("approve",[token,u.name,s2.value],()=>{u.status="active";u.role=s2.value});
+      const no=el("button","chip","Reject");no.type="button";no.id="ap-no-"+slug(u.name);no.onclick=()=>apiWrite("removeUser",[token,u.name],()=>{users=users.filter(x=>x!==u)});
+      td3.append(ok,document.createTextNode(" "),no);tr.append(td3);body.append(tr);
+    });
+    tb.append(body);tw.append(tb);view.append(tw);
+    view.append(el("p","hint","Approve only if you know this person asked for it (for example they told you or messaged you). Anyone with the link can send a request."));
+  }
+  const act=users.filter(u=>u.status==="active").sort((a,b)=>(a.role+a.name).localeCompare(b.role+b.name));
+  view.append(el("h2",null,"Active logins ("+act.length+")"));
+  const linked=new Set(act.filter(u=>u.role==="teacher").map(u=>u.name));
+  const missing=ALL_TEACHERS.filter(n=>!linked.has(n));
+  if(missing.length)view.append(el("p","hint","No login yet: "+missing.join(", ")+"."));
+  if(!act.length)return;
+  const tw=el("div","tw"),tb=el("table");tb.style.minWidth="520px";
+  const hr=el("tr");["Name","Role","Approved",""].forEach(x=>hr.append(el("th",null,x)));const th=el("thead");th.append(hr);tb.append(th);
+  const body=el("tbody");
+  act.forEach(u=>{
+    const tr=el("tr");const n=el("td");n.append(el("b",null,u.name));tr.append(n);
+    tr.append(el("td",null,u.role==="manager"?"Manager":"Teacher"),el("td",null,u.approvedAt?fmt(u.approvedAt):"—"));
+    const td=el("td");const rm=el("button","chip","Reset / remove login");rm.type="button";rm.id="rm-"+slug(u.name);
+    rm.onclick=()=>{if(rm.dataset.arm!=="1"){rm.dataset.arm="1";rm.textContent="Tap again — they must set a new password";return}apiWrite("removeUser",[token,u.name],()=>{users=users.filter(x=>x!==u)})};
+    if(me&&u.name===me.name)rm.disabled=true;
+    td.append(rm);tr.append(td);body.append(tr);
+  });
+  tb.append(body);tw.append(tb);view.append(tw);
+  view.append(el("p","hint","Forgotten password: tap “Reset / remove login”. The teacher then sets a new password with “First time? Set password”, and you approve it again. Every change is also written to the Log tab of the Google Sheet."));
+}
+
+/* ---------- server ---------- */
+let token="";try{token=localStorage.getItem("chk68-token")||""}catch(e){}
+function setToken(t){token=t||"";try{if(token)localStorage.setItem("chk68-token",token);else localStorage.removeItem("chk68-token")}catch(e){}}
+async function api(fn,args){
+  const r=await fetch(API_URL,{method:"POST",redirect:"follow",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({fn,args:args||[]})});
+  const txt=await r.text();let j;
+  try{j=JSON.parse(txt)}catch(x){throw new Error("The server didn't answer properly. Check the Apps Script deployment (Anyone can access).")}
+  if(!j.ok)throw new Error(j.err||"Something went wrong.");
+  return j.v;
+}
+function applyState(s){
+  if(!s)return;
+  reports=s.reports||{};tasks=s.tasks||{};overrides=s.overrides||{};users=s.users||[];me=s.me||null;serverToday=s.today||null;
+  if(token&&!me)setToken("");
+  setStatus("live","Live · updated "+new Date().toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"}));
+  render();
+}
+let pending=0;
+async function refresh(){
+  if(!API_URL){render();return}
+  if(pending)return;
+  try{applyState(await api("state",[token]))}catch(e){setStatus("off","Can't reach the server — retrying");render()}
+}
+async function apiWrite(fn,args,optimistic){
+  if(optimistic){try{optimistic()}catch(e){}render()}
+  pending++;setStatus("","Saving…");
+  try{const s=await api(fn,args);pending--;applyState(s);banner("")}
+  catch(e){pending--;banner(e.message);await refresh()}
+}
+function setStatus(c,t){$("status").className="status "+c;$("statusText").textContent=t}
+function banner(m){$("banner").textContent=m;$("banner").hidden=!m}
+
+render();
+refresh();
+setInterval(()=>{if(document.visibilityState==="visible"&&$("shade").hidden&&$("edShade").hidden)refresh()},30000);
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")refresh()});
+
+function renderMy(view,t){
+  const p=myProfile();
+  const head=el("div","sec-h");head.append(el("h2",null,"My work · "+p.name),el("p",null,"Everything assigned to you, most urgent first. Tap a row to report."));view.append(head);
+  const RANK={over:0,tod:1,hand:2,idle:3,late:4,ok:5};
+  const rows=pairsWhere((j,sec)=>tOf(j,sec)===p.name).map(([j,sec])=>{const rec=getRec(j,sec);return {j,sec,rec,x:st(j,rec,t)}})
+    .filter(r=>!(r.rec&&isoOf(new Date(r.rec.at))<isoOf(new Date(D(t).getTime()-7*864e5))))
+    .sort((a,b)=>RANK[a.x.s]-RANK[b.x.s]||((a.j.due||"9")<(b.j.due||"9")?-1:1)||ORDER[a.j.k]-ORDER[b.j.k]);
+  const m=metrics(pairsWhere((j,sec)=>tOf(j,sec)===p.name),t);
+  const k=el("div","kpis");
+  [["over","Overdue",m.over],["tod","Due today",m.tod],["hand","In hand / to do",m.hand],["ok","On time",m.pct==null?"—":m.pct+"%"],["","Done late",m.late],["","Defaulters · Absent",m.def+" · "+m.abs]].forEach(([c,l,v])=>{const d=el("div","kpi "+c);d.append(el("div","l",l),el("div","v",String(v)));k.append(d)});
+  view.append(k);
+  if(!rows.length){view.append(el("div","notice","Nothing assigned to you yet."));return}
+  const tw=el("div","tw"),tb=el("table");tb.style.minWidth="640px";
+  const hr=el("tr");["Status","Deadline","Section","Subject","Job","Received"].forEach(x=>hr.append(el("th",null,x)));
+  const th=el("thead");th.append(hr);tb.append(th);const body=el("tbody");
+  const LBL={over:x=>x.late+"d overdue",tod:()=>"Due today",hand:(x,j)=>IS_CHECK[j.k]?"In hand":"To do",idle:()=>"Not started",late:x=>"Done late "+x.late+"d",ok:()=>"✓ Done"};
+  const CLS={over:"num-over",tod:"num-late",late:"num-late",ok:"num-ok"};
+  rows.forEach(({j,sec,rec,x})=>{
+    const tr=el("tr","clickable");tr.tabIndex=0;const go=()=>openSheet(sec,j);tr.onclick=go;tr.onkeydown=e=>{if(e.key==="Enter")go()};
+    tr.append(el("td",CLS[x.s]||"",LBL[x.s](x,j)),el("td",null,j.due?fmt(j.due)+" "+wd(j.due):"—"));
+    const sc=el("td");sc.append(el("b",null,sec));tr.append(sc);
+    const sp=el("td");sp.append(el("span","subj-pill",SNAME[j.s]));tr.append(sp);
+    const jd=el("td");jd.append(el("span","kind"+(j.k==="test"?" test":""),KIND[j.k]),document.createTextNode(j.lesson+(rec&&j.da?"  ·  D "+(rec.def??0)+" · A "+(rec.abs??0):"")));tr.append(jd);
+    tr.append(el("td",null,fmt(j.recv)));
+    body.append(tr);
+  });
+  tb.append(body);tw.append(tb);view.append(tw);
+}
+
+</script>
+
+</body>
+</html>
