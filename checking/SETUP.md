@@ -20,7 +20,7 @@ The first manager is approved automatically. Every login after that needs one ap
 
 ## 3. Teachers
 
-Send teachers the link. Each one taps **First time? Set password**, chooses their name and sets their own password. Approve each one once in the **Teacher logins** tab. After that they just log in with name + password.
+Send teachers the link. Each one taps **First time? Set password**, chooses their name and sets their own password. Approve each one once in **Admin → Teacher logins**. After that they just log in with name + password.
 
 ## 4. Section list and mentors (Admin tab, managers only)
 
