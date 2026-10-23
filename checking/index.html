@@ -170,6 +170,39 @@ textarea{font:inherit;width:100%;min-height:60px;border:1px solid var(--line);bo
 .btn.undo{color:var(--over)}
 .who{font-size:12.5px;color:var(--muted)}
 
+/* areas */
+.areas{display:flex;gap:6px;flex-wrap:wrap}
+.area{font:inherit;font-weight:700;font-size:14.5px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:9px 15px;border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.area[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.pcell{font:inherit;font-size:12.5px;font-weight:700;width:100%;min-height:34px;border:0;border-radius:7px;cursor:pointer;background:var(--idle-bg);color:var(--muted)}
+.pcell.ok{background:var(--ok-bg);color:var(--ok-ink)}
+.pcell.na{background:transparent;box-shadow:inset 0 0 0 1px var(--line);color:var(--muted)}
+.pcell.over{background:var(--over-bg);color:var(--over-ink)}
+.pcell.due{background:var(--tod-bg);color:var(--tod)}
+.pcell:disabled{cursor:default}
+table.prep td.c{padding:3px;min-width:84px}
+th.ctr{text-align:center;white-space:normal;min-width:84px}
+tr.sel td{background:var(--hand-bg)}
+.numin{font:inherit;width:72px;border:1px solid var(--line);border-radius:7px;padding:6px;text-align:center;background:var(--card);color:var(--ink)}
+.numin.ok{background:var(--ok-bg);color:var(--ok-ink);border-color:var(--ok)}
+td.names{font-size:12.5px;min-width:180px;vertical-align:top}
+.dn-list{margin-bottom:3px}.ab-list{color:var(--muted)}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.mgrid .lb{display:flex;flex-direction:column;gap:3px;font-weight:700;font-size:13px}
+#stuPaste{min-height:110px;font-family:ui-monospace,monospace;font-size:13px}
+.stulist{display:flex;flex-direction:column;gap:2px;max-height:48vh;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:6px}
+.stu-head{font-size:12px;color:var(--muted);padding:2px 4px 6px}
+.stu{display:flex;align-items:center;gap:8px;padding:4px 6px;border-radius:8px}
+.stu.is-d{background:var(--over-bg)}.stu.is-a{background:var(--idle-bg)}
+.stu .roll{width:24px;text-align:right;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.stu .sname{flex:1;min-width:0;font-size:14px}
+.tgl{font:inherit;font-weight:700;width:36px;height:32px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--muted);cursor:pointer}
+.tgl.on-d{background:var(--over);border-color:var(--over);color:#fff}
+.tgl.on-a{background:var(--muted);border-color:var(--muted);color:var(--card)}
+.mk{font:inherit;width:64px;height:32px;border:1px solid var(--line);border-radius:8px;text-align:center;background:var(--card);color:var(--ink)}
+.stu-count{font-size:12.5px;font-weight:700;padding:6px 4px 2px;color:var(--ink)}
+button.kpi{font:inherit;text-align:left;cursor:pointer;color:var(--ink)}
+
 /* login bar */
 .acct{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:14px}
 .acct .hint{flex-basis:100%}
@@ -214,13 +247,14 @@ textarea{font:inherit;width:100%;min-height:60px;border:1px solid var(--line);bo
     <div class="status" id="status"><span class="dot"></span><span id="statusText">Connecting…</span></div>
   </header>
 
+  <nav class="areas" id="areas" aria-label="Section"></nav>
   <nav class="tabs" id="tabs" role="tablist" aria-label="Board"></nav>
   <div class="acct" id="acct"></div>
   <div id="banner" class="banner" hidden></div>
 
   <div id="view" style="display:flex;flex-direction:column;gap:16px"></div>
 
-  <div class="legend">
+  <div class="legend" id="legend">
     <span><i class="sw" style="background:var(--ok-bg);box-shadow:inset 0 0 0 1px var(--ok)"></i>Checked on time</span>
     <span><i class="sw" style="background:var(--late-bg);box-shadow:inset 0 0 0 1px var(--late)"></i>Checked late</span>
     <span><i class="sw" style="background:var(--over-bg);box-shadow:inset 0 0 0 2px var(--over)"></i>Overdue</span>
@@ -229,17 +263,21 @@ textarea{font:inherit;width:100%;min-height:60px;border:1px solid var(--line);bo
     <span><i class="sw" style="box-shadow:inset 0 0 0 1px var(--line)"></i>Not received yet</span>
     <span>D = defaulters · A = absentees</span>
   </div>
-  <p class="rules"><b>Deadlines.</b> Notebook, Assignment and Book are checked before the next class of the same subject in that class (Hindi-1 and Hindi-2 count as one Hindi class). The test notebook is due before the 2nd test of any subject after it, because students alternate two test notebooks, so test notebooks are priority. A lesson spread over several days is received on its last day. Dates come from the Academic Planner (Classes 6–8): 15–20 Oct from the October planner, 21–31 Oct from the revised planner, including Maths (Class 6 homework notebook and assignments, and Maths tests; Classes 7–8 written work is the CM’s content notebook). <b>Teachers</b> tap their own box in a subject tab, enter Defaulters and Absentees (when the task asks for them), and save. <b>Logins:</b> each teacher sets their own password once and a manager approves it once. Reports are accepted only from that teacher (or a manager) for their own sections, carry their name and the server time, and lock at the end of the day. Every change is logged in the Google Sheet. Only managers (Editors) can add, edit or remove tasks. <b>Editing:</b> “+ Add task” adds any notebook, test, assignment, checking material, extra task, preparation, class or school task for chosen sections. “Edit” on any job changes its name, dates, sections, teacher and whether a Defaulter/Absentee report applies, or removes it. Removed planner jobs can be restored from the bottom of the subject tab.</p>
+  <p class="rules" id="rules"><b>Deadlines.</b> Notebook, Assignment and Book are checked before the next class of the same subject in that class (Hindi-1 and Hindi-2 count as one Hindi class). The test notebook is due before the 2nd test of any subject after it, because students alternate two test notebooks, so test notebooks are priority. A lesson spread over several days is received on its last day. Dates come from the Academic Planner (Classes 6–8): 15–20 Oct from the October planner, 21–31 Oct from the revised planner, including Maths (Class 6 homework notebook and assignments, and Maths tests; Classes 7–8 written work is the CM’s content notebook). <b>Teachers</b> tap their own box in a subject tab, enter Defaulters and Absentees (when the task asks for them), and save. <b>Logins:</b> each teacher sets their own password once and a manager approves it once. Reports are accepted only from that teacher (or a manager) for their own sections, carry their name and the server time, and lock at the end of the day. Every change is logged in the Google Sheet. Only managers (Editors) can add, edit or remove tasks. <b>Editing:</b> “+ Add task” adds any notebook, test, assignment, checking material, extra task, preparation, class or school task for chosen sections. “Edit” on any job changes its name, dates, sections, teacher and whether a Defaulter/Absentee report applies, or removes it. Removed planner jobs can be restored from the bottom of the subject tab.</p>
 </div>
 
 <div class="shade" id="shade" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="shTitle">
     <div><h3 id="shTitle"></h3><div class="sub" id="shSub"></div></div>
     <div id="daFields" style="display:flex;flex-direction:column;gap:14px">
+    <div class="fld" id="maxRow" hidden><label for="inMax">Maximum marks<small>Out of how many marks</small></label><input id="inMax" type="number" min="1" max="500" class="sel" style="width:90px"></div>
+    <div id="stuList" class="stulist" hidden></div>
+    <div id="daSteppers" style="display:flex;flex-direction:column;gap:14px">
     <div class="fld"><label for="inDef">Defaulters<small>Not submitted / work not done</small></label>
       <div class="step"><button type="button" data-t="inDef" data-d="-1" aria-label="Less">−</button><input id="inDef" type="number" min="0" max="60" inputmode="numeric"><button type="button" data-t="inDef" data-d="1" aria-label="More">+</button></div></div>
     <div class="fld"><label for="inAbs">Absentees<small>Absent on the day</small></label>
       <div class="step"><button type="button" data-t="inAbs" data-d="-1" aria-label="Less">−</button><input id="inAbs" type="number" min="0" max="60" inputmode="numeric"><button type="button" data-t="inAbs" data-d="1" aria-label="More">+</button></div></div>
+    </div>
     </div>
     <div><label for="inNote" style="font-weight:700;display:block;margin-bottom:4px">Remarks <small style="font-weight:400;color:var(--muted)">(optional, e.g. roll nos.)</small></label>
       <textarea id="inNote" maxlength="400"></textarea></div>
@@ -365,7 +403,7 @@ const docId=(sec,j)=>`${sec}_${j.lid}_${j.k}`; // English ids kept from the firs
 
 
 // Data comes from the Google Sheet through the Apps Script web app. The server checks every change.
-let reports={}, overrides={}, tasks={}, users=[], me=null, serverToday=null;
+let reports={}, overrides={}, tasks={}, users=[], me=null, serverToday=null, prep={}, mentorData={}, config={mentors:{},prepLessons:[],students:[]};
 function getRec(j,sec){return reports[docId(sec,j)]||null}
 const myProfile=()=>me;
 const isManager=()=>!!me&&me.role==="manager";
@@ -455,10 +493,7 @@ function renderTabs(t){
   const mk=(id,label,badge)=>{const b=el("button","tab",label);b.type="button";b.id="tab-"+id;b.setAttribute("role","tab");b.setAttribute("aria-selected",tab===id);
     if(badge)b.append(el("span","bdg",String(badge)));b.onclick=()=>goTab(id);nav.append(b)};
   mk("dash","Dashboard");
-  const p=myProfile();
-  if(p&&p.role==="teacher")mk("my","My work",metrics(pairsWhere((j,sec)=>tOf(j,sec)===p.name),t).over);
   SUBJ.forEach(s=>{const o=metrics(pairsWhere(j=>j.s===s.id),t).over;mk(s.tab,s.name,o)});
-  if(isAdmin)mk("logins","Teacher logins",users.filter(u=>u.status==="pending").length);
 }
 
 /* ---------- Dashboard ---------- */
@@ -637,13 +672,21 @@ async function render(){
   JOBS=buildJobs();
   isAdmin=isManager();
   const t=todayISO();
-  if(tab==="logins"&&!isAdmin)tab="dash";
-  if(tab==="my"&&!(me&&me.role==="teacher"))tab="dash";
-  renderTabs(t);renderAcct();
+  if(tab==="logins"||tab==="my"){area=tab==="my"?"my":"admin";tab="dash"}
+  if(area==="admin"&&!isAdmin)area="check";
+  if(area==="my"&&!(me&&me.role==="teacher"))area="check";
+  renderAreas(t);
+  $("tabs").hidden=area!=="check";$("legend").hidden=area!=="check"&&area!=="my";$("rules").hidden=area!=="check";
+  if(area==="check")renderTabs(t);
+  renderAcct();
   const view=$("view");view.replaceChildren();
-  if(tab==="dash")renderDash(view,t);
-  else if(tab==="my")renderMy(view,t);
-  else if(tab==="logins")renderLogins(view);
+  if(area==="my"){renderMy(view,t);myExtras(view,t)}
+  else if(area==="prep")renderPrep(view,t);
+  else if(area==="mentor")renderMentor(view,t);
+  else if(area==="def")renderDef(view,t);
+  else if(area==="perf")renderPerf(view,t);
+  else if(area==="admin")renderAdmin(view,t);
+  else if(tab==="dash")renderDash(view,t);
   else renderSubject(view,t,SUBJ.find(s=>s.tab===tab)||SUBJ[0]);
 }
 
@@ -658,6 +701,7 @@ function openSheet(sec,j){
   $("shTitle").textContent=`${tOf(j,sec)} · ${sec} · ${SNAME[j.s]} ${KIND_LONG[j.k]}`;
   $("shSub").textContent=`${j.lesson} · received ${fmt(j.recv)}`+(j.due?` · deadline ${fmt(j.due)}`:" · no deadline")+(j.note?" · "+j.note:"");
   $("daFields").hidden=!j.da;
+  fillStudentList(sec,j,rec,editable);
   $("inDef").value=rec?.def??0;$("inAbs").value=rec?.abs??0;$("inNote").value=rec?.note??"";
   let info=rec?`Reported on ${fmt(rec.at)} by ${rec.by}${rec.editedBy?" · corrected by "+rec.editedBy:""}${rec.note?" · "+rec.note:""}`:"";
   if(!editable){
@@ -679,8 +723,19 @@ $("btnSave").onclick=()=>{
   if(!cur||!cur.editable)return;const {j,sec,id,rec}=cur;
   const payload={...jobCtx(j,sec),lesson:j.lesson,due:j.due||"",da:j.da,note:$("inNote").value.trim().slice(0,400)};
   if(j.da){payload.def=num($("inDef").value);payload.abs=num($("inAbs").value)}
+  if(!$("stuList").hidden){
+    if(j.k==="test"){
+      const mx=parseInt($("inMax").value,10);if(Object.keys(sheetMarks).length&&!(mx>0)){banner("Enter the maximum marks of the test.");$("inMax").focus();return}
+      const bad=Object.entries(sheetMarks).filter(([,v])=>!/^(\d{1,3}(\.\d)?|A|NG)$/.test(v)||(parseFloat(v)>mx));
+      if(bad.length){banner("Check marks for roll "+bad.map(b=>b[0]).join(", ")+": use a number up to "+mx+", A or NG.");return}
+      payload.marks=sheetMarks;payload.max=mx;
+      payload.defList=Object.keys(sheetMarks).filter(k=>sheetMarks[k]==="NG");payload.absList=Object.keys(sheetMarks).filter(k=>sheetMarks[k]==="A");
+    }else{payload.defList=[...sheetDef];payload.absList=[...sheetAbs]}
+    payload.def=payload.defList.length;payload.abs=payload.absList.length;
+  }
   const opt={sec,subject:j.s,kind:j.k,lesson:j.lesson,note:payload.note,at:rec?rec.at:new Date().toISOString(),by:rec?rec.by:me.name};
   if(j.da){opt.def=payload.def;opt.abs=payload.abs}
+  if(payload.defList)opt.data={defList:payload.defList,absList:payload.absList,...(payload.marks?{marks:payload.marks,max:payload.max}:{})};
   closeSheet();
   apiWrite("saveReport",[token,payload],()=>{reports[id]=opt});
 };
@@ -749,7 +804,7 @@ $("edRemove").onclick=()=>{
 function restoreJob(key){apiWrite("deleteOverride",[token,key],()=>{delete overrides[key]})}
 
 /* ---------- login ---------- */
-function teacherNames(){return [...new Set([...ALL_TEACHERS,...Object.values(tasks).map(t=>t&&t.assignee).filter(Boolean)])].sort()}
+function teacherNames(){return [...new Set([...ALL_TEACHERS,...Object.values(DEFAULT_MENTORS),...Object.values(config.mentors||{}),...Object.values(tasks).map(t=>t&&t.assignee).filter(Boolean)])].sort()}
 let acctMode="login"; // login | setup
 function renderAcct(){
   const a=$("acct");a.replaceChildren();
@@ -861,6 +916,7 @@ async function api(fn,args){
 function applyState(s){
   if(!s)return;
   reports=s.reports||{};tasks=s.tasks||{};overrides=s.overrides||{};users=s.users||[];me=s.me||null;serverToday=s.today||null;
+  prep=s.prep||{};mentorData=s.mentor||{};config=Object.assign({mentors:{},prepLessons:[],students:[]},s.config||{});
   if(token&&!me)setToken("");
   setStatus("live","Live · updated "+new Date().toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"}));
   render();
@@ -880,10 +936,6 @@ async function apiWrite(fn,args,optimistic){
 function setStatus(c,t){$("status").className="status "+c;$("statusText").textContent=t}
 function banner(m){$("banner").textContent=m;$("banner").hidden=!m}
 
-render();
-refresh();
-setInterval(()=>{if(document.visibilityState==="visible"&&$("shade").hidden&&$("edShade").hidden)refresh()},30000);
-document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")refresh()});
 
 function renderMy(view,t){
   const p=myProfile();
@@ -914,6 +966,352 @@ function renderMy(view,t){
   tb.append(body);tw.append(tb);view.append(tw);
 }
 
+
+
+/* ================= Areas: Preparation & Review · Mentor tasks · Defaulters · Performance · Admin ================= */
+const DEFAULT_MENTORS={"6A":"Shailesh","6B":"Ishita","6C":"Monika","7A":"Swati","7B":"Yavnika","7C":"Jyotsna","8A":"Pallavi","8B":"Shreya","8C":"Ritika"};
+const mentorOf=sec=>(config.mentors&&config.mentors[sec])||DEFAULT_MENTORS[sec]||"";
+const PREP_COLS=[["booklet","Booklet"],["anskey","Assignment answer key"],["video","Video"],["ppt","PPT"],["epl","EPL"]];
+const REVIEW_COLS=[["rvContent","Booklet / Content"],["rvAsg","Assignments"]];
+const MENTOR_ITEMS=[["att","Attendance Register","daily"],["rec","Record Register","weekly"],["route","Route Plan","weekly"],["coc","Co-curricular","weekly"],["disp","Class Display","monthly"],["wall","Student Wall Display (no. submitted)","monthly"]];
+const AREAS=[["check","Checking"],["prep","Preparation & Review"],["mentor","Mentor tasks"],["def","Defaulters"],["perf","Performance"]];
+let area="check", prepView="prep", pTeacher="", pShow="upcoming", pClass="all", pSubj="all", mDate="", dClass="all", dSubj="all", dKind="all", perfClass="all", perfSubj="all";
+try{const s=JSON.parse(localStorage.getItem("chk68-area")||"{}");if(s.area)area=s.area;if(s.prepView)prepView=s.prepView}catch(e){}
+const saveArea=()=>{try{localStorage.setItem("chk68-area",JSON.stringify({area,prepView}))}catch(e){}};
+function goArea(a){area=a;saveArea();render();window.scrollTo({top:0})}
+
+function studentsOf(sec){return (config.students||[]).filter(s=>s.sec===sec).sort((a,b)=>(parseInt(a.roll)||0)-(parseInt(b.roll)||0)||String(a.roll).localeCompare(String(b.roll)))}
+function stuName(sec,roll){const s=(config.students||[]).find(x=>x.sec===sec&&String(x.roll)===String(roll));return s?s.name:"Roll "+roll}
+
+function renderAreas(t){
+  const nav=$("areas");nav.replaceChildren();
+  const mk=(id,label,badge)=>{const b=el("button","area",label);b.type="button";b.id="area-"+id;b.setAttribute("aria-pressed",area===id);if(badge)b.append(el("span","bdg",String(badge)));b.onclick=()=>goArea(id);nav.append(b)};
+  if(me&&me.role==="teacher")mk("my","My work");
+  AREAS.forEach(([id,l])=>mk(id,l));
+  if(isAdmin)mk("admin","Admin",users.filter(u=>u.status==="pending").length);
+}
+
+/* ---------- Preparation & Review ---------- */
+function prepLessons(){
+  const out=[];
+  for(const c of CLASSES){
+    const {L,T}=PLAN[c];
+    for(const s of SUBJ.map(x=>x.id)){
+      if(s==="GEN")continue;
+      let rows=L.filter(x=>x[1]===s).map(([d,,n])=>[d,n]);
+      if(s==="MATH"){rows=[];L.filter(x=>x[1]==="MATH").forEach(([d,,n])=>{const m=n.match(/L(?:esson)?-?\s?(\d+)/);if(m)rows.push([d,"Maths L-"+m[1]])});T.filter(x=>x[1]==="MATH").forEach(([d,,n])=>rows.push([d,n]))}
+      const merged=[];rows.sort((a,b)=>a[0]<b[0]?-1:1).forEach(([d,n])=>{const f=merged.find(m=>m.name===n);if(f){if(d<f.start)f.start=d;if(d>f.end)f.end=d}else merged.push({name:n,start:d,end:d})});
+      merged.forEach(m=>{if(m.end<START)return;out.push({c,s,lesson:m.name,lid:slug(m.name),start:m.start,end:m.end})});
+    }
+  }
+  (config.prepLessons||[]).forEach(p=>{if(!out.some(o=>o.c===p.c&&o.s===p.s&&o.lid===slug(p.lesson)))out.push({c:p.c,s:p.s,lesson:p.lesson,lid:slug(p.lesson),start:p.start||todayISO(),end:p.start||todayISO(),added:true})});
+  const rows=[];
+  out.forEach(l=>{const names=[...new Set(LET.map(x=>defTeacher(l.s,l.c+x)))];names.forEach(tn=>rows.push({...l,teacher:tn,key:`${tn}|${l.c}|${l.s}|${l.lid}`,secs:LET.filter(x=>defTeacher(l.s,l.c+x)===tn).map(x=>l.c+x)}))});
+  return rows.sort((a,b)=>a.start<b.start?-1:a.start>b.start?1:a.teacher.localeCompare(b.teacher));
+}
+const pVal=(row,tool)=>(prep[row.key]&&prep[row.key][tool])||"due";
+function prepStats(rows,cols,t){
+  let done=0,na=0,due=0,late=0;
+  rows.forEach(r=>cols.forEach(([k])=>{const v=pVal(r,k);if(v==="done")done++;else if(v==="na")na++;else{due++;if(r.start<=t)late++}}));
+  const total=done+due;return {done,na,due,late,total,pct:total?Math.round(done/total*100):null};
+}
+function renderPrep(view,t){
+  const all=prepLessons();
+  const cols=prepView==="prep"?PREP_COLS:REVIEW_COLS;
+  if(!pTeacher)pTeacher=me&&me.role==="teacher"?me.name:"all";
+  const head=el("div","sec-h");
+  const seg=el("div","toolbar");[["prep","Preparation status"],["review","Content review status"]].forEach(([v,x])=>{const b=el("button","chip",x);b.type="button";b.id="pv-"+v;b.setAttribute("aria-pressed",prepView===v);b.onclick=()=>{prepView=v;saveArea();render()};seg.append(b)});
+  head.append(el("h2",null,prepView==="prep"?"Preparation status":"Content review status"),seg);view.append(head);
+
+  // dashboard: one row per teacher
+  const teachers=[...new Set(all.map(r=>r.teacher))].sort();
+  const tw=el("div","tw"),tb=el("table");tb.style.minWidth="640px";
+  const hr=el("tr");["Teacher","Lessons","Done %","Done","Due (lesson started)","Due (upcoming)","NA"].forEach((x,i)=>hr.append(el("th",i>1?"n":"",x)));
+  const th=el("thead");th.append(hr);tb.append(th);const body=el("tbody");
+  teachers.forEach(tn=>{
+    const rs=all.filter(r=>r.teacher===tn&&(pShow==="all"||r.end>=t||cols.some(([k])=>pVal(r,k)==="due"&&r.start<=t)));
+    const m=prepStats(rs,cols,t);
+    const tr=el("tr","clickable"+(pTeacher===tn?" sel":""));tr.tabIndex=0;const go=()=>{pTeacher=tn;render()};tr.onclick=go;tr.onkeydown=e=>{if(e.key==="Enter")go()};
+    const n=el("td");n.append(el("b",null,tn));tr.append(n,el("td","n",String(rs.length)));
+    const pc=el("td");const pw=el("div","pctcell");const bar=el("div","bar");[["b-ok",m.done]].forEach(([k,v])=>{const i=el("i",k);i.style.width=m.total?(v/m.total*100)+"%":"0";bar.append(i)});
+    pw.append(el("b",m.pct==null?"":m.pct>=80?"num-ok":m.pct>=50?"num-late":"num-over",m.pct==null?"—":m.pct+"%"),bar);pc.append(pw);tr.append(pc);
+    [[m.done,"num-ok"],[m.late,m.late?"num-over":""],[m.due-m.late,""],[m.na,""]].forEach(([v,c])=>{const td=el("td","n");td.append(el("span",c,String(v)));tr.append(td)});
+    body.append(tr);
+  });
+  tb.append(body);tw.append(tb);view.append(tw);
+
+  // filters
+  const bar=el("div","toolbar");
+  const sel=(id,lab,opts,cur,set)=>{bar.append(el("span","lab",lab));const s=document.createElement("select");s.className="sel";s.id=id;opts.forEach(([v,x])=>{const o=el("option",null,x);o.value=v;s.append(o)});s.value=cur;s.onchange=()=>{set(s.value);render()};bar.append(s)};
+  sel("pT","Teacher",[["all","All teachers"],...teachers.map(x=>[x,x])],pTeacher,v=>pTeacher=v);
+  sel("pS","Show",[["upcoming","Upcoming + pending"],["all","All lessons"]],pShow,v=>pShow=v);
+  sel("pC","Class",[["all","All"],["6","6"],["7","7"],["8","8"]],pClass,v=>pClass=v);
+  sel("pSub","Subject",[["all","All"],...SUBJ.filter(s=>s.id!=="GEN").map(s=>[s.id,s.name])],pSubj,v=>pSubj=v);
+  view.append(bar);
+
+  const rows=all.filter(r=>(pTeacher==="all"||r.teacher===pTeacher)&&(pClass==="all"||r.c===pClass)&&(pSubj==="all"||r.s===pSubj)&&(pShow==="all"||r.end>=t||cols.some(([k])=>pVal(r,k)==="due"&&r.start<=t)));
+  const tw2=el("div","tw"),t2=el("table","prep");t2.style.minWidth=(560+cols.length*92)+"px";
+  const h2=el("tr");["Starts","Teacher","Sections","Subject","Lesson"].forEach(x=>h2.append(el("th",null,x)));cols.forEach(([,x])=>h2.append(el("th","ctr",x)));
+  const th2=el("thead");th2.append(h2);t2.append(th2);const b2=el("tbody");
+  if(!rows.length){const tr=el("tr"),td=el("td","empty","No lessons in this view.");td.colSpan=5+cols.length;tr.append(td);b2.append(tr)}
+  rows.forEach(r=>{
+    const tr=el("tr");
+    tr.append(el("td",r.start===t?"num-late":"",fmt(r.start)+(r.end!==r.start?"–"+D(r.end).getDate():"")),el("td",null,r.teacher),el("td",null,r.secs.join(" ")));
+    const sp=el("td");sp.append(el("span","subj-pill",SNAME[r.s]));tr.append(sp);
+    const ln=el("td");ln.append(el("b",null,r.lesson));tr.append(ln);
+    const can=!!me&&(me.role==="manager"||me.name===r.teacher);
+    cols.forEach(([k,lab])=>{
+      const v=pVal(r,k),td=el("td","c");
+      const b=el("button","pcell "+(v==="done"?"ok":v==="na"?"na":r.start<=t?"over":"due"),v==="done"?"✓ Done":v==="na"?"NA":r.start<=t?"Due":"Due");
+      b.type="button";b.id="p-"+slug(r.key)+"-"+k;b.title=can?"Tap: Due → Done → NA":"Only "+r.teacher+" or a manager can change this";
+      b.setAttribute("aria-label",`${r.teacher} ${r.lesson} ${lab}: ${v}`);
+      if(!can)b.disabled=true;
+      b.onclick=()=>{const nv=v==="due"?"done":v==="done"?"na":"due";apiWrite("savePrep",[token,r.key,k,nv],()=>{const p=prep[r.key]=prep[r.key]||{};if(nv==="due")delete p[k];else p[k]=nv})};
+      td.append(b);tr.append(td);
+    });
+    b2.append(tr);
+  });
+  t2.append(b2);tw2.append(t2);view.append(tw2);
+  view.append(el("p","hint","Tap a box to cycle Due → Done → NA. Red “Due” = the lesson has already started. Teachers can change only their own rows."+(isAdmin?" Add a lesson that is not in the planner from Admin → Extra lessons.":"")));
+}
+
+/* ---------- Mentor tasks ---------- */
+const monday=iso=>{const d=D(iso);const k=(d.getDay()+6)%7;d.setDate(d.getDate()-k);return isoOf(d)};
+function periodKey(freq,iso){return freq==="daily"?iso:freq==="weekly"?monday(iso):iso.slice(0,7)}
+function periodLabel(freq,iso){if(freq==="daily")return fmt(iso);if(freq==="weekly"){const m=monday(iso),e=isoOf(new Date(D(m).getTime()+5*864e5));return "week "+fmt(m)+"–"+fmt(e)}return D(iso).toLocaleDateString("en-IN",{month:"long"})}
+function weekDays(iso){const m=monday(iso);return [0,1,2,3,4,5].map(i=>isoOf(new Date(D(m).getTime()+i*864e5)))}
+function renderMentor(view,t){
+  if(!mDate)mDate=t;
+  const head=el("div","sec-h");head.append(el("h2",null,"Mentor tasks"));
+  const dp=document.createElement("input");dp.type="date";dp.id="mDate";dp.className="sel";dp.value=mDate;dp.onchange=()=>{mDate=dp.value||t;render()};
+  const lab=el("label","toolbar");lab.append(el("span","lab","Date"),dp);head.append(lab);view.append(head);
+  view.append(el("p","hint","Attendance Register: daily ("+fmt(mDate)+") · Record Register, Route Plan, Co-curricular: "+periodLabel("weekly",mDate)+" · Class Display, Student Wall Display: "+periodLabel("monthly",mDate)+". Tap to cycle Due → Done → NA; type the number of wall submissions."));
+  const tw=el("div","tw"),tb=el("table","prep");tb.style.minWidth="900px";
+  const hr=el("tr");hr.append(el("th",null,"Section"),el("th",null,"Mentor"));MENTOR_ITEMS.forEach(([,l])=>hr.append(el("th","ctr",l)));hr.append(el("th","n","Attendance this week"),el("th","n","Done"));
+  const th=el("thead");th.append(hr);tb.append(th);const body=el("tbody");
+  const days=weekDays(mDate).filter(d=>d<=t);
+  SECS.forEach(sec=>{
+    const mn=mentorOf(sec),can=!!me&&(me.role==="manager"||me.name===mn);
+    const tr=el("tr");const sc=el("td");sc.append(el("b",null,sec));tr.append(sc,el("td",null,mn||"—"));
+    let done=0,tot=0;
+    MENTOR_ITEMS.forEach(([k,l,f])=>{
+      const key=`${sec}|${k}|${periodKey(f,mDate)}`,rec=mentorData[key],td=el("td","c");tot++;
+      const pastDue=f==="daily"?mDate<t:f==="weekly"?isoOf(new Date(D(monday(mDate)).getTime()+5*864e5))<t:false;
+      if(k==="wall"){
+        const inp=document.createElement("input");inp.type="number";inp.min="0";inp.max="999";inp.className="numin"+(rec?" ok":"");inp.id="m-"+sec+"-"+k;inp.value=rec?rec.v:"";inp.placeholder="—";inp.disabled=!can;inp.setAttribute("aria-label",sec+" "+l);
+        inp.onchange=()=>{const v=inp.value.trim();apiWrite("saveMentor",[token,key,v===""?"due":v],()=>{if(v==="")delete mentorData[key];else mentorData[key]={v,by:me.name,at:new Date().toISOString()}})};
+        if(rec)done++;td.append(inp);
+      }else{
+        const v=rec?rec.v:"due";if(v!=="due")done++;
+        const b=el("button","pcell "+(v==="done"?"ok":v==="na"?"na":pastDue?"over":"due"),v==="done"?"✓ Done":v==="na"?"NA":"Due");b.type="button";b.id="m-"+sec+"-"+k;
+        b.setAttribute("aria-label",`${sec} ${l}: ${v}`);if(!can)b.disabled=true;
+        b.onclick=()=>{const nv=v==="due"?"done":v==="done"?"na":"due";apiWrite("saveMentor",[token,key,nv],()=>{if(nv==="due")delete mentorData[key];else mentorData[key]={v:nv,by:me.name,at:new Date().toISOString()}})};
+        td.append(b);
+      }
+      tr.append(td);
+    });
+    const att=days.filter(d=>mentorData[`${sec}|att|${d}`]).length;
+    tr.append(el("td","n "+(att<days.length?"num-late":"num-ok"),att+"/"+days.length),el("td","n",done+"/"+tot));
+    body.append(tr);
+  });
+  tb.append(body);tw.append(tb);view.append(tw);
+  // month summary per mentor
+  view.append(el("h2",null,"This month · "+periodLabel("monthly",mDate)));
+  const tw2=el("div","tw"),t2=el("table");t2.style.minWidth="620px";
+  const h2=el("tr");["Section","Mentor","Attendance days marked","Weekly items done","Class Display","Wall submissions"].forEach((x,i)=>h2.append(el("th",i>1?"n":"",x)));
+  const th2=el("thead");th2.append(h2);t2.append(th2);const b2=el("tbody");
+  const mon=mDate.slice(0,7);
+  SECS.forEach(sec=>{
+    const ks=Object.keys(mentorData).filter(k=>k.startsWith(sec+"|"));
+    const attN=ks.filter(k=>k.split("|")[1]==="att"&&k.split("|")[2].slice(0,7)===mon).length;
+    const wk=ks.filter(k=>["rec","route","coc"].includes(k.split("|")[1])&&k.split("|")[2].slice(0,7)===mon&&mentorData[k].v==="done").length;
+    const disp=mentorData[`${sec}|disp|${mon}`],wall=mentorData[`${sec}|wall|${mon}`];
+    const tr=el("tr");const sc=el("td");sc.append(el("b",null,sec));tr.append(sc,el("td",null,mentorOf(sec)),el("td","n",String(attN)),el("td","n",String(wk)),el("td","n",disp?(disp.v==="done"?"✓":disp.v):"—"),el("td","n",wall?wall.v:"—"));b2.append(tr);
+  });
+  t2.append(b2);tw2.append(t2);view.append(tw2);
+}
+
+/* ---------- Defaulters ---------- */
+function reportsWithLists(){
+  return JOBS.flatMap(j=>j.secs.map(l=>{const sec=j.c+l,r=getRec(j,sec);return r&&r.data&&((r.data.defList||[]).length||(r.data.absList||[]).length)?{j,sec,r}:null}).filter(Boolean));
+}
+function renderDef(view,t){
+  const head=el("div","sec-h");head.append(el("h2",null,"Defaulter status"),el("p",null,me?"Names from the section list. Red = defaulter (incomplete / not submitted), grey = absent.":"Log in to see student names; roll numbers are shown."));view.append(head);
+  const bar=el("div","toolbar");
+  const sel=(id,lab,opts,cur,set)=>{bar.append(el("span","lab",lab));const s=document.createElement("select");s.className="sel";s.id=id;opts.forEach(([v,x])=>{const o=el("option",null,x);o.value=v;s.append(o)});s.value=cur;s.onchange=()=>{set(s.value);render()};bar.append(s)};
+  sel("dC","Class",[["all","All"],["6","6"],["7","7"],["8","8"]],dClass,v=>dClass=v);
+  sel("dS","Subject",[["all","All"],...SUBJ.map(s=>[s.id,s.name])],dSubj,v=>dSubj=v);
+  sel("dK","Type",[["all","All"],["nb","Notebook"],["asg","Assignment"],["book","Book"],["test","Test"],["mat","Checking material"]],dKind,v=>dKind=v);
+  view.append(bar);
+  const items=reportsWithLists().filter(x=>(dClass==="all"||x.j.c===dClass)&&(dSubj==="all"||x.j.s===dSubj)&&(dKind==="all"||x.j.k===dKind));
+  const nm=(sec,roll)=>me?stuName(sec,roll):"Roll "+roll;
+  // lesson-wise, section-wise
+  const byJob=new Map();items.forEach(x=>{const k=x.j.key;if(!byJob.has(k))byJob.set(k,{j:x.j,cells:{}});byJob.get(k).cells[x.sec[1]]=x});
+  view.append(el("h2",null,"Lesson-wise incomplete work"));
+  if(!byJob.size)view.append(el("div","notice","No defaulter or absentee names reported yet for this filter. Teachers tap names when they report a notebook, assignment or test."));
+  else{
+    const tw=el("div","tw"),tb=el("table");tb.style.minWidth="820px";
+    const hr=el("tr");["Checked","Class · Subject","Job"].forEach(x=>hr.append(el("th",null,x)));LET.forEach(l=>hr.append(el("th",null,"Section "+l)));
+    const th=el("thead");th.append(hr);tb.append(th);const body=el("tbody");
+    [...byJob.values()].sort((a,b)=>(b.j.recv>a.j.recv?1:-1)).forEach(({j,cells})=>{
+      const tr=el("tr");tr.append(el("td",null,fmt(j.recv)),el("td",null,j.c+" · "+SNAME[j.s]));
+      const jd=el("td");jd.append(el("span","kind"+(j.k==="test"?" test":""),KIND[j.k]),document.createTextNode(j.lesson));tr.append(jd);
+      LET.forEach(l=>{const td=el("td","names");const x=cells[l];
+        if(x){const dl=x.r.data.defList||[],al=x.r.data.absList||[];
+          if(dl.length){const d=el("div","dn-list");d.append(el("b","num-over","D "+dl.length+": "),document.createTextNode(dl.map(r=>nm(x.sec,r)).join(", ")));td.append(d)}
+          if(al.length){const a=el("div","ab-list");a.append(el("b",null,"A "+al.length+": "),document.createTextNode(al.map(r=>nm(x.sec,r)).join(", ")));td.append(a)}
+        }else td.append(el("span","hint","—"));
+        tr.append(td)});
+      body.append(tr);
+    });
+    tb.append(body);tw.append(tb);view.append(tw);
+  }
+  // repeat defaulters
+  const cnt=new Map();
+  items.forEach(x=>(x.r.data.defList||[]).forEach(roll=>{const k=x.sec+"|"+roll;if(!cnt.has(k))cnt.set(k,{sec:x.sec,roll,n:0,jobs:[]});const c=cnt.get(k);c.n++;c.jobs.push(SNAME[x.j.s]+" "+KIND[x.j.k]+" "+x.j.lesson)}));
+  const rep=[...cnt.values()].filter(c=>c.n>=2).sort((a,b)=>b.n-a.n||a.sec.localeCompare(b.sec));
+  view.append(el("h2",null,"Repeat defaulters (2 or more)"));
+  if(!rep.length){view.append(el("div","notice","No student is a defaulter twice yet in this filter."));return}
+  const tw=el("div","tw"),tb=el("table");tb.style.minWidth="620px";
+  const hr=el("tr");["Student","Section","Times","Where"].forEach((x,i)=>hr.append(el("th",i===2?"n":"",x)));const th=el("thead");th.append(hr);tb.append(th);const body=el("tbody");
+  rep.forEach(c=>{const tr=el("tr");const n=el("td");n.append(el("b",null,nm(c.sec,c.roll)));tr.append(n,el("td",null,c.sec),el("td","n num-over",String(c.n)),el("td","hint",c.jobs.join(" · ")));body.append(tr)});
+  tb.append(body);tw.append(tb);view.append(tw);
+}
+
+/* ---------- Performance (test marks) ---------- */
+function markPct(v,max){const n=parseFloat(v);return isNaN(n)?null:n/max*100}
+function renderPerf(view,t){
+  const head=el("div","sec-h");head.append(el("h2",null,"Performance tracker · test marks"),el("p",null,"Teachers enter marks when they report a test notebook. Below 60% is flagged."));view.append(head);
+  const bar=el("div","toolbar");
+  const sel=(id,lab,opts,cur,set)=>{bar.append(el("span","lab",lab));const s=document.createElement("select");s.className="sel";s.id=id;opts.forEach(([v,x])=>{const o=el("option",null,x);o.value=v;s.append(o)});s.value=cur;s.onchange=()=>{set(s.value);render()};bar.append(s)};
+  sel("fC","Class",[["all","All"],["6","6"],["7","7"],["8","8"]],perfClass,v=>perfClass=v);
+  sel("fS","Subject",[["all","All"],...SUBJ.filter(s=>s.id!=="GEN").map(s=>[s.id,s.name])],perfSubj,v=>perfSubj=v);
+  view.append(bar);
+  const tests=JOBS.filter(j=>(perfClass==="all"||j.c===perfClass)&&(perfSubj==="all"||j.s===perfSubj)).flatMap(j=>j.secs.map(l=>{const sec=j.c+l,r=getRec(j,sec);return r&&r.data&&r.data.marks?{j,sec,r}:null}).filter(Boolean));
+  if(!tests.length){view.append(el("div","notice","No marks entered yet. When a teacher reports a test notebook, the report box shows the section list with a marks column."));return}
+  const byJob=new Map();tests.forEach(x=>{if(!byJob.has(x.j.key))byJob.set(x.j.key,{j:x.j,cells:{}});byJob.get(x.j.key).cells[x.sec[1]]=x});
+  const tw=el("div","tw"),tb=el("table");tb.style.minWidth="760px";
+  const hr=el("tr");["Test","Class · Subject"].forEach(x=>hr.append(el("th",null,x)));LET.forEach(l=>hr.append(el("th",null,"Section "+l)));
+  const th=el("thead");th.append(hr);tb.append(th);const body=el("tbody");
+  const stu=new Map();
+  [...byJob.values()].sort((a,b)=>b.j.recv>a.j.recv?1:-1).forEach(({j,cells})=>{
+    const tr=el("tr");const jd=el("td");jd.append(el("b",null,j.lesson),el("div","hint",fmt(j.recv)));tr.append(jd,el("td",null,j.c+" · "+SNAME[j.s]));
+    LET.forEach(l=>{const td=el("td","names");const x=cells[l];
+      if(!x){td.append(el("span","hint","—"));tr.append(td);return}
+      const max=x.r.data.max||10,ps=[];let low=[];
+      Object.entries(x.r.data.marks).forEach(([roll,v])=>{const p=markPct(v,max);if(p==null)return;ps.push(p);if(p<60)low.push(roll);
+        const k=x.sec+"|"+roll;if(!stu.has(k))stu.set(k,{sec:x.sec,roll,tests:0,low:0,sum:0});const s=stu.get(k);s.tests++;s.sum+=p;if(p<60)s.low++});
+      const avg=ps.length?Math.round(ps.reduce((a,b)=>a+b,0)/ps.length):null;
+      td.append(el("div",avg==null?"":avg>=60?"num-ok":"num-over","Avg "+(avg==null?"—":avg+"%")+" · "+ps.length+" wrote · max "+max));
+      if(low.length){const d=el("div","dn-list");d.append(el("b","num-over","Below 60% ("+low.length+"): "),document.createTextNode(low.map(r=>me?stuName(x.sec,r):"Roll "+r).join(", ")));td.append(d)}
+      tr.append(td)});
+    body.append(tr);
+  });
+  tb.append(body);tw.append(tb);view.append(tw);
+  const weak=[...stu.values()].filter(s=>s.low>=2).sort((a,b)=>b.low-a.low||a.sum/a.tests-b.sum/b.tests);
+  view.append(el("h2",null,"Students below 60% in 2 or more tests"));
+  if(!weak.length){view.append(el("div","notice","None yet in this filter."));return}
+  const tw2=el("div","tw"),t2=el("table");t2.style.minWidth="520px";
+  const h2=el("tr");["Student","Section","Tests","Below 60%","Average"].forEach((x,i)=>h2.append(el("th",i>1?"n":"",x)));const th2=el("thead");th2.append(h2);t2.append(th2);const b2=el("tbody");
+  weak.forEach(s=>{const tr=el("tr");const n=el("td");n.append(el("b",null,me?stuName(s.sec,s.roll):"Roll "+s.roll));tr.append(n,el("td",null,s.sec),el("td","n",String(s.tests)),el("td","n num-over",String(s.low)),el("td","n",Math.round(s.sum/s.tests)+"%"));b2.append(tr)});
+  t2.append(b2);tw2.append(t2);view.append(tw2);
+}
+
+/* ---------- Admin ---------- */
+function renderAdmin(view,t){
+  view.append(el("h2",null,"Section list"));
+  const cnt={};(config.students||[]).forEach(s=>cnt[s.sec]=(cnt[s.sec]||0)+1);
+  view.append(el("p","hint",(config.students||[]).length?"Loaded: "+SECS.map(s=>s+" "+(cnt[s]||0)).join(" · ")+". Pasting a new list replaces the old one.":"No students loaded yet. Paste the list below: one student per line — Section, Roll No, Name (copy straight from Excel, or comma separated)."));
+  const ta=document.createElement("textarea");ta.id="stuPaste";ta.rows=6;ta.placeholder="6A\t1\tAditya Nair\n6A\t2\tAhaana Malik\n…";view.append(ta);
+  const sb=el("button","addbtn","Save section list");sb.type="button";sb.id="stuSave";
+  sb.onclick=()=>{
+    const list=[];ta.value.split(/\r?\n/).forEach(line=>{const p=line.split(/\t|,(?=\s*\S)/).map(x=>x.trim());if(p.length<3)return;const sec=p[0].toUpperCase().replace(/\s/g,"");if(!/^[678][ABC]$/.test(sec))return;list.push({sec,roll:p[1],name:p.slice(2).join(" ").trim()})});
+    if(!list.length){banner("Nothing recognised. Each line needs Section, Roll No, Name.");return}
+    apiWrite("saveConfig",[token,"students",list],()=>{config.students=list});ta.value="";
+  };
+  view.append(sb);
+
+  view.append(el("h2",null,"Mentors (class teachers)"));
+  const mg=el("div","mgrid");
+  SECS.forEach(sec=>{const lb=el("label","lb");lb.append(el("span",null,sec));const i=document.createElement("input");i.type="text";i.className="sel";i.id="mt-"+sec;i.value=mentorOf(sec);i.setAttribute("list","teacherList");lb.append(i);mg.append(lb)});
+  view.append(mg);
+  const ms=el("button","addbtn","Save mentors");ms.type="button";ms.id="mtSave";
+  ms.onclick=()=>{const m={};SECS.forEach(sec=>{const v=$("mt-"+sec).value.trim();if(v)m[sec]=v});apiWrite("saveConfig",[token,"mentors",m],()=>{config.mentors=m})};
+  view.append(ms);
+
+  view.append(el("h2",null,"Extra lessons for preparation"));
+  view.append(el("p","hint","Lessons come from the planner automatically. Add any lesson that is missing (e.g. next month's first lessons) so teachers can mark its preparation."));
+  const f=el("div","toolbar");
+  const c=document.createElement("select");c.className="sel";c.id="xlC";["6","7","8"].forEach(x=>{const o=el("option",null,"Class "+x);o.value=x;c.append(o)});
+  const s=document.createElement("select");s.className="sel";s.id="xlS";SUBJ.filter(x=>x.id!=="GEN").forEach(x=>{const o=el("option",null,x.name);o.value=x.id;s.append(o)});
+  const n=document.createElement("input");n.type="text";n.className="sel";n.id="xlN";n.placeholder="Lesson, e.g. English-1 L-8";
+  const d=document.createElement("input");d.type="date";d.className="sel";d.id="xlD";d.value=t;
+  const a=el("button","addbtn","Add lesson");a.type="button";a.id="xlAdd";
+  a.onclick=()=>{if(!n.value.trim()){banner("Type the lesson name.");return}const list=[...(config.prepLessons||[]),{c:c.value,s:s.value,lesson:n.value.trim(),start:d.value}];apiWrite("saveConfig",[token,"prepLessons",list],()=>{config.prepLessons=list})};
+  f.append(c,s,n,d,a);view.append(f);
+  (config.prepLessons||[]).forEach((p,i)=>{const r=el("div","removed");r.append(el("span",null,"Class "+p.c+" · "+SNAME[p.s]+" · "+p.lesson+" · "+(p.start?fmt(p.start):"")));const x=el("button",null,"Remove");x.type="button";x.id="xlRm"+i;x.onclick=()=>{const list=(config.prepLessons||[]).filter((_,k)=>k!==i);apiWrite("saveConfig",[token,"prepLessons",list],()=>{config.prepLessons=list})};r.append(x);view.append(r)});
+
+  renderLogins(view);
+}
+
+/* ---------- student list inside the report box ---------- */
+let sheetMarks={},sheetDef=new Set(),sheetAbs=new Set();
+function fillStudentList(sec,j,rec,editable){
+  const box=$("stuList");box.replaceChildren();
+  const list=studentsOf(sec);
+  const isTest=j.k==="test";
+  const useList=j.da&&list.length&&!!me;
+  box.hidden=!useList;$("daSteppers").hidden=!!useList;$("maxRow").hidden=!(useList&&isTest);
+  if(!useList)return;
+  const d=rec&&rec.data||{};
+  sheetDef=new Set(d.defList||[]);sheetAbs=new Set(d.absList||[]);sheetMarks={...(d.marks||{})};
+  $("inMax").value=d.max||"";$("inMax").disabled=!editable;
+  box.append(el("div","stu-head",isTest?"Type marks · A = absent · NG = not given":"Tap D for defaulter (incomplete / not submitted) or A for absent"));
+  list.forEach(s=>{
+    const row=el("div","stu");row.append(el("span","roll",s.roll),el("span","sname",s.name));
+    if(isTest){
+      const i=document.createElement("input");i.type="text";i.inputMode="decimal";i.className="mk";i.value=sheetMarks[s.roll]||"";i.placeholder="—";i.disabled=!editable;i.setAttribute("aria-label","Marks for "+s.name);
+      i.oninput=()=>{const v=i.value.trim().toUpperCase();if(v)sheetMarks[s.roll]=v;else delete sheetMarks[s.roll];updateCounts()};
+      const qa=el("button","tgl"+(sheetMarks[s.roll]==="A"?" on-a":""),"A");qa.type="button";qa.disabled=!editable;qa.onclick=()=>{i.value=i.value.toUpperCase()==="A"?"":"A";i.oninput();qa.classList.toggle("on-a",i.value==="A")};
+      row.append(i,qa);
+    }else{
+      const bd=el("button","tgl"+(sheetDef.has(s.roll)?" on-d":""),"D"),ba=el("button","tgl"+(sheetAbs.has(s.roll)?" on-a":""),"A");
+      [bd,ba].forEach(b=>{b.type="button";b.disabled=!editable});
+      bd.setAttribute("aria-label","Defaulter: "+s.name);ba.setAttribute("aria-label","Absent: "+s.name);
+      bd.onclick=()=>{if(sheetDef.has(s.roll))sheetDef.delete(s.roll);else{sheetDef.add(s.roll);sheetAbs.delete(s.roll)}refreshRow()};
+      ba.onclick=()=>{if(sheetAbs.has(s.roll))sheetAbs.delete(s.roll);else{sheetAbs.add(s.roll);sheetDef.delete(s.roll)}refreshRow()};
+      const refreshRow=()=>{bd.classList.toggle("on-d",sheetDef.has(s.roll));ba.classList.toggle("on-a",sheetAbs.has(s.roll));row.classList.toggle("is-d",sheetDef.has(s.roll));row.classList.toggle("is-a",sheetAbs.has(s.roll));updateCounts()};
+      row.classList.toggle("is-d",sheetDef.has(s.roll));row.classList.toggle("is-a",sheetAbs.has(s.roll));
+      row.append(bd,ba);
+    }
+    box.append(row);
+  });
+  box.append(el("div","stu-count"));updateCounts();
+}
+function updateCounts(){
+  const c=$("stuList").querySelector(".stu-count");if(!c)return;
+  if(cur&&cur.j.k==="test"){const v=Object.values(sheetMarks);c.textContent=`${v.filter(x=>x!=="A"&&x!=="NG").length} marks · ${v.filter(x=>x==="A").length} absent · ${v.filter(x=>x==="NG").length} not given`}
+  else c.textContent=`${sheetDef.size} defaulters · ${sheetAbs.size} absent`;
+}
+
+function myExtras(view,t){
+  if(!me)return;
+  const rows=prepLessons().filter(r=>r.teacher===me.name);
+  const pm=prepStats(rows.filter(r=>r.start<=t||r.end>=t),PREP_COLS,t),rm=prepStats(rows,REVIEW_COLS,t);
+  const mySecs=SECS.filter(s=>mentorOf(s)===me.name);
+  const box=el("div","kpis");
+  const k=(c,l,v,s,go)=>{const d=el("button","kpi "+c);d.type="button";d.append(el("div","l",l),el("div","v",String(v)),el("div","s",s));d.onclick=go;box.append(d)};
+  k(pm.late?"over":"ok","Preparation due",pm.late,"lessons already started",()=>{prepView="prep";pTeacher=me.name;goArea("prep")});
+  k("","Preparation done",pm.pct==null?"—":pm.pct+"%",pm.done+" of "+pm.total+" items",()=>{prepView="prep";pTeacher=me.name;goArea("prep")});
+  k(rm.late?"over":"","Review due",rm.late,"booklet / assignment review",()=>{prepView="review";pTeacher=me.name;goArea("prep")});
+  if(mySecs.length){const today=MENTOR_ITEMS.filter(([kk,,f])=>!mentorData[`${mySecs[0]}|${kk}|${periodKey(f,t)}`]).length;k(today?"tod":"ok","Mentor tasks open",today,"for "+mySecs.join(", ")+" (today / this week / month)",()=>goArea("mentor"))}
+  const h=el("h2",null,"Preparation, review and mentor tasks");view.append(h,box);
+}
+
+render();
+refresh();
+setInterval(()=>{if(document.visibilityState==="visible"&&$("shade").hidden&&$("edShade").hidden)refresh()},30000);
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")refresh()});
 </script>
 
 </body>

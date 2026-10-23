@@ -17,6 +17,12 @@ function defTeacher(s,sec){
   return BYL[s]?BYL[s][sec[1]]:"";
 }
 const TOKEN_DAYS=120;
+const DEFAULT_MENTORS={"6A":"Shailesh","6B":"Ishita","6C":"Monika","7A":"Swati","7B":"Yavnika","7C":"Jyotsna","8A":"Pallavi","8B":"Shreya","8C":"Ritika"};
+function mentorOf(DB,sec){return (DB.Config.mentors||{})[sec]||DEFAULT_MENTORS[sec]||""}
+const PREP_TOOLS=["booklet","anskey","video","ppt","epl","rvContent","rvAsg"];
+const MENTOR_ITEMS={att:"daily",rec:"weekly",route:"weekly",coc:"weekly",disp:"monthly",wall:"monthly"};
+function cleanList(a){return (Array.isArray(a)?a:[]).map(x=>str(x,12)).filter(Boolean).slice(0,80)}
+function cleanMarks(m){const o={};if(m&&typeof m==="object")Object.keys(m).slice(0,80).forEach(k=>{const v=str(m[k],6).toUpperCase();if(/^(\d{1,3}(\.\d)?|A|NG)$/.test(v))o[str(k,12)]=v});return o}
 
 function fail(m){throw new Error(m)}
 function str(v,max){return String(v==null?"":v).trim().slice(0,max)}
@@ -62,7 +68,8 @@ function publicState(ctx,me){
     today:ctx.today,
     me:me?{name:me.name,role:me.role}:null,
     users:DB.Users.filter(u=>u.status==="active"||mgr).map(u=>({name:u.name,role:u.role,status:u.status,requestedAt:u.requestedAt||"",approvedAt:u.approvedAt||""})),
-    reports:DB.Reports,tasks:DB.Tasks,overrides:DB.Overrides
+    reports:DB.Reports,tasks:DB.Tasks,overrides:DB.Overrides,prep:DB.Prep,mentor:DB.Mentor,
+    config:{mentors:Object.assign({},DEFAULT_MENTORS,DB.Config.mentors||{}),prepLessons:DB.Config.prepLessons||[],students:me?(DB.Config.students||[]):[]}
   };
 }
 
@@ -117,6 +124,9 @@ const API={
     const r={sec:j.sec,subject:j.s,kind:j.k,lesson:str(c.lesson||j.lesson,120),due:str(c.due,10),
       note:str(c.note,400),at:prev?prev.at:nowIso,by:prev?prev.by:me.name};
     if(c.da){r.def=n60(c.def);r.abs=n60(c.abs)}
+    const dl=cleanList(c.defList),al=cleanList(c.absList),mk=cleanMarks(c.marks);
+    if(dl.length||al.length||Object.keys(mk).length){r.data={defList:dl,absList:al};if(Object.keys(mk).length){r.data.marks=mk;r.data.max=Math.max(1,Math.min(500,parseInt(c.max,10)||0))}
+      if(c.da){r.def=Math.max(r.def,dl.length);r.abs=Math.max(r.abs,al.length)}}
     if(prev&&prev.by!==me.name){r.editedBy=me.name;r.editedAt=nowIso}
     else if(prev){r.updatedAt=nowIso}
     DB.Reports[j.id]=r;ctx.dirty.Reports=true;
@@ -161,6 +171,43 @@ const API={
   },
   deleteOverride(ctx,token,key){const me=needManager(ctx,token);delete ctx.DB.Overrides[key];ctx.dirty.Overrides=true;ctx.log(me.name,"restore job",key,"");return publicState(ctx,me)},
 
+  savePrep(ctx,token,key,tool,val){
+    const me=needUser(ctx,token);key=str(key,300);
+    const parts=key.split("|");if(parts.length!==4||!/^[678]$/.test(parts[1])||!SUBJECTS.includes(parts[2]))fail("Unknown lesson.");
+    if(me.role!=="manager"&&parts[0]!==me.name)fail("Only "+parts[0]+" or a manager can update this.");
+    if(!PREP_TOOLS.includes(tool))fail("Unknown item.");
+    if(!["done","due","na"].includes(val))fail("Unknown status.");
+    const p=ctx.DB.Prep[key]||{};if(val==="due")delete p[tool];else p[tool]=val;
+    p.at=new Date(ctx.now).toISOString();p.by=me.name;ctx.DB.Prep[key]=p;ctx.dirty.Prep=true;
+    ctx.log(me.name,"prep "+tool,key,val);return publicState(ctx,me);
+  },
+  saveMentor(ctx,token,key,val){
+    const me=needUser(ctx,token);key=str(key,60);
+    const [sec,item,period]=key.split("|");
+    if(!/^[678][ABC]$/.test(sec||"")||!MENTOR_ITEMS[item]||!/^\d{4}-\d\d(-\d\d)?$/.test(period||""))fail("Unknown mentor task.");
+    const mentor=mentorOf(ctx.DB,sec);
+    if(me.role!=="manager"&&mentor!==me.name)fail(mentor?"Only "+mentor+" (mentor of "+sec+") or a manager can update this.":"No mentor set for "+sec+" yet. Ask a manager.");
+    if(val==="due"||val===""||val==null)delete ctx.DB.Mentor[key];
+    else{
+      let v=String(val);if(item==="wall"){v=String(Math.max(0,Math.min(999,parseInt(v,10)||0)))}else if(!["done","na"].includes(v))fail("Unknown status.");
+      ctx.DB.Mentor[key]={v,at:new Date(ctx.now).toISOString(),by:me.name};
+    }
+    ctx.dirty.Mentor=true;ctx.log(me.name,"mentor "+item,key,String(val));return publicState(ctx,me);
+  },
+  saveConfig(ctx,token,name,value){
+    const me=needManager(ctx,token);
+    if(name==="students"){
+      const list=(Array.isArray(value)?value:[]).map(x=>({sec:str(x.sec,3).toUpperCase(),roll:str(x.roll,12),name:str(x.name,60)})).filter(x=>/^[678][ABC]$/.test(x.sec)&&x.roll&&x.name);
+      if(list.length>3000)fail("Too many students.");
+      ctx.DB.Config.students=list;
+    }else if(name==="mentors"){
+      const m={};Object.keys(value||{}).forEach(k=>{if(/^[678][ABC]$/.test(k)&&str(value[k],40))m[k]=str(value[k],40)});ctx.DB.Config.mentors=m;
+    }else if(name==="prepLessons"){
+      ctx.DB.Config.prepLessons=(Array.isArray(value)?value:[]).slice(0,500).map(x=>({c:str(x.c,1),s:str(x.s,5),lesson:str(x.lesson,80),start:/^\d{4}-\d\d-\d\d$/.test(x.start||"")?x.start:""})).filter(x=>/^[678]$/.test(x.c)&&SUBJECTS.includes(x.s)&&x.lesson);
+    }else fail("Unknown setting.");
+    ctx.dirty.Config=true;ctx.log(me.name,"settings",name,"");return publicState(ctx,me);
+  },
+
   approve(ctx,token,name,role){
     const me=needManager(ctx,token);const u=ctx.DB.Users.find(x=>x.name===name);if(!u)fail("Request not found.");
     u.status="active";u.role=role==="manager"?"manager":"teacher";u.approvedAt=new Date(ctx.now).toISOString();u.approvedBy=me.name;
@@ -181,7 +228,10 @@ function runApi(ctx,fn,args){
 const TZ="Asia/Kolkata";
 const COLS={
   Users:["name","role","status","salt","hash","ver","requestedAt","approvedAt","approvedBy"],
-  Reports:["id","sec","subject","kind","lesson","due","def","abs","note","at","by","updatedAt","editedBy","editedAt"],
+  Reports:["id","sec","subject","kind","lesson","due","def","abs","note","at","by","updatedAt","editedBy","editedAt","data"],
+  Prep:["key","json"],
+  Mentor:["key","v","at","by"],
+  Config:["name","json"],
   Tasks:["id","json"],
   Overrides:["key","json"],
   Log:["time","who","action","item","detail"],
@@ -206,15 +256,21 @@ function write_(name,objs){
   }
 }
 function loadDB_(){
-  const DB={Users:rows_("Users").map(u=>({...u,ver:Number(u.ver||1)})),Reports:{},Tasks:{},Overrides:{}};
-  rows_("Reports").forEach(r=>{const id=r.id;delete r.id;["def","abs"].forEach(k=>{if(r[k]==="")delete r[k];else r[k]=Number(r[k])});Object.keys(r).forEach(k=>{if(r[k]==="")delete r[k]});DB.Reports[id]=r});
+  const DB={Users:rows_("Users").map(u=>({...u,ver:Number(u.ver||1)})),Reports:{},Tasks:{},Overrides:{},Prep:{},Mentor:{},Config:{}};
+  rows_("Prep").forEach(r=>{try{DB.Prep[r.key]=JSON.parse(r.json)}catch(e){}});
+  rows_("Mentor").forEach(r=>{DB.Mentor[r.key]={v:r.v,at:r.at,by:r.by}});
+  rows_("Config").forEach(r=>{try{DB.Config[r.name]=JSON.parse(r.json)}catch(e){}});
+  rows_("Reports").forEach(r=>{const id=r.id;delete r.id;if(r.data){try{r.data=JSON.parse(r.data)}catch(e){delete r.data}}["def","abs"].forEach(k=>{if(r[k]==="")delete r[k];else r[k]=Number(r[k])});Object.keys(r).forEach(k=>{if(r[k]==="")delete r[k]});DB.Reports[id]=r});
   rows_("Tasks").forEach(r=>{try{DB.Tasks[r.id]=JSON.parse(r.json)}catch(e){}});
   rows_("Overrides").forEach(r=>{try{DB.Overrides[r.key]=JSON.parse(r.json)}catch(e){}});
   return DB;
 }
 function saveDB_(DB,dirty){
   if(dirty.Users)write_("Users",DB.Users);
-  if(dirty.Reports)write_("Reports",Object.entries(DB.Reports).sort((a,b)=>a[0]<b[0]?-1:1).map(([id,r])=>({id,...r})));
+  if(dirty.Reports)write_("Reports",Object.entries(DB.Reports).sort((a,b)=>a[0]<b[0]?-1:1).map(([id,r])=>({id,...r,data:r.data?JSON.stringify(r.data):""})));
+  if(dirty.Prep)write_("Prep",Object.entries(DB.Prep).map(([key,p])=>({key,json:JSON.stringify(p)})));
+  if(dirty.Mentor)write_("Mentor",Object.entries(DB.Mentor).sort((a,b)=>a[0]<b[0]?-1:1).map(([key,m])=>({key,...m})));
+  if(dirty.Config)write_("Config",Object.entries(DB.Config).map(([name,v])=>({name,json:JSON.stringify(v)})));
   if(dirty.Tasks)write_("Tasks",Object.entries(DB.Tasks).map(([id,t])=>({id,json:JSON.stringify(t)})));
   if(dirty.Overrides)write_("Overrides",Object.entries(DB.Overrides).map(([key,o])=>({key,json:JSON.stringify(o)})));
 }
