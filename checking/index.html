@@ -203,6 +203,41 @@ td.names{font-size:12.5px;min-width:180px;vertical-align:top}
 .stu-count{font-size:12.5px;font-weight:700;padding:6px 4px 2px;color:var(--ink)}
 button.kpi{font:inherit;text-align:left;cursor:pointer;color:var(--ink)}
 
+/* teacher cards + lesson rows with tool tabs */
+.tcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+.tcard{font:inherit;text-align:left;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;cursor:pointer;min-width:0}
+.tcard.static{cursor:default}
+.tcard.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
+.tc-top{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
+.tc-top b{font-family:var(--f-display);font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tc-top span{font-family:var(--f-display);font-weight:800;font-size:18px;font-variant-numeric:tabular-nums}
+.tc-sub{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:12px;color:var(--muted)}
+.tgroup{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.tg-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;padding:12px 14px;background:var(--zebra);border-bottom:1px solid var(--line)}
+.tg-head h3{font-family:var(--f-display);font-size:18px;margin:0}
+.lrow{display:grid;grid-template-columns:minmax(0,240px) minmax(0,1fr);gap:10px 14px;padding:10px 14px;border-bottom:1px solid var(--line);align-items:center}
+.lrow:last-child{border-bottom:0}
+.linfo{min-width:0;display:flex;flex-direction:column;gap:2px}
+.lcls{font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.03em}
+.lname{font-size:15px}
+.lmeta{font-size:12px;color:var(--muted)}
+.lsum{font-size:12px;font-weight:700}
+.chips{display:flex;flex-direction:column;gap:6px;min-width:0}
+.chipset{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chipset.rv{padding-top:6px;border-top:1px dashed var(--line)}
+.chiplab{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-right:2px}
+.tchip{font:inherit;display:inline-flex;flex-direction:column;align-items:flex-start;gap:0;line-height:1.2;border:1px solid var(--line);border-radius:9px;padding:5px 10px;background:var(--card);color:var(--ink);cursor:pointer;min-width:92px}
+.tchip .tl{font-size:12.5px;font-weight:700}
+.tchip .ts{font-size:11.5px}
+.tchip.ok{background:var(--ok-bg);border-color:var(--ok);color:var(--ok-ink)}
+.tchip.due{background:var(--tod-bg);border-color:var(--tod);color:var(--tod)}
+.tchip.over{background:var(--over-bg);border-color:var(--over);color:var(--over-ink)}
+.tchip.na{background:transparent;color:var(--muted);border-style:dashed}
+.tchip:disabled{cursor:default}
+.tchip .numin{width:64px;margin-top:2px;padding:3px}
+@media (max-width:640px){.lrow{grid-template-columns:1fr}.tchip{min-width:0;flex:1 1 30%}
+  .tcards{display:flex;overflow-x:auto;scroll-snap-type:x proximity;padding-bottom:4px}.tcard{flex:0 0 150px;scroll-snap-align:start}}
+
 /* login bar */
 .acct{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:14px}
 .acct .hint{flex-basis:100%}
@@ -1033,122 +1068,133 @@ function prepStats(rows,cols,t){
 function showRow(r,cols,t){
   if(pShow==="all")return true;
   if(pShow==="nov")return r.month==="Nov"||(r.start||"").startsWith("2026-11");
-  return !r.end||r.end>=t||cols.some(([k])=>pVal(r,k)==="due"&&r.start<=t);
+  return !r.end||r.end>=t||cols.some(([k])=>pVal(r,k)==="due"&&r.start&&r.start<=t);
+}
+const ALL_TOOLS=[...PREP_COLS.map(([k,l])=>[k,l,"prep"]),...REVIEW_COLS.map(([k,l])=>[k,l==="Booklet / Content"?"Content review":"Assignment review","review"])];
+const SHORT={booklet:"Booklet",anskey:"Answer key",video:"Video",ppt:"PPT",epl:"EPL",rvContent:"Content review",rvAsg:"Assignment review"};
+function toolChip(r,k,t,can){
+  const v=pVal(r,k),late=v==="due"&&r.start&&r.start<=t;
+  const b=el("button","tchip "+(v==="done"?"ok":v==="na"?"na":late?"over":"due"));b.type="button";b.id="p-"+slug(r.key)+"-"+k;
+  b.append(el("span","tl",SHORT[k]),el("span","ts",v==="done"?"✓ Done":v==="na"?"NA":late?"Due !":"Due"));
+  b.setAttribute("aria-label",`${SHORT[k]}: ${v==="done"?"done":v==="na"?"not applicable":"due"}`);
+  if(!can){b.disabled=true;b.title="Only "+r.teacher+" or a manager can change this"}
+  else{b.title="Tap: Due → Done → NA";b.onclick=()=>{const nv=v==="due"?"done":v==="done"?"na":"due";apiWrite("savePrep",[token,r.key,k,nv],()=>{const p=prep[r.key]=prep[r.key]||{};if(nv==="due")delete p[k];else p[k]=nv})}}
+  return b;
 }
 function renderPrep(view,t){
   const all=prepLessons();
-  const cols=prepView==="prep"?PREP_COLS:REVIEW_COLS;
   if(!pTeacher)pTeacher=me&&me.role==="teacher"?me.name:"all";
-  const head=el("div","sec-h");
-  const seg=el("div","toolbar");[["prep","Preparation status"],["review","Content review status"]].forEach(([v,x])=>{const b=el("button","chip",x);b.type="button";b.id="pv-"+v;b.setAttribute("aria-pressed",prepView===v);b.onclick=()=>{prepView=v;saveArea();render()};seg.append(b)});
-  head.append(el("h2",null,prepView==="prep"?"Preparation status":"Content review status"),seg);view.append(head);
-
-  // dashboard: one row per teacher
-  const teachers=[...new Set(all.map(r=>r.teacher))].sort();
-  const tw=el("div","tw"),tb=el("table");tb.style.minWidth="640px";
-  const hr=el("tr");["Teacher","Lessons","Done %","Done","Due (lesson started)","Due (upcoming)","NA"].forEach((x,i)=>hr.append(el("th",i>1?"n":"",x)));
-  const th=el("thead");th.append(hr);tb.append(th);const body=el("tbody");
-  teachers.forEach(tn=>{
-    const rs=all.filter(r=>r.teacher===tn&&showRow(r,cols,t));
-    const m=prepStats(rs,cols,t);
-    const tr=el("tr","clickable"+(pTeacher===tn?" sel":""));tr.tabIndex=0;const go=()=>{pTeacher=tn;render()};tr.onclick=go;tr.onkeydown=e=>{if(e.key==="Enter")go()};
-    const n=el("td");n.append(el("b",null,tn));tr.append(n,el("td","n",String(rs.length)));
-    const pc=el("td");const pw=el("div","pctcell");const bar=el("div","bar");[["b-ok",m.done]].forEach(([k,v])=>{const i=el("i",k);i.style.width=m.total?(v/m.total*100)+"%":"0";bar.append(i)});
-    pw.append(el("b",m.pct==null?"":m.pct>=80?"num-ok":m.pct>=50?"num-late":"num-over",m.pct==null?"—":m.pct+"%"),bar);pc.append(pw);tr.append(pc);
-    [[m.done,"num-ok"],[m.late,m.late?"num-over":""],[m.due-m.late,""],[m.na,""]].forEach(([v,c])=>{const td=el("td","n");td.append(el("span",c,String(v)));tr.append(td)});
-    body.append(tr);
-  });
-  tb.append(body);tw.append(tb);view.append(tw);
+  const fil=r=>(pClass==="all"||r.c===pClass)&&(pSubj==="all"||r.s===pSubj)&&showRow(r,PREP_COLS.concat(REVIEW_COLS),t);
+  const head=el("div","sec-h");head.append(el("h2",null,"Preparation & Review"),el("p",null,"Each teacher marks every tool in front of each lesson. Tap a tab: Due → Done → NA."));view.append(head);
 
   // filters
   const bar=el("div","toolbar");
   const sel=(id,lab,opts,cur,set)=>{bar.append(el("span","lab",lab));const s=document.createElement("select");s.className="sel";s.id=id;opts.forEach(([v,x])=>{const o=el("option",null,x);o.value=v;s.append(o)});s.value=cur;s.onchange=()=>{set(s.value);render()};bar.append(s)};
-  sel("pT","Teacher",[["all","All teachers"],...teachers.map(x=>[x,x])],pTeacher,v=>pTeacher=v);
   sel("pS","Show",[["upcoming","Upcoming + pending"],["nov","November syllabus"],["all","All lessons"]],pShow,v=>pShow=v);
   sel("pC","Class",[["all","All"],["6","6"],["7","7"],["8","8"]],pClass,v=>pClass=v);
   sel("pSub","Subject",[["all","All"],...SUBJ.filter(s=>s.id!=="GEN").map(s=>[s.id,s.name]),["COMP","Computer"]],pSubj,v=>pSubj=v);
   view.append(bar);
 
-  const rows=all.filter(r=>(pTeacher==="all"||r.teacher===pTeacher)&&(pClass==="all"||r.c===pClass)&&(pSubj==="all"||r.s===pSubj)&&showRow(r,cols,t));
-  const tw2=el("div","tw"),t2=el("table","prep");t2.style.minWidth=(560+cols.length*92)+"px";
-  const h2=el("tr");["Starts","Teacher","Sections","Subject","Lesson"].forEach(x=>h2.append(el("th",null,x)));cols.forEach(([,x])=>h2.append(el("th","ctr",x)));
-  const th2=el("thead");th2.append(h2);t2.append(th2);const b2=el("tbody");
-  if(!rows.length){const tr=el("tr"),td=el("td","empty","No lessons in this view.");td.colSpan=5+cols.length;tr.append(td);b2.append(tr)}
-  rows.forEach(r=>{
-    const tr=el("tr");
-    tr.append(el("td",r.start===t?"num-late":"",r.month?"Nov (dates TBA)":fmt(r.start)+(r.end!==r.start?"–"+D(r.end).getDate():"")),el("td",null,r.teacher),el("td",null,r.secs.join(" ")));
-    const sp=el("td");sp.append(el("span","subj-pill",SNAME[r.s]));tr.append(sp);
-    const ln=el("td");ln.append(el("b",null,r.lesson));tr.append(ln);
-    const can=!!me&&(me.role==="manager"||me.name===r.teacher);
-    cols.forEach(([k,lab])=>{
-      const v=pVal(r,k),td=el("td","c");
-      const b=el("button","pcell "+(v==="done"?"ok":v==="na"?"na":r.start&&r.start<=t?"over":"due"),v==="done"?"✓ Done":v==="na"?"NA":"Due");
-      b.type="button";b.id="p-"+slug(r.key)+"-"+k;b.title=can?"Tap: Due → Done → NA":"Only "+r.teacher+" or a manager can change this";
-      b.setAttribute("aria-label",`${r.teacher} ${r.lesson} ${lab}: ${v}`);
-      if(!can)b.disabled=true;
-      b.onclick=()=>{const nv=v==="due"?"done":v==="done"?"na":"due";apiWrite("savePrep",[token,r.key,k,nv],()=>{const p=prep[r.key]=prep[r.key]||{};if(nv==="due")delete p[k];else p[k]=nv})};
-      td.append(b);tr.append(td);
+  // teacher cards (the dashboard)
+  const teachers=[...new Set(all.map(r=>r.teacher))].sort();
+  const cards=el("div","tcards");
+  const card=(id,name,rows)=>{
+    const pm=prepStats(rows,PREP_COLS,t),rm=prepStats(rows,REVIEW_COLS,t);
+    const c=el("button","tcard"+(pTeacher===id?" sel":""));c.type="button";c.id="tc-"+slug(id);
+    const top=el("div","tc-top");top.append(el("b",null,name),el("span",pm.pct==null?"":pm.pct>=80?"num-ok":pm.pct>=50?"num-late":"num-over",pm.pct==null?"—":pm.pct+"%"));
+    const bar=el("div","bar");const i=el("i","b-ok");i.style.width=(pm.total?pm.done/pm.total*100:0)+"%";bar.append(i);
+    const sub=el("div","tc-sub");
+    sub.append(el("span",null,rows.length+" lessons"));
+    if(pm.late)sub.append(el("span","num-over",pm.late+" overdue"));
+    sub.append(el("span",null,pm.due+" due"));
+    sub.append(el("span",null,"Review "+(rm.pct==null?"—":rm.pct+"%")));
+    c.append(top,bar,sub);c.onclick=()=>{pTeacher=id;render()};cards.append(c);
+  };
+  card("all","All teachers",all.filter(fil));
+  const order=pTeacher!=="all"?[pTeacher,...teachers.filter(x=>x!==pTeacher)]:teachers;
+  order.forEach(tn=>card(tn,tn,all.filter(r=>r.teacher===tn&&fil(r))));
+  view.append(cards);
+
+  // lesson rows grouped by teacher
+  const show=pTeacher==="all"?teachers:[pTeacher];
+  let any=false;
+  show.forEach(tn=>{
+    const rows=all.filter(r=>r.teacher===tn&&fil(r));
+    if(!rows.length)return;any=true;
+    const g=el("section","tgroup");
+    const pm=prepStats(rows,PREP_COLS,t);
+    const gh=el("div","tg-head");gh.append(el("h3",null,tn),el("span","hint",pm.done+" of "+pm.total+" tools done"+(pm.late?" · "+pm.late+" overdue":"")));
+    g.append(gh);
+    const can=!!me&&(me.role==="manager"||me.name===tn);
+    rows.forEach(r=>{
+      const row=el("div","lrow");
+      const info=el("div","linfo");
+      info.append(el("span","lcls",r.secs.join(" ")),el("b","lname",r.lesson));
+      const meta=el("div","lmeta");meta.append(el("span","subj-pill",SNAME[r.s]),document.createTextNode(" "+(r.month?"November · dates TBA":"starts "+fmt(r.start)+(r.end&&r.end!==r.start?" – "+fmt(r.end):""))));
+      info.append(meta);
+      const due=ALL_TOOLS.filter(([k])=>pVal(r,k)==="due").map(([k])=>SHORT[k]);
+      info.append(el("div","lsum "+(due.length?(r.start&&r.start<=t?"num-over":"num-late"):"num-ok"),due.length?"Due: "+due.join(", "):"All done"));
+      const chips=el("div","chips");
+      const p1=el("div","chipset");PREP_COLS.forEach(([k])=>p1.append(toolChip(r,k,t,can)));
+      const p2=el("div","chipset rv");p2.append(el("span","chiplab","Review"));REVIEW_COLS.forEach(([k])=>p2.append(toolChip(r,k,t,can)));
+      chips.append(p1,p2);
+      row.append(info,chips);g.append(row);
     });
-    b2.append(tr);
+    view.append(g);
   });
-  t2.append(b2);tw2.append(t2);view.append(tw2);
-  view.append(el("p","hint","Tap a box to cycle Due → Done → NA. Red “Due” = the lesson has already started. Teachers can change only their own rows."+(isAdmin?" Add a lesson that is not in the planner from Admin → Extra lessons.":"")));
+  if(!any)view.append(el("div","notice","No lessons in this view. Try Show → All lessons."));
 }
 
 /* ---------- Mentor tasks ---------- */
 const monday=iso=>{const d=D(iso);const k=(d.getDay()+6)%7;d.setDate(d.getDate()-k);return isoOf(d)};
 function periodKey(freq,iso){return freq==="daily"?iso:freq==="weekly"?monday(iso):iso.slice(0,7)}
-function periodLabel(freq,iso){if(freq==="daily")return fmt(iso);if(freq==="weekly"){const m=monday(iso),e=isoOf(new Date(D(m).getTime()+5*864e5));return "week "+fmt(m)+"–"+fmt(e)}return D(iso).toLocaleDateString("en-IN",{month:"long"})}
+function periodLabel(freq,iso){if(freq==="daily")return fmt(iso);if(freq==="weekly"){const m=monday(iso),e=isoOf(new Date(D(m).getTime()+5*864e5));return fmt(m)+"–"+fmt(e)}return D(iso).toLocaleDateString("en-IN",{month:"long"})}
 function weekDays(iso){const m=monday(iso);return [0,1,2,3,4,5].map(i=>isoOf(new Date(D(m).getTime()+i*864e5)))}
+const MSHORT={att:"Attendance Register",rec:"Record Register",route:"Route Plan",coc:"Co-curricular",disp:"Class Display",wall:"Student Wall Display"};
 function renderMentor(view,t){
   if(!mDate)mDate=t;
   const head=el("div","sec-h");head.append(el("h2",null,"Mentor tasks"));
   const dp=document.createElement("input");dp.type="date";dp.id="mDate";dp.className="sel";dp.value=mDate;dp.onchange=()=>{mDate=dp.value||t;render()};
   const lab=el("label","toolbar");lab.append(el("span","lab","Date"),dp);head.append(lab);view.append(head);
-  view.append(el("p","hint","Attendance Register: daily ("+fmt(mDate)+") · Record Register, Route Plan, Co-curricular: "+periodLabel("weekly",mDate)+" · Class Display, Student Wall Display: "+periodLabel("monthly",mDate)+". Tap to cycle Due → Done → NA; type the number of wall submissions."));
-  const tw=el("div","tw"),tb=el("table","prep");tb.style.minWidth="900px";
-  const hr=el("tr");hr.append(el("th",null,"Section"),el("th",null,"Mentor"));MENTOR_ITEMS.forEach(([,l])=>hr.append(el("th","ctr",l)));hr.append(el("th","n","Attendance this week"),el("th","n","Done"));
-  const th=el("thead");th.append(hr);tb.append(th);const body=el("tbody");
+  view.append(el("p","hint","Daily: "+fmt(mDate)+" · Weekly: "+periodLabel("weekly",mDate)+" · Monthly: "+periodLabel("monthly",mDate)+". Tap a tab: Due → Done → NA. Type the number of wall display submissions."));
   const days=weekDays(mDate).filter(d=>d<=t);
+  const cards=el("div","tcards");
+  const stat=sec=>{let d=0;MENTOR_ITEMS.forEach(([k,,f])=>{if(mentorData[`${sec}|${k}|${periodKey(f,mDate)}`])d++});return d};
+  SECS.forEach(sec=>{
+    const d=stat(sec),att=days.filter(x=>mentorData[`${sec}|att|${x}`]).length;
+    const c=el("div","tcard static");const top=el("div","tc-top");top.append(el("b",null,sec+" · "+mentorOf(sec)),el("span",d===6?"num-ok":d>=3?"num-late":"num-over",d+"/6"));
+    const bar=el("div","bar");const i=el("i","b-ok");i.style.width=(d/6*100)+"%";bar.append(i);
+    const sub=el("div","tc-sub");sub.append(el("span",att<days.length?"num-late":"",  "Attendance "+att+"/"+days.length+" days"));
+    c.append(top,bar,sub);cards.append(c);
+  });
+  view.append(cards);
+  const g=el("section","tgroup");
   SECS.forEach(sec=>{
     const mn=mentorOf(sec),can=!!me&&(me.role==="manager"||me.name===mn);
-    const tr=el("tr");const sc=el("td");sc.append(el("b",null,sec));tr.append(sc,el("td",null,mn||"—"));
-    let done=0,tot=0;
-    MENTOR_ITEMS.forEach(([k,l,f])=>{
-      const key=`${sec}|${k}|${periodKey(f,mDate)}`,rec=mentorData[key],td=el("td","c");tot++;
+    const row=el("div","lrow");
+    const info=el("div","linfo");info.append(el("span","lcls",sec),el("b","lname",mn||"—"));
+    const due=MENTOR_ITEMS.filter(([k,,f])=>!mentorData[`${sec}|${k}|${periodKey(f,mDate)}`]).map(([k])=>MSHORT[k]);
+    info.append(el("div","lsum "+(due.length?"num-late":"num-ok"),due.length?"Due: "+due.join(", "):"All done"));
+    const chips=el("div","chips");const set=el("div","chipset");
+    MENTOR_ITEMS.forEach(([k,,f])=>{
+      const key=`${sec}|${k}|${periodKey(f,mDate)}`,rec=mentorData[key];
       const pastDue=f==="daily"?mDate<t:f==="weekly"?isoOf(new Date(D(monday(mDate)).getTime()+5*864e5))<t:false;
       if(k==="wall"){
-        const inp=document.createElement("input");inp.type="number";inp.min="0";inp.max="999";inp.className="numin"+(rec?" ok":"");inp.id="m-"+sec+"-"+k;inp.value=rec?rec.v:"";inp.placeholder="—";inp.disabled=!can;inp.setAttribute("aria-label",sec+" "+l);
+        const w=el("label","tchip "+(rec?"ok":"due"));w.append(el("span","tl",MSHORT[k]));
+        const inp=document.createElement("input");inp.type="number";inp.min="0";inp.max="999";inp.className="numin";inp.id="m-"+sec+"-"+k;inp.value=rec?rec.v:"";inp.placeholder="No.";inp.disabled=!can;inp.setAttribute("aria-label",sec+" wall display submissions");
         inp.onchange=()=>{const v=inp.value.trim();apiWrite("saveMentor",[token,key,v===""?"due":v],()=>{if(v==="")delete mentorData[key];else mentorData[key]={v,by:me.name,at:new Date().toISOString()}})};
-        if(rec)done++;td.append(inp);
-      }else{
-        const v=rec?rec.v:"due";if(v!=="due")done++;
-        const b=el("button","pcell "+(v==="done"?"ok":v==="na"?"na":pastDue?"over":"due"),v==="done"?"✓ Done":v==="na"?"NA":"Due");b.type="button";b.id="m-"+sec+"-"+k;
-        b.setAttribute("aria-label",`${sec} ${l}: ${v}`);if(!can)b.disabled=true;
-        b.onclick=()=>{const nv=v==="due"?"done":v==="done"?"na":"due";apiWrite("saveMentor",[token,key,nv],()=>{if(nv==="due")delete mentorData[key];else mentorData[key]={v:nv,by:me.name,at:new Date().toISOString()}})};
-        td.append(b);
+        w.append(inp);set.append(w);return;
       }
-      tr.append(td);
+      const v=rec?rec.v:"due";
+      const b=el("button","tchip "+(v==="done"?"ok":v==="na"?"na":pastDue?"over":"due"));b.type="button";b.id="m-"+sec+"-"+k;
+      b.append(el("span","tl",MSHORT[k]),el("span","ts",(v==="done"?"✓ Done":v==="na"?"NA":"Due")+" · "+(f==="daily"?"today":f==="weekly"?"week":"month")));
+      if(!can){b.disabled=true;b.title="Only "+mn+" (mentor) or a manager"}
+      else b.onclick=()=>{const nv=v==="due"?"done":v==="done"?"na":"due";apiWrite("saveMentor",[token,key,nv],()=>{if(nv==="due")delete mentorData[key];else mentorData[key]={v:nv,by:me.name,at:new Date().toISOString()}})};
+      set.append(b);
     });
-    const att=days.filter(d=>mentorData[`${sec}|att|${d}`]).length;
-    tr.append(el("td","n "+(att<days.length?"num-late":"num-ok"),att+"/"+days.length),el("td","n",done+"/"+tot));
-    body.append(tr);
+    chips.append(set);row.append(info,chips);g.append(row);
   });
-  tb.append(body);tw.append(tb);view.append(tw);
-  // month summary per mentor
-  view.append(el("h2",null,"This month · "+periodLabel("monthly",mDate)));
-  const tw2=el("div","tw"),t2=el("table");t2.style.minWidth="620px";
-  const h2=el("tr");["Section","Mentor","Attendance days marked","Weekly items done","Class Display","Wall submissions"].forEach((x,i)=>h2.append(el("th",i>1?"n":"",x)));
-  const th2=el("thead");th2.append(h2);t2.append(th2);const b2=el("tbody");
-  const mon=mDate.slice(0,7);
-  SECS.forEach(sec=>{
-    const ks=Object.keys(mentorData).filter(k=>k.startsWith(sec+"|"));
-    const attN=ks.filter(k=>k.split("|")[1]==="att"&&k.split("|")[2].slice(0,7)===mon).length;
-    const wk=ks.filter(k=>["rec","route","coc"].includes(k.split("|")[1])&&k.split("|")[2].slice(0,7)===mon&&mentorData[k].v==="done").length;
-    const disp=mentorData[`${sec}|disp|${mon}`],wall=mentorData[`${sec}|wall|${mon}`];
-    const tr=el("tr");const sc=el("td");sc.append(el("b",null,sec));tr.append(sc,el("td",null,mentorOf(sec)),el("td","n",String(attN)),el("td","n",String(wk)),el("td","n",disp?(disp.v==="done"?"✓":disp.v):"—"),el("td","n",wall?wall.v:"—"));b2.append(tr);
-  });
-  t2.append(b2);tw2.append(t2);view.append(tw2);
+  view.append(g);
 }
 
 /* ---------- Defaulters ---------- */
