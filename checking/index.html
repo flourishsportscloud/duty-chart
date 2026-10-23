@@ -353,17 +353,20 @@ const SUBJ=[
   {id:"GEN",tab:"general",name:"General"},
 ];
 const SNAME=Object.fromEntries(SUBJ.map(s=>[s.id,s.name]));
+SNAME.COMP="Computer"; // preparation only — Computer book/notebook checking is done by the CM
+const COMPUTER={"6C":"Richa","7C":"Richa"}; // all other sections: Himanshu
 const BYL={ENG:{A:"Swati",B:"Yavnika",C:"Jyotsna"},SCI:{A:"Pallavi",B:"Shreya",C:"Ritika"},SST:{A:"Shailesh",B:"Ishita",C:"Monika"},HIN:{A:"Tripti",B:"Ajita",C:"Bharti"}};
 BYL.SKT=BYL.HIN;
 const MATHS={"6A":"Amit","6B":"Madhu","6C":"Neha","7A":"Vipul","7B":"Madhu","7C":"Neha","8A":"Vipul","8B":"Amit","8C":"Neha"};
 function defTeacher(s,sec){
   if(s==="GEN")return "Unassigned";
+  if(s==="COMP")return COMPUTER[sec]||"Himanshu";
   if(s==="MATH")return MATHS[sec];
   if(s==="GK")return (sec[0]==="8"?BYL.SCI:BYL.SST)[sec[1]]; // GK assessment sits with S.St (6, 7) and Science (8)
   return BYL[s][sec[1]];
 }
 const tOf=(j,sec)=>j.assignee||defTeacher(j.s,sec);
-const ALL_TEACHERS=[...new Set([...Object.values(BYL).flatMap(o=>Object.values(o)),...Object.values(MATHS)])].sort();
+const ALL_TEACHERS=[...new Set([...Object.values(BYL).flatMap(o=>Object.values(o)),...Object.values(MATHS),"Himanshu","Richa"])].sort();
 
 const KIND={test:"Test NB",nb:"Notebook",asg:"Assignment",book:"Book",mat:"Checking material",task:"Extra task",prep:"Preparation",cls:"Class task",sch:"School task"};
 const KIND_LONG={test:"Test notebook",nb:"Notebook",asg:"Assignment",book:"Book",mat:"Checking material",task:"Additional task",prep:"Preparation task",cls:"Class task",sch:"School task"};
@@ -994,9 +997,9 @@ function renderAreas(t){
 /* ---------- Preparation & Review ---------- */
 // November 2026 syllabus (Classes 6–8) for preparation & review; dates come with the November planner
 const NOV_SYLLABUS={
- "6":{ENG:["English-1 L-8","English Poem-5","English-2 L-9","English-2 E-mail Writing"],HIN:["Hindi-1 L-15","Hindi-1 L-16","Hindi-2 L-16","Hindi-2 चित्र वर्णन","Hindi-2 विलोम शब्द (23—44)"],SCI:["Science L-10"],MATH:["Maths L-7"],SST:["S.St L-8","S.St L-3"],GK:["GK Pg 37-40, 50, 56"],SKT:["Sanskrit L-12","Sanskrit L-13","Sanskrit बालिका शब्द रूप","Sanskrit गम्, भु धातु","Sanskrit लृट् लकार (भविष्यत् काल)"]},
- "7":{ENG:["English-1 L-8","English Poem-5","English-2 L-9","English-2 Newspaper Report Writing"],HIN:["Hindi-1 L-13","Hindi-1 L-14","Hindi-2 L-16","Hindi-2 चित्र वर्णन","Hindi-2 विलोम शब्द (21—40)"],SCI:["Science L-10"],MATH:["Maths Part-2 L-2","Maths Part-2 L-3"],SST:["S.St Part-2 L-1","S.St Part-2 L-2"],GK:["GK Pg 35-38, 50, 56"],SKT:["Sanskrit L-12","Sanskrit L-13","Sanskrit पत्र","Sanskrit गम्, भु धातु","Sanskrit लृट् लकार (भविष्यत् काल)"]},
- "8":{ENG:["English-1 L-8","English Poem-5","English-2 L-10"],HIN:["Hindi-1 L-12","Hindi-1 L-13","Hindi-2 L-14","Hindi-2 L-19","Hindi-2 अनौपचारिक पत्र","Hindi-2 ई-मेल लेखन","Hindi-2 पर्यायवाची शब्द (21—30)","Hindi-2 विलोम शब्द (21—30)"],SCI:["Science L-10"],MATH:["Maths Part-2 L-1","Maths Part-2 L-2"],SST:["S.St Part-2 L-4"],GK:["GK Pg 38-41, 57, 63"],SKT:["Sanskrit L-12","Sanskrit L-13","Sanskrit बालिका शब्द रूप","Sanskrit गम्, भु धातु","Sanskrit लृट् लकार (भविष्यत् काल)"]},
+ "6":{COMP:["Computer L-7"],ENG:["English-1 L-8","English Poem-5","English-2 L-9","English-2 E-mail Writing"],HIN:["Hindi-1 L-15","Hindi-1 L-16","Hindi-2 L-16","Hindi-2 चित्र वर्णन","Hindi-2 विलोम शब्द (23—44)"],SCI:["Science L-10"],MATH:["Maths L-7"],SST:["S.St L-8","S.St L-3"],GK:["GK Pg 37-40, 50, 56"],SKT:["Sanskrit L-12","Sanskrit L-13","Sanskrit बालिका शब्द रूप","Sanskrit गम्, भु धातु","Sanskrit लृट् लकार (भविष्यत् काल)"]},
+ "7":{COMP:["Computer L-7"],ENG:["English-1 L-8","English Poem-5","English-2 L-9","English-2 Newspaper Report Writing"],HIN:["Hindi-1 L-13","Hindi-1 L-14","Hindi-2 L-16","Hindi-2 चित्र वर्णन","Hindi-2 विलोम शब्द (21—40)"],SCI:["Science L-10"],MATH:["Maths Part-2 L-2","Maths Part-2 L-3"],SST:["S.St Part-2 L-1","S.St Part-2 L-2"],GK:["GK Pg 35-38, 50, 56"],SKT:["Sanskrit L-12","Sanskrit L-13","Sanskrit पत्र","Sanskrit गम्, भु धातु","Sanskrit लृट् लकार (भविष्यत् काल)"]},
+ "8":{COMP:["Computer L-8"],ENG:["English-1 L-8","English Poem-5","English-2 L-10"],HIN:["Hindi-1 L-12","Hindi-1 L-13","Hindi-2 L-14","Hindi-2 L-19","Hindi-2 अनौपचारिक पत्र","Hindi-2 ई-मेल लेखन","Hindi-2 पर्यायवाची शब्द (21—30)","Hindi-2 विलोम शब्द (21—30)"],SCI:["Science L-10"],MATH:["Maths Part-2 L-1","Maths Part-2 L-2"],SST:["S.St Part-2 L-4"],GK:["GK Pg 38-41, 57, 63"],SKT:["Sanskrit L-12","Sanskrit L-13","Sanskrit बालिका शब्द रूप","Sanskrit गम्, भु धातु","Sanskrit लृट् लकार (भविष्यत् काल)"]},
 };
 // lesson id that stays unique for Hindi/Sanskrit names
 function pslug(n){const b=slug(n);if(!/[^\x00-\x7f]/.test(n))return b;let x=5381;for(const ch of n)x=((x*33)^ch.codePointAt(0))>>>0;return b+"-"+x.toString(36)}
@@ -1013,6 +1016,8 @@ function prepLessons(){
     }
   }
   (config.prepLessons||[]).forEach(p=>{if(!out.some(o=>o.c===p.c&&o.s===p.s&&o.lid===pslug(p.lesson)))out.push({c:p.c,s:p.s,lesson:p.lesson,lid:pslug(p.lesson),start:p.start||todayISO(),end:p.start||todayISO(),added:true})});
+  // Computer, October (from the planner's Computer column)
+  [["6","Computer L-6","2026-10-21","2026-10-28"],["7","Computer L-6","2026-10-26","2026-10-27"],["8","Computer L-6","2026-10-23","2026-10-30"],["8","Computer L-7","2026-10-31","2026-10-31"]].forEach(([c,n,s0,s1])=>{const lid=pslug(n);if(!out.some(o=>o.c===c&&o.s==="COMP"&&o.lid===lid))out.push({c,s:"COMP",lesson:n,lid,start:s0,end:s1})});
   Object.entries(NOV_SYLLABUS).forEach(([c,subs])=>Object.entries(subs).forEach(([s,ls])=>ls.forEach(n=>{const lid=pslug(n);if(!out.some(o=>o.c===c&&o.s===s&&o.lid===lid))out.push({c,s,lesson:n,lid,start:"",end:"",month:"Nov"})})));
   const rows=[];
   out.forEach(l=>{const names=[...new Set(LET.map(x=>defTeacher(l.s,l.c+x)))];names.forEach(tn=>rows.push({...l,teacher:tn,key:`${tn}|${l.c}|${l.s}|${l.lid}`,secs:LET.filter(x=>defTeacher(l.s,l.c+x)===tn).map(x=>l.c+x)}))});
@@ -1061,7 +1066,7 @@ function renderPrep(view,t){
   sel("pT","Teacher",[["all","All teachers"],...teachers.map(x=>[x,x])],pTeacher,v=>pTeacher=v);
   sel("pS","Show",[["upcoming","Upcoming + pending"],["nov","November syllabus"],["all","All lessons"]],pShow,v=>pShow=v);
   sel("pC","Class",[["all","All"],["6","6"],["7","7"],["8","8"]],pClass,v=>pClass=v);
-  sel("pSub","Subject",[["all","All"],...SUBJ.filter(s=>s.id!=="GEN").map(s=>[s.id,s.name])],pSubj,v=>pSubj=v);
+  sel("pSub","Subject",[["all","All"],...SUBJ.filter(s=>s.id!=="GEN").map(s=>[s.id,s.name]),["COMP","Computer"]],pSubj,v=>pSubj=v);
   view.append(bar);
 
   const rows=all.filter(r=>(pTeacher==="all"||r.teacher===pTeacher)&&(pClass==="all"||r.c===pClass)&&(pSubj==="all"||r.s===pSubj)&&showRow(r,cols,t));
@@ -1258,7 +1263,7 @@ function renderAdmin(view,t){
   view.append(el("p","hint","Lessons come from the planner automatically. Add any lesson that is missing (e.g. next month's first lessons) so teachers can mark its preparation."));
   const f=el("div","toolbar");
   const c=document.createElement("select");c.className="sel";c.id="xlC";["6","7","8"].forEach(x=>{const o=el("option",null,"Class "+x);o.value=x;c.append(o)});
-  const s=document.createElement("select");s.className="sel";s.id="xlS";SUBJ.filter(x=>x.id!=="GEN").forEach(x=>{const o=el("option",null,x.name);o.value=x.id;s.append(o)});
+  const s=document.createElement("select");s.className="sel";s.id="xlS";[...SUBJ.filter(x=>x.id!=="GEN"),{id:"COMP",name:"Computer"}].forEach(x=>{const o=el("option",null,x.name);o.value=x.id;s.append(o)});
   const n=document.createElement("input");n.type="text";n.className="sel";n.id="xlN";n.placeholder="Lesson, e.g. English-1 L-8";
   const d=document.createElement("input");d.type="date";d.className="sel";d.id="xlD";d.value=t;
   const a=el("button","addbtn","Add lesson");a.type="button";a.id="xlAdd";

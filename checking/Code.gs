@@ -8,10 +8,11 @@
 const BYL={ENG:{A:"Swati",B:"Yavnika",C:"Jyotsna"},SCI:{A:"Pallavi",B:"Shreya",C:"Ritika"},SST:{A:"Shailesh",B:"Ishita",C:"Monika"},HIN:{A:"Tripti",B:"Ajita",C:"Bharti"}};
 BYL.SKT=BYL.HIN;
 const MATHS={"6A":"Amit","6B":"Madhu","6C":"Neha","7A":"Vipul","7B":"Madhu","7C":"Neha","8A":"Vipul","8B":"Amit","8C":"Neha"};
-const SUBJECTS=["ENG","SCI","SST","MATH","HIN","SKT","GK","GEN"];
+const SUBJECTS=["ENG","SCI","SST","MATH","HIN","SKT","GK","GEN","COMP"];
 const KINDS=["test","nb","asg","book","mat","task","prep","cls","sch"];
 function defTeacher(s,sec){
   if(s==="GEN")return "Unassigned";
+  if(s==="COMP")return ({"6C":"Richa","7C":"Richa"})[sec]||"Himanshu";
   if(s==="MATH")return MATHS[sec];
   if(s==="GK")return (sec[0]==="8"?BYL.SCI:BYL.SST)[sec[1]];
   return BYL[s]?BYL[s][sec[1]]:"";
