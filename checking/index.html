@@ -992,6 +992,14 @@ function renderAreas(t){
 }
 
 /* ---------- Preparation & Review ---------- */
+// November 2026 syllabus (Classes 6–8) for preparation & review; dates come with the November planner
+const NOV_SYLLABUS={
+ "6":{ENG:["English-1 L-8","English Poem-5","English-2 L-9","English-2 E-mail Writing"],HIN:["Hindi-1 L-15","Hindi-1 L-16","Hindi-2 L-16","Hindi-2 चित्र वर्णन","Hindi-2 विलोम शब्द (23—44)"],SCI:["Science L-10"],MATH:["Maths L-7"],SST:["S.St L-8","S.St L-3"],GK:["GK Pg 37-40, 50, 56"],SKT:["Sanskrit L-12","Sanskrit L-13","Sanskrit बालिका शब्द रूप","Sanskrit गम्, भु धातु","Sanskrit लृट् लकार (भविष्यत् काल)"]},
+ "7":{ENG:["English-1 L-8","English Poem-5","English-2 L-9","English-2 Newspaper Report Writing"],HIN:["Hindi-1 L-13","Hindi-1 L-14","Hindi-2 L-16","Hindi-2 चित्र वर्णन","Hindi-2 विलोम शब्द (21—40)"],SCI:["Science L-10"],MATH:["Maths Part-2 L-2","Maths Part-2 L-3"],SST:["S.St Part-2 L-1","S.St Part-2 L-2"],GK:["GK Pg 35-38, 50, 56"],SKT:["Sanskrit L-12","Sanskrit L-13","Sanskrit पत्र","Sanskrit गम्, भु धातु","Sanskrit लृट् लकार (भविष्यत् काल)"]},
+ "8":{ENG:["English-1 L-8","English Poem-5","English-2 L-10"],HIN:["Hindi-1 L-12","Hindi-1 L-13","Hindi-2 L-14","Hindi-2 L-19","Hindi-2 अनौपचारिक पत्र","Hindi-2 ई-मेल लेखन","Hindi-2 पर्यायवाची शब्द (21—30)","Hindi-2 विलोम शब्द (21—30)"],SCI:["Science L-10"],MATH:["Maths Part-2 L-1","Maths Part-2 L-2"],SST:["S.St Part-2 L-4"],GK:["GK Pg 38-41, 57, 63"],SKT:["Sanskrit L-12","Sanskrit L-13","Sanskrit बालिका शब्द रूप","Sanskrit गम्, भु धातु","Sanskrit लृट् लकार (भविष्यत् काल)"]},
+};
+// lesson id that stays unique for Hindi/Sanskrit names
+function pslug(n){const b=slug(n);if(!/[^\x00-\x7f]/.test(n))return b;let x=5381;for(const ch of n)x=((x*33)^ch.codePointAt(0))>>>0;return b+"-"+x.toString(36)}
 function prepLessons(){
   const out=[];
   for(const c of CLASSES){
@@ -1004,16 +1012,23 @@ function prepLessons(){
       merged.forEach(m=>{if(m.end<START)return;out.push({c,s,lesson:m.name,lid:slug(m.name),start:m.start,end:m.end})});
     }
   }
-  (config.prepLessons||[]).forEach(p=>{if(!out.some(o=>o.c===p.c&&o.s===p.s&&o.lid===slug(p.lesson)))out.push({c:p.c,s:p.s,lesson:p.lesson,lid:slug(p.lesson),start:p.start||todayISO(),end:p.start||todayISO(),added:true})});
+  (config.prepLessons||[]).forEach(p=>{if(!out.some(o=>o.c===p.c&&o.s===p.s&&o.lid===pslug(p.lesson)))out.push({c:p.c,s:p.s,lesson:p.lesson,lid:pslug(p.lesson),start:p.start||todayISO(),end:p.start||todayISO(),added:true})});
+  Object.entries(NOV_SYLLABUS).forEach(([c,subs])=>Object.entries(subs).forEach(([s,ls])=>ls.forEach(n=>{const lid=pslug(n);if(!out.some(o=>o.c===c&&o.s===s&&o.lid===lid))out.push({c,s,lesson:n,lid,start:"",end:"",month:"Nov"})})));
   const rows=[];
   out.forEach(l=>{const names=[...new Set(LET.map(x=>defTeacher(l.s,l.c+x)))];names.forEach(tn=>rows.push({...l,teacher:tn,key:`${tn}|${l.c}|${l.s}|${l.lid}`,secs:LET.filter(x=>defTeacher(l.s,l.c+x)===tn).map(x=>l.c+x)}))});
-  return rows.sort((a,b)=>a.start<b.start?-1:a.start>b.start?1:a.teacher.localeCompare(b.teacher));
+  const sk=r=>r.start||"9999";
+  return rows.sort((a,b)=>sk(a)<sk(b)?-1:sk(a)>sk(b)?1:a.s.localeCompare(b.s)||a.c.localeCompare(b.c)||a.teacher.localeCompare(b.teacher));
 }
 const pVal=(row,tool)=>(prep[row.key]&&prep[row.key][tool])||"due";
 function prepStats(rows,cols,t){
   let done=0,na=0,due=0,late=0;
-  rows.forEach(r=>cols.forEach(([k])=>{const v=pVal(r,k);if(v==="done")done++;else if(v==="na")na++;else{due++;if(r.start<=t)late++}}));
+  rows.forEach(r=>cols.forEach(([k])=>{const v=pVal(r,k);if(v==="done")done++;else if(v==="na")na++;else{due++;if(r.start&&r.start<=t)late++}}));
   const total=done+due;return {done,na,due,late,total,pct:total?Math.round(done/total*100):null};
+}
+function showRow(r,cols,t){
+  if(pShow==="all")return true;
+  if(pShow==="nov")return r.month==="Nov"||(r.start||"").startsWith("2026-11");
+  return !r.end||r.end>=t||cols.some(([k])=>pVal(r,k)==="due"&&r.start<=t);
 }
 function renderPrep(view,t){
   const all=prepLessons();
@@ -1029,7 +1044,7 @@ function renderPrep(view,t){
   const hr=el("tr");["Teacher","Lessons","Done %","Done","Due (lesson started)","Due (upcoming)","NA"].forEach((x,i)=>hr.append(el("th",i>1?"n":"",x)));
   const th=el("thead");th.append(hr);tb.append(th);const body=el("tbody");
   teachers.forEach(tn=>{
-    const rs=all.filter(r=>r.teacher===tn&&(pShow==="all"||r.end>=t||cols.some(([k])=>pVal(r,k)==="due"&&r.start<=t)));
+    const rs=all.filter(r=>r.teacher===tn&&showRow(r,cols,t));
     const m=prepStats(rs,cols,t);
     const tr=el("tr","clickable"+(pTeacher===tn?" sel":""));tr.tabIndex=0;const go=()=>{pTeacher=tn;render()};tr.onclick=go;tr.onkeydown=e=>{if(e.key==="Enter")go()};
     const n=el("td");n.append(el("b",null,tn));tr.append(n,el("td","n",String(rs.length)));
@@ -1044,25 +1059,25 @@ function renderPrep(view,t){
   const bar=el("div","toolbar");
   const sel=(id,lab,opts,cur,set)=>{bar.append(el("span","lab",lab));const s=document.createElement("select");s.className="sel";s.id=id;opts.forEach(([v,x])=>{const o=el("option",null,x);o.value=v;s.append(o)});s.value=cur;s.onchange=()=>{set(s.value);render()};bar.append(s)};
   sel("pT","Teacher",[["all","All teachers"],...teachers.map(x=>[x,x])],pTeacher,v=>pTeacher=v);
-  sel("pS","Show",[["upcoming","Upcoming + pending"],["all","All lessons"]],pShow,v=>pShow=v);
+  sel("pS","Show",[["upcoming","Upcoming + pending"],["nov","November syllabus"],["all","All lessons"]],pShow,v=>pShow=v);
   sel("pC","Class",[["all","All"],["6","6"],["7","7"],["8","8"]],pClass,v=>pClass=v);
   sel("pSub","Subject",[["all","All"],...SUBJ.filter(s=>s.id!=="GEN").map(s=>[s.id,s.name])],pSubj,v=>pSubj=v);
   view.append(bar);
 
-  const rows=all.filter(r=>(pTeacher==="all"||r.teacher===pTeacher)&&(pClass==="all"||r.c===pClass)&&(pSubj==="all"||r.s===pSubj)&&(pShow==="all"||r.end>=t||cols.some(([k])=>pVal(r,k)==="due"&&r.start<=t)));
+  const rows=all.filter(r=>(pTeacher==="all"||r.teacher===pTeacher)&&(pClass==="all"||r.c===pClass)&&(pSubj==="all"||r.s===pSubj)&&showRow(r,cols,t));
   const tw2=el("div","tw"),t2=el("table","prep");t2.style.minWidth=(560+cols.length*92)+"px";
   const h2=el("tr");["Starts","Teacher","Sections","Subject","Lesson"].forEach(x=>h2.append(el("th",null,x)));cols.forEach(([,x])=>h2.append(el("th","ctr",x)));
   const th2=el("thead");th2.append(h2);t2.append(th2);const b2=el("tbody");
   if(!rows.length){const tr=el("tr"),td=el("td","empty","No lessons in this view.");td.colSpan=5+cols.length;tr.append(td);b2.append(tr)}
   rows.forEach(r=>{
     const tr=el("tr");
-    tr.append(el("td",r.start===t?"num-late":"",fmt(r.start)+(r.end!==r.start?"–"+D(r.end).getDate():"")),el("td",null,r.teacher),el("td",null,r.secs.join(" ")));
+    tr.append(el("td",r.start===t?"num-late":"",r.month?"Nov (dates TBA)":fmt(r.start)+(r.end!==r.start?"–"+D(r.end).getDate():"")),el("td",null,r.teacher),el("td",null,r.secs.join(" ")));
     const sp=el("td");sp.append(el("span","subj-pill",SNAME[r.s]));tr.append(sp);
     const ln=el("td");ln.append(el("b",null,r.lesson));tr.append(ln);
     const can=!!me&&(me.role==="manager"||me.name===r.teacher);
     cols.forEach(([k,lab])=>{
       const v=pVal(r,k),td=el("td","c");
-      const b=el("button","pcell "+(v==="done"?"ok":v==="na"?"na":r.start<=t?"over":"due"),v==="done"?"✓ Done":v==="na"?"NA":r.start<=t?"Due":"Due");
+      const b=el("button","pcell "+(v==="done"?"ok":v==="na"?"na":r.start&&r.start<=t?"over":"due"),v==="done"?"✓ Done":v==="na"?"NA":"Due");
       b.type="button";b.id="p-"+slug(r.key)+"-"+k;b.title=can?"Tap: Due → Done → NA":"Only "+r.teacher+" or a manager can change this";
       b.setAttribute("aria-label",`${r.teacher} ${r.lesson} ${lab}: ${v}`);
       if(!can)b.disabled=true;
@@ -1297,7 +1312,7 @@ function updateCounts(){
 function myExtras(view,t){
   if(!me)return;
   const rows=prepLessons().filter(r=>r.teacher===me.name);
-  const pm=prepStats(rows.filter(r=>r.start<=t||r.end>=t),PREP_COLS,t),rm=prepStats(rows,REVIEW_COLS,t);
+  const pm=prepStats(rows,PREP_COLS,t),rm=prepStats(rows,REVIEW_COLS,t);
   const mySecs=SECS.filter(s=>mentorOf(s)===me.name);
   const box=el("div","kpis");
   const k=(c,l,v,s,go)=>{const d=el("button","kpi "+c);d.type="button";d.append(el("div","l",l),el("div","v",String(v)),el("div","s",s));d.onclick=go;box.append(d)};
