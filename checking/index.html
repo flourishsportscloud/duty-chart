@@ -251,7 +251,7 @@ td.ctr{text-align:center}
 .repmx th,.repmx td{border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:5px 8px;font-size:12.5px;white-space:nowrap}
 .repmx thead th{position:sticky;top:0;z-index:3;background:var(--card);vertical-align:bottom}
 .repmx .sticky1{position:sticky;left:0;z-index:2;background:var(--card);min-width:44px}
-.repmx .sticky2{position:sticky;left:44px;z-index:2;background:var(--card);min-width:150px;font-weight:700}
+.repmx .sticky2{position:sticky;left:0;z-index:2;background:var(--card);min-width:150px;font-weight:700}
 .repmx thead .sticky1,.repmx thead .sticky2{z-index:4}
 .repmx th.jh{min-width:96px;max-width:130px;white-space:normal;text-transform:none;letter-spacing:0;color:var(--ink)}
 .repmx .jl{font-size:13px;font-weight:700;margin-top:2px}.repmx .jd{font-size:11px;color:var(--muted);font-weight:400}
@@ -1045,7 +1045,7 @@ const saveArea=()=>{try{localStorage.setItem("chk68-area",JSON.stringify({area,p
 function goArea(a){area=a;saveArea();render();window.scrollTo({top:0})}
 
 function studentsOf(sec){return (config.students||[]).filter(s=>s.sec===sec).sort((a,b)=>(parseInt(a.roll)||0)-(parseInt(b.roll)||0)||String(a.roll).localeCompare(String(b.roll)))}
-function stuName(sec,roll){const s=(config.students||[]).find(x=>x.sec===sec&&String(x.roll)===String(roll));return s?s.name:"Roll "+roll}
+function stuName(sec,roll){const s=(config.students||[]).find(x=>x.sec===sec&&String(x.roll)===String(roll));return s?s.name:"(not in section list)"}
 
 function renderAreas(t){
   const nav=$("areas");nav.replaceChildren();
@@ -1517,8 +1517,8 @@ function dashReport(view,t){
   // download
   const dl=el("button","chip","Download (Excel CSV)");dl.type="button";dl.id="rDl";dl.style.alignSelf="flex-start";
   dl.onclick=()=>{
-    const rows=[["Roll No.","Student Name",...jobs.map(x=>KIND_LONG[x.j.k]+" "+x.j.lesson),"Defaulter","Absentee"]];
-    studs.forEach(s=>{let dn=0,an=0;const cells=jobs.map(x=>{const [k,v]=cellOf(x,s.roll);if(k==="def")dn++;if(k==="abs")an++;return v});rows.push([s.roll,s.name,...cells,dn,an])});
+    const rows=[["Student Name",...jobs.map(x=>KIND_LONG[x.j.k]+" "+x.j.lesson),"Defaulter","Absentee"]];
+    studs.forEach(s=>{let dn=0,an=0;const cells=jobs.map(x=>{const [k,v]=cellOf(x,s.roll);if(k==="def")dn++;if(k==="abs")an++;return v});rows.push([s.name,...cells,dn,an])});
     const csv="﻿"+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join("\r\n");
     const fname="Checking_Report_"+sec+".csv";
     if(window.claude&&window.claude.use){window.claude.use("downloads").then(d=>{if(!d){banner("Download is not available here.");return}return d.save({filename:fname,data:new Blob([csv],{type:"text/csv"})})}).catch(()=>{});return}
@@ -1529,20 +1529,20 @@ function dashReport(view,t){
   const tw=el("div","tw rep"),tb=el("table","repmx");
   const h1=el("tr"),h2=el("tr");
   const th=(txt,cls,rs)=>{const e=el("th",cls,txt);if(rs)e.rowSpan=rs;return e};
-  h1.append(th("Roll No.","sticky1",2),th("Student Name","sticky2",2));
+  h1.append(th("Student Name","sticky2",2));
   jobs.forEach(x=>{const e=el("th","jh");e.append(el("span","kind"+(x.j.k==="test"?" test":""),KIND[x.j.k]),el("div","jl",x.j.lesson),el("div","jd",SNAME[x.j.s]+" · "+(x.r?fmt(x.r.at):"not checked")));h1.append(e)});
   h1.append(th("D","n",2),th("A","n",2));
   const thead=el("thead");thead.append(h1);tb.append(thead);
   const body=el("tbody");
   studs.forEach(s=>{
-    const tr=el("tr");tr.append(el("td","sticky1 n",s.roll),el("td","sticky2",s.name));
+    const tr=el("tr");tr.append(el("td","sticky2",s.name));
     let dn=0,an=0;
     jobs.forEach(x=>{const [k,v]=cellOf(x,s.roll);if(k==="def")dn++;if(k==="abs")an++;tr.append(el("td","rc "+k,v))});
     tr.append(el("td","n "+(dn?"num-over":""),String(dn)),el("td","n",String(an)));
     body.append(tr);
   });
   // column totals
-  const ft=el("tr","tot");ft.append(el("td","sticky1",""),el("td","sticky2","Defaulter / Absent"));
+  const ft=el("tr","tot");ft.append(el("td","sticky2","Defaulter / Absent"));
   jobs.forEach(x=>{let dn=0,an=0;studs.forEach(s=>{const [k]=cellOf(x,s.roll);if(k==="def")dn++;if(k==="abs")an++});ft.append(el("td","rc",x.r?dn+" / "+an:"—"))});
   ft.append(el("td","n",String(defN)),el("td","n",String(absN)));body.append(ft);
   tb.append(body);tw.append(tb);view.append(tw);
@@ -1563,7 +1563,7 @@ function fillStudentList(sec,j,rec,editable){
   $("inMax").value=d.max||"";$("inMax").disabled=!editable;
   box.append(el("div","stu-head",isTest?"Type marks, or tap A = absent · NG = not given":"Tap D for defaulter (incomplete / not submitted) or A for absent"));
   list.forEach(s=>{
-    const row=el("div","stu");row.append(el("span","roll",s.roll),el("span","sname",s.name));
+    const row=el("div","stu");row.append(el("span","sname",s.name));
     if(isTest){
       const i=document.createElement("input");i.type="text";i.inputMode="decimal";i.className="mk";i.value=sheetMarks[s.roll]||"";i.placeholder="—";i.disabled=!editable;i.setAttribute("aria-label","Marks for "+s.name);
       const qa=el("button","tgl","A"),qn=el("button","tgl ng","NG");qn.title="Not given";
