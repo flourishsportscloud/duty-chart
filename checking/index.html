@@ -1517,7 +1517,9 @@ function dashReport(view,t){
     const rows=[["Roll No.","Student Name",...jobs.map(x=>KIND_LONG[x.j.k]+" "+x.j.lesson),"Defaulter","Absentee"]];
     studs.forEach(s=>{let dn=0,an=0;const cells=jobs.map(x=>{const [k,v]=cellOf(x,s.roll);if(k==="def")dn++;if(k==="abs")an++;return v});rows.push([s.roll,s.name,...cells,dn,an])});
     const csv="﻿"+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join("\r\n");
-    try{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download="Checking_Report_"+sec+".csv";document.body.append(a);a.click();a.remove()}catch(e){banner("Download is not available here.")}
+    const fname="Checking_Report_"+sec+".csv";
+    if(window.claude&&window.claude.use){window.claude.use("downloads").then(d=>{if(!d){banner("Download is not available here.");return}return d.save({filename:fname,data:new Blob([csv],{type:"text/csv"})})}).catch(()=>{});return}
+    try{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download=fname;document.body.append(a);a.click();a.remove()}catch(e){banner("Download is not available here.")}
   };
   view.append(dl);
   // matrix
