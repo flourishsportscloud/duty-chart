@@ -198,7 +198,7 @@ td.names{font-size:12.5px;min-width:180px;vertical-align:top}
 .stu .sname{flex:1;min-width:0;font-size:14px}
 .tgl{font:inherit;font-weight:700;width:36px;height:32px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--muted);cursor:pointer}
 .tgl.on-d{background:var(--over);border-color:var(--over);color:#fff}
-.tgl.ng{width:auto;padding:0 8px;font-size:12px}
+.tgl.ng{font-size:12.5px}
 .tgl.on-a{background:var(--muted);border-color:var(--muted);color:var(--card)}
 .mk{font:inherit;width:64px;height:32px;border:1px solid var(--line);border-radius:8px;text-align:center;background:var(--card);color:var(--ink)}
 .stu-count{font-size:12.5px;font-weight:700;padding:6px 4px 2px;color:var(--ink)}
@@ -1559,12 +1559,12 @@ function fillStudentList(sec,j,rec,editable){
   const d=rec&&rec.data||{};
   sheetDef=new Set(d.defList||[]);sheetAbs=new Set(d.absList||[]);sheetMarks={...(d.marks||{})};
   $("inMax").value=d.max||"";$("inMax").disabled=!editable;
-  box.append(el("div","stu-head",isTest?"Type marks, or tap A (absent) / Not given":"Tap D for defaulter (incomplete / not submitted) or A for absent"));
+  box.append(el("div","stu-head",isTest?"Type marks, or tap A = absent · NG = not given":"Tap D for defaulter (incomplete / not submitted) or A for absent"));
   list.forEach(s=>{
     const row=el("div","stu");row.append(el("span","roll",s.roll),el("span","sname",s.name));
     if(isTest){
       const i=document.createElement("input");i.type="text";i.inputMode="decimal";i.className="mk";i.value=sheetMarks[s.roll]||"";i.placeholder="—";i.disabled=!editable;i.setAttribute("aria-label","Marks for "+s.name);
-      const qa=el("button","tgl","A"),qn=el("button","tgl ng","Not given");
+      const qa=el("button","tgl","A"),qn=el("button","tgl ng","NG");qn.title="Not given";
       [qa,qn].forEach(b=>{b.type="button";b.disabled=!editable});
       qa.setAttribute("aria-label","Absent: "+s.name);qn.setAttribute("aria-label","Not given: "+s.name);
       const sync=()=>{const v=(sheetMarks[s.roll]||"");qa.classList.toggle("on-a",v==="A");qn.classList.toggle("on-d",v==="NG");row.classList.toggle("is-a",v==="A");row.classList.toggle("is-d",v==="NG");i.disabled=!editable||v==="A"||v==="NG";if(v==="A"||v==="NG")i.value=""};
