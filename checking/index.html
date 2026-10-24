@@ -238,6 +238,11 @@ button.kpi{font:inherit;text-align:left;cursor:pointer;color:var(--ink)}
 @media (max-width:640px){.lrow{grid-template-columns:1fr}.tchip{min-width:0;flex:1 1 30%}
   .tcards{display:flex;overflow-x:auto;scroll-snap-type:x proximity;padding-bottom:4px}.tcard{flex:0 0 150px;scroll-snap-align:start}}
 
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.two>div{min-width:0;display:flex;flex-direction:column;gap:8px}
+@media (max-width:760px){.two{grid-template-columns:1fr}}
+.stp{display:inline-block;min-width:34px;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700;text-align:center}
+.stp.ok{background:var(--ok-bg);color:var(--ok-ink)}.stp.due{background:var(--tod-bg);color:var(--tod)}.stp.over{background:var(--over-bg);color:var(--over-ink)}.stp.na{color:var(--muted);box-shadow:inset 0 0 0 1px var(--line)}
+td.ctr{text-align:center}
 /* login bar */
 .acct{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:14px}
 .acct .hint{flex-basis:100%}
@@ -711,14 +716,16 @@ async function render(){
   isAdmin=isManager();
   const t=todayISO();
   if(tab==="logins"||tab==="my"){area=tab==="my"?"my":"admin";tab="dash"}
+  if(area==="def"||area==="perf"){board=area;area="boards"}
   if(area==="admin"&&!isAdmin)area="check";
   if(area==="my"&&!(me&&me.role==="teacher"))area="check";
   renderAreas(t);
-  $("tabs").hidden=area!=="check";$("legend").hidden=area!=="check"&&area!=="my";$("rules").hidden=area!=="check";
+  $("tabs").hidden=area!=="check";$("legend").hidden=!(area==="check"||area==="my"||(area==="boards"&&board==="check"));$("rules").hidden=area!=="check";
   if(area==="check")renderTabs(t);
   renderAcct();
   const view=$("view");view.replaceChildren();
   if(area==="my"){renderMy(view,t);myExtras(view,t)}
+  else if(area==="boards")renderBoards(view,t);
   else if(area==="prep")renderPrep(view,t);
   else if(area==="mentor")renderMentor(view,t);
   else if(area==="def")renderDef(view,t);
@@ -1012,8 +1019,8 @@ const mentorOf=sec=>(config.mentors&&config.mentors[sec])||DEFAULT_MENTORS[sec]|
 const PREP_COLS=[["booklet","Booklet"],["anskey","Assignment answer key"],["video","Video"],["ppt","PPT"],["epl","EPL"]];
 const REVIEW_COLS=[["rvContent","Booklet / Content"],["rvAsg","Assignments"]];
 const MENTOR_ITEMS=[["att","Attendance Register","daily"],["rec","Record Register","weekly"],["route","Route Plan","weekly"],["coc","Co-curricular","weekly"],["disp","Class Display","monthly"],["wall","Student Wall Display (no. submitted)","monthly"]];
-const AREAS=[["check","Checking"],["prep","Preparation & Review"],["mentor","Mentor tasks"],["def","Defaulters"],["perf","Performance"]];
-let area="check", prepView="prep", pTeacher="", pShow="upcoming", pClass="all", pSubj="all", mDate="", dClass="all", dSubj="all", dKind="all", perfClass="all", perfSubj="all";
+const AREAS=[["boards","Dashboards"],["check","Checking"],["prep","Preparation & Review"],["mentor","Mentor tasks"]];
+let area="boards", prepView="prep", pTeacher="", pShow="upcoming", pClass="all", pSubj="all", mDate="", dClass="all", dSubj="all", dKind="all", perfClass="all", perfSubj="all";
 try{const s=JSON.parse(localStorage.getItem("chk68-area")||"{}");if(s.area)area=s.area;if(s.prepView)prepView=s.prepView}catch(e){}
 const saveArea=()=>{try{localStorage.setItem("chk68-area",JSON.stringify({area,prepView}))}catch(e){}};
 function goArea(a){area=a;saveArea();render();window.scrollTo({top:0})}
@@ -1318,6 +1325,132 @@ function renderAdmin(view,t){
   (config.prepLessons||[]).forEach((p,i)=>{const r=el("div","removed");r.append(el("span",null,"Class "+p.c+" · "+SNAME[p.s]+" · "+p.lesson+" · "+(p.start?fmt(p.start):"")));const x=el("button",null,"Remove");x.type="button";x.id="xlRm"+i;x.onclick=()=>{const list=(config.prepLessons||[]).filter((_,k)=>k!==i);apiWrite("saveConfig",[token,"prepLessons",list],()=>{config.prepLessons=list})};r.append(x);view.append(r)});
 
   renderLogins(view);
+}
+
+
+/* ================= Dashboards (one per area, for monitoring) ================= */
+const BOARDS=[["check","Checking Status"],["prep","Preparation Status"],["review","Content Review Status"],["mentor","Mentor Tasks"],["def","Defaulter Status"],["perf","Performance Tracker"]];
+let board="check";
+try{const s=JSON.parse(localStorage.getItem("chk68-board")||"{}");if(s.board)board=s.board}catch(e){}
+function kpiRow(view,items){const k=el("div","kpis");items.forEach(([c,l,v,s])=>{const d=el("div","kpi "+c);d.append(el("div","l",l),el("div","v",String(v)),el("div","s",s||""));k.append(d)});view.append(k)}
+function pctTd(p,done,total){const td=el("td");const w=el("div","pctcell");const b=el("div","bar");const i=el("i","b-ok");i.style.width=(total?done/total*100:0)+"%";b.append(i);w.append(el("b",p==null?"":p>=80?"num-ok":p>=50?"num-late":"num-over",p==null?"—":p+"%"),b);td.append(w);return td}
+function simpleTable(view,heads,rows,minW){
+  const tw=el("div","tw"),tb=el("table");if(minW)tb.style.minWidth=minW+"px";
+  const hr=el("tr");heads.forEach(([x,c])=>hr.append(el("th",c||"",x)));const th=el("thead");th.append(hr);tb.append(th);
+  const body=el("tbody");rows.forEach(r=>body.append(r));tb.append(body);tw.append(tb);view.append(tw);
+}
+function renderBoards(view,t){
+  const nav=el("nav","tabs");nav.setAttribute("role","tablist");
+  BOARDS.forEach(([id,l])=>{const b=el("button","tab",l);b.type="button";b.id="board-"+id;b.setAttribute("role","tab");b.setAttribute("aria-selected",board===id);b.onclick=()=>{board=id;try{localStorage.setItem("chk68-board",JSON.stringify({board}))}catch(e){};render()};nav.append(b)});
+  view.append(nav);
+  if(board==="check")renderDash(view,t);
+  else if(board==="prep")dashPrep(view,t,PREP_COLS,"Preparation status","prep");
+  else if(board==="review")dashPrep(view,t,REVIEW_COLS,"Content review status","review");
+  else if(board==="mentor")dashMentor(view,t);
+  else if(board==="def")dashDef(view,t);
+  else if(board==="perf")dashPerf(view,t);
+}
+
+/* ---- Preparation / Content review ---- */
+function dashPrep(view,t,cols,title,mode){
+  const all=prepLessons();
+  const scope=board==="prep"||board==="review"?(pShow):pShow;
+  const rows=all.filter(r=>showRow(r,cols,t));
+  const m=prepStats(rows,cols,t);
+  const head=el("div","sec-h");head.append(el("h2",null,title));
+  const bar=el("div","toolbar");bar.append(el("span","lab","Show"));
+  const s=document.createElement("select");s.className="sel";s.id="dbShow";[["upcoming","Upcoming + pending"],["nov","November syllabus"],["all","All lessons"]].forEach(([v,x])=>{const o=el("option",null,x);o.value=v;s.append(o)});s.value=pShow;s.onchange=()=>{pShow=s.value;render()};bar.append(s);
+  head.append(bar);view.append(head);
+  kpiRow(view,[["ok","Done",m.pct==null?"—":m.pct+"%",m.done+" of "+m.total+" items"],["over","Overdue",m.late,"lesson started, not done"],["tod","Due",m.due-m.late,"upcoming lessons"],["","NA",m.na,"not applicable"],["","Lessons",new Set(rows.map(r=>r.c+r.s+r.lid)).size,"in this view"],["","Teachers",new Set(rows.map(r=>r.teacher)).size,""]]);
+
+  // by teacher
+  view.append(el("h2",null,"By teacher"));
+  const teachers=[...new Set(rows.map(r=>r.teacher))].sort();
+  const tr=teachers.map(tn=>{const rs=rows.filter(r=>r.teacher===tn),x=prepStats(rs,cols,t);return {tn,rs,x}}).sort((a,b)=>(a.x.pct??101)-(b.x.pct??101));
+  simpleTable(view,[["Teacher"],["Done %"],["Done","n"],["Overdue","n"],["Due","n"],["Lessons","n"]],tr.map(({tn,rs,x})=>{
+    const r=el("tr","clickable");r.tabIndex=0;const go=()=>{pTeacher=tn;prepView=mode;goArea("prep")};r.onclick=go;r.onkeydown=e=>{if(e.key==="Enter")go()};
+    const n=el("td");n.append(el("b",null,tn));r.append(n,pctTd(x.pct,x.done,x.total));
+    [[x.done,"num-ok"],[x.late,x.late?"num-over":""],[x.due-x.late,""],[rs.length,""]].forEach(([v,c])=>{const td=el("td","n");td.append(el("span",c,String(v)));r.append(td)});return r}),560);
+
+  // by tool + by subject side by side
+  const two=el("div","two");
+  const left=el("div");left.append(el("h2",null,"By item"));
+  simpleTable(left,[["Item"],["Done %"],["Overdue","n"]],cols.map(([k])=>{
+    let d=0,tot=0,late=0;rows.forEach(r=>{const v=pVal(r,k);if(v==="na")return;tot++;if(v==="done")d++;else if(r.start&&r.start<=t)late++});
+    const r=el("tr");r.append(el("td",null,SHORT[k]),pctTd(tot?Math.round(d/tot*100):null,d,tot));const td=el("td","n");td.append(el("span",late?"num-over":"",String(late)));r.append(td);return r}));
+  const right=el("div");right.append(el("h2",null,"By subject"));
+  const subs=[...new Set(rows.map(r=>r.s))];
+  simpleTable(right,[["Subject"],["Done %"],["Overdue","n"]],subs.map(sb=>{const x=prepStats(rows.filter(r=>r.s===sb),cols,t);
+    const r=el("tr");const sp=el("td");sp.append(el("span","subj-pill",SNAME[sb]));r.append(sp,pctTd(x.pct,x.done,x.total));const td=el("td","n");td.append(el("span",x.late?"num-over":"",String(x.late)));r.append(td);return r}));
+  two.append(left,right);view.append(two);
+
+  // overdue list
+  const od=rows.filter(r=>r.start&&r.start<=t&&cols.some(([k])=>pVal(r,k)==="due"));
+  view.append(el("h2",null,"Overdue ("+od.length+" lessons)"));
+  if(!od.length){view.append(el("div","notice","Nothing overdue."));return}
+  simpleTable(view,[["Started"],["Teacher"],["Section"],["Subject"],["Lesson"],["Still due"]],od.sort((a,b)=>a.start<b.start?-1:1).map(r=>{
+    const x=el("tr","clickable");x.tabIndex=0;const go=()=>{pTeacher=r.teacher;prepView=mode;goArea("prep")};x.onclick=go;
+    const sp=el("td");sp.append(el("span","subj-pill",SNAME[r.s]));
+    x.append(el("td",null,fmt(r.start)),el("td",null,r.teacher),el("td",null,r.secs.join(" ")),sp,el("td",null,r.lesson),el("td","num-over",cols.filter(([k])=>pVal(r,k)==="due").map(([k])=>SHORT[k]).join(", ")));return x}),760);
+}
+
+/* ---- Mentor tasks ---- */
+function dashMentor(view,t){
+  if(!mDate)mDate=t;
+  const head=el("div","sec-h");head.append(el("h2",null,"Mentor tasks"));
+  const dp=document.createElement("input");dp.type="date";dp.id="dbMDate";dp.className="sel";dp.value=mDate;dp.onchange=()=>{mDate=dp.value||t;render()};
+  const lab=el("label","toolbar");lab.append(el("span","lab","Date"),dp);head.append(lab);view.append(head);
+  const days=weekDays(mDate).filter(d=>d<=t),mon=mDate.slice(0,7);
+  const monthDays=[];for(let d=1;d<=31;d++){const iso=mon+"-"+String(d).padStart(2,"0");if(iso>t||D(iso).getMonth()!==D(mon+"-01").getMonth())break;if(D(iso).getDay()!==0)monthDays.push(iso)}
+  let attW=0,attM=0,wk=0,disp=0,wall=0,wallN=0;
+  SECS.forEach(sec=>{attW+=days.filter(d=>mentorData[`${sec}|att|${d}`]).length;attM+=monthDays.filter(d=>mentorData[`${sec}|att|${d}`]).length;
+    ["rec","route","coc"].forEach(k=>{if(mentorData[`${sec}|${k}|${monday(mDate)}`])wk++});if(mentorData[`${sec}|disp|${mon}`])disp++;const w=mentorData[`${sec}|wall|${mon}`];if(w){wall++;wallN+=parseInt(w.v)||0}});
+  const pc=(a,b)=>b?Math.round(a/b*100)+"%":"—";
+  kpiRow(view,[["ok","Attendance this week",pc(attW,days.length*9),attW+" of "+days.length*9+" section-days"],["","Attendance this month",pc(attM,monthDays.length*9),attM+" of "+monthDays.length*9],["","Weekly items",pc(wk,27),"Record, Route, Co-curricular: "+wk+"/27"],["","Class Display",disp+"/9","sections this month"],["hand","Wall submissions",wallN,"total this month ("+wall+"/9 sections)"],["","Week",periodLabel("weekly",mDate),""]]);
+  view.append(el("h2",null,"By section"));
+  simpleTable(view,[["Section"],["Mentor"],["Attendance (week)","n"],["Attendance (month)","n"],["Record Register","ctr"],["Route Plan","ctr"],["Co-curricular","ctr"],["Class Display","ctr"],["Wall submissions","n"]],SECS.map(sec=>{
+    const r=el("tr","clickable");r.tabIndex=0;r.onclick=()=>goArea("mentor");
+    const s=el("td");s.append(el("b",null,sec));r.append(s,el("td",null,mentorOf(sec)));
+    const aw=days.filter(d=>mentorData[`${sec}|att|${d}`]).length,am=monthDays.filter(d=>mentorData[`${sec}|att|${d}`]).length;
+    r.append(el("td","n "+(aw<days.length?"num-late":"num-ok"),aw+"/"+days.length),el("td","n "+(am<monthDays.length?"num-late":"num-ok"),am+"/"+monthDays.length));
+    const st=k=>{const v=mentorData[k];const td=el("td","ctr");td.append(el("span","stp "+(v?(v.v==="na"?"na":"ok"):"due"),v?(v.v==="na"?"NA":"✓"):"Due"));return td};
+    ["rec","route","coc"].forEach(k=>r.append(st(`${sec}|${k}|${monday(mDate)}`)));r.append(st(`${sec}|disp|${mon}`));
+    const w=mentorData[`${sec}|wall|${mon}`];r.append(el("td","n",w?w.v:"—"));return r}),900);
+  view.append(el("h2",null,"Attendance register — this week"));
+  simpleTable(view,[["Section"],...weekDays(mDate).map(d=>[wd(d)+" "+D(d).getDate(),"ctr"])],SECS.map(sec=>{
+    const r=el("tr");const s=el("td");s.append(el("b",null,sec));r.append(s);
+    weekDays(mDate).forEach(d=>{const td=el("td","ctr");if(d>t)td.append(el("span","hint","·"));else{const v=mentorData[`${sec}|att|${d}`];td.append(el("span","stp "+(v?"ok":"over"),v?"✓":"✗"))}r.append(td)});return r}),560);
+}
+
+/* ---- Defaulters ---- */
+function dashDef(view,t){
+  const items=reportsWithLists().filter(x=>(dClass==="all"||x.j.c===dClass)&&(dSubj==="all"||x.j.s===dSubj)&&(dKind==="all"||x.j.k===dKind));
+  let dm=0,am=0;const stu=new Set(),cnt=new Map();
+  items.forEach(x=>{(x.r.data.defList||[]).forEach(r=>{dm++;stu.add(x.sec+"|"+r);cnt.set(x.sec+"|"+r,(cnt.get(x.sec+"|"+r)||0)+1)});am+=(x.r.data.absList||[]).length});
+  const repeat=[...cnt.values()].filter(n=>n>=2).length;
+  kpiRow(view,[["over","Defaulter marks",dm,"incomplete / not submitted"],["","Students",stu.size,"with at least one"],["over","Repeat defaulters",repeat,"2 or more times"],["","Absent marks",am,""],["","Reports with names",items.length,""],["","Students listed",(config.students||[]).length,"in section list"]]);
+  view.append(el("h2",null,"Defaulters by section and subject"));
+  const subs=SUBJ.filter(s=>s.id!=="GEN");
+  simpleTable(view,[["Section"],...subs.map(s=>[s.name,"n"]),["Total","n"]],SECS.map(sec=>{
+    const r=el("tr");const s=el("td");s.append(el("b",null,sec));r.append(s);let tot=0;
+    subs.forEach(sb=>{const n=items.filter(x=>x.sec===sec&&x.j.s===sb.id).reduce((a,x)=>a+(x.r.data.defList||[]).length,0);tot+=n;const td=el("td","n");td.append(el("span",n>=5?"num-over":n?"num-late":"",n?String(n):"·"));r.append(td)});
+    const td=el("td","n");td.append(el("b",null,String(tot)));r.append(td);return r}),760);
+  renderDef(view,t);
+}
+
+/* ---- Performance ---- */
+function dashPerf(view,t){
+  const tests=JOBS.flatMap(j=>j.secs.map(l=>{const sec=j.c+l,r=getRec(j,sec);return r&&r.data&&r.data.marks?{j,sec,r}:null}).filter(Boolean));
+  let all=[],low=0;const per=new Map();
+  tests.forEach(x=>{const max=x.r.data.max||10;Object.values(x.r.data.marks).forEach(v=>{const p=markPct(v,max);if(p==null)return;all.push(p);if(p<60)low++;const k=x.sec+"|"+x.j.s;if(!per.has(k))per.set(k,[]);per.get(k).push(p)})});
+  const avg=a=>a.length?Math.round(a.reduce((s,v)=>s+v,0)/a.length):null;
+  kpiRow(view,[["","Tests with marks",new Set(tests.map(x=>x.j.key)).size,tests.length+" section reports"],["ok","Average",avg(all)==null?"—":avg(all)+"%","all marks entered"],["over","Below 60%",low,"answer sheets"],["","Marks entered",all.length,""],["","Above 80%",all.filter(p=>p>=80).length,"answer sheets"],["","Sections",new Set(tests.map(x=>x.sec)).size,"with marks"]]);
+  view.append(el("h2",null,"Average % by section and subject"));
+  const subs=SUBJ.filter(s=>s.id!=="GEN");
+  simpleTable(view,[["Section"],...subs.map(s=>[s.name,"n"])],SECS.map(sec=>{
+    const r=el("tr");const s=el("td");s.append(el("b",null,sec));r.append(s);
+    subs.forEach(sb=>{const a=avg(per.get(sec+"|"+sb.id)||[]);const td=el("td","n");td.append(el("span",a==null?"hint":a>=75?"num-ok":a>=60?"num-late":"num-over",a==null?"·":a+"%"));r.append(td)});return r}),760);
+  renderPerf(view,t);
 }
 
 /* ---------- student list inside the report box ---------- */
