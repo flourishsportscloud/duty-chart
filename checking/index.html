@@ -243,6 +243,24 @@ button.kpi{font:inherit;text-align:left;cursor:pointer;color:var(--ink)}
 .stp{display:inline-block;min-width:34px;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700;text-align:center}
 .stp.ok{background:var(--ok-bg);color:var(--ok-ink)}.stp.due{background:var(--tod-bg);color:var(--tod)}.stp.over{background:var(--over-bg);color:var(--over-ink)}.stp.na{color:var(--muted);box-shadow:inset 0 0 0 1px var(--line)}
 td.ctr{text-align:center}
+/* checking report matrix */
+.chk{display:inline-flex;align-items:center;gap:4px;font-size:13px;color:var(--muted)}
+.tw.rep{max-height:75vh;overflow:auto}
+.repmx{border-collapse:separate;border-spacing:0;min-width:0;width:max-content}
+.repmx th,.repmx td{border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:5px 8px;font-size:12.5px;white-space:nowrap}
+.repmx thead th{position:sticky;top:0;z-index:3;background:var(--card);vertical-align:bottom}
+.repmx .sticky1{position:sticky;left:0;z-index:2;background:var(--card);min-width:44px}
+.repmx .sticky2{position:sticky;left:44px;z-index:2;background:var(--card);min-width:150px;font-weight:700}
+.repmx thead .sticky1,.repmx thead .sticky2{z-index:4}
+.repmx th.jh{min-width:96px;max-width:130px;white-space:normal;text-transform:none;letter-spacing:0;color:var(--ink)}
+.repmx .jl{font-size:13px;font-weight:700;margin-top:2px}.repmx .jd{font-size:11px;color:var(--muted);font-weight:400}
+.repmx td.rc{text-align:center;font-weight:700}
+.rc.ok{color:var(--ok-ink);background:var(--ok-bg)}
+.rc.def{color:var(--over-ink);background:var(--over-bg)}
+.rc.abs{color:var(--muted);background:var(--idle-bg)}
+.rc.low{color:var(--over-ink);background:var(--late-bg)}
+.rc.nc{color:var(--muted)}
+.repmx tr.tot td{font-weight:700;background:var(--zebra)}
 /* login bar */
 .acct{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:14px}
 .acct .hint{flex-basis:100%}
@@ -1329,7 +1347,7 @@ function renderAdmin(view,t){
 
 
 /* ================= Dashboards (one per area, for monitoring) ================= */
-const BOARDS=[["check","Checking Status"],["prep","Preparation Status"],["review","Content Review Status"],["mentor","Mentor Tasks"],["def","Defaulter Status"],["perf","Performance Tracker"]];
+const BOARDS=[["check","Checking Status"],["report","Checking Report"],["prep","Preparation Status"],["review","Content Review Status"],["mentor","Mentor Tasks"],["def","Defaulter Status"],["perf","Performance Tracker"]];
 let board="check";
 try{const s=JSON.parse(localStorage.getItem("chk68-board")||"{}");if(s.board)board=s.board}catch(e){}
 function kpiRow(view,items){const k=el("div","kpis");items.forEach(([c,l,v,s])=>{const d=el("div","kpi "+c);d.append(el("div","l",l),el("div","v",String(v)),el("div","s",s||""));k.append(d)});view.append(k)}
@@ -1344,6 +1362,7 @@ function renderBoards(view,t){
   BOARDS.forEach(([id,l])=>{const b=el("button","tab",l);b.type="button";b.id="board-"+id;b.setAttribute("role","tab");b.setAttribute("aria-selected",board===id);b.onclick=()=>{board=id;try{localStorage.setItem("chk68-board",JSON.stringify({board}))}catch(e){};render()};nav.append(b)});
   view.append(nav);
   if(board==="check")renderDash(view,t);
+  else if(board==="report")dashReport(view,t);
   else if(board==="prep")dashPrep(view,t,PREP_COLS,"Preparation status","prep");
   else if(board==="review")dashPrep(view,t,REVIEW_COLS,"Content review status","review");
   else if(board==="mentor")dashMentor(view,t);
@@ -1451,6 +1470,78 @@ function dashPerf(view,t){
     const r=el("tr");const s=el("td");s.append(el("b",null,sec));r.append(s);
     subs.forEach(sb=>{const a=avg(per.get(sec+"|"+sb.id)||[]);const td=el("td","n");td.append(el("span",a==null?"hint":a>=75?"num-ok":a>=60?"num-late":"num-over",a==null?"·":a+"%"));r.append(td)});return r}),760);
   renderPerf(view,t);
+}
+
+
+/* ---- Checking Report: student × job matrix for one section ---- */
+let rSec="", rSubs=new Set(), rKind="all", rShowAll=false;
+function dashReport(view,t){
+  if(!rSec)rSec=(me&&SECS.find(s=>JOBS.some(j=>j.c+"" ===s[0]&&tOf(j,s)===me.name)))||"6A";
+  const head=el("div","sec-h");head.append(el("h2",null,"Checking report · "+rSec),el("p",null,"Student-wise status of every notebook, assignment, book and test checked."));view.append(head);
+  const bar=el("div","toolbar");
+  bar.append(el("span","lab","Section"));
+  const ss=document.createElement("select");ss.className="sel";ss.id="rSec";SECS.forEach(s=>{const o=el("option",null,s);o.value=s;ss.append(o)});ss.value=rSec;ss.onchange=()=>{rSec=ss.value;render()};bar.append(ss);
+  bar.append(el("span","sep"),el("span","lab","Type"));
+  const ks=document.createElement("select");ks.className="sel";ks.id="rKind";[["all","All"],["nb","Notebook"],["asg","Assignment"],["book","Book"],["test","Test"],["mat","Checking material"]].forEach(([v,x])=>{const o=el("option",null,x);o.value=v;ks.append(o)});ks.value=rKind;ks.onchange=()=>{rKind=ks.value;render()};bar.append(ks);
+  const cb=el("label","chk");const ci=document.createElement("input");ci.type="checkbox";ci.id="rAll";ci.checked=rShowAll;ci.onchange=()=>{rShowAll=ci.checked;render()};cb.append(ci,document.createTextNode(" Include jobs not checked yet"));bar.append(cb);
+  view.append(bar);
+  // subject multi-select chips
+  const sb=el("div","toolbar");sb.append(el("span","lab","Subjects"));
+  const allB=el("button","chip","All subjects");allB.type="button";allB.id="rs-all";allB.setAttribute("aria-pressed",rSubs.size===0);allB.onclick=()=>{rSubs.clear();render()};sb.append(allB);
+  SUBJ.forEach(s=>{const b=el("button","chip",s.name);b.type="button";b.id="rs-"+s.id;b.setAttribute("aria-pressed",rSubs.has(s.id));b.onclick=()=>{if(rSubs.has(s.id))rSubs.delete(s.id);else rSubs.add(s.id);render()};sb.append(b)});
+  sb.append(el("span","hint","Tap several to combine, e.g. Hindi + English"));
+  view.append(sb);
+
+  const sec=rSec,c=sec[0],l=sec[1];
+  const jobs=JOBS.filter(j=>j.c===c&&j.secs.includes(l)&&(rSubs.size===0||rSubs.has(j.s))&&(rKind==="all"||j.k===rKind)&&IS_CHECK[j.k])
+    .map(j=>({j,r:getRec(j,sec)})).filter(x=>rShowAll?x.j.recv<=t:!!x.r)
+    .sort((a,b)=>(a.j.s+a.j.recv+ORDER[a.j.k]).localeCompare(b.j.s+b.j.recv+ORDER[b.j.k]));
+  const studs=studentsOf(sec);
+  if(!me){view.append(el("div","notice","Log in to see the student-wise report."));return}
+  if(!studs.length){view.append(el("div","notice","No section list loaded for "+sec+". A manager can paste it in Admin → Section list."));return}
+  if(!jobs.length){view.append(el("div","notice","Nothing checked yet for this choice."));return}
+  const cellOf=(x,roll)=>{
+    const r=x.r;if(!r)return ["nc","—"];
+    const d=r.data||{};
+    if(x.j.k==="test"&&d.marks){const v=d.marks[roll];if(v==="A")return ["abs","Absentee"];if(v==="NG")return ["def","Not given"];if(v==null||v==="")return ["nc","—"];const p=markPct(v,d.max||10);return [p!=null&&p<60?"low":"ok",v+"/"+(d.max||10)]}
+    if((d.defList||[]).includes(roll))return ["def","Defaulter"];
+    if((d.absList||[]).includes(roll))return ["abs","Absentee"];
+    return ["ok","Done"];
+  };
+  // summary
+  let defN=0,absN=0;studs.forEach(s=>jobs.forEach(x=>{const [k]=cellOf(x,s.roll);if(k==="def")defN++;if(k==="abs")absN++}));
+  kpiRow(view,[["","Jobs",jobs.length,jobs.filter(x=>x.r).length+" checked"],["","Students",studs.length,sec],["over","Defaulter marks",defN,""],["","Absentee marks",absN,""],["over","Students with any defaulter",studs.filter(s=>jobs.some(x=>cellOf(x,s.roll)[0]==="def")).length,""],["ok","All done",studs.filter(s=>jobs.every(x=>["ok","low"].includes(cellOf(x,s.roll)[0])||!x.r)).length,"students"]]);
+  // download
+  const dl=el("button","chip","Download (Excel CSV)");dl.type="button";dl.id="rDl";dl.style.alignSelf="flex-start";
+  dl.onclick=()=>{
+    const rows=[["Roll No.","Student Name",...jobs.map(x=>KIND_LONG[x.j.k]+" "+x.j.lesson),"Defaulter","Absentee"]];
+    studs.forEach(s=>{let dn=0,an=0;const cells=jobs.map(x=>{const [k,v]=cellOf(x,s.roll);if(k==="def")dn++;if(k==="abs")an++;return v});rows.push([s.roll,s.name,...cells,dn,an])});
+    const csv="﻿"+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join("\r\n");
+    try{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download="Checking_Report_"+sec+".csv";document.body.append(a);a.click();a.remove()}catch(e){banner("Download is not available here.")}
+  };
+  view.append(dl);
+  // matrix
+  const tw=el("div","tw rep"),tb=el("table","repmx");
+  const h1=el("tr"),h2=el("tr");
+  const th=(txt,cls,rs)=>{const e=el("th",cls,txt);if(rs)e.rowSpan=rs;return e};
+  h1.append(th("Roll No.","sticky1",2),th("Student Name","sticky2",2));
+  jobs.forEach(x=>{const e=el("th","jh");e.append(el("span","kind"+(x.j.k==="test"?" test":""),KIND[x.j.k]),el("div","jl",x.j.lesson),el("div","jd",SNAME[x.j.s]+" · "+(x.r?fmt(x.r.at):"not checked")));h1.append(e)});
+  h1.append(th("D","n",2),th("A","n",2));
+  const thead=el("thead");thead.append(h1);tb.append(thead);
+  const body=el("tbody");
+  studs.forEach(s=>{
+    const tr=el("tr");tr.append(el("td","sticky1 n",s.roll),el("td","sticky2",s.name));
+    let dn=0,an=0;
+    jobs.forEach(x=>{const [k,v]=cellOf(x,s.roll);if(k==="def")dn++;if(k==="abs")an++;tr.append(el("td","rc "+k,v))});
+    tr.append(el("td","n "+(dn?"num-over":""),String(dn)),el("td","n",String(an)));
+    body.append(tr);
+  });
+  // column totals
+  const ft=el("tr","tot");ft.append(el("td","sticky1",""),el("td","sticky2","Defaulter / Absent"));
+  jobs.forEach(x=>{let dn=0,an=0;studs.forEach(s=>{const [k]=cellOf(x,s.roll);if(k==="def")dn++;if(k==="abs")an++});ft.append(el("td","rc",x.r?dn+" / "+an:"—"))});
+  ft.append(el("td","n",String(defN)),el("td","n",String(absN)));body.append(ft);
+  tb.append(body);tw.append(tb);view.append(tw);
+  view.append(el("p","hint","Done = submitted and checked · Defaulter = incomplete / not submitted · Absentee = absent that day · test cells show marks (red below 60%). “—” = not checked yet."));
 }
 
 /* ---------- student list inside the report box ---------- */
