@@ -1296,7 +1296,7 @@ function renderPerf(view,t){
       const avg=ps.length?Math.round(ps.reduce((a,b)=>a+b,0)/ps.length):null;
       td.append(el("div",avg==null?"":avg>=60?"num-ok":"num-over","Avg "+(avg==null?"—":avg+"%")));
       const mv=Object.values(x.r.data.marks),aN=mv.filter(v=>v==="A").length,ngN=mv.filter(v=>v==="NG").length;
-      td.append(el("div","ab-list","A (Absentee) – "+aN+" · NG (Not Given) – "+ngN));
+      td.append(el("div","ab-list","A – "+aN+" · NG – "+ngN));
       if(low.length){const d=el("div","dn-list");d.append(el("b","num-over","Below 60% ("+low.length+"): "),document.createTextNode(low.map(r=>stuName(x.sec,r)).join(", ")));td.append(d)}
       tr.append(td)});
     body.append(tr);
