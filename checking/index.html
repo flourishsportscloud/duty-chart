@@ -1477,12 +1477,12 @@ function dashPerf(view,t){
 let rSec="", rSubs=new Set(), rKind="all", rShowAll=false;
 function dashReport(view,t){
   if(!rSec)rSec=(me&&SECS.find(s=>JOBS.some(j=>j.c+"" ===s[0]&&tOf(j,s)===me.name)))||"6A";
-  const head=el("div","sec-h");head.append(el("h2",null,"Checking report · "+rSec),el("p",null,"Student-wise status of every notebook, assignment, book and test checked."));view.append(head);
+  const head=el("div","sec-h");head.append(el("h2",null,"Checking report · "+rSec),el("p",null,"Student-wise status of every notebook, assignment and book checked (tests are in Performance Tracker)."));view.append(head);
   const bar=el("div","toolbar");
   bar.append(el("span","lab","Section"));
   const ss=document.createElement("select");ss.className="sel";ss.id="rSec";SECS.forEach(s=>{const o=el("option",null,s);o.value=s;ss.append(o)});ss.value=rSec;ss.onchange=()=>{rSec=ss.value;render()};bar.append(ss);
   bar.append(el("span","sep"),el("span","lab","Type"));
-  const ks=document.createElement("select");ks.className="sel";ks.id="rKind";[["all","All"],["nb","Notebook"],["asg","Assignment"],["book","Book"],["test","Test"],["mat","Checking material"]].forEach(([v,x])=>{const o=el("option",null,x);o.value=v;ks.append(o)});ks.value=rKind;ks.onchange=()=>{rKind=ks.value;render()};bar.append(ks);
+  const ks=document.createElement("select");ks.className="sel";ks.id="rKind";[["all","All"],["nb","Notebook"],["asg","Assignment"],["book","Book"],["mat","Checking material"]].forEach(([v,x])=>{const o=el("option",null,x);o.value=v;ks.append(o)});if(rKind==="test")rKind="all";ks.value=rKind;ks.onchange=()=>{rKind=ks.value;render()};bar.append(ks);
   const cb=el("label","chk");const ci=document.createElement("input");ci.type="checkbox";ci.id="rAll";ci.checked=rShowAll;ci.onchange=()=>{rShowAll=ci.checked;render()};cb.append(ci,document.createTextNode(" Include jobs not checked yet"));bar.append(cb);
   view.append(bar);
   // subject multi-select chips
@@ -1493,7 +1493,7 @@ function dashReport(view,t){
   view.append(sb);
 
   const sec=rSec,c=sec[0],l=sec[1];
-  const jobs=JOBS.filter(j=>j.c===c&&j.secs.includes(l)&&(rSubs.size===0||rSubs.has(j.s))&&(rKind==="all"||j.k===rKind)&&IS_CHECK[j.k])
+  const jobs=JOBS.filter(j=>j.c===c&&j.secs.includes(l)&&(rSubs.size===0||rSubs.has(j.s))&&(rKind==="all"||j.k===rKind)&&IS_CHECK[j.k]&&j.k!=="test")
     .map(j=>({j,r:getRec(j,sec)})).filter(x=>rShowAll?x.j.recv<=t:!!x.r)
     .sort((a,b)=>(a.j.s+a.j.recv+ORDER[a.j.k]).localeCompare(b.j.s+b.j.recv+ORDER[b.j.k]));
   const studs=studentsOf(sec);
@@ -1543,7 +1543,7 @@ function dashReport(view,t){
   jobs.forEach(x=>{let dn=0,an=0;studs.forEach(s=>{const [k]=cellOf(x,s.roll);if(k==="def")dn++;if(k==="abs")an++});ft.append(el("td","rc",x.r?dn+" / "+an:"—"))});
   ft.append(el("td","n",String(defN)),el("td","n",String(absN)));body.append(ft);
   tb.append(body);tw.append(tb);view.append(tw);
-  view.append(el("p","hint","Done = submitted and checked · Defaulter = incomplete / not submitted · Absentee = absent that day · test cells show marks (red below 60%). “—” = not checked yet."));
+  view.append(el("p","hint","Done = submitted and checked · Defaulter = incomplete / not submitted · Absentee = absent that day · “—” = not checked yet. Test marks are in Performance Tracker."));
 }
 
 /* ---------- student list inside the report box ---------- */
