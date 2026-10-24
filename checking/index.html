@@ -1236,7 +1236,7 @@ function renderDef(view,t){
   sel("dK","Type",[["all","All"],["nb","Notebook"],["asg","Assignment"],["book","Book"],["test","Test"],["mat","Checking material"]],dKind,v=>dKind=v);
   view.append(bar);
   const items=reportsWithLists().filter(x=>(dClass==="all"||x.j.c===dClass)&&(dSubj==="all"||x.j.s===dSubj)&&(dKind==="all"||x.j.k===dKind));
-  const nm=(sec,roll)=>me?stuName(sec,roll):"Roll "+roll;
+  const nm=(sec,roll)=>stuName(sec,roll);
   // lesson-wise, section-wise
   const byJob=new Map();items.forEach(x=>{const k=x.j.key;if(!byJob.has(k))byJob.set(k,{j:x.j,cells:{}});byJob.get(k).cells[x.sec[1]]=x});
   view.append(el("h2",null,"Lesson-wise incomplete work"));
@@ -1294,8 +1294,10 @@ function renderPerf(view,t){
       Object.entries(x.r.data.marks).forEach(([roll,v])=>{const p=markPct(v,max);if(p==null)return;ps.push(p);if(p<60)low.push(roll);
         const k=x.sec+"|"+roll;if(!stu.has(k))stu.set(k,{sec:x.sec,roll,tests:0,low:0,sum:0});const s=stu.get(k);s.tests++;s.sum+=p;if(p<60)s.low++});
       const avg=ps.length?Math.round(ps.reduce((a,b)=>a+b,0)/ps.length):null;
-      td.append(el("div",avg==null?"":avg>=60?"num-ok":"num-over","Avg "+(avg==null?"—":avg+"%")+" · "+ps.length+" wrote · max "+max));
-      if(low.length){const d=el("div","dn-list");d.append(el("b","num-over","Below 60% ("+low.length+"): "),document.createTextNode(low.map(r=>me?stuName(x.sec,r):"Roll "+r).join(", ")));td.append(d)}
+      td.append(el("div",avg==null?"":avg>=60?"num-ok":"num-over","Avg "+(avg==null?"—":avg+"%")));
+      const mv=Object.values(x.r.data.marks),aN=mv.filter(v=>v==="A").length,ngN=mv.filter(v=>v==="NG").length;
+      td.append(el("div","ab-list","A (Absentee) – "+aN+" · NG (Not Given) – "+ngN));
+      if(low.length){const d=el("div","dn-list");d.append(el("b","num-over","Below 60% ("+low.length+"): "),document.createTextNode(low.map(r=>stuName(x.sec,r)).join(", ")));td.append(d)}
       tr.append(td)});
     body.append(tr);
   });
@@ -1305,7 +1307,7 @@ function renderPerf(view,t){
   if(!weak.length){view.append(el("div","notice","None yet in this filter."));return}
   const tw2=el("div","tw"),t2=el("table");t2.style.minWidth="520px";
   const h2=el("tr");["Student","Section","Tests","Below 60%","Average"].forEach((x,i)=>h2.append(el("th",i>1?"n":"",x)));const th2=el("thead");th2.append(h2);t2.append(th2);const b2=el("tbody");
-  weak.forEach(s=>{const tr=el("tr");const n=el("td");n.append(el("b",null,me?stuName(s.sec,s.roll):"Roll "+s.roll));tr.append(n,el("td",null,s.sec),el("td","n",String(s.tests)),el("td","n num-over",String(s.low)),el("td","n",Math.round(s.sum/s.tests)+"%"));b2.append(tr)});
+  weak.forEach(s=>{const tr=el("tr");const n=el("td");n.append(el("b",null,stuName(s.sec,s.roll)));tr.append(n,el("td",null,s.sec),el("td","n",String(s.tests)),el("td","n num-over",String(s.low)),el("td","n",Math.round(s.sum/s.tests)+"%"));b2.append(tr)});
   t2.append(b2);tw2.append(t2);view.append(tw2);
 }
 
