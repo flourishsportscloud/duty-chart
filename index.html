@@ -3,7 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Duty Chart – September 2026</title>
+<title>Duty Chart</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Duty Chart">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#18213A">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&display=swap" rel="stylesheet">
@@ -459,7 +467,8 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbyxWYwmvDDlIR6VjS2W4209
     return p;
   }}};
   const status = t => { const m = document.getElementById('main') || document.body; m.insertAdjacentHTML('afterbegin', '<div id="bootmsg" style="margin:16px;padding:14px;border-radius:12px;background:#fff;border:1px dashed #ccc;font-family:system-ui">' + t + '</div>'); };
-  const start = () => call('boot').then(b => {
+  /* chat name changes are applied to every boot result (fresh or cached) */
+  const prep = b => {
     /* ===== NAME CHANGES MADE IN CHAT (last update: 26 Oct 2026) =====
        Cards listed here replace the Sheet's card of the same name; new cards are added after "after". */
     (function(){
@@ -480,15 +489,43 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbyxWYwmvDDlIR6VjS2W4209
       if (ex && ex.cols) Object.keys(EX).forEach(h => { const col = ex.cols.find(c => c.h === h); if (!col) return;
         col.groups = EX[h].map(o => ({t:o.t, c:o.c, p:o.p.slice()})); });
     })();
+    return b;
+  };
+  const CK = 'dutyBootCache';
+  const readCache = () => { try { return JSON.parse(localStorage.getItem(CK) || 'null'); } catch(e){ return null; } };
+  const writeCache = b => { try { localStorage.setItem(CK, JSON.stringify(b)); } catch(e){} };
+  const sig = b => JSON.stringify([b.tabs, b.settings]);
+  let started = false;
+  const launch = raw => {
+    started = true;
+    const b = prep(JSON.parse(JSON.stringify(raw)));
     window.__B = b;
     document.getElementById('daily').textContent = JSON.stringify(b.daily || {});
     document.getElementById('roster').textContent = JSON.stringify(b.roster || {});
     const m = document.getElementById('bootmsg'); if (m) m.remove();
     const sc = document.createElement('script'); sc.id = 'app'; sc.textContent = document.getElementById('appsrc').textContent;
     document.body.appendChild(sc);
-  }).catch(e => { const m = document.getElementById('bootmsg'); if (m) m.remove(); const why = String(e && e.message || e).replace(/[<>&]/g,''); status('Could not load the duty chart. <button onclick="location.reload()">Reload</button><br><small style="color:#888">Reason: ' + why + '</small>'); });
+  };
+  const start = () => {
+    const cached = readCache();
+    if (cached) launch(cached);            /* open instantly from this phone's last copy */
+    call('boot').then(fresh => {
+      writeCache(fresh);
+      if (!started) { launch(fresh); return; }
+      /* duty names changed in the Sheet since the cached copy: reload once to show them */
+      if (sig(fresh) !== sig(cached)) {
+        let n = 0; try { n = +sessionStorage.getItem('dutyReloads') || 0; sessionStorage.setItem('dutyReloads', n + 1); } catch(e){}
+        if (n < 2) location.reload();
+      }
+    }).catch(e => {
+      if (started) return;                 /* already showing the cached copy */
+      const m = document.getElementById('bootmsg'); if (m) m.remove();
+      const why = String(e && e.message || e).replace(/[<>&]/g,'');
+      status('Could not load the duty chart. <button onclick="location.reload()">Reload</button><br><small style="color:#888">Reason: ' + why + '</small>');
+    });
+  };
   if (!/^https:\/\/script\.google\.com\//.test(api)) { document.addEventListener('DOMContentLoaded', () => status('Set API_URL at the top of this file to your Apps Script web app link.')); return; }
-  document.addEventListener('DOMContentLoaded', () => { status('Loading duty chart…'); start(); });
+  document.addEventListener('DOMContentLoaded', () => { if (!localStorage.getItem('dutyBootCache')) status('Loading duty chart…'); start(); });
 })();
 </script>
 <script type="text/plain" id="headmeta">
@@ -1391,7 +1428,12 @@ async function gsEnable(){
   if (st.Title) { const h = document.querySelector('h1'); if (h) h.textContent = st.Title; }
   if (st.Month) { const m = document.querySelector('.month'); if (m) m.textContent = st.Month; document.title = (st.Title || 'Duty Chart') + ' – ' + st.Month; }
   whoBar();
-  if (GS.pin) { try { if (await GS.unlock(GS.pin)) await gsEnable(); else GS.lock(); } catch(e){} }
+  /* a PIN saved on this phone unlocks at once; it is re-checked in the background */
+  if (GS.pin) {
+    await gsEnable();
+    GS.run('checkPin', GS.pin).then(ok => { if (ok === false) { GS.lock(); toast('The edit PIN has changed – please enter the new PIN'); } }).catch(() => {});
+  }
+  GS.refresh(false);
   setInterval(() => { if (!document.hidden) GS.refresh(false); }, 45000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) GS.refresh(false); });
 })();
