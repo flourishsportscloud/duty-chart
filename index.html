@@ -150,6 +150,8 @@ tr.cov td{background:color-mix(in srgb,var(--sports) 10%,transparent)}
 .x{border:0;background:none;color:var(--gate);font-size:22px;width:34px;height:34px;cursor:pointer}
 .hint{font-size:.78rem;color:var(--muted);margin:4px 0 8px}
 .sheet .foot{display:flex;gap:8px;margin-top:12px;position:sticky;bottom:-18px;background:var(--bg);padding:10px 0}
+.syncb{position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:60;background:#FFF1C2;color:#7A5A00;border:1px solid #E8C860;border-radius:999px;padding:6px 12px;font-size:.8rem;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+.syncb[hidden]{display:none}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:700;z-index:60;max-width:calc(100% - 32px);text-align:center}
 /* staff picker */
 .ptabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:2px 0 8px}
@@ -1358,21 +1360,88 @@ async function save(next, day, btn, roster){
     await sendWa(t); closeEditor(); closeQA(); if (CI) closeCI(); return;
   }
   if (!ART){ toast('Enter the edit PIN to save'); return; }
-  btn = btn || $('#edSave'); const label = btn.textContent; btn.disabled = true; btn.textContent = 'Saving…';
-  try {
-    try { sessionStorage.setItem('dutyDay', day); } catch(e){}
-    await ART.publish(next, roster || ROSTER);
-    if (roster) ROSTER = roster;
-    try { sessionStorage.removeItem('dutyPendingAtt'); } catch(e){}
-    DAILY = next; closeEditor(); closeQA(); if (CI) closeCI(); setDay(day); toast('Saved for everyone');
-  } catch(e){
-    const c = e && e.code;
-    if (c === 'conflict') { GS.refresh(true); } if (c === 'conflict') toast(sessionStorage.getItem('dutyPendingAtt') ? 'Someone else saved at the same time – your check-in will be saved again after reload.' : 'Someone else saved just now – reloading. Please check and save again.');
-    else if (c === 'not_writer' || c === 'not_granted' || c === 'not_declared' || c === 'consent_required' || c === 'capability_disabled'){ CAN_EDIT = false; whoBar(); closeEditor(); closeQA(); renderNotice(); toast('You can view this chart but not edit it.'); }
-    else if (c === 'rate_limited') toast('Too many saves – wait a minute and try again.');
-    else { try { sessionStorage.removeItem('dutyPendingAtt'); } catch(e2){} toast('Could not save. Try again.'); }
-  } finally { btn.disabled = false; btn.textContent = label; }
+  const ops = diffOps(DAILY, next, ROSTER, roster);
+  try { sessionStorage.setItem('dutyDay', day); sessionStorage.removeItem('dutyPendingAtt'); } catch(e){}
+  DAILY = next; if (roster) ROSTER = roster;
+  closeEditor(); closeQA(); if (CI) closeCI(); setDay(day);
+  if (!ops.length){ toast('No changes to save'); return; }
+  Q.ops.push(...ops); qSave(); Q.wait = 0; clearTimeout(Q.timer); Q.timer = null;
+  toast('Saved ✓ – sending to everyone…'); syncBadge(); flush();
 }
+/* ---------- many people saving at once ----------
+   Each save is turned into small changes (one day / one check-in area at a time). They are kept on this
+   phone until the Sheet confirms them, merged with what others saved meanwhile, and retried automatically. */
+const jk = x => JSON.stringify(x === undefined ? null : x);
+function mergeDay(base, val, cur){
+  base = base || {}; val = val || {}; const out = cur ? JSON.parse(JSON.stringify(cur)) : {};
+  new Set([...Object.keys(base), ...Object.keys(val)]).forEach(k => {
+    const b = base[k], v = val[k]; if (jk(b) === jk(v)) return;
+    if (k === 'att'){
+      const o = out.att = out.att || {};
+      new Set([...Object.keys(b || {}), ...Object.keys(v || {})]).forEach(id => {
+        const ba = (b || {})[id] || {}, va = (v || {})[id];
+        if (jk((b || {})[id]) === jk(va)) return;
+        if (!va){ delete o[id]; return; }
+        const ca = o[id] = o[id] ? JSON.parse(JSON.stringify(o[id])) : {s:{}}; ca.s = ca.s || {};
+        const bs = ba.s || {}, vs = va.s || {};
+        new Set([...Object.keys(bs), ...Object.keys(vs)]).forEach(n => { if (jk(bs[n]) === jk(vs[n])) return; if (vs[n]) ca.s[n] = vs[n]; else delete ca.s[n]; });
+        if (va.at) ca.at = va.at;
+      });
+      return;
+    }
+    if (Array.isArray(b) || Array.isArray(v)){
+      const B = new Set((b || []).map(jk)), V = new Set((v || []).map(jk));
+      const c = (out[k] || []).filter(x => !(B.has(jk(x)) && !V.has(jk(x)))); const C = new Set(c.map(jk));
+      (v || []).forEach(x => { if (!B.has(jk(x)) && !C.has(jk(x))) { c.push(x); C.add(jk(x)); } });
+      out[k] = c; return;
+    }
+    if (v === undefined) delete out[k]; else out[k] = v;
+  });
+  return out;
+}
+const emptyDay = m => !(m.leave || []).length && !(m.cover || []).length && !(m.adj || []).length && !Object.keys(m.att || {}).length;
+function diffOps(prev, next, prevR, nextR){
+  const ops = [];
+  new Set([...Object.keys(prev || {}), ...Object.keys(next || {})]).forEach(d => { if (jk(prev[d]) !== jk(next[d])) ops.push({t:'day', day:d, base:prev[d] || null, val:next[d] || null}); });
+  if (nextR) new Set([...Object.keys(prevR || {}), ...Object.keys(nextR)]).forEach(id => { if (jk((prevR || {})[id]) !== jk(nextR[id])) ops.push({t:'roster', id, val:nextR[id] || null}); });
+  return ops;
+}
+function applyOps(daily, roster, ops){
+  const D = {...(daily || {})}, R = {...(roster || {})};
+  ops.forEach(o => {
+    if (o.t === 'day'){ const m = mergeDay(o.base, o.val, D[o.day]); if (!o.val && emptyDay(m)) delete D[o.day]; else D[o.day] = m; }
+    else if (o.t === 'roster'){ if (o.val) R[o.id] = o.val; else delete R[o.id]; }
+  });
+  return {daily: D, roster: R};
+}
+const Q = {ops: [], busy: false, wait: 0, timer: null};
+try { Q.ops = JSON.parse(localStorage.getItem('dutyQueue') || '[]') || []; } catch(e){ Q.ops = []; }
+function qSave(){ try { localStorage.setItem('dutyQueue', JSON.stringify(Q.ops)); } catch(e){} }
+function syncBadge(){
+  let el = document.getElementById('syncb');
+  if (!el){ el = document.createElement('div'); el.id = 'syncb'; el.className = 'syncb'; el.setAttribute('role', 'status'); el.onclick = () => { Q.wait = 0; clearTimeout(Q.timer); Q.timer = null; flush(); }; document.body.appendChild(el); }
+  const n = new Set(Q.ops.map(o => o.t + (o.day || o.id))).size;
+  el.hidden = !Q.ops.length;
+  el.textContent = Q.busy ? `⟳ Saving ${n} change${n > 1 ? 's' : ''}…` : `⏳ ${n} change${n > 1 ? 's' : ''} waiting – retrying (tap to retry now)`;
+}
+const dialogsClosed = () => $('#ed').hidden && $('#qa').hidden && $('#ci').hidden;
+async function flush(){
+  if (Q.busy || !Q.ops.length || !ART) { syncBadge(); return; }
+  Q.busy = true; syncBadge();
+  const batch = Q.ops.slice(); let ok = false;
+  try {
+    const r = await GS.push(batch);
+    Q.ops = Q.ops.slice(batch.length); qSave(); Q.wait = 0; ok = true;
+    const v = applyOps(r.daily, r.roster, Q.ops); DAILY = v.daily; ROSTER = v.roster;
+    if (dialogsClosed()) setDay(DAY);
+    if (!Q.ops.length) toast('Saved for everyone ✓');
+  } catch(e){
+    if (e && e.code === 'not_writer'){ toast('Your edit PIN is not accepted – enter the PIN again. Your changes are kept on this phone.'); GS.lock(); }
+    else { Q.wait = Math.min(30000, Math.max(2000, (Q.wait || 1000) * 2)); clearTimeout(Q.timer); Q.timer = setTimeout(() => { Q.timer = null; flush(); }, Q.wait + Math.random() * 1500); }
+  } finally { Q.busy = false; syncBadge(); }
+  if (ok && Q.ops.length) flush();
+}
+window.addEventListener('online', () => flush());
 function buildPage(data, roster){
   const json = JSON.stringify(data).replace(/</g,'\\u003c');
   const S = '<' + '/script>';
@@ -1397,16 +1466,29 @@ const GS = (() => {
   const run = (fn, ...args) => new Promise((ok, bad) => google.script.run.withSuccessHandler(ok).withFailureHandler(e => {
     const m = String(e && e.message || e); const err = new Error(m);
     err.code = /conflict/i.test(m) ? 'conflict' : /pin/i.test(m) ? 'not_writer' : 'error'; bad(err); })[fn](...args));
-  let VER = window.__B.ver, PIN = '';
+  let VER = window.__B.ver, PIN = '', HAS_PATCH = null;
   try { PIN = localStorage.getItem('dutyPin') || ''; } catch(e){}
   return {
     run,
     publish: async (daily, roster) => { const r = await run('saveAll', daily, roster, VER, PIN); VER = r.ver; return r; },
+    async push(ops){
+      if (HAS_PATCH !== false) try {
+        const r = await run('savePatch', ops, PIN); HAS_PATCH = true;
+        if (r.ver === VER + 1 || r.ver === VER) VER = r.ver; else { VER = r.ver; }
+        return r;
+      } catch(e){ if (!/unknown call/i.test(e.message)) throw e; HAS_PATCH = false; }
+      for (let i = 0; ; i++){
+        const all = await run('getAll'); const m = applyOps(all.daily, all.roster, ops);
+        const cut = addDays(ymd(new Date()), -60); Object.keys(m.daily).forEach(d => { if (d < cut) delete m.daily[d]; });
+        try { const r = await run('saveAll', m.daily, m.roster, all.ver, PIN); VER = r.ver; return {ver: r.ver, daily: m.daily, roster: m.roster}; }
+        catch(e){ if (e.code !== 'conflict' || i >= 6) throw e; await new Promise(z => setTimeout(z, 400 + Math.random() * 1600)); }
+      }
+    },
     async refresh(force){
       try {
         if (!force && (!$('#ed').hidden || !$('#qa').hidden || !$('#ci').hidden)) return;
         const v = await run('getVer'); if (!force && v === VER) return;
-        const all = await run('getAll'); VER = all.ver; DAILY = all.daily || {}; ROSTER = all.roster || {};
+        const all = await run('getAll'); VER = all.ver; const mv = applyOps(all.daily || {}, all.roster || {}, Q.ops); DAILY = mv.daily; ROSTER = mv.roster;
         setDay(DAY);
       } catch(e){}
     },
@@ -1424,7 +1506,8 @@ async function gsEnable(){
   whoBar();
   document.body.classList.toggle('can-edit', CAN_ALL()); renderNotice(); render(TAB);
   let pt = null; try { pt = JSON.parse(sessionStorage.getItem('dutyPendingAtt') || 'null'); } catch(e){}
-  if (pt && pt.day && pt.id){ toast('Re-saving your check-in…'); await save(applyAtt(DAILY, pt), pt.day, $('#ciSave'), pt.roster ? {...ROSTER, [pt.id]: pt.roster} : null); if (pt.day === DAY) render('checkin'); }
+  if (pt && pt.day && pt.id){ try { sessionStorage.removeItem('dutyPendingAtt'); } catch(e){} Q.ops.push(...diffOps(DAILY, applyAtt(DAILY, pt), ROSTER, pt.roster ? {...ROSTER, [pt.id]: pt.roster} : null)); qSave(); }
+  if (Q.ops.length){ const v = applyOps(DAILY, ROSTER, Q.ops); DAILY = v.daily; ROSTER = v.roster; setDay(DAY); flush(); }
 }
 (async () => {
   const st = window.__B.settings || {};
@@ -1438,7 +1521,7 @@ async function gsEnable(){
   }
   GS.refresh(false);
   setInterval(() => { if (!document.hidden) GS.refresh(false); }, 45000);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) GS.refresh(false); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { GS.refresh(false); flush(); } });
 })();
 </script>
 </body>
