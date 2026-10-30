@@ -173,9 +173,9 @@ input:focus-visible, select:focus-visible, button:focus-visible, a:focus-visible
     <div class="top-t">
       <div class="school">Flourish International School · 2026-27</div>
       <h1>FIS Reports</h1>
-      <div class="asof"><a href="../fis/" class="back">‹ FIS apps</a> · Checking &amp; test performance, Class 1-11 · data as of <b id="asof"></b> · <button type="button" class="lockbtn" id="lockbtn">Lock</button></div>
+      <div class="asof"><a href="../fis/" class="back">‹ FIS apps</a> · Checking &amp; test performance, Class 1-11<span class="unl" hidden> · data as of <b id="asof"></b> · <button type="button" class="lockbtn" id="lockbtn">Lock</button></span></div>
     </div>
-    <div class="views" role="group" aria-label="View">
+    <div class="views unl" role="group" aria-label="View" hidden>
       <button id="v-pdf" type="button" data-view="pdf" aria-pressed="true">PDF reports</button>
       <button id="v-dash" type="button" data-view="dash" aria-pressed="false">Defaulter dashboard</button>
     </div>
@@ -304,7 +304,7 @@ async function unlock(key) {
   const data = JSON.parse(new TextDecoder().decode(await decrypt(await (await fetch('data.bin', { cache: 'no-cache' })).arrayBuffer(), key)));
   KEY = key; AS_OF = data.asOf; FILES = data.files;
   D.rows = data.rows.map(r => Object.fromEntries(data.cols.map((c, k) => [c, r[k]])));
-  $('asof').textContent = AS_OF; $('gate').hidden = true; $('mainv').hidden = false; fromHash();
+  $('asof').textContent = AS_OF; document.querySelectorAll('.unl').forEach(e => e.hidden = false); $('gate').hidden = true; $('mainv').hidden = false; fromHash();
 }
 async function boot() {
   let lock; try { lock = await (await fetch('lock.json', { cache: 'no-cache' })).json(); } catch (e) { showGate('Could not load. Check the internet and reload.'); return; }
