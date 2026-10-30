@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>FIS Reports</title>
+<link rel="icon" href="../fis/fis-icon-192.png">
+<link rel="apple-touch-icon" href="../fis/fis-icon-192.png">
+<meta name="theme-color" content="#18213A">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Source+Sans+3:wght@400;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+body { margin: 0; padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px) }
+/* Layout: plain header, two views (PDF library, defaulter dashboard) behind one switch; PDFs open in a full-screen reader */
+:root {
+  --bg: #f3f4f8; --surface: #ffffff; --ink: #1c2236; --muted: #5d6478; --line: #d9dce6;
+  --navy: #1d2a57; --navy-ink: #ffffff; --gold: #f2b134; --gold-ink: #1d2a57;
+  --chip: #e8ebf4; --btn: #1d2a57; --hover: #eef0f7; --ok: #1e7a3b; --warn: #8a5a00; --bad: #b42318; --bad-bg: #fde2e2;
+  --wa: #1a8f4c; --wa-ink: #ffffff;
+  --shadow: 0 1px 2px rgba(29,42,87,.08), 0 4px 14px rgba(29,42,87,.06);
+  --f-display: "Archivo", "Arial Narrow", Arial, sans-serif;
+  --f-body: "Source Sans 3", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #121624; --surface: #1a2033; --ink: #e8eaf2; --muted: #a2a9bd; --line: #2d3550;
+  --navy: #17204a; --navy-ink: #ffffff; --gold: #f2b134; --gold-ink: #17204a;
+  --chip: #252d47; --btn: #3d55a8; --hover: #222a42; --ok: #5fc27e; --warn: #e0b45a; --bad: #f08b80; --bad-bg: #3a2228;
+  --wa: #23a85c; --wa-ink: #ffffff;
+  --shadow: 0 1px 2px rgba(0,0,0,.3); color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #121624; --surface: #1a2033; --ink: #e8eaf2; --muted: #a2a9bd; --line: #2d3550;
+  --navy: #17204a; --navy-ink: #ffffff; --gold: #f2b134; --gold-ink: #17204a;
+  --chip: #252d47; --btn: #3d55a8; --hover: #222a42; --ok: #5fc27e; --warn: #e0b45a; --bad: #f08b80; --bad-bg: #3a2228;
+  --wa: #23a85c; --wa-ink: #ffffff;
+  --shadow: 0 1px 2px rgba(0,0,0,.3); color-scheme: dark }
+* { box-sizing: border-box }
+[hidden] { display: none !important }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.45 }
+.wrap { max-width: 1040px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)) }
+header.top { padding-block: 14px 0 }
+.top-in { display: flex; flex-wrap: wrap; gap: 10px 20px; justify-content: space-between; align-items: flex-end; padding-bottom: 10px; border-bottom: 3px solid var(--gold); min-width: 0 }
+.top-t { display: grid; gap: 2px; min-width: 0 }
+.school { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 600; overflow-wrap: anywhere }
+.top h1 { font-family: var(--f-display); font-weight: 800; font-size: 24px; margin: 0; line-height: 1.15; color: var(--ink); overflow-wrap: anywhere }
+.asof { font-size: 13px; color: var(--muted); overflow-wrap: anywhere }
+.asof b { color: var(--ink) }
+.back { color: var(--btn); font-weight: 700; text-decoration: none }
+.lockbtn { border: 0; background: none; color: var(--btn); font: 700 13px var(--f-body); padding: 0; cursor: pointer; text-decoration: underline }
+.gate { max-width: 420px; margin: 8vh auto 0; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 22px; display: grid; gap: 12px }
+.gate h2 { margin: 0; font-family: var(--f-display); font-size: 22px }
+.gate p { margin: 0; color: var(--muted); font-size: 14px }
+.gate label.rm { display: flex; gap: 8px; align-items: center; font-size: 14px; color: var(--muted) }
+.gate .err { color: var(--bad); font-weight: 600; font-size: 14px }
+.views { display: inline-flex; background: var(--chip); border-radius: 10px; padding: 3px; gap: 3px }
+.views button, .seg button { border: 0; background: transparent; color: var(--muted); font: 600 14px var(--f-body); padding: 8px 14px; border-radius: 8px; cursor: pointer }
+.views button[aria-pressed="true"], .seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow) }
+main .wrap { padding-block: 16px 40px; display: grid; gap: 16px }
+.bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between }
+.seg { display: inline-flex; background: var(--chip); border-radius: 10px; padding: 3px; gap: 3px }
+.search { flex: 1 1 220px; max-width: 360px }
+.search input, .inp { width: 100%; font: 15px var(--f-body); color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px 11px }
+select.inp { width: auto; padding-right: 6px }
+input:focus-visible, select:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px }
+.cats { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr)); gap: 10px }
+.cat { text-align: left; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 12px; padding: 12px 14px; cursor: pointer; display: grid; gap: 6px; font: inherit }
+.cat:hover { background: var(--hover) }
+.cat[aria-pressed="true"] { border-color: var(--navy); box-shadow: inset 0 0 0 1px var(--navy), var(--shadow) }
+:root[data-theme="dark"] .cat[aria-pressed="true"] { border-color: var(--gold); box-shadow: inset 0 0 0 1px var(--gold) }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .cat[aria-pressed="true"] { border-color: var(--gold); box-shadow: inset 0 0 0 1px var(--gold) } }
+.code { font-family: var(--f-mono); font-weight: 600; font-size: 12px; background: var(--gold); color: var(--gold-ink); border-radius: 5px; padding: 1px 6px; justify-self: start }
+.cat .nm { font-family: var(--f-display); font-weight: 700; font-size: 16px; line-height: 1.2 }
+.cat .meta { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; min-width: 0 }
+.panel h2 { font-family: var(--f-display); font-size: 18px; margin: 0; padding: 14px 16px; border-bottom: 1px solid var(--line); display: flex; gap: 10px; align-items: center; flex-wrap: wrap }
+.panel h2 small { font: 400 13px var(--f-body); color: var(--muted) }
+.row { display: grid; grid-template-columns: 62px minmax(0, 1fr) auto; gap: 6px 12px; align-items: center; padding: 10px 16px; border-bottom: 1px solid var(--line) }
+.row:last-child { border-bottom: 0 }
+.row .code { justify-self: start; background: var(--chip); color: var(--ink) }
+.row .t { min-width: 0 }
+.row .t b { display: block; font-weight: 600 }
+.row .t span { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums }
+.acts { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end }
+.btn { border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: 600 13px var(--f-body); border-radius: 8px; padding: 7px 11px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap }
+.btn:hover { background: var(--hover) }
+.btn.primary { background: var(--btn); color: #fff; border-color: var(--btn) }
+.btn.wa { background: var(--wa); color: var(--wa-ink); border-color: var(--wa) }
+.btn[disabled] { opacity: .45; cursor: not-allowed }
+@media (max-width: 560px) {
+  .row { grid-template-columns: 54px minmax(0, 1fr) }
+  .acts { grid-column: 1 / -1; justify-content: flex-start }
+}
+.empty { padding: 22px 16px; color: var(--muted) }
+.how { font-size: 13.5px; color: var(--muted); display: grid; gap: 4px; padding-inline: 2px }
+.how b { color: var(--ink) }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 9px 14px; border-radius: 9px; font-size: 14px; z-index: 70; max-width: calc(100% - 32px) }
+/* WhatsApp send sheet */
+.sheet-bg { position: fixed; inset: 0; z-index: 60; background: rgba(10,14,28,.55); display: grid; place-items: end center; padding: 16px max(16px, env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)) }
+.sheet { background: var(--surface); color: var(--ink); border-radius: 16px; width: min(100%, 460px); padding: 18px; display: grid; gap: 12px; box-shadow: var(--shadow) }
+.sheet h3 { margin: 0; font-family: var(--f-display); font-size: 18px }
+.sheet ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; font-size: 14.5px }
+.sheet .fn { font-family: var(--f-mono); font-size: 12.5px; background: var(--chip); border-radius: 6px; padding: 6px 8px; overflow-wrap: anywhere }
+.sheet .acts { justify-content: flex-start }
+.sheet .st { font-size: 13.5px; color: var(--muted) }
+.sheet .st.ok { color: var(--ok); font-weight: 600 }
+/* reader */
+.reader { position: fixed; inset: 0; z-index: 40; background: #3a3f4c; display: flex; flex-direction: column }
+.rbar { background: var(--navy); color: var(--navy-ink); display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  padding-top: max(8px, env(safe-area-inset-top, 0px)); padding-bottom: 8px; padding-left: max(12px, env(safe-area-inset-left, 0px)); padding-right: max(12px, env(safe-area-inset-right, 0px)); border-bottom: 3px solid var(--gold) }
+.rbar .rt { flex: 1 1 200px; min-width: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.rbar .rt small { font-weight: 400; opacity: .8; margin-left: 6px }
+.rbar .btn { border-color: rgba(255,255,255,.25); background: rgba(255,255,255,.1); color: #fff }
+.rbar .btn.wa { background: var(--wa); border-color: var(--wa) }
+.pages { flex: 1; overflow: auto; padding: 14px max(10px, env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) max(10px, env(safe-area-inset-left, 0px)); display: grid; gap: 12px; justify-items: center; align-content: start }
+.pg { background: #fff; width: min(100%, 860px); box-shadow: 0 2px 10px rgba(0,0,0,.35); position: relative }
+.pg canvas { display: block; width: 100%; height: auto }
+.pg .ph { position: absolute; inset: 0; display: grid; place-items: center; color: #8a8f9c; font-size: 13px }
+.rmsg { color: #e6e8ef; padding: 30px; text-align: center }
+/* dashboard */
+.filters { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: flex-end; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px }
+.fg { display: grid; gap: 4px; min-width: 0 }
+.fl { font-size: 12px; color: var(--muted); font-weight: 600 }
+.chips { display: flex; flex-wrap: wrap; gap: 5px }
+.chip { font: 600 13px var(--f-body); border: 1px solid var(--line); background: var(--surface); color: var(--muted); border-radius: 999px; padding: 5px 10px; cursor: pointer }
+.chip[aria-pressed="true"] { background: var(--btn); border-color: var(--btn); color: #fff }
+.take { margin: 0; color: var(--muted) }
+.take b { color: var(--ink) }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr)); gap: 10px }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: grid; gap: 4px }
+.tile .tl { font-size: 12.5px; color: var(--muted) }
+.tile .tv { font-family: var(--f-display); font-weight: 800; font-size: 26px; font-variant-numeric: tabular-nums; line-height: 1.1 }
+.tile.hot .tv { color: var(--bad) }
+.dtabs { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 16px; border-bottom: 1px solid var(--line) }
+.dtab { font: 600 13px var(--f-body); border: 1px solid var(--line); background: var(--surface); color: var(--muted); border-radius: 8px; padding: 6px 11px; cursor: pointer }
+.dtab[aria-selected="true"] { background: var(--btn); border-color: var(--btn); color: #fff }
+.note { margin: 0; padding: 10px 16px 0; font-size: 13px; color: var(--muted) }
+.tw { overflow: auto; max-height: 34rem; margin: 10px 16px 16px; border: 1px solid var(--line); border-radius: 10px }
+.tb { width: 100%; border-collapse: collapse; font-size: 13.5px; font-variant-numeric: tabular-nums }
+.tb th { position: sticky; top: 0; background: var(--surface); color: var(--muted); font-weight: 600; text-align: right; padding: 7px 9px; border-bottom: 1px solid var(--line); white-space: nowrap }
+.tb th.l, .tb td.l { text-align: left }
+.tb td { padding: 6px 9px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap }
+.tb td.w { white-space: normal; min-width: 9rem }
+.tb tr.click { cursor: pointer }
+.tb tr.click:hover td { background: var(--hover) }
+.tb tr.on td { background: var(--hover); font-weight: 700 }
+.zero { color: var(--muted); opacity: .5 }
+.hotv { color: var(--bad); font-weight: 700 }
+.minibar { display: inline-block; height: 6px; border-radius: 3px; background: var(--bad); opacity: .7; margin-left: 6px; vertical-align: middle }
+.dsearch { margin: 10px 16px 0; max-width: 320px }
+.names { padding: 14px 16px 16px; display: grid; gap: 18px }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12.5px; color: var(--muted); padding: 10px 16px 0 }
+.legend b { color: var(--ink) }
+.item h3 { margin: 0 0 8px; font-family: var(--f-display); font-size: 17px; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap }
+.item h3 span { font: 400 13px var(--f-body); color: var(--muted) }
+.ggrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr)); gap: 10px }
+.grp { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: grid; gap: 6px; background: var(--bg); min-width: 0 }
+.grp .gh { display: flex; justify-content: space-between; gap: 8px; font-weight: 700 }
+.grp .gh span { font-weight: 600; color: var(--muted); font-size: 13px; white-space: nowrap }
+.grp .gm { font-size: 12.5px; color: var(--muted) }
+.nl { display: flex; flex-wrap: wrap; gap: 4px }
+.nm-c { font-size: 12.5px; border: 1px solid var(--line); background: var(--surface); border-radius: 5px; padding: 1px 6px }
+.nm-c i { font-style: normal; font-weight: 700; margin-left: 4px }
+.nm-c.s-ns i, .nm-c.s-bl i { color: var(--bad) } .nm-c.s-ic i { color: var(--warn) } .nm-c.s-ng i, .nm-c.s-ab i { color: var(--muted) }
+.pickhint { margin: 0; padding: 14px 16px; color: var(--muted) }
+@media (prefers-reduced-motion: no-preference) { .cat, .btn, .chip { transition: background .15s } }
+</style>
+
+</head>
+<body>
+<header class="top wrap">
+  <div class="top-in">
+    <div class="top-t">
+      <div class="school">Flourish International School · 2026-27</div>
+      <h1>FIS Reports</h1>
+      <div class="asof"><a href="../fis/" class="back">‹ FIS apps</a> · Checking &amp; test performance, Class 1-11 · data as of <b id="asof"></b> · <button type="button" class="lockbtn" id="lockbtn">Lock</button></div>
+    </div>
+    <div class="views" role="group" aria-label="View">
+      <button id="v-pdf" type="button" data-view="pdf" aria-pressed="true">PDF reports</button>
+      <button id="v-dash" type="button" data-view="dash" aria-pressed="false">Defaulter dashboard</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap" id="gate" hidden>
+  <form class="gate" id="gateform" autocomplete="off">
+    <h2>Staff access</h2>
+    <p>These reports have student and staff names. Enter the staff password given by the office.</p>
+    <input class="inp" id="pw" type="password" placeholder="Password" autocomplete="current-password" required>
+    <label class="rm"><input type="checkbox" id="remember" checked> Remember on this phone</label>
+    <div class="err" id="gerr" hidden></div>
+    <button class="btn primary" type="submit" id="gbtn">Open reports</button>
+  </form>
+</div>
+<main id="mainv" hidden>
+  <!-- PDF library -->
+  <div class="wrap" id="view-pdf">
+    <div class="bar">
+      <div class="seg" role="group" aria-label="Segment">
+        <button id="segA" type="button" data-seg="A" aria-pressed="true">Primary 1-5</button>
+        <button id="segB" type="button" data-seg="B" aria-pressed="false">Secondary 6-11</button>
+      </div>
+      <label class="search"><span hidden>Search</span><input id="q" type="search" placeholder="Search: Class 6, Maths, Hindi…" autocomplete="off"></label>
+    </div>
+    <div class="cats" id="cats"></div>
+    <section class="panel" id="list" aria-live="polite"></section>
+    <div class="how">
+      <div><b>View</b> opens the PDF here. <b>Save</b> downloads it.</div>
+      <div><b>WhatsApp PDF</b> opens your phone's share sheet with the full PDF: choose WhatsApp, then the group. On a computer the PDF downloads, then attach it in WhatsApp Web as a Document.</div>
+    </div>
+  </div>
+
+  <!-- Defaulter dashboard -->
+  <div class="wrap" id="view-dash" hidden>
+    <p class="take" id="d-take">Loading the defaulter records…</p>
+    <section class="filters" aria-label="Filters">
+      <label class="fg"><span class="fl">Class</span>
+        <select class="inp" id="f-cls"><option value="">All classes</option><option value="1">Class 1</option><option value="2">Class 2</option><option value="3">Class 3</option><option value="4">Class 4</option><option value="5">Class 5</option><option value="6">Class 6</option><option value="7">Class 7</option><option value="8">Class 8</option><option value="9">Class 9</option><option value="10">Class 10</option><option value="11">Class 11</option></select></label>
+      <label class="fg"><span class="fl">Section</span>
+        <select class="inp" id="f-sec"><option value="">All sections</option><option value="A">A</option><option value="B">B</option><option value="C">C</option></select></label>
+      <div class="fg"><span class="fl">Item</span><div class="chips" id="f-items"></div></div>
+      <div class="fg"><span class="fl">Reason</span><div class="chips" id="f-stats"></div></div>
+      <label class="fg"><span class="fl">Checked by</span>
+        <select class="inp" id="f-role"><option value="all">Mentors and CMs</option><option value="Mentor">Mentors only</option><option value="CM">CMs only</option></select></label>
+      <button type="button" class="btn" id="f-reset">Reset</button>
+    </section>
+    <section class="tiles" id="d-tiles"></section>
+    <section class="panel">
+      <h2>Who and where <small id="d-scope"></small></h2>
+      <div class="dtabs" role="tablist" aria-label="Breakdown">
+        <button type="button" class="dtab" role="tab" data-tab="class" id="t-class">Class-wise</button>
+        <button type="button" class="dtab" role="tab" data-tab="subject" id="t-subject">Subject-wise</button>
+        <button type="button" class="dtab" role="tab" data-tab="staff" id="t-staff">Mentor-wise</button>
+        <button type="button" class="dtab" role="tab" data-tab="student" id="t-student">Student-wise</button>
+      </div>
+      <p class="note" id="d-note"></p>
+      <input class="inp dsearch" id="d-q" type="search" placeholder="Search a student" aria-label="Search a student" hidden>
+      <div class="tw"><table class="tb"><thead id="d-thead"></thead><tbody id="d-tbody"></tbody></table></div>
+    </section>
+    <section class="panel" id="d-names-card">
+      <h2>Defaulter names <small id="d-scope2"></small></h2>
+      <div class="legend"><span><b>•</b> not submitted</span><span><b>IC</b> incomplete</span><span><b>NG</b> not given</span><span><b>Ab</b> absent</span><span><b>blank</b> not marked</span></div>
+      <p class="pickhint" id="d-pick" hidden>Pick a class above, or tap a section in the Class-wise table, to see names item by item.</p>
+      <div class="names" id="d-names"></div>
+    </section>
+  </div>
+</main>
+
+<div class="reader" id="reader" hidden>
+  <div class="rbar">
+    <span class="rt" id="rt"></span>
+    <button class="btn" id="rsave" type="button">Save</button>
+    <button class="btn wa" id="rwa" type="button">WhatsApp PDF</button>
+    <button class="btn" id="rclose" type="button">Close</button>
+  </div>
+  <div class="pages" id="pages"></div>
+</div>
+
+<div class="sheet-bg" id="sheet" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-t">
+    <h3 id="sh-t">Send PDF on WhatsApp</h3>
+    <div class="fn" id="sh-fn"></div>
+    <div class="st" id="sh-st"></div>
+    <ol>
+      <li>Tap <b>Share PDF</b>, choose <b>WhatsApp</b>, pick the group and send.</li>
+      <li>If WhatsApp is not in the list (or on a computer), tap <b>Save PDF</b>, then in the WhatsApp group tap 📎 → <b>Document</b> and pick this file.</li>
+    </ol>
+    <div class="acts">
+      <button class="btn wa" id="sh-share" type="button">Share PDF</button>
+      <button class="btn" id="sh-save" type="button">Save PDF</button>
+      <a class="btn" id="sh-link" href="#" target="_blank" rel="noopener">Send link only</a>
+      <button class="btn" id="sh-close" type="button">Close</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+<script>
+let AS_OF = '';
+const PAGE_URL = location.href.split('#')[0];
+const SEGS = { A: 'Primary (Class 1-5)', B: 'Secondary (Class 6-11)' };
+const CATS = {
+  A1: 'CM Checking', A2: 'Mentor Checking', A3: 'Class Test Performance',
+  B1: 'CM Checking', B2: 'Mentor Checking · Class-wise', B3: 'Mentor Checking · Subject-wise',
+  B4: 'Class Test Performance · Class-wise', B5: 'Class Test Performance · Subject-wise', B6: 'Checking Report 6-11 (earlier layout)'
+};
+let FILES = [];   // [cat, code, name, pages, kb]
+
+const $ = id => document.getElementById(id);
+let view = 'pdf', seg = 'A', cat = 'A1', query = '';
+// ---------- lock: everything is AES-GCM encrypted; the key comes from the staff password ----------
+let KEY = null;
+const b64 = { to: u => btoa(String.fromCharCode(...new Uint8Array(u))), from: s => Uint8Array.from(atob(s), c => c.charCodeAt(0)) };
+const hex = h => Uint8Array.from(h.match(/../g).map(x => parseInt(x, 16)));
+async function decrypt(buf, key = KEY) { const u = new Uint8Array(buf); return crypto.subtle.decrypt({ name: 'AES-GCM', iv: u.slice(0, 12) }, key, u.slice(12)); }
+async function deriveKey(pw, lock) {
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: hex(lock.salt), iterations: lock.iter }, base, 256);
+  return { raw: bits, key: await crypto.subtle.importKey('raw', bits, 'AES-GCM', false, ['decrypt']) };
+}
+async function unlock(key) {
+  const data = JSON.parse(new TextDecoder().decode(await decrypt(await (await fetch('data.bin', { cache: 'no-cache' })).arrayBuffer(), key)));
+  KEY = key; AS_OF = data.asOf; FILES = data.files;
+  D.rows = data.rows.map(r => Object.fromEntries(data.cols.map((c, k) => [c, r[k]])));
+  $('asof').textContent = AS_OF; $('gate').hidden = true; $('mainv').hidden = false; fromHash();
+}
+async function boot() {
+  let lock; try { lock = await (await fetch('lock.json', { cache: 'no-cache' })).json(); } catch (e) { showGate('Could not load. Check the internet and reload.'); return; }
+  let saved = null; try { saved = JSON.parse(localStorage.getItem('fisReportsKey') || 'null'); } catch (e) {}
+  if (saved && saved.salt === lock.salt) {
+    try { await unlock(await crypto.subtle.importKey('raw', b64.from(saved.k), 'AES-GCM', false, ['decrypt'])); return; } catch (e) { try { localStorage.removeItem('fisReportsKey'); } catch (e2) {} }
+  }
+  showGate('');
+  $('gateform').onsubmit = async ev => {
+    ev.preventDefault(); $('gbtn').disabled = true; $('gbtn').textContent = 'Opening…'; $('gerr').hidden = true;
+    try {
+      const { raw, key } = await deriveKey($('pw').value.trim(), lock);
+      await decrypt(hex(lock.check), key);
+      if ($('remember').checked) { try { localStorage.setItem('fisReportsKey', JSON.stringify({ salt: lock.salt, k: b64.to(raw) })); } catch (e) {} }
+      await unlock(key);
+    } catch (e) { $('gerr').textContent = 'Wrong password. Please check and try again.'; $('gerr').hidden = false; }
+    $('gbtn').disabled = false; $('gbtn').textContent = 'Open reports';
+  };
+}
+function showGate(msg) { $('gate').hidden = false; $('mainv').hidden = true; if (msg) { $('gerr').textContent = msg; $('gerr').hidden = false; } setTimeout(() => $('pw').focus(), 50); }
+$('lockbtn').onclick = () => { try { localStorage.removeItem('fisReportsKey'); } catch (e) {} location.reload(); };
+
+function toast(t) { const el = $('toast'); el.textContent = t; el.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => el.hidden = true, 3600); }
+function fileName(f) { return `${f[1]} ${f[2]}.pdf`; }
+function waLinkHref(f) {
+  const msg = `*${f[1]} ${f[2]}* (${f[3]} pages, data as of ${AS_OF})\nFIS Reports (staff password needed)\n${PAGE_URL}#${f[1]}`;
+  return 'https://wa.me/?text=' + encodeURIComponent(msg);
+}
+const cache = {};
+async function bytes(code) {
+  if (!cache[code]) cache[code] = fetch(`pdf/${code}.bin`).then(r => { if (!r.ok) throw new Error('Could not load the PDF (' + r.status + ')'); return r.arrayBuffer(); }).then(b => decrypt(b)).catch(e => { delete cache[code]; throw e; });
+  return cache[code];
+}
+function pdfFile(buf, f) { return new File([buf], fileName(f), { type: 'application/pdf' }); }
+async function save(f, statusEl) {
+  const say = (m, ok) => { if (statusEl) { statusEl.textContent = m; statusEl.className = 'st' + (ok ? ' ok' : ''); } else toast(m); };
+  try {
+    const buf = await bytes(f[1]);
+    const url = URL.createObjectURL(new Blob([buf], { type: 'application/pdf' }));
+    const a = document.createElement('a'); a.href = url; a.download = fileName(f); document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    say('Saved ' + fileName(f) + '. Attach it in WhatsApp as a Document.', true); return true;
+  } catch (e) { say(e?.message || 'Could not save the file.'); return false; }
+}
+async function share(f, statusEl) {
+  const say = (m, ok) => { statusEl.textContent = m; statusEl.className = 'st' + (ok ? ' ok' : ''); };
+  try {
+    say('Preparing the PDF…');
+    const file = pdfFile(await bytes(f[1]), f);
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: `${f[1]} ${f[2]}`, text: `${f[1]} ${f[2]} · data as of ${AS_OF}` });
+      say('Shared.', true);
+    } else { say('This browser cannot share files directly. Use Save PDF, then attach it in WhatsApp.'); }
+  } catch (e) { if (e?.name === 'AbortError') say(''); else say('Could not share: ' + (e?.message || e) + '. Use Save PDF instead.'); }
+}
+function sendSheet(f) {
+  $('sh-fn').textContent = fileName(f) + ` · ${f[3]} pages`;
+  $('sh-st').textContent = ''; $('sh-st').className = 'st';
+  $('sh-share').onclick = () => share(f, $('sh-st'));
+  $('sh-save').onclick = () => save(f, $('sh-st'));
+  $('sh-link').href = waLinkHref(f);
+  $('sheet').hidden = false;
+}
+$('sh-close').onclick = () => { $('sheet').hidden = true; };
+$('sheet').addEventListener('click', e => { if (e.target === $('sheet')) $('sheet').hidden = true; });
+
+function render() {
+  $('segA').setAttribute('aria-pressed', seg === 'A'); $('segB').setAttribute('aria-pressed', seg === 'B');
+  const cats = Object.keys(CATS).filter(c => c[0] === seg);
+  $('cats').innerHTML = '';
+  for (const c of cats) {
+    const fs = FILES.filter(f => f[0] === c); if (!fs.length) continue;
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'cat'; b.id = 'cat-' + c;
+    b.setAttribute('aria-pressed', !query && c === cat);
+    b.innerHTML = `<span class="code">${c}</span><span class="nm"></span><span class="meta">${fs.length} PDF${fs.length > 1 ? 's' : ''} · ${fs.reduce((a, f) => a + f[3], 0)} pages</span>`;
+    b.querySelector('.nm').textContent = CATS[c];
+    b.onclick = () => { cat = c; query = ''; $('q').value = ''; setHash(c); render(); };
+    $('cats').appendChild(b);
+  }
+  const list = $('list'); list.innerHTML = '';
+  let fs, head;
+  if (query) {
+    const w = query.toLowerCase().split(/\s+/).filter(Boolean);
+    fs = FILES.filter(f => { const s = `${f[1]} ${f[2]} ${CATS[f[0]]} ${SEGS[f[0][0]]}`.toLowerCase(); return w.every(x => s.includes(x)); });
+    head = `Search results <small>${fs.length} PDF${fs.length === 1 ? '' : 's'}</small>`;
+  } else {
+    fs = FILES.filter(f => f[0] === cat);
+    head = `<span class="code">${cat}</span> ${CATS[cat]} <small>${SEGS[cat[0]]}</small>`;
+  }
+  const h = document.createElement('h2'); h.innerHTML = head; list.appendChild(h);
+  if (!fs.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = 'No PDF matches. Try a class number or a subject.'; list.appendChild(e); }
+  for (const f of fs) {
+    const r = document.createElement('div'); r.className = 'row';
+    r.innerHTML = `<span class="code"></span><div class="t"><b></b><span></span></div><div class="acts">
+      <button class="btn primary" type="button" data-a="view">View</button>
+      <button class="btn" type="button" data-a="save">Save</button>
+      <button class="btn wa" type="button" data-a="wa">WhatsApp PDF</button></div>`;
+    r.querySelector('.code').textContent = f[1];
+    r.querySelector('b').textContent = f[2];
+    r.querySelector('.t span').textContent = `${f[3]} pages · ${f[4] >= 1024 ? (f[4] / 1024).toFixed(1) + ' MB' : f[4] + ' KB'}` + (query ? ` · ${CATS[f[0]]}` : '');
+    r.querySelector('[data-a=view]').onclick = () => openReader(f);
+    r.querySelector('[data-a=save]').onclick = () => save(f);
+    r.querySelector('[data-a=wa]').onclick = () => sendSheet(f);
+    list.appendChild(r);
+  }
+}
+document.querySelectorAll('.seg button').forEach(b => b.onclick = () => {
+  seg = b.dataset.seg; cat = Object.keys(CATS).find(c => c[0] === seg); query = ''; $('q').value = ''; setHash(cat); render();
+});
+$('q').addEventListener('input', e => { query = e.target.value.trim(); render(); });
+
+// reader
+let readerTask = 0, observer = null;
+async function openReader(f) {
+  const task = ++readerTask;
+  $('reader').hidden = false; document.body.style.overflow = 'hidden';
+  $('rt').innerHTML = ''; $('rt').append(`${f[1]} ${f[2]}`); const sm = document.createElement('small'); sm.textContent = `${f[3]} pages`; $('rt').append(sm);
+  $('rsave').onclick = () => save(f);
+  $('rwa').onclick = () => sendSheet(f);
+  setHash(f[1]);
+  const box = $('pages'); box.innerHTML = '<div class="rmsg">Opening…</div>'; box.scrollTop = 0;
+  if (!window.pdfjsLib) { box.innerHTML = '<div class="rmsg">The PDF reader could not load. Use Save to open the file on your device.</div>'; return; }
+  try {
+    const buf = await bytes(f[1]);
+    const doc = await pdfjsLib.getDocument({ data: new Uint8Array(buf.slice(0)), isEvalSupported: false }).promise;
+    if (task !== readerTask) return;
+    box.innerHTML = '';
+    if (observer) observer.disconnect();
+    observer = new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting) { observer.unobserve(en.target); draw(doc, en.target, task); } }), { root: box, rootMargin: '600px 0px' });
+    const first = await doc.getPage(1); const vp = first.getViewport({ scale: 1 });
+    for (let i = 1; i <= doc.numPages; i++) {
+      const d = document.createElement('div'); d.className = 'pg'; d.dataset.n = i;
+      d.style.aspectRatio = `${vp.width} / ${vp.height}`;
+      d.innerHTML = `<div class="ph">Page ${i}</div>`; box.appendChild(d); observer.observe(d);
+    }
+  } catch (e) { if (task === readerTask) { box.innerHTML = '<div class="rmsg"></div>'; box.firstChild.textContent = e.message || 'Could not open the PDF.'; } }
+}
+async function draw(doc, el, task) {
+  const page = await doc.getPage(+el.dataset.n); if (task !== readerTask) return;
+  const base = page.getViewport({ scale: 1 });
+  const scale = Math.min(3, (el.clientWidth * (window.devicePixelRatio || 1) * 1.15) / base.width);
+  const vp = page.getViewport({ scale });
+  const c = document.createElement('canvas'); c.width = Math.floor(vp.width); c.height = Math.floor(vp.height);
+  el.style.aspectRatio = `${base.width} / ${base.height}`;
+  await page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+  if (task !== readerTask) return;
+  el.innerHTML = ''; el.appendChild(c);
+}
+function closeReader() { readerTask++; $('reader').hidden = true; document.body.style.overflow = ''; $('pages').innerHTML = ''; if (observer) observer.disconnect(); setHash(cat); }
+$('rclose').onclick = closeReader;
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (!$('sheet').hidden) $('sheet').hidden = true; else if (!$('reader').hidden) closeReader(); } });
+
+// ---------- defaulter dashboard ----------
+const D = { rows: null, loading: null, cls: '1', sec: '', items: ['Assignment', 'Notebook', 'Book', 'Test'], stats: ['Not submitted', 'Incomplete', 'Not given', 'Absent', 'Blank'], role: 'all', tab: 'class', q: '' };
+const ITEMS = ['Assignment', 'Notebook', 'Book', 'Test'];
+const STATS = ['Not submitted', 'Incomplete', 'Not given', 'Absent', 'Blank'];
+const SCODE = { 'Not submitted': '•', 'Incomplete': 'IC', 'Not given': 'NG', 'Absent': 'Ab', 'Blank': 'blank' };
+const SCLS = { 'Not submitted': 's-ns', 'Incomplete': 's-ic', 'Not given': 's-ng', 'Absent': 's-ab', 'Blank': 's-bl' };
+const SLAB = { 'Not submitted': '• Not submitted', 'Incomplete': 'IC Incomplete', 'Not given': 'NG Not given', 'Absent': 'Ab Absent', 'Blank': 'Blank' };
+const nf = new Intl.NumberFormat('en-IN');
+const fmtN = v => nf.format(v);
+const dfmt = d => { if (!d) return 'no date'; const x = new Date(d + 'T00:00:00Z'); return x.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' }); };
+const secKey = s => { const m = /^(\d+)(.*)$/.exec(s) || [0, 0, s]; return [+m[1], m[2]]; };
+const bySec = (a, b) => { const x = secKey(a), y = secKey(b); return x[0] - y[0] || (x[1] < y[1] ? -1 : x[1] > y[1] ? 1 : 0); };
+const lesNum = l => { const m = /(\d+)/.exec(l || ''); return m ? +m[1] : 999; };
+const groupBy = (list, key) => { const m = new Map(); for (const r of list) { const k = key(r); if (!m.has(k)) m.set(k, []); m.get(k).push(r); } return m; };
+const studentsOf = list => new Set(list.map(r => r.sec + '|' + r.student)).size;
+const counts = list => { const c = { Assignment: 0, Notebook: 0, Book: 0, Test: 0 }; for (const r of list) c[r.item]++; return c; };
+
+function buildChips() {
+  const mk = (box, vals, key, lab) => { box.innerHTML = ''; for (const v of vals) { const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = lab ? lab[v] : v; b.dataset.v = v;
+    b.onclick = () => { let cur = D[key]; cur = cur.includes(v) ? cur.filter(x => x !== v) : [...cur, v]; if (!cur.length) cur = vals.slice(); D[key] = cur; dRender(); }; box.appendChild(b); } };
+  mk($('f-items'), ITEMS, 'items'); mk($('f-stats'), STATS, 'stats', SLAB);
+}
+buildChips();
+$('f-cls').onchange = e => { D.cls = e.target.value; D.sec = ''; dRender(); };
+$('f-sec').onchange = e => { D.sec = e.target.value; dRender(); };
+$('f-role').onchange = e => { D.role = e.target.value; dRender(); };
+$('f-reset').onclick = () => { Object.assign(D, { cls: '1', sec: '', items: ITEMS.slice(), stats: STATS.slice(), role: 'all', q: '' }); $('d-q').value = ''; dRender(); };
+document.querySelectorAll('.dtab').forEach(b => b.onclick = () => { D.tab = b.dataset.tab; dRender(); });
+$('d-q').addEventListener('input', e => { D.q = e.target.value; dRenderTable(); });
+
+function dLoad() {}
+const base = () => D.rows.filter(r => D.items.includes(r.item) && D.stats.includes(r.status) && (D.role === 'all' || r.role === D.role));
+const inScope = list => list.filter(r => (!D.cls || r.cls === D.cls) && (!D.sec || r.sec === D.cls + D.sec));
+const scopeText = () => D.cls ? `Class ${D.cls}${D.sec || ''}${D.sec ? '' : ' · all sections'}` : 'Whole school';
+
+function dRender() {
+  $('f-cls').value = D.cls; $('f-sec').value = D.sec; $('f-sec').disabled = !D.cls; $('f-role').value = D.role;
+  $('f-items').querySelectorAll('.chip').forEach(b => b.setAttribute('aria-pressed', D.items.includes(b.dataset.v)));
+  $('f-stats').querySelectorAll('.chip').forEach(b => b.setAttribute('aria-pressed', D.stats.includes(b.dataset.v)));
+  document.querySelectorAll('.dtab').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === D.tab));
+  if (!D.rows) return;
+  const b = base(), s = inScope(b);
+  // takeaway
+  const top = [...groupBy(b, r => r.sec)].sort((x, y) => y[1].length - x[1].length)[0];
+  const ds = D.rows.map(r => r.date).filter(Boolean).sort();
+  const t = $('d-take'); t.innerHTML = '';
+  const add = (txt, bold) => { const e = document.createElement(bold ? 'b' : 'span'); e.textContent = txt; t.appendChild(e); };
+  add('Across the school, '); add(fmtN(b.length), 1); add(' pending entries for '); add(fmtN(studentsOf(b)), 1); add(' students.');
+  if (top) { add(' Most in '); add(`${top[0]} (${fmtN(top[1].length)})`, 1); add('.'); }
+  if (ds.length) { add(' Checks from '); add(`${dfmt(ds[0])} to ${dfmt(ds[ds.length - 1])}`, 1); add('.'); }
+  // tiles
+  const c = counts(s), tiles = [['Pending entries · ' + scopeText(), s.length, true], ['Students with pending work', studentsOf(s)],
+    ['Assignments', c.Assignment], ['Notebooks', c.Notebook], ['Books', c.Book], ['Tests (absent / not given)', c.Test]];
+  const tb = $('d-tiles'); tb.innerHTML = '';
+  for (const [l, v, hot] of tiles) { const d = document.createElement('div'); d.className = 'tile' + (hot && v ? ' hot' : ''); const a = document.createElement('span'); a.className = 'tl'; a.textContent = l; const n = document.createElement('span'); n.className = 'tv'; n.textContent = fmtN(v); d.append(a, n); tb.appendChild(d); }
+  $('d-scope').textContent = D.tab === 'class' ? '· whole school' : '· ' + scopeText();
+  $('d-scope2').textContent = '· ' + scopeText();
+  dRenderTable(); dRenderNames(s);
+}
+function cell(tr, v, cls) { const td = document.createElement('td'); td.textContent = v; if (cls) td.className = cls; tr.appendChild(td); return td; }
+function ncell(tr, v, hot) { return cell(tr, v ? fmtN(v) : '–', v ? (hot ? 'hotv' : '') : 'zero'); }
+function head(cols) { const tr = document.createElement('tr'); for (const [t, l] of cols) { const th = document.createElement('th'); th.textContent = t; if (l) th.className = 'l'; tr.appendChild(th); } $('d-thead').replaceChildren(tr); }
+function dRenderTable() {
+  if (!D.rows) return;
+  const body = $('d-tbody'); body.replaceChildren(); const b = base(), s = inScope(b);
+  $('d-q').hidden = D.tab !== 'student';
+  const NOTE = { class: 'Every section, for the item and reason filters. Tap a section to see its names below.', subject: 'Subjects in the class and section picked.',
+    staff: 'Pending entries in the records each mentor or CM keeps. A high count can mean strict checking as much as students falling behind.', student: 'Students most pending first (top 400).' };
+  $('d-note').textContent = NOTE[D.tab];
+  const none = n => { const tr = document.createElement('tr'); const td = cell(tr, 'Nothing pending for these filters.', 'l'); td.colSpan = n; body.appendChild(tr); };
+  const itemCells = (tr, list) => { const c = counts(list); for (const it of ITEMS) ncell(tr, c[it]); };
+  if (D.tab === 'class') {
+    head([['Section', 1], ['Assignment'], ['Notebook'], ['Book'], ['Test'], ['Total'], ['Students']]);
+    const g = [...groupBy(b, r => r.sec)].sort((x, y) => bySec(x[0], y[0])); if (!g.length) return none(7);
+    const max = Math.max(1, ...g.map(x => x[1].length));
+    for (const [sec, list] of g) {
+      const tr = document.createElement('tr'); tr.className = 'click' + (D.cls && sec === D.cls + D.sec ? ' on' : '');
+      cell(tr, sec, 'l'); itemCells(tr, list);
+      const td = ncell(tr, list.length, list.length / max > .6); const bar = document.createElement('span'); bar.className = 'minibar'; bar.style.width = Math.round(40 * list.length / max) + 'px'; td.appendChild(bar);
+      ncell(tr, studentsOf(list));
+      tr.onclick = () => { const m = /^(\d+)(.*)$/.exec(sec); D.cls = m[1]; D.sec = m[2]; dRender(); $('d-names-card').scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+      body.appendChild(tr);
+    }
+  } else if (D.tab === 'subject') {
+    head([['Subject', 1], ['Lessons'], ['Assignment'], ['Notebook'], ['Book'], ['Test'], ['Total'], ['Students']]);
+    const g = [...groupBy(s, r => r.subject)].sort((x, y) => y[1].length - x[1].length); if (!g.length) return none(8);
+    for (const [sj, list] of g) { const tr = document.createElement('tr'); cell(tr, sj, 'l'); ncell(tr, new Set(list.map(r => r.lesson)).size); itemCells(tr, list); ncell(tr, list.length); ncell(tr, studentsOf(list)); body.appendChild(tr); }
+  } else if (D.tab === 'staff') {
+    head([['Mentor / CM', 1], ['Role', 1], ['Sections', 1], ['Assignment'], ['Notebook'], ['Book'], ['Test'], ['Total'], ['Students']]);
+    const g = [...groupBy(s, r => r.staff + '|' + r.role)].sort((x, y) => y[1].length - x[1].length); if (!g.length) return none(9);
+    for (const [k, list] of g) { const [nm, role] = k.split('|'); const tr = document.createElement('tr'); cell(tr, nm, 'l'); cell(tr, role, 'l'); cell(tr, [...new Set(list.map(r => r.sec))].sort(bySec).join(', '), 'l w'); itemCells(tr, list); ncell(tr, list.length); ncell(tr, studentsOf(list)); body.appendChild(tr); }
+  } else {
+    head([['Student', 1], ['Section', 1], ['Assignment'], ['Notebook'], ['Book'], ['Test'], ['Total'], ['Subjects', 1]]);
+    const q = D.q.trim().toLowerCase();
+    let g = [...groupBy(s, r => r.sec + '|' + r.student)]; if (q) g = g.filter(([k]) => k.toLowerCase().includes(q));
+    g.sort((x, y) => y[1].length - x[1].length || x[0].localeCompare(y[0])); if (!g.length) return none(8);
+    for (const [k, list] of g.slice(0, 400)) {
+      const [sec, nm] = k.split('|'); const tr = document.createElement('tr'); cell(tr, nm, 'l'); cell(tr, sec, 'l'); itemCells(tr, list); ncell(tr, list.length, list.length >= 5);
+      const subs = [...groupBy(list, r => r.subject)].sort((x, y) => y[1].length - x[1].length).map(([sj, l]) => `${sj} ${l.length}`);
+      cell(tr, subs.slice(0, 4).join(' · ') + (subs.length > 4 ? ' …' : ''), 'l w'); body.appendChild(tr);
+    }
+  }
+}
+function dRenderNames(s) {
+  const box = $('d-names'); box.replaceChildren(); $('d-pick').hidden = !!D.cls; if (!D.cls) return;
+  if (!s.length) { const p = document.createElement('p'); p.className = 'pickhint'; p.textContent = 'Nothing pending for these filters.'; box.appendChild(p); return; }
+  for (const it of ITEMS) {
+    const list = s.filter(r => r.item === it); if (!list.length) continue;
+    const sec = document.createElement('div'); sec.className = 'item';
+    const h = document.createElement('h3'); h.textContent = it + 's '; const hs = document.createElement('span'); hs.textContent = `${fmtN(list.length)} entries · ${fmtN(studentsOf(list))} students`; h.appendChild(hs); sec.appendChild(h);
+    const grid = document.createElement('div'); grid.className = 'ggrid';
+    const g = [...groupBy(list, r => [r.subject, r.lesson, r.sec].join('|'))].sort((x, y) => { const a = x[0].split('|'), b = y[0].split('|'); return a[0].localeCompare(b[0]) || lesNum(a[1]) - lesNum(b[1]) || a[1].localeCompare(b[1]) || bySec(a[2], b[2]); });
+    for (const [k, rs] of g) {
+      const [sj, les, sc] = k.split('|');
+      const card = document.createElement('div'); card.className = 'grp';
+      const gh = document.createElement('div'); gh.className = 'gh'; const t = document.createElement('span'); t.style.color = 'inherit'; t.style.fontWeight = '700'; t.textContent = `${sj} ${les === '—' ? '' : les}`.trim(); const n = document.createElement('span'); n.textContent = `${sc} · ${rs.length}`; gh.append(t, n); card.appendChild(gh);
+      const gm = document.createElement('div'); gm.className = 'gm'; gm.textContent = `${[...new Set(rs.map(r => r.date))].sort().map(dfmt).join(', ')} · ${[...new Set(rs.map(r => r.staff))].join(', ')}`; card.appendChild(gm);
+      const nl = document.createElement('div'); nl.className = 'nl';
+      for (const [nm, xs] of [...groupBy(rs, r => r.student)].sort((x, y) => x[0].localeCompare(y[0]))) {
+        const ch = document.createElement('span'); ch.className = 'nm-c ' + SCLS[xs[xs.length - 1].status]; ch.textContent = nm;
+        const i = document.createElement('i'); i.textContent = [...new Set(xs.map(x => SCODE[x.status]))].join('/') + (xs.length > 1 ? ` ×${xs.length}` : ''); ch.appendChild(i); nl.appendChild(ch);
+      }
+      card.appendChild(nl); grid.appendChild(card);
+    }
+    sec.appendChild(grid); box.appendChild(sec);
+  }
+}
+
+// views + hash: #dash = dashboard, #A1 = category, #A1-3 = one PDF
+function showView(v) {
+  view = v; $('view-pdf').hidden = v !== 'pdf'; $('view-dash').hidden = v !== 'dash';
+  $('v-pdf').setAttribute('aria-pressed', v === 'pdf'); $('v-dash').setAttribute('aria-pressed', v === 'dash');
+  if (v === 'dash') { dLoad(); dRender(); } else render();
+}
+document.querySelectorAll('.views button').forEach(b => b.onclick = () => { showView(b.dataset.view); setHash(b.dataset.view === 'dash' ? 'dash' : cat); });
+let settingHash = false;
+function setHash(h) { if (location.hash.slice(1) === h) return; settingHash = true; location.hash = h; setTimeout(() => settingHash = false, 0); }
+function fromHash() {
+  const raw = location.hash.slice(1); const h = raw.toUpperCase();
+  if (raw === 'dash') { showView('dash'); return; }
+  showView('pdf');
+  const f = FILES.find(x => x[1] === h);
+  if (f) { seg = f[0][0]; cat = f[0]; render(); openReader(f); return; }
+  if (CATS[h]) { seg = h[0]; cat = h; if (!$('reader').hidden) { readerTask++; $('reader').hidden = true; document.body.style.overflow = ''; } render(); return; }
+  if (h === 'A' || h === 'B') { seg = h; cat = h + '1'; }
+  render();
+}
+window.addEventListener('hashchange', () => { if (!settingHash && KEY) fromHash(); });
+boot();
+</script>
+
+</body>
+</html>
