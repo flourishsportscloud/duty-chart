@@ -295,7 +295,7 @@ const ORD = ["","1st","2nd","3rd","4th","5th","6th","7th","8th","9th","10th","11
 const $ = id => document.getElementById(id);
 const el = (t, c, txt) => { const e = document.createElement(t); if (c) e.className = c; if (txt != null) e.textContent = txt; return e; };
 
-const API_URL = new URLSearchParams(location.search).get("api") || "";
+const API_URL = new URLSearchParams(location.search).get("api") || "https://script.google.com/macros/s/AKfycbyvWTDOKOQ8F0vD-oy9vchmq04GdhfZfgtpomgWg73rIa13gmkrFkpZsvQl9ISZKrSFQw/exec";
 let token = ""; try { token = localStorage.getItem("diary-token") || ""; } catch(e){}
 let me = null, ready = false, authMode = "login", users = [], refreshing = false;
 const ROLE_LABEL = {cm:"Class Manager", pl:"Class incharge (PL)", admin:"Admin / central team"};
