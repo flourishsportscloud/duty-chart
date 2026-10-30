@@ -1,0 +1,1083 @@
+<title>Diary Report – FIS</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#16467A">
+<link rel="icon" href="../fis/fis-icon-192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Source+Sans+3:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: sticky control bar (date, class chips, section tabs) over a one-column list of student cards, each with five tap-to-cycle marks; report sheet slides up from the bottom. */
+:root{
+  --bg:#f3f5f8; --card:#ffffff; --ink:#0e1a2b; --muted:#5a6678; --line:#e0e5ec;
+  --accent:#16467a; --accent-ink:#ffffff; --accent-soft:#e7eef6;
+  --ok:#1d6b49; --ok-soft:#e2f1e9; --bad:#9e3a33; --bad-soft:#f7e7e5; --warn:#855710; --warn-soft:#f9efd9;
+  --font-display:"Manrope","Segoe UI",system-ui,sans-serif;
+  --font-body:"Source Sans 3","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1622; --card:#161f2d; --ink:#e7edf6; --muted:#97a4b8; --line:#243246;
+    --accent:#86abd8; --accent-ink:#0e1622; --accent-soft:#1c2c44;
+    --ok:#62c796; --ok-soft:#14352a; --bad:#f08c84; --bad-soft:#3b1f1d; --warn:#e8b861; --warn-soft:#3a2c0f;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1622; --card:#161f2d; --ink:#e7edf6; --muted:#97a4b8; --line:#243246;
+  --accent:#86abd8; --accent-ink:#0e1622; --accent-soft:#1c2c44;
+  --ok:#62c796; --ok-soft:#14352a; --bad:#f08c84; --bad-soft:#3b1f1d; --warn:#e8b861; --warn-soft:#3a2c0f;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.35;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 96px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wrap{max-width:720px;margin:0 auto}
+header.top{padding-top:14px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--font-display);font-size:26px;line-height:1.1;margin:0;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:14px;margin-top:2px}
+.datebox{display:flex;flex-direction:column;gap:2px}
+.datebox label{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.datebox input{font:inherit;font-weight:600;padding:8px 10px;border:1.5px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:10px 0 8px;margin-top:8px;border-bottom:1px solid var(--line)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin}
+.chip{flex:0 0 auto;min-width:44px;height:40px;padding:0 12px;border:1.5px solid var(--line);background:var(--card);border-radius:20px;font-weight:600;position:relative}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.chip .dot{position:absolute;top:4px;right:5px;width:8px;height:8px;border-radius:50%;background:var(--ok)}
+.tabs{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.tab{height:36px;padding:0 16px;border:1.5px solid var(--line);background:var(--card);border-radius:8px;font-weight:600}
+.tab[aria-selected="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.stats{margin-left:auto;display:flex;gap:10px;font-size:13px;color:var(--muted);flex-wrap:wrap;font-variant-numeric:tabular-nums}
+.stats b{color:var(--ink)}
+.stats .bad b{color:var(--bad)} .stats .warn b{color:var(--warn)}
+.status{font-size:13px;color:var(--muted);padding:8px 0 0;min-height:24px}
+.list{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.stu{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 10px 10px 12px}
+.stu.absent{background:var(--bad-soft)}
+.head{display:flex;align-items:center;gap:10px;min-width:0}
+.roll{font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px;width:22px;flex:0 0 auto}
+.nm{font-weight:600;flex:1 1 auto;min-width:0;overflow-wrap:anywhere}
+.pen{flex:0 0 auto;width:40px;height:36px;border:1.5px solid var(--line);background:transparent;border-radius:8px;color:var(--muted);font-size:13px;font-weight:600}
+.pen.has{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.marks{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:8px}
+.mk{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-height:50px;border:1.5px solid var(--line);background:var(--bg);border-radius:9px;padding:4px 2px}
+.mk small{font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.mk span{font-weight:700;font-size:14px}
+.mk.ok{background:var(--ok-soft);border-color:var(--ok)} .mk.ok span{color:var(--ok)}
+.mk.bad{background:var(--bad-soft);border-color:var(--bad)} .mk.bad span{color:var(--bad)}
+.mk.warn{background:var(--warn-soft);border-color:var(--warn)} .mk.warn span{color:var(--warn)}
+.mk:disabled{opacity:.35;cursor:default}
+.rem{margin-top:8px}
+.rem textarea{width:100%;font:inherit;padding:8px 10px;border:1.5px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);resize:vertical;min-height:62px}
+.fab{position:fixed;left:0;right:0;bottom:0;padding:10px max(16px,env(safe-area-inset-left,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));background:linear-gradient(transparent,var(--bg) 35%);z-index:6}
+.fab .wrap{display:flex;gap:8px}
+.btn{height:48px;border-radius:12px;border:1.5px solid var(--accent);background:var(--accent);color:var(--accent-ink);font-weight:700;padding:0 18px;flex:1}
+.btn.alt{background:var(--card);color:var(--accent)}
+.sheet{position:fixed;inset:0;z-index:20;background:rgba(10,16,28,.55);display:flex;align-items:flex-end;justify-content:center}
+.sheet[hidden]{display:none}
+.panel{background:var(--card);width:100%;max-width:720px;max-height:88%;border-radius:18px 18px 0 0;display:flex;flex-direction:column;padding:14px max(16px,env(safe-area-inset-left,0px)) calc(14px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));gap:10px}
+.panel h2{font-family:var(--font-display);font-size:20px;margin:0}
+.scope{display:flex;gap:6px;flex-wrap:wrap}
+#rtext{flex:1 1 auto;min-height:200px;width:100%;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13.5px;line-height:1.45;padding:10px;border:1.5px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);resize:none}
+.opt{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--muted)}
+.opt input{width:20px;height:20px}
+.row{display:flex;gap:8px}
+.empty{padding:30px 10px;text-align:center;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:30;max-width:90%}
+.toast[hidden]{display:none}
+.nav{display:flex;gap:6px;margin-top:10px}
+.nav .tab{flex:1;height:42px}
+.dsub{font-size:13px;color:var(--muted);padding:2px 0 4px}
+h2.sec{font-family:var(--font-display);font-size:18px;margin:18px 0 8px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:8px;margin-top:10px}
+.tile{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:10px 12px;border:1.5px solid var(--line);border-radius:12px;background:var(--card)}
+.tile[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.tile b{font-family:var(--font-display);font-size:26px;line-height:1;font-variant-numeric:tabular-nums}
+.tile small{font-size:12px;color:var(--muted);font-weight:600}
+.tile.t-warn b{color:var(--warn)} .tile.t-bad b{color:var(--bad)} .tile.t-ok b{color:var(--ok)}
+.tscroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+.tbl{border-collapse:collapse;width:100%;min-width:520px;font-size:14px;font-variant-numeric:tabular-nums}
+.tbl th,.tbl td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+.tbl th:first-child,.tbl td:first-child{text-align:left}
+.tbl th{font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.tbl tr:last-child td{border-bottom:0}
+.tbl tr.me td{background:var(--accent-soft)}
+.tbl td.hot{color:var(--bad);font-weight:700}
+.tbl button.lnk{background:none;border:0;color:var(--accent);font-weight:700;padding:4px 0}
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.item{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.item.done{opacity:.62}
+.ihead{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pill{font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.pill.warn{background:var(--warn-soft);color:var(--warn);border-color:var(--warn)}
+.pill.bad{background:var(--bad-soft);color:var(--bad);border-color:var(--bad)}
+.pill.ok{background:var(--ok-soft);color:var(--ok);border-color:var(--ok)}
+.pill.acc{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+.iname{font-weight:700}
+.iwhere{color:var(--muted);font-size:13px;margin-left:auto}
+.itext{font-size:15px;overflow-wrap:anywhere}
+.arow{display:flex;gap:6px;flex-wrap:wrap}
+.arow select,.arow input{font:inherit;min-width:0;padding:8px 10px;border:1.5px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.arow select{flex:1 1 150px}.arow input{flex:2 1 160px}
+.srow{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.sbtn{height:40px;border:1.5px solid var(--line);background:var(--bg);border-radius:8px;font-weight:600;font-size:14px}
+.sbtn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.fab[hidden]{display:none}
+.when{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.sbtn-go{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.iss{display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap}
+.rem-text{flex:1 1 200px;min-width:0;font-size:16px;font-weight:500}
+.streak{font-size:12.5px;font-weight:700;color:var(--warn)} .streak.hot{color:var(--bad)}
+.logl{font-size:13.5px;color:var(--ok);font-weight:600}
+.flatbar{margin-top:12px;padding-bottom:6px}
+.row2{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:12px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.kpi b{font-family:var(--font-display);font-size:28px;line-height:1.05;font-variant-numeric:tabular-nums}
+.kpi span{font-size:12.5px;color:var(--muted);font-weight:600}
+.kpi.w b{color:var(--warn)} .kpi.a b{color:var(--accent)} .kpi.b b{color:var(--bad)}
+h3.grp{font-family:var(--font-display);font-size:13px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:14px 0 2px;font-weight:700}
+.summary{font-size:13px;color:var(--muted);font-weight:600;padding:2px 2px 0}
+.ic{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.ic-head{display:flex;align-items:center;gap:10px;min-width:0}
+.ic-name{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
+.ic-name b{font-family:var(--font-display);font-size:16px;font-weight:700;overflow-wrap:anywhere}
+.ic-name small{font-size:12.5px;color:var(--muted)}
+.stat{flex:0 0 auto;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;white-space:nowrap}
+.stat.ok{background:var(--ok-soft);color:var(--ok)} .stat.warn{background:var(--warn-soft);color:var(--warn)}
+.stat.acc{background:var(--accent-soft);color:var(--accent)} .stat.mute{background:var(--bg);color:var(--muted)}
+.ic-body{display:flex;flex-direction:column;gap:8px}
+.quote{margin:0;padding:10px 12px;background:var(--bg);border-radius:10px;font-size:16px;line-height:1.45;overflow-wrap:anywhere}
+.meta{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.flag{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:15px}
+.flag-l{font-weight:600}
+.flag-s{font-size:12.5px;font-weight:700;color:var(--warn)} .flag-s.hot{color:var(--bad)}
+.dot2{width:8px;height:8px;border-radius:50%;flex:0 0 auto;background:var(--muted)} .dot2.w{background:var(--warn)} .dot2.b{background:var(--bad)}
+.tl{display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--line);padding-top:10px}
+.tl-row{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;align-items:baseline}
+.tl-role{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:6px;grid-row:span 2}
+.tl-role.pl{background:var(--accent-soft);color:var(--accent)} .tl-role.ad{background:var(--ok-soft);color:var(--ok)}
+.tl-text{font-size:15px;overflow-wrap:anywhere}
+.tl-time{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.qrow{display:flex;gap:6px;flex-wrap:wrap}
+.qbtn{height:36px;padding:0 12px;border:1.5px solid var(--line);background:var(--card);border-radius:8px;font-weight:600;font-size:14px}
+.arow2{display:flex;gap:6px;flex-wrap:wrap}
+.arow2 input{flex:1 1 180px;min-width:0;font:inherit;padding:9px 11px;border:1.5px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.gobtn{height:40px;padding:0 16px;border-radius:8px;border:1.5px solid var(--accent);background:var(--accent);color:var(--accent-ink);font-weight:700}
+.tab[aria-selected="true"]{font-weight:700}
+.tbl th{white-space:normal;text-align:right;vertical-align:bottom}
+.tbl th:first-child{text-align:left}
+@media (prefers-reduced-motion:no-preference){.mk,.chip,.tab{transition:background .12s,border-color .12s}}
+
+.drow{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}
+.drow label{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;display:flex;flex-direction:column;gap:2px}
+.drow input{font:inherit;font-size:15px;padding:8px 10px;border:1.5px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
+.drow input[type=search]{flex:1 1 140px;min-width:120px}
+.dt{border-collapse:collapse;width:100%;min-width:760px;font-size:14px}
+.dt th{font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600;text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);background:var(--bg)}
+.dt td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}
+.dt td.nw{white-space:nowrap}.dt td.nm2{font-weight:700;min-width:120px}.dt td.rmk{min-width:200px}
+.dt small{display:block;color:var(--muted);font-size:12px}
+.dt .eline{margin-bottom:4px}.dt .dash{color:var(--muted)}
+.lnk2{background:none;border:0;color:var(--accent);font-weight:700;padding:4px 0;font-size:13px}
+.xr td{background:var(--accent-soft)}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:8px;margin-top:10px}
+.stile{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:9px 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);text-align:left}
+.stile b{font-size:16px}.stile small{font-size:11.5px;color:var(--muted);font-weight:600}
+.stile.hot{border-color:var(--accent)}.stile.hot small{color:var(--accent)}
+.stile.on{background:var(--accent-soft);border-color:var(--accent)}
+
+.who{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--muted);padding-top:8px}
+.who b{color:var(--ink)}
+.who .lnkb{background:none;border:0;color:var(--accent);font-weight:700;padding:4px 0;font-size:13px;margin-left:auto}
+.home{color:var(--accent);font-weight:700;font-size:13px;text-decoration:none}
+.banner{margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--warn-soft);color:var(--warn);font-size:14px;overflow-wrap:anywhere}
+.banner.info{background:var(--accent-soft);color:var(--accent)}
+.authcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:14px;display:grid;gap:12px}
+.authcard h2{margin:0;font-family:var(--font-display);font-size:20px}
+.authcard p{margin:0;color:var(--muted);font-size:14px}
+.field{display:grid;gap:4px}
+.field label{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.field input,.field select{font:inherit;padding:10px 11px;border:1.5px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.authcard .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.ucard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ucard .un{font-weight:700;flex:1 1 140px}.ucard small{color:var(--muted);display:block;font-weight:400}
+.ucard select{font:inherit;padding:7px 8px;border:1.5px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Diary Report</h1>
+      <div class="sub"><a class="home" href="../fis/">‹ FIS apps</a> · Class Managers mark each child's diary in front of them</div>
+    </div>
+    <div class="datebox">
+      <label for="date">Report date</label>
+      <input id="date" type="date">
+    </div>
+  </header>
+
+  <div class="banner" id="banner" hidden></div>
+  <div id="auth" hidden></div>
+  <div class="who" id="who" hidden></div>
+  <div id="app" hidden>
+  <nav class="nav" id="nav" aria-label="View">
+    <button class="tab" type="button" data-view="mark" aria-selected="true">Marking</button>
+    <button class="tab" type="button" data-view="cls" aria-selected="false">Class (PL)</button>
+    <button class="tab" type="button" data-view="cen" aria-selected="false">Central</button>
+    <button class="tab" type="button" data-view="staff" aria-selected="false" id="navStaff" hidden>Staff</button>
+  </nav>
+
+  <div id="viewMark">
+  <div class="bar">
+    <div class="chips" id="chips" role="group" aria-label="Class"></div>
+    <div class="tabs" id="tabs" role="tablist" aria-label="Section"></div>
+  </div>
+  <div class="status" id="status" aria-live="polite"></div>
+  <div class="list" id="list"></div>
+  </div>
+
+  <div id="viewCls" hidden>
+    <div class="bar">
+      <div class="chips" id="pchips" role="group" aria-label="Class"></div>
+      <div class="tabs" id="ptabs" role="tablist" aria-label="Section"></div>
+      <div class="tabs" id="psegs" role="tablist" aria-label="Segment" style="margin-top:6px"></div>
+    </div>
+    <div class="status" id="psub"></div>
+    <div class="list" id="pitems"></div>
+  </div>
+
+  <div id="viewCen" hidden>
+    <div class="row2" style="margin-top:12px"><h2 class="sec" style="margin:0">Central dashboard</h2><button class="tab sbtn-go" id="cxl" type="button">Copy for Excel</button></div>
+    <div class="flatbar">
+      <div class="tabs" id="csegs" role="tablist" aria-label="Segment"></div>
+      <div id="cremctl">
+        <div class="drow"><label>From <input type="date" id="cfrom"></label><label>To <input type="date" id="cto"></label><input type="search" id="cq" placeholder="Search name" aria-label="Search name"></div>
+        <div class="chips" id="cchips" role="group" aria-label="Class scope" style="margin-top:8px"></div>
+        <div class="tabs" id="ctabs" role="tablist" aria-label="Section scope" style="margin-top:6px"></div>
+      </div>
+    </div>
+    <div id="cbody"></div>
+  </div>
+
+  <div id="viewStaff" hidden></div>
+  </div>
+</div>
+
+<div class="fab"><div class="wrap">
+  <button class="btn alt" id="btnAllPresent" type="button">Mark all present</button>
+  <button class="btn" id="btnReport" type="button">Make report</button>
+</div></div>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="rtitle">
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <h2 id="rtitle">Diary Remarks</h2>
+      <button class="tab" id="rclose" type="button">Close</button>
+    </div>
+    <div class="scope" id="scope">
+      <button class="tab" type="button" data-scope="class" aria-selected="true">This class</button>
+      <button class="tab" type="button" data-scope="all" aria-selected="false">All classes</button>
+    </div>
+    <label class="opt"><input id="optNames" type="checkbox"> Include defaulter names</label>
+    <textarea id="rtext" readonly aria-label="Report text"></textarea>
+    <div class="row"><button class="btn" id="rcopy" type="button">Copy report</button></div>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+function EMPTY_ROSTER(){ const r = {}; for (let c = 1; c <= 11; c++) r[c] = {A: []}; return r; }
+let ROSTER = EMPTY_ROSTER(), rosterVer = "";
+const rosterReady = () => Object.keys(ROSTER).some(c => Object.values(ROSTER[c]).some(l => l.length));
+const ORD = ["","1st","2nd","3rd","4th","5th","6th","7th","8th","9th","10th","11th"];
+const $ = id => document.getElementById(id);
+const el = (t, c, txt) => { const e = document.createElement(t); if (c) e.className = c; if (txt != null) e.textContent = txt; return e; };
+
+const API_URL = new URLSearchParams(location.search).get("api") || "";
+let token = ""; try { token = localStorage.getItem("diary-token") || ""; } catch(e){}
+let me = null, ready = false, authMode = "login", users = [], refreshing = false;
+const ROLE_LABEL = {cm:"Class Manager", pl:"Class incharge (PL)", admin:"Admin / central team"};
+const canMark = () => !!me && (me.role === "cm" || me.role === "admin");
+const canPL = () => !!me && (me.role === "pl" || me.role === "admin");
+const canAdmin = () => !!me && me.role === "admin";
+function setToken(t){ token = t || ""; try { if (token) localStorage.setItem("diary-token", token); else localStorage.removeItem("diary-token"); } catch(e){} }
+async function api(fn, args){
+  let r;
+  try { r = await fetch(API_URL, {method:"POST", redirect:"follow", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({fn, args:args || []})}); }
+  catch(e){ throw new Error("Can't reach the server. Check your internet and try again."); }
+  const txt = await r.text(); let j;
+  try { j = JSON.parse(txt); } catch(e){ throw new Error("The server didn't answer properly. Check the Apps Script deployment (Anyone can access)."); }
+  if (!j.ok) { if (/log in again/i.test(j.err || "")) { setToken(""); me = null; render(); } throw new Error(j.err || "Something went wrong."); }
+  return j.v;
+}
+function banner(msg, info){ const b = $("banner"); b.textContent = msg || ""; b.hidden = !msg; b.className = "banner" + (info ? " info" : ""); }
+let date = todayStr();
+let cls = 1, sec = "A";
+let docs = {};            // "date_cls" -> {date, cls, m:{}}
+const timers = {}, writing = {}, dirtyKeys = {};
+const openRem = new Set();
+
+function todayStr(){
+  const d = new Date(); const p = n => String(n).padStart(2,"0");
+  return d.getFullYear() + "-" + p(d.getMonth()+1) + "-" + p(d.getDate());
+}
+function dmy(s){ const [y,m,d] = s.split("-"); return d + "-" + m + "-" + y; }
+function docId(c){ return date + "_" + c; }
+function getDoc(c){ const id = docId(c); if (!docs[id]) docs[id] = {date, cls:c, m:{}}; return docs[id]; }
+function sections(c){ return Object.keys(ROSTER[c]); }
+function key(s, i){ return s + "-" + (i+1); }
+function mark(c, s, i, dt){ const d = docs[(dt || date) + "_" + c]; return (d && d.m[key(s,i)]) || {}; }
+function firstName(n){ return n.trim().split(/\s+/)[0].toUpperCase(); }
+
+/* ---------- storage (Google Sheet through the Apps Script web app) ---------- */
+function scheduleSave(c, k){
+  const id = docId(c); (dirtyKeys[id] = dirtyKeys[id] || new Set()).add(k);
+  setStatus("Saving…");
+  clearTimeout(timers[id]);
+  timers[id] = setTimeout(() => flush(id), 500);
+}
+async function flush(id){
+  if (!me || !API_URL) return;
+  const keys = dirtyKeys[id]; if (!keys || !keys.size) return;
+  if (writing[id]) { timers[id] = setTimeout(() => flush(id), 400); return; }
+  writing[id] = true;
+  const sent = Array.from(keys); keys.clear();
+  const d = docs[id], set = {}, del = [];
+  sent.forEach(k => { if (d.m[k]) set[k] = d.m[k]; else del.push(k); });
+  try { await api("saveMarks", [token, d.date, d.cls, set, del]); setStatus("Saved for everyone"); }
+  catch(e){ sent.forEach(k => keys.add(k)); setStatus("Not saved yet. Will retry. " + e.message); toast(e.message); }
+  finally { writing[id] = false; }
+}
+function retryDirty(){ Object.keys(dirtyKeys).forEach(id => { if (dirtyKeys[id].size && !writing[id]) flush(id); }); }
+function applyState(s){
+  if (!s) return;
+  me = s.me || null; users = s.users || [];
+  if (!me) { if (token) { setToken(""); banner("Please log in again.", true); } ready = true; render(); return; }
+  if (s.roster) {
+    const r = EMPTY_ROSTER(); Object.keys(s.roster).forEach(c => { if (r[c]) r[c] = s.roster[c]; });
+    ROSTER = r; rosterVer = s.rosterVer || "";
+    if (!ROSTER[cls][sec]) sec = sections(cls)[0]; if (!ROSTER[pcls][psec]) psec = sections(pcls)[0];
+  }
+  Object.keys(s.docs || {}).forEach(id => {
+    if (writing[id]) return;
+    const v = s.docs[id], m = JSON.parse(JSON.stringify(v.m || {})), loc = docs[id];
+    if (loc && dirtyKeys[id]) dirtyKeys[id].forEach(k => { if (loc.m[k]) m[k] = loc.m[k]; else delete m[k]; });
+    docs[id] = {date:v.date, cls:v.cls, m};
+  });
+  Object.keys(s.acts || {}).forEach(id => { if (aBusy[id]) return; acts[id] = {log: s.acts[id].log || []}; });
+  smsRec = s.sms || {};
+  ready = true;
+  const p = n => String(n).padStart(2,"0"), n = new Date();
+  setStatus("Live · updated " + p(n.getHours()) + ":" + p(n.getMinutes()));
+  render();
+}
+async function refresh(){
+  if (!API_URL || !token || refreshing) return;
+  refreshing = true;
+  try { applyState(await api("state", [token, date, rosterVer])); }
+  catch(e){ setStatus("Can't reach the server. Retrying."); if (!ready) { ready = true; render(); } }
+  finally { refreshing = false; }
+}
+
+/* ---------- state changes ---------- */
+function setMark(c, s, i, patch){
+  const d = getDoc(c), k = key(s,i), prev = d.m[k] || {};
+  const cur = Object.assign({}, prev, patch);
+  const tm = Object.assign({}, prev.t || {}), now = Date.now();
+  ["a","d","e","s","b"].forEach(f => { if (f in patch) { if (cur[f]) tm[f] = now; else delete tm[f]; } });
+  if ("r" in patch) { if (cur.r && cur.r.trim()) { if (!(prev.r && prev.r.trim())) tm.r = now; } else delete tm.r; }
+  ["a","d","e","s","b"].forEach(f => { if (!cur[f]) delete cur[f]; });
+  if (!cur.r || !cur.r.trim()) delete cur.r;
+  cur.t = tm; if (!Object.keys(tm).length) delete cur.t;
+  const has = ["a","d","e","s","b","r"].some(f => cur[f]);
+  if (has) d.m[k] = cur; else delete d.m[k];
+  scheduleSave(c, k);
+}
+const cycle3 = v => ((v||0) + 1) % 3;
+
+/* ---------- render ---------- */
+function setStatus(t){ $("status").textContent = t; }
+let toastT;
+function toast(t){ const e = $("toast"); e.textContent = t; e.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { e.hidden = true; }, 2200); }
+
+function renderChips(){
+  const box = $("chips"); box.textContent = "";
+  for (let c = 1; c <= 11; c++){
+    const b = el("button","chip", String(c)); b.type = "button";
+    b.setAttribute("aria-pressed", String(c === cls)); b.setAttribute("aria-label","Class " + c);
+    const d = docs[docId(c)]; if (d && Object.keys(d.m).length) b.appendChild(el("i","dot"));
+    b.onclick = () => { cls = c; if (!ROSTER[c][sec]) sec = "A"; render(); };
+    box.appendChild(b);
+  }
+}
+function counts(c, s){
+  const names = ROSTER[c][s]; let absent = 0, def = 0, enNo = 0, sgNo = 0, bad = 0;
+  names.forEach((n,i) => {
+    const m = mark(c,s,i);
+    if (m.a) { absent++; return; }
+    if (m.d) def++; if (m.e === 2) enNo++; if (m.s === 2) sgNo++; if (m.b === 2) bad++;
+  });
+  return {total:names.length, absent, present:names.length-absent, def, enNo, sgNo, bad};
+}
+function renderTabs(){
+  const box = $("tabs"); box.textContent = "";
+  sections(cls).forEach(s => {
+    const b = el("button","tab", cls + " " + s); b.type = "button"; b.setAttribute("role","tab");
+    b.setAttribute("aria-selected", String(s === sec));
+    b.onclick = () => { sec = s; render(); };
+    box.appendChild(b);
+  });
+  const k = counts(cls, sec), st = el("div","stats");
+  const add = (cn, lab, v) => { const sp = el("span", cn); sp.append(lab + " "); sp.appendChild(el("b", null, String(v))); st.appendChild(sp); };
+  add("", "Present", k.present + "/" + k.total); add("bad", "Absent", k.absent); add("warn", "Defaulters", k.def);
+  box.appendChild(st);
+}
+function markBtn(label, text, tone, onclick, disabled){
+  const b = el("button","mk" + (tone ? " " + tone : "")); b.type = "button";
+  b.appendChild(el("small", null, label)); b.appendChild(el("span", null, text));
+  b.onclick = onclick; b.disabled = !!disabled;
+  b.setAttribute("aria-label", label + ": " + text);
+  return b;
+}
+function renderList(){
+  const box = $("list"); box.textContent = "";
+  const names = ROSTER[cls][sec];
+  if (!names || !names.length){ box.appendChild(el("div","empty","No students in this section.")); return; }
+  names.forEach((n, i) => {
+    const m = mark(cls, sec, i), abs = !!m.a;
+    const card = el("div","stu" + (abs ? " absent" : ""));
+    const head = el("div","head");
+    head.appendChild(el("span","roll", String(i+1)));
+    head.appendChild(el("span","nm", n));
+    if (m.t) { const lt = Math.max.apply(null, Object.values(m.t)); head.appendChild(el("span","when", fmtT(lt))); }
+    const pen = el("button","pen" + (m.r ? " has" : ""), m.r ? "Note" : "+ Note"); pen.type = "button";
+    pen.style.width = "auto"; pen.style.padding = "0 10px";
+    pen.onclick = () => { const k = cls+sec+i; if (openRem.has(k)) openRem.delete(k); else openRem.add(k); renderList(); };
+    head.appendChild(pen); card.appendChild(head);
+    const mk = el("div","marks");
+    mk.appendChild(markBtn("Attend", abs ? "A" : "P", abs ? "bad" : "ok", () => { setMark(cls,sec,i,{a: abs ? 0 : 1}); render(); }));
+    mk.appendChild(markBtn("Diary", m.d ? "DEF" : "OK", m.d ? "warn" : "", () => { setMark(cls,sec,i,{d: m.d ? 0 : 1}); render(); }, abs));
+    const yn = (f, label) => markBtn(label, m[f] === 1 ? "Yes" : m[f] === 2 ? "No" : "–", m[f] === 1 ? "ok" : m[f] === 2 ? "bad" : "", () => { setMark(cls,sec,i,{[f]: cycle3(m[f])}); render(); }, abs);
+    mk.appendChild(yn("e","English"));
+    mk.appendChild(yn("s","Sign"));
+    mk.appendChild(markBtn("Behav", m.b === 1 ? "Good" : m.b === 2 ? "Bad" : "–", m.b === 1 ? "ok" : m.b === 2 ? "bad" : "", () => { setMark(cls,sec,i,{b: cycle3(m.b)}); render(); }, abs));
+    card.appendChild(mk);
+    if (m.r || openRem.has(cls+sec+i)){
+      const r = el("div","rem"); const ta = el("textarea"); ta.id = "rem-" + cls + sec + i;
+      ta.placeholder = "Remark from parent"; ta.value = m.r || ""; ta.setAttribute("aria-label","Parent remark for " + n);
+      let t; ta.oninput = () => { clearTimeout(t); t = setTimeout(() => { setMark(cls,sec,i,{r: ta.value}); renderTabs(); renderChips(); }, 400); };
+      ta.onblur = () => { const has = !!ta.value.trim(); pen.className = "pen" + (has ? " has" : ""); pen.textContent = has ? "Note" : "+ Note"; };
+      r.appendChild(ta); card.appendChild(r);
+    }
+    box.appendChild(card);
+  });
+}
+function renderMark(){
+  renderChips(); renderTabs();
+  const ae = document.activeElement;
+  if (ae && ae.tagName === "TEXTAREA" && $("list").contains(ae)) return; // don't disturb typing
+  renderList();
+}
+
+/* ---------- report ---------- */
+function reportFor(c, withNames){
+  const lines = [];
+  const secs = sections(c);
+  secs.forEach(s => {
+    const k = counts(c, s), label = "Class " + ORD[c] + " " + s;
+    lines.push("*" + label + " - Present - " + k.present + "/" + k.total + "*");
+    const rem = [];
+    ROSTER[c][s].forEach((n,i) => { const m = mark(c,s,i); if (m.r && m.r.trim()) rem.push(firstName(n) + " - " + m.r.trim().replace(/\s+/g," ")); });
+    if (rem.length) rem.forEach((t,i) => lines.push((i+1) + ". " + t)); else lines.push("NA");
+    const extra = [];
+    if (k.enNo) extra.push("Spoken English (No): " + k.enNo);
+    if (k.sgNo) extra.push("Parent sign (No): " + k.sgNo);
+    if (k.bad) extra.push("Behaviour (Bad): " + k.bad);
+    if (extra.length) lines.push("_" + extra.join(" | ") + "_");
+    lines.push("");
+  });
+  lines.push("*Diary defaulters -*");
+  secs.forEach(s => {
+    const k = counts(c, s);
+    let t = "*" + c + ORD[c].replace(/^\d+/, "") + " " + s + " -* " + k.def;
+    if (withNames && k.def){
+      const nm = []; ROSTER[c][s].forEach((n,i) => { const m = mark(c,s,i); if (!m.a && m.d) nm.push(n); });
+      t += " (" + nm.join(", ") + ")";
+    }
+    lines.push(t);
+  });
+  return lines.join("\n");
+}
+let scope = "class";
+function buildReport(){
+  const wn = $("optNames").checked;
+  const head = "*Diary Remarks*- " + dmy(date) + "\n\n";
+  let body;
+  if (scope === "class") body = reportFor(cls, wn);
+  else { const parts = []; for (let c = 1; c <= 11; c++) parts.push(reportFor(c, wn)); body = parts.join("\n\n"); }
+  $("rtext").value = head + body;
+}
+
+/* ---------- wiring ---------- */
+$("date").value = date;
+$("date").onchange = e => { if (!e.target.value) return; date = e.target.value; render(); refresh(); };
+$("btnAllPresent").onclick = () => {
+  ROSTER[cls][sec].forEach((n,i) => { if (mark(cls,sec,i).a) setMark(cls,sec,i,{a:0}); });
+  render(); toast("All marked present");
+};
+$("btnReport").onclick = () => { buildReport(); $("sheet").hidden = false; };
+$("rclose").onclick = () => { $("sheet").hidden = true; };
+$("sheet").onclick = e => { if (e.target === $("sheet")) $("sheet").hidden = true; };
+$("optNames").onchange = buildReport;
+$("scope").querySelectorAll("button").forEach(b => { b.onclick = () => {
+  scope = b.dataset.scope;
+  $("scope").querySelectorAll("button").forEach(x => x.setAttribute("aria-selected", String(x === b)));
+  buildReport();
+}; });
+$("rcopy").onclick = async () => {
+  const t = $("rtext").value;
+  try { await navigator.clipboard.writeText(t); toast("Report copied"); }
+  catch(e){ const ta = $("rtext"); ta.removeAttribute("readonly"); ta.focus(); ta.select(); ta.setAttribute("readonly",""); toast("Text selected. Use Copy."); }
+};
+document.addEventListener("keydown", e => { if (e.key === "Escape") $("sheet").hidden = true; });
+
+/* ---------- action log, class view (PL) and central view (admin) ---------- */
+let view = "mark", pcls = 1, psec = "A", pseg = "rem";
+let ccls = 0, csec = "all", cseg = "rem";
+let acts = {};            // "2026-10-27_1A9" -> {log:[{a,cats,at,by}]}
+let smsRec = {};          // "1A9_def" -> {sentOn, sentAt, remark}
+const aPending = {}, aWriting = {};
+let pMsg = ""; const aBusy = {};
+const FIELD = {def:"d", eng:"e", sig:"s", beh:"b", rem:"r"};
+const LABEL = {rem:"Parent remark", def:"Diary not completed", eng:"Spoken English", sig:"Parent signature", beh:"Conduct"};
+const QUICK = {
+  rem:["Noted","Counselled","Warned"],
+  def:["Student cautioned","Called parent"],
+  eng:["Student guided","Called parent"],
+  sig:["Parent reminded","Called parent"],
+  beh:["Student counselled","Called parent"]
+};
+const ADMIN_QUICK = ["Noted","Counselled","Warned"];
+const STREAK_CATS = ["def","eng","sig","beh"];
+const DEF_SEG = ["def","eng","sig","beh"];
+
+function shiftDate(s, n){
+  const [y,m,d] = s.split("-").map(Number); const t = new Date(Date.UTC(y, m-1, d + n));
+  const p = x => String(x).padStart(2,"0");
+  return t.getUTCFullYear() + "-" + p(t.getUTCMonth()+1) + "-" + p(t.getUTCDate());
+}
+function fmtT(ms){
+  if (!ms) return "time not recorded";
+  const d = new Date(ms), p = n => String(n).padStart(2,"0");
+  let h = d.getHours(); const ap = h >= 12 ? "pm" : "am"; h = h % 12 || 12;
+  return p(d.getDate()) + "-" + p(d.getMonth()+1) + " " + h + ":" + p(d.getMinutes()) + " " + ap;
+}
+function gap(from, to){
+  if (!from || !to) return "";
+  const m = Math.max(0, Math.round((to - from) / 60000));
+  return m < 1 ? "under 1 min" : m < 60 ? m + " min" : m < 1440 ? Math.floor(m/60) + " h " + (m%60) + " min" : Math.floor(m/1440) + " d " + Math.floor((m%1440)/60) + " h";
+}
+function flagged(m, cat){
+  if (!m || m.a) return false;
+  return cat === "def" ? !!m.d : cat === "eng" ? m.e === 2 : cat === "sig" ? m.s === 2 : m.b === 2;
+}
+function streak(c, s, i, cat){
+  const k = key(s,i); let n = 0, start = null;
+  for (let b = 0; b < 14; b++){
+    const dt = shiftDate(date, -b), d = docs[dt + "_" + c];
+    if (!d || !Object.keys(d.m).length) continue;
+    if (flagged(d.m[k], cat)) { n++; start = dt; } else break;
+  }
+  return {n, start};
+}
+function issuesFor(c, s, i, seg, dt){
+  const m = mark(c, s, i, dt), t = m.t || {}, out = [];
+  if (seg === "rem") {
+    if (m.r && m.r.trim()) out.push({cat:"rem", text:m.r.trim(), at:t.r});
+  } else if (!m.a) {
+    if (m.d) out.push({cat:"def", at:t.d});
+    if (m.e === 2) out.push({cat:"eng", at:t.e});
+    if (m.s === 2) out.push({cat:"sig", at:t.s});
+    if (m.b === 2) out.push({cat:"beh", at:t.b});
+  }
+  return out;
+}
+function aid(c, s, i, dt){ return dt + "_" + c + s + (i+1); }
+function allLog(c, s, i, dt){ const a = acts[aid(c,s,i,dt)]; return (a && a.log) || []; }
+function dayList(dt, c, s, seg){
+  const out = [], cats = seg === "rem" ? ["rem"] : DEF_SEG;
+  ROSTER[c][s].forEach((nm, i) => {
+    const iss = issuesFor(c, s, i, seg, dt); if (!iss.length) return;
+    const mine = allLog(c, s, i, dt).filter(l => (l.cats || []).some(x => cats.includes(x)));
+    out.push({dt, c, s, i, nm, seg, iss, pl: mine.filter(l => l.by !== "admin"), ad: mine.filter(l => l.by === "admin")});
+  });
+  return out;
+}
+function rangeItems(seg, c0, s0, days){
+  const out = [];
+  for (let b = 0; b < days; b++){
+    const dt = shiftDate(date, -b);
+    for (let c = 1; c <= 11; c++){
+      if (c0 && c !== c0) continue; if (!docs[dt + "_" + c]) continue;
+      sections(c).forEach(s => { if (s0 && s0 !== "all" && s !== s0) return; dayList(dt, c, s, seg).forEach(x => out.push(x)); });
+    }
+  }
+  return out;
+}
+function saveLog(it, text, by){
+  const id = aid(it.c, it.s, it.i, it.dt);
+  const cats = it.seg === "rem" ? ["rem"] : it.iss.map(x => x.cat);
+  const at = Date.now(), before = allLog(it.c, it.s, it.i, it.dt);
+  acts[id] = {log: before.concat([{a:text, cats, at, by, who: me ? me.name : ""}])};
+  aBusy[id] = (aBusy[id] || 0) + 1; pMsg = "Saving\u2026";
+  api("addLog", [token, it.dt, it.c, it.s, it.i + 1, it.nm, text, cats, by]).then(r => {
+    acts[id] = {log: r.log}; pMsg = "Saved for everyone";
+  }).catch(e => {
+    acts[id] = {log: allLog(it.c, it.s, it.i, it.dt).filter(l => l.at !== at)}; pMsg = ""; toast(e.message);
+  }).finally(() => { aBusy[id]--; if (!aBusy[id]) delete aBusy[id]; render(); });
+}
+
+/* shared card */
+function statusChip(txt, tone){ return el("span", "stat " + tone, txt); }
+function itemCard(it, role){
+  const box = el("article", "ic");
+  const head = el("div", "ic-head");
+  head.appendChild(el("span", "roll", String(it.i + 1)));
+  const nm = el("div", "ic-name"); nm.appendChild(el("b", null, it.nm));
+  if (role === "admin") nm.appendChild(el("small", null, "Class " + it.c + " " + it.s + " · " + dmy(it.dt)));
+  head.appendChild(nm);
+  if (role === "pl") {
+    head.appendChild(it.pl.length ? statusChip("Actioned", "ok") : statusChip("Awaiting action", "warn"));
+  } else {
+    head.appendChild(it.pl.length ? statusChip("PL actioned", "ok") : statusChip("No PL action yet", "mute"));
+  }
+  box.appendChild(head);
+
+  const body = el("div", "ic-body");
+  it.iss.forEach(x => {
+    if (x.cat === "rem") {
+      const q = el("blockquote", "quote", x.text); body.appendChild(q);
+      body.appendChild(el("div", "meta", "Remark entered " + fmtT(x.at)));
+    } else {
+      const row = el("div", "flag");
+      row.appendChild(el("span", "dot2 " + (x.cat === "def" ? "w" : "b")));
+      row.appendChild(el("span", "flag-l", LABEL[x.cat]));
+      const st = STREAK_CATS.includes(x.cat) && role === "pl" ? streak(it.c, it.s, it.i, x.cat) : null;
+      if (st && st.n >= 2) row.appendChild(el("span", "flag-s" + (st.n >= 3 ? " hot" : ""), st.n + " consecutive days" + (st.n >= 3 ? " · SMS by admin" : "")));
+      row.appendChild(el("span", "meta", "Marked " + fmtT(x.at)));
+      body.appendChild(row);
+    }
+  });
+  box.appendChild(body);
+
+  const first = Math.min.apply(null, it.iss.map(x => x.at || Infinity));
+  const entries = it.pl.map(l => ({l, r:"PL"})).concat(it.ad.map(l => ({l, r:"Admin"}))).sort((a,b) => a.l.at - b.l.at);
+  if (entries.length) {
+    const tl = el("div", "tl");
+    entries.forEach(e => {
+      const r = el("div", "tl-row");
+      r.appendChild(el("span", "tl-role " + (e.r === "Admin" ? "ad" : "pl"), e.r));
+      r.appendChild(el("span", "tl-text", e.l.a));
+      r.appendChild(el("span", "tl-time", (e.l.who ? e.l.who + " · " : "") + fmtT(e.l.at) + (isFinite(first) ? " · " + gap(first, e.l.at) + " after marking" : "")));
+      tl.appendChild(r);
+    });
+    box.appendChild(tl);
+  }
+
+  if (role === "pl" && !canPL()) return box;
+  const quick = [];
+  if (role === "admin") ADMIN_QUICK.forEach(q => quick.push(q));
+  else it.iss.forEach(x => (QUICK[x.cat] || []).forEach(q => { if (!quick.includes(q)) quick.push(q); }));
+  const qr = el("div", "qrow");
+  quick.forEach(q => { const b = el("button", "qbtn", q); b.type = "button"; b.onclick = () => { saveLog(it, q, role === "admin" ? "admin" : "pl"); render(); }; qr.appendChild(b); });
+  box.appendChild(qr);
+  const ar = el("div", "arow2");
+  const inp = el("input"); inp.id = role + "-" + it.seg + "-" + aid(it.c, it.s, it.i, it.dt);
+  inp.placeholder = role === "admin" ? "Additional remark or action, if required" : it.seg === "rem" ? "Action / follow-up on this remark" : "Other action or note";
+  inp.setAttribute("aria-label", (role === "admin" ? "Admin remark for " : "Action note for ") + it.nm);
+  const go = el("button", "gobtn", role === "admin" ? "Add remark" : "Log action"); go.type = "button";
+  const submit = () => { const v = inp.value.trim(); if (!v) return; saveLog(it, v, role === "admin" ? "admin" : "pl"); render(); };
+  go.onclick = submit; inp.onkeydown = e => { if (e.key === "Enter") submit(); };
+  ar.appendChild(inp); ar.appendChild(go); box.appendChild(ar);
+  return box;
+}
+function typing(box){ const ae = document.activeElement; return ae && ae.tagName === "INPUT" && box.contains(ae); }
+
+/* ---------- PL class view ---------- */
+function plCount(c, s, seg){ const l = dayList(date, c, s, seg); return {n: l.filter(x => !x.pl.length).length, all: l.length}; }
+function renderPLSub(){ $("psub").textContent = "Class " + pcls + " " + psec + " · " + dmy(date) + (pMsg ? " · " + pMsg : ""); }
+function renderPL(){
+  const cb = $("pchips"); cb.textContent = "";
+  for (let c = 1; c <= 11; c++){
+    let n = 0; sections(c).forEach(s => { n += plCount(c,s,"rem").n + plCount(c,s,"def").n; });
+    const b = el("button","chip", String(c)); b.type = "button"; b.setAttribute("aria-pressed", String(c === pcls));
+    b.setAttribute("aria-label","Class " + c + (n ? ", " + n + " awaiting action" : ""));
+    if (n) b.appendChild(el("i","dot"));
+    b.onclick = () => { pcls = c; if (!ROSTER[c][psec]) psec = "A"; history.replaceState(null,"","#class-" + c); renderPL(); };
+    cb.appendChild(b);
+  }
+  const tb = $("ptabs"); tb.textContent = "";
+  sections(pcls).forEach(s => {
+    const n = plCount(pcls,s,"rem").n + plCount(pcls,s,"def").n;
+    const b = el("button","tab", pcls + " " + s + (n ? " (" + n + ")" : "")); b.type = "button"; b.setAttribute("aria-selected", String(s === psec));
+    b.onclick = () => { psec = s; renderPL(); }; tb.appendChild(b);
+  });
+  const sg = $("psegs"); sg.textContent = "";
+  const r = plCount(pcls,psec,"rem"), d = plCount(pcls,psec,"def");
+  [["rem","Parent remarks · " + r.all], ["def","Diary and conduct · " + d.all]].forEach(([k,l]) => {
+    const b = el("button","tab", l); b.type = "button"; b.setAttribute("aria-selected", String(pseg === k));
+    b.onclick = () => { pseg = k; renderPL(); }; sg.appendChild(b);
+  });
+  renderPLSub();
+  const box = $("pitems"); if (typing(box)) return; box.textContent = "";
+  const list = dayList(date, pcls, psec, pseg).sort((a,b) => (a.pl.length ? 1 : 0) - (b.pl.length ? 1 : 0) || a.i - b.i);
+  if (!list.length) { box.appendChild(el("div","empty", (pseg === "rem" ? "No parent remarks" : "Nothing to follow up") + " in " + pcls + " " + psec + " on " + dmy(date) + ".")); return; }
+  const pend = list.filter(x => !x.pl.length).length;
+  box.appendChild(el("div","summary", pend + " awaiting action · " + (list.length - pend) + " actioned"));
+  list.forEach(it => box.appendChild(itemCard(it, "pl")));
+}
+
+/* ---------- SMS (admin) ---------- */
+function smsText(first, cat, n){
+  const f = first.charAt(0) + first.slice(1).toLowerCase();
+  const t = {
+    def:"has not completed diary work for " + n + " days in a row. Please check the diary daily.",
+    eng:"has not spoken in English at school for " + n + " days in a row. Please encourage English at home.",
+    sig:"diary has not been signed by a parent for " + n + " days in a row. Please sign the diary daily.",
+    beh:"has shown conduct concerns at school for " + n + " days in a row. Please talk to your child."
+  };
+  return "Dear Parent, " + f + " " + t[cat];
+}
+function smsDue(){
+  const out = [];
+  for (let c = 1; c <= 11; c++) sections(c).forEach(s => ROSTER[c][s].forEach((nm,i) => {
+    STREAK_CATS.forEach(cat => {
+      const st = streak(c,s,i,cat); if (st.n < 3) return;
+      const rec = smsRec[c + s + (i+1) + "_" + cat];
+      out.push({c, s, i, nm, cat, n:st.n, start:st.start, sent: !!(rec && rec.sentOn >= st.start), rec});
+    });
+  }));
+  return out;
+}
+async function markSms(it, sent, remark){
+  const id = it.c + it.s + (it.i+1) + "_" + it.cat;
+  try {
+    const r = await api("markSms", [token, id, sent, {cls:it.c, sec:it.s, name:it.nm, cat:it.cat, sentOn:date, remark}]);
+    if (sent) smsRec[id] = r; else delete smsRec[id];
+    render();
+  } catch(e){ toast(e.message); }
+}
+
+/* ---------- central view (admin) ---------- */
+let cfrom = null, cto = null, cq = "", ssel = null, lastRem = [];
+const cexp = new Set();
+function cRange(){ if (!cto) cto = date; if (!cfrom) cfrom = shiftDate(cto, -6); return [cfrom, cto]; }
+function rangeBetween(seg, c0, s0, from, to){
+  const out = []; let dt = to, guard = 0;
+  while (dt >= from && guard++ < 62){
+    for (let c = 1; c <= 11; c++){
+      if (c0 && c !== c0) continue; if (!docs[dt + "_" + c]) continue;
+      sections(c).forEach(s => { if (s0 && s0 !== "all" && s !== s0) return; dayList(dt, c, s, seg).forEach(x => out.push(x)); });
+    }
+    dt = shiftDate(dt, -1);
+  }
+  return out;
+}
+function adminControls(it){
+  const wrap = el("div","xrow");
+  const qr = el("div","qrow");
+  ADMIN_QUICK.forEach(q => { const b = el("button","qbtn", q); b.type = "button"; b.onclick = () => { saveLog(it, q, "admin"); renderCentral(true); }; qr.appendChild(b); });
+  wrap.appendChild(qr);
+  const ar = el("div","arow2");
+  const inp = el("input"); inp.id = "adm-" + it.seg + "-" + aid(it.c, it.s, it.i, it.dt);
+  inp.placeholder = "Follow-up remark or action, if required"; inp.setAttribute("aria-label","Follow-up for " + it.nm);
+  const go = el("button","gobtn","Add follow-up"); go.type = "button";
+  const submit = () => { const v = inp.value.trim(); if (!v) return; inp.blur(); saveLog(it, v, "admin"); renderCentral(true); };
+  go.onclick = submit; inp.onkeydown = e => { if (e.key === "Enter") submit(); };
+  ar.appendChild(inp); ar.appendChild(go); wrap.appendChild(ar);
+  return wrap;
+}
+function entryLines(list){
+  const d = el("div","elines");
+  if (!list.length) { d.appendChild(el("span","dash","–")); return d; }
+  list.forEach(l => { const r = el("div","eline"); r.appendChild(el("span", null, l.a)); r.appendChild(el("small", null, (l.who ? l.who + " · " : "") + fmtT(l.at))); d.appendChild(r); });
+  return d;
+}
+function renderRemTable(box){
+  const [from, to] = cRange();
+  let rem = rangeBetween("rem", ccls, csec, from, to);
+  if (cq) rem = rem.filter(x => x.nm.toLowerCase().includes(cq));
+  rem.sort((a,b) => (a.dt < b.dt ? 1 : a.dt > b.dt ? -1 : 0) || a.c - b.c || a.s.localeCompare(b.s) || a.i - b.i);
+  lastRem = rem;
+  box.appendChild(el("div","summary", rem.length + " remark" + (rem.length === 1 ? "" : "s") + " · " + dmy(from) + " to " + dmy(to)));
+  if (!rem.length) { box.appendChild(el("div","empty","No parent remarks for this selection.")); return rem.length; }
+  const wrap = el("div","tscroll"), tbl = el("table","dt");
+  const hr = el("tr"); ["Date","Name","Class","Section","Remark","Action","Follow-up"].forEach(h => hr.appendChild(el("th", null, h))); tbl.appendChild(hr);
+  rem.forEach(it => {
+    const id = aid(it.c, it.s, it.i, it.dt) + it.seg;
+    const tr = el("tr");
+    tr.appendChild(el("td","nw", dmy(it.dt)));
+    tr.appendChild(el("td","nm2", it.nm));
+    tr.appendChild(el("td","nw", String(it.c)));
+    tr.appendChild(el("td","nw", it.s));
+    const rt = el("td","rmk"); rt.appendChild(el("div", null, it.iss[0].text)); rt.appendChild(el("small", null, "Entered " + fmtT(it.iss[0].at))); tr.appendChild(rt);
+    const at = el("td"); at.appendChild(entryLines(it.pl)); tr.appendChild(at);
+    const ft = el("td"); ft.appendChild(entryLines(it.ad));
+    if (canAdmin()) {
+      const tg = el("button","lnk2", cexp.has(id) ? "Close" : "+ Add"); tg.type = "button";
+      tg.onclick = () => { if (cexp.has(id)) cexp.delete(id); else cexp.add(id); renderCentral(true); };
+      ft.appendChild(tg);
+    }
+    tr.appendChild(ft);
+    tbl.appendChild(tr);
+    if (cexp.has(id)) { const xr = el("tr","xr"), xd = el("td"); xd.colSpan = 7; xd.appendChild(adminControls(it)); xr.appendChild(xd); tbl.appendChild(xr); }
+  });
+  wrap.appendChild(tbl); box.appendChild(wrap);
+  return rem.length;
+}
+function smsCard(it){
+  const card = el("article","ic");
+  const head = el("div","ic-head");
+  head.appendChild(el("span","roll", String(it.i + 1)));
+  const nm = el("div","ic-name"); nm.appendChild(el("b", null, it.nm)); nm.appendChild(el("small", null, "Class " + it.c + " " + it.s + " · " + LABEL[it.cat] + " · " + it.n + " consecutive days")); head.appendChild(nm);
+  head.appendChild(it.sent ? statusChip("SMS sent", "ok") : statusChip("SMS to send", "acc"));
+  card.appendChild(head);
+  const msg = smsText(firstName(it.nm), it.cat, it.n);
+  card.appendChild(el("blockquote","quote", msg));
+  if (it.sent) {
+    const tl = el("div","tl"), r = el("div","tl-row");
+    r.appendChild(el("span","tl-role ad","Admin")); r.appendChild(el("span","tl-text", "SMS sent" + (it.rec.remark ? " · " + it.rec.remark : "")));
+    r.appendChild(el("span","tl-time", (it.rec.by ? it.rec.by + " · " : "") + (it.rec.sentAt ? fmtT(it.rec.sentAt) : dmy(it.rec.sentOn)))); tl.appendChild(r); card.appendChild(tl);
+  }
+  if (!canAdmin()) { const cp0 = el("button","qbtn","Copy SMS"); cp0.type = "button"; cp0.onclick = async () => { try { await navigator.clipboard.writeText(msg); toast("SMS copied"); } catch(e){ toast("Select the text and copy"); } }; card.appendChild(cp0); return card; }
+  const ar = el("div","arow2");
+  const inp = el("input"); inp.id = "sms-" + it.c + it.s + (it.i+1) + it.cat; inp.placeholder = "Remark (optional)"; inp.setAttribute("aria-label","Remark for SMS to " + it.nm);
+  if (it.sent) inp.style.display = "none";
+  const cp = el("button","qbtn","Copy SMS"); cp.type = "button";
+  cp.onclick = async () => { try { await navigator.clipboard.writeText(msg); toast("SMS copied"); } catch(e){ toast("Select the text and copy"); } };
+  const sb = el("button","gobtn", it.sent ? "Undo" : "Mark sent"); sb.type = "button";
+  sb.onclick = () => { inp.blur(); markSms(it, !it.sent, inp.value.trim()); };
+  ar.appendChild(inp); ar.appendChild(cp); ar.appendChild(sb); card.appendChild(ar);
+  return card;
+}
+function renderSmsDash(box){
+  const all = smsDue(), open = all.filter(x => !x.sent).length;
+  box.appendChild(el("div","summary", open + " to send · " + (all.length - open) + " sent · counted to " + dmy(date)));
+  const grid = el("div","sgrid");
+  const tile = (label, n, sent, sel, fn) => {
+    const b = el("button","stile" + (sel ? " on" : "") + (n ? " hot" : "")); b.type = "button";
+    b.appendChild(el("b", null, label)); b.appendChild(el("small", null, n ? n + " to send" : sent ? "all sent" : "none"));
+    b.setAttribute("aria-pressed", String(sel)); b.onclick = fn; grid.appendChild(b);
+  };
+  tile("All", open, all.length - open, !ssel, () => { ssel = null; renderCentral(true); });
+  for (let c = 1; c <= 11; c++) sections(c).forEach(s => {
+    const l = all.filter(x => x.c === c && x.s === s), n = l.filter(x => !x.sent).length;
+    tile(c + s, n, l.length - n, !!ssel && ssel.c === c && ssel.s === s, () => { ssel = {c, s}; renderCentral(true); });
+  });
+  box.appendChild(grid);
+  let list = all.filter(x => !ssel || (x.c === ssel.c && x.s === ssel.s));
+  list = list.sort((a,b) => a.c - b.c || a.s.localeCompare(b.s) || a.i - b.i || (a.sent ? 1 : 0) - (b.sent ? 1 : 0));
+  const hd = el("div","row2"); hd.style.marginTop = "14px";
+  hd.appendChild(el("h2","sec", ssel ? "Class " + ssel.c + " · Section " + ssel.s : "All classes"));
+  const cpl = el("button","tab sbtn-go","Copy list for Excel"); cpl.type = "button";
+  cpl.onclick = async () => {
+    const lines = [["Class","Section","Roll","Name","Category","Consecutive days","SMS","Status","Sent time"].join("\t")];
+    list.forEach(it => lines.push([it.c, it.s, it.i + 1, it.nm, LABEL[it.cat], it.n, smsText(firstName(it.nm), it.cat, it.n), it.sent ? "Sent" : "To send", it.sent && it.rec.sentAt ? fmtT(it.rec.sentAt) : ""].join("\t")));
+    try { await navigator.clipboard.writeText(lines.join("\n")); toast(list.length + " rows copied. Paste into Excel."); } catch(e){ toast("Copy not allowed here"); }
+  };
+  hd.appendChild(cpl); box.appendChild(hd);
+  if (!list.length) { box.appendChild(el("div","empty","No child has been flagged three days in a row here.")); return; }
+  const wrap = el("div","list"); let last = "";
+  list.forEach(it => {
+    const g = "Class " + it.c + " · Section " + it.s;
+    if (!ssel && g !== last) { wrap.appendChild(el("h3","grp", g)); last = g; }
+    wrap.appendChild(smsCard(it));
+  });
+  box.appendChild(wrap);
+}
+function renderCentral(force){
+  const ae = document.activeElement;
+  if (!force && ae && ae.tagName === "INPUT" && $("viewCen").contains(ae)) return;
+  const [from, to] = cRange();
+  if ($("cfrom").value !== from) $("cfrom").value = from;
+  if ($("cto").value !== to) $("cto").value = to;
+  $("cfrom").min = $("cto").min = shiftDate(date, -30); $("cfrom").max = $("cto").max = date;
+  const smsOpen = smsDue().filter(x => !x.sent).length;
+  const remCount = rangeBetween("rem", 0, "all", from, to).length;
+  const sg = $("csegs"); sg.textContent = "";
+  [["rem","Remarks · " + remCount],["sms","SMS · " + smsOpen + " to send"]].forEach(([k,l]) => { const b = el("button","tab", l); b.type = "button"; b.setAttribute("aria-selected", String(cseg === k)); b.onclick = () => { cseg = k; renderCentral(true); }; sg.appendChild(b); });
+  $("cremctl").hidden = cseg !== "rem";
+  const box = $("cbody"); box.textContent = "";
+  if (cseg === "rem") {
+    const cb = $("cchips"); cb.textContent = "";
+    const mk = (lab, v) => { const b = el("button","chip", lab); b.type = "button"; b.setAttribute("aria-pressed", String(ccls === v)); b.onclick = () => { ccls = v; csec = "all"; renderCentral(true); }; cb.appendChild(b); };
+    mk("All", 0); for (let c = 1; c <= 11; c++) mk(String(c), c);
+    const tb = $("ctabs"); tb.textContent = "";
+    if (ccls) [["all","All sections"]].concat(sections(ccls).map(s => [s, ccls + " " + s])).forEach(([k,l]) => { const b = el("button","tab", l); b.type = "button"; b.setAttribute("aria-selected", String(csec === k)); b.onclick = () => { csec = k; renderCentral(true); }; tb.appendChild(b); });
+    renderRemTable(box);
+  } else renderSmsDash(box);
+}
+$("cfrom").onchange = e => { if (!e.target.value) return; cfrom = e.target.value; cRange(); if (cfrom > cto) cto = cfrom; renderCentral(true); };
+$("cto").onchange = e => { if (!e.target.value) return; cto = e.target.value; cRange(); if (cto < cfrom) cfrom = cto; renderCentral(true); };
+$("cq").oninput = e => { cq = e.target.value.trim().toLowerCase(); renderCentral(true); };
+$("cxl").onclick = async () => {
+  const lines = [["Date","Class","Section","Roll","Name","Remark","Remark time","Action","Action time","Follow-up","Follow-up time"].join("\t")];
+  const clean = v => String(v == null ? "" : v).replace(/[\t\r\n]+/g, " ");
+  lastRem.slice().reverse().forEach(it => lines.push([dmy(it.dt), it.c, it.s, it.i + 1, it.nm, it.iss[0].text, fmtT(it.iss[0].at),
+    it.pl.map(l => l.a).join("; "), it.pl.map(l => fmtT(l.at)).join("; "), it.ad.map(l => l.a).join("; "), it.ad.map(l => fmtT(l.at)).join("; ")].map(clean).join("\t")));
+  try { await navigator.clipboard.writeText(lines.join("\n")); toast(lastRem.length + " remarks copied. Paste into Excel."); } catch(e){ toast("Copy not allowed here"); }
+};
+
+function updateBadge(){
+  const rem = rangeItems("rem", 0, "all", 7).filter(x => !x.ad.length && !x.pl.length).length;
+  const sm = smsDue().filter(x => !x.sent).length, n = rem + sm;
+  const b = document.querySelector('#nav [data-view="cen"]'); if (b) b.textContent = n ? "Central (" + n + ")" : "Central";
+}
+
+/* ---------- views & routing ---------- */
+function allowedView(v){ return v === "mark" ? canMark() : v === "staff" ? canAdmin() : true; }
+function render(){
+  const authed = !!me;
+  $("auth").hidden = authed || !API_URL || !ready; $("app").hidden = !authed; $("who").hidden = !authed;
+  if (!API_URL) { banner("Setup needed: add the Apps Script web app URL to API_URL in this page (see SETUP.md)."); return; }
+  if (!authed) { if (ready && !$("loginForm")) renderAuth(); document.querySelector(".fab").hidden = true; return; }
+  if ($("loginForm")) { $("auth").textContent = ""; banner(""); }
+  if (!allowedView(view)) { setView(canMark() ? "mark" : "cls"); return; }
+  renderWho();
+  if (!rosterReady()) banner(canAdmin() ? "Class lists are not loaded yet. Open the Staff tab and upload them." : "Class lists are not loaded yet. Ask the admin to upload them.", true);
+  else if (/Class lists are not loaded/.test($("banner").textContent)) banner("");
+  $("nav").querySelectorAll("button").forEach(b => { b.hidden = !allowedView(b.dataset.view); });
+  document.querySelector(".fab").hidden = view !== "mark";
+  if (view === "cls") renderPL(); else if (view === "cen") renderCentral(); else if (view === "staff") renderStaff(); else renderMark();
+  updateBadge();
+}
+function renderWho(){
+  const w = $("who"); w.textContent = "";
+  const a = el("span", null, "Logged in as "); a.appendChild(el("b", null, me.name)); a.appendChild(document.createTextNode(" · " + ROLE_LABEL[me.role])); w.appendChild(a);
+  const o = el("button","lnkb","Log out"); o.type = "button"; o.onclick = () => { setToken(""); me = null; docs = {}; acts = {}; smsRec = {}; ready = true; authMode = "login"; render(); };
+  w.appendChild(o);
+}
+function renderAuth(){
+  const setup = authMode === "setup";
+  const name = el("input"); name.type = "text"; name.id = "lgName"; name.maxLength = 40; name.autocomplete = "username"; name.placeholder = "e.g. Anita Sharma";
+  const role = el("select"); role.id = "lgRole"; ["cm","pl","admin"].forEach(r => { const o = el("option", null, ROLE_LABEL[r]); o.value = r; role.appendChild(o); });
+  const pw = el("input"); pw.type = "password"; pw.id = "lgPw"; pw.autocomplete = setup ? "new-password" : "current-password"; pw.placeholder = setup ? "Set a password (6+ characters)" : "Password";
+  const go = el("button","btn", setup ? "Create login" : "Log in"); go.type = "submit"; go.id = "lgGo";
+  const sw = el("button","tab", setup ? "I already have a password" : "First time? Set password"); sw.type = "button"; sw.onclick = () => { authMode = setup ? "login" : "setup"; banner(""); $("loginForm") && $("loginForm").remove(); renderAuth(); };
+  const f = el("form","authcard"); f.id = "loginForm"; f.noValidate = true;
+  f.appendChild(el("h2", null, setup ? "First-time setup" : "Log in"));
+  f.appendChild(el("p", null, setup ? "Type your name, choose your role and your own password. The admin approves your login once; nobody can see your password." : "Log in to mark diaries, log actions or view the central dashboard."));
+  const fld = (lab, inp, id) => { const d = el("div","field"); const l = el("label", null, lab); l.htmlFor = id; d.appendChild(l); d.appendChild(inp); return d; };
+  f.appendChild(fld("Your name", name, "lgName"));
+  if (setup) f.appendChild(fld("I am", role, "lgRole"));
+  f.appendChild(fld("Password", pw, "lgPw"));
+  const row = el("div","row"); row.appendChild(go); row.appendChild(sw); f.appendChild(row);
+  f.onsubmit = async e => {
+    e.preventDefault();
+    const nm = name.value.trim(); if (!nm) { banner("Type your name."); return; } if (!pw.value) { banner("Enter your password."); return; }
+    go.disabled = true; banner("");
+    try {
+      if (setup) {
+        const r = await api("setup", [nm, pw.value, role.value]);
+        if (r.token) { setToken(r.token); applyState(r.state); }
+        else { authMode = "login"; $("loginForm") && $("loginForm").remove(); renderAuth(); banner("Password set for " + nm + ". The admin needs to approve your login once. After that, log in with this password.", true); }
+      } else { const r2 = await api("login", [nm, pw.value]); setToken(r2.token); applyState(r2.state); }
+    } catch(err){ banner(err.message); }
+    go.disabled = false;
+  };
+  $("auth").textContent = ""; $("auth").appendChild(f);
+}
+function renderStaff(){
+  const box = $("viewStaff"); const a0 = document.activeElement; if (a0 && a0.tagName === "SELECT" && box.contains(a0)) return; box.textContent = "";
+  const h = el("h2","sec","Staff logins"); h.style.marginTop = "12px"; box.appendChild(h);
+  box.insertBefore(rosterCard(), h);
+  const pend = users.filter(u => u.status === "pending"), act = users.filter(u => u.status !== "pending");
+  const roleSel = cur => { const sel = el("select"); ["cm","pl","admin"].forEach(r => { const o = el("option", null, ROLE_LABEL[r]); o.value = r; if (r === cur) o.selected = true; sel.appendChild(o); }); return sel; };
+  const card = u => {
+    const c = el("div","ucard"); const n = el("div","un", u.name);
+    n.appendChild(el("small", null, ROLE_LABEL[u.role] + " · " + (u.status === "active" ? "active" : u.status === "reset" ? "password reset, waiting for a new password" : "waiting for approval")));
+    c.appendChild(n);
+    if (u.status === "pending") {
+      const sel = roleSel(u.role);
+      const ok = el("button","gobtn","Approve"); ok.type = "button";
+      ok.onclick = async () => { ok.disabled = true; try { applyState(await api("approve", [token, u.name, sel.value])); toast("Approved " + u.name); } catch(e){ toast(e.message); ok.disabled = false; } };
+      c.appendChild(sel); c.appendChild(ok);
+    } else if (u.name !== me.name) {
+      const sel = roleSel(u.role);
+      sel.onchange = async () => { try { applyState(await api("approve", [token, u.name, sel.value])); toast("Role changed"); } catch(e){ toast(e.message); } };
+      const rs = el("button","qbtn","Reset password"); rs.type = "button"; let ar = false;
+      rs.onclick = async () => { if (!ar) { ar = true; rs.textContent = "Tap again to reset"; return; } try { applyState(await api("resetUser", [token, u.name])); toast("Reset. " + u.name + " sets a new password."); } catch(e){ toast(e.message); } };
+      const rm = el("button","qbtn","Remove"); rm.type = "button"; let am = false;
+      rm.onclick = async () => { if (!am) { am = true; rm.textContent = "Tap again to remove"; return; } try { applyState(await api("removeUser", [token, u.name])); toast("Removed"); } catch(e){ toast(e.message); } };
+      c.appendChild(sel); c.appendChild(rs); c.appendChild(rm);
+    }
+    return c;
+  };
+  if (pend.length) { box.appendChild(el("h3","grp","Waiting for approval · " + pend.length)); const l1 = el("div","list"); pend.forEach(u => l1.appendChild(card(u))); box.appendChild(l1); }
+  box.appendChild(el("h3","grp","Everyone"));
+  const l2 = el("div","list"); act.forEach(u => l2.appendChild(card(u))); box.appendChild(l2);
+  if (!act.length && !pend.length) box.appendChild(el("div","empty","No logins yet."));
+}
+function parseRoster(text){
+  const out = {}; let n = 0, bad = 0;
+  text.split(/\r?\n/).forEach((line, i) => {
+    if (!line.trim()) return;
+    const cells = []; line.replace(/("([^"]*)"|[^,\t]*)(,|\t|$)/g, (m, a, q) => { cells.push((q != null ? q : a).trim()); return ""; });
+    const cm = /(\d{1,2})/.exec(cells[0] || ""), sc = /^[A-Za-z]$/.test(cells[1] || "") ? cells[1].toUpperCase() : "", nm = (cells[2] || "").trim();
+    if (!cm || !sc || !nm) { if (i > 0) bad++; return; }
+    const c = +cm[1]; if (c < 1 || c > 11) { bad++; return; }
+    ((out[c] = out[c] || {})[sc] = out[c][sc] || []).push(nm); n++;
+  });
+  return {out, n, bad};
+}
+function rosterCard(){
+  const c = el("div","ucard"); c.style.marginTop = "12px"; c.style.display = "grid";
+  const total = Object.keys(ROSTER).reduce((a, k) => a + Object.values(ROSTER[k]).reduce((b, l) => b + l.length, 0), 0);
+  const t = el("div","un","Class lists"); t.appendChild(el("small", null, total ? total + " students loaded. Upload a new file to replace the classes it contains." : "Not loaded yet. Upload the class list file (CSV with columns Class, Section, Name)."));
+  c.appendChild(t);
+  const inp = el("input"); inp.type = "file"; inp.accept = ".csv,.txt,text/csv"; inp.setAttribute("aria-label","Class list CSV file");
+  const msg = el("small", null, ""); const go = el("button","gobtn","Upload class lists"); go.type = "button"; go.disabled = true; let parsed = null;
+  inp.onchange = async () => {
+    parsed = null; go.disabled = true; const f = inp.files && inp.files[0]; if (!f) return;
+    const r = parseRoster(await f.text());
+    if (!r.n) { msg.textContent = "No students found. Columns must be Class, Section, Name."; return; }
+    parsed = r; const secs = Object.values(r.out).reduce((a, o) => a + Object.keys(o).length, 0);
+    msg.textContent = r.n + " students in " + secs + " sections of " + Object.keys(r.out).length + " classes" + (r.bad ? " (" + r.bad + " rows skipped)" : "") + ". Check, then tap Upload."; go.disabled = false;
+  };
+  go.onclick = async () => { if (!parsed) return; go.disabled = true; try { applyState(await api("saveRoster", [token, parsed.out])); toast("Class lists saved"); } catch(e){ toast(e.message); go.disabled = false; } };
+  c.appendChild(inp); c.appendChild(msg); c.appendChild(go);
+  return c;
+}
+function setView(v){
+  view = v;
+  [["Mark","mark"],["Cls","cls"],["Cen","cen"],["Staff","staff"]].forEach(([n,m]) => { $("view" + n).hidden = v !== m; });
+  $("nav").querySelectorAll("button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.view === v)));
+  render();
+}
+$("nav").querySelectorAll("button").forEach(b => { b.onclick = () => {
+  const v = b.dataset.view;
+  history.replaceState(null, "", v === "cls" ? "#class-" + pcls : v === "cen" ? "#central" : v === "staff" ? "#staff" : "#marking");
+  setView(v);
+}; });
+function route(){
+  const h = location.hash.replace("#","");
+  const m = /^(?:class|actions|dashboard)(?:-(\d{1,2}))?$/.exec(h);
+  if (m) { if (m[1]) pcls = Math.min(11, Math.max(1, +m[1])); if (!ROSTER[pcls][psec]) psec = "A"; setView("cls"); }
+  else if (h === "central" || h === "sms") setView("cen");
+  else if (h === "staff") setView("staff");
+  else setView("mark");
+}
+window.addEventListener("hashchange", route);
+
+route(); setStatus("");
+if (API_URL && token) refresh(); else { ready = true; render(); }
+setInterval(() => {
+  if (document.visibilityState !== "visible" || !me) return;
+  retryDirty();
+  const a = document.activeElement, typing = a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA");
+  if (!typing) refresh();
+}, 20000);
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && me) { retryDirty(); refresh(); } });
+</script>
