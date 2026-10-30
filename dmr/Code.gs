@@ -61,7 +61,7 @@ function vendorsOf(DB){
 }
 function pubComplaint(c){
   return {id:c.id,floor:c.floor,area:c.area,text:c.text,category:c.category,kind:c.kind,priority:c.priority,vendor:c.vendor,date:c.date,
-    hasPhoto:!!c.photo,by:c.by,at:c.at,status:c.status,remark:c.remark,eta:c.eta,etaDays:c.etaDays,etaSet:c.etaSet,doneDate:c.doneDate};
+    hasPhoto:!!c.photo,hasDonePhoto:!!c.donePhoto,by:c.by,at:c.at,status:c.status,remark:c.remark,eta:c.eta,etaDays:c.etaDays,etaSet:c.etaSet,doneDate:c.doneDate,doneAt:c.doneAt};
 }
 function publicState(ctx,me){
   const DB=ctx.DB,cutoff=addDays(ctx.today,-WINDOW_DAYS),complaints={};
@@ -97,7 +97,7 @@ function applyManager(ctx,rec,P){
   }
   if("status" in P){
     const s=pick(P.status,STATUSES,"a status");
-    if(s!==rec.status){rec.status=s;rec.doneDate=s==="done"?ctx.today:""}
+    if(s!==rec.status){rec.status=s;rec.doneDate=s==="done"?ctx.today:"";rec.doneAt=s==="done"?new Date(ctx.now).toISOString():""}
   }
 }
 const LOGGED_KEYS=["floor","area","text","category","kind","priority"];
@@ -199,16 +199,38 @@ const API={
       if(ctx.dateOf(rec.at)!==ctx.today)fail("Locked: ask the maintenance manager to delete it.");
     }
     if(rec.photo)ctx.photos.trash(rec.photo);
+    if(rec.donePhoto)ctx.photos.trash(rec.donePhoto);
     delete ctx.DB.Complaints[id];ctx.dirty.Complaints=true;
     ctx.log(me.name,"delete",id,rec.floor+" · "+rec.text.slice(0,60));
     return publicState(ctx,me);
   },
 
   // the photo is looked up through a complaint the user can already see, never by a raw Drive id
-  photo(ctx,token,id){
+  // kind "done" returns the completion photo, anything else the photo logged with the complaint
+  photo(ctx,token,id,kind){
     needUser(ctx,token);
-    const rec=ctx.DB.Complaints[str(id,40)];if(!rec||!rec.photo)fail("There is no photo for this complaint.");
-    return {data:ctx.photos.get(rec.photo)};
+    const rec=ctx.DB.Complaints[str(id,40)],f=kind==="done"?"donePhoto":"photo";
+    if(!rec||!rec[f])fail("There is no photo for this complaint.");
+    return {data:ctx.photos.get(rec[f])};
+  },
+
+  // maintenance manager only: the photo of the finished work, allowed once the complaint is Done; "" removes it
+  setDonePhoto(ctx,token,id,photo){
+    const me=needUser(ctx,token);if(me.role!=="manager")fail("Only the maintenance manager can add the completion photo.");
+    const rec=ctx.DB.Complaints[str(id,40)];if(!rec)fail("This complaint no longer exists.");
+    if(photo===""||photo==null){
+      if(rec.donePhoto){ctx.photos.trash(rec.donePhoto);rec.donePhoto="";ctx.dirty.Complaints=true;ctx.log(me.name,"done-photo-removed",rec.id,"")}
+      return publicState(ctx,me);
+    }
+    if(rec.status!=="done")fail("Mark the complaint Done first, then add the completion photo.");
+    const p=String(photo);
+    if(p.length>MAX_PHOTO||!/^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(p))fail("The photo could not be saved. Try a smaller photo.");
+    const old=rec.donePhoto;
+    rec.donePhoto=ctx.photos.save(p);
+    if(old)ctx.photos.trash(old);
+    rec.updatedBy=me.name;rec.updatedAt=new Date(ctx.now).toISOString();
+    ctx.dirty.Complaints=true;ctx.log(me.name,"done-photo",rec.id,rec.floor+" · "+rec.text.slice(0,60));
+    return publicState(ctx,me);
   },
 
   // complaints of one day older than the window sent by state()
@@ -248,7 +270,7 @@ function runApi(ctx,fn,args){
 const TZ="Asia/Kolkata";
 const COLS={
   Users:["name","role","status","salt","hash","ver","requestedAt","approvedAt","approvedBy"],
-  Complaints:["id","date","floor","area","text","category","kind","priority","status","vendor","remark","eta","by","at","photo","doneDate","etaDays","etaSet","updatedBy","updatedAt"],
+  Complaints:["id","date","floor","area","text","category","kind","priority","status","vendor","remark","eta","by","at","photo","doneDate","etaDays","etaSet","updatedBy","updatedAt","donePhoto","doneAt"],
   Config:["name","json"],
   Log:["time","who","action","item","detail"],
 };
@@ -256,6 +278,7 @@ function sheet_(name){
   const ss=SpreadsheetApp.getActiveSpreadsheet();
   let sh=ss.getSheetByName(name);
   if(!sh){sh=ss.insertSheet(name);sh.getRange(1,1,1,COLS[name].length).setValues([COLS[name]]).setFontWeight("bold");sh.setFrozenRows(1)}
+  else{const n=COLS[name].length;if(sh.getRange(1,n,1,1).getDisplayValues()[0][0]!==COLS[name][n-1])sh.getRange(1,1,1,n).setValues([COLS[name]]).setFontWeight("bold")} // adds new columns to a sheet made by an older version
   return sh;
 }
 function rows_(name){

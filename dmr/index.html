@@ -115,6 +115,9 @@ textarea{resize:vertical}
 .meta .ok{color:var(--done);font-weight:500}
 .note{background:var(--surface-2);border-radius:6px;padding:10px 12px;display:grid;gap:4px;font-size:14px}
 .note p{margin:0;overflow-wrap:anywhere}
+.donebar{border-top:1px dashed var(--line);padding-top:10px}
+.donebar.needs{background:var(--work-bg);border:1px solid var(--work);border-radius:6px;padding:8px 10px}
+.donebar .hint{color:var(--work);font-weight:500}
 .note .eta{font:500 12px var(--font-mono);color:var(--ink-2)}
 
 .mgr{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
@@ -312,6 +315,7 @@ td select{width:auto}
   </form>
 </div>
 
+<input type="file" id="dp-file" accept="image/*" hidden>
 <div class="lightbox" id="lightbox" hidden><img id="lb-img" alt="Complaint photo"></div>
 <div class="toast" id="toast" role="status" hidden></div>
 
@@ -381,6 +385,7 @@ function addDays(k,n){var d=parseKey(k);d.setDate(d.getDate()+n);return keyOf(d)
 function fmtLong(k){return parseKey(k).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});}
 function fmtShort(k){return parseKey(k).toLocaleDateString('en-GB',{day:'numeric',month:'short'});}
 function daysBetween(a,b){return Math.round((parseKey(b)-parseKey(a))/864e5);}
+function fmtTime(iso){try{return new Date(iso).toLocaleTimeString('en-IN',{timeZone:'Asia/Kolkata',hour:'numeric',minute:'2-digit',hour12:true}).replace(/\s+/g,' ')}catch(e){return ''}}
 function istDate(iso){try{return new Date(iso).toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'})}catch(e){return ''}}
 
 /* ---------- server ---------- */
@@ -435,9 +440,9 @@ function items(){
     var prio=PRIOS.indexOf(c.priority)>-1?c.priority:'normal';
     out.push({id:id,floor:FLOOR_KEYS.indexOf(c.floor)>-1?c.floor:'CAMPUS',area:c.area||'',text:c.text||'',
       cat:CATS.indexOf(c.category)>-1?c.category:'Others',kind:c.kind==='task'?'task':'complaint',
-      vendor:c.vendor||'',date:DATE_RE.test(c.date)?c.date:'',age:age,at:c.at||'',by:c.by||'',hasPhoto:!!c.hasPhoto,
+      vendor:c.vendor||'',date:DATE_RE.test(c.date)?c.date:'',age:age,at:c.at||'',by:c.by||'',hasPhoto:!!c.hasPhoto,hasDonePhoto:!!c.hasDonePhoto,
       st:st,prio:prio,hot:st!=='done'&&(prio==='urgent'||age>=3),
-      remark:c.remark||'',eta:c.eta||'',due:due,doneDate:DATE_RE.test(c.doneDate)?c.doneDate:''});
+      remark:c.remark||'',eta:c.eta||'',due:due,doneDate:DATE_RE.test(c.doneDate)?c.doneDate:'',doneAt:c.doneAt||''});
   }
   return out;
 }
@@ -463,7 +468,9 @@ function metaLine(i,ctx){
   if(ctx!=='date'&&i.date)bits.push(h('span',null,'Logged '+fmtShort(i.date)));
   if(i.by)bits.push(h('span',null,'by '+i.by));
   if(i.st==='done'){
-    if(i.doneDate)bits.push(h('span',{class:'ok'},'Done '+fmtShort(i.doneDate)));
+    if(i.doneDate)bits.push(h('span',{class:'ok'},'Completed '+fmtShort(i.doneDate)+(i.doneAt?' at '+fmtTime(i.doneAt):'')));
+    if(i.eta)bits.push(h('span',null,'Estimated: '+i.eta));
+    if(i.doneDate&&i.date){var took=Math.max(0,daysBetween(i.date,i.doneDate));bits.push(h('span',null,took===0?'Took: same day':'Took: '+took+(took===1?' day':' days')));}
   }else{
     bits.push(i.age>0?h('span',{class:i.age>=3?'late':''},i.age+(i.age===1?' day':' days')+' pending'):h('span',null,'Logged today'));
     if(i.due){
@@ -488,11 +495,12 @@ function card(i,ctx){
   ));
   kids.push(h('p',{class:'issue'},i.text||'(no description)'));
   kids.push(metaLine(i,ctx));
-  if(i.remark||i.eta)kids.push(h('div',{class:'note'},
+  if(i.remark||(i.eta&&i.st!=='done'))kids.push(h('div',{class:'note'},
     i.remark?h('p',null,i.remark):null,
-    i.eta?h('p',{class:'eta'},'Time needed: '+i.eta):null));
+    i.eta&&i.st!=='done'?h('p',{class:'eta'},'Time needed: '+i.eta):null));
   var acts=[];
   if(i.hasPhoto)acts.push(h('button',{class:'btn',type:'button',onclick:function(){showPhoto(i.id);}},'View photo'));
+  if(i.st==='done'&&i.hasDonePhoto)acts.push(h('button',{class:'btn',type:'button',onclick:function(){showPhoto(i.id,'done');}},'Done photo'));
   if(canEditOwn(i))acts.push(h('button',{class:'btn',type:'button',onclick:function(){openSheet(i);}},'Edit'));
   if(isMgr()){
     var open=S.expanded.has(i.id);
@@ -504,6 +512,12 @@ function card(i,ctx){
       if(S.expanded.has(i.id))S.expanded.delete(i.id);else S.expanded.add(i.id);
       S.confirm='';render();
     }},open?'Hide details':'Remark & time'));
+  }
+  if(isMgr()&&i.st==='done'){
+    kids.push(h('div',{class:'mgr donebar'+(i.hasDonePhoto?'':' needs')},
+      i.hasDonePhoto?null:h('span',{class:'hint',style:'margin:0'},'No completion photo yet'),
+      h('button',{class:'btn'+(i.hasDonePhoto?'':' primary'),type:'button',id:'dp-'+i.id,onclick:function(){pickDonePhoto(i.id);}},i.hasDonePhoto?'Replace done photo':'Add done photo'),
+      i.hasDonePhoto?h('button',{class:'btn danger',type:'button',onclick:function(){removeDonePhoto(i);}},'Remove'):null));
   }
   if(acts.length)kids.push(h('div',{class:'mgr'},acts));
   if(isMgr()&&S.expanded.has(i.id))kids.push(panel(i));
@@ -564,9 +578,9 @@ async function savePanel(i){
   if(ok){delete S.drafts[i.id];S.expanded.delete(i.id);toast('Saved');render();}
 }
 function changeStatus_(i,s){return write('editComplaint',[token,i.id,{status:s}],function(){
-  var c=S.complaints[i.id]||S.extra[i.id];if(c){c.status=s;c.doneDate=s==='done'?TODAY():'';}
+  var c=S.complaints[i.id]||S.extra[i.id];if(c){c.status=s;c.doneDate=s==='done'?TODAY():'';c.doneAt=s==='done'?new Date().toISOString():'';}
 });}
-function changeStatus(i,s){if(i.st===s)return;changeStatus_(i,s).then(function(ok){if(ok)toast('Marked '+STATUS[s].toLowerCase());});}
+function changeStatus(i,s){if(i.st===s)return;changeStatus_(i,s).then(function(ok){if(ok)toast(s==='done'&&!i.hasDonePhoto?'Marked done — now add the completion photo':'Marked '+STATUS[s].toLowerCase());});}
 async function removeComplaint(i){
   var ok=await write('deleteComplaint',[token,i.id],function(){delete S.complaints[i.id];delete S.extra[i.id];});
   if(ok){S.confirm='';S.expanded.delete(i.id);delete S.drafts[i.id];toast('Complaint deleted');}
@@ -863,11 +877,27 @@ $('d-clear').addEventListener('click',function(){pickDate('');});
 /* ---------- photos ---------- */
 function openPhoto(src){$('lb-img').src=src;$('lightbox').hidden=false;}
 $('lightbox').addEventListener('click',function(){this.hidden=true;$('lb-img').removeAttribute('src');});
-async function showPhoto(id){
-  if(S.photos[id]){openPhoto(S.photos[id]);return;}
+async function showPhoto(id,kind){
+  var key=id+(kind==='done'?':done':'');
+  if(S.photos[key]){openPhoto(S.photos[key]);return;}
   toast('Loading photo…');
-  try{var r=await api('photo',[token,id]);S.photos[id]=r.data;$('toast').hidden=true;openPhoto(r.data);}
+  try{var r=await api('photo',[token,id,kind==='done'?'done':'']);S.photos[key]=r.data;$('toast').hidden=true;openPhoto(r.data);}
   catch(e){toast(e.message);}
+}
+/* completion photo: the manager picks a photo after the work is done */
+function pickDonePhoto(id){S.donePhotoFor=id;var f=$('dp-file');f.value='';f.click();}
+$('dp-file').addEventListener('change',async function(e){
+  var f=e.target.files&&e.target.files[0],id=S.donePhotoFor;
+  if(!f||!id)return;
+  var data;
+  toast('Preparing photo…');
+  try{data=await toJpeg(f);}catch(_){toast('That photo could not be read or is too large. Try another photo.');return;}
+  var ok=await write('setDonePhoto',[token,id,data]);
+  if(ok){delete S.photos[id+':done'];toast('Completion photo saved');}
+});
+async function removeDonePhoto(i){
+  var ok=await write('setDonePhoto',[token,i.id,'']);
+  if(ok){delete S.photos[i.id+':done'];toast('Completion photo removed');}
 }
 async function toJpeg(file){
   var url=URL.createObjectURL(file);
