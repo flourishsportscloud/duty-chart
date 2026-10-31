@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f4e8c">
+<title>Lost and Found Desk – FIS</title>
+<link rel="icon" href="../fis/fis-icon-192.png">
+<link rel="apple-touch-icon" href="../fis/fis-icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: phone-first single column. Top bar with the signed-in staff name, one screen at a time, and a fixed bottom tab bar (Home, Complaints, Found, Floor round, History). Cases open as a full-screen layer; forms open as bottom sheets. */
+:root {
+  --bg: #f3f5f8;
+  --surface: #ffffff;
+  --surface-2: #f6f8fa;
+  --ink: #1a2530;
+  --muted: #5a6876;
+  --line: #dbe1e8;
+  --accent: #1f4e8c;
+  --accent-ink: #ffffff;
+  --danger: #b3261e;
+  --amber-bg: #fff1cf;
+  --amber-fg: #7a5200;
+  --blue-bg: #e1ecfa;
+  --blue-fg: #1f4e8c;
+  --green-bg: #dff1e3;
+  --green-fg: #1b6a33;
+  --grey-bg: #eceff3;
+  --grey-fg: #4a5662;
+  --font: "Figtree", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11171e; --surface: #19222c; --surface-2: #1f2a36; --ink: #e7edf3; --muted: #94a3b2; --line: #2c3946;
+    --accent: #6aa5ec; --accent-ink: #0b1b2e; --danger: #f28b82;
+    --amber-bg: #4a3a12; --amber-fg: #f3d58a; --blue-bg: #1b3552; --blue-fg: #a9cdf5;
+    --green-bg: #1b4127; --green-fg: #a8ddb2; --grey-bg: #27323d; --grey-fg: #b6c2cd;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11171e; --surface: #19222c; --surface-2: #1f2a36; --ink: #e7edf3; --muted: #94a3b2; --line: #2c3946;
+  --accent: #6aa5ec; --accent-ink: #0b1b2e; --danger: #f28b82;
+  --amber-bg: #4a3a12; --amber-fg: #f3d58a; --blue-bg: #1b3552; --blue-fg: #a9cdf5;
+  --green-bg: #1b4127; --green-fg: #a8ddb2; --grey-bg: #27323d; --grey-fg: #b6c2cd;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 16px; line-height: 1.45;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 16px calc(96px + env(safe-area-inset-bottom, 0px));
+}
+.app { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+h1 { font-size: 22px; line-height: 1.2; margin: 0; font-weight: 700; }
+h2 { font-size: 18px; line-height: 1.25; margin: 0; font-weight: 700; }
+h3 { font-size: 16px; line-height: 1.3; margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+p { margin: 0; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.topbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 12px; }
+.who { font-size: 14px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; }
+.linkbtn { background: none; border: 0; padding: 6px 2px; color: var(--accent); font-weight: 600; font-size: 14px; min-height: 36px; }
+
+input[type=text], input[type=password], input[type=date], input[type=time], input[type=search], select, textarea {
+  width: 100%; min-height: 48px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+}
+textarea { min-height: 88px; resize: vertical; }
+input[type=checkbox] { width: 24px; height: 24px; flex: none; accent-color: var(--accent); }
+.field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.field label, .lbl { font-size: 13px; font-weight: 600; color: var(--muted); }
+.check { display: flex; gap: 12px; align-items: flex-start; font-weight: 500; min-height: 44px; }
+.check span { padding-top: 1px; }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.three { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.stack { display: flex; flex-direction: column; gap: 14px; }
+
+.btn { min-height: 48px; padding: 8px 18px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); font-weight: 600; }
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.danger { color: var(--danger); border-color: var(--danger); }
+.btn.small { min-height: 44px; padding: 6px 14px; font-size: 15px; }
+.btn.ghost { background: transparent; }
+.btn.block { width: 100%; }
+.btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; }
+
+.bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 15; background: var(--surface); border-top: 1px solid var(--line); display: flex;
+  padding: 4px max(6px, env(safe-area-inset-right, 0px)) calc(4px + env(safe-area-inset-bottom, 0px)) max(6px, env(safe-area-inset-left, 0px)); }
+.tabbtn { flex: 1 1 0; min-width: 0; min-height: 56px; border: 0; background: transparent; color: var(--muted); font-weight: 600; font-size: 12.5px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 8px; }
+.tabbtn .badge { font-size: 12px; font-weight: 700; min-width: 22px; padding: 0 6px; border-radius: 999px; background: var(--grey-bg); color: var(--grey-fg); font-variant-numeric: tabular-nums; }
+.tabbtn[aria-current="page"] { color: var(--accent); background: var(--blue-bg); }
+.tabbtn[aria-current="page"] .badge { background: var(--accent); color: var(--accent-ink); }
+
+.screenhead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
+.counts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.count { display: flex; flex-direction: column; gap: 2px; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px; min-height: 84px; }
+.count b { font-size: 30px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.count span { color: var(--muted); font-size: 14px; font-weight: 600; }
+.quick { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+
+.filters { display: flex; flex-direction: column; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { min-height: 44px; padding: 4px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); font-weight: 600; }
+.chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+
+.list { display: flex; flex-direction: column; gap: 10px; }
+.row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+.row.withthumb { grid-template-columns: 72px minmax(0, 1fr); gap: 12px; align-items: start; }
+.row .thumb { width: 72px; height: 72px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); background: var(--surface-2); }
+.row .nothumb { width: 72px; height: 72px; border-radius: 8px; border: 1px dashed var(--line); display: grid; place-items: center; color: var(--muted); font-size: 12px; text-align: center; }
+.rtop { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 10px; align-items: flex-start; }
+.rsub { color: var(--muted); font-size: 14px; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.hint { font-size: 14px; font-weight: 600; color: var(--green-fg); }
+.sec { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin: 4px 0 -4px; }
+
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.pill { font-size: 13px; font-weight: 600; padding: 2px 9px; border-radius: 6px; white-space: nowrap; }
+.p-amber { background: var(--amber-bg); color: var(--amber-fg); }
+.p-blue { background: var(--blue-bg); color: var(--blue-fg); }
+.p-green { background: var(--green-bg); color: var(--green-fg); }
+.p-grey { background: var(--grey-bg); color: var(--grey-fg); }
+.p-red { background: var(--danger); color: var(--surface); }
+.p-line { border: 1px solid var(--line); color: var(--muted); }
+
+.empty { text-align: center; padding: 32px 16px; border: 1px dashed var(--line); border-radius: 10px; color: var(--muted); display: flex; flex-direction: column; gap: 10px; align-items: center; background: var(--surface); }
+.empty strong { font-size: 17px; color: var(--ink); }
+.empty p { max-width: 42ch; }
+.notice { padding: 12px 14px; border-radius: 8px; background: var(--surface); border: 1px solid var(--line); color: var(--muted); font-size: 15px; }
+
+.overlay { position: fixed; inset: 0; z-index: 20; background: var(--bg); overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding-top: calc(12px + env(safe-area-inset-top, 0px)); padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.overlay .inner { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.casehead { display: flex; align-items: center; gap: 10px; }
+.casehead .code { font-weight: 700; font-variant-numeric: tabular-nums; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.photos { display: flex; flex-direction: column; gap: 10px; }
+.bigphoto { width: 100%; height: auto; max-height: 72vh; object-fit: contain; border-radius: 8px; border: 1px solid var(--line); background: var(--surface-2); display: block; cursor: zoom-in; }
+.nophoto { padding: 28px 12px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: 8px; }
+.dl { display: grid; grid-template-columns: minmax(96px, auto) minmax(0, 1fr); gap: 6px 14px; font-size: 15px; margin: 0; }
+.dl dt { color: var(--muted); }
+.dl dd { margin: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.match { display: flex; flex-direction: column; gap: 8px; border: 1px solid var(--line); border-radius: 8px; padding: 10px; background: var(--surface-2); }
+.match .mhead { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 10px; align-items: center; }
+.match .mhead.nothumb { grid-template-columns: minmax(0, 1fr); }
+.match img { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); }
+.reasons { font-size: 14px; color: var(--muted); }
+.hist { display: flex; flex-direction: column; gap: 0; }
+.hist .h { padding: 10px 0; border-top: 1px solid var(--line); font-size: 15px; }
+.hist .h:first-child { border-top: 0; }
+.hist .h time { display: block; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.proof { display: flex; flex-direction: column; gap: 10px; }
+.proof img { width: 100%; max-height: 60vh; object-fit: contain; border-radius: 8px; border: 1px solid var(--line); background: #fff; cursor: zoom-in; }
+
+.group h2 { font-size: 16px; padding: 8px 0 6px; border-bottom: 2px solid var(--line); display: flex; justify-content: space-between; gap: 8px; }
+.group h2 span { font-size: 14px; font-weight: 500; color: var(--muted); }
+.group + .group { margin-top: 8px; }
+.rcard { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.rcard.shown { border-color: var(--green-fg); }
+
+.shwrap { position: fixed; inset: 0; z-index: 40; display: flex; align-items: flex-end; justify-content: center; }
+.backdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.5); }
+.sheet { position: relative; background: var(--surface); width: 100%; max-width: 640px; max-height: 94vh; overflow-y: auto; border-radius: 16px 16px 0 0; -webkit-overflow-scrolling: touch;
+  padding: 16px max(16px, env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.sheet .shead { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 14px; }
+.err { color: var(--danger); font-size: 15px; font-weight: 600; min-height: 1.2em; }
+.pw { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.pw .pimg { position: relative; }
+.pw .pimg img { width: 92px; height: 92px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); display: block; }
+.pw .pimg button { position: absolute; top: 2px; right: 2px; min-height: 32px; width: 32px; border-radius: 6px; border: 0; background: rgba(0,0,0,0.65); color: #fff; font-weight: 700; padding: 0; }
+.pw .addbtn { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 8px 18px; border-radius: 8px; border: 1px dashed var(--accent); color: var(--accent); font-weight: 600; cursor: pointer; background: var(--surface-2); }
+.sig { width: 100%; height: 150px; border: 1px solid var(--line); border-radius: 8px; background: #fff; touch-action: none; display: block; }
+
+.lightbox { position: fixed; inset: 0; z-index: 60; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.lightbox img { max-width: 100%; max-height: 100%; border-radius: 8px; background: #fff; }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(80px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 12px 16px; border-radius: 8px; font-weight: 600; z-index: 70; max-width: calc(100% - 32px); }
+@media (min-width: 640px) { .counts { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <a class="linkbtn" href="../fis/" style="align-self:flex-start">‹ All FIS apps</a>
+  <header class="topbar">
+    <h1>Lost and Found Desk</h1>
+    <div class="who" id="who"></div>
+  </header>
+  <main id="screen" aria-live="polite"></main>
+</div>
+<nav class="bar" id="bar" aria-label="Main"></nav>
+<div class="overlay" id="case" hidden></div>
+<div class="shwrap" id="shwrap" hidden><div class="backdrop" data-act="sheet-close"></div><div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title"></div></div>
+<div class="lightbox" id="lb" hidden><img id="lbimg" alt="Photo, enlarged"></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function () {
+  "use strict";
+  var CATS = ["Water bottle", "Lunch box / tiffin", "Uniform & clothing", "Bag", "Books & stationery", "Sports gear", "Jewellery & watch", "Electronics", "Other"];
+  var LOCS = ["Ground floor", "1st floor", "2nd floor", "3rd floor", "Playground", "Canteen", "School bus", "Sports room", "Library", "Staff room", "Other"];
+  var CHANNELS = [["door", "At the door"], ["desk", "At the parents' desk"], ["call", "By call"], ["diary", "Through the diary"], ["app", "Through the app"], ["other", "Other"]];
+  var RTYPES = [["parent", "Parent"], ["student", "Child"], ["teacher", "Staff member"], ["other", "Other"]];
+  var RELS = [["self", "The student (owner)"], ["parent", "Parent or guardian"], ["teacher", "Teacher"], ["other", "Other"]];
+  var STOP = { the: 1, and: 1, with: 1, for: 1, has: 1, one: 1, its: 1, was: 1, are: 1, not: 1, demo: 1 };
+  var TABS = [["home", "Home"], ["complaints", "Complaints"], ["found", "Found"], ["round", "Floor round"], ["history", "History"]];
+  var STRONG = 10, MAYBE = 5, REVIEW_DAYS = 30;
+
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
+  var pad = function (n) { return n < 10 ? "0" + n : "" + n; };
+  var dstr = function (d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); };
+  var today = function () { return dstr(new Date()); };
+  function nowInfo() { var d = new Date(); return { at: d.getTime(), date: dstr(d), time: pad(d.getHours()) + ":" + pad(d.getMinutes()) }; }
+  function parseD(s) { return new Date(s + "T00:00:00"); }
+  function dayDiff(a, b) { return Math.round((parseD(b) - parseD(a)) / 86400000); }
+  function daysAgo(date) { return date ? Math.max(0, dayDiff(date, today())) : 0; }
+  function fmtDate(s) { if (!s) return ""; try { return parseD(s).toLocaleDateString("en-IN", { day: "numeric", month: "short" }); } catch (e) { return s; } }
+  function fmtTime(t) { if (!t) return ""; try { return new Date("2000-01-01T" + t + ":00").toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" }); } catch (e) { return t; } }
+  function fmtDay(d, t) { return fmtDate(d) + (t ? ", " + fmtTime(t) : ""); }
+  function fmtDT(ms) { if (!ms) return ""; try { return new Date(ms).toLocaleString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit", second: "2-digit" }); } catch (e) { return ""; } }
+  function csvDT(ms) { if (!ms) return ""; var d = new Date(ms); return dstr(d) + " " + pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds()); }
+  function mkId(p) { return p + "-" + Date.now().toString(36).slice(-5) + Math.random().toString(36).slice(2, 5); }
+  var DATA_OK = /^data:image\/(jpeg|png);base64,[A-Za-z0-9+\/=]+$/;
+  var PH = {}, PHq = {}, PHbusy = 0, PHtimer = 0;
+  function isPid(p) { return typeof p === "string" && /^p_[a-z0-9]{6,40}$/.test(p); }
+  function safeImg(p) {
+    if (typeof p !== "string") return "";
+    if (isPid(p)) { if (PH[p]) return PH[p]; if (!PHq[p]) { PHq[p] = 1; clearTimeout(PHtimer); PHtimer = setTimeout(pumpPh, 30); } return ""; }
+    return DATA_OK.test(p) ? p : "";
+  }
+  function hasPh(arr) { return !!(arr && arr.length); }
+  function pumpPh() {
+    if (!TOKEN || PHbusy >= 2) return;
+    var ids = Object.keys(PHq).filter(function (k) { return PHq[k] === 1; }).slice(0, 6);
+    if (!ids.length) return;
+    ids.forEach(function (k) { PHq[k] = 2; }); PHbusy++;
+    tcall("photo", [ids]).then(function (m) { Object.keys(m || {}).forEach(function (k) { PH[k] = m[k]; }); }, function () {})
+      .then(function () {
+        var got = false;
+        ids.forEach(function (k) { if (PH[k]) { delete PHq[k]; got = true; } else PHq[k] = 3; });
+        PHbusy--;
+        if (got) rerenderPh();
+        pumpPh();
+      });
+  }
+  function rerenderPh() {
+    if (!S.me) return;
+    if (S.route === "home") renderScreen(); else renderList();
+    if (S.caseId) renderCase();
+  }
+  function label(list, key) { for (var i = 0; i < list.length; i++) if (list[i][0] === key) return list[i][1]; return key || ""; }
+  function opts(list, sel, blank) {
+    var h = blank != null ? '<option value="">' + esc(blank) + "</option>" : "";
+    return h + list.map(function (x) { var v = Array.isArray(x) ? x[0] : x, t = Array.isArray(x) ? x[1] : x; return '<option value="' + esc(v) + '"' + (v === sel ? " selected" : "") + ">" + esc(t) + "</option>"; }).join("");
+  }
+  var toastTimer;
+  function toast(m) { var t = $("#toast"); t.textContent = m; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.hidden = true; }, 3200); }
+
+  /* ---------- state ---------- */
+  var S = { found: [], comps: [], hist: [], rdy: { f: false, c: false, h: false }, route: "home", caseId: "", name: "", uid: "", profileName: false, isMgr: false, isAdmin: false, me: null, users: [], canWrite: true, noDb: false, fail: false, caseHist: {}, proofs: {} };
+  var M = { byC: {}, byI: {} };
+  var colF = null, colC = null, colH = null, db = null;
+  /* The page keeps its records in a Google Sheet through an Apps Script web app (see SETUP.md). */
+  var API_URL = "";   // paste the Web app URL (ends in /exec) between the quotes, or open the page with ?api=<that URL>
+  try { API_URL = new URLSearchParams(location.search).get("api") || API_URL; } catch (e) {}
+  var TOKEN = "", lastSig = "", pollOn = false;
+  function call(fn, args) {
+    return fetch(API_URL, { method: "POST", redirect: "follow", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ fn: fn, args: args || [] }) })
+      .then(function (r) { return r.json(); })
+      .then(function (j) { if (!j.ok) throw new Error(j.err || "Something went wrong."); return j.v; });
+  }
+  function tcall(fn, args) {
+    return call(fn, [TOKEN].concat(args || [])).catch(function (e) { if (/log in again/i.test(e && e.message)) logout(true); throw e; });
+  }
+  function wr(ops) { return tcall("write", [ops]).then(function (st) { applyState(st); }); }
+  function ref(col, id) { return { set: function (d) { return wr([{ op: "set", col: col, id: id, data: d }]); }, update: function (d) { return wr([{ op: "update", col: col, id: id, data: d }]); } }; }
+  function colRef(col) { return { doc: function (id) { return ref(col, id); } }; }
+  colF = colRef("found"); colC = colRef("complaints"); colH = colRef("history");
+  db = { doc: function (path) { var id = path.split("/")[1], r = ref("handovers", id); r.get = function () { return tcall("handover", [id]).then(function (v) { return { exists: !!v, data: function () { return v; } }; }); }; return r; } };
+  function applyState(st, quiet) {
+    if (!st || !st.me) { logout(true); return; }
+    var sig = JSON.stringify([st.found, st.comps, st.hist.length, st.hist[0] && st.hist[0].id, st.users, st.me]);
+    if (quiet && sig === lastSig && S.me) return;
+    lastSig = sig;
+    if (!pollOn) { pollOn = true; setInterval(poll, 20000); document.addEventListener("visibilitychange", poll); }
+    S.me = st.me; S.name = st.me.name; S.profileName = true; S.isMgr = st.me.role !== "staff"; S.isAdmin = st.me.role === "admin"; S.users = st.users || [];
+    S.found = st.found || []; S.comps = st.comps || []; S.hist = st.hist || []; S.rdy = { f: true, c: true, h: true }; S.fail = false;
+    refresh();
+  }
+  function poll() { if (!TOKEN || !S.me || document.hidden) return; tcall("state").then(function (st) { applyState(st, true); }, function () {}); }
+  function logout(expired) {
+    TOKEN = ""; try { localStorage.removeItem("lf-token"); } catch (e) {}
+    S.me = null; S.isMgr = false; S.isAdmin = false; S.rdy = { f: false, c: false, h: false }; S.found = []; S.comps = []; S.hist = []; S.proofs = {}; PH = {}; PHq = {}; lastSig = "";
+    $("#case").hidden = true; S.caseId = ""; closeSheet();
+    renderAuth("login", expired ? "Please log in again." : "");
+  }
+  function saveText(name, text) {
+    var b = new Blob([text], { type: "text/csv;charset=utf-8" }), a = document.createElement("a");
+    a.href = URL.createObjectURL(b); a.download = name; document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 800);
+  }
+  function newF() { return { range: "all", from: "", to: "", status: "", cat: "", loc: "", q: "" }; }
+  var FV = { mode: "list" };
+  var F = { complaints: newF(), found: newF(), history: newF(), round: { loc: "", q: "", hideShown: false, restricted: false } };
+
+  /* ---------- statuses ---------- */
+  function ckey(c) { return c.status === "closed" ? (c.closeReason === "returned" ? "closed_returned" : "closed_not_found") : c.status; }
+  function flagged(f) { return f.status === "in_stock" && daysAgo(f.foundDate) >= REVIEW_DAYS; }
+  function pill(cls, t) { return '<span class="pill ' + cls + '">' + esc(t) + "</span>"; }
+  function cPill(c) {
+    var k = ckey(c);
+    if (k === "open") return pill("p-amber", "Open");
+    if (k === "matched") return pill("p-blue", "Matched");
+    if (k === "closed_returned") return pill("p-green", "Closed: returned");
+    return pill("p-grey", "Closed: not found");
+  }
+  function fPills(f) {
+    var h = "";
+    if (f.status === "in_stock") h += pill("p-blue", "In stock");
+    else if (f.status === "ready") h += pill("p-amber", "Ready to hand over");
+    else if (f.status === "returned") h += pill("p-green", "Returned");
+    else h += pill("p-grey", f.disposal && f.disposal.kind === "donate" ? "Disposed: donated" : "Disposed");
+    if (f.restricted) h += pill("p-red", "Restricted");
+    if (flagged(f)) h += pill("p-red", "30+ days: review");
+    if (f.demo) h += pill("p-line", "Demo");
+    return h;
+  }
+  var C_STAT = [["open", "Open (pending)"], ["matched", "Matched"], ["closed_returned", "Closed: returned"], ["closed_not_found", "Closed: not found"]];
+  var F_STAT = [["in_stock", "In stock"], ["ready", "Ready to hand over"], ["returned", "Returned"], ["disposed", "Disposed"], ["review", "30+ days: review"]];
+  var H_STAT = [["open", "Open complaint"], ["matched", "Matched complaint"], ["closed_returned", "Closed: returned"], ["closed_not_found", "Closed: not found"], ["in_stock", "In stock"], ["ready", "Ready to hand over"], ["returned", "Returned item"], ["disposed", "Disposed"]];
+
+  /* ---------- matching ---------- */
+  function toks(s) { var o = {}; String(s || "").toLowerCase().split(/[^a-z0-9]+/).forEach(function (w) { if (w.length > 2 && !STOP[w]) o[w] = 1; }); return o; }
+  function norm(s) { return String(s || "").toLowerCase().replace(/[^a-z0-9]/g, ""); }
+  function scorePair(c, f) {
+    var s = 0, r = [];
+    if (c.category && c.category === f.category) { s += 3; r.push("Same category"); }
+    var cw = toks(c.title + " " + c.desc), fw = toks(f.title + " " + f.desc + " " + f.nameOnItem), hit = [];
+    Object.keys(cw).forEach(function (w) { if (fw[w]) hit.push(w); });
+    if (hit.length) { s += Math.min(hit.length, 4) * 2; r.push("Shared words: " + hit.slice(0, 4).join(", ")); }
+    var nm = toks(c.reporterName), fn = toks(f.nameOnItem), nh = false;
+    Object.keys(nm).forEach(function (w) { if (fn[w]) nh = true; });
+    if (nh) { s += 5; r.push("Name on item matches the reporter"); }
+    var cc = norm(c.reporterClass), fc = norm(f.classOnItem);
+    if (cc && fc && cc === fc) { s += 3; r.push("Class matches"); }
+    if (c.lastSeenPlace && f.location && c.lastSeenPlace === f.location) { s += 2; r.push("Same place"); }
+    if (c.lastSeenDate && f.foundDate) {
+      var d = dayDiff(c.lastSeenDate, f.foundDate);
+      if (d < 0) { s -= 3; r.push("Found before it was last seen"); }
+      else if (d <= 14) { s += 2; r.push(d === 0 ? "Found the same day" : "Found " + d + (d === 1 ? " day" : " days") + " after last seen"); }
+      else s -= 1;
+    }
+    return { s: s, r: r };
+  }
+  function recompute() {
+    M = { byC: {}, byI: {} };
+    var open = S.comps.filter(function (c) { return c.status === "open"; });
+    var stock = S.found.filter(function (f) { return f.status === "in_stock"; });
+    open.forEach(function (c) {
+      var arr = [];
+      stock.forEach(function (f) { var x = scorePair(c, f); if (x.s >= MAYBE) arr.push({ c: c, f: f, s: x.s, r: x.r }); });
+      arr.sort(function (a, b) { return b.s - a.s; });
+      M.byC[c.id] = arr.slice(0, 5);
+      arr.forEach(function (x) { (M.byI[x.f.id] = M.byI[x.f.id] || []).push(x); });
+    });
+    Object.keys(M.byI).forEach(function (k) { M.byI[k].sort(function (a, b) { return b.s - a.s; }); M.byI[k] = M.byI[k].slice(0, 5); });
+  }
+
+  /* ---------- filters ---------- */
+  function weekStart() { var d = new Date(); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return dstr(d); }
+  function inRange(date, f) {
+    if (f.range === "all") return true;
+    if (!date) return false;
+    if (f.range === "today") return date === today();
+    if (f.range === "week") return date >= weekStart() && date <= today();
+    return (!f.from || date >= f.from) && (!f.to || date <= f.to);
+  }
+  function qHit(q, arr) { if (!q) return true; return arr.join(" ").toLowerCase().indexOf(q.toLowerCase()) !== -1; }
+  function cPass(c, f) {
+    if (!inRange(c.reportedDate, f)) return false;
+    if (f.status && ckey(c) !== f.status) return false;
+    if (f.cat && c.category !== f.cat) return false;
+    if (f.loc && c.lastSeenPlace !== f.loc) return false;
+    return qHit(f.q, [c.code, c.title, c.desc, c.reporterName, c.reporterClass, c.lastSeenPlace, c.loggedBy, c.category, label(CHANNELS, c.channel)]);
+  }
+  function fPass(x, f) {
+    if (!inRange(x.foundDate, f)) return false;
+    if (f.status === "review") { if (!flagged(x)) return false; } else if (f.status && x.status !== f.status) return false;
+    if (f.cat && x.category !== f.cat) return false;
+    if (f.loc && x.location !== f.loc) return false;
+    return qHit(f.q, [x.code, x.title, x.desc, x.location, x.keptAt, x.foundBy, x.loggedBy, x.category, x.nameOnItem, x.classOnItem]);
+  }
+  function caseOf(h) { return h.caseType === "found" ? byId(S.found, h.caseId) : byId(S.comps, h.caseId); }
+  function hPass(h, f) {
+    var d = dstr(new Date(h.at)), rec = caseOf(h);
+    if (!inRange(d, f)) return false;
+    if (f.status) { if (!rec) return false; var k = h.caseType === "found" ? rec.status : ckey(rec); if (k !== f.status) return false; }
+    if (f.cat && (!rec || rec.category !== f.cat)) return false;
+    if (f.loc && (!rec || (rec.location || rec.lastSeenPlace) !== f.loc)) return false;
+    return qHit(f.q, [h.code, h.title, h.action, h.detail, h.by]);
+  }
+  function byId(list, id) { for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i]; return null; }
+  function filterBar(key, statOpts) {
+    var f = F[key];
+    return '<div class="filters" data-fkey="' + key + '">' +
+      '<input type="search" data-fk="q" placeholder="Search" value="' + esc(f.q) + '" aria-label="Search">' +
+      '<div class="chips">' + [["all", "All dates"], ["today", "Today"], ["week", "This week"], ["custom", "Custom"]].map(function (r) {
+        return '<button type="button" class="chip" data-frange="' + r[0] + '" aria-pressed="' + (f.range === r[0]) + '">' + r[1] + "</button>";
+      }).join("") + "</div>" +
+      (f.range === "custom" ? '<div class="two"><div class="field"><label for="ff-from">From</label><input type="date" id="ff-from" data-fk="from" value="' + esc(f.from) + '"></div><div class="field"><label for="ff-to">To</label><input type="date" id="ff-to" data-fk="to" value="' + esc(f.to) + '"></div></div>' : "") +
+      '<div class="three"><div class="field"><label for="ff-st">Status</label><select id="ff-st" data-fk="status">' + opts(statOpts, f.status, "All statuses") + "</select></div>" +
+      '<div class="field"><label for="ff-cat">Category</label><select id="ff-cat" data-fk="cat">' + opts(CATS, f.cat, "All categories") + "</select></div>" +
+      '<div class="field"><label for="ff-loc">Floor or location</label><select id="ff-loc" data-fk="loc">' + opts(LOCS, f.loc, "All locations") + "</select></div></div>" +
+      '<div><button type="button" class="btn small ghost" data-act="fclear">Clear filters</button></div></div>';
+  }
+  function filtersActive(f) { return f.range !== "all" || f.status || f.cat || f.loc || f.q; }
+
+  /* ---------- rows ---------- */
+  function emptyBox(title, text, btn) { return '<div class="empty"><strong>' + esc(title) + "</strong><p>" + esc(text) + "</p>" + (btn || "") + "</div>"; }
+  function noMatchBox() { return emptyBox("Nothing matches", "Try other filters or a different search.", '<button type="button" class="btn" data-act="fclear">Clear filters</button>'); }
+  function complaintRow(c) {
+    var best = c.status === "open" && M.byC[c.id] && M.byC[c.id][0];
+    return '<a class="row" href="#case-' + c.id + '"><div class="rtop"><h3>' + esc(c.title) + '</h3><span class="tags">' + (c.demo ? pill("p-line", "Demo") : "") + cPill(c) + "</span></div>" +
+      '<div class="rsub">' + esc([c.reporterName, c.reporterClass].filter(Boolean).join(", ")) + "</div>" +
+      '<div class="rsub">' + esc(label(CHANNELS, c.channel) + " · Reported " + fmtDT(c.at)) + "</div>" + (c.lastRemark ? '<div class="rsub">' + esc("Remark: " + c.lastRemark) + "</div>" : "") +
+      '<div class="rsub">' + esc("Last seen: " + (c.lastSeenPlace || "not noted") + ", " + fmtDay(c.lastSeenDate, c.lastSeenTime)) + "</div>" +
+      (best ? '<div class="hint">' + (best.s >= STRONG ? "Strong match" : "Possible match") + ": " + esc(best.f.title) + "</div>" : "") + "</a>";
+  }
+  function foundRow(f) {
+    var ph = safeImg((f.photos || [])[0]);
+    return '<a class="row withthumb" href="#case-' + f.id + '">' + (ph ? '<img class="thumb" src="' + ph + '" alt="">' : '<div class="nothumb">' + (hasPh(f.photos) ? "Loading" : "No photo") + "</div>") +
+      '<div><div class="rtop"><h3>' + esc(f.title) + '</h3><span class="tags">' + fPills(f) + "</span></div>" +
+      '<div class="rsub">' + esc(f.category + " · " + (f.location || "")) + "</div>" +
+      '<div class="rsub">' + esc("Found " + fmtDay(f.foundDate, f.foundTime) + " by " + (f.foundBy || "not noted")) + "</div>" +
+      '<div class="rsub">' + esc("Kept at: " + (f.keptAt || "not noted")) + "</div>" + (f.lastRemark ? '<div class="rsub">' + esc("Remark: " + f.lastRemark) + "</div>" : "") + "</div></a>";
+  }
+  function histRow(h) {
+    var rec = caseOf(h);
+    return '<a class="row" href="#case-' + h.caseId + '"><div class="rsub">' + esc(fmtDT(h.at)) + '</div><div><b>' + esc(h.action) + "</b>" + (h.detail ? esc(": " + h.detail) : "") + "</div>" +
+      '<div class="rsub">' + esc((h.code || "") + " · " + (rec ? rec.title : h.title || "") + " · by " + (h.by || "unknown")) + "</div></a>";
+  }
+
+  /* ---------- screens ---------- */
+  function renderBar() {
+    var openC = S.comps.filter(function (c) { return c.status === "open"; }).length;
+    var stock = S.found.filter(function (f) { return f.status === "in_stock"; }).length;
+    var act = needs().length;
+    var badges = { home: act, complaints: openC, found: stock, round: "", history: "" };
+    $("#bar").innerHTML = TABS.map(function (t) {
+      var b = badges[t[0]];
+      return '<button type="button" class="tabbtn" data-tab="' + t[0] + '"' + (S.route === t[0] ? ' aria-current="page"' : "") + "><span>" + t[1] + "</span>" + (b !== "" && b != null ? '<span class="badge">' + b + "</span>" : '<span class="badge" style="visibility:hidden">0</span>') + "</button>";
+    }).join("");
+  }
+  function renderWho() {
+    if (!S.me) { $("#who").innerHTML = ""; return; }
+    var h = "Signed in as <b>" + esc(S.name) + "</b> " + pill("p-blue", S.isAdmin ? "Admin" : S.isMgr ? "Incharge" : "Staff");
+    if (S.isAdmin) h += ' <button type="button" class="linkbtn" data-act="team">Team logins' + (S.users.some(function (u) { return u.status === "pending"; }) ? " (new)" : "") + "</button>";
+    h += ' <button type="button" class="linkbtn" data-act="logout">Log out</button>';
+    $("#who").innerHTML = h;
+  }
+  function loading() { return !(S.rdy.f && S.rdy.c && S.rdy.h); }
+  function renderScreen() {
+    var box = $("#screen");
+    if (S.noDb) { box.innerHTML = emptyBox("Not connected yet", "This page is waiting for its Google Sheet connection. See SETUP.md in the lostfound folder."); return; }
+    if (S.fail) { box.innerHTML = emptyBox("The records did not load", "Reload the page. If it keeps happening, check that you still have access."); return; }
+    if (loading()) { box.innerHTML = emptyBox("Loading records", "One moment."); return; }
+    if (S.route === "home") renderHome();
+    else if (S.route === "complaints") {
+      box.innerHTML = '<div class="stack"><div class="screenhead"><h2>Complaints</h2>' + (S.canWrite ? '<button type="button" class="btn primary" data-act="log-comp">Log complaint</button>' : "") + "</div>" + filterBar("complaints", C_STAT) + '<div class="list" id="flist"></div></div>';
+      renderList();
+    } else if (S.route === "found") {
+      box.innerHTML = '<div class="stack"><div class="screenhead"><h2>Found and stock</h2>' + (S.canWrite ? '<button type="button" class="btn primary" data-act="log-found">Log found item</button>' : "") + "</div>" + '<div class="chips"><button type="button" class="chip" data-fview="list" aria-pressed="' + (FV.mode === "list") + '">All items</button><button type="button" class="chip" data-fview="item" aria-pressed="' + (FV.mode === "item") + '">Item-wise stock</button></div>' + filterBar("found", F_STAT) + '<div class="list" id="flist"></div></div>';
+      renderList();
+    } else if (S.route === "history") {
+      box.innerHTML = '<div class="stack"><div class="screenhead"><h2>History</h2><button type="button" class="btn" data-act="export">Export all records (CSV)</button></div>' + filterBar("history", H_STAT) + '<div class="list" id="flist"></div></div>';
+      renderList();
+    } else if (S.route === "round") {
+      var r = F.round;
+      box.innerHTML = '<div class="stack"><div class="screenhead"><h2>Floor round</h2></div>' +
+        '<div class="filters" data-fkey="round"><input type="search" data-rk="q" placeholder="Search items" value="' + esc(r.q) + '" aria-label="Search items">' +
+        '<div class="field"><label for="fr-loc">Floor or location</label><select id="fr-loc" data-rk="loc">' + opts(LOCS, r.loc, "All floors and locations") + "</select></div>" +
+        '<label class="check"><input type="checkbox" data-rk="hideShown"' + (r.hideShown ? " checked" : "") + "><span>Hide items already shown today</span></label>" +
+        '<label class="check"><input type="checkbox" data-rk="restricted"' + (r.restricted ? " checked" : "") + "><span>Include restricted items</span></label></div>" +
+        '<div id="flist" class="stack"></div></div>';
+      renderList();
+    }
+  }
+  function renderList() {
+    var box = $("#flist");
+    if (!box || loading() || S.noDb || S.fail) return;
+    var r = S.route, list;
+    if (r === "complaints") {
+      if (!S.comps.length) { box.innerHTML = emptyBox("No complaints yet", "When someone reports a lost item, log it here. Open complaints are matched against found items.", S.canWrite ? '<button type="button" class="btn primary" data-act="log-comp">Log the first complaint</button>' : ""); return; }
+      list = S.comps.filter(function (c) { return cPass(c, F.complaints); }).sort(function (a, b) { return (b.at || 0) - (a.at || 0); });
+      box.innerHTML = list.length ? list.map(complaintRow).join("") : noMatchBox();
+    } else if (r === "found") {
+      if (!S.found.length) { box.innerHTML = emptyBox("No found items yet", "When a staff member finds something on campus, log it here with a photo and where it is kept.", S.canWrite ? '<button type="button" class="btn primary" data-act="log-found">Log the first item</button>' : ""); return; }
+      list = S.found.filter(function (x) { return fPass(x, F.found); }).sort(function (a, b) { return ((b.foundDate || "") + (b.foundTime || "")).localeCompare((a.foundDate || "") + (a.foundTime || "")) || (b.at || 0) - (a.at || 0); });
+      if (FV.mode === "item") {
+        if (!F.found.status) list = list.filter(function (x) { return x.status === "in_stock" || x.status === "ready"; });
+        if (!list.length) { box.innerHTML = emptyBox("No items in stock", "Items waiting for their owners are listed here item by item."); return; }
+        box.innerHTML = '<div class="notice">' + list.length + " items in stock, grouped by item type</div>" + CATS.filter(function (cn) { return list.some(function (x) { return x.category === cn; }); }).map(function (cn) {
+          var it = list.filter(function (x) { return x.category === cn; });
+          return '<section class="group"><h2>' + esc(cn) + " <span>" + it.length + "</span></h2><div class=\"list\" style=\"margin-top:10px\">" + it.map(foundRow).join("") + "</div></section>";
+        }).join("");
+        return;
+      }
+      box.innerHTML = list.length ? list.map(foundRow).join("") : noMatchBox();
+    } else if (r === "history") {
+      if (!S.hist.length) { box.innerHTML = emptyBox("No history yet", "Every action on a case is recorded here with the date, time and staff name."); return; }
+      list = S.hist.filter(function (h) { return hPass(h, F.history); }).sort(function (a, b) { return b.at - a.at; });
+      box.innerHTML = list.length ? list.map(histRow).join("") : noMatchBox();
+    } else if (r === "round") renderRoundList(box);
+  }
+  function renderRoundList(box) {
+    var r = F.round, td = today();
+    var stock = S.found.filter(function (x) { return x.status === "in_stock"; });
+    if (!stock.length) { box.innerHTML = emptyBox("No items in stock", "Items waiting for their owners appear here, grouped by floor, so floor managers can show them to students."); return; }
+    var hiddenRestricted = 0;
+    var list = stock.filter(function (x) {
+      if (x.restricted && !r.restricted) { hiddenRestricted++; return false; }
+      if (r.loc && x.location !== r.loc) return false;
+      if (r.hideShown && x.shownOn === td) return false;
+      return qHit(r.q, [x.code, x.title, x.desc, x.nameOnItem, x.classOnItem, x.category]);
+    });
+    var shown = stock.filter(function (x) { return x.shownOn === td; }).length;
+    var html = '<div class="notice">' + stock.length + " in stock · " + shown + " shown today" + (hiddenRestricted ? " · " + hiddenRestricted + " restricted not listed" : "") + "</div>";
+    if (!list.length) { box.innerHTML = html + emptyBox("Nothing to show", r.hideShown ? "Every matching item has been shown today. Untick the filter to see them again." : "No items match these filters.", '<button type="button" class="btn" data-act="fclear">Clear filters</button>'); return; }
+    var groups = LOCS.filter(function (l) { return list.some(function (x) { return x.location === l; }); });
+    list.forEach(function (x) { if (groups.indexOf(x.location) === -1) groups.push(x.location); });
+    html += groups.map(function (g) {
+      var items = list.filter(function (x) { return x.location === g; }).sort(function (a, b) { return ((b.foundDate || "") + (b.foundTime || "")).localeCompare((a.foundDate || "") + (a.foundTime || "")); });
+      return '<section class="group"><h2>' + esc(g || "No location") + " <span>" + items.length + (items.length === 1 ? " item" : " items") + "</span></h2><div class=\"list\" style=\"margin-top:10px\">" + items.map(roundCard).join("") + "</div></section>";
+    }).join("");
+    box.innerHTML = html;
+  }
+  function roundCard(x) {
+    var ph = safeImg((x.photos || [])[0]), td = today(), isShown = x.shownOn === td;
+    return '<article class="rcard' + (isShown ? " shown" : "") + '">' +
+      (ph ? '<img class="bigphoto" src="' + ph + '" alt="Photo of ' + esc(x.title) + '" data-zoom>' : '<div class="nophoto">' + (hasPh(x.photos) ? "Loading photo" : "No photo") + "</div>") +
+      '<div class="rtop"><h3>' + esc(x.title) + '</h3><span class="tags">' + fPills(x) + "</span></div>" +
+      (x.desc ? "<p>" + esc(x.desc) + "</p>" : "") +
+      '<div class="rsub">' + esc("Found " + fmtDay(x.foundDate, x.foundTime) + (x.nameOnItem ? " · Name on item: " + x.nameOnItem + (x.classOnItem ? ", " + x.classOnItem : "") : "")) + "</div>" +
+      (isShown ? '<div class="rsub">' + esc("Shown today " + fmtTime(dstr(new Date(x.shownAt || 0)) === td ? pad(new Date(x.shownAt).getHours()) + ":" + pad(new Date(x.shownAt).getMinutes()) : "") + " by " + (x.shownBy || "")) + "</div>" : "") +
+      '<div class="actions">' + (S.canWrite ? '<button type="button" class="btn ' + (isShown ? "" : "primary") + ' block" data-act="tick" data-id="' + x.id + '">' + (isShown ? "Shown on round (tap to undo)" : "Shown on round") + "</button>" : "") +
+      '<a class="btn block" style="text-align:center;display:flex;align-items:center;justify-content:center" href="#case-' + x.id + '">Open case</a></div></article>';
+  }
+
+  /* ---------- home ---------- */
+  function needs() {
+    var out = [];
+    S.comps.filter(function (c) { return c.status === "open"; }).forEach(function (c) {
+      var m = M.byC[c.id] && M.byC[c.id][0];
+      if (m && m.s >= STRONG) out.push({ p: 1, id: c.id, t: "Confirm match: " + c.title, s: "Strong match with " + m.f.title });
+    });
+    S.found.filter(function (f) { return f.status === "ready"; }).forEach(function (f) {
+      var c = byId(S.comps, f.matchedComplaintId);
+      out.push({ p: 2, id: f.id, t: "Ready to hand over: " + f.title, s: (c ? "For " + [c.reporterName, c.reporterClass].filter(Boolean).join(", ") : "Owner matched") + (f.restricted ? " · Restricted: senior staff only" : "") });
+    });
+    S.found.filter(flagged).forEach(function (f) {
+      out.push({ p: 3, id: f.id, t: "Review after " + daysAgo(f.foundDate) + " days: " + f.title, s: "Manager must confirm disposal or donation" });
+    });
+    S.comps.filter(function (c) { return c.status === "open" && daysAgo(c.reportedDate) >= 3 && !(M.byC[c.id] && M.byC[c.id][0] && M.byC[c.id][0].s >= STRONG); }).forEach(function (c) {
+      out.push({ p: 4, id: c.id, t: "Follow up: " + c.title, s: "Open for " + daysAgo(c.reportedDate) + " days · " + [c.reporterName, c.reporterClass].filter(Boolean).join(", ") });
+    });
+    return out.sort(function (a, b) { return a.p - b.p; });
+  }
+  function todayBlock() {
+    var td = today(), tc = S.comps.filter(function (c) { return c.reportedDate === td; }), tf = S.found.filter(function (f) { return f.foundDate === td; });
+    var h = "<h2>Today's cases</h2>";
+    if (!tc.length && !tf.length) return h + emptyBox("Nothing logged today", "Complaints and found items logged today appear here.");
+    return h + '<div class="list">' + tc.map(complaintRow).join("") + tf.map(foundRow).join("") + "</div>";
+  }
+  function renderHome() {
+    var openC = S.comps.filter(function (c) { return c.status === "open"; }).length;
+    var stock = S.found.filter(function (f) { return f.status === "in_stock"; }).length;
+    var ready = S.found.filter(function (f) { return f.status === "ready"; }).length;
+    var mk = today().slice(0, 7);
+    var ret = S.found.filter(function (f) { return f.status === "returned" && f.returnedAt && dstr(new Date(f.returnedAt)).slice(0, 7) === mk; }).length;
+    var n = needs(), demo = S.found.some(function (x) { return x.demo; }) || S.comps.some(function (x) { return x.demo; });
+    var html = '<div class="stack">' +
+      '<div class="counts">' +
+      '<button type="button" class="count" data-go="complaints" data-status="open"><b>' + openC + "</b><span>Pending complaints</span></button>" +
+      '<button type="button" class="count" data-go="found" data-status="in_stock"><b>' + stock + "</b><span>Items in stock</span></button>" +
+      '<button type="button" class="count" data-go="found" data-status="ready"><b>' + ready + "</b><span>Ready to hand over</span></button>" +
+      '<button type="button" class="count" data-go="found" data-status="returned" data-range="month"><b>' + ret + "</b><span>Returned this month</span></button></div>" +
+      (S.canWrite ? '<div class="quick"><button type="button" class="btn primary" data-act="log-found">Log found item</button><button type="button" class="btn primary" data-act="log-comp">Log complaint</button></div>' : '<div class="notice">You can view records. Logging needs Contributor access.</div>') +
+      "<h2>Needs action</h2>" +
+      (n.length ? '<div class="list">' + n.slice(0, 20).map(function (x) { return '<a class="row" href="#case-' + x.id + '"><h3>' + esc(x.t) + '</h3><div class="rsub">' + esc(x.s) + "</div></a>"; }).join("") + (n.length > 20 ? '<div class="notice">' + (n.length - 20) + " more. Use Complaints and Found to see them all.</div>" : "") + "</div>"
+        : emptyBox("Nothing needs action", "New matches, items ready to hand over and items waiting 30+ days show up here.")) +
+      todayBlock() +
+      '<div class="actions"><button type="button" class="btn" data-act="export">Export all records (CSV)</button>' + (demo && S.isAdmin ? '<button type="button" class="btn danger" data-act="demo-delete">Delete demo records</button>' : "") + (!demo && S.isAdmin && !S.found.length && !S.comps.length ? '<button type="button" class="btn" data-act="demo-load">Load demo records</button>' : "") + "</div>" +
+      (demo && !S.isAdmin ? '<div class="notice">Demo records are shown so you can try the flow. The admin can delete them from this screen.</div>' : "") +
+      "</div>";
+    $("#screen").innerHTML = html;
+  }
+
+  /* ---------- case screen ---------- */
+  function histFor(id) {
+    var seen = {}, out = [];
+    (S.hist || []).concat(S.caseHist[id] || []).forEach(function (h) { if (h.caseId === id && !seen[h.id]) { seen[h.id] = 1; out.push(h); } });
+    return out.sort(function (a, b) { return b.at - a.at; });
+  }
+  function histBlock(id) {
+    var hs = histFor(id);
+    return '<div class="card"><h2>History</h2>' + (hs.length ? '<div class="hist">' + hs.map(function (h) { return '<div class="h"><time>' + esc(fmtDT(h.at)) + "</time><b>" + esc(h.action) + "</b>" + (h.detail ? esc(": " + h.detail) : "") + " · " + esc(h.by || "unknown") + "</div>"; }).join("") + "</div>" : '<p class="rsub">No actions recorded yet.</p>') + "</div>";
+  }
+  function dlist(rows) { return '<dl class="dl">' + rows.filter(function (r) { return r[1]; }).map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd>"; }).join("") + "</dl>"; }
+  function back() { return '<div class="casehead"><button type="button" class="btn small" data-act="back">Back</button>'; }
+  function matchCard(x, forComplaint) {
+    var f = x.f, c = x.c, ph = safeImg((f.photos || [])[0]);
+    var title = forComplaint ? f.title : c.title;
+    var sub = forComplaint ? "Found " + fmtDay(f.foundDate, f.foundTime) + " · " + (f.location || "") : [c.reporterName, c.reporterClass].filter(Boolean).join(", ") + " · Reported " + fmtDay(c.reportedDate, c.reportedTime);
+    var label = x.s >= STRONG ? "Strong match" : "Possible match";
+    return '<div class="match"><div class="mhead' + (forComplaint && ph ? "" : " nothumb") + '">' + (forComplaint && ph ? '<img src="' + ph + '" alt="" data-zoom>' : "") +
+      "<div><b>" + esc(title) + "</b><div class=\"rsub\">" + esc(sub) + "</div><div>" + pill(x.s >= STRONG ? "p-green" : "p-amber", label) + '</div></div></div><div class="reasons">' + esc(x.r.join(" · ")) + "</div>" +
+      (S.canWrite ? '<button type="button" class="btn primary" data-act="confirm-match" data-c="' + c.id + '" data-f="' + f.id + '">Confirm match</button>' : "") +
+      '<a class="btn" style="text-align:center;display:flex;align-items:center;justify-content:center" href="#case-' + (forComplaint ? f.id : c.id) + '">Open ' + (forComplaint ? "item" : "complaint") + "</a></div>";
+  }
+  function renderCase() {
+    var box = $("#case"), id = S.caseId;
+    if (!id) { box.hidden = true; return; }
+    box.hidden = false;
+    if (S.noDb || loading()) { box.innerHTML = '<div class="inner">' + back() + "</div>" + emptyBox("Loading", "One moment.") + "</div>"; return; }
+    var isF = id.indexOf("f-") === 0, rec = byId(isF ? S.found : S.comps, id);
+    if (!rec) { box.innerHTML = '<div class="inner">' + back() + "</div>" + emptyBox("Case not found", "It may have been deleted.") + "</div>"; return; }
+    box.innerHTML = '<div class="inner">' + (isF ? foundCase(rec) : complaintCase(rec)) + "</div>";
+  }
+  function foundCase(f) {
+    var photos = (f.photos || []).map(safeImg).filter(Boolean);
+    var c = byId(S.comps, f.matchedComplaintId), h = "";
+    h += back() + '<span class="code">' + esc(f.code) + '</span></div><div class="tags">' + fPills(f) + "</div><h2>" + esc(f.title) + "</h2>";
+    h += '<div class="photos">' + (photos.length ? photos.map(function (p) { return '<img class="bigphoto" src="' + p + '" alt="Photo of ' + esc(f.title) + '" data-zoom>'; }).join("") : '<div class="nophoto">' + (hasPh(f.photos) ? "Loading photos" : "No photo") + "</div>") + "</div>";
+    h += '<div class="card">' + dlist([
+      ["Category", f.category], ["Found at", f.location], ["Found on", fmtDay(f.foundDate, f.foundTime)], ["Found by", f.foundBy],
+      ["Logged by", (f.loggedBy || "") + (f.at ? " on " + fmtDT(f.at) : "")], ["Kept at", f.keptAt],
+      ["Owner (name, class)", [f.nameOnItem, f.classOnItem].filter(Boolean).join(", ")], ["Details", f.desc], ["Latest remark", f.lastRemark],
+      ["Floor round", f.shownOn ? "Shown " + fmtDate(f.shownOn) + " by " + (f.shownBy || "") : "Not shown yet"]
+    ]) + "</div>";
+    if (f.status === "in_stock") {
+      var ms = M.byI[f.id] || [];
+      h += '<div class="card"><h2>Match suggestions</h2>' + (ms.length ? ms.map(function (x) { return matchCard(x, false); }).join("") : '<p class="rsub">No open complaint matches this item yet.</p>') + "</div>";
+    }
+    if (f.status === "ready" && c) {
+      h += '<div class="card"><h2>Matched complaint</h2><div class="match"><b>' + esc(c.title) + '</b><div class="rsub">' + esc([c.reporterName, c.reporterClass].filter(Boolean).join(", ") + " · " + label(CHANNELS, c.channel)) + '</div><a class="btn" style="text-align:center;display:flex;align-items:center;justify-content:center" href="#case-' + c.id + '">Open complaint</a>' + (S.canWrite ? '<button type="button" class="btn" data-act="undo-match" data-c="' + c.id + '" data-f="' + f.id + '">Undo match</button>' : "") + "</div></div>";
+    }
+    if (f.status === "returned") {
+      var p = S.proofs[f.id];
+      h += '<div class="card"><h2>Handover</h2>' + dlist([["Returned", fmtDT(f.returnedAt)], ["Handed over by", f.returnedBy]]) + (p ? handoverBlock(p) : '<button type="button" class="btn" data-act="show-proof" data-id="' + f.id + '">Show handover details and photo</button>') + "</div>";
+    }
+    if (f.status === "disposed" && f.disposal) {
+      h += '<div class="card"><h2>' + (f.disposal.kind === "donate" ? "Donated" : "Disposed") + "</h2>" + dlist([["Confirmed by", f.disposal.by], ["Confirmed on", fmtDT(f.disposal.at)], ["Reason", f.disposal.reason]]) + "</div>";
+    }
+    if (flagged(f)) {
+      h += '<div class="card"><h2>Review needed</h2><p>This item has been in stock for ' + daysAgo(f.foundDate) + " days. A manager must confirm disposal or donation, with a reason.</p>" +
+        (S.isMgr && S.canWrite ? '<button type="button" class="btn danger" data-act="dispose" data-id="' + f.id + '">Confirm disposal or donation</button>' : '<p class="rsub">Only a manager can confirm this.</p>') + "</div>";
+    }
+    if (S.canWrite && (f.status === "in_stock" || f.status === "ready")) {
+      h += '<div class="card"><h2>Actions</h2><div class="stack">';
+      var blocked = f.restricted && !S.isMgr;
+      h += '<button type="button" class="btn primary block" data-act="handover" data-id="' + f.id + '"' + (blocked ? " disabled" : "") + ">Hand over to owner</button>";
+      if (blocked) h += '<p class="rsub">Restricted item: only a senior staff member can hand it over.</p>';
+      if (f.status === "in_stock") h += '<button type="button" class="btn block" data-act="tick" data-id="' + f.id + '">' + (f.shownOn === today() ? "Shown on round today (tap to undo)" : "Mark shown on round") + "</button>";
+      if (!f.restricted) h += '<button type="button" class="btn block" data-act="restrict" data-id="' + f.id + '">Mark as restricted</button>';
+      else if (S.isMgr) h += '<button type="button" class="btn block" data-act="unrestrict" data-id="' + f.id + '">Remove restricted mark</button>';
+      h += '<button type="button" class="btn block" data-act="edit-found" data-id="' + f.id + '">Edit details</button></div></div>';
+    }
+    if (S.canWrite) h += '<button type="button" class="btn block" data-act="remark" data-id="' + f.id + '">Add remark</button>';
+    return h + histBlock(f.id);
+  }
+  function handoverBlock(p) {
+    var pr = safeImg(p.proof), sg = safeImg(p.signature);
+    return '<div class="proof">' + dlist([["Collected by", [p.collectedBy, p.collectedClass].filter(Boolean).join(", ")], ["Relation", label(RELS, p.relation)], ["Owner verified", p.verified ? "Yes" : "No"], ["Notes", p.notes]]) +
+      (pr ? '<div class="lbl">Photo of the child with the item</div><img src="' + pr + '" alt="Handover proof photo" data-zoom>' : "") +
+      (sg ? '<div class="lbl">Signature</div><img src="' + sg + '" alt="Signature" data-zoom>' : "") + "</div>";
+  }
+  function complaintCase(c) {
+    var h = "", f = byId(S.found, c.matchedItemId);
+    h += back() + '<span class="code">' + esc(c.code) + '</span></div><div class="tags">' + cPill(c) + (c.demo ? pill("p-line", "Demo") : "") + "</div><h2>" + esc(c.title) + "</h2>";
+    h += '<div class="card">' + dlist([
+      ["Category", c.category], ["Reported by", [c.reporterName, c.reporterClass].filter(Boolean).join(", ") + " (" + label(RTYPES, c.reporterType) + ")"], ["Contact", c.contact],
+      ["How it came in", label(CHANNELS, c.channel)], ["Reported on", fmtDT(c.at)], ["Logged by", c.loggedBy],
+      ["Latest remark", c.lastRemark], ["Last seen", (c.lastSeenPlace || "Not noted") + ", " + fmtDay(c.lastSeenDate, c.lastSeenTime)], ["Description", c.desc],
+      ["Closed", c.status === "closed" ? fmtDT(c.closedAt) + " by " + (c.closedBy || "") : ""], ["Closing note", c.closeNote]
+    ]) + "</div>";
+    if (c.status === "open") {
+      var ms = M.byC[c.id] || [];
+      h += '<div class="card"><h2>Match suggestions</h2>' + (ms.length ? ms.map(function (x) { return matchCard(x, true); }).join("") : '<p class="rsub">No item in stock matches yet. New found items are compared automatically.</p>') + "</div>";
+    }
+    if (f && (c.status === "matched" || c.closeReason === "returned")) {
+      var ph = safeImg((f.photos || [])[0]);
+      h += '<div class="card"><h2>Matched item</h2><div class="match"><div class="mhead' + (ph ? "" : " nothumb") + '">' + (ph ? '<img src="' + ph + '" alt="" data-zoom>' : "") + "<div><b>" + esc(f.title) + '</b><div class="rsub">' + esc(f.location + " · Kept at " + (f.keptAt || "not noted")) + "</div><div>" + fPills(f) + '</div></div></div><a class="btn primary" style="text-align:center;display:flex;align-items:center;justify-content:center" href="#case-' + f.id + '">' + (c.status === "matched" ? "Open item to hand over" : "Open item") + "</a>" + (c.status === "matched" && S.canWrite ? '<button type="button" class="btn" data-act="undo-match" data-c="' + c.id + '" data-f="' + f.id + '">Undo match</button>' : "") + "</div></div>";
+    }
+    if (S.canWrite) {
+      h += '<div class="card"><h2>Actions</h2><div class="stack">';
+      if (c.status === "open") h += '<button type="button" class="btn block" data-act="close-nf" data-id="' + c.id + '">Close as not found</button>';
+      if (c.status === "closed" && c.closeReason === "not_found") h += '<button type="button" class="btn block" data-act="reopen-comp" data-id="' + c.id + '">Reopen complaint</button>';
+      h += '<button type="button" class="btn block" data-act="edit-comp" data-id="' + c.id + '">Edit details</button></div></div>';
+    }
+    if (S.canWrite) h += '<button type="button" class="btn block" data-act="remark" data-id="' + c.id + '">Add remark</button>';
+    return h + histBlock(c.id);
+  }
+
+  /* ---------- sheets ---------- */
+  var sheetClose = null;
+  function openSheet(title, html, mount, locked) {
+    $("#sheet").innerHTML = '<div class="shead"><h2 id="sheet-title">' + esc(title) + "</h2>" + (locked ? "" : '<button type="button" class="btn small" data-act="sheet-close">Close</button>') + "</div>" + html;
+    $("#shwrap").hidden = false; $("#sheet").scrollTop = 0;
+    if (mount) mount($("#sheet"));
+  }
+  function closeSheet() { $("#shwrap").hidden = true; $("#sheet").innerHTML = ""; }
+  function val(id) { var e = document.getElementById(id); return e ? String(e.value).trim() : ""; }
+  function fld(id, lab, inner, cls) { return '<div class="field' + (cls ? " " + cls : "") + '"><label for="' + id + '">' + lab + "</label>" + inner + "</div>"; }
+
+  function shrink(file, max, q) {
+    return new Promise(function (res, rej) {
+      var fr = new FileReader();
+      fr.onerror = rej;
+      fr.onload = function () {
+        var img = new Image();
+        img.onerror = rej;
+        img.onload = function () {
+          var s = Math.min(1, max / Math.max(img.width, img.height)), c = document.createElement("canvas");
+          c.width = Math.max(1, Math.round(img.width * s)); c.height = Math.max(1, Math.round(img.height * s));
+          c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+          res(c.toDataURL("image/jpeg", q));
+        };
+        img.src = fr.result;
+      };
+      fr.readAsDataURL(file);
+    });
+  }
+  function photoWidget(host, id, start, max, capture, maxPx, quality) {
+    var list = (start || []).map(function (p) { return { v: p, src: safeImg(p) }; });
+    function draw() {
+      host.innerHTML = list.map(function (p, i) { return '<div class="pimg"><img src="' + (p.src || "") + '" alt="Photo ' + (i + 1) + '"><button type="button" data-rm="' + i + '" aria-label="Remove photo ' + (i + 1) + '">X</button></div>'; }).join("") +
+        (list.length < max ? '<label class="addbtn" for="' + id + '-file">' + (list.length ? "Add another photo" : "Take or choose photo") + '</label><input type="file" id="' + id + '-file" accept="image/*"' + (capture ? ' capture="environment"' : "") + " hidden>" : "");
+    }
+    host.addEventListener("click", function (e) { var b = e.target.closest("[data-rm]"); if (b) { list.splice(+b.getAttribute("data-rm"), 1); draw(); } });
+    host.addEventListener("change", async function (e) {
+      if (e.target.type !== "file") return;
+      var f = e.target.files && e.target.files[0]; if (!f) return;
+      try { var du = await shrink(f, maxPx, quality); list.push({ v: du, src: du }); draw(); } catch (x) { toast("That photo could not be read. Try another one."); }
+    });
+    draw();
+    return { get: function () { return list.map(function (p) { return p.v; }); } };
+  }
+  function sigPad(host) {
+    host.innerHTML = '<canvas class="sig" width="600" height="250" aria-label="Signature area"></canvas><div style="margin-top:8px"><button type="button" class="btn small" data-sig="clear">Clear signature</button></div>';
+    var cv = host.querySelector("canvas"), ctx = cv.getContext("2d"), down = false, dirty = false;
+    ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, cv.width, cv.height); ctx.lineWidth = 4; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.strokeStyle = "#111";
+    function pos(e) { var r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) * cv.width / (r.width || 1), y: (e.clientY - r.top) * cv.height / (r.height || 1) }; }
+    cv.addEventListener("pointerdown", function (e) { down = true; dirty = true; var p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + 0.1, p.y + 0.1); ctx.stroke(); try { cv.setPointerCapture(e.pointerId); } catch (x) {} e.preventDefault(); });
+    cv.addEventListener("pointermove", function (e) { if (!down) return; var p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); e.preventDefault(); });
+    ["pointerup", "pointercancel", "pointerleave"].forEach(function (n) { cv.addEventListener(n, function () { down = false; }); });
+    host.addEventListener("click", function (e) { if (e.target.closest("[data-sig]")) { ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, cv.width, cv.height); dirty = false; } });
+    return { get: function () { return dirty ? cv.toDataURL("image/png") : ""; } };
+  }
+
+  function needName() { return !S.me; }
+  function nameSheet() {
+    openSheet("Your name for the log", '<form id="nf" class="stack" novalidate><p>Every action is recorded with the name of the staff member. Enter your full name.</p>' + fld("nm", "Your name", '<input type="text" id="nm" maxlength="60" autocomplete="name">') + '<p class="err" id="nerr" role="alert"></p><button type="submit" class="btn primary block">Save name</button></form>', function (sh) {
+      $("#nm").value = S.name; $("#nm").focus();
+      $("#nf").addEventListener("submit", function (e) {
+        e.preventDefault(); var v = val("nm");
+        if (v.length < 2) { $("#nerr").textContent = "Enter your name."; return; }
+        S.name = v; try { localStorage.setItem("lfd-name", v); } catch (x) {}
+        closeSheet(); renderWho(); toast("Name saved");
+      });
+    }, !S.name);
+  }
+
+  function foundForm(it) {
+    if (needName()) return;
+    var edit = !!it, n = nowInfo();
+    var html = '<form id="ff" class="stack" novalidate>' +
+      fld("ff-title", "What is it?", '<input type="text" id="ff-t" maxlength="80" placeholder="e.g. Grey steel water bottle">'.replace('id="ff-t"', 'id="ff-title"')) +
+      '<div class="two">' + fld("ff-cat", "Category", '<select id="ff-cat">' + opts(CATS, it && it.category) + "</select>") + fld("ff-loc", "Found at (floor or location)", '<select id="ff-loc">' + opts(LOCS, it && it.location, "Choose") + "</select>") + "</div>" +
+      '<div class="two">' + fld("ff-date", "Date found", '<input type="date" id="ff-date">') + fld("ff-time", "Time found", '<input type="time" id="ff-time">') + "</div>" +
+      '<div class="two">' + fld("ff-by", "Found by", '<input type="text" id="ff-by" maxlength="60">') + fld("ff-kept", "Kept at", '<input type="text" id="ff-kept" maxlength="60" placeholder="e.g. Front office cupboard">') + "</div>" +
+      '<div class="two">' + fld("ff-name", "Owner name (if known or written on item)", '<input type="text" id="ff-name" maxlength="60">') + fld("ff-cls", "Owner class (if known)", '<input type="text" id="ff-cls" maxlength="20" placeholder="e.g. 6B">') + "</div>" +
+      fld("ff-desc", "Details that help identify it", '<textarea id="ff-desc" maxlength="300" placeholder="Colour, brand, marks, what is inside"></textarea>') +
+      '<label class="check"><input type="checkbox" id="ff-res"><span>Restricted item (for example a phone or a sharp object). Only a senior staff member can hand it over.</span></label>' +
+      '<div class="field"><label>Photos (at least one, up to 3)</label><div class="pw" id="ff-pw"></div></div>' +
+      '<p class="err" id="ff-err" role="alert"></p><button type="submit" class="btn primary block" id="ff-save">' + (edit ? "Save changes" : "Save found item") + "</button></form>";
+    openSheet(edit ? "Edit found item" : "Log found item", html, function () {
+      $("#ff-title").value = it ? it.title || "" : ""; $("#ff-date").value = it ? it.foundDate : n.date; $("#ff-time").value = it ? it.foundTime || "" : n.time;
+      $("#ff-by").value = it ? it.foundBy || "" : ""; $("#ff-kept").value = it ? it.keptAt || "" : ""; $("#ff-name").value = it ? it.nameOnItem || "" : ""; $("#ff-cls").value = it ? it.classOnItem || "" : "";
+      $("#ff-desc").value = it ? it.desc || "" : ""; $("#ff-res").checked = !!(it && it.restricted);
+      if (it && it.restricted && !S.isMgr) $("#ff-res").disabled = true;
+      var pw = photoWidget($("#ff-pw"), "ffp", it ? it.photos : [], 3, false, 560, 0.62);
+      $("#ff").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        var d = { title: val("ff-title"), category: val("ff-cat"), location: val("ff-loc"), foundDate: val("ff-date"), foundTime: val("ff-time"), foundBy: val("ff-by"), keptAt: val("ff-kept"), nameOnItem: val("ff-name"), classOnItem: val("ff-cls"), desc: val("ff-desc"), restricted: $("#ff-res").checked, photos: pw.get() };
+        var err = !d.title ? "Say what the item is." : !d.location ? "Choose where it was found." : !d.foundDate ? "Add the date found." : !d.foundBy ? "Add who found it." : !d.keptAt ? "Say where it is kept." : !d.photos.length ? "Add at least one photo." : "";
+        if (err) { $("#ff-err").textContent = err; return; }
+        var b = $("#ff-save"); b.disabled = true;
+        if (edit) { if (await patchRec("found", it, d, "Edited details", "")) { closeSheet(); toast("Changes saved"); } }
+        else {
+          var id = mkId("f"), ni = nowInfo();
+          d.code = id.toUpperCase(); d.status = "in_stock"; d.at = ni.at; d.loggedBy = S.name; d.loggedById = S.uid; d.demo = false; d.createdAt = ni.at; d.updatedAt = ni.at; d.matchedComplaintId = "";
+          try { await colF.doc(id).set(d); d.id = id; await hist("found", d, "Logged found item", d.location + ", kept at " + d.keptAt + (d.restricted ? ", restricted" : "")); closeSheet(); toast("Found item logged"); }
+          catch (x) { writeErr(x); }
+        }
+        b.disabled = false;
+      });
+    });
+  }
+
+  function compForm(c) {
+    if (needName()) return;
+    var edit = !!c, n = nowInfo();
+    var html = '<form id="cf" class="stack" novalidate>' +
+      fld("cf-title", "What was lost?", '<input type="text" id="cf-title" maxlength="80" placeholder="e.g. Blue water bottle with a green lid">') +
+      '<div class="two">' + fld("cf-cat", "Category", '<select id="cf-cat">' + opts(CATS, c && c.category) + "</select>") + fld("cf-ch", "Source of complaint", '<select id="cf-ch">' + opts(CHANNELS, c && c.channel) + "</select>") + "</div>" +
+      '<div class="two">' + fld("cf-rt", "Complaint from", '<select id="cf-rt">' + opts(RTYPES, c && c.reporterType) + "</select>") + fld("cf-rn", "Name of the person complaining", '<input type="text" id="cf-rn" maxlength="60">') + "</div>" +
+      '<div class="two">' + fld("cf-rc", "Child's class (or staff class)", '<input type="text" id="cf-rc" maxlength="20" placeholder="e.g. 6B">') + fld("cf-ct", "Phone (optional)", '<input type="text" id="cf-ct" maxlength="30" inputmode="tel">') + "</div>" +
+      fld("cf-desc", "Description", '<textarea id="cf-desc" maxlength="300" placeholder="Colour, brand, marks, name written on it"></textarea>') +
+      '<div class="two">' + fld("cf-place", "Last seen at", '<select id="cf-place">' + opts(LOCS, c && c.lastSeenPlace, "Choose") + "</select>") + fld("cf-sd", "Last seen on", '<input type="date" id="cf-sd">') + "</div>" +
+      fld("cf-st", "Last seen time (optional)", '<input type="time" id="cf-st">') +
+      '<p class="rsub">The time this complaint was received is recorded automatically.</p>' +
+      '<p class="err" id="cf-err" role="alert"></p><button type="submit" class="btn primary block" id="cf-save">' + (edit ? "Save changes" : "Save complaint") + "</button></form>";
+    openSheet(edit ? "Edit complaint" : "Log complaint", html, function () {
+      $("#cf-title").value = c ? c.title || "" : ""; $("#cf-rn").value = c ? c.reporterName || "" : ""; $("#cf-rc").value = c ? c.reporterClass || "" : ""; $("#cf-ct").value = c ? c.contact || "" : "";
+      $("#cf-desc").value = c ? c.desc || "" : ""; $("#cf-sd").value = c ? c.lastSeenDate || "" : n.date; $("#cf-st").value = c ? c.lastSeenTime || "" : "";
+      $("#cf").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        var d = { title: val("cf-title"), category: val("cf-cat"), channel: val("cf-ch"), reporterType: val("cf-rt"), reporterName: val("cf-rn"), reporterClass: val("cf-rc"), contact: val("cf-ct"), desc: val("cf-desc"), lastSeenPlace: val("cf-place"), lastSeenDate: val("cf-sd"), lastSeenTime: val("cf-st") };
+        var err = !d.title ? "Say what was lost." : !d.reporterName ? "Add the reporter's name." : !d.reporterClass ? "Add the class." : !d.desc ? "Add a short description." : !d.lastSeenPlace ? "Choose where it was last seen." : !d.lastSeenDate ? "Add the date it was last seen." : "";
+        if (err) { $("#cf-err").textContent = err; return; }
+        var b = $("#cf-save"); b.disabled = true;
+        if (edit) { if (await patchRec("complaint", c, d, "Edited details", "")) { closeSheet(); toast("Changes saved"); } }
+        else {
+          var id = mkId("c"), ni = nowInfo();
+          d.code = id.toUpperCase(); d.status = "open"; d.reportedDate = ni.date; d.reportedTime = ni.time; d.at = ni.at; d.loggedBy = S.name; d.loggedById = S.uid; d.matchedItemId = ""; d.demo = false; d.createdAt = ni.at; d.updatedAt = ni.at;
+          try { await colC.doc(id).set(d); d.id = id; await hist("complaint", d, "Logged complaint", label(CHANNELS, d.channel) + ", " + d.reporterName + ", " + d.reporterClass); closeSheet(); toast("Complaint logged"); }
+          catch (x) { writeErr(x); }
+        }
+        b.disabled = false;
+      });
+    });
+  }
+
+  function handoverForm(f) {
+    if (needName()) return;
+    if (f.restricted && !S.isMgr) { toast("Only a senior staff member can hand over a restricted item."); return; }
+    var c = byId(S.comps, f.matchedComplaintId);
+    var html = '<form id="hf" class="stack" novalidate><p><b>' + esc(f.title) + "</b></p>" +
+      (c ? '<div class="notice">Matched complaint: ' + esc([c.reporterName, c.reporterClass].filter(Boolean).join(", ")) + "</div>" : '<div class="notice">No complaint is matched to this item. Only the item will be closed.</div>') +
+      '<label class="check"><input type="checkbox" id="hf-ver"><span>I have verified the owner (name and class checked).</span></label>' +
+      '<div class="two">' + fld("hf-name", "Collected by (name)", '<input type="text" id="hf-name" maxlength="60">') + fld("hf-cls", "Class", '<input type="text" id="hf-cls" maxlength="20" placeholder="e.g. 5A">') + "</div>" +
+      fld("hf-rel", "Collected by is", '<select id="hf-rel">' + opts(RELS, "self") + "</select>") +
+      '<div class="field"><label>Photo of the child with the item (required)</label><div class="pw" id="hf-pw"></div></div>' +
+      '<div class="field"><label>Signature (optional)</label><div id="hf-sig"></div></div>' +
+      fld("hf-notes", "Notes (optional)", '<textarea id="hf-notes" maxlength="200"></textarea>') +
+      '<p class="rsub">The photo and signature are saved with this case and can be seen only by staff who open this page.</p>' +
+      '<p class="err" id="hf-err" role="alert"></p><button type="submit" class="btn primary block" id="hf-save">Hand over and close case</button></form>';
+    openSheet("Hand over", html, function () {
+      if (c) { $("#hf-name").value = c.reporterName || ""; $("#hf-cls").value = c.reporterClass || ""; }
+      var pw = photoWidget($("#hf-pw"), "hfp", [], 1, true, 640, 0.65), sp = sigPad($("#hf-sig"));
+      $("#hf").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        var proof = pw.get()[0] || "";
+        var err = !$("#hf-ver").checked ? "Confirm that the owner is verified." : !val("hf-name") ? "Add who collected the item." : !proof ? "Add the photo of the child with the item." : "";
+        if (err) { $("#hf-err").textContent = err; return; }
+        var b = $("#hf-save"); b.disabled = true;
+        var ni = nowInfo(), ho = { itemId: f.id, complaintId: c ? c.id : "", collectedBy: val("hf-name"), collectedClass: val("hf-cls"), relation: val("hf-rel"), verified: true, proof: proof, signature: sp.get(), notes: val("hf-notes"), at: ni.at, by: S.name, byId: S.uid, demo: !!f.demo };
+        try {
+          await db.doc("handovers/" + f.id).set(ho);
+          await colF.doc(f.id).update({ status: "returned", returnedAt: ni.at, returnedBy: S.name, collectedBy: ho.collectedBy, collectedClass: ho.collectedClass, updatedAt: ni.at });
+          await hist("found", f, "Handed over", "Collected by " + ho.collectedBy + (ho.collectedClass ? ", " + ho.collectedClass : "") + " (" + label(RELS, ho.relation) + "), owner verified, photo" + (ho.signature ? " and signature" : "") + " saved");
+          if (c) { await colC.doc(c.id).update({ status: "closed", closeReason: "returned", closedAt: ni.at, closedBy: S.name, updatedAt: ni.at }); await hist("complaint", c, "Closed: returned", "Item " + f.code + " handed over"); }
+          S.proofs[f.id] = ho; closeSheet(); toast("Handed over. Case closed.");
+        } catch (x) { writeErr(x); }
+        b.disabled = false;
+      });
+    });
+  }
+
+  function disposeForm(f) {
+    if (!S.isMgr) { toast("Only a manager can confirm this."); return; }
+    if (needName()) return;
+    var html = '<form id="df" class="stack" novalidate><p><b>' + esc(f.title) + "</b> has been in stock for " + daysAgo(f.foundDate) + " days.</p>" +
+      '<div class="field"><label>Decision</label><div class="chips"><label class="chip" style="display:flex;gap:8px;align-items:center"><input type="radio" name="dk" value="donate" checked> Donate</label><label class="chip" style="display:flex;gap:8px;align-items:center"><input type="radio" name="dk" value="dispose"> Dispose</label></div></div>' +
+      fld("df-reason", "Reason (required)", '<textarea id="df-reason" maxlength="200" placeholder="e.g. Unclaimed for 30 days. Donated to the charity drive."></textarea>') +
+      '<p class="err" id="df-err" role="alert"></p><button type="submit" class="btn danger block" id="df-save">Confirm</button></form>';
+    openSheet("Confirm disposal or donation", html, function () {
+      $("#df").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        var kind = ($("#df input[name=dk]:checked") || {}).value || "donate", reason = val("df-reason");
+        if (reason.length < 5) { $("#df-err").textContent = "Give a reason of at least a few words."; return; }
+        var b = $("#df-save"); b.disabled = true;
+        var ok = await patchRec("found", f, { status: "disposed", disposal: { kind: kind, reason: reason, by: S.name, byId: S.uid, at: Date.now() } }, kind === "donate" ? "Donated" : "Disposed", reason);
+        if (ok) { closeSheet(); toast(kind === "donate" ? "Marked as donated" : "Marked as disposed"); }
+        b.disabled = false;
+      });
+    });
+  }
+  function remarkForm(rec) {
+    if (needName()) return;
+    var kind = rec.id.indexOf("f-") === 0 ? "found" : "complaint";
+    openSheet("Add remark", '<form id="rf" class="stack" novalidate><p><b>' + esc(rec.title) + "</b></p>" + fld("rf-t", "Remark", '<textarea id="rf-t" maxlength="200" placeholder="e.g. Parent will collect tomorrow"></textarea>') + '<p class="err" id="rf-err" role="alert"></p><button type="submit" class="btn primary block" id="rf-save">Save remark</button></form>', function () {
+      $("#rf").addEventListener("submit", async function (e) {
+        e.preventDefault(); var t = val("rf-t");
+        if (t.length < 2) { $("#rf-err").textContent = "Write a short remark."; return; }
+        var b = $("#rf-save"); b.disabled = true;
+        var ok = await patchRec(kind, rec, { lastRemark: t }, "Remark", t);
+        if (ok) { closeSheet(); toast("Remark saved"); }
+        b.disabled = false;
+      });
+    });
+  }
+  function closeNfForm(c) {
+    if (needName()) return;
+    openSheet("Close as not found", '<form id="nff" class="stack" novalidate>' + fld("nf-note", "What was done to look for it? (required)", '<textarea id="nf-note" maxlength="200" placeholder="e.g. Checked all floors and the bus. Not found."></textarea>') + '<p class="err" id="nf-err" role="alert"></p><button type="submit" class="btn primary block" id="nf-save">Close complaint</button></form>', function () {
+      $("#nff").addEventListener("submit", async function (e) {
+        e.preventDefault(); var note = val("nf-note");
+        if (note.length < 3) { $("#nf-err").textContent = "Add a short note."; return; }
+        var b = $("#nf-save"); b.disabled = true;
+        var ok = await patchRec("complaint", c, { status: "closed", closeReason: "not_found", closedAt: Date.now(), closedBy: S.name, closeNote: note }, "Closed: not found", note);
+        if (ok) { closeSheet(); toast("Complaint closed"); }
+        b.disabled = false;
+      });
+    });
+  }
+
+  /* ---------- writes ---------- */
+  function writeErr(e) {
+    if (e && e.message && !(e instanceof TypeError)) toast(e.message);
+    else toast("Could not save. Check your connection and try again.");
+  }
+  function hist(kind, rec, action, detail) {
+    var id = mkId("h");
+    return colH.doc(id).set({ caseType: kind, caseId: rec.id, code: rec.code || "", title: rec.title || "", action: action, detail: detail || "", at: Date.now(), by: S.name, byId: S.uid, demo: false });
+  }
+  async function patchRec(kind, rec, patch, action, detail) {
+    var col = kind === "found" ? colF : colC;
+    try {
+      patch.updatedAt = Date.now();
+      await col.doc(rec.id).update(patch);
+      await hist(kind, rec, action, detail);
+      return true;
+    } catch (e) { writeErr(e); return false; }
+  }
+  async function confirmMatch(cid, fid) {
+    if (needName()) return;
+    var c = byId(S.comps, cid), f = byId(S.found, fid);
+    if (!c || !f) return;
+    if (c.status !== "open" || f.status !== "in_stock") { toast("This case has changed. Check the latest status."); return; }
+    try {
+      await colC.doc(cid).update({ status: "matched", matchedItemId: fid, updatedAt: Date.now() });
+      await colF.doc(fid).update({ status: "ready", matchedComplaintId: cid, updatedAt: Date.now() });
+      await hist("complaint", c, "Match confirmed", "Item " + f.code + ": " + f.title);
+      await hist("found", f, "Match confirmed", "Complaint " + c.code + " from " + c.reporterName);
+      toast("Match confirmed. Item is ready to hand over.");
+    } catch (e) { writeErr(e); }
+  }
+  async function undoMatch(cid, fid) {
+    if (needName()) return;
+    var c = byId(S.comps, cid), f = byId(S.found, fid);
+    if (!c || !f) return;
+    if (f.status !== "ready" || c.status !== "matched") { toast("This match can no longer be undone."); return; }
+    try {
+      await colC.doc(cid).update({ status: "open", matchedItemId: "", updatedAt: Date.now() });
+      await colF.doc(fid).update({ status: "in_stock", matchedComplaintId: "", updatedAt: Date.now() });
+      await hist("complaint", c, "Match undone", "Item " + f.code);
+      await hist("found", f, "Match undone", "Complaint " + c.code);
+      toast("Match undone");
+    } catch (e) { writeErr(e); }
+  }
+  async function tick(id) {
+    if (needName()) return;
+    var f = byId(S.found, id); if (!f) return;
+    var on = f.shownOn === today(), n = nowInfo();
+    if (on) await patchRec("found", f, { shownOn: "", shownBy: "", shownAt: 0 }, "Floor round tick removed", "");
+    else await patchRec("found", f, { shownOn: n.date, shownBy: S.name, shownAt: n.at }, "Shown on floor round", f.location || "");
+  }
+  async function showProof(id) {
+    try {
+      var s = await db.doc("handovers/" + id).get();
+      if (s.exists) { S.proofs[id] = s.data(); renderCase(); } else toast("No handover record found for this item.");
+    } catch (e) { toast("Could not load the handover details."); }
+  }
+  async function loadCaseHist(id) {
+    try {
+      S.caseHist[id] = await tcall("caseHistory", [id]);
+      if (S.caseId === id) renderCase();
+    } catch (e) {}
+  }
+
+  /* ---------- export and demo delete ---------- */
+  function csvCell(v) { var s = String(v == null ? "" : v); return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
+  async function exportCsv() {
+    var cols = ["record_type", "code", "status", "date_time", "category", "title", "floor_or_location", "kept_at", "reporter_or_finder", "class", "how_reported", "description", "last_seen", "matched_with", "restricted", "closed_or_returned_at", "collected_by", "disposal", "logged_by", "demo"];
+    var rows = [cols];
+    S.comps.slice().sort(function (a, b) { return a.at - b.at; }).forEach(function (c) {
+      var f = byId(S.found, c.matchedItemId);
+      rows.push(["complaint", c.code, ckey(c), csvDT(c.at), c.category, c.title, c.lastSeenPlace, "", c.reporterName + " (" + label(RTYPES, c.reporterType) + ")", c.reporterClass, label(CHANNELS, c.channel), c.desc, c.lastSeenDate + " " + (c.lastSeenTime || ""), f ? f.code : "", "", csvDT(c.closedAt), "", c.closeNote || "", c.loggedBy, c.demo ? "yes" : ""]);
+    });
+    S.found.slice().sort(function (a, b) { return a.at - b.at; }).forEach(function (f) {
+      var c = byId(S.comps, f.matchedComplaintId), p = S.proofs[f.id];
+      rows.push(["found", f.code, f.status, csvDT(f.at), f.category, f.title, f.location, f.keptAt, f.foundBy, f.classOnItem || "", "", f.desc, f.foundDate + " " + (f.foundTime || ""), c ? c.code : "", f.restricted ? "yes" : "", csvDT(f.returnedAt), f.collectedBy ? f.collectedBy + (f.collectedClass ? ", " + f.collectedClass : "") : "", f.disposal ? f.disposal.kind + ": " + f.disposal.reason : "", f.loggedBy, f.demo ? "yes" : ""]);
+    });
+    S.hist.slice().sort(function (a, b) { return a.at - b.at; }).forEach(function (h) {
+      rows.push(["history", h.code, "", csvDT(h.at), "", h.title, "", "", "", "", "", h.action + (h.detail ? ": " + h.detail : ""), "", "", "", "", "", "", h.by, h.demo ? "yes" : ""]);
+    });
+    var text = "﻿" + rows.map(function (r) { return r.map(csvCell).join(","); }).join("\r\n");
+    try { saveText("lost-and-found-" + today() + ".csv", text); toast("Export ready"); }
+    catch (e) { toast("Could not save the file."); }
+  }
+  function demoDeleteSheet() {
+    var n = S.found.filter(function (x) { return x.demo; }).length + S.comps.filter(function (x) { return x.demo; }).length;
+    openSheet("Delete demo records", '<div class="stack"><p>This permanently deletes the ' + n + " demo records, their history and their handover photos. Your real records are not touched.</p>" + '<p class="err" id="dd-err" role="alert"></p><button type="button" class="btn danger block" id="dd-go">Delete demo records</button></div>', function () {
+      $("#dd-go").addEventListener("click", async function () {
+        var b = $("#dd-go"); b.disabled = true;
+        try {
+          applyState(await tcall("deleteDemo"));
+          closeSheet(); toast("Demo records deleted");
+        } catch (e) { $("#dd-err").textContent = "Some records could not be deleted. Try again."; b.disabled = false; }
+      });
+    });
+  }
+
+  /* ---------- events ---------- */
+  function goRoute() {
+    if (!S.me) return;
+    var h = decodeURIComponent((location.hash || "").slice(1));
+    if (h.indexOf("case-") === 0) {
+      var id = h.slice(5);
+      if (S.caseId !== id) { S.caseId = id; loadCaseHist(id); }
+      renderCase(); $("#case").scrollTop = 0; return;
+    }
+    S.caseId = ""; $("#case").hidden = true;
+    var r = TABS.some(function (t) { return t[0] === h; }) ? h : "home";
+    if (r !== S.route || !$("#screen").innerHTML) { S.route = r; renderBar(); renderScreen(); } else { renderBar(); }
+  }
+  function refresh() {
+    recompute(); renderBar(); renderWho();
+    if (S.route === "home" || loading() || S.noDb || S.fail) renderScreen(); else renderList();
+    if (S.caseId) renderCase();
+  }
+  function go(route) { location.hash = route; }
+  document.addEventListener("click", function (ev) {
+    var z = ev.target.closest("[data-zoom]");
+    if (z) { $("#lbimg").src = z.getAttribute("src"); $("#lb").hidden = false; return; }
+    if (ev.target.closest("#lb")) { $("#lb").hidden = true; return; }
+    var t = ev.target.closest("[data-tab]");
+    if (t) { go(t.getAttribute("data-tab")); return; }
+    var g = ev.target.closest("[data-go]");
+    if (g) {
+      var r = g.getAttribute("data-go"), st = g.getAttribute("data-status"), rg = g.getAttribute("data-range");
+      var f = r === "complaints" ? F.complaints : F.found; f.status = st || ""; f.range = "all"; f.from = ""; f.to = ""; f.cat = ""; f.loc = ""; f.q = "";
+      if (rg === "month") { f.range = "custom"; f.from = today().slice(0, 8) + "01"; f.to = today(); }
+      if (S.route === r) renderScreen(); go(r); return;
+    }
+    var fvb = ev.target.closest("[data-fview]");
+    if (fvb) { FV.mode = fvb.getAttribute("data-fview"); renderScreen(); return; }
+    var fr = ev.target.closest("[data-frange]");
+    if (fr) { var key = fr.closest("[data-fkey]").getAttribute("data-fkey"); F[key].range = fr.getAttribute("data-frange"); var bar = fr.closest(".filters"); var tmp = document.createElement("div"); tmp.innerHTML = filterBar(key, key === "complaints" ? C_STAT : key === "found" ? F_STAT : H_STAT); bar.replaceWith(tmp.firstChild); renderList(); return; }
+    var b = ev.target.closest("[data-act]"); if (!b) return;
+    var a = b.getAttribute("data-act"), id = b.getAttribute("data-id");
+    if (a === "back") { if (S.caseId) go(S.route); }
+    else if (a === "sheet-close") { if (S.name || $("#nm") == null) closeSheet(); }
+    else if (a === "log-found") foundForm(null);
+    else if (a === "log-comp") compForm(null);
+    else if (a === "edit-found") foundForm(byId(S.found, id));
+    else if (a === "edit-comp") compForm(byId(S.comps, id));
+    else if (a === "confirm-match") confirmMatch(b.getAttribute("data-c"), b.getAttribute("data-f"));
+    else if (a === "undo-match") undoMatch(b.getAttribute("data-c"), b.getAttribute("data-f"));
+    else if (a === "handover") { var hf = byId(S.found, id); if (hf) handoverForm(hf); }
+    else if (a === "dispose") { var df = byId(S.found, id); if (df) disposeForm(df); }
+    else if (a === "remark") { var rr = byId(S.found, id) || byId(S.comps, id); if (rr) remarkForm(rr); }
+    else if (a === "close-nf") { var cc = byId(S.comps, id); if (cc) closeNfForm(cc); }
+    else if (a === "reopen-comp") { var rc = byId(S.comps, id); if (rc) patchRec("complaint", rc, { status: "open", closeReason: "", closedAt: 0, closedBy: "", closeNote: "" }, "Reopened", ""); }
+    else if (a === "restrict") { var rf = byId(S.found, id); if (rf && !needName()) patchRec("found", rf, { restricted: true }, "Marked restricted", "Handover by senior staff only"); }
+    else if (a === "unrestrict") { var uf = byId(S.found, id); if (uf && S.isMgr && !needName()) patchRec("found", uf, { restricted: false }, "Restricted mark removed", ""); }
+    else if (a === "tick") tick(id);
+    else if (a === "show-proof") showProof(id);
+    else if (a === "export") exportCsv();
+    else if (a === "demo-delete") demoDeleteSheet();
+    else if (a === "name") nameSheet();
+    else if (a === "logout") logout(false);
+    else if (a === "team") teamSheet();
+    else if (a === "demo-load") { b.disabled = true; tcall("seedDemo").then(function (st) { applyState(st); toast("Demo records loaded"); }, function (e) { b.disabled = false; writeErr(e); }); }
+    else if (a === "fclear") {
+      if (S.route === "round") F.round = { loc: "", q: "", hideShown: false, restricted: false }; else if (F[S.route]) F[S.route] = newF();
+      renderScreen();
+    }
+  });
+  function onField(ev) {
+    var el = ev.target, fk = el.getAttribute && el.getAttribute("data-fk"), rk = el.getAttribute && el.getAttribute("data-rk");
+    if (fk) { var key = el.closest("[data-fkey]").getAttribute("data-fkey"); F[key][fk] = el.value; renderList(); }
+    else if (rk) { F.round[rk] = el.type === "checkbox" ? el.checked : el.value; renderList(); }
+  }
+  document.addEventListener("input", onField);
+  document.addEventListener("change", onField);
+  document.addEventListener("keydown", function (ev) { if (ev.key === "Escape") { $("#lb").hidden = true; } });
+  window.addEventListener("hashchange", goRoute);
+
+  /* ---------- start ---------- */
+  function renderAuth(mode, msg) {
+    $("#bar").innerHTML = ""; $("#who").innerHTML = "";
+    var first = mode === "setup";
+    $("#screen").innerHTML = '<div class="card"><form id="af" class="stack" novalidate><h2>' + (first ? "First time? Set password" : "Log in") + "</h2>" +
+      fld("au-n", "Your name", '<input type="text" id="au-n" maxlength="40" autocomplete="username">') +
+      fld("au-p", first ? "Choose a password (6 or more characters)" : "Password", '<input type="password" id="au-p" maxlength="60" autocomplete="' + (first ? "new-password" : "current-password") + '">') +
+      (first ? fld("au-r", "I am", '<select id="au-r"><option value="staff">Staff</option><option value="incharge">Incharge (manager)</option><option value="admin">Admin</option></select>') + '<p class="rsub">The admin approves every new login. Use your full name so the log shows who did what.</p>' : "") +
+      '<p class="err" id="au-e" role="alert">' + esc(msg || "") + '</p><button type="submit" class="btn primary block" id="au-go">' + (first ? "Create login" : "Log in") + '</button>' +
+      '<button type="button" class="btn ghost block" id="au-sw">' + (first ? "I already have a login" : "First time? Set password") + "</button></form></div>";
+    $("#au-sw").addEventListener("click", function () { renderAuth(first ? "login" : "setup", ""); });
+    $("#af").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var n = val("au-n"), pw = document.getElementById("au-p").value;
+      if (!n || !pw) { $("#au-e").textContent = "Type your name and password."; return; }
+      var b = $("#au-go"); b.disabled = true;
+      call(first ? "setup" : "login", first ? [n, pw, val("au-r")] : [n, pw]).then(function (r) {
+        if (r.pending) { renderAuth("login", "Your login is created. It is waiting for the admin to approve it."); return; }
+        TOKEN = r.token; try { localStorage.setItem("lf-token", TOKEN); } catch (x) {}
+        applyState(r.state); goRoute();
+      }, function (err) { $("#au-e").textContent = err.message || "Could not log in."; b.disabled = false; });
+    });
+  }
+  function teamSheet() {
+    var rows = S.users.slice().sort(function (a, b) { return (a.status === "pending" ? 0 : 1) - (b.status === "pending" ? 0 : 1) || a.name.localeCompare(b.name); }).map(function (u, i) {
+      var idx = S.users.indexOf(u);
+      return '<div class="row"><div class="rtop"><h3>' + esc(u.name) + '</h3><span class="tags">' + pill(u.status === "active" ? "p-green" : "p-amber", u.status === "active" ? "Active" : u.status === "pending" ? "Waiting for approval" : "Password reset") + "</span></div>" +
+        '<div class="field"><label for="tr-' + idx + '">Role</label><select id="tr-' + idx + '">' + opts([["staff", "Staff"], ["incharge", "Incharge (manager)"], ["admin", "Admin"]], u.role) + "</select></div>" +
+        '<div class="actions">' + (u.status === "pending" ? '<button type="button" class="btn small primary" data-u="approve" data-i="' + idx + '">Approve</button>' : '<button type="button" class="btn small" data-u="role" data-i="' + idx + '">Save role</button>') +
+        (u.name !== S.name ? '<button type="button" class="btn small" data-u="reset" data-i="' + idx + '">Reset password</button><button type="button" class="btn small danger" data-u="remove" data-i="' + idx + '">Remove</button>' : "") + "</div></div>";
+    }).join("");
+    openSheet("Team logins", '<div class="list">' + (rows || emptyBox("No logins yet", "People create their own login on the first screen.")) + '</div><p class="err" id="tm-e" role="alert"></p>', function (sh) {
+      sh.addEventListener("click", function (e) {
+        var b = e.target.closest("[data-u]"); if (!b) return;
+        var u = S.users[+b.getAttribute("data-i")], act = b.getAttribute("data-u"); if (!u) return;
+        var role = document.getElementById("tr-" + b.getAttribute("data-i")).value, p;
+        if (act === "approve" || act === "role") p = tcall("approve", [u.name, role]);
+        else if (act === "reset") p = tcall("resetUser", [u.name]);
+        else p = tcall("removeUser", [u.name]);
+        b.disabled = true;
+        p.then(function (st) { applyState(st); teamSheet(); }, function (err) { $("#tm-e").textContent = err.message; b.disabled = false; });
+      });
+    });
+  }
+  async function start() {
+    renderWho(); renderBar();
+    if (!API_URL) { S.noDb = true; renderScreen(); return; }
+    try { TOKEN = localStorage.getItem("lf-token") || ""; } catch (e) {}
+    if (!TOKEN) { renderAuth("login", ""); return; }
+    $("#screen").innerHTML = emptyBox("Loading records", "One moment.");
+    try {
+      var st = await tcall("state");
+      if (!st || !st.me) { logout(false); return; }
+      applyState(st); goRoute();
+    } catch (e) {
+      if (!TOKEN) return;
+      S.fail = true; renderScreen();
+    }
+  }
+  start();
+})();
+</script>
+</body>
+</html>
