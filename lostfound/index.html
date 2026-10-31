@@ -270,7 +270,7 @@ input[type=checkbox] { width: 24px; height: 24px; flex: none; accent-color: var(
   var M = { byC: {}, byI: {} };
   var colF = null, colC = null, colH = null, db = null;
   /* The page keeps its records in a Google Sheet through an Apps Script web app (see SETUP.md). */
-  var API_URL = "";   // paste the Web app URL (ends in /exec) between the quotes, or open the page with ?api=<that URL>
+  var API_URL = "https://script.google.com/macros/s/AKfycbwGqI1jcIxT8PoDtP6IhZuQuNhKWAURmZM6Iz9bo-GkdOhFCiPs5JuxZSeFs-Jxt8sD/exec";   // paste the Web app URL (ends in /exec) between the quotes, or open the page with ?api=<that URL>
   try { API_URL = new URLSearchParams(location.search).get("api") || API_URL; } catch (e) {}
   var TOKEN = "", lastSig = "", pollOn = false;
   function call(fn, args) {
