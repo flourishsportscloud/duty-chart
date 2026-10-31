@@ -1,0 +1,1549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b6b63">
+<title>Stock and Purchase Desk</title>
+<link rel="icon" href="../fis/fis-icon-192.png">
+<link rel="apple-touch-icon" href="../fis/fis-icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: sticky header with five view tabs, a one-line open/overdue summary, a filter row, then a list of request cards.
+   Details, forms and actions open in a bottom sheet so the list never loses its place. */
+:root {
+  --bg: #f2f5f6;
+  --surface: #ffffff;
+  --ink: #15212a;
+  --muted: #566774;
+  --line: #d8e0e5;
+  --soft: #e9eef1;
+  --accent: #0b6b63;
+  --accent-ink: #ffffff;
+  --accent-soft: #d9eeeb;
+  --amber: #7a4e00;
+  --amber-bg: #fbebc8;
+  --red: #a2241c;
+  --red-bg: #fadcd8;
+  --green: #1c6a39;
+  --green-bg: #d8f0e0;
+  --blue: #1a4e8e;
+  --blue-bg: #dbe8f8;
+  --violet: #5a3d99;
+  --violet-bg: #e8e0f7;
+  --grey: #4d5b66;
+  --grey-bg: #e3e9ed;
+  --scrim: rgba(12, 22, 30, .55);
+  --shadow: 0 1px 2px rgba(15, 30, 40, .06), 0 8px 24px rgba(15, 30, 40, .14);
+  --font: 'Public Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f161b; --surface: #172129; --ink: #e7eef2; --muted: #96a7b2; --line: #2a3842; --soft: #1f2c35;
+    --accent: #4cc2b4; --accent-ink: #06201c; --accent-soft: #143530;
+    --amber: #f1c56c; --amber-bg: #3a2d0d; --red: #ff9d94; --red-bg: #3f1814; --green: #84daa3; --green-bg: #12301e;
+    --blue: #92bcf3; --blue-bg: #14283f; --violet: #bba6f2; --violet-bg: #2a2041; --grey: #a9b8c2; --grey-bg: #222f38;
+    --scrim: rgba(0, 0, 0, .65);
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .5);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f161b; --surface: #172129; --ink: #e7eef2; --muted: #96a7b2; --line: #2a3842; --soft: #1f2c35;
+  --accent: #4cc2b4; --accent-ink: #06201c; --accent-soft: #143530;
+  --amber: #f1c56c; --amber-bg: #3a2d0d; --red: #ff9d94; --red-bg: #3f1814; --green: #84daa3; --green-bg: #12301e;
+  --blue: #92bcf3; --blue-bg: #14283f; --violet: #bba6f2; --violet-bg: #2a2041; --grey: #a9b8c2; --grey-bg: #222f38;
+  --scrim: rgba(0, 0, 0, .65);
+  --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .5);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.45 var(--font); -webkit-text-size-adjust: 100%; }
+body.lock { overflow: hidden; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--surface); }
+button, input, select, textarea { font: inherit; color: inherit; }
+h1, h2, h3, p { margin: 0; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.muted { color: var(--muted); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* header */
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--surface); border-bottom: 1px solid var(--line); }
+.bar-in { max-width: 860px; margin: 0 auto; padding-block: 10px 0; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; gap: 12px; align-items: end; justify-content: space-between; flex-wrap: wrap; }
+.brand { min-width: 0; }
+.brand h1 { font-size: 18px; font-weight: 700; letter-spacing: -.01em; }
+.brand p { font-size: 12px; color: var(--muted); }
+.who { display: flex; flex-direction: column; gap: 2px; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); min-width: 0; }
+.who input { font-size: 14px; text-transform: none; letter-spacing: 0; width: 170px; max-width: 100%; padding: 6px 9px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); }
+.tabs { max-width: 860px; margin: 0 auto; display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; padding-left: max(8px, env(safe-area-inset-left, 0px)); padding-right: max(8px, env(safe-area-inset-right, 0px)); }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { flex: none; background: none; border: 0; border-bottom: 3px solid transparent; padding: 11px 12px 9px; font-weight: 600; color: var(--muted); cursor: pointer; white-space: nowrap; }
+.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+
+/* main */
+main { max-width: 860px; margin: 0 auto; padding-block: 14px 110px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; gap: 12px; }
+.banner { padding: 10px 12px; border-radius: 8px; background: var(--amber-bg); color: var(--amber); font-size: 13px; }
+.sum { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.sum button { text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; cursor: pointer; min-width: 0; }
+.sum b { display: block; font: 600 20px/1.1 var(--mono); font-variant-numeric: tabular-nums; }
+.sum span { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.sum .hot b { color: var(--red); }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.filters input[type="search"] { flex: 1 1 180px; min-width: 0; padding: 9px 11px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--surface); }
+.seg button { border: 0; background: none; padding: 8px 12px; cursor: pointer; color: var(--muted); font-weight: 600; font-size: 13px; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.extra { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; width: 100%; }
+.extra label { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+.extra input[type="date"] { padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+
+.totals { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; font-size: 13px; }
+.totals b { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.grp { display: flex; flex-direction: column; gap: 8px; }
+.grp + .grp { margin-top: 8px; }
+.grp h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); display: flex; align-items: center; gap: 8px; padding-top: 4px; }
+.grp h2 span { font-family: var(--mono); background: var(--soft); border-radius: 999px; padding: 0 8px; }
+.grp.over h2 { color: var(--red); }
+.empty { padding: 36px 8px; text-align: center; color: var(--muted); }
+
+/* cards */
+.card { display: flex; gap: 10px; align-items: flex-start; justify-content: space-between; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; cursor: pointer; }
+.card:hover { border-color: var(--accent); }
+.c-main { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.c-top { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.code { font: 500 12px var(--mono); color: var(--muted); }
+.tag, .pill { font-size: 11px; font-weight: 600; padding: 1px 8px; border-radius: 999px; white-space: nowrap; }
+.k-stock { background: var(--blue-bg); color: var(--blue); }
+.k-purchase { background: var(--violet-bg); color: var(--violet); }
+.k-fwd { background: var(--grey-bg); color: var(--grey); }
+.s-pending { background: var(--amber-bg); color: var(--amber); }
+.s-bought { background: var(--blue-bg); color: var(--blue); }
+.s-handed, .s-arranged { background: var(--green-bg); color: var(--green); }
+.s-cancelled { background: var(--grey-bg); color: var(--grey); }
+.s-unapproved { background: var(--red-bg); color: var(--red); }
+.s-unavailable { background: var(--amber-bg); color: var(--amber); }
+.s-refunded { background: var(--violet-bg); color: var(--violet); }
+.k-ex { background: var(--soft); color: var(--muted); border: 1px dashed var(--line); }
+.banner.info { background: var(--soft); color: var(--ink); display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 4px 11px; font-size: 12.5px; cursor: pointer; }
+.chip:hover { border-color: var(--accent); }
+.c-item { font-size: 16px; overflow-wrap: anywhere; }
+.qty { color: var(--muted); font-weight: 500; }
+.c-meta { font-size: 12.5px; color: var(--muted); overflow-wrap: anywhere; }
+.c-due { font-size: 12.5px; font-weight: 600; }
+.due-over { color: var(--red); }
+.due-today { color: var(--amber); }
+.due-soon { color: var(--amber); }
+.due-ok, .due-done { color: var(--muted); font-weight: 500; }
+.c-note { font-size: 12.5px; background: var(--soft); border-radius: 6px; padding: 4px 8px; overflow-wrap: anywhere; }
+.c-thumb { width: 52px; height: 52px; object-fit: cover; border-radius: 6px; flex: none; background: var(--soft); }
+
+/* new button */
+.fab { position: fixed; z-index: 15; right: calc(16px + env(safe-area-inset-right, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 999px; padding: 14px 22px; font-weight: 700; box-shadow: var(--shadow); cursor: pointer; }
+
+/* sheet */
+.sheet { position: fixed; inset: 0; z-index: 40; display: flex; justify-content: center; align-items: flex-end; }
+.scrim { position: absolute; inset: 0; background: var(--scrim); }
+.panel { position: relative; width: 100%; max-width: 640px; max-height: 94%; overflow-y: auto; overscroll-behavior: contain; background: var(--surface); border-radius: 14px 14px 0 0; box-shadow: var(--shadow); padding-block: 14px; padding-top: 14px; padding-bottom: calc(22px + env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; gap: 14px; }
+.panel:focus { outline: none; }
+@media (min-width: 700px) { .sheet { align-items: center; } .panel { border-radius: 14px; max-height: 90%; } }
+.p-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.x { background: var(--soft); border: 0; border-radius: 6px; padding: 7px 12px; cursor: pointer; font-weight: 600; }
+.p-title { font-size: 20px; line-height: 1.25; overflow-wrap: anywhere; }
+.p-tags { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.facts { display: grid; grid-template-columns: minmax(96px, 128px) minmax(0, 1fr); gap: 7px 12px; margin: 0; font-size: 14px; }
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; overflow-wrap: anywhere; }
+.pics { display: flex; flex-wrap: wrap; gap: 10px; }
+.pic { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
+.pic img { width: 112px; height: 112px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); cursor: zoom-in; background: var(--soft); }
+.pic .gone { width: 112px; height: 112px; display: grid; place-items: center; border: 1px dashed var(--line); border-radius: 8px; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn { min-height: 44px; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 9px 14px; font-weight: 600; cursor: pointer; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.danger { color: var(--red); }
+.btn.small { min-height: 36px; padding: 6px 12px; font-size: 13px; }
+.btn:disabled { opacity: .6; cursor: default; }
+form { display: flex; flex-direction: column; gap: 12px; }
+form h3 { font-size: 15px; }
+.field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.field > label, .field > .lbl { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.field input[type="text"], .field input[type="number"], .field input[type="date"], .field textarea, .field select { width: 100%; padding: 10px 11px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); min-height: 44px; }
+.field textarea { min-height: 72px; resize: vertical; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; }
+.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+.photo-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.hint { font-size: 12px; color: var(--muted); }
+.segopts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.segopt { position: relative; }
+.segopt input { position: absolute; opacity: 0; inset: 0; }
+.segopt span { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; font-weight: 600; cursor: pointer; background: var(--bg); }
+.segopt small { font-weight: 400; color: var(--muted); }
+.segopt input:checked + span { border-color: var(--accent); background: var(--accent-soft); }
+.segopt input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.total-line { font-size: 14px; }
+.total-line b { font-family: var(--mono); }
+.tl { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.tl li { display: flex; flex-direction: column; gap: 1px; font-size: 13.5px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+.tl li:last-child { border-bottom: 0; }
+.tl-h { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12px; color: var(--muted); }
+.tl-t { font-family: var(--mono); }
+.tl .remark .tl-x { background: var(--soft); border-radius: 6px; padding: 6px 9px; }
+.sec-h { font-size: 12px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+.warn { background: var(--red-bg); color: var(--red); border-radius: 8px; padding: 10px 12px; font-size: 14px; }
+
+#lightbox { position: fixed; inset: 0; z-index: 60; background: rgba(0, 0, 0, .88); display: grid; place-items: center; padding: 16px; cursor: zoom-out; }
+#lightbox img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 6px; }
+#toast { position: fixed; z-index: 70; left: 50%; transform: translateX(-50%); bottom: calc(84px + env(safe-area-inset-bottom, 0px)); max-width: min(92vw, 460px); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 8px; font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .18s; }
+#toast.show { opacity: 1; }
+@media (max-width: 440px) { .sum b { font-size: 18px; } .two { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { #toast { transition: none; } }
+/* readability pass */
+body { font-size: 16px; }
+.card { padding: 14px 16px; gap: 12px; }
+.card.over { border-color: var(--red); }
+.c-main { gap: 6px; }
+.c-kind, .p-kind { font-size: 11px; font-weight: 700; letter-spacing: .08em; color: var(--muted); }
+.c-item { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 18px; line-height: 1.25; }
+.c-item strong { min-width: 0; overflow-wrap: anywhere; }
+.qty { flex: none; font: 600 13px var(--mono); background: var(--soft); color: var(--ink); padding: 2px 9px; border-radius: 6px; white-space: nowrap; }
+.c-state { display: flex; flex-wrap: wrap; gap: 6px; }
+.pill { font-size: 13px; padding: 3px 11px; }
+.s-warnapp { background: var(--amber-bg); color: var(--amber); }
+.c-due { font-size: 14.5px; }
+.c-meta, .c-note { font-size: 13.5px; }
+.grp { gap: 10px; }
+.grp h2 { font-size: 14px; color: var(--ink); letter-spacing: .04em; }
+.grp.over h2 { color: var(--red); }
+.tabhint { margin: 0; font-size: 13.5px; color: var(--muted); }
+.sum span { text-transform: none; letter-spacing: 0; font-size: 12.5px; }
+.sum b { font-size: 22px; }
+.p-title { font-size: 22px; }
+.p-qty { font: 600 14px var(--mono); color: var(--muted); margin-top: -8px; }
+.next { display: flex; flex-direction: column; gap: 2px; padding: 11px 14px; border-radius: 8px; font-size: 15px; }
+.next b { font-size: 16px; }
+.sec { display: flex; flex-direction: column; gap: 8px; }
+.facts { font-size: 15px; }
+.actions { display: flex; flex-direction: column; gap: 14px; }
+.a-main { display: flex; flex-direction: column; gap: 8px; }
+.a-main .btn { width: 100%; font-size: 16px; min-height: 50px; }
+.a-more { display: flex; flex-wrap: wrap; gap: 8px; }
+.a-more .btn { font-size: 14px; min-height: 40px; font-weight: 500; }
+.filters select { padding: 9px 11px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); max-width: 100%; }
+.c-items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+.c-items li { display: flex; justify-content: space-between; gap: 12px; font-size: 16px; }
+.c-items li strong { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.c-items li span { flex: none; color: var(--muted); font: 500 13px var(--mono); }
+.c-items li.more { color: var(--muted); font-size: 13.5px; }
+.c-items li.nb { text-decoration: line-through; color: var(--muted); }
+.irows { display: flex; flex-direction: column; gap: 10px; }
+.irow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+.irow .it { grid-column: 1 / -1; }
+.irow .rm { grid-column: 1 / -1; text-align: right; }
+.irow:only-child .rm { display: none; }
+.irow .field input { background: var(--surface); }
+form.is-stock .est { display: none; }
+.blines { display: flex; flex-direction: column; gap: 10px; }
+.bline { display: grid; gap: 6px; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+.bline .field input { background: var(--surface); }
+.chk { display: flex; gap: 10px; align-items: center; cursor: pointer; }
+.chk input { width: 20px; height: 20px; flex: none; }
+.b-line { font-size: 13.5px; }
+.tbl-wrap { overflow-x: auto; }
+.dtbl { border-collapse: collapse; width: 100%; font-size: 14px; }
+.main .dtbl, main .dtbl { background: var(--surface); }
+.dtbl th, .dtbl td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.dtbl th { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.dtbl td:first-child { white-space: normal; min-width: 120px; }
+.dtbl tr.nb td { color: var(--muted); }
+:root { --go: #1f7a3f; --go-ink: #ffffff; }
+.ist { display: inline-block; font-size: 12.5px; font-weight: 700; padding: 2px 10px; border-radius: 999px; white-space: nowrap; font-family: var(--font); }
+.i-pending, .i-skipped { background: var(--grey-bg); color: var(--grey); }
+.i-purchased, .i-arranged { background: var(--green-bg); color: var(--green); }
+.i-unavailable { background: var(--amber-bg); color: var(--amber); }
+.i-expensive { background: var(--violet-bg); color: var(--violet); }
+.i-soldout { background: var(--red-bg); color: var(--red); }
+.i-other { background: var(--blue-bg); color: var(--blue); }
+.s-part { background: var(--green-bg); color: var(--green); }
+.icards { display: flex; flex-direction: column; gap: 10px; }
+.icard { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; background: var(--surface); }
+.icard.ic-purchased, .icard.ic-arranged { border-color: var(--green); background: var(--green-bg); }
+.ic-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 17px; }
+.ic-top strong { min-width: 0; overflow-wrap: anywhere; }
+.ic-state { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; font-size: 14px; }
+.ic-when { font-size: 13px; }
+.ic-remark { font-size: 14px; overflow-wrap: anywhere; }
+.ic-img { width: 84px; height: 84px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); cursor: zoom-in; background: var(--soft); }
+.ic-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.ic-actions .btn.small { min-height: 40px; font-weight: 500; }
+.btn.go { background: var(--go); border-color: var(--go); color: var(--go-ink); font-weight: 700; min-width: 140px; }
+.iform { border-top: 1px dashed var(--line); padding-top: 10px; }
+.chiprow { display: flex; flex-wrap: wrap; gap: 8px; }
+.rchip { position: relative; }
+.rchip input { position: absolute; opacity: 0; inset: 0; }
+.rchip span { display: inline-block; border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; font-weight: 600; font-size: 14px; background: var(--bg); cursor: pointer; }
+.rchip input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.r-purchased input:checked + span { background: var(--go); border-color: var(--go); color: var(--go-ink); }
+.r-unavailable input:checked + span { background: var(--amber-bg); border-color: var(--amber); color: var(--amber); }
+.r-expensive input:checked + span { background: var(--violet-bg); border-color: var(--violet); color: var(--violet); }
+.r-soldout input:checked + span { background: var(--red-bg); border-color: var(--red); color: var(--red); }
+.r-other input:checked + span, .r-pending input:checked + span { background: var(--soft); border-color: var(--ink); }
+.iform .price-f { display: none; }
+.iform.showprice .price-f { display: flex; }
+.ilog tr[data-id] { cursor: pointer; }
+.ilog td { vertical-align: top; }
+.ilog td.wrap { white-space: normal; min-width: 150px; }
+.ilog-img { width: 44px; height: 44px; object-fit: cover; border-radius: 6px; cursor: zoom-in; }
+[hidden] { display: none !important; }
+img[data-pid]:not([src]) { visibility: hidden; }
+.outbtn { background: transparent; border: 1px solid var(--line); color: var(--ink); border-radius: 8px; min-height: 36px; padding: 0 12px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.authwrap { position: fixed; inset: 0; z-index: 60; background: var(--bg); display: flex; align-items: flex-start; justify-content: center; padding: 24px 16px; overflow: auto; }
+.authwrap[hidden] { display: none !important; }
+.authbox { width: 100%; max-width: 420px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px 18px; display: flex; flex-direction: column; gap: 12px; margin-top: 8vh; }
+.authbox h2 { margin: 0; font-size: 21px; }
+.authbox p { margin: 0; color: var(--muted, #667); font-size: 14px; }
+.authbox .err { color: #b3261e; font-weight: 600; min-height: 1.2em; }
+.authbox input, .authbox select { width: 100%; box-sizing: border-box; min-height: 46px; font: inherit; font-size: 16px; padding: 0 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); }
+.authbox label { display: flex; flex-direction: column; gap: 4px; font-weight: 600; font-size: 14px; }
+.authbox .btn { min-height: 46px; width: 100%; }
+.team-row { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.team-row .row { display: flex; gap: 8px; flex-wrap: wrap; }
+</style>
+
+</head>
+<body>
+<header class="bar">
+  <div class="bar-in">
+    <div class="brand"><h1>Stock and Purchase Desk</h1><p>Store room orders and buying requests</p></div>
+    <label class="who">You<input id="me" type="text" readonly tabindex="-1" aria-label="Logged in as"></label>
+    <button type="button" class="outbtn" id="outbtn" hidden>Log out</button>
+    <button type="button" class="outbtn" id="teambtn" hidden>Team logins</button>
+  </div>
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Views">
+    <button class="tab" role="tab" data-tab="today">Today</button>
+    <button class="tab" role="tab" data-tab="pending">Pending</button>
+    <button class="tab" role="tab" data-tab="itemlog">Item log</button>
+    <button class="tab" role="tab" data-tab="deadlines">Deadline check</button>
+    <button class="tab" role="tab" data-tab="datewise">Date wise</button>
+    <button class="tab" role="tab" data-tab="tilldate">Till date</button>
+  </nav>
+</header>
+
+<main>
+  <div class="banner" id="banner" hidden></div>
+  <div class="banner info" id="samplebar" hidden></div>
+  <section class="sum" id="sum" aria-label="Summary"></section>
+  <section class="filters" aria-label="Filters">
+    <div class="seg" id="kindseg">
+      <button type="button" data-kind="all" aria-pressed="true">All</button>
+      <button type="button" data-kind="stock" aria-pressed="false">Stock</button>
+      <button type="button" data-kind="purchase" aria-pressed="false">Purchase</button>
+    </div>
+    <select id="dept" aria-label="Department"><option value="">All departments</option></select>
+    <input id="q" type="search" placeholder="Search item, person, department" aria-label="Search">
+    <div class="extra" id="extra2" hidden>
+      <div class="seg" id="respseg">
+        <button type="button" data-resp="all" aria-pressed="true">All items</button>
+        <button type="button" data-resp="pending" aria-pressed="false">Waiting</button>
+        <button type="button" data-resp="purchased" aria-pressed="false">Purchased</button>
+        <button type="button" data-resp="problem" aria-pressed="false">Not purchased</button>
+      </div>
+    </div>
+    <div class="extra" id="extra" hidden>
+      <div class="seg" id="statseg">
+        <button type="button" data-stat="all" aria-pressed="false">All</button>
+        <button type="button" data-stat="open" aria-pressed="false">Open</button>
+        <button type="button" data-stat="closed" aria-pressed="false">Closed</button>
+      </div>
+      <label>From <input id="from" type="date"></label>
+      <label>To <input id="to" type="date"></label>
+    </div>
+  </section>
+  <p class="tabhint" id="tabhint"></p>
+  <section id="list" aria-live="polite"></section>
+</main>
+
+<button class="fab" id="newbtn" type="button">New request</button>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="scrim" data-close></div>
+  <div class="panel" id="panel" role="dialog" aria-modal="true" aria-label="Request" tabindex="-1"></div>
+</div>
+<div id="lightbox" hidden><img id="lb-img" alt="Photo"></div>
+<div id="authwrap" class="authwrap" hidden></div>
+<div id="toast" role="status"></div>
+
+<datalist id="dl-staff"></datalist>
+<datalist id="dl-items"></datalist>
+<datalist id="dl-dept"></datalist>
+<datalist id="dl-units">
+  <option value="pcs"></option><option value="packs"></option><option value="boxes"></option><option value="reams"></option>
+  <option value="sets"></option><option value="rolls"></option><option value="bottles"></option><option value="pairs"></option>
+  <option value="kg"></option><option value="litres"></option>
+</datalist>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (s, root) { return (root || document).querySelector(s); };
+  var esc = function (s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  };
+
+  var STATUS = { pending: 'Pending', bought: 'Bought, to hand over', handed: 'Handed over', arranged: 'Arranged', cancelled: 'Cancelled', unapproved: 'Not approved', unavailable: 'Not available in market', refunded: 'Refunded' };
+  var REMARKS = ['Waiting for approval', 'Reminder sent', 'Vendor will deliver tomorrow', 'Stock expected next week', 'Budget not available', 'Called the vendor'];
+  var ISTATE = { pending: 'Waiting', purchased: 'Purchased', unavailable: 'Not available', expensive: 'Too expensive', soldout: 'Sold out', skipped: 'Not bought', arranged: 'Arranged', other: 'Other' };
+  var isBought = function (it) { return it.state === 'purchased'; };
+  function itemTag(state) { return '<span class="ist i-' + esc(state) + '">' + esc(ISTATE[state] || state) + '</span>'; }
+  var HASH = { today: 'today', pending: 'pending', itemlog: 'item-log', deadlines: 'deadlines', datewise: 'datewise', tilldate: 'till-date' };
+
+  var assets = true;
+  var canWrite = true, canDelete = false;
+  var TOKEN = '', ME = null, USERS = [], lastRev = '', pollTimer = null;
+  var S = { items: [], dept: '', resp: 'all', itemIdx: null, preResp: '', ready: false, loaded: false, tab: 'today', kind: 'all', q: '', stat: 'all', from: '', to: '', sel: null, mode: 'view', busy: false };
+  var lastFocus = null, toastTimer = null;
+
+  function lsGet(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { } }
+
+  /* ---------- dates and money ---------- */
+  var pad = function (n) { return String(n).padStart(2, '0'); };
+  var ymd = function (d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+  var todayStr = function () { return ymd(new Date()); };
+  var isYmd = function (s) { return /^\d{4}-\d{2}-\d{2}$/.test(s || ''); };
+  var dayNum = function (s) { var p = s.split('-').map(Number); return Math.round(Date.UTC(p[0], p[1] - 1, p[2]) / 86400000); };
+  var daysTo = function (s) { return dayNum(s) - dayNum(todayStr()); };
+  var toLocal = function (s) { var p = s.split('-').map(Number); return new Date(p[0], p[1] - 1, p[2]); };
+  var fmtD = function (s) { return toLocal(s).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }); };
+  var fmtDY = function (s) { return toLocal(s).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }); };
+  var fmtDW = function (s) { return toLocal(s).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }); };
+  var fmtT = function (iso) { return new Date(iso).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase(); };
+  var fmtDT = function (iso) { return fmtDY(ymd(new Date(iso))) + ', ' + fmtT(iso); };
+  var fmtDTs = function (iso) { return fmtD(ymd(new Date(iso))) + ', ' + fmtT(iso); };
+  var money = function (n) { return 'Rs ' + Number(n).toLocaleString('en-IN', { maximumFractionDigits: 2 }); };
+  var round2 = function (n) { return Math.round(n * 100) / 100; };
+
+  /* ---------- record helpers ---------- */
+  var isOpen = function (r) { return r.status === 'pending' || r.status === 'bought'; };
+  var hasDl = function (r) { return isYmd(r.deadline); };
+  var closedAt = function (r) {
+    if (r.status === 'refunded') return r.refundedAt || null;
+    if (r.status === 'unapproved') return r.unapprovedAt || null;
+    if (r.status === 'unavailable') return r.unavailableAt || null;
+    if (r.status === 'cancelled') return r.cancelledAt || null;
+    if (r.status === 'arranged') return r.arrangedAt || null;
+    return r.handedAt || null;
+  };
+  var code = function (r) { var d = new Date(r.createdAt); return pad(d.getDate()) + pad(d.getMonth() + 1) + '-' + String(r.id).slice(-3).toUpperCase(); };
+  var qtyText = function (r) {
+    var it = r.items || [];
+    if (it.length > 1) return it.length + ' items';
+    var a = it[0] || r;
+    return (a.qty == null ? '' : a.qty) + (a.unit ? ' ' + a.unit : '');
+  };
+  var me = function () { return ME ? ME.name : ''; };
+  var cur = function () { return S.items.find(function (x) { return x.id === S.sel; }) || null; };
+  var lastRemark = function (r) {
+    for (var i = (r.log || []).length - 1; i >= 0; i--) { if (r.log[i].kind === 'remark') return r.log[i]; }
+    return null;
+  };
+  function norm(id, d) {
+    var r = Object.assign({ kind: 'stock', status: 'pending', qty: 0, unit: '', staff: '', item: '', deadline: '', createdAt: '1970-01-01T00:00:00.000Z', log: [] }, d);
+    r.id = id;
+    if (!Array.isArray(r.log)) r.log = [];
+    if (!Array.isArray(r.items) || !r.items.length) {
+      r.items = [{ item: r.item, qty: r.qty, unit: r.unit, est: r.estPrice != null ? r.estPrice : null, price: r.price != null ? r.price : null }];
+    }
+    r.department = r.department || '';
+    var closedMap = { unavailable: 'unavailable', cancelled: 'skipped', unapproved: 'skipped', arranged: 'arranged' };
+    r.items = r.items.map(function (x) {
+      var o = Object.assign({}, x);
+      if (!o.state) {
+        if (o.bought === true) o.state = 'purchased';
+        else if (o.bought === false) o.state = 'skipped';
+        else if (r.kind === 'purchase' && r.items.length === 1 && (r.status === 'bought' || r.status === 'handed' || r.status === 'refunded') && (o.price != null || r.price != null)) o.state = 'purchased';
+        else if (r.kind === 'purchase' && closedMap[r.status]) o.state = closedMap[r.status];
+        else o.state = 'pending';
+      }
+      if (o.state === 'purchased') { if (!o.at) o.at = r.boughtAt || null; if (!o.by) o.by = r.buyer || ''; }
+      return o;
+    });
+    return r;
+  }
+  function plural(n, w) { return n + ' ' + w + (n === 1 ? '' : 's'); }
+  function dueInfo(r) {
+    if (!hasDl(r)) return { cls: 'due-ok', text: 'No deadline set' };
+    if (!isOpen(r)) {
+      var c = closedAt(r);
+      if ((r.status !== 'handed' && r.status !== 'arranged') || !c) return { cls: 'due-done', text: 'Deadline was ' + fmtD(r.deadline) };
+      var late = dayNum(ymd(new Date(c))) - dayNum(r.deadline);
+      return late > 0 ? { cls: 'due-over', text: 'Done ' + plural(late, 'day') + ' late (deadline ' + fmtD(r.deadline) + ')' } : { cls: 'due-done', text: 'Done on time (deadline ' + fmtD(r.deadline) + ')' };
+    }
+    var n = daysTo(r.deadline);
+    if (n < 0) return { cls: 'due-over', text: 'Overdue by ' + plural(-n, 'day') + ' (deadline was ' + fmtD(r.deadline) + ')' };
+    if (n === 0) return { cls: 'due-today', text: 'Due today (' + fmtD(r.deadline) + ')' };
+    if (n === 1) return { cls: 'due-soon', text: 'Due tomorrow (' + fmtD(r.deadline) + ')' };
+    return { cls: n <= 3 ? 'due-soon' : 'due-ok', text: 'Due ' + fmtD(r.deadline) + ' (in ' + plural(n, 'day') + ')' };
+  }
+  function waitText(r) {
+    if (!isOpen(r)) return '';
+    var n = dayNum(todayStr()) - dayNum(ymd(new Date(r.createdAt)));
+    return n > 0 ? ' · waiting ' + plural(n, 'day') : '';
+  }
+  function matchQ(r) {
+    var q = S.q.toLowerCase();
+    if (!q) return true;
+    return [r.item, (r.items || []).map(function (x) { return x.item; }).join(' '), r.department, r.staff, r.approvedBy, r.buyer, r.handedTo, r.handedBy, r.keptAt, code(r)].some(function (x) {
+      return String(x || '').toLowerCase().indexOf(q) !== -1;
+    });
+  }
+  var byCreatedDesc = function (a, b) { return b.createdAt.localeCompare(a.createdAt); };
+
+  /* ---------- rendering the page ---------- */
+  function card(r) {
+    var due = dueInfo(r), last = lastRemark(r), open = isOpen(r), its = r.items || [], body, pur = r.kind === 'purchase';
+    var nBought = its.filter(isBought).length;
+    if (its.length > 1) {
+      body = '<ul class="c-items">' + its.slice(0, 4).map(function (it) {
+        return '<li class="' + (it.state === 'skipped' ? 'nb' : '') + '"><strong>' + esc(it.item) + '</strong><span>' + (pur && it.state !== 'pending' ? itemTag(it.state) + ' ' : '') + esc(it.qty + (it.unit ? ' ' + it.unit : '')) + '</span></li>';
+      }).join('') + (its.length > 4 ? '<li class="more">+ ' + (its.length - 4) + ' more items</li>' : '') + '</ul>';
+    } else {
+      body = '<div class="c-item"><strong>' + esc(r.item) + '</strong><span class="qty">' + esc(qtyText(r)) + '</span></div>';
+    }
+    return '<div class="card' + (open && due.cls === 'due-over' ? ' over' : '') + '" role="button" tabindex="0" data-id="' + esc(r.id) + '">' +
+      '<div class="c-main">' +
+      '<div class="c-kind">' + (r.kind === 'stock' ? 'STOCK ORDER' : 'PURCHASE') + (r.routedFrom ? ' · SENT FROM ' + esc(r.routedFrom).toUpperCase() : '') + (r.sample ? ' · EXAMPLE' : '') + '</div>' +
+      body +
+      '<div class="c-state"><span class="pill s-' + esc(r.status) + '">' + esc(STATUS[r.status] || r.status) + '</span>' +
+      (pur && open && its.length > 1 && nBought ? '<span class="pill s-part">' + nBought + ' of ' + its.length + ' purchased</span>' : '') +
+      (open && !r.approvedBy ? '<span class="pill s-warnapp">Needs approval</span>' : '') + '</div>' +
+      '<div class="c-due ' + due.cls + '">' + esc(due.text) + '</div>' +
+      '<div class="c-meta">Asked by ' + esc(r.staff) + (r.department ? ' (' + esc(r.department) + ')' : '') + ' on ' + esc(fmtDTs(r.createdAt)) + esc(waitText(r)) + '</div>' +
+      (last ? '<div class="c-note"><b>Remark:</b> ' + esc(last.text) + '</div>' : '') +
+      '</div>' +
+      (r.refImg ? '<img class="c-thumb" data-pid="' + esc(r.refImg) + '" data-blob alt="" loading="lazy">' : '') +
+      '</div>';
+  }
+  function group(title, items, cls) {
+    if (!items.length) return '';
+    return '<div class="grp ' + (cls || '') + '"><h2>' + title + '<span>' + items.length + '</span></h2>' + items.map(card).join('') + '</div>';
+  }
+
+  function spendOf(r) {
+    if ((r.status === 'bought' || r.status === 'handed') && r.total) return Number(r.total);
+    if (r.status === 'refunded' && r.total) return Math.max(0, Number(r.total) - Number(r.refundAmount || 0));
+    return 0;
+  }
+  function deptTable(rows) {
+    var m = {};
+    rows.forEach(function (r) {
+      var k = r.department || 'Not set';
+      var o = m[k] = m[k] || { n: 0, open: 0, spent: 0 };
+      o.n++; if (isOpen(r)) o.open++; o.spent += spendOf(r);
+    });
+    var keys = Object.keys(m).sort();
+    if (!keys.length) return '';
+    return '<div class="tbl-wrap" style="margin-top:12px"><table class="dtbl"><thead><tr><th>Department</th><th>Requests</th><th>Open</th><th>Spent</th></tr></thead><tbody>' +
+      keys.map(function (k) { return '<tr><td>' + esc(k) + '</td><td>' + m[k].n + '</td><td>' + m[k].open + '</td><td>' + esc(money(m[k].spent)) + '</td></tr>'; }).join('') + '</tbody></table></div>';
+  }
+  function renderTabs() {
+    document.querySelectorAll('.tab').forEach(function (b) { b.setAttribute('aria-selected', b.dataset.tab === S.tab ? 'true' : 'false'); });
+    document.querySelectorAll('#kindseg button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.kind === S.kind ? 'true' : 'false'); });
+    document.querySelectorAll('#statseg button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.stat === S.stat ? 'true' : 'false'); });
+    document.querySelectorAll('#respseg button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.resp === S.resp ? 'true' : 'false'); });
+    $('#extra').hidden = S.tab !== 'tilldate';
+    $('#extra2').hidden = S.tab !== 'itemlog';
+    var H = {
+      today: 'Requests logged today, and older requests that were closed today.',
+      pending: 'Cases that are still open, with the nearest deadline first.',
+      deadlines: 'Open cases grouped by how close the deadline is.',
+      itemlog: 'Every item of every purchase order: when it was ordered, the response, when it was bought, remarks and photos.',
+      datewise: 'All requests grouped by the day they were logged.',
+      tilldate: 'Every request so far. Narrow it by status or date.'
+    };
+    $('#tabhint').textContent = H[S.tab] || '';
+  }
+  function renderSummary() {
+    var base = S.items.filter(function (r) { return (S.kind === 'all' || r.kind === S.kind) && (!S.dept || r.department === S.dept); });
+    var open = base.filter(isOpen);
+    var over = open.filter(function (r) { return hasDl(r) && daysTo(r.deadline) < 0; }).length;
+    var due0 = open.filter(function (r) { return hasDl(r) && daysTo(r.deadline) === 0; }).length;
+    var t = todayStr();
+    var logged = base.filter(function (r) { return ymd(new Date(r.createdAt)) === t; }).length;
+    $('#sum').innerHTML =
+      '<button type="button" data-go="pending"><b>' + open.length + '</b><span>Open cases</span></button>' +
+      '<button type="button" data-go="deadlines" class="' + (over ? 'hot' : '') + '"><b>' + over + '</b><span>Overdue</span></button>' +
+      '<button type="button" data-go="deadlines"><b>' + due0 + '</b><span>Due today</span></button>' +
+      '<button type="button" data-go="today"><b>' + logged + '</b><span>Logged today</span></button>';
+  }
+  function emptyMsg() {
+    if (S.q || S.kind !== 'all') return '<p class="empty">No requests match this filter.</p>';
+    var m = {
+      today: 'Nothing logged today yet. Tap New request to log a stock order or a purchase.',
+      pending: 'No pending cases. Every request logged so far is closed.',
+      deadlines: 'No open cases to check against a deadline.',
+      itemlog: 'No purchase items to show. Log a purchase to see its items here.',
+      datewise: 'No requests yet. Tap New request to log the first one.',
+      tilldate: 'No requests in this range.'
+    };
+    return '<p class="empty">' + m[S.tab] + '</p>';
+  }
+  function renderList() {
+    var el = $('#list');
+    if (!S.ready || (db && !S.loaded)) { el.innerHTML = '<p class="empty">Loading requests…</p>'; return; }
+    if (!db) { el.innerHTML = '<p class="empty">Requests cannot load because this page cannot reach its store. Sign in to claude.ai and reload.</p>'; return; }
+    var base = S.items.filter(function (r) { return (S.kind === 'all' || r.kind === S.kind) && (!S.dept || r.department === S.dept) && matchQ(r); });
+    var out = '';
+    var t = todayStr();
+    if (S.tab === 'today') {
+      var logged = base.filter(function (r) { return ymd(new Date(r.createdAt)) === t; }).sort(byCreatedDesc);
+      var closed = base.filter(function (r) {
+        var c = closedAt(r);
+        return ymd(new Date(r.createdAt)) !== t && c && ymd(new Date(c)) === t;
+      }).sort(byCreatedDesc);
+      out = group('Logged today', logged) + group('Closed today, logged earlier', closed);
+    } else if (S.tab === 'pending') {
+      var open = base.filter(isOpen).sort(function (a, b) {
+        return (a.deadline || '9999').localeCompare(b.deadline || '9999') || a.createdAt.localeCompare(b.createdAt);
+      });
+      out = group('Not approved yet', open.filter(function (r) { return r.status === 'pending' && !r.approvedBy; })) +
+        group('Approved, pending', open.filter(function (r) { return r.status === 'pending' && r.approvedBy; })) +
+        group('Bought, waiting for handover', open.filter(function (r) { return r.status === 'bought'; }));
+    } else if (S.tab === 'deadlines') {
+      var o = base.filter(isOpen).sort(function (a, b) {
+        return (a.deadline || '9999').localeCompare(b.deadline || '9999') || a.createdAt.localeCompare(b.createdAt);
+      });
+      var g = { over: [], today: [], tom: [], week: [], later: [], none: [] };
+      o.forEach(function (r) {
+        if (!hasDl(r)) { g.none.push(r); return; }
+        var n = daysTo(r.deadline);
+        if (n < 0) g.over.push(r); else if (n === 0) g.today.push(r); else if (n === 1) g.tom.push(r); else if (n <= 7) g.week.push(r); else g.later.push(r);
+      });
+      out = group('Overdue', g.over, 'over') + group('Due today', g.today) + group('Due tomorrow', g.tom) +
+        group('Next 7 days', g.week) + group('Later', g.later) + group('No deadline', g.none);
+    } else if (S.tab === 'itemlog') {
+      out = itemLog(base);
+    } else if (S.tab === 'datewise') {
+      var days = {};
+      base.slice().sort(byCreatedDesc).forEach(function (r) {
+        var d = ymd(new Date(r.createdAt));
+        (days[d] = days[d] || []).push(r);
+      });
+      out = Object.keys(days).sort().reverse().map(function (d) {
+        var arr = days[d];
+        var nClosed = arr.filter(function (r) { return !isOpen(r); }).length;
+        return '<div class="grp"><h2>' + esc(fmtDW(d)) + ' · ' + arr.length + ' logged · ' + nClosed + ' closed</h2>' + arr.map(card).join('') + '</div>';
+      }).join('');
+    } else {
+      var rows = base.filter(function (r) {
+        var d = ymd(new Date(r.createdAt));
+        if (S.from && d < S.from) return false;
+        if (S.to && d > S.to) return false;
+        if (S.stat === 'open') return isOpen(r);
+        if (S.stat === 'closed') return !isOpen(r);
+        return true;
+      }).sort(byCreatedDesc);
+      var nOpen = rows.filter(isOpen).length;
+      var nOver = rows.filter(function (r) { return isOpen(r) && hasDl(r) && daysTo(r.deadline) < 0; }).length;
+      var spend = rows.reduce(function (a, r) {
+        if ((r.status === 'bought' || r.status === 'handed') && r.total) return a + Number(r.total);
+        if (r.status === 'refunded' && r.total) return a + Math.max(0, Number(r.total) - Number(r.refundAmount || 0));
+        return a;
+      }, 0);
+      var refunded = rows.reduce(function (a, r) { return a + (r.status === 'refunded' ? Number(r.refundAmount || 0) : 0); }, 0);
+      if (rows.length) {
+        out = '<div class="totals"><span>Requests <b>' + rows.length + '</b></span><span>Open <b>' + nOpen + '</b></span><span>Closed <b>' + (rows.length - nOpen) + '</b></span><span>Overdue <b>' + nOver + '</b></span><span>Spent on purchases <b>' + esc(money(spend)) + '</b></span>' + (refunded ? '<span>Refunded <b>' + esc(money(refunded)) + '</b></span>' : '') + '</div>' +
+          deptTable(rows) + '<div class="grp" style="margin-top:12px">' + rows.map(card).join('') + '</div>';
+      }
+    }
+    el.innerHTML = out || emptyMsg();
+  }
+  function renderDatalists() {
+    var staff = {}, items = {};
+    S.items.forEach(function (r) {
+      if (r.sample) return;
+      [r.staff, r.approvedBy, r.buyer, r.handedBy, r.handedTo].forEach(function (n) { if (n) staff[n] = 1; });
+      (r.items || []).forEach(function (x) { if (x.item) items[x.item] = 1; });
+    });
+    $('#dl-staff').innerHTML = Object.keys(staff).sort().map(function (n) { return '<option value="' + esc(n) + '"></option>'; }).join('');
+    var depts = {};
+    ['Academics', 'Administration', 'Primary Wing', 'Sports', 'Art and Craft', 'Science Lab', 'Housekeeping', 'Kitchen and Canteen', 'Transport', 'Maintenance', 'Library', 'IT', 'Events'].forEach(function (n) { depts[n] = 1; });
+    S.items.forEach(function (r) { if (!r.sample && r.department) depts[r.department] = 1; });
+    $('#dl-dept').innerHTML = Object.keys(depts).sort().map(function (n) { return '<option value="' + esc(n) + '"></option>'; }).join('');
+    $('#dl-items').innerHTML = Object.keys(items).sort().map(function (n) { return '<option value="' + esc(n) + '"></option>'; }).join('');
+  }
+  function renderBanner() {
+    var b = $('#banner');
+    if (!db && S.ready) { b.hidden = false; b.textContent = 'Saving is off. Sign in to claude.ai with your school account and reload this page.'; }
+    else if (!canWrite) { b.hidden = false; b.textContent = 'You can view requests but not change them. Ask the page owner to share it with you as a Contributor.'; }
+    else b.hidden = true;
+    $('#newbtn').hidden = !ME || !canWrite;
+  }
+  function renderSample() {
+    var el = $('#samplebar'), n = S.items.filter(function (r) { return r.sample; }).length;
+    if (!n || !canDelete || !canWrite) { el.hidden = true; return; }
+    el.hidden = false;
+    el.innerHTML = S.clearAsk
+      ? 'Remove all ' + n + ' example requests for good? <button class="btn small danger" type="button" data-clear-yes>Yes, remove</button> <button class="btn small" type="button" data-clear-no>Keep</button>'
+      : n + ' example requests are loaded so staff can see every case. <button class="btn small" type="button" data-clear-ask>Remove examples</button>';
+  }
+  function renderDept() {
+    var el = $('#dept'), seen = {};
+    S.items.forEach(function (r) { if (r.department) seen[r.department] = 1; });
+    if (S.dept && !seen[S.dept]) S.dept = '';
+    var html = '<option value="">All departments</option>' + Object.keys(seen).sort().map(function (n) { return '<option value="' + esc(n) + '">' + esc(n) + '</option>'; }).join('');
+    if (el.innerHTML !== html) el.innerHTML = html;
+    el.value = S.dept;
+  }
+  function render() { renderTabs(); renderDept(); renderSummary(); renderList(); renderDatalists(); renderBanner(); renderSample(); }
+
+  /* ---------- sheet ---------- */
+  var sheet = $('#sheet'), panel = $('#panel');
+  function openSheet(id, mode) {
+    lastFocus = document.activeElement;
+    S.sel = id; S.mode = mode;
+    sheet.hidden = false; document.body.classList.add('lock');
+    renderSheet();
+    panel.scrollTop = 0; panel.focus();
+  }
+  function closeSheet() {
+    sheet.hidden = true; document.body.classList.remove('lock');
+    S.sel = null; S.mode = 'view'; panel.innerHTML = '';
+    if (lastFocus && lastFocus.focus) { try { lastFocus.focus(); } catch (e) { } }
+  }
+  function field(label, inner, hint) {
+    return '<div class="field"><label>' + label + '</label>' + inner + (hint ? '<span class="hint">' + hint + '</span>' : '') + '</div>';
+  }
+  function photoField(id, label) {
+    if (!assets) return '';
+    return '<div class="field"><span class="lbl">' + label + ' (optional)</span><div class="photo-row">' +
+      '<label class="btn small" for="' + id + '">Choose photo</label><input class="sr" id="' + id + '" type="file" accept="image/*">' +
+      '<span class="hint" id="' + id + '-n">No photo chosen</span></div></div>';
+  }
+  function formBtns(label) {
+    return '<div class="row"><button class="btn primary" type="submit">' + label + '</button><button class="btn" type="button" data-mode="view">Back</button></div>';
+  }
+  function nextStep(r) {
+    var s = r.status, pur = r.kind === 'purchase';
+    if (s === 'pending') {
+      if (pur) {
+        var nb = r.items.filter(isBought).length;
+        if (nb) return nb + ' of ' + r.items.length + (r.items.length === 1 ? ' item' : ' items') + ' purchased. Waiting for the rest.';
+        return r.approvedBy ? 'Approved. Waiting for the buyer to purchase it.' : 'Needs approval. Then the buyer will purchase it.';
+      }
+      return r.approvedBy ? 'Approved. Waiting for the store manager to hand it over.' : 'Needs approval. Then the store manager will hand it over.';
+    }
+    if (s === 'bought') return 'Bought. Waiting to be handed over to ' + r.staff + '.';
+    if (s === 'handed') return 'Done. Handed over to ' + (r.handedTo || r.staff) + '.';
+    if (s === 'arranged') return 'Done. It was arranged without buying.';
+    if (s === 'cancelled') return 'Cancelled. Nothing more to do.';
+    if (s === 'unapproved') return 'Not approved. Reopen it if the decision changes.';
+    if (s === 'unavailable') return 'Not available in the market. Reopen it if an alternative is found.';
+    if (s === 'refunded') return 'Refunded ' + money(r.refundAmount || 0) + '. Nothing more to do.';
+    return '';
+  }
+  function itemsTable(r) {
+    if (!r.items || r.items.length < 2) return '';
+    var priced = r.items.some(function (it) { return it.price != null || it.est != null; });
+    var rows = r.items.map(function (it) {
+      var q = esc(it.qty + (it.unit ? ' ' + it.unit : ''));
+      if (it.state === 'skipped' || it.bought === false) return '<tr class="nb"><td>' + esc(it.item) + '</td><td>' + q + '</td>' + (priced ? '<td colspan="2">Not bought</td>' : '') + '</tr>';
+      var pr = it.price != null ? esc(money(it.price)) : (it.est != null ? esc(money(it.est)) + ' <span class="muted">est.</span>' : '-');
+      var tot = it.lineTotal != null && it.price != null ? esc(money(it.lineTotal)) : '-';
+      return '<tr><td>' + esc(it.item) + '</td><td>' + q + '</td>' + (priced ? '<td>' + pr + '</td><td>' + tot + '</td>' : '') + '</tr>';
+    }).join('');
+    return '<div class="sec"><h3 class="sec-h">Items in this order (' + r.items.length + ')</h3><div class="tbl-wrap"><table class="dtbl"><thead><tr><th>Item</th><th>Quantity</th>' + (priced ? '<th>Price per unit</th><th>Total</th>' : '') + '</tr></thead><tbody>' + rows + '</tbody></table></div></div>';
+  }
+  function elapsedText(a, b) {
+    var ms = new Date(b) - new Date(a);
+    if (!(ms >= 0)) return '-';
+    var m = Math.round(ms / 60000);
+    if (m < 1) return 'under 1 min';
+    if (m < 60) return m + ' min';
+    var h = Math.floor(m / 60), mm = m % 60;
+    if (h < 24) return h + ' h' + (mm ? ' ' + mm + ' min' : '');
+    var dd = Math.floor(h / 24), hh = h % 24;
+    return dd + ' d' + (hh ? ' ' + hh + ' h' : '');
+  }
+  function itemForm(r, i) {
+    var it = r.items[i], pre = S.preResp || '';
+    var chips = [['purchased', 'Purchased'], ['unavailable', 'Not available'], ['expensive', 'Too expensive'], ['soldout', 'Sold out'], ['other', 'Other'], ['pending', 'Back to waiting']];
+    var pv = it.price != null ? it.price : (it.quote != null ? it.quote : (it.est != null ? it.est : ''));
+    return '<form data-act="item" class="iform" data-i="' + i + '">' +
+      '<div class="chiprow">' + chips.map(function (c) {
+        return '<label class="rchip r-' + c[0] + '"><input type="radio" name="resp" value="' + c[0] + '"' + (pre === c[0] ? ' checked' : '') + '><span>' + c[1] + '</span></label>';
+      }).join('') + '</div>' +
+      '<div class="field price-f"><label>Price per unit (Rs)</label><input id="f-iprice" type="number" inputmode="decimal" min="0" step="any" value="' + esc(pv) + '"></div>' +
+      field('Remark', '<input id="f-iremark" type="text" placeholder="For example: shop closed, asking Rs 90 against Rs 56">') +
+      photoField('f-iimg', 'Photo') +
+      '<div class="row"><button class="btn primary" type="submit">Save</button><button class="btn" type="button" data-mode="view">Cancel</button></div></form>';
+  }
+  function syncItemForm() {
+    var f = panel.querySelector('form.iform');
+    if (!f) return;
+    var c = f.querySelector('input[name="resp"]:checked'), val = c ? c.value : '';
+    f.classList.toggle('showprice', val === 'purchased' || val === 'expensive');
+    var lab = f.querySelector('.price-f label');
+    if (lab) lab.textContent = val === 'expensive' ? 'Price quoted per unit (Rs)' : 'Price per unit (Rs)';
+  }
+  function itemCards(r, readonly) {
+    if (r.kind !== 'purchase') return itemsTable(r);
+    var its = r.items, editable = !readonly && canWrite && (r.status === 'pending' || r.status === 'bought');
+    var nBought = its.filter(isBought).length, nWait = its.filter(function (x) { return x.state === 'pending'; }).length;
+    var cards = its.map(function (it, i) {
+      var q = esc(it.qty + (it.unit ? ' ' + it.unit : '')), detail = '';
+      if (it.state === 'purchased') detail = it.price != null ? esc(money(it.price)) + ' per unit' + (it.lineTotal != null ? ' · total <b>' + esc(money(it.lineTotal)) + '</b>' : '') : 'Price not entered';
+      else if (it.state === 'expensive' && it.quote != null) detail = 'Quoted ' + esc(money(it.quote)) + ' per unit' + (it.est != null ? ' against ' + esc(money(it.est)) + ' expected' : '');
+      else if (it.state === 'pending' && it.est != null) detail = 'Expected ' + esc(money(it.est)) + ' per unit';
+      var when = it.at ? esc(fmtDT(it.at)) + (it.by ? ' by ' + esc(it.by) : '') + ' · ' + esc(elapsedText(r.createdAt, it.at)) + ' after the order' : '';
+      var remark = it.remark ? '<div class="ic-remark"><b>Remark:</b> ' + esc(it.remark) + (it.remarkAt ? ' <span class="muted">(' + esc(it.remarkBy || '') + ', ' + esc(fmtDTs(it.remarkAt)) + ')</span>' : '') + '</div>' : '';
+      var img = it.img ? '<img class="ic-img" data-pid="' + esc(it.img) + '" data-blob alt="Photo of ' + esc(it.item) + '">' : '';
+      var inForm = S.mode === 'item' && S.itemIdx === i, acts = '';
+      if (editable && !inForm) {
+        var b = function (resp, t, cls) { return '<button class="btn small ' + (cls || '') + '" type="button" data-item="' + i + '" data-resp="' + resp + '">' + t + '</button>'; };
+        acts = it.state === 'pending'
+          ? '<div class="ic-actions">' + b('purchased', 'Purchased', 'go') + b('unavailable', 'Not available') + b('expensive', 'Too expensive') + b('soldout', 'Sold out') + b('', 'Remark') + '</div>'
+          : '<div class="ic-actions">' + b(it.state, 'Change response') + b('', 'Add remark') + '</div>';
+      }
+      return '<div class="icard ic-' + esc(it.state) + '"><div class="ic-top"><strong>' + esc(it.item) + '</strong><span class="qty">' + q + '</span></div>' +
+        '<div class="ic-state">' + itemTag(it.state) + (detail ? ' <span>' + detail + '</span>' : '') + '</div>' +
+        (when ? '<div class="ic-when muted">' + when + '</div>' : '') + remark + img + acts + (inForm ? itemForm(r, i) : '') + '</div>';
+    }).join('');
+    var done = editable && nBought && nWait && S.mode !== 'item'
+      ? '<div><button class="btn" type="button" data-done-buying>Done buying: close the ' + nWait + ' waiting ' + (nWait === 1 ? 'item' : 'items') + ' as not bought</button></div>' : '';
+    var hint = r.status === 'pending' && !nWait && !nBought ? '<p class="hint">No item has been purchased. Try again, or close the whole order with "Not available in market".</p>' : '';
+    return '<div class="sec"><h3 class="sec-h">Items (' + its.length + ') · ' + nBought + ' purchased' + (nWait ? ', ' + nWait + ' waiting' : '') + '</h3><div class="icards">' + cards + '</div>' + done + hint + '</div>';
+  }
+  function applyItems(r, items, entries, now, actor) {
+    var anyP = items.some(function (x) { return x.state === 'pending'; });
+    var bought = items.filter(isBought), st = r.status;
+    if (st === 'pending' || st === 'bought') st = (!anyP && bought.length) ? 'bought' : 'pending';
+    var priced = bought.filter(function (x) { return x.lineTotal != null; });
+    var last = bought.slice().sort(function (a, b) { return String(a.at || '').localeCompare(String(b.at || '')); }).pop();
+    var total = priced.length ? round2(priced.reduce(function (a, x) { return a + Number(x.lineTotal); }, 0)) : null;
+    var log = entries.slice();
+    if (st !== r.status) log.push({ at: now, by: actor, kind: 'event', text: st === 'bought' ? 'All items answered: ' + bought.length + ' of ' + items.length + ' purchased' + (total != null ? ', total ' + money(total) : '') + '. Ready to hand over.' : 'Order is open again' });
+    return { items: items, status: st, total: total, price: items.length === 1 && items[0].price != null ? items[0].price : null, buyer: last ? (last.by || '') : '', boughtAt: last ? (last.at || null) : null, log: (r.log || []).concat(log) };
+  }
+  async function finishBuying() {
+    var r = cur();
+    if (!r || S.busy || !needMe()) return;
+    S.busy = true;
+    try {
+      var now = new Date().toISOString(), actor = me(), n = 0;
+      var items = r.items.map(function (x) { var o = Object.assign({}, x); if (o.state === 'pending') { o.state = 'skipped'; o.at = now; o.by = actor; n++; } return o; });
+      var fields = applyItems(r, items, [{ at: now, by: actor, kind: 'event', text: 'Finished buying. ' + n + (n === 1 ? ' item' : ' items') + ' closed as not bought' }], now, actor);
+      await db.doc('requests/' + r.id).update(fields);
+      renderSheet(); toast('Buying finished');
+    } catch (err) { toast(errMsg(err)); }
+    finally { S.busy = false; }
+  }
+  function timeCheck(r, it) {
+    if (it.state === 'purchased' && it.at && hasDl(r)) {
+      var late = dayNum(ymd(new Date(it.at))) - dayNum(r.deadline);
+      return { cls: late > 0 ? 'due-over' : 'due-done', text: (late > 0 ? 'Bought ' + plural(late, 'day') + ' late' : 'Bought on time') + ' · took ' + elapsedText(r.createdAt, it.at) };
+    }
+    if (isOpen(r) && it.state !== 'purchased' && hasDl(r)) return dueInfo(r);
+    if (it.at) return { cls: 'due-ok', text: 'Answered after ' + elapsedText(r.createdAt, it.at) };
+    return { cls: 'due-ok', text: '-' };
+  }
+  function itemLog(base) {
+    var rows = [];
+    base.filter(function (r) { return r.kind === 'purchase'; }).sort(byCreatedDesc).forEach(function (r) {
+      r.items.forEach(function (it) { rows.push({ r: r, it: it }); });
+    });
+    rows = rows.filter(function (x) {
+      var st = x.it.state;
+      if (S.resp === 'pending') return st === 'pending';
+      if (S.resp === 'purchased') return st === 'purchased' || st === 'arranged';
+      if (S.resp === 'problem') return st !== 'pending' && st !== 'purchased' && st !== 'arranged';
+      return true;
+    });
+    if (!rows.length) return '';
+    var nBought = rows.filter(function (x) { return isBought(x.it); }).length;
+    var nWait = rows.filter(function (x) { return x.it.state === 'pending'; }).length;
+    var spent = rows.reduce(function (a, x) { return a + (isBought(x.it) && x.it.lineTotal != null ? Number(x.it.lineTotal) : 0); }, 0);
+    var totals = '<div class="totals"><span>Items <b>' + rows.length + '</b></span><span>Purchased <b>' + nBought + '</b></span><span>Waiting <b>' + nWait + '</b></span><span>Not purchased <b>' + (rows.length - nBought - nWait) + '</b></span><span>Spent <b>' + esc(money(round2(spent))) + '</b></span></div>';
+    var body = rows.map(function (x) {
+      var r = x.r, it = x.it, tc = timeCheck(r, it);
+      var price = it.state === 'purchased' && it.price != null ? esc(money(it.price)) + '<br><b>' + esc(money(it.lineTotal || 0)) + '</b>'
+        : (it.state === 'expensive' && it.quote != null ? 'quoted ' + esc(money(it.quote)) : (it.est != null ? '<span class="muted">est. ' + esc(money(it.est)) + '</span>' : '-'));
+      var got = it.state === 'purchased' && it.at ? esc(fmtD(ymd(new Date(it.at)))) + '<br><span class="muted">' + esc(fmtT(it.at)) + (it.by ? ' · ' + esc(it.by) : '') + '</span>' : '-';
+      return '<tr data-id="' + esc(r.id) + '"><td>' + esc(fmtD(ymd(new Date(r.createdAt)))) + '<br><span class="muted">' + esc(fmtT(r.createdAt)) + '</span></td>' +
+        '<td class="wrap"><strong>' + esc(it.item) + '</strong><br><span class="muted">#' + esc(code(r)) + (r.sample ? ' · example' : '') + '</span></td>' +
+        '<td>' + esc(it.qty + (it.unit ? ' ' + it.unit : '')) + '</td><td class="wrap">' + esc(r.department || '-') + '</td>' +
+        '<td>' + (hasDl(r) ? esc(fmtD(r.deadline)) : '-') + '</td><td>' + itemTag(it.state) + '</td><td>' + got + '</td><td>' + price + '</td>' +
+        '<td class="wrap">' + (it.remark ? esc(it.remark) : '<span class="muted">-</span>') + '</td>' +
+        '<td>' + (it.img ? '<img class="ilog-img" data-pid="' + esc(it.img) + '" data-blob alt="">' : '-') + '</td>' +
+        '<td class="wrap ' + tc.cls + '">' + esc(tc.text) + '</td></tr>';
+    }).join('');
+    return totals + '<div class="tbl-wrap" style="margin-top:10px"><table class="dtbl ilog"><thead><tr><th>Ordered</th><th>Item</th><th>Quantity</th><th>Department</th><th>Deadline</th><th>Response</th><th>Purchased</th><th>Price</th><th>Remark</th><th>Photo</th><th>Time check</th></tr></thead><tbody>' + body + '</tbody></table></div>';
+  }
+  function factSec(title, rows) {
+    return rows.length ? '<div class="sec"><h3 class="sec-h">' + title + '</h3><dl class="facts">' + rows.join('') + '</dl></div>' : '';
+  }
+  function facts(r) {
+    var req = [], buy = [], out = [], end = [];
+    var row = function (a, k, v) { if (v) a.push('<dt>' + k + '</dt><dd>' + v + '</dd>'); };
+    row(req, 'Person', esc(r.staff));
+    row(req, 'Department', esc(r.department || ''));
+    row(req, 'Logged on', esc(fmtDT(r.createdAt)));
+    row(req, 'Deadline', hasDl(r) ? esc(fmtDY(r.deadline)) : '');
+    row(req, 'Approval', r.approvedBy ? 'Approved by ' + esc(r.approvedBy) + (r.approvedAt ? ' on ' + esc(fmtDT(r.approvedAt)) : '') : '<span class="muted">Not approved yet</span>');
+    if (r.estPrice != null && r.estPrice !== '' && r.items.length === 1) row(req, 'Expected price', esc(money(r.estPrice)) + ' per unit');
+    if (r.buyer) row(buy, 'Bought by', esc(r.buyer) + (r.boughtAt ? ' on ' + esc(fmtDT(r.boughtAt)) : ''));
+    if (r.price != null && r.items.length === 1) row(buy, 'Price per unit', esc(money(r.price)));
+    if (r.total != null) row(buy, 'Total price', '<strong>' + esc(money(r.total)) + '</strong>');
+    if (r.buyNote) row(buy, 'Note', esc(r.buyNote));
+    if (r.handedAt) {
+      row(out, 'Handed over to', esc(r.handedTo || '-'));
+      row(out, 'Handed over by', esc(r.handedBy || '-'));
+      row(out, 'Handed over on', esc(fmtDT(r.handedAt)));
+    }
+    if (r.keptAt) row(out, 'Kept at', esc(r.keptAt));
+    if (r.handNote) row(out, 'Handover note', esc(r.handNote));
+    if (r.arrangedAt) { row(end, 'Arranged', esc(r.arrangedHow || '')); row(end, 'Arranged by', esc(r.arrangedBy || '') + ' on ' + esc(fmtDT(r.arrangedAt))); }
+    if (r.unapprovedAt) { row(end, 'Not approved because', esc(r.unapprovedWhy || '')); row(end, 'Decided by', esc(r.unapprovedBy || '') + ' on ' + esc(fmtDT(r.unapprovedAt))); }
+    if (r.unavailableAt) { row(end, 'Not available', esc(r.unavailableNote || '')); row(end, 'Checked by', esc(r.unavailableBy || '') + ' on ' + esc(fmtDT(r.unavailableAt))); }
+    if (r.refundedAt) { row(end, 'Refund amount', '<strong>' + esc(money(r.refundAmount || 0)) + '</strong>'); row(end, 'Refund reason', esc(r.refundWhy || '')); row(end, 'Refunded by', esc(r.refundedBy || '') + ' on ' + esc(fmtDT(r.refundedAt))); }
+    if (r.cancelledAt) { row(end, 'Cancelled because', esc(r.cancelledWhy || '')); row(end, 'Cancelled by', esc(r.cancelledBy || '') + ' on ' + esc(fmtDT(r.cancelledAt))); }
+    return factSec('Request', req) + factSec('Buying', buy) + factSec('Handover', out) + factSec('How it ended', end);
+  }
+  function pics(r) {
+    var list = [['Reference', r.refImg], ['Bill', r.billImg], ['Handover', r.handImg], ['Arranged', r.arrImg], ['Refund receipt', r.refundImg]].filter(function (p) { return p[1]; });
+    if (!list.length) return '';
+    return '<div class="pics">' + list.map(function (p) {
+      return '<div class="pic"><img data-pid="' + esc(p[1]) + '" data-blob alt="' + p[0] + ' photo" loading="lazy"><span>' + p[0] + '</span></div>';
+    }).join('') + '</div>';
+  }
+  function timeline(r) {
+    var items = (r.log || []).map(function (e) {
+      return '<li class="' + (e.kind === 'remark' ? 'remark' : 'event') + '"><div class="tl-h"><span class="tl-t">' + esc(fmtDT(e.at)) + '</span><span>' + esc(e.by) + (e.kind === 'remark' ? ' · remark' : '') + '</span></div><div class="tl-x">' + esc(e.text) + '</div></li>';
+    }).join('');
+    return '<div><h3 class="sec-h" style="margin-bottom:8px">History and remarks</h3><ol class="tl">' + items + '</ol></div>';
+  }
+  function viewActions(r) {
+    if (!canWrite) return '';
+    var open = isOpen(r), main = [], more = [];
+    var btn = function (m, t, cls) { return '<button class="btn ' + (cls || '') + '" type="button" data-mode="' + m + '">' + t + '</button>'; };
+    if (r.status === 'pending' && r.kind === 'stock') main.push(btn('handover', 'Hand over to staff', 'primary'));
+    if (r.status === 'bought') main.push(btn('handover', 'Hand over to staff', 'primary'));
+    if (r.status === 'unapproved' || r.status === 'unavailable' || r.status === 'cancelled') main.push(btn('reopen', 'Reopen this request', 'primary'));
+    if (open && !r.approvedBy) more.push(btn('approve', 'Approve'));
+    if (r.status === 'pending' && r.kind === 'purchase') { more.push(btn('forward', 'Send to store')); more.push(btn('arrange', 'Arranged without buying')); more.push(btn('unavailable', 'Not available in market')); }
+    if (r.status === 'pending' && r.kind === 'stock') more.push(btn('forward', 'Not in stock, send to purchase'));
+    if (r.kind === 'purchase' && (r.status === 'bought' || r.status === 'handed')) more.push(btn('refund', 'Refund or return'));
+    if (open) more.push(btn('deadline', 'Change deadline'));
+    if (open && !r.approvedBy) more.push(btn('unapprove', 'Not approved', 'danger'));
+    if (open) more.push(btn('cancel', 'Cancel request', 'danger'));
+    if (canDelete) more.push(btn('delete', 'Delete', 'danger'));
+    if (!main.length && !more.length) return '';
+    return '<div class="actions">' + (main.length ? '<div class="a-main">' + main.join('') + '</div>' : '') +
+      (more.length ? '<div><div class="sec-h" style="margin-bottom:8px">Other actions</div><div class="a-more">' + more.join('') + '</div></div>' : '') + '</div>';
+  }
+  function modeForm(r) {
+    var m = S.mode, by = esc(me()), pur = r.kind === 'purchase';
+    if (m === 'approve') return '<form data-act="approve"><h3>Approve this request</h3>' + field('Approved by', '<input id="f-by" type="text" required list="dl-staff" value="' + by + '">') + formBtns('Approve') + '</form>';
+    if (m === 'buy') return '<form data-act="buy"><h3>Record the purchase</h3>' +
+      field('Buyer', '<input id="f-buyer" type="text" required list="dl-staff" value="' + by + '">') +
+      '<div class="blines">' + r.items.map(function (it) {
+        return '<div class="bline"><label class="chk"><input type="checkbox" class="b-on" checked><span><b>' + esc(it.item) + '</b> · ' + esc(it.qty + (it.unit ? ' ' + it.unit : '')) + '</span></label>' +
+          '<div class="field"><label>Price per unit (Rs)</label><input type="number" class="b-price" inputmode="decimal" min="0" step="any" value="' + (it.est != null ? esc(it.est) : '') + '"></div>' +
+          '<div class="b-line muted"></div></div>';
+      }).join('') + '</div>' +
+      '<div class="total-line">Grand total: <b id="f-total">-</b></div>' +
+      photoField('f-bill', 'Bill photo') + field('Note', '<input id="f-note" type="text" placeholder="Shop, bill number, anything useful">') + formBtns('Mark bought') + '</form>';
+        if (m === 'handover') return '<form data-act="handover"><h3>Hand over</h3>' +
+      '<div class="two">' + field('Handed over to', '<input id="f-to" type="text" required list="dl-staff" value="' + esc(r.staff) + '">') + field('Handed by', '<input id="f-from" type="text" required list="dl-staff" value="' + by + '">') + '</div>' +
+      (pur ? field('Place to keep', '<input id="f-place" type="text" placeholder="Shelf, cupboard or room where it is kept">') : '') +
+      photoField('f-hand', 'Handover photo') + field('Note', '<input id="f-note" type="text">') + formBtns('Mark handed over') + '</form>';
+    if (m === 'forward') return '<form data-act="forward"><h3>' + (pur ? 'Send to store instead of buying' : 'Not in stock, send to purchase') + '</h3>' +
+      field('Your name', '<input id="f-by" type="text" required list="dl-staff" value="' + by + '">') + field('Remark', '<input id="f-note" type="text" placeholder="Optional">') + formBtns(pur ? 'Send to store' : 'Send to purchase') + '</form>';
+    if (m === 'arrange') return '<form data-act="arrange"><h3>Arranged without buying</h3>' +
+      field('How was it arranged?', '<input id="f-how" type="text" required placeholder="For example: borrowed from the art room">') +
+      '<div class="two">' + field('Arranged by', '<input id="f-by" type="text" required list="dl-staff" value="' + by + '">') + field('Place to keep', '<input id="f-place" type="text">') + '</div>' +
+      photoField('f-arr', 'Photo') + formBtns('Close as arranged') + '</form>';
+    if (m === 'cancel') return '<form data-act="cancel"><h3>Cancel this request</h3>' + field('Reason', '<input id="f-why" type="text" required>') + field('Your name', '<input id="f-by" type="text" required list="dl-staff" value="' + by + '">') + formBtns('Cancel request') + '</form>';
+    if (m === 'deadline') return '<form data-act="deadline"><h3>Change deadline</h3>' +
+      '<div class="two">' + field('New deadline', '<input id="f-date" type="date" required value="' + esc(r.deadline) + '">') + field('Your name', '<input id="f-by" type="text" required list="dl-staff" value="' + by + '">') + '</div>' +
+      field('Reason', '<input id="f-why" type="text" placeholder="Optional">') + formBtns('Save deadline') + '</form>';
+    if (m === 'unapprove') return '<form data-act="unapprove"><h3>Not approved</h3>' + field('Reason', '<input id="f-why" type="text" required placeholder="Why this request is not approved">') + field('Decided by', '<input id="f-by" type="text" required list="dl-staff" value="' + by + '">') + formBtns('Mark not approved') + '</form>';
+    if (m === 'unavailable') return '<form data-act="unavailable"><h3>Not available in market</h3>' + field('What was tried', '<input id="f-note" type="text" required placeholder="Shops visited, alternatives, when it may be available">') + field('Your name', '<input id="f-by" type="text" required list="dl-staff" value="' + by + '">') + formBtns('Mark not available') + '</form>';
+    if (m === 'refund') return '<form data-act="refund"><h3>Refund or return</h3><div class="two">' + field('Refund amount (Rs)', '<input id="f-amt" type="number" inputmode="decimal" min="0" step="any" required value="' + (r.total != null ? esc(r.total) : '') + '">') + field('Your name', '<input id="f-by" type="text" required list="dl-staff" value="' + by + '">') + '</div>' + field('Reason', '<input id="f-why" type="text" required placeholder="Wrong size, damaged, not needed">') + photoField('f-rcpt', 'Receipt or credit note photo') + formBtns('Record refund') + '</form>';
+    if (m === 'reopen') return '<form data-act="reopen"><h3>Reopen this request</h3>' + field('Your name', '<input id="f-by" type="text" required list="dl-staff" value="' + by + '">') + field('Remark', '<input id="f-note" type="text" placeholder="Optional">') + formBtns('Reopen') + '</form>';
+    if (m === 'delete') return '<div class="warn">Delete request #' + esc(code(r)) + ' for good? Its photos stay in storage but the request and its history are removed.</div>' +
+      '<div class="row"><button class="btn danger" type="button" data-act-delete>Delete request</button><button class="btn" type="button" data-mode="view">Keep it</button></div>';
+    return '';
+  }
+  function itemRow() {
+    return '<div class="irow" data-row><div class="field it"><label>Item</label><input class="i-item" type="text" list="dl-items" placeholder="For example: flowers, milk, markers"></div>' +
+      '<div class="field"><label>Quantity</label><input class="i-qty" type="number" inputmode="decimal" min="0" step="any"></div>' +
+      '<div class="field"><label>Unit</label><input class="i-unit" type="text" list="dl-units" placeholder="pcs, litres"></div>' +
+      '<div class="field est"><label>Price per unit (Rs)</label><input class="i-est" type="number" inputmode="decimal" min="0" step="any" placeholder="Optional"></div>' +
+      '<div class="rm"><button class="btn small" type="button" data-rm-row>Remove item</button></div></div>';
+  }
+  function newForm() {
+    var k = S.kind === 'purchase' ? 'purchase' : 'stock';
+    return '<div class="p-head"><h2 class="p-title">New request</h2><button class="x" type="button" data-close>Close</button></div>' +
+      '<form data-act="new" class="' + (k === 'purchase' ? '' : 'is-stock') + '" autocomplete="off">' +
+      '<div class="field"><span class="lbl">Type</span><div class="segopts">' +
+      '<label class="segopt"><input type="radio" name="k" value="stock"' + (k === 'stock' ? ' checked' : '') + '><span>Stock order<small>Taken from the store room</small></span></label>' +
+      '<label class="segopt"><input type="radio" name="k" value="purchase"' + (k === 'purchase' ? ' checked' : '') + '><span>Purchase<small>Needs to be bought</small></span></label></div></div>' +
+      '<div class="two">' + field('Department', '<input id="f-dept" type="text" required list="dl-dept" placeholder="For example: Housekeeping">') +
+      field('Person', '<input id="f-staff" type="text" required list="dl-staff" value="' + esc(me()) + '">', 'Who needs these items') + '</div>' +
+      '<div class="field"><span class="lbl">Items in this order</span><div id="item-rows" class="irows">' + itemRow() + '</div>' +
+      '<div><button class="btn small" type="button" data-add-row>Add another item</button></div></div>' +
+      field('Deadline', '<input id="f-date" type="date" required min="' + todayStr() + '">') +
+      photoField('f-ref', 'Reference photo') +
+      field('Approved by', '<input id="f-appr" type="text" list="dl-staff" placeholder="Optional">') +
+      '<p class="hint">The date and time of logging are recorded automatically.</p>' +
+      '<div class="row"><button class="btn primary" type="submit">Log request</button><button class="btn" type="button" data-close>Cancel</button></div></form>';
+  }
+  function renderSheet() {
+    if (S.mode === 'new') { panel.innerHTML = newForm(); return; }
+    var r = cur();
+    if (!r) { closeSheet(); return; }
+    var due = dueInfo(r), pur = r.kind === 'purchase';
+    var head = '<div class="p-head"><span class="p-kind">' + (r.kind === 'stock' ? 'STOCK ORDER' : 'PURCHASE') + (r.routedFrom ? ' · SENT FROM ' + esc(r.routedFrom).toUpperCase() : '') + (r.sample ? ' · EXAMPLE' : '') + '</span><button class="x" type="button" data-close>Close</button></div>' +
+      '<h2 class="p-title">' + esc(r.item) + '</h2><div class="p-qty">' + esc(qtyText(r)) + ' · #' + esc(code(r)) + '</div>';
+    var next = '<div class="next s-' + esc(r.status) + '"><b>' + esc(STATUS[r.status] || r.status) + '</b><span>' + esc(nextStep(r)) + '</span></div>' +
+      '<div class="c-due ' + due.cls + '">' + esc(due.text) + '</div>';
+    var html;
+    if (S.mode === 'view' || S.mode === 'item') {
+      var acts = S.mode === 'view' ? viewActions(r) : '', blk = itemCards(r);
+      html = head + next + (pur ? blk + acts : acts + blk) + pics(r) + facts(r) + timeline(r);
+      if (S.mode === 'view' && canWrite) html += '<form data-act="remark"><div class="field"><label for="f-remark">Add a remark on the whole order</label><div class="chips">' + REMARKS.map(function (x) { return '<button class="chip" type="button" data-chip="' + esc(x) + '">' + esc(x) + '</button>'; }).join('') + '</div><textarea id="f-remark" required placeholder="Progress, delay, reason, anything the next person should know"></textarea></div><div class="row"><button class="btn small primary" type="submit">Add remark</button></div></form>';
+    } else {
+      html = head + modeForm(r) + next + itemCards(r, true) + facts(r) + timeline(r);
+    }
+    panel.innerHTML = html;
+    if (S.mode === 'buy') calcBuy();
+    if (S.mode === 'item') syncItemForm();
+  }
+
+  /* ---------- saving ---------- */
+  function toast(msg) {
+    var t = $('#toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.classList.remove('show'); }, 3800);
+  }
+  function errMsg(e) {
+    var c = e && e.code;
+    if (c === 'invalid_argument') return 'You are not allowed to change requests. Ask the owner to share this page as a Contributor.';
+    if (c === 'quota_exceeded' || c === 'quota_or_state') return 'Storage is full. Ask the owner to clear space.';
+    if (c === 'too_large') return 'That photo is too large.';
+    if (c === 'unsupported_type') return 'That photo type is not supported. Use JPEG or PNG.';
+    if (c === 'rate_limited' || c === 'resource_exhausted') return 'Too many saves at once. Wait a moment and try again.';
+    if (c === 'unavailable' || c === 'store_unavailable') return 'Could not reach the store. Try again.';
+    if (e && e.message === 'read') return 'Could not read that photo. Choose a JPEG or PNG.';
+    return 'Could not save. Try again.';
+  }
+  function loadImg(file) {
+    return new Promise(function (res, rej) {
+      var u = URL.createObjectURL(file), i = new Image();
+      i.onload = function () { URL.revokeObjectURL(u); res(i); };
+      i.onerror = function () { URL.revokeObjectURL(u); rej(new Error('read')); };
+      i.src = u;
+    });
+  }
+  async function compress(file, maxSide, quality) {
+    var MAX = maxSide || 1400, bmp;
+    try { bmp = await createImageBitmap(file, { imageOrientation: 'from-image' }); } catch (e) { bmp = await loadImg(file); }
+    var w = bmp.width || bmp.naturalWidth, h = bmp.height || bmp.naturalHeight;
+    var sc = Math.min(1, MAX / Math.max(w, h));
+    var c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(w * sc)); c.height = Math.max(1, Math.round(h * sc));
+    var ctx = c.getContext('2d');
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, c.width, c.height);
+    ctx.drawImage(bmp, 0, 0, c.width, c.height);
+    return new Promise(function (res, rej) { c.toBlob(function (b) { b ? res(b) : rej(new Error('read')); }, 'image/jpeg', quality || 0.82); });
+  }
+  function blobToDataUrl(blob) {
+    return new Promise(function (res, rej) { var r = new FileReader(); r.onload = function () { res(r.result); }; r.onerror = function () { rej(new Error('read')); }; r.readAsDataURL(blob); });
+  }
+  async function uploadPhoto(form, id) {
+    var inp = form.querySelector('#' + id);
+    var f = inp && inp.files && inp.files[0];
+    if (!f) return null;
+    var blob = await compress(f), url = await blobToDataUrl(blob);
+    if (url.length > 320000) { blob = await compress(f, 1000, 0.7); url = await blobToDataUrl(blob); }
+    if (url.length > 320000) { blob = await compress(f, 760, 0.6); url = await blobToDataUrl(blob); }
+    var pid = await tcall('putPhoto', [url]);
+    PH[pid] = url;
+    return pid;
+  }
+  async function patch(id, fields, text, by) {
+    var r = S.items.find(function (x) { return x.id === id; });
+    if (!r) throw new Error('missing');
+    var log = (r.log || []).concat([{ at: new Date().toISOString(), by: by, kind: 'event', text: text }]);
+    await db.doc('requests/' + id).update(Object.assign({}, fields, { log: log }));
+  }
+  async function run(form, fn) {
+    if (S.busy) return;
+    S.busy = true;
+    var btn = form.querySelector('button[type="submit"]'), old = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+    try { await fn(); }
+    catch (err) { toast(errMsg(err)); if (btn) { btn.disabled = false; btn.textContent = old; } }
+    finally { S.busy = false; }
+  }
+  function needMe() {
+    if (me()) return true;
+    toast('Type your name in the box at the top first.');
+    $('#me').focus();
+    return false;
+  }
+
+  panel.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var f = e.target, act = f.dataset.act, id = S.sel;
+    var v = function (i) { var el = f.querySelector('#' + i); return el ? el.value.trim() : ''; };
+    var done = function (msg) { S.mode = 'view'; renderSheet(); toast(msg); };
+    var r = cur();
+
+    if (act === 'new') {
+      var kind = f.querySelector('input[name="k"]:checked').value;
+      var staff = v('f-staff'), dept = v('f-dept'), date = v('f-date');
+      var lines = [], badRow = false;
+      f.querySelectorAll('[data-row]').forEach(function (row) {
+        var nm = row.querySelector('.i-item').value.trim(), q = row.querySelector('.i-qty').value, un = row.querySelector('.i-unit').value.trim(), es = row.querySelector('.i-est').value;
+        if (!nm && q === '' && !un && es === '') return;
+        if (!nm || !(Number(q) > 0)) { badRow = true; return; }
+        lines.push({ item: nm, qty: Number(q), unit: un, est: kind === 'purchase' && es !== '' && Number(es) >= 0 ? Number(es) : null });
+      });
+      if (!staff || !dept || !date || badRow || !lines.length) { toast(badRow ? 'Every item needs a name and a quantity.' : 'Fill in department, person, at least one item and the deadline.'); return; }
+      var title = lines.length === 1 ? lines[0].item : lines[0].item + ' and ' + (lines.length - 1) + ' more';
+      run(f, async function () {
+        var refImg = await uploadPhoto(f, 'f-ref');
+        var now = new Date().toISOString(), appr = v('f-appr');
+        await db.collection('requests').doc().set({
+          kind: kind, origKind: kind, createdAt: now, department: dept, staff: staff, item: title, items: lines,
+          qty: lines[0].qty, unit: lines[0].unit, deadline: date, refImg: refImg, approvedBy: appr, approvedAt: appr ? now : null,
+          estPrice: lines.length === 1 ? lines[0].est : null, status: 'pending',
+          log: [{ at: now, by: staff, kind: 'event', text: (kind === 'stock' ? 'Stock order logged' : 'Purchase request logged') + (lines.length > 1 ? ' (' + lines.length + ' items)' : '') }]
+        });
+        closeSheet(); toast('Request logged');
+      });
+      return;
+    }
+        if (!r) return;
+
+    if (act === 'remark') {
+      var text = v('f-remark');
+      if (!text || !needMe()) return;
+      run(f, async function () {
+        var log = (r.log || []).concat([{ at: new Date().toISOString(), by: me(), kind: 'remark', text: text }]);
+        await db.doc('requests/' + id).update({ log: log });
+        done('Remark added');
+      });
+    } else if (act === 'approve') {
+      var who = v('f-by'); if (!who) return;
+      run(f, async function () { await patch(id, { approvedBy: who, approvedAt: new Date().toISOString() }, 'Approved by ' + who, who); done('Approved'); });
+    } else if (act === 'buy') {
+      var buyer = v('f-buyer');
+      var newItems = [], total = 0, bad = false, nb = 0;
+      f.querySelectorAll('.bline').forEach(function (row, i) {
+        var it = r.items[i], on = row.querySelector('.b-on').checked, pv = row.querySelector('.b-price').value, pr = Number(pv);
+        if (!on) { nb++; newItems.push(Object.assign({}, it, { bought: false, price: null, lineTotal: 0 })); return; }
+        if (pv === '' || !(pr >= 0)) { bad = true; return; }
+        var lt = round2(pr * Number(it.qty || 0)); total += lt;
+        newItems.push(Object.assign({}, it, { bought: true, price: pr, lineTotal: lt }));
+      });
+      if (!buyer || bad || nb === newItems.length) { toast(bad ? 'Enter a price for every item you bought.' : 'Enter the buyer and mark at least one item as bought.'); return; }
+      total = round2(total);
+      run(f, async function () {
+        var billImg = await uploadPhoto(f, 'f-bill');
+        await patch(id, { status: 'bought', buyer: buyer, items: newItems, price: newItems.length === 1 ? newItems[0].price : null, total: total, boughtAt: new Date().toISOString(), billImg: billImg || r.billImg || null, buyNote: v('f-note') },
+          'Bought by ' + buyer + ', total ' + money(total) + (nb ? ', ' + nb + (nb === 1 ? ' item' : ' items') + ' not bought' : ''), buyer);
+        done('Marked as bought');
+      });
+    } else if (act === 'handover') {
+      var to = v('f-to'), from = v('f-from');
+      if (!to || !from) { toast('Enter who received it and who handed it over.'); return; }
+      run(f, async function () {
+        var handImg = await uploadPhoto(f, 'f-hand');
+        var fields = { status: 'handed', handedTo: to, handedBy: from, handedAt: new Date().toISOString(), handImg: handImg, handNote: v('f-note') };
+        if (r.kind === 'purchase' && v('f-place')) fields.keptAt = v('f-place');
+        await patch(id, fields, 'Handed over to ' + to + ' by ' + from + (fields.keptAt ? ', kept at ' + fields.keptAt : ''), from);
+        done('Marked as handed over');
+      });
+    } else if (act === 'forward') {
+      var fwho = v('f-by'); if (!fwho) return;
+      var toKind = r.kind === 'purchase' ? 'stock' : 'purchase';
+      run(f, async function () {
+        await patch(id, { kind: toKind, routedFrom: r.kind, routedAt: new Date().toISOString() },
+          'Sent to ' + (toKind === 'stock' ? 'store' : 'purchase') + (v('f-note') ? ': ' + v('f-note') : ''), fwho);
+        done('Sent to ' + (toKind === 'stock' ? 'store' : 'purchase'));
+      });
+    } else if (act === 'arrange') {
+      var how = v('f-how'), aby = v('f-by');
+      if (!how || !aby) { toast('Say how it was arranged and who arranged it.'); return; }
+      run(f, async function () {
+        var arrImg = await uploadPhoto(f, 'f-arr');
+        var fields = { status: 'arranged', arrangedBy: aby, arrangedAt: new Date().toISOString(), arrangedHow: how, arrImg: arrImg };
+        if (v('f-place')) fields.keptAt = v('f-place');
+        await patch(id, fields, 'Arranged without buying: ' + how, aby);
+        done('Closed as arranged');
+      });
+    } else if (act === 'cancel') {
+      var why = v('f-why'), cby = v('f-by');
+      if (!why || !cby) return;
+      run(f, async function () {
+        await patch(id, { status: 'cancelled', cancelledAt: new Date().toISOString(), cancelledBy: cby, cancelledWhy: why }, 'Cancelled: ' + why, cby);
+        done('Request cancelled');
+      });
+    } else if (act === 'item') {
+      var idx = Number(f.dataset.i), it0 = r.items[idx];
+      if (!it0 || !needMe()) return;
+      var chip = f.querySelector('input[name="resp"]:checked'), resp = chip ? chip.value : it0.state;
+      var pstr = v('f-iprice'), rtext = v('f-iremark'), fileEl = f.querySelector('#f-iimg'), hasFile = !!(fileEl && fileEl.files && fileEl.files[0]);
+      if (!chip && !rtext && !hasFile) { toast('Choose a response or write a remark.'); return; }
+      if ((resp === 'purchased' || resp === 'expensive') && pstr !== '' && !(Number(pstr) >= 0)) { toast('Enter a valid price.'); return; }
+      run(f, async function () {
+        var img = await uploadPhoto(f, 'f-iimg');
+        var now = new Date().toISOString(), actor = me();
+        var items = r.items.map(function (x) { return Object.assign({}, x); });
+        var it = items[idx], changed = resp !== it.state, pnum = pstr === '' ? null : Number(pstr);
+        if (changed) { it.at = resp === 'pending' ? null : now; it.by = resp === 'pending' ? '' : actor; }
+        it.state = resp;
+        delete it.bought;
+        if (resp === 'purchased') { it.price = pnum; it.lineTotal = pnum != null ? round2(pnum * Number(it.qty || 0)) : null; it.quote = null; }
+        else if (resp === 'expensive') { it.quote = pnum; it.price = null; it.lineTotal = null; }
+        else { it.price = null; it.lineTotal = null; it.quote = null; }
+        if (rtext) { it.remark = rtext; it.remarkAt = now; it.remarkBy = actor; }
+        if (img) it.img = img;
+        var text;
+        if (!changed && rtext) text = it.item + ': ' + rtext;
+        else text = it.item + ' · ' + (ISTATE[resp] || resp) + (resp === 'purchased' && it.price != null ? ' at ' + money(it.price) + ' per unit, total ' + money(it.lineTotal) : '') + (resp === 'expensive' && it.quote != null ? ' (quoted ' + money(it.quote) + ' per unit)' : '') + (rtext ? '. ' + rtext : '');
+        var fields = applyItems(r, items, [{ at: now, by: actor, kind: rtext ? 'remark' : 'event', text: text }], now, actor);
+        await db.doc('requests/' + id).update(fields);
+        S.mode = 'view'; S.itemIdx = null; S.preResp = '';
+        renderSheet(); toast(resp === 'purchased' ? 'Marked as purchased' : 'Saved');
+      });
+    } else if (act === 'unapprove') {
+      var uwhy = v('f-why'), uby = v('f-by');
+      if (!uwhy || !uby) return;
+      run(f, async function () {
+        await patch(id, { status: 'unapproved', approvedBy: '', approvedAt: null, unapprovedBy: uby, unapprovedAt: new Date().toISOString(), unapprovedWhy: uwhy }, 'Not approved: ' + uwhy, uby);
+        done('Marked as not approved');
+      });
+    } else if (act === 'unavailable') {
+      var anote = v('f-note'), aby2 = v('f-by');
+      if (!anote || !aby2) return;
+      run(f, async function () {
+        await patch(id, { status: 'unavailable', unavailableBy: aby2, unavailableAt: new Date().toISOString(), unavailableNote: anote }, 'Not available in market: ' + anote, aby2);
+        done('Marked as not available');
+      });
+    } else if (act === 'refund') {
+      var amt = Number(v('f-amt')), rwhy = v('f-why'), rby = v('f-by');
+      if (v('f-amt') === '' || !(amt >= 0) || !rwhy || !rby) { toast('Enter the refund amount, the reason and your name.'); return; }
+      run(f, async function () {
+        var rcpt = await uploadPhoto(f, 'f-rcpt');
+        await patch(id, { status: 'refunded', refundAmount: amt, refundWhy: rwhy, refundedBy: rby, refundedAt: new Date().toISOString(), refundImg: rcpt }, 'Refund ' + money(amt) + ': ' + rwhy, rby);
+        done('Refund recorded');
+      });
+    } else if (act === 'reopen') {
+      var oby = v('f-by');
+      if (!oby) return;
+      run(f, async function () {
+        await patch(id, { status: 'pending' }, 'Reopened' + (v('f-note') ? ': ' + v('f-note') : ''), oby);
+        done('Request reopened');
+      });
+    } else if (act === 'deadline') {
+      var nd = v('f-date'), dby = v('f-by');
+      if (!isYmd(nd) || !dby) return;
+      run(f, async function () {
+        await patch(id, { deadline: nd }, 'Deadline moved from ' + (hasDl(r) ? fmtD(r.deadline) : 'none') + ' to ' + fmtD(nd) + (v('f-why') ? ': ' + v('f-why') : ''), dby);
+        done('Deadline updated');
+      });
+    }
+  });
+
+  panel.addEventListener('click', async function (e) {
+    var t = e.target;
+    var ib = t.closest('[data-item]');
+    if (ib) {
+      S.itemIdx = Number(ib.dataset.item); S.preResp = ib.dataset.resp || ''; S.mode = 'item'; renderSheet();
+      var fi = panel.querySelector('#f-iremark'); if (fi) fi.focus();
+      return;
+    }
+    if (t.closest('[data-done-buying]')) { finishBuying(); return; }
+    if (t.closest('[data-add-row]')) {
+      var box = $('#item-rows');
+      if (box && box.children.length < 30) { box.insertAdjacentHTML('beforeend', itemRow()); var ins = box.querySelectorAll('.i-item'); ins[ins.length - 1].focus(); }
+      return;
+    }
+    var rmb = t.closest('[data-rm-row]');
+    if (rmb) { var rowEl = rmb.closest('[data-row]'); if (rowEl && rowEl.parentNode.children.length > 1) rowEl.remove(); return; }
+    var chip = t.closest('[data-chip]');
+    if (chip) { var ta = $('#f-remark'); if (ta) { ta.value = ta.value ? ta.value + ' ' + chip.dataset.chip : chip.dataset.chip; ta.focus(); } return; }
+    if (t.closest('[data-close]')) { closeSheet(); return; }
+    var m = t.closest('[data-mode]');
+    if (m) {
+      var mode = m.dataset.mode;
+      if ((mode === 'forward' || mode === 'cancel' || mode === 'approve') && false) return;
+      S.mode = mode; renderSheet(); return;
+    }
+    if (t.closest('[data-act-delete]')) {
+      if (S.busy) return;
+      S.busy = true;
+      try { await db.doc('requests/' + S.sel).delete(); closeSheet(); toast('Request deleted'); }
+      catch (err) { toast(errMsg(err)); }
+      finally { S.busy = false; }
+      return;
+    }
+    var img = t.closest('img[data-blob]');
+    if (img) { $('#lb-img').src = img.src; $('#lightbox').hidden = false; }
+  });
+  panel.addEventListener('change', function (e) {
+    var t = e.target;
+    if (t.type === 'file') {
+      var n = $('#' + t.id + '-n'); if (n) n.textContent = t.files && t.files[0] ? t.files[0].name : 'No photo chosen';
+    }
+    if (t.name === 'k') { var ff = t.closest('form'); if (ff) ff.classList.toggle('is-stock', t.value !== 'purchase'); }
+    if (t.classList && t.classList.contains('b-on')) calcBuy();
+    if (t.name === 'resp') syncItemForm();
+  });
+  function calcBuy() {
+    var r = cur();
+    if (!r) return;
+    var total = 0;
+    panel.querySelectorAll('.bline').forEach(function (row, i) {
+      var it = r.items[i], on = row.querySelector('.b-on').checked, pv = row.querySelector('.b-price');
+      pv.disabled = !on;
+      var p = Number(pv.value), line = on && pv.value !== '' && p >= 0 ? round2(p * Number(it.qty || 0)) : null;
+      if (line != null) total += line;
+      row.querySelector('.b-line').textContent = !on ? 'Not bought' : (line != null ? 'Line total: ' + money(line) : 'Enter the price');
+    });
+    var t = $('#f-total');
+    if (t) t.textContent = money(round2(total));
+  }
+  panel.addEventListener('input', function (e) {
+    if (e.target.classList && e.target.classList.contains('b-price')) calcBuy();
+  });
+
+  /* ---------- page events ---------- */
+  function setTab(t, fromHash) {
+    if (!HASH[t]) t = 'today';
+    S.tab = t;
+    if (!fromHash) { try { history.replaceState(null, '', '#' + HASH[t]); } catch (e) { location.hash = HASH[t]; } }
+    renderTabs(); renderList();
+  }
+  function tabFromHash() {
+    var h = (location.hash || '').replace('#', '');
+    var k = Object.keys(HASH).filter(function (x) { return HASH[x] === h; })[0];
+    return k || null;
+  }
+  $('#tabs').addEventListener('click', function (e) { var b = e.target.closest('[data-tab]'); if (b) setTab(b.dataset.tab); });
+  $('#sum').addEventListener('click', function (e) { var b = e.target.closest('[data-go]'); if (b) setTab(b.dataset.go); });
+  $('#kindseg').addEventListener('click', function (e) { var b = e.target.closest('[data-kind]'); if (b) { S.kind = b.dataset.kind; render(); } });
+  $('#statseg').addEventListener('click', function (e) { var b = e.target.closest('[data-stat]'); if (b) { S.stat = b.dataset.stat; render(); } });
+  $('#respseg').addEventListener('click', function (e) { var b = e.target.closest('[data-resp]'); if (b) { S.resp = b.dataset.resp; render(); } });
+  $('#dept').addEventListener('change', function (e) { S.dept = e.target.value; render(); });
+  $('#q').addEventListener('input', function (e) { S.q = e.target.value.trim(); renderList(); });
+  $('#from').addEventListener('change', function (e) { S.from = e.target.value; renderList(); });
+  $('#to').addEventListener('change', function (e) { S.to = e.target.value; renderList(); });
+  $('#newbtn').addEventListener('click', function () { if (ME && canWrite) openSheet(null, 'new'); });
+  $('#list').addEventListener('click', function (e) {
+    var pic = e.target.closest('img.ilog-img');
+    if (pic) { $('#lb-img').src = pic.src; $('#lightbox').hidden = false; return; }
+    var tr = e.target.closest('tr[data-id]');
+    if (tr) { openSheet(tr.dataset.id, 'view'); return; }
+    var c = e.target.closest('.card'); if (c) openSheet(c.dataset.id, 'view');
+  });
+  $('#list').addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    var c = e.target.closest('.card'); if (c) { e.preventDefault(); openSheet(c.dataset.id, 'view'); }
+  });
+  $('#lightbox').addEventListener('click', function () { $('#lightbox').hidden = true; });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    if (!$('#lightbox').hidden) $('#lightbox').hidden = true;
+    else if (!sheet.hidden) closeSheet();
+  });
+  document.addEventListener('error', function (e) {
+    var t = e.target;
+    if (t && t.tagName === 'IMG' && t.hasAttribute('data-blob')) {
+      var s = document.createElement('div'); s.className = 'gone' + (t.classList.contains('c-thumb') ? ' c-thumb' : ''); s.textContent = 'Photo missing';
+      if (t.classList.contains('c-thumb')) { t.remove(); } else { t.replaceWith(s); }
+    }
+  }, true);
+  window.addEventListener('hashchange', function () { var t = tabFromHash(); if (t && t !== S.tab) setTab(t, true); });
+
+  $('#samplebar').addEventListener('click', async function (e) {
+    if (e.target.closest('[data-clear-ask]')) { S.clearAsk = true; renderSample(); }
+    else if (e.target.closest('[data-clear-no]')) { S.clearAsk = false; renderSample(); }
+    else if (e.target.closest('[data-clear-yes]')) {
+      if (S.busy) return;
+      S.busy = true;
+      try {
+        var ids = S.items.filter(function (r) { return r.sample; }).map(function (r) { return r.id; });
+        for (var i = 0; i < ids.length; i++) { await db.doc('requests/' + ids[i]).delete(); }
+        S.clearAsk = false; toast('Example requests removed');
+      } catch (err) { toast(errMsg(err)); }
+      finally { S.busy = false; }
+    }
+  });
+
+  /* ---------- data ---------- */
+  function onData(snap) {
+    S.items = snap.docs.map(function (d) { return norm(d.id, d.data()); }).filter(function (r) { return r.item; });
+    S.loaded = true;
+    render();
+    if (!sheet.hidden && S.mode !== 'new') {
+      if (!cur()) { closeSheet(); return; }
+      var a = document.activeElement;
+      var typing = a && panel.contains(a) && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName);
+      if (S.mode === 'view' && !typing) renderSheet();
+    }
+  }
+  /* ---------- storage: Google Sheet through an Apps Script web app (see SETUP.md) ---------- */
+  var API_URL = "";   // paste the Web app URL (ends in /exec) between the quotes, or open the page with ?api=<that URL>
+  try { API_URL = new URLSearchParams(location.search).get('api') || API_URL; } catch (e) { }
+  var PH = {}, PHq = {}, PHbusy = false;
+  function call(fn, args) {
+    return fetch(API_URL, { method: 'POST', redirect: 'follow', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn: fn, args: args || [] }) })
+      .then(function (r) { return r.json(); })
+      .then(function (j) { if (!j.ok) throw new Error(j.err || 'Something went wrong.'); return j.v; });
+  }
+  function tcall(fn, args) {
+    return call(fn, [TOKEN].concat(args || [])).catch(function (e) { if (/log in again/i.test(e && e.message)) logout(true); throw e; });
+  }
+  function newId() { return 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+  function wr(ops) { return tcall('write', [ops]).then(applyState); }
+  var db = {
+    doc: function (path) {
+      var id = path.split('/')[1];
+      return {
+        set: function (d) { return wr([{ op: 'set', id: id, data: d }]); },
+        update: function (d) { return wr([{ op: 'update', id: id, data: d }]); },
+        delete: function () { return wr([{ op: 'delete', id: id }]); }
+      };
+    },
+    collection: function () {
+      return { doc: function (id) { return db.doc('requests/' + (id || newId())); } };
+    }
+  };
+  function applyState(st) {
+    if (!st || !st.me) { logout(true); return; }
+    ME = st.me; USERS = st.users || []; lastRev = st.rev || '';
+    canWrite = true; canDelete = ME.role !== 'staff';
+    $('#me').value = ME.name; $('#outbtn').hidden = false; $('#teambtn').hidden = ME.role !== 'admin';
+    $('#teambtn').textContent = 'Team logins' + (USERS.some(function (u) { return u.status === 'pending'; }) ? ' (new)' : '');
+    $('#authwrap').hidden = true;
+    if (st.items) onData({ docs: st.items.map(function (r) { return { id: r.id, data: function () { return r; } }; }) });
+    if (!pollTimer) { pollTimer = setInterval(poll, 20000); document.addEventListener('visibilitychange', poll); }
+  }
+  function poll() {
+    if (!TOKEN || !ME || document.hidden || S.busy) return;
+    var a = document.activeElement;
+    if (a && panel.contains(a) && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return;
+    tcall('state', [lastRev]).then(function (st) { if (!st.same) applyState(st); }, function () { });
+  }
+  function logout(expired) {
+    TOKEN = ''; ME = null; lastRev = ''; PH = {}; PHq = {};
+    lsSet('fis-sp-token', '');
+    $('#me').value = ''; $('#outbtn').hidden = true; $('#teambtn').hidden = true;
+    closeSheet();
+    S.items = []; S.loaded = false; render();
+    renderAuth('login', expired === true ? 'Please log in again.' : '');
+  }
+  /* photos are fetched when they are first shown */
+  function loadPhotos() {
+    var imgs = document.querySelectorAll('img[data-pid]');
+    imgs.forEach(function (im) {
+      var id = im.getAttribute('data-pid');
+      if (PH[id]) { if (im.getAttribute('src') !== PH[id]) im.src = PH[id]; return; }
+      PHq[id] = 1;
+    });
+    if (PHbusy) return;
+    var ids = Object.keys(PHq).slice(0, 8);
+    if (!ids.length || !TOKEN) return;
+    PHbusy = true;
+    tcall('photo', [ids]).then(function (r) {
+      ids.forEach(function (id) { delete PHq[id]; PH[id] = r[id] || 'data:image/gif;base64,R0lGODlhAQABAAAAACw='; });
+    }, function () { ids.forEach(function (id) { delete PHq[id]; }); }).then(function () {
+      PHbusy = false; loadPhotos();
+    });
+  }
+  new MutationObserver(function () { loadPhotos(); }).observe(document.body, { childList: true, subtree: true });
+
+  function fld(id, label, input) { return '<label for="' + id + '">' + label + input + '</label>'; }
+  function renderAuth(mode, msg) {
+    var first = mode === 'setup', w = $('#authwrap');
+    w.hidden = false;
+    w.innerHTML = '<div class="authbox"><h2>Stock and Purchase Desk</h2><p>' + (first ? 'First time? Choose a password.' : 'Staff log in.') + '</p><form id="af" style="display:flex;flex-direction:column;gap:12px" novalidate>' +
+      fld('au-n', 'Your name', '<input type="text" id="au-n" maxlength="40" autocomplete="username">') +
+      fld('au-p', first ? 'Choose a password (6 or more characters)' : 'Password', '<input type="password" id="au-p" maxlength="60" autocomplete="' + (first ? 'new-password' : 'current-password') + '">') +
+      (first ? fld('au-r', 'I am', '<select id="au-r"><option value="staff">Staff</option><option value="incharge">Incharge (manager)</option><option value="admin">Admin</option></select>') + '<p>The admin approves every new login. Use your full name so the history shows who did what.</p>' : '') +
+      '<p class="err" id="au-e" role="alert">' + esc(msg || '') + '</p><button type="submit" class="btn primary" id="au-go">' + (first ? 'Create login' : 'Log in') + '</button>' +
+      '<button type="button" class="btn" id="au-sw">' + (first ? 'I already have a login' : 'First time? Set password') + '</button></form></div>';
+    $('#au-sw').addEventListener('click', function () { renderAuth(first ? 'login' : 'setup', ''); });
+    $('#af').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var n = $('#au-n').value.trim(), pw = $('#au-p').value;
+      if (!n || !pw) { $('#au-e').textContent = 'Type your name and password.'; return; }
+      var b = $('#au-go'); b.disabled = true;
+      call(first ? 'setup' : 'login', first ? [n, pw, $('#au-r').value] : [n, pw]).then(function (r) {
+        if (r.pending) { renderAuth('login', 'Your login is created. It is waiting for the admin to approve it.'); return; }
+        TOKEN = r.token; lsSet('fis-sp-token', TOKEN);
+        applyState(r.state);
+      }, function (err) { $('#au-e').textContent = err.message || 'Could not log in.'; b.disabled = false; });
+    });
+  }
+  function teamSheet() {
+    var w = $('#authwrap'); w.hidden = false;
+    var rows = USERS.slice().sort(function (a, b) { return (a.status === 'pending' ? 0 : 1) - (b.status === 'pending' ? 0 : 1) || a.name.localeCompare(b.name); }).map(function (u) {
+      var idx = USERS.indexOf(u), st = u.status === 'active' ? 'Active' : u.status === 'pending' ? 'Waiting for approval' : 'Password reset';
+      return '<div class="team-row"><strong>' + esc(u.name) + '</strong><span>' + st + '</span>' +
+        '<select id="tr-' + idx + '" aria-label="Role">' + [['staff', 'Staff'], ['incharge', 'Incharge (manager)'], ['admin', 'Admin']].map(function (o) { return '<option value="' + o[0] + '"' + (o[0] === u.role ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select>' +
+        '<div class="row">' + (u.status === 'pending' ? '<button type="button" class="btn small primary" data-u="approve" data-i="' + idx + '">Approve</button>' : '<button type="button" class="btn small" data-u="role" data-i="' + idx + '">Save role</button>') +
+        (u.name !== ME.name ? '<button type="button" class="btn small" data-u="reset" data-i="' + idx + '">Reset password</button><button type="button" class="btn small danger" data-u="remove" data-i="' + idx + '">Remove</button>' : '') + '</div></div>';
+    }).join('');
+    w.innerHTML = '<div class="authbox"><h2>Team logins</h2>' + (rows || '<p>No logins yet.</p>') + '<p class="err" id="tm-e" role="alert"></p><button type="button" class="btn" id="tm-close">Close</button></div>';
+    $('#tm-close').addEventListener('click', function () { w.hidden = true; });
+    w.querySelector('.authbox').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-u]'); if (!b) return;
+      var u = USERS[+b.getAttribute('data-i')], act = b.getAttribute('data-u'); if (!u) return;
+      var role = $('#tr-' + b.getAttribute('data-i')).value, p;
+      if (act === 'approve' || act === 'role') p = tcall('approve', [u.name, role]);
+      else if (act === 'reset') p = tcall('resetUser', [u.name]);
+      else p = tcall('removeUser', [u.name]);
+      b.disabled = true;
+      p.then(function (st) { applyState(st); teamSheet(); }, function (err) { $('#tm-e').textContent = err.message; b.disabled = false; });
+    });
+  }
+  $('#outbtn').addEventListener('click', function () { logout(false); });
+  $('#teambtn').addEventListener('click', teamSheet);
+
+  async function init() {
+    S.tab = tabFromHash() || 'today';
+    render();
+    S.ready = true;
+    if (!API_URL) {
+      var w = $('#authwrap'); w.hidden = false;
+      w.innerHTML = '<div class="authbox"><h2>Setting up</h2><p>This app is not connected to its Google Sheet yet. The admin needs to finish the one-time setup (see SETUP.md), then this page will open here.</p></div>';
+      return;
+    }
+    TOKEN = lsGet('fis-sp-token');
+    if (!TOKEN) { renderAuth('login', ''); return; }
+    try {
+      var st = await tcall('state', ['']);
+      if (!st || !st.me) { logout(false); return; }
+      applyState(st);
+    } catch (e) {
+      if (!TOKEN) return;
+      S.loaded = true; render(); toast('Could not reach the server. Check the internet and reload.');
+    }
+  }
+  init();
+})();
+</script>
+</body>
+</html>
