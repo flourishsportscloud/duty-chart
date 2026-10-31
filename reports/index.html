@@ -161,7 +161,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, a:focus-visible
 .nl { display: flex; flex-wrap: wrap; gap: 4px }
 .nm-c { font-size: 12.5px; border: 1px solid var(--line); background: var(--surface); border-radius: 5px; padding: 1px 6px }
 .nm-c i { font-style: normal; font-weight: 700; margin-left: 4px }
-.nm-c.s-ns i, .nm-c.s-bl i { color: var(--bad) } .nm-c.s-ic i { color: var(--warn) } .nm-c.s-ng i, .nm-c.s-ab i { color: var(--muted) }
+.nm-c.s-ns i, .nm-c.s-bl i, .nm-c.s-lo i { color: var(--bad) } .nm-c.s-ic i { color: var(--warn) } .nm-c.s-ng i, .nm-c.s-ab i { color: var(--muted) }
 .pickhint { margin: 0; padding: 14px 16px; color: var(--muted) }
 @media (prefers-reduced-motion: no-preference) { .cat, .btn, .chip { transition: background .15s } }
 </style>
@@ -239,7 +239,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, a:focus-visible
     </section>
     <section class="panel" id="d-names-card">
       <h2>Defaulter names <small id="d-scope2"></small></h2>
-      <div class="legend"><span><b>•</b> not submitted</span><span><b>IC</b> incomplete</span><span><b>NG</b> not given</span><span><b>Ab</b> absent</span><span><b>blank</b> not marked</span></div>
+      <div class="legend"><span><b>•</b> not submitted</span><span><b>IC</b> incomplete</span><span><b>NG</b> not given</span><span><b>Ab</b> absent</span><span><b>blank</b> not marked</span><span><b>4/10</b> test score below 60%</span></div>
       <p class="pickhint" id="d-pick" hidden>Pick a class above, or tap a section in the Class-wise table, to see names item by item.</p>
       <div class="names" id="d-names"></div>
     </section>
@@ -458,12 +458,12 @@ $('rclose').onclick = closeReader;
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (!$('sheet').hidden) $('sheet').hidden = true; else if (!$('reader').hidden) closeReader(); } });
 
 // ---------- defaulter dashboard ----------
-const D = { rows: null, loading: null, cls: '1', sec: '', items: ['Assignment', 'Notebook', 'Book', 'Test'], stats: ['Not submitted', 'Incomplete', 'Not given', 'Absent', 'Blank'], role: 'all', tab: 'class', q: '' };
+const D = { rows: null, loading: null, cls: '1', sec: '', items: ['Assignment', 'Notebook', 'Book', 'Test'], stats: ['Below 60%', 'Not submitted', 'Incomplete', 'Not given', 'Absent', 'Blank'], role: 'all', tab: 'class', q: '' };
 const ITEMS = ['Assignment', 'Notebook', 'Book', 'Test'];
-const STATS = ['Not submitted', 'Incomplete', 'Not given', 'Absent', 'Blank'];
-const SCODE = { 'Not submitted': '•', 'Incomplete': 'IC', 'Not given': 'NG', 'Absent': 'Ab', 'Blank': 'blank' };
-const SCLS = { 'Not submitted': 's-ns', 'Incomplete': 's-ic', 'Not given': 's-ng', 'Absent': 's-ab', 'Blank': 's-bl' };
-const SLAB = { 'Not submitted': '• Not submitted', 'Incomplete': 'IC Incomplete', 'Not given': 'NG Not given', 'Absent': 'Ab Absent', 'Blank': 'Blank' };
+const STATS = ['Below 60%', 'Not submitted', 'Incomplete', 'Not given', 'Absent', 'Blank'];
+const SCODE = { 'Below 60%': '<60%', 'Not submitted': '•', 'Incomplete': 'IC', 'Not given': 'NG', 'Absent': 'Ab', 'Blank': 'blank' };
+const SCLS = { 'Below 60%': 's-lo', 'Not submitted': 's-ns', 'Incomplete': 's-ic', 'Not given': 's-ng', 'Absent': 's-ab', 'Blank': 's-bl' };
+const SLAB = { 'Below 60%': 'Test below 60%', 'Not submitted': '• Not submitted', 'Incomplete': 'IC Incomplete', 'Not given': 'NG Not given', 'Absent': 'Ab Absent', 'Blank': 'Blank' };
 const nf = new Intl.NumberFormat('en-IN');
 const fmtN = v => nf.format(v);
 const dfmt = d => { if (!d) return 'no date'; const x = new Date(d + 'T00:00:00Z'); return x.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' }); };
@@ -509,7 +509,7 @@ function dRender() {
   if (ds.length) { add(' Checks from '); add(`${dfmt(ds[0])} to ${dfmt(ds[ds.length - 1])}`, 1); add('.'); }
   // tiles
   const c = counts(s), tiles = [['Pending entries · ' + scopeText(), s.length, true], ['Students with pending work', studentsOf(s)],
-    ['Assignments', c.Assignment], ['Notebooks', c.Notebook], ['Books', c.Book], ['Tests (absent / not given)', c.Test]];
+    ['Assignments', c.Assignment], ['Notebooks', c.Notebook], ['Books', c.Book], ['Tests (below 60% · Ab · NG)', c.Test]];
   const tb = $('d-tiles'); tb.innerHTML = '';
   for (const [l, v, hot] of tiles) { const d = document.createElement('div'); d.className = 'tile' + (hot && v ? ' hot' : ''); const a = document.createElement('span'); a.className = 'tl'; a.textContent = l; const n = document.createElement('span'); n.className = 'tv'; n.textContent = fmtN(v); d.append(a, n); tb.appendChild(d); }
   $('d-scope').textContent = D.tab === 'class' ? '· whole school' : '· ' + scopeText();
@@ -577,7 +577,7 @@ function dRenderNames(s) {
       const nl = document.createElement('div'); nl.className = 'nl';
       for (const [nm, xs] of [...groupBy(rs, r => r.student)].sort((x, y) => x[0].localeCompare(y[0]))) {
         const ch = document.createElement('span'); ch.className = 'nm-c ' + SCLS[xs[xs.length - 1].status]; ch.textContent = nm;
-        const i = document.createElement('i'); i.textContent = [...new Set(xs.map(x => SCODE[x.status]))].join('/') + (xs.length > 1 ? ` ×${xs.length}` : ''); ch.appendChild(i); nl.appendChild(ch);
+        const i = document.createElement('i'); i.textContent = [...new Set(xs.map(x => x.score || SCODE[x.status]))].join('/') + (xs.length > 1 ? ` ×${xs.length}` : ''); ch.appendChild(i); nl.appendChild(ch);
       }
       card.appendChild(nl); grid.appendChild(card);
     }
