@@ -688,6 +688,11 @@ img[data-pid]:not([src]) { visibility: hidden; }
   }
   function renderSample() {
     var el = $('#samplebar'), n = S.items.filter(function (r) { return r.sample; }).length;
+    if (!n && ME && ME.role === 'admin' && S.loaded) {
+      el.hidden = false;
+      el.innerHTML = S.seeding ? 'Loading sample data…' : 'Want to see how it works? <button class="btn small" type="button" data-seed>Load sample data</button> <span class="muted">Stock orders and purchases covering every case. You can remove them later.</span>';
+      return;
+    }
     if (!n || !canDelete || !canWrite) { el.hidden = true; return; }
     el.hidden = false;
     el.innerHTML = S.clearAsk
@@ -1377,7 +1382,14 @@ img[data-pid]:not([src]) { visibility: hidden; }
   window.addEventListener('hashchange', function () { var t = tabFromHash(); if (t && t !== S.tab) setTab(t, true); });
 
   $('#samplebar').addEventListener('click', async function (e) {
-    if (e.target.closest('[data-clear-ask]')) { S.clearAsk = true; renderSample(); }
+    if (e.target.closest('[data-seed]')) {
+      if (S.seeding) return;
+      S.seeding = true; renderSample();
+      try { applyState(await tcall('seedDemo')); toast('Sample data loaded'); }
+      catch (err) { toast(errMsg(err)); }
+      S.seeding = false; renderSample();
+    }
+    else if (e.target.closest('[data-clear-ask]')) { S.clearAsk = true; renderSample(); }
     else if (e.target.closest('[data-clear-no]')) { S.clearAsk = false; renderSample(); }
     else if (e.target.closest('[data-clear-yes]')) {
       if (S.busy) return;
