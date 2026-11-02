@@ -60,7 +60,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .nm{font-weight:600;flex:1 1 auto;min-width:0;overflow-wrap:anywhere}
 .pen{flex:0 0 auto;width:40px;height:36px;border:1.5px solid var(--line);background:transparent;border-radius:8px;color:var(--muted);font-size:13px;font-weight:600}
 .pen.has{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
-.marks{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:8px}
+.marks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:8px}
 .mk{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-height:50px;border:1.5px solid var(--line);background:var(--bg);border-radius:9px;padding:4px 2px}
 .mk small{font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .mk span{font-weight:700;font-size:14px}
@@ -68,6 +68,10 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .mk.bad{background:var(--bad-soft);border-color:var(--bad)} .mk.bad span{color:var(--bad)}
 .mk.warn{background:var(--warn-soft);border-color:var(--warn)} .mk.warn span{color:var(--warn)}
 .mk:disabled{opacity:.35;cursor:default}
+.subbar{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px 12px;margin-bottom:8px;border:1.5px solid var(--warn);background:var(--warn-soft);border-radius:10px}
+.subbar.done{border-color:var(--ok);background:var(--ok-soft)}
+.subbar .subtxt{font-size:13px;line-height:1.35}
+.subbar .btn{flex:0 0 auto;min-height:40px;padding:0 14px;border-radius:9px;border:0;background:var(--accent);color:#fff;font-weight:700;cursor:pointer}
 .rem{margin-top:8px}
 .rem textarea{width:100%;font:inherit;padding:8px 10px;border:1.5px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);resize:vertical;min-height:62px}
 .fab{position:fixed;left:0;right:0;bottom:0;padding:10px max(16px,env(safe-area-inset-left,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));background:linear-gradient(transparent,var(--bg) 35%);z-index:6}
@@ -382,19 +386,32 @@ async function refresh(){
 }
 
 /* ---------- state changes ---------- */
+const MF = ["a","d","e","s","b","v","y","p"];   // absent, diary, english, sign, behaviour, tv, study, play
+/* Every child starts as Present · Diary OK · English Yes · Sign Yes · Behaviour Good · TV/Study/Play Yes.
+   Only the exceptions (the defaulters) are stored. A section is "submitted" when the marker taps Submit. */
+function subKey(s){ return "_" + s; }
+function subOf(c, s, dt){ const d = docs[(dt || date) + "_" + c]; return (d && d.m[subKey(s)]) || null; }
+function hasMarks(c, s, dt){ const d = docs[(dt || date) + "_" + c]; return !!d && Object.keys(d.m).some(k => k.indexOf(s + "-") === 0); }
+function secDone(c, s, dt){ return !!subOf(c, s, dt) || hasMarks(c, s, dt); }
+function submitSec(c, s){
+  const d = getDoc(c), k = subKey(s);
+  d.m[k] = {k:1, at:Date.now(), u:(typeof me !== "undefined" && me && me.name) || ""};
+  scheduleSave(c, k);
+}
 function setMark(c, s, i, patch){
   const d = getDoc(c), k = key(s,i), prev = d.m[k] || {};
   const cur = Object.assign({}, prev, patch);
   const tm = Object.assign({}, prev.t || {}), now = Date.now();
-  ["a","d","e","s","b"].forEach(f => { if (f in patch) { if (cur[f]) tm[f] = now; else delete tm[f]; } });
+  MF.forEach(f => { if (f in patch) { if (cur[f]) tm[f] = now; else delete tm[f]; } });
   if ("r" in patch) { if (cur.r && cur.r.trim()) { if (!(prev.r && prev.r.trim())) tm.r = now; } else delete tm.r; }
-  ["a","d","e","s","b"].forEach(f => { if (!cur[f]) delete cur[f]; });
+  MF.forEach(f => { if (!cur[f]) delete cur[f]; });
   if (!cur.r || !cur.r.trim()) delete cur.r;
   cur.t = tm; if (!Object.keys(tm).length) delete cur.t;
-  const has = ["a","d","e","s","b","r"].some(f => cur[f]);
+  const has = MF.concat(["r"]).some(f => cur[f]);
   if (has) d.m[k] = cur; else delete d.m[k];
   scheduleSave(c, k);
 }
+const flip2 = v => v === 2 ? 0 : 2;
 const cycle3 = v => ((v||0) + 1) % 3;
 
 /* ---------- render ---------- */
@@ -413,13 +430,14 @@ function renderChips(){
   }
 }
 function counts(c, s){
-  const names = ROSTER[c][s]; let absent = 0, def = 0, enNo = 0, sgNo = 0, bad = 0;
+  const names = ROSTER[c][s]; let absent = 0, def = 0, enNo = 0, sgNo = 0, bad = 0, tvNo = 0, stNo = 0, plNo = 0;
   names.forEach((n,i) => {
     const m = mark(c,s,i);
     if (m.a) { absent++; return; }
     if (m.d) def++; if (m.e === 2) enNo++; if (m.s === 2) sgNo++; if (m.b === 2) bad++;
+    if (m.v === 2) tvNo++; if (m.y === 2) stNo++; if (m.p === 2) plNo++;
   });
-  return {total:names.length, absent, present:names.length-absent, def, enNo, sgNo, bad};
+  return {total:names.length, absent, present:names.length-absent, def, enNo, sgNo, bad, tvNo, stNo, plNo};
 }
 function renderTabs(){
   const box = $("tabs"); box.textContent = "";
@@ -441,10 +459,22 @@ function markBtn(label, text, tone, onclick, disabled){
   b.setAttribute("aria-label", label + ": " + text);
   return b;
 }
+function submitBar(){
+  const sb = subOf(cls, sec), k = counts(cls, sec), bar = el("div", "subbar" + (sb ? " done" : ""));
+  const txt = el("div", "subtxt");
+  if (sb) txt.textContent = "Submitted " + fmtT(sb.at) + (sb.u ? " by " + sb.u : "") + " · " + k.def + " diary defaulters";
+  else txt.textContent = "Everyone is pre-marked Present · OK · Yes · Good. Change only the defaulters, then tap Submit.";
+  bar.appendChild(txt);
+  const b = el("button", "btn", sb ? "Submit again" : "Submit " + cls + " " + sec); b.type = "button";
+  b.onclick = () => { submitSec(cls, sec); render(); toast("Section " + cls + " " + sec + " submitted"); };
+  bar.appendChild(b);
+  return bar;
+}
 function renderList(){
   const box = $("list"); box.textContent = "";
   const names = ROSTER[cls][sec];
   if (!names || !names.length){ box.appendChild(el("div","empty","No students in this section.")); return; }
+  box.appendChild(submitBar());
   names.forEach((n, i) => {
     const m = mark(cls, sec, i), abs = !!m.a;
     const card = el("div","stu" + (abs ? " absent" : ""));
@@ -457,12 +487,15 @@ function renderList(){
     pen.onclick = () => { const k = cls+sec+i; if (openRem.has(k)) openRem.delete(k); else openRem.add(k); renderList(); };
     head.appendChild(pen); card.appendChild(head);
     const mk = el("div","marks");
+    const nb = (label, f, yes, no) => markBtn(label, m[f] === 2 ? no : yes, m[f] === 2 ? "bad" : "ok", () => { setMark(cls,sec,i,{[f]: flip2(m[f])}); render(); }, abs);
     mk.appendChild(markBtn("Attend", abs ? "A" : "P", abs ? "bad" : "ok", () => { setMark(cls,sec,i,{a: abs ? 0 : 1}); render(); }));
-    mk.appendChild(markBtn("Diary", m.d ? "DEF" : "OK", m.d ? "warn" : "", () => { setMark(cls,sec,i,{d: m.d ? 0 : 1}); render(); }, abs));
-    const yn = (f, label) => markBtn(label, m[f] === 1 ? "Yes" : m[f] === 2 ? "No" : "–", m[f] === 1 ? "ok" : m[f] === 2 ? "bad" : "", () => { setMark(cls,sec,i,{[f]: cycle3(m[f])}); render(); }, abs);
-    mk.appendChild(yn("e","English"));
-    mk.appendChild(yn("s","Sign"));
-    mk.appendChild(markBtn("Behav", m.b === 1 ? "Good" : m.b === 2 ? "Bad" : "–", m.b === 1 ? "ok" : m.b === 2 ? "bad" : "", () => { setMark(cls,sec,i,{b: cycle3(m.b)}); render(); }, abs));
+    mk.appendChild(markBtn("Diary", m.d ? "DEF" : "OK", m.d ? "warn" : "ok", () => { setMark(cls,sec,i,{d: m.d ? 0 : 1}); render(); }, abs));
+    mk.appendChild(nb("English","e","Yes","No"));
+    mk.appendChild(nb("Sign","s","Yes","No"));
+    mk.appendChild(nb("Behav","b","Good","Bad"));
+    mk.appendChild(nb("TV hr","v","Yes","No"));
+    mk.appendChild(nb("Study hr","y","Yes","No"));
+    mk.appendChild(nb("Play hr","p","Yes","No"));
     card.appendChild(mk);
     if (m.r || openRem.has(cls+sec+i)){
       const r = el("div","rem"); const ta = el("textarea"); ta.id = "rem-" + cls + sec + i;
@@ -487,7 +520,7 @@ function reportFor(c, withNames){
   const secs = sections(c);
   secs.forEach(s => {
     const k = counts(c, s), label = "Class " + ORD[c] + " " + s;
-    lines.push("*" + label + " - Present - " + k.present + "/" + k.total + "*");
+    lines.push("*" + label + " - Present - " + k.present + "/" + k.total + "*" + (secDone(c, s) ? "" : " _(not submitted yet)_"));
     const rem = [];
     ROSTER[c][s].forEach((n,i) => { const m = mark(c,s,i); if (m.r && m.r.trim()) rem.push(firstName(n) + " - " + m.r.trim().replace(/\s+/g," ")); });
     if (rem.length) rem.forEach((t,i) => lines.push((i+1) + ". " + t)); else lines.push("NA");
@@ -495,6 +528,9 @@ function reportFor(c, withNames){
     if (k.enNo) extra.push("Spoken English (No): " + k.enNo);
     if (k.sgNo) extra.push("Parent sign (No): " + k.sgNo);
     if (k.bad) extra.push("Behaviour (Bad): " + k.bad);
+    if (k.tvNo) extra.push("TV hour (No): " + k.tvNo);
+    if (k.stNo) extra.push("Study hour (No): " + k.stNo);
+    if (k.plNo) extra.push("Play hour (No): " + k.plNo);
     if (extra.length) lines.push("_" + extra.join(" | ") + "_");
     lines.push("");
   });
@@ -550,18 +586,21 @@ let acts = {};            // "2026-10-27_1A9" -> {log:[{a,cats,at,by}]}
 let smsRec = {};          // "1A9_def" -> {sentOn, sentAt, remark}
 const aPending = {}, aWriting = {};
 let pMsg = ""; const aBusy = {};
-const FIELD = {def:"d", eng:"e", sig:"s", beh:"b", rem:"r"};
-const LABEL = {rem:"Parent remark", def:"Diary not completed", eng:"Spoken English", sig:"Parent signature", beh:"Conduct"};
+const FIELD = {def:"d", eng:"e", sig:"s", beh:"b", tv:"v", study:"y", play:"p", rem:"r"};
+const LABEL = {rem:"Parent remark", def:"Diary not completed", eng:"Spoken English", sig:"Parent signature", beh:"Conduct", tv:"TV hour", study:"Study hour", play:"Play hour"};
 const QUICK = {
   rem:["Noted","Counselled","Warned"],
   def:["Student cautioned","Called parent"],
   eng:["Student guided","Called parent"],
   sig:["Parent reminded","Called parent"],
-  beh:["Student counselled","Called parent"]
+  beh:["Student counselled","Called parent"],
+  tv:["Student guided","Called parent"],
+  study:["Student guided","Called parent"],
+  play:["Student guided","Called parent"]
 };
 const ADMIN_QUICK = ["Noted","Counselled","Warned"];
-const STREAK_CATS = ["def","eng","sig","beh"];
-const DEF_SEG = ["def","eng","sig","beh"];
+const STREAK_CATS = ["def","eng","sig","beh","tv","study","play"];
+const DEF_SEG = ["def","eng","sig","beh","tv","study","play"];
 
 function shiftDate(s, n){
   const [y,m,d] = s.split("-").map(Number); const t = new Date(Date.UTC(y, m-1, d + n));
@@ -581,13 +620,13 @@ function gap(from, to){
 }
 function flagged(m, cat){
   if (!m || m.a) return false;
-  return cat === "def" ? !!m.d : cat === "eng" ? m.e === 2 : cat === "sig" ? m.s === 2 : m.b === 2;
+  return cat === "def" ? !!m.d : cat === "eng" ? m.e === 2 : cat === "sig" ? m.s === 2 : cat === "beh" ? m.b === 2 : cat === "tv" ? m.v === 2 : cat === "study" ? m.y === 2 : m.p === 2;
 }
 function streak(c, s, i, cat){
   const k = key(s,i); let n = 0, start = null;
   for (let b = 0; b < 14; b++){
     const dt = shiftDate(date, -b), d = docs[dt + "_" + c];
-    if (!d || !Object.keys(d.m).length) continue;
+    if (!d || !secDone(c, s, dt)) continue;
     if (flagged(d.m[k], cat)) { n++; start = dt; } else break;
   }
   return {n, start};
@@ -601,6 +640,9 @@ function issuesFor(c, s, i, seg, dt){
     if (m.e === 2) out.push({cat:"eng", at:t.e});
     if (m.s === 2) out.push({cat:"sig", at:t.s});
     if (m.b === 2) out.push({cat:"beh", at:t.b});
+    if (m.v === 2) out.push({cat:"tv", at:t.v});
+    if (m.y === 2) out.push({cat:"study", at:t.y});
+    if (m.p === 2) out.push({cat:"play", at:t.p});
   }
   return out;
 }
@@ -746,7 +788,10 @@ function smsText(first, cat, n){
     def:"has not completed diary work for " + n + " days in a row. Please check the diary daily.",
     eng:"has not spoken in English at school for " + n + " days in a row. Please encourage English at home.",
     sig:"diary has not been signed by a parent for " + n + " days in a row. Please sign the diary daily.",
-    beh:"has shown conduct concerns at school for " + n + " days in a row. Please talk to your child."
+    beh:"has shown conduct concerns at school for " + n + " days in a row. Please talk to your child.",
+    tv:"has not followed the TV hour routine at home for " + n + " days in a row. Please follow the school's TV hour schedule.",
+    study:"has not followed the study hour routine at home for " + n + " days in a row. Please ensure daily study time.",
+    play:"has not followed the play hour routine at home for " + n + " days in a row. Please ensure daily play time."
   };
   return "Dear Parent, " + f + " " + t[cat];
 }

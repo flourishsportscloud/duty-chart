@@ -6,7 +6,7 @@
    - action and SMS times are stamped by the server, so nobody can back-date them
 */
 const ROLES=["cm","pl","admin"];
-const CATS=["rem","def","eng","sig","beh"];
+const CATS=["rem","def","eng","sig","beh","tv","study","play"];
 const TOKEN_DAYS=120;
 const WINDOW_DAYS=35;       // state() sends this many days back from the date being viewed
 const BACKDATE_DAYS=30;     // marks can be entered or corrected up to 30 days back
@@ -39,11 +39,11 @@ function cleanMark(x,me){
   if(!x||typeof x!=="object")return null;
   const o={};
   ["a","d"].forEach(f=>{if(x[f])o[f]=1});
-  ["e","s","b"].forEach(f=>{const v=Number(x[f]);if(v===1||v===2)o[f]=v});
+  ["e","s","b","v","y","p"].forEach(f=>{const v=Number(x[f]);if(v===1||v===2)o[f]=v});
   if(typeof x.r==="string"&&x.r.trim())o.r=x.r.trim().slice(0,500);
   if(!Object.keys(o).length)return null;
   if(x.t&&typeof x.t==="object"){
-    const t={};["a","d","e","s","b","r"].forEach(f=>{const v=Number(x.t[f]);if(v>0&&isFinite(v)&&o[f])t[f]=v});
+    const t={};["a","d","e","s","b","v","y","p","r"].forEach(f=>{const v=Number(x.t[f]);if(v>0&&isFinite(v)&&o[f])t[f]=v});
     if(Object.keys(t).length)o.t=t;
   }
   return o;
@@ -128,6 +128,7 @@ const API={
     const id=date+"_"+cls,row=findRow_("Marks",id);
     let m={};if(row){try{m=JSON.parse(row.json)}catch(e){}}
     Object.keys(set||{}).forEach(k=>{
+      if(/^_[A-Z]$/.test(k)){m[k]={k:1,at:ctx.now,u:me.name};return}   // "section submitted", stamped here
       if(!/^[A-Z]-\d{1,3}$/.test(k))fail("Unknown student.");
       const c=cleanMark(set[k]);
       if(!c){delete m[k];return}
@@ -167,11 +168,11 @@ const API={
   // admin: SMS sent / undone for a child and category
   markSms(ctx,token,id,sent,info){
     const me=needAdmin(ctx,token);
-    id=str(id,20);if(!/^\d{1,2}[A-Z]\d{1,3}_(def|eng|sig|beh)$/.test(id))fail("Unknown SMS item.");
+    id=str(id,20);if(!/^\d{1,2}[A-Z]\d{1,3}_(def|eng|sig|beh|tv|study|play)$/.test(id))fail("Unknown SMS item.");
     if(!sent){deleteRow_("Sms",id);ctx.log(me.name,"sms undone",id,"");return {}}
     info=info||{};
     const sentOn=isoDate(info.sentOn)&&info.sentOn<=ctx.today?info.sentOn:ctx.today;
-    const rec={cls:Number(info.cls)||0,sec:str(info.sec,2),name:str(info.name,60),cat:str(info.cat,4),sentOn,sentAt:ctx.now,remark:str(info.remark,200),by:me.name};
+    const rec={cls:Number(info.cls)||0,sec:str(info.sec,2),name:str(info.name,60),cat:str(info.cat,8),sentOn,sentAt:ctx.now,remark:str(info.remark,200),by:me.name};
     upsert_("Sms",{id,json:JSON.stringify(rec),updated:new Date(ctx.now).toISOString()});
     ctx.log(me.name,"sms sent",id,rec.remark);
     return rec;
