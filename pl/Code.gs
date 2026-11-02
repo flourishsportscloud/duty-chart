@@ -24,10 +24,11 @@ function rows_(name){const sh=sheet_(name);const n=sh.getLastRow();if(n<2)return
 function parse_(s){try{return JSON.parse(s)||{}}catch(e){return {}}}
 function getTimes_(){const r=rows_("Config").find(x=>x[0]==="times");return r?parse_(r[1]):{}}
 
+function wkOf_(date){const d=new Date(date+"T00:00:00Z");d.setUTCDate(d.getUTCDate()-((d.getUTCDay()+6)%7));return d.toISOString().slice(0,10)}
 function state_(wk){
   if(!isoDate(wk))fail("Bad week.");
   const docs={};
-  rows_("Plan").forEach(r=>{if(String(r[4])===wk){const j=parse_(r[5]);docs[r[0]]={pl:r[1],mode:r[2],date:String(r[3]),wk:String(r[4]),cells:j.cells||{},rem:j.rem||{}}}});
+  rows_("Plan").forEach(r=>{const p=String(r[0]).split("_");if(p.length===3&&isoDate(p[2])&&wkOf_(p[2])===wk){const j=parse_(r[5]);docs[r[0]]={pl:p[0],mode:p[1],date:p[2],wk:wk,cells:j.cells||{},rem:j.rem||{}}}});
   return {today:today_(),docs,times:getTimes_()};
 }
 
@@ -39,8 +40,7 @@ function save_(id,patch,who){
   const name=String(who||"");
   if(Object.keys(PEOPLE).map(k=>PEOPLE[k]).indexOf(name)<0)fail("Pick your name first.");
   if(name!==PEOPLE[pl]&&SENIORS.indexOf(name)<0)fail("Only "+PEOPLE[pl]+" and the seniors can update this plan.");
-  const d=new Date(date+"T00:00:00Z");d.setUTCDate(d.getUTCDate()-((d.getUTCDay()+6)%7));
-  const wk=d.toISOString().slice(0,10);
+  const wk=wkOf_(date);
   const sh=sheet_("Plan");const all=rows_("Plan");
   let idx=all.findIndex(r=>r[0]===id);
   const j=idx>=0?parse_(all[idx][5]):{};j.cells=j.cells||{};j.rem=j.rem||{};
@@ -54,7 +54,7 @@ function save_(id,patch,who){
     const num=(e.n===""||e.n==null||isNaN(Number(e.n)))?"":Number(e.n);
     j.rem[String(k).slice(0,80)]={n:num,x:String(e.x||"").slice(0,500),by:name,at:now};n++;
   });
-  const row=[id,pl,mode,date,wk,JSON.stringify(j),new Date(now)];
+  const row=[id,pl,mode,"'"+date,"'"+wk,JSON.stringify(j),new Date(now)];
   if(idx>=0)sh.getRange(idx+2,1,1,row.length).setValues([row]);else sh.appendRow(row);
   const lg=sheet_("Log");lg.appendRow([Utilities.formatDate(new Date(now),TZ,"yyyy-MM-dd HH:mm"),name,id,n+" change(s)"]);
   return {pl,mode,date,wk,cells:j.cells,rem:j.rem};
@@ -89,4 +89,4 @@ function doPost(e){
   return ContentService.createTextOutput(JSON.stringify(out)).setMimeType(ContentService.MimeType.JSON);
 }
 function doGet(){return ContentService.createTextOutput("PL Plan – Live API is running.")}
-function setupSheets(){Object.keys(COLS).forEach(sheet_)}
+function setupSheets(){Object.keys(COLS).forEach(sheet_);SpreadsheetApp.getActiveSpreadsheet().rename("PL Plan Data")}
