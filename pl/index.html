@@ -223,7 +223,7 @@ const secsFor=(pl,mode)=>mode==='dp'?pl.sections:['x'];
 function dueOf(b){const t=S.times[b.id];if(t==='none')return null;if(t&&t!=='def')return t;return b.time}
 
 /* ================= STORAGE (Google Sheet via Apps Script — see SETUP.md) ================= */
-const API_URL=new URLSearchParams(location.search).get('api')||'';
+const API_URL=new URLSearchParams(location.search).get('api')||'https://script.google.com/macros/s/AKfycbyzHMWJYQOB8Qr9jlrsml9PnoRs6d9xjvzWMejOMUF_1RGohDSIhnHmxM6QF79LgJ-q/exec';
 const LKEY='plplan_gh_v1';
 function saveLocal(){try{localStorage.setItem(LKEY,JSON.stringify({docs:S.docs,times:S.times}))}catch(e){}}
 function loadLocal(){try{const o=JSON.parse(localStorage.getItem(LKEY)||'null');if(o){S.docs=o.docs||{};S.times=o.times||{}}}catch(e){}}
