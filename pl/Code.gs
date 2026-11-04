@@ -4,13 +4,14 @@
    - ticks and remarks can only be saved for today's date (India time) — past days are read only
    - every tick time is stamped by the server, so nothing can be back-dated
    - only the seniors (Sarita, Dean, Director–Admin) can change block due times
+   - every PL request needs a login token; a PL sees and updates only their own plan
 */
 const TZ="Asia/Kolkata";
 const PLS=["poonam","garima","renu"];
 const MODES=["dp","de"];
 const PEOPLE={poonam:"Poonam",garima:"Garima",renu:"Renu Harsh",sarita:"Sarita (Head of Secondary)",dean:"Dean of Academics",director:"Director–Admin"};
 const SENIORS=["Sarita (Head of Secondary)","Dean of Academics","Director–Admin"];
-const COLS={Plan:["id","pl","mode","date","wk","json","updated"],"PM Plan":["id","pl","mode","date","wk","json","updated"],Config:["key","json","by","at"],Log:["time","who","doc","what"]};
+const COLS={Plan:["id","pl","mode","date","wk","json","updated"],"PM Plan":["id","pl","mode","date","wk","json","updated"],Users:["id","name","role","salt","hash","ver"],Config:["key","json","by","at"],Log:["time","who","doc","what"]};
 
 function fail(m){throw new Error(m)}
 function isoDate(v){return /^\d{4}-\d\d-\d\d$/.test(String(v||""))}
@@ -25,29 +26,85 @@ function parse_(s){try{return JSON.parse(s)||{}}catch(e){return {}}}
 function getTimes_(){const r=rows_("Config").find(x=>x[0]==="times");return r?parse_(r[1]):{}}
 
 function wkOf_(date){const d=new Date(date+"T00:00:00Z");d.setUTCDate(d.getUTCDate()-((d.getUTCDay()+6)%7));return d.toISOString().slice(0,10)}
-function state_(wk){
-  if(!isoDate(wk))fail("Bad week.");
-  const docs={};
-  rows_("Plan").forEach(r=>{const p=String(r[0]).split("_");if(p.length===3&&isoDate(p[2])&&wkOf_(p[2])===wk){const j=parse_(r[5]);docs[r[0]]={pl:p[0],mode:p[1],date:p[2],wk:wk,cells:j.cells||{},rem:j.rem||{}}}});
-  return {today:today_(),docs,times:getTimes_()};
+/* ---------- PL logins (passwords stored only as salted hashes in the Users tab) ---------- */
+const PL_USERS=[["poonam","Poonam","pl"],["garima","Garima","pl"],["renu","Renu Harsh","pl"],
+  ["sarita","Sarita (Head of Secondary)","senior"],["dean","Dean of Academics","senior"],["director","Director–Admin","admin"]];
+const TOKEN_DAYS=120;
+const H_={
+  sha:s=>Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,s,Utilities.Charset.UTF_8)),
+  hmac:(s,k)=>Utilities.base64EncodeWebSafe(Utilities.computeHmacSha256Signature(s,k,Utilities.Charset.UTF_8)).replace(/=+$/,""),
+  b64:s=>Utilities.base64EncodeWebSafe(s,Utilities.Charset.UTF_8).replace(/=+$/,""),
+  unb64:s=>Utilities.newBlob(Utilities.base64DecodeWebSafe(s+"===".slice((s.length+3)%4))).getDataAsString("UTF-8"),
+  salt:()=>Utilities.getUuid().replace(/-/g,"")
+};
+function secret_(){const p=PropertiesService.getScriptProperties();let s=p.getProperty("TOKEN_SECRET");if(!s){s=Utilities.getUuid()+Utilities.getUuid();p.setProperty("TOKEN_SECRET",s)}return s}
+function hashPw_(salt,pw){let h=salt+"|"+pw;for(let i=0;i<300;i++)h=H_.sha(h+"|"+salt);return h}
+function users_(){
+  const sh=sheet_("Users");const rows=rows_("Users");
+  return PL_USERS.map(u=>{const i=rows.findIndex(r=>r[0]===u[0]);const r=i>=0?rows[i]:null;
+    return {id:u[0],name:u[1],role:u[2],salt:r?String(r[3]):"",hash:r?String(r[4]):"",ver:r?Number(r[5])||1:1,row:i>=0?i+2:0}});
+}
+function writeUser_(u){const sh=sheet_("Users");const row=[u.id,u.name,u.role,u.salt,u.hash,u.ver];
+  if(u.row)sh.getRange(u.row,1,1,6).setValues([row]);else sh.appendRow(row)}
+function pub_(u){return {id:u.id,name:u.name,role:u.role,senior:u.role!=="pl",admin:u.role==="admin"}}
+function token_(u){const exp=Date.now()+TOKEN_DAYS*864e5;const body=u.id+"|"+exp+"|"+u.ver;return H_.b64(body)+"."+H_.hmac(body,secret_())}
+function me_(token){
+  const t=String(token||"").split(".");if(t.length!==2)fail("Please log in again.");
+  let body;try{body=H_.unb64(t[0])}catch(e){fail("Please log in again.")}
+  if(H_.hmac(body,secret_())!==t[1])fail("Please log in again.");
+  const b=body.split("|");if(Number(b[1])<Date.now())fail("Please log in again.");
+  const u=users_().find(x=>x.id===b[0]);if(!u||!u.hash||String(u.ver)!==b[2])fail("Please log in again.");
+  return u;
+}
+function login_(id,pw){
+  const u=users_().find(x=>x.id===id);
+  if(!u||!u.hash)fail("This login is not set up yet. Ask the Director–Admin.");
+  Utilities.sleep(300);
+  if(hashPw_(u.salt,String(pw||""))!==u.hash)fail("Wrong password.");
+  return {token:token_(u),me:pub_(u)};
+}
+function setPw_(u,pw){pw=String(pw||"");if(pw.length<6)fail("Password must be at least 6 characters.");u.salt=H_.salt();u.hash=hashPw_(u.salt,pw);u.ver=(u.ver||1)+1;writeUser_(u)}
+function changePw_(token,target,pw){
+  const me=me_(token);const u=users_().find(x=>x.id===target);if(!u)fail("Unknown login.");
+  if(u.id!==me.id&&me.role!=="admin")fail("Only the Director–Admin can reset another login.");
+  setPw_(u,pw);sheet_("Log").appendRow([Utilities.formatDate(new Date(),TZ,"yyyy-MM-dd HH:mm"),me.name,"password",u.id===me.id?"changed own":"reset "+u.name]);
+  return u.id===me.id?{token:token_(u),me:pub_(u)}:{ok:1};
+}
+function listUsers_(token){const me=me_(token);if(me.role!=="admin")fail("Only the Director–Admin can see logins.");return users_().map(u=>({id:u.id,name:u.name,role:u.role,set:!!u.hash}))}
+function bootstrap_(map){
+  const us=users_();if(us.some(u=>u.hash))fail("Logins are already set up.");
+  us.forEach(u=>{if(map&&map[u.id])setPw_(u,map[u.id])});return {ok:1};
 }
 
-function save_(id,patch,who){
+function state_(token,wk){
+  const me=me_(token);
+  if(!isoDate(wk))fail("Bad week.");
+  const docs={};
+  rows_("Plan").forEach(r=>{const p=String(r[0]).split("_");if(p.length===3&&isoDate(p[2])&&wkOf_(p[2])===wk&&(me.role!=="pl"||p[0]===me.id)){const j=parse_(r[5]);docs[r[0]]={pl:p[0],mode:p[1],date:p[2],wk:wk,cells:j.cells||{},rem:j.rem||{}}}});
+  return {today:today_(),docs,times:getTimes_(),me:pub_(me)};
+}
+
+function save_(token,id,patch){
+  const me=me_(token);const name=me.name;
   const p=String(id||"").split("_");
   const pl=p[0],mode=p[1],date=p[2];
   if(PLS.indexOf(pl)<0||MODES.indexOf(mode)<0||!isoDate(date))fail("Bad record.");
   if(date!==today_())fail("Only today's plan can be updated.");
-  const name=String(who||"");
-  if(Object.keys(PEOPLE).map(k=>PEOPLE[k]).indexOf(name)<0)fail("Pick your name first.");
-  if(name!==PEOPLE[pl]&&SENIORS.indexOf(name)<0)fail("Only "+PEOPLE[pl]+" and the seniors can update this plan.");
+  if(me.role==="pl"&&me.id!==pl)fail("You can update only your own plan.");
   const wk=wkOf_(date);
   const sh=sheet_("Plan");const all=rows_("Plan");
   let idx=all.findIndex(r=>r[0]===id);
   const j=idx>=0?parse_(all[idx][5]):{};j.cells=j.cells||{};j.rem=j.rem||{};
   const now=Date.now();let n=0;
   Object.keys((patch&&patch.cells)||{}).forEach(k=>{
-    const c=patch.cells[k]||{};const s=["","D","N","A"].indexOf(c.s)>=0?c.s:"";
-    j.cells[String(k).slice(0,80)]={s:s,by:name,at:now,l:c.l?1:0};n++;
+    const c=patch.cells[k]||{};const key=String(k).slice(0,80);
+    if(Array.isArray(c.ops)){                       // timed observations: server stamps each one
+      const obs=((j.cells[key]&&j.cells[key].obs)||[]).slice();
+      c.ops.slice(0,20).forEach(o=>{if(o==="add")obs.push(now);else if(o==="pop")obs.pop()});
+      j.cells[key]={s:obs.length?"D":"",by:name,at:now,l:0,obs:obs};n++;return;
+    }
+    const s=["","D","N","A"].indexOf(c.s)>=0?c.s:"";
+    j.cells[key]={s:s,by:name,at:now,l:c.l?1:0};n++;
   });
   Object.keys((patch&&patch.rem)||{}).forEach(k=>{
     const e=patch.rem[k]||{};
@@ -60,8 +117,9 @@ function save_(id,patch,who){
   return {pl,mode,date,wk,cells:j.cells,rem:j.rem};
 }
 
-function setTime_(b,v,who){
-  if(SENIORS.indexOf(String(who||""))<0)fail("Only the seniors can change due times.");
+function setTime_(token,b,v){
+  const me=me_(token);const who=me.name;
+  if(me.role==="pl")fail("Only the seniors can change due times.");
   if(!/^(dp|de)\d{1,2}$/.test(String(b)))fail("Bad block.");
   if(!(v==="none"||v==="def"||/^\d\d:\d\d$/.test(String(v))))fail("Bad time.");
   const t=getTimes_();t[b]=v;
@@ -130,12 +188,17 @@ function doPost(e){
   try{
     const req=JSON.parse(e.postData.contents||"{}");const a=req.args||[];
     let v;
-    if(req.fn==="state")v=state_(a[0]);
+    const tk=req.token;
+    if(req.fn==="state")v=state_(tk,a[0]);
+    else if(req.fn==="login")v=login_(a[0],a[1]);
     else if(req.fn==="pmState")v=pmState_(a[0]);
     else{
       lock.waitLock(20000);
-      if(req.fn==="save")v=save_(a[0],a[1],a[2]);
-      else if(req.fn==="setTime")v=setTime_(a[0],a[1],a[2]);
+      if(req.fn==="save")v=save_(tk,a[0],a[1]);
+      else if(req.fn==="setTime")v=setTime_(tk,a[0],a[1]);
+      else if(req.fn==="changePw")v=changePw_(tk,a[0],a[1]);
+      else if(req.fn==="listUsers")v=listUsers_(tk);
+      else if(req.fn==="bootstrap")v=bootstrap_(a[0]);
       else if(req.fn==="pmSave")v=pmSave_(a[0],a[1],a[2]);
       else if(req.fn==="pmSetTime")v=pmSetTime_(a[0],a[1],a[2]);
       else fail("Unknown request.");

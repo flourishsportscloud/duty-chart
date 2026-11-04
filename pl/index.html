@@ -15,7 +15,13 @@ header{background:var(--navy);color:#fff;padding:10px 12px 8px;position:sticky;t
 .h1 h1{font-size:18px;margin:0;font-weight:700;display:flex;align-items:center;gap:8px}
 .h1 h1 a{color:#fff;text-decoration:none;font-size:12px;font-weight:600;background:rgba(255,255,255,.16);padding:3px 8px;border-radius:99px}
 .who{display:flex;align-items:center;gap:6px;font-size:12px}
-.who select{font-size:13px;padding:5px 6px;border-radius:6px;border:0;max-width:190px}
+.who b{font-size:13px}.who button{border:0;background:rgba(255,255,255,.16);color:#fff;border-radius:99px;padding:4px 9px;font-size:11px;font-weight:600}
+.login{max-width:380px;margin:30px auto}.login label{display:block;font-size:12px;color:var(--mut);margin:10px 0 4px}
+.login select,.login input,.pwrow input{width:100%;font:inherit;font-size:15px;padding:9px 10px;border:1px solid #c7cfe2;border-radius:8px;background:#fff}
+.btn{border:0;border-radius:8px;background:var(--navy);color:#fff;font-weight:700;padding:10px 14px;font-size:14px;margin-top:12px;width:100%}
+.btn.sec{background:#cfd6e8;color:var(--ink)}
+.pwrow{display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
+.pwrow .btn{margin:0;width:auto;padding:8px 10px;font-size:12px}
 .sub{display:flex;justify-content:space-between;align-items:center;margin-top:6px;gap:8px;flex-wrap:wrap}
 .chip{font-size:11px;padding:2px 8px;border-radius:99px;background:rgba(255,255,255,.18)}
 .chip.live{background:#1e9e5a}.chip.err{background:#d64545}.chip.loc{background:#c97b00}
@@ -98,6 +104,7 @@ nav button small{display:block;font-weight:400;font-size:10px;opacity:.8}
 .box.n{background:#fde8e8;border:2px solid var(--red)}.box.n .sy{color:var(--red)}
 .box.a{background:#eceff5;border:2px solid var(--grey)}.box.a .sy{color:var(--grey)}
 .box.ro{cursor:default}
+.box.obs .tm{font-size:10px;line-height:12px;text-align:left;padding:0 2px}
 .row.de{display:flex;align-items:center;gap:8px}
 .row.de .rl{flex:1;margin:0}
 .rembox{background:#f6f8fc;border:1px solid var(--line);border-radius:8px;padding:8px;margin-top:6px}
@@ -122,7 +129,7 @@ td.g{background:#e3f6ec;color:var(--green)}td.r{background:#fde8e8;color:var(--r
 <body>
 <header>
   <div class="h1"><h1><a href="../fis/">‹ FIS</a>PL Plan – Live</h1>
-    <div class="who">Updating as <select id="who"></select></div></div>
+    <div class="who" id="whobox"></div></div>
   <div class="sub"><div class="seg" id="modeseg"></div><span class="chip" id="conn"></span></div>
 </header>
 <nav id="tabs"></nav>
@@ -144,43 +151,37 @@ const DP=[
  {id:'assembly',name:'Assembly',rem:'r',subs:[['prayer','Prayer'],['fb','FB'],['tann',"Teacher's Announcement"],['uniform','Uniform'],['talk','Talk Hour']]},
  {id:'testobs',name:'Test Observation',rem:'r'},
  {id:'defaulters',name:'Defaulters',rem:'r',subs:[['late','Late Comers'],['uniform','Uniform']]}]},
+{id:'dp8',name:'Lesson / Learning Inspection',time:null,items:[{id:'lessoninsp',name:'Lesson Inspection'},{id:'learninginsp',name:'Learning Inspection'}]},
+{id:'dp9',name:'Teaching Observation Report',time:null,items:[{id:'tor',name:'Teaching Observation Report',rem:'n',multi:1}]},
 {id:'dp2',name:'Reports',time:'10:45',items:[
- {id:'diary',name:'Diary Report'},
- {id:'collrep',name:'Collection Report & Defaulter Submission Report',subs:[['coll','Collection Report'],['defsub','Defaulter Submission Report']]}]},
+ {id:'diary',name:'Diary Report'},{id:'collrep',name:'Collection Report'},{id:'defsubrev',name:'Defaulter Submission Review'}]},
 {id:'dp3',name:'Activity',time:null,items:[
  {id:'cupboard',name:'Class Cupboard'},{id:'folder',name:'Class Folder'},{id:'display',name:'Class Display'},
- {id:'weeklysub',name:'Weekly Submission'},{id:'leftover',name:'Leftover Checked Assignment'},{id:'diststatus',name:'Distribution Status'}]},
-{id:'dp4',name:'Lunch Round',time:'11:30',items:[{id:'stayback',name:'Stayback'},{id:'lunchann',name:'Announcement'}]},
+ {id:'weeklysub',name:'Weekly Submission'},{id:'leftover',name:'Leftover Checked Assignment'},{id:'diststatus',name:'Distribution Status'},
+ {id:'record',name:'Record Register',rem:'n'}]},
+{id:'dp4',name:'Lunch Round',time:'11:30',items:[{id:'stayback',name:'Stayback'},{id:'lunchann',name:'PL Announcement'}]},
 {id:'dp5',name:'Action',time:'14:30',items:[
  {id:'diarydef',name:'Diary Defaulter',rem:'r'},{id:'hwdef',name:'Home Work Defaulter',rem:'r'},{id:'absent',name:'Absentees Work',rem:'r'},
  {id:'testmarks',name:'Test Marks Defaulter',rem:'r'},{id:'hwquality',name:'HW Submission Quality',rem:'r'}]},
 {id:'dp6',name:'Distribution Round',time:'12:30',items:[{id:'distround',name:'Distribution Round & Report'}]},
 {id:'dp7',name:'PL Round',time:'14:30',yn:true,items:[
- {id:'club10',name:'Club 10'},{id:'stationery',name:'Stationery'},{id:'bookreading',name:'Book Reading'},{id:'acadmot',name:'Academic Motivation'},{id:'plann',name:'Announcement'}]},
-{id:'dp8',name:'Lesson / Learning Inspection',time:null,items:[{id:'lessoninsp',name:'Lesson Inspection'},{id:'learninginsp',name:'Learning Inspection'}]},
-{id:'dp9',name:'Teaching Observation Report',time:null,items:[{id:'tor',name:'Teaching Observation Report SMS',rem:'n'}]},
-{id:'dp10',name:'Response & Follow-up',time:null,items:[
- {id:'resp',name:'Response Group',rem:'n'},{id:'followup',name:'Follow up Feedback Action'},{id:'record',name:'Record Register',rem:'n'}]}
+ {id:'club10',name:'Club 10'},{id:'stationery',name:'Stationery'},{id:'bookreading',name:'Book Reading'},{id:'acadmot',name:'Academic Motivation'},{id:'plann',name:'Announcement'}]}
 ];
 const DE=[
 {id:'de1',name:'Parent Communication & Next Day Tests',time:'13:30',items:[
  {id:'diaryparent',name:'Diary to Parent & Test paper',subs:[['diary','Diary to Parent'],['test','Test paper']]},
  {id:'defsms',name:'Defaulter SMS',subs:[['diary','Diary'],['booknb','Book-Notebook'],['test','Test'],['assign','Assignment']]},
  {id:'nextpaper',name:'Next day Test paper on Drive'}]},
-{id:'de2',name:'Next Day – Lesson Overview',time:'14:00',items:[{id:'lessonoverview',name:'Next Day – Lesson Overview'}]},
-{id:'de3',name:'Next Day Preparation',time:'14:30',items:[
- {id:'lessonreview',name:'Lesson Review'},{id:'videoppt',name:'Video–PPT'},{id:'batprep',name:'BAT Prep'},{id:'lessoninit',name:'Lesson Initiative'},
- {id:'ss',name:'SS'},{id:'ks',name:'KS'},{id:'booknb',name:'Book-Notebook'},{id:'assigntest',name:'Assignment-Test Nb'}]},
 {id:'de4',name:'Groups & Feedback',time:'15:00',items:[
- {id:'classgroup',name:'Class Group',subs:[['cg','Class Group'],['sg','Subject Groups'],['fg','Feedback Group'],['admin','Admin'],['pl','PL'],['class','Class'],['stock','Stock'],['ops','Operations'],['obs','Observation Discussion']]},
+ {id:'classgroup',name:'Class Group',subs:[['cgsg','Class / Subject Group'],['fg','Feedback Group'],['admin','Admin'],['pl','PL'],['stock','Stock']]},
  {id:'fbdisc',name:'Feedback Discussion',subs:[['diary','Diary'],['ohm','OHM'],['fo','FO'],['sb','SB']]}]},
 {id:'de5',name:'Day-End Review & Discussion',time:'15:30',items:[
  {id:'ctp',name:'Class Test Performers'},{id:'chkcm',name:'Checking Status Review – CM'},{id:'chkmentor',name:'Checking Status Review – Mentor'},
  {id:'distcoll',name:'Distribution – Collection Record'},{id:'schedule',name:'Schedule Discussion'},
- {id:'mathsprep',name:'Maths Prep',subs:[['planner','Planner-Book Prep'],['checked','Checked Assignment'],['hwnb','HW Notebook'],['contentnb','Content Notebook'],['xerox','Content Xerox'],['diary','Diary'],['unchecked','Unchecked Status']]},
- {id:'teacherprep',name:'Teacher Prep',subs:[['book','Book'],['content','Content'],['key','Assignment Answer Key'],['epl','EPL / Activity Prep'],['testnb','Test NB'],['checked','Checked Assignment'],['checkednb','Checked Notebook']]},
- {id:'defdisc',name:'Defaulter Discussion (Checking & Test)',subs:[['checking','Checking'],['test','Test']]},
- {id:'supply',name:'Supply Chain',subs:[['checked','Checked Assignment'],['unchecked','Unchecked Assignment'],['testnb','Test NB'],['notebook','Notebook']]}]}
+ {id:'mathsprep',name:'Maths Prep',sec:1,subs:[['planner','Planner'],['bookprep','Book Prep'],['checked','Checked Assignment'],['hwnb','HW Notebook'],['contentnb','Content Notebook'],['xerox','Content Xerox'],['diary','Diary'],['unchecked','Unchecked Status']]},
+ {id:'teacherprep',name:'Teacher / Next Day Prep',sec:1,subs:[['lessonrev','Book / Lesson Review'],['content','Content'],['checkednb','Checked Notebook'],['checked','Checked Assignment'],['checkedtest','Checked Test'],['key','Assignment Answer Key'],['epl','EPL / Activity Prep'],['video','Video'],['ppt','PPT']]},
+ {id:'defdisc',name:'Defaulter Discussion (Checking & Test)',subs:[['mentor','Mentor Check'],['cm','CM Checking'],['test','Test']]},
+ {id:'supply',name:'Supply Chain',sec:1,subs:[['checked','Checked Assignment'],['testnb','Test NB'],['notebook','Notebook'],['nextassign','Next Day Assignment'],['testdrive','Test Paper on Drive']]}]}
 ];
 const DEFS={dp:DP,de:DE};
 const ROWS={dp:[],de:[]};
@@ -206,8 +207,9 @@ function fmt12(t){const a=t.split(':').map(Number);const ap=a[0]>=12?'PM':'AM';r
 const docId=(pl,mode,date)=>pl+'_'+mode+'_'+date;
 
 /* ================= STATE ================= */
-const S={who:'',tab:'dash',mode:'dp',wk:null,date:null,docs:{},times:{},conn:'init',openRem:{},editTime:null,dirty:false};
-try{S.who=localStorage.getItem('plplan_who')||''}catch(e){}
+const S={who:'',me:null,token:'',view:null,users:null,busy:false,tab:'dash',mode:'dp',wk:null,date:null,docs:{},times:{},conn:'init',openRem:{},editTime:null,dirty:false};
+try{S.token=localStorage.getItem('plplan_token')||'';S.me=JSON.parse(localStorage.getItem('plplan_me')||'null');if(S.me)S.who=S.me.id}catch(e){}
+if(!S.token)S.me=null;
 (function initDates(){
   const now=new Date();
   if(now.getDay()===0){const y=new Date(now);y.setDate(y.getDate()-1);S.wk=ds(mondayOf(y));const sat=parseD(S.wk);sat.setDate(sat.getDate()+5);S.date=ds(sat)}
@@ -219,14 +221,14 @@ const person=()=>PEOPLE.find(p=>p.id===S.who);
 const isSenior=()=>!!(person()&&person().senior);
 const canAct=plId=>{const p=person();if(!p)return false;if(S.date!==todayStr())return false;return !!(p.senior||p.pl===plId)};
 const whoName=()=>person()?person().name:'';
-const secsFor=(pl,mode)=>mode==='dp'?pl.sections:['x'];
+const secsFor=(pl,mode,r)=>(mode==='dp'||(r&&r.item.sec))?pl.sections:['x'];
 function dueOf(b){const t=S.times[b.id];if(t==='none')return null;if(t&&t!=='def')return t;return b.time}
 
 /* ================= STORAGE (Google Sheet via Apps Script — see SETUP.md) ================= */
 const API_URL=new URLSearchParams(location.search).get('api')||'https://script.google.com/macros/s/AKfycbyzHMWJYQOB8Qr9jlrsml9PnoRs6d9xjvzWMejOMUF_1RGohDSIhnHmxM6QF79LgJ-q/exec';
-const LKEY='plplan_gh_v1';
-function saveLocal(){try{localStorage.setItem(LKEY,JSON.stringify({docs:S.docs,times:S.times}))}catch(e){}}
-function loadLocal(){try{const o=JSON.parse(localStorage.getItem(LKEY)||'null');if(o){S.docs=o.docs||{};S.times=o.times||{}}}catch(e){}}
+const lkey=()=>'plplan_gh_v2_'+(S.me?S.me.id:'');
+function saveLocal(){try{localStorage.setItem(lkey(),JSON.stringify({docs:S.docs,times:S.times}))}catch(e){}}
+function loadLocal(){try{const o=JSON.parse(localStorage.getItem(lkey())||'null');if(o){S.docs=o.docs||{};S.times=o.times||{}}}catch(e){}}
 function setConn(c){if(S.conn!==c){S.conn=c;paintConn()}}
 let msgTimer=null;
 function showMsg(t){const el=document.getElementById('msg');el.innerHTML=t?`<div class="notice bad">${esc(t)}</div>`:'';clearTimeout(msgTimer);if(t)msgTimer=setTimeout(()=>showMsg(''),6000)}
@@ -234,22 +236,26 @@ const queues={};
 function enqueue(k,job){queues[k]=(queues[k]||Promise.resolve()).then(job).catch(()=>{})}
 async function api(fn,args){
   let r;
-  try{r=await fetch(API_URL,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn,args:args||[]})})}
+  try{r=await fetch(API_URL,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn,args:args||[],token:S.token})})}
   catch(e){throw new Error('offline')}
   let j;try{j=JSON.parse(await r.text())}catch(e){throw new Error('offline')}
-  if(!j.ok){const er=new Error(j.err||'Something went wrong.');er.server=true;throw er}
+  if(!j.ok){const er=new Error(j.err||'Something went wrong.');er.server=true;if(/log in again/i.test(er.message)&&fn!=='login'){logout(true)}throw er}
   return j.v;
 }
 const unacked={},inflight={};
 const hasPend=u=>!!(u&&(Object.keys(u.cells).length||Object.keys(u.rem).length));
 function overlay(id,doc){
   doc.cells=doc.cells||{};doc.rem=doc.rem||{};
-  [inflight[id],unacked[id]].forEach(u=>{if(u){Object.assign(doc.cells,clone(u.cells));Object.assign(doc.rem,clone(u.rem))}});
+  [inflight[id],unacked[id]].forEach(u=>{if(u){
+    Object.keys(u.cells).forEach(k=>{const c=u.cells[k];doc.cells[k]=c.ops?applyOps(doc.cells[k],c.ops,whoName()):clone(c)});
+    Object.assign(doc.rem,clone(u.rem))}});
   return doc;
 }
 function persist(id,patch){
   const u=unacked[id]=unacked[id]||{cells:{},rem:{}};
-  Object.assign(u.cells,clone(patch.cells||{}));Object.assign(u.rem,clone(patch.rem||{}));
+  Object.keys(patch.cells||{}).forEach(k=>{const c=clone(patch.cells[k]);
+    if(c.ops&&u.cells[k]&&u.cells[k].ops)u.cells[k].ops=u.cells[k].ops.concat(c.ops);else u.cells[k]=c});
+  Object.assign(u.rem,clone(patch.rem||{}));
   saveLocal();
   if(!API_URL)return;
   enqueue(id,()=>sendDoc(id));
@@ -258,17 +264,18 @@ async function sendDoc(id){
   const u=unacked[id];if(!hasPend(u))return;
   inflight[id]=u;unacked[id]={cells:{},rem:{}};
   try{
-    const doc=await api('save',[id,u,whoName()]);
+    const doc=await api('save',[id,u]);
     delete inflight[id];S.docs[id]=overlay(id,doc);setConn('live');saveLocal();render();
   }catch(e){
     delete inflight[id];
     if(e.server){showMsg(e.message);poll()}
-    else{const n=unacked[id];unacked[id]={cells:Object.assign(u.cells,n.cells),rem:Object.assign(u.rem,n.rem)};setConn('err')}
+    else{const n=unacked[id];Object.keys(n.cells).forEach(k=>{const c=n.cells[k];if(c.ops&&u.cells[k]&&u.cells[k].ops)u.cells[k].ops=u.cells[k].ops.concat(c.ops);else u.cells[k]=c});
+      unacked[id]={cells:u.cells,rem:Object.assign(u.rem,n.rem)};setConn('err')}
   }
 }
 let polling=false;
 async function poll(){
-  if(!API_URL||polling)return;polling=true;const wk=S.wk;
+  if(!API_URL||polling||!S.token)return;polling=true;const wk=S.wk;
   try{
     Object.keys(unacked).forEach(id=>{if(hasPend(unacked[id]))enqueue(id,()=>sendDoc(id))});
     const v=await api('state',[wk]);
@@ -276,23 +283,71 @@ async function poll(){
       Object.keys(S.docs).forEach(id=>{if(S.docs[id].wk===wk&&!v.docs[id]&&!hasPend(unacked[id])&&!inflight[id])delete S.docs[id]});
       Object.keys(v.docs).forEach(id=>{S.docs[id]=overlay(id,v.docs[id])});
       S.times=v.times||{};
+      if(v.me){S.me=Object.assign(S.me||{},v.me);try{localStorage.setItem('plplan_me',JSON.stringify(S.me))}catch(e){}}
     }
     setConn('live');saveLocal();render();
   }catch(e){setConn('err')}
   finally{polling=false}
 }
 function subscribeWeek(wk){poll()}
+function setSession(v){
+  S.token=v.token;S.me=v.me;S.who=v.me.id;S.docs={};S.times={};
+  try{localStorage.setItem('plplan_token',S.token);localStorage.setItem('plplan_me',JSON.stringify(S.me))}catch(e){}
+  S.tab=S.me.senior?'dash':S.me.id;loadLocal();
+}
+function logout(expired){
+  try{localStorage.removeItem(lkey());localStorage.removeItem('plplan_token');localStorage.removeItem('plplan_me')}catch(e){}
+  S.token='';S.me=null;S.who='';S.docs={};S.view=null;S.users=null;
+  render(true);if(expired)showMsg('Please log in again.');
+}
+async function doLogin(){
+  const id=document.getElementById('lid').value,pw=document.getElementById('lpw').value;
+  if(!id||!pw){showMsg('Choose your name and type your password.');return}
+  S.busy=true;render(true);
+  try{const v=await api('login',[id,pw]);setSession(v);showMsg('');S.busy=false;render(true);poll()}
+  catch(e){S.busy=false;render(true);showMsg(e.server?e.message:"Can't reach the server. Check your internet.")}
+}
+async function doChangePw(target,inId,in2Id){
+  const pw=document.getElementById(inId).value,pw2=in2Id?document.getElementById(in2Id).value:pw;
+  if(pw.length<6){showMsg('Password must be at least 6 characters.');return}
+  if(pw!==pw2){showMsg('The two passwords do not match.');return}
+  try{const v=await api('changePw',[target,pw]);
+    if(v&&v.token){setSession(v);S.view=null;render(true);showOk('Password changed.');poll()}
+    else{document.getElementById(inId).value='';showOk('New password set for '+PEOPLE.find(p=>p.id===target).name+'.')}
+  }catch(e){showMsg(e.message)}
+}
+function showOk(t){const el=document.getElementById('msg');el.innerHTML=`<div class="notice info">${esc(t)}</div>`;clearTimeout(msgTimer);msgTimer=setTimeout(()=>showMsg(''),5000)}
+function loginHTML(){
+  return `<div class="card login"><h3 style="font-size:17px">Log in</h3><div class="muted">PL Plan – Live · FIS</div>
+  <label for="lid">Your name</label><select id="lid"><option value="">— choose —</option>${PEOPLE.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select>
+  <label for="lpw">Password</label><input id="lpw" type="password" autocomplete="current-password">
+  <button class="btn" data-act="login" ${S.busy?'disabled':''}>${S.busy?'Logging in…':'Log in'}</button>
+  <div class="muted" style="margin-top:10px">Forgot your password? Ask the Director–Admin to set a new one.</div></div>`;
+}
+function pwHTML(){
+  return `<div class="card login"><h3>Change my password</h3>
+  <label for="np1">New password (at least 6 characters)</label><input id="np1" type="password" autocomplete="new-password">
+  <label for="np2">Type it again</label><input id="np2" type="password" autocomplete="new-password">
+  <button class="btn" data-act="savepw">Save new password</button><button class="btn sec" data-act="closeview">Cancel</button></div>`;
+}
+function loginsHTML(){
+  if(!S.users){api('listUsers').then(u=>{S.users=u;render(true)}).catch(e=>showMsg(e.message));return '<div class="card">Loading…</div>'}
+  return `<div class="card"><h3>Staff logins</h3><div class="muted" style="margin-bottom:6px">Set a new password for anyone who forgot theirs. It logs them out on every phone; share the new password with them privately.</div>`+
+    S.users.map(u=>`<div class="pwrow"><div><b>${esc(u.name)}</b><br><span class="muted">${u.role==='pl'?'PL':u.role==='admin'?'Admin · dashboard':'Senior · dashboard'}${u.set?'':' · not set'}</span></div><input id="up_${u.id}" type="text" placeholder="New password" autocomplete="off"><button class="btn" data-act="setuserpw" data-u="${u.id}">Set</button></div>`).join('')+
+    `<button class="btn sec" data-act="closeview">Close</button></div>`;
+}
 function persistCfg(patch){
   saveLocal();if(!API_URL)return;
   const k=Object.keys(patch.times)[0];
   enqueue('cfg',async()=>{
-    try{S.times=await api('setTime',[k,patch.times[k],whoName()]);setConn('live');saveLocal();render()}
+    try{S.times=await api('setTime',[k,patch.times[k]]);setConn('live');saveLocal();render()}
     catch(e){if(e.server){showMsg(e.message);poll()}else setConn('err')}
   });
 }
 function initDb(){
   loadLocal();
   if(!API_URL){setConn('local');render();return}
+  if(S.me)S.tab=S.me.senior?'dash':S.me.id;
   render();poll();
   setInterval(()=>{if(!document.hidden)poll()},20000);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll()});
@@ -313,6 +368,22 @@ function setCells(plId,list){
   const now=Date.now();const patch={cells:{}};
   list.forEach(x=>{const key=x[0]+'__'+x[1];const c=mkCell(x[0],x[2],now,mode,date);doc.cells[key]=c;patch.cells[key]=clone(c)});
   persist(id,patch);render();
+}
+function applyOps(cell,ops,by){
+  const obs=((cell&&cell.obs)||[]).slice();
+  ops.forEach(o=>{if(o==='add')obs.push(Date.now());else if(o==='pop')obs.pop()});
+  return {s:obs.length?'D':'',obs:obs,by:by,at:Date.now(),l:0};
+}
+function doObs(plId,rk,sec,op){
+  if(!canAct(plId))return;
+  const mode=S.mode,date=S.date,id=docId(plId,mode,date),doc=ensureDoc(id,plId,mode,date),key=rk+'__'+sec;
+  doc.cells[key]=applyOps(doc.cells[key],[op],whoName());
+  persist(id,{cells:{[key]:{ops:[op]}}});render();
+}
+function obsUndo(plId,rk){
+  const doc=S.docs[docId(plId,S.mode,S.date)];if(!doc)return;
+  let best=null,bt=0;Object.keys(doc.cells).forEach(k=>{const p=k.split('__');if(p[0]!==rk)return;const o=doc.cells[k].obs||[];if(o.length&&o[o.length-1]>bt){bt=o[o.length-1];best=p[1]}});
+  if(best)doObs(plId,rk,best,'pop');
 }
 const NEXT={'':'D',D:'N',N:'A',A:''};
 function doTick(plId,rk,sec){
@@ -342,8 +413,8 @@ function onRemInput(el){
 /* ================= STATS ================= */
 function cellS(doc,rk,sec){const c=doc&&doc.cells&&doc.cells[rk+'__'+sec];return (c&&c.s)||''}
 function countRows(doc,pl,mode,rows){
-  const secs=secsFor(pl,mode);const o={D:0,N:0,A:0,P:0,T:0};
-  rows.forEach(r=>secs.forEach(s=>{const v=cellS(doc,r.key,s);o.T++;o[v||'P']++}));
+  const o={D:0,N:0,A:0,P:0,T:0};
+  rows.forEach(r=>secsFor(pl,mode,r).forEach(s=>{const v=cellS(doc,r.key,s);o.T++;o[v||'P']++}));
   o.pct=o.T?Math.round((o.D+o.A)/o.T*100):0;return o;
 }
 const stats=(doc,pl,mode)=>countRows(doc,pl,mode,ROWS[mode]);
@@ -377,21 +448,25 @@ function render(force){
   if(typing()&&!force){S.dirty=true;return}
   S.dirty=false;
   paintTop();
+  if(!S.me){document.getElementById('root').innerHTML=loginHTML();return}
+  if(S.view==='pw'){document.getElementById('root').innerHTML=pwHTML();return}
+  if(S.view==='logins'){document.getElementById('root').innerHTML=loginsHTML();return}
+  if(!S.me.senior&&S.tab!==S.me.id)S.tab=S.me.id;
   const root=document.getElementById('root');
   const scroll=window.scrollY;
   root.innerHTML=strip()+(S.tab==='dash'?dashboard():plPage(plOf(S.tab)));
   window.scrollTo(0,scroll);
 }
 function paintTop(){
-  const w=document.getElementById('who');
-  if(!w.dataset.built){
-    w.innerHTML='<option value="">— choose your name —</option>'+PEOPLE.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');
-    w.dataset.built=1;
-  }
-  w.value=S.who;
+  const w=document.getElementById('whobox');
+  w.innerHTML=S.me?`<b>${esc(S.me.name)}</b><button data-act="view" data-v="pw">Password</button>${S.me.admin?'<button data-act="view" data-v="logins">Logins</button>':''}<button data-act="logout">Log out</button>`:'';
+  const show=!!S.me&&!S.view;
+  document.getElementById('modeseg').style.display=show?'':'none';
+  document.getElementById('tabs').style.display=show?'':'none';
   document.getElementById('modeseg').innerHTML=`<button data-act="mode" data-v="dp" class="${S.mode==='dp'?'on':''}">Day Plan</button><button data-act="mode" data-v="de" class="${S.mode==='de'?'on':''}">Day End</button>`;
-  document.getElementById('tabs').innerHTML=`<button data-act="tab" data-v="dash" class="${S.tab==='dash'?'on':''}">Dashboard</button>`+
-    PLS.map(p=>`<button data-act="tab" data-v="${p.id}" class="${S.tab===p.id?'on':''}">${esc(p.name)}<small>${p.cls}</small></button>`).join('');
+  const vis=!S.me?[]:S.me.senior?PLS:PLS.filter(p=>p.id===S.me.id);
+  document.getElementById('tabs').innerHTML=(S.me&&S.me.senior?`<button data-act="tab" data-v="dash" class="${S.tab==='dash'?'on':''}">Dashboard</button>`:'')+
+    vis.map(p=>`<button data-act="tab" data-v="${p.id}" class="${S.tab===p.id?'on':''}">${esc(p.name)}<small>${p.cls}</small></button>`).join('');
   paintConn();
 }
 function strip(){
@@ -415,6 +490,11 @@ function boxHTML(pl,r,sec,c,yn,editable,showSec){
   const by=s&&c&&c.by?` title="${esc(c.by)}"`:'';
   return `<button class="box ${cls} ${editable?'':'ro'}"${by} data-act="tick" data-pl="${pl.id}" data-row="${r.key}" data-sec="${sec}"><span class="sl">${showSec?esc(sec):''}</span><span class="sy">${sym}</span>${tm}</button>`;
 }
+function obsBoxHTML(pl,r,sec,c,yn,editable){
+  const obs=(c&&c.obs)||[];const cls=obs.length?'d':'';
+  const list=obs.map((t,i)=>`${i+1}-${fmtT(t).replace(/ [AP]M$/,'')}`).join('<br>');
+  return `<button class="box obs ${cls} ${editable?'':'ro'}" data-act="obsadd" data-pl="${pl.id}" data-row="${r.key}" data-sec="${sec}"><span class="sl">${esc(sec)}</span><span class="sy">${obs.length||'+'}</span><span class="tm">${list}</span></button>`;
+}
 function remPanel(pl,r,doc,editable){
   return `<div class="rembox">`+pl.sections.map(s=>{
     const e=(doc&&doc.rem&&doc.rem[r.key+'__'+s])||{};
@@ -428,14 +508,16 @@ function remCount(pl,r,doc){
   let n=0;pl.sections.forEach(s=>{const e=doc&&doc.rem&&doc.rem[r.key+'__'+s];if(e&&((e.n!==''&&e.n!=null)||String(e.x||'').trim()))n++});return n;
 }
 function rowHTML(pl,r,doc,mode,editable,yn){
-  const secs=secsFor(pl,mode);const de=mode==='de';
+  const secs=secsFor(pl,mode,r);const de=secs[0]==='x';
   const rcount=r.rem?remCount(pl,r,doc):0;
   const open=S.openRem[pl.id+'|'+r.key];
   let h=`<div class="row ${r.sub?'sub':''} ${de?'de':''}"><div class="rl"><span class="lbl">${esc(r.label)}</span><span class="rb">`;
   if(r.rem)h+=`<button class="mini ${open?'on':''}" data-act="rem" data-pl="${pl.id}" data-row="${r.key}">${r.rem==='n'?'# / Remark':'Remark'}${rcount?' ('+rcount+')':''}</button>`;
-  h+=`<button class="mini ${editable?'':'ro'}" data-act="allrow" data-pl="${pl.id}" data-row="${r.key}">all ✓</button>`;
+  if(r.item.multi)h+=`<button class="mini ${editable?'':'ro'}" data-act="obsundo" data-pl="${pl.id}" data-row="${r.key}">↶ Undo last</button>`;
+  else h+=`<button class="mini ${editable?'':'ro'}" data-act="allrow" data-pl="${pl.id}" data-row="${r.key}">all ✓</button>`;
   h+=`</span></div>`;
-  h+=`<div class="boxes">`+secs.map(s=>boxHTML(pl,r,s,doc&&doc.cells[r.key+'__'+s],yn,editable,!de)).join('')+`</div>`;
+  h+=`<div class="boxes">`+secs.map(s=>(r.item.multi?obsBoxHTML:boxHTML)(pl,r,s,doc&&doc.cells[r.key+'__'+s],yn,editable,!de)).join('')+`</div>`;
+  if(r.item.multi)h+=`<div class="muted" style="margin-top:3px">Tap a section each time you observe — every observation is saved with its time.</div>`;
   if(r.rem&&open&&!de)h+=remPanel(pl,r,doc,editable);
   return h+'</div>';
 }
@@ -468,8 +550,8 @@ function blocksHTML(pl,doc,mode,editable){
 function notDone(pl,doc,mode){
   const out=[];
   ROWS[mode].forEach(r=>{
-    const bad=secsFor(pl,mode).filter(s=>cellS(doc,r.key,s)==='N');
-    if(bad.length)out.push(`<div><b>${esc(r.sub?r.item.name+' › '+r.label:r.label)}</b> <span class="bl">· ${esc(r.block.name)}</span>${mode==='dp'?' — '+bad.map(esc).join(', '):''}</div>`);
+    const bad=secsFor(pl,mode,r).filter(s=>cellS(doc,r.key,s)==='N');
+    if(bad.length)out.push(`<div><b>${esc(r.sub?r.item.name+' › '+r.label:r.label)}</b> <span class="bl">· ${esc(r.block.name)}</span>${bad[0]!=='x'?' — '+bad.map(esc).join(', '):''}</div>`);
   });
   return out.length?out.join(''):'<div class="ok">No “Not Done” items 🎉</div>';
 }
@@ -516,8 +598,7 @@ function plPage(pl){
   const mode=S.mode,doc=getDoc(pl,mode,S.date);const c=stats(doc,pl,mode);const today=todayStr();
   const editable=canAct(pl.id);
   let notice='';
-  if(!person())notice='<div class="notice">View only — pick your name in “Updating as” (top right) to tick items.</div>';
-  else if(S.date<today)notice='<div class="notice info">Past day — shown as recorded.</div>';
+  if(S.date<today)notice='<div class="notice info">Past day — shown as recorded.</div>';
   else if(S.date===today&&!editable)notice=`<div class="notice">You can view ${esc(pl.name)}’s plan but only ${esc(pl.name)} and the seniors can update it.</div>`;
   let h=notice;
   h+=`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><div><h3 style="margin:0">${esc(pl.name)} · ${pl.cls}</h3><span class="muted">${mode==='dp'?'Day Plan · '+pl.sections.length+' sections':'Day End'} · ${parseD(S.date).toLocaleDateString('en',{weekday:'long',day:'numeric',month:'short'})}</span></div><div class="pct">${c.pct}%</div></div>`+
@@ -532,7 +613,6 @@ function plPage(pl){
 }
 function dashboard(){
   const mode=S.mode,today=todayStr();let h='';
-  if(!person())h+='<div class="notice">View only — pick your name in “Updating as” to tick items.</div>';
   h+=`<div class="card"><h3>All PLs · ${parseD(S.date).toLocaleDateString('en',{weekday:'long',day:'numeric',month:'short'})} · ${mode==='dp'?'Day Plan':'Day End'}</h3><div class="grid4">`;
   PLS.forEach(pl=>{
     const doc=getDoc(pl,mode,S.date);const c=stats(doc,pl,mode);
@@ -559,8 +639,14 @@ function dashboard(){
 document.addEventListener('click',ev=>{
   const t=ev.target.closest('[data-act]');if(!t)return;
   const a=t.dataset.act;
+  if(a==='login'){doLogin();return}
+  if(a==='logout'){logout();return}
+  if(a==='view'){S.view=S.view===t.dataset.v?null:t.dataset.v;S.users=null;render(true);window.scrollTo(0,0);return}
+  if(a==='closeview'){S.view=null;render(true);return}
+  if(a==='savepw'){doChangePw(S.me.id,'np1','np2');return}
+  if(a==='setuserpw'){doChangePw(t.dataset.u,'up_'+t.dataset.u);return}
   if(a==='mode'){S.mode=t.dataset.v;render(true)}
-  else if(a==='tab'){S.tab=t.dataset.v;render(true);window.scrollTo(0,0)}
+  else if(a==='tab'){if(t.dataset.v==='dash'&&!(S.me&&S.me.senior))return;S.tab=t.dataset.v;render(true);window.scrollTo(0,0)}
   else if(a==='day'){S.date=t.dataset.v;render(true)}
   else if(a==='wk'){
     const m=parseD(S.wk);m.setDate(m.getDate()+7*Number(t.dataset.v));S.wk=ds(m);
@@ -569,8 +655,10 @@ document.addEventListener('click',ev=>{
     subscribeWeek(S.wk);render(true);
   }
   else if(a==='tick')doTick(t.dataset.pl,t.dataset.row,t.dataset.sec);
-  else if(a==='allrow'){const p=plOf(t.dataset.pl);if(!canAct(p.id))return;setCells(p.id,secsFor(p,S.mode).map(s=>[t.dataset.row,s,'D']))}
-  else if(a==='allitem'){const p=plOf(t.dataset.pl);if(!canAct(p.id))return;const list=[];ROWS[S.mode].filter(r=>r.item.id===t.dataset.item).forEach(r=>secsFor(p,S.mode).forEach(s=>list.push([r.key,s,'D'])));setCells(p.id,list)}
+  else if(a==='obsadd')doObs(t.dataset.pl,t.dataset.row,t.dataset.sec,'add');
+  else if(a==='obsundo'){if(canAct(t.dataset.pl))obsUndo(t.dataset.pl,t.dataset.row)}
+  else if(a==='allrow'){const p=plOf(t.dataset.pl);if(!canAct(p.id))return;const rr=ROWMAP[S.mode][t.dataset.row];if(rr.item.multi)return;setCells(p.id,secsFor(p,S.mode,rr).map(s=>[t.dataset.row,s,'D']))}
+  else if(a==='allitem'){const p=plOf(t.dataset.pl);if(!canAct(p.id))return;const list=[];ROWS[S.mode].filter(r=>r.item.id===t.dataset.item).forEach(r=>secsFor(p,S.mode,r).forEach(s=>list.push([r.key,s,'D'])));setCells(p.id,list)}
   else if(a==='rem'){const k=t.dataset.pl+'|'+t.dataset.row;S.openRem[k]=!S.openRem[k];render(true)}
   else if(a==='edittime'){S.editTime=S.editTime===t.dataset.b?null:t.dataset.b;render(true)}
   else if(a==='canceltime'){S.editTime=null;render(true)}
@@ -586,7 +674,7 @@ document.addEventListener('input',ev=>{if(ev.target.classList&&ev.target.classLi
 document.addEventListener('focusout',ev=>{
   if(ev.target.classList&&ev.target.classList.contains('remin')){flushAll();setTimeout(()=>{if(!typing()&&S.dirty)render(true)},80)}
 });
-document.getElementById('who').addEventListener('change',e=>{S.who=e.target.value;try{localStorage.setItem('plplan_who',S.who)}catch(x){}render(true)});
+document.addEventListener('keydown',ev=>{if(ev.key==='Enter'&&ev.target.id==='lpw')doLogin()});
 window.addEventListener('pagehide',flushAll);
 setInterval(()=>render(),30000);
 render(true);initDb();
