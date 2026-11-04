@@ -18,3 +18,9 @@ Until then the page works in "this device only" mode (ticks are kept in that pho
 
 ## Updating the script later
 After pasting a new `Code.gs`: **Deploy → Manage deployments → ✏️ Edit → Version: New version → Deploy**. The URL stays the same.
+
+## Logins (added 4 Nov 2026)
+- Every PL Plan user logs in with their name and a password. Passwords are stored only as salted hashes in the **Users** tab.
+- PLs (Poonam, Garima, Renu Harsh) see and update only their own plan. The Dashboard and all PL tabs are visible only to Sarita, the Dean of Academics and the Director–Admin.
+- Anyone can change their own password (**Password** button). The Director–Admin can set a new password for anyone (**Logins** button), which logs that person out everywhere.
+- Starting passwords were set once with the `bootstrap` call; it refuses to run again once any login exists.
