@@ -19,6 +19,7 @@ body { margin: 0; padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-b
   --chip: #e8ebf4; --btn: #1d2a57; --hover: #eef0f7; --ok: #1e7a3b; --warn: #8a5a00; --bad: #b42318; --bad-bg: #fde2e2;
   --wa: #1a8f4c; --wa-ink: #ffffff;
   --shadow: 0 1px 2px rgba(29,42,87,.08), 0 4px 14px rgba(29,42,87,.06);
+  --c-asg: #2f4fb5; --c-nb: #d98a00; --c-bk: #1b8a6b; --c-ts: #c0392b;
   --f-display: "Archivo", "Arial Narrow", Arial, sans-serif;
   --f-body: "Source Sans 3", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
@@ -28,13 +29,15 @@ body { margin: 0; padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-b
   --navy: #17204a; --navy-ink: #ffffff; --gold: #f2b134; --gold-ink: #17204a;
   --chip: #252d47; --btn: #3d55a8; --hover: #222a42; --ok: #5fc27e; --warn: #e0b45a; --bad: #f08b80; --bad-bg: #3a2228;
   --wa: #23a85c; --wa-ink: #ffffff;
-  --shadow: 0 1px 2px rgba(0,0,0,.3); color-scheme: dark } }
+  --shadow: 0 1px 2px rgba(0,0,0,.3); color-scheme: dark;
+  --c-asg: #7d97ef; --c-nb: #f0b34a; --c-bk: #4cc3a0; --c-ts: #f08b80 } }
 :root[data-theme="dark"] {
   --bg: #121624; --surface: #1a2033; --ink: #e8eaf2; --muted: #a2a9bd; --line: #2d3550;
   --navy: #17204a; --navy-ink: #ffffff; --gold: #f2b134; --gold-ink: #17204a;
   --chip: #252d47; --btn: #3d55a8; --hover: #222a42; --ok: #5fc27e; --warn: #e0b45a; --bad: #f08b80; --bad-bg: #3a2228;
   --wa: #23a85c; --wa-ink: #ffffff;
-  --shadow: 0 1px 2px rgba(0,0,0,.3); color-scheme: dark }
+  --shadow: 0 1px 2px rgba(0,0,0,.3); color-scheme: dark;
+  --c-asg: #7d97ef; --c-nb: #f0b34a; --c-bk: #4cc3a0; --c-ts: #f08b80 }
 * { box-sizing: border-box }
 [hidden] { display: none !important }
 body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.45 }
@@ -163,6 +166,42 @@ input:focus-visible, select:focus-visible, button:focus-visible, a:focus-visible
 .nm-c i { font-style: normal; font-weight: 700; margin-left: 4px }
 .nm-c.s-ns i, .nm-c.s-bl i, .nm-c.s-lo i { color: var(--bad) } .nm-c.s-ic i { color: var(--warn) } .nm-c.s-ng i, .nm-c.s-ab i { color: var(--muted) }
 .pickhint { margin: 0; padding: 14px 16px; color: var(--muted) }
+.fl small { font-weight: 400 }
+.seg button { white-space: nowrap }
+main .wrap > *, .poor > * { min-width: 0 }
+.seg { flex-wrap: wrap; max-width: 100% }
+.dates { flex-wrap: wrap } .fg { max-width: 100% }
+@media (max-width: 380px) { .seg button { padding: 7px 7px; font-size: 13px } }
+@media (max-width: 560px) { .seg button { padding: 8px 9px; font-size: 13.5px } .bar .seg { max-width: 100% } }
+.fg.wide { flex: 1 1 100% }
+.dates { display: flex; gap: 6px; align-items: center; color: var(--muted); font-size: 13px }
+.dates .inp { width: auto; padding: 6px 8px }
+.cmp-bar { display: flex; flex-wrap: wrap; gap: 10px 16px; justify-content: space-between; align-items: flex-end; padding: 12px 16px; border-bottom: 1px solid var(--line) }
+.shot { background: var(--surface); padding: 14px 16px 16px; display: grid; gap: 10px; min-width: 0 }
+.shot-h { display: grid; gap: 2px }
+.shot-h b { font-family: var(--f-display); font-size: 17px; line-height: 1.25 }
+.shot-h span { font-size: 13px; color: var(--muted) }
+.shot .note { padding: 0 }
+.bars { display: grid; gap: 5px }
+.brow { display: grid; grid-template-columns: minmax(64px, 12rem) minmax(0, 1fr) auto; gap: 8px; align-items: center; font-size: 13px }
+.bl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600 }
+.bt { display: flex; height: 14px; background: var(--chip); border-radius: 4px; overflow: hidden; min-width: 0 }
+.bs { height: 100%; min-width: 2px }
+.bv { font-variant-numeric: tabular-nums; color: var(--muted); white-space: nowrap; font-size: 12.5px }
+.keyrow { display: flex; gap: 6px 14px; font-size: 12.5px; color: var(--muted); flex-wrap: wrap }
+.keyrow i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px }
+.lw { overflow: auto; max-height: 34rem; border: 1px solid var(--line); border-radius: 10px }
+.tb td.b { font-weight: 700 }
+.tb td.s-lo, .tb td.s-ns, .tb td.s-bl { color: var(--bad); font-weight: 600 } .tb td.s-ic { color: var(--warn); font-weight: 600 } .tb td.s-ng, .tb td.s-ab { color: var(--muted) }
+.poor, .plist { display: grid; gap: 16px }
+.pc-h { display: flex; flex-wrap: wrap; gap: 8px 12px; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line) }
+.panel .pc-h h2 { padding: 0; border: 0 }
+.tw.ptw { margin: 0; max-height: none }
+.ptb th { text-align: center; line-height: 1.25 }
+.ptb th .mx { font-weight: 400 }
+.ptb td { text-align: center }
+.ptb td.hotv { background: var(--bad-bg) }
+.cap .tw, .cap .lw { overflow: visible; max-height: none }
 @media (prefers-reduced-motion: no-preference) { .cat, .btn, .chip { transition: background .15s } }
 </style>
 
@@ -199,11 +238,25 @@ input:focus-visible, select:focus-visible, button:focus-visible, a:focus-visible
       <div class="seg" role="group" aria-label="Segment">
         <button id="segA" type="button" data-seg="A" aria-pressed="true">Primary 1-5</button>
         <button id="segB" type="button" data-seg="B" aria-pressed="false">Secondary 6-11</button>
+        <button id="segP" type="button" data-seg="P" aria-pressed="false">Poor performers</button>
       </div>
       <label class="search"><span hidden>Search</span><input id="q" type="search" placeholder="Search: Class 6, Maths, Hindi…" autocomplete="off"></label>
     </div>
     <div class="cats" id="cats"></div>
     <section class="panel" id="list" aria-live="polite"></section>
+    <div class="poor" id="poor" hidden>
+      <section class="filters" aria-label="Poor performer filters">
+        <div class="fg wide"><span class="fl">Class <small>tap one or more</small></span><div class="chips" id="p-cls"></div></div>
+        <div class="fg"><span class="fl">Section</span><div class="chips" id="p-sec"></div></div>
+        <div class="fg wide"><span class="fl">Subject <small>all, or tap one or more</small></span><div class="chips" id="p-subs"></div></div>
+        <label class="fg"><span class="fl">Poor performer</span>
+          <select class="inp" id="p-run"><option value="2">Below 60% in 2 tests in a row</option><option value="3">Below 60% in 3 tests in a row</option><option value="4">Below 60% in 4 tests in a row</option></select></label>
+        <label class="fg"><span class="fl">Tests shown</span>
+          <select class="inp" id="p-show"><option value="6">Latest 6</option><option value="10">Latest 10</option><option value="0">All tests</option></select></label>
+      </section>
+      <p class="take" id="p-sum"></p>
+      <div class="plist" id="p-list"></div>
+    </div>
     <div class="how">
       <div><b>View</b> opens the PDF here. <b>Save</b> downloads it.</div>
       <div><b>WhatsApp PDF</b> opens your phone's share sheet with the full PDF: choose WhatsApp, then the group. On a computer the PDF downloads, then attach it in WhatsApp Web as a Document.</div>
@@ -214,12 +267,13 @@ input:focus-visible, select:focus-visible, button:focus-visible, a:focus-visible
   <div class="wrap" id="view-dash" hidden>
     <p class="take" id="d-take">Loading the defaulter records…</p>
     <section class="filters" aria-label="Filters">
-      <label class="fg"><span class="fl">Class</span>
-        <select class="inp" id="f-cls"><option value="">All classes</option><option value="1">Class 1</option><option value="2">Class 2</option><option value="3">Class 3</option><option value="4">Class 4</option><option value="5">Class 5</option><option value="6">Class 6</option><option value="7">Class 7</option><option value="8">Class 8</option><option value="9">Class 9</option><option value="10">Class 10</option><option value="11">Class 11</option></select></label>
-      <label class="fg"><span class="fl">Section</span>
-        <select class="inp" id="f-sec"><option value="">All sections</option><option value="A">A</option><option value="B">B</option><option value="C">C</option></select></label>
+      <div class="fg wide"><span class="fl">Class <small>tap one or more</small></span><div class="chips" id="f-cls"></div></div>
+      <div class="fg"><span class="fl">Section</span><div class="chips" id="f-sec"></div></div>
+      <div class="fg wide"><span class="fl">Subject <small>tap one or more</small></span><div class="chips" id="f-subs"></div></div>
       <div class="fg"><span class="fl">Item</span><div class="chips" id="f-items"></div></div>
       <div class="fg"><span class="fl">Reason</span><div class="chips" id="f-stats"></div></div>
+      <div class="fg"><span class="fl">Dates</span>
+        <div class="dates"><input class="inp" id="f-from" type="date" aria-label="From date"><span>to</span><input class="inp" id="f-to" type="date" aria-label="To date"></div></div>
       <label class="fg"><span class="fl">Checked by</span>
         <select class="inp" id="f-role"><option value="all">Mentors and CMs</option><option value="Mentor">Mentors only</option><option value="CM">CMs only</option></select></label>
       <button type="button" class="btn" id="f-reset">Reset</button>
@@ -240,8 +294,27 @@ input:focus-visible, select:focus-visible, button:focus-visible, a:focus-visible
     <section class="panel" id="d-names-card">
       <h2>Defaulter names <small id="d-scope2"></small></h2>
       <div class="legend"><span><b>•</b> not submitted</span><span><b>IC</b> incomplete</span><span><b>NG</b> not given</span><span><b>Ab</b> absent</span><span><b>blank</b> not marked</span><span><b>4/10</b> test score below 60%</span></div>
-      <p class="pickhint" id="d-pick" hidden>Pick a class above, or tap a section in the Class-wise table, to see names item by item.</p>
+      <p class="pickhint" id="d-pick" hidden>Pick a class above, or tap a section in the Class-wise table, to see names item by item. Newest check first.</p>
       <div class="names" id="d-names"></div>
+    </section>
+    <section class="panel" id="cmp-card">
+      <h2>Compare and share <small id="cmp-scope"></small></h2>
+      <div class="cmp-bar">
+        <div class="fg"><span class="fl">Compare by</span><div class="chips" id="cmp-by"></div></div>
+        <div class="acts">
+          <button class="btn wa" type="button" id="cmp-share">Share image</button>
+          <button class="btn" type="button" id="cmp-copyimg">Copy image</button>
+          <button class="btn" type="button" id="cmp-saveimg">Save image</button>
+          <button class="btn" type="button" id="cmp-copytxt">Copy text</button>
+        </div>
+      </div>
+      <div class="shot" id="cmp-shot">
+        <div class="shot-h"><b id="cmp-title"></b><span id="cmp-sub"></span></div>
+        <div class="bars" id="cmp-chart"></div>
+        <div class="keyrow" id="cmp-key"></div>
+        <div class="lw"><table class="tb list" id="cmp-list"><thead><tr><th class="l">Date</th><th class="l">Section</th><th class="l">Subject</th><th class="l">Lesson</th><th class="l">Item</th><th class="l">Student</th><th class="l">Reason</th><th class="l">Checked by</th></tr></thead><tbody id="cmp-tbody"></tbody></table></div>
+        <p class="note" id="cmp-more"></p>
+      </div>
     </section>
   </div>
 </main>
@@ -277,6 +350,7 @@ input:focus-visible, select:focus-visible, button:focus-visible, a:focus-visible
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 let AS_OF = '';
 const PAGE_URL = location.href.split('#')[0];
@@ -304,6 +378,8 @@ async function unlock(key) {
   const data = JSON.parse(new TextDecoder().decode(await decrypt(await (await fetch('data.bin', { cache: 'no-cache' })).arrayBuffer(), key)));
   KEY = key; AS_OF = data.asOf; FILES = data.files;
   D.rows = data.rows.map(r => Object.fromEntries(data.cols.map((c, k) => [c, r[k]])));
+  D.tests = (data.tests || []).map(([sec, subj, lesson, date, max, marks]) => ({ sec, subj, lesson, date, max, marks })).filter(t => /[A-Za-z]/.test(t.subj) && t.max);
+  buildFilters(); buildPoorFilters();
   $('asof').textContent = AS_OF; document.querySelectorAll('.unl').forEach(e => e.hidden = false); $('gate').hidden = true; $('mainv').hidden = false; fromHash();
 }
 async function boot() {
@@ -372,7 +448,10 @@ $('sh-close').onclick = () => { $('sheet').hidden = true; };
 $('sheet').addEventListener('click', e => { if (e.target === $('sheet')) $('sheet').hidden = true; });
 
 function render() {
-  $('segA').setAttribute('aria-pressed', seg === 'A'); $('segB').setAttribute('aria-pressed', seg === 'B');
+  $('segA').setAttribute('aria-pressed', seg === 'A'); $('segB').setAttribute('aria-pressed', seg === 'B'); $('segP').setAttribute('aria-pressed', seg === 'P');
+  const poor = seg === 'P';
+  $('poor').hidden = !poor; $('cats').hidden = poor; $('list').hidden = poor; document.querySelector('.how').hidden = poor; document.querySelector('.bar .search').hidden = poor;
+  if (poor) { renderPoor(); return; }
   const cats = Object.keys(CATS).filter(c => c[0] === seg);
   $('cats').innerHTML = '';
   for (const c of cats) {
@@ -412,7 +491,9 @@ function render() {
   }
 }
 document.querySelectorAll('.seg button').forEach(b => b.onclick = () => {
-  seg = b.dataset.seg; cat = Object.keys(CATS).find(c => c[0] === seg); query = ''; $('q').value = ''; setHash(cat); render();
+  seg = b.dataset.seg; query = ''; $('q').value = '';
+  if (seg === 'P') { setHash('poor'); render(); return; }
+  cat = Object.keys(CATS).find(c => c[0] === seg); setHash(cat); render();
 });
 $('q').addEventListener('input', e => { query = e.target.value.trim(); render(); });
 
@@ -453,53 +534,86 @@ async function draw(doc, el, task) {
   if (task !== readerTask) return;
   el.innerHTML = ''; el.appendChild(c);
 }
-function closeReader() { readerTask++; $('reader').hidden = true; document.body.style.overflow = ''; $('pages').innerHTML = ''; if (observer) observer.disconnect(); setHash(cat); }
+function closeReader() { readerTask++; $('reader').hidden = true; document.body.style.overflow = ''; $('pages').innerHTML = ''; if (observer) observer.disconnect(); setHash(seg === 'P' ? 'poor' : cat); }
 $('rclose').onclick = closeReader;
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (!$('sheet').hidden) $('sheet').hidden = true; else if (!$('reader').hidden) closeReader(); } });
 
 // ---------- defaulter dashboard ----------
-const D = { rows: null, loading: null, cls: '1', sec: '', items: ['Assignment', 'Notebook', 'Book', 'Test'], stats: ['Below 60%', 'Not submitted', 'Incomplete', 'Not given', 'Absent', 'Blank'], role: 'all', tab: 'class', q: '' };
+const CLASSES = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'];
+const SECS = ['A', 'B', 'C'];
 const ITEMS = ['Assignment', 'Notebook', 'Book', 'Test'];
 const STATS = ['Below 60%', 'Not submitted', 'Incomplete', 'Not given', 'Absent', 'Blank'];
+const D = { rows: null, tests: [], cls: ['1'], secs: [], subs: [], items: ITEMS.slice(), stats: STATS.slice(), role: 'all', from: '', to: '', tab: 'class', q: '', by: 'sec' };
 const SCODE = { 'Below 60%': '<60%', 'Not submitted': '•', 'Incomplete': 'IC', 'Not given': 'NG', 'Absent': 'Ab', 'Blank': 'blank' };
 const SCLS = { 'Below 60%': 's-lo', 'Not submitted': 's-ns', 'Incomplete': 's-ic', 'Not given': 's-ng', 'Absent': 's-ab', 'Blank': 's-bl' };
 const SLAB = { 'Below 60%': 'Test below 60%', 'Not submitted': '• Not submitted', 'Incomplete': 'IC Incomplete', 'Not given': 'NG Not given', 'Absent': 'Ab Absent', 'Blank': 'Blank' };
+const SHORT = { 'English 1': 'Eng 1', 'English 2': 'Eng 2', 'English': 'Eng', 'Hindi 1': 'Hin 1', 'Hindi 2': 'Hin 2', 'Hindi': 'Hin', 'Hindi Comp': 'Hin Comp', 'Sanskrit': 'Skt', 'Science': 'Sci', 'Computer': 'Comp', 'English Comp': 'Eng Comp' };
+const ITEMC = { Assignment: 'var(--c-asg)', Notebook: 'var(--c-nb)', Book: 'var(--c-bk)', Test: 'var(--c-ts)' };
 const nf = new Intl.NumberFormat('en-IN');
 const fmtN = v => nf.format(v);
 const dfmt = d => { if (!d) return 'no date'; const x = new Date(d + 'T00:00:00Z'); return x.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' }); };
+const dshort = d => d ? `${+d.slice(8, 10)}/${+d.slice(5, 7)}` : '—';
 const secKey = s => { const m = /^(\d+)(.*)$/.exec(s) || [0, 0, s]; return [+m[1], m[2]]; };
 const bySec = (a, b) => { const x = secKey(a), y = secKey(b); return x[0] - y[0] || (x[1] < y[1] ? -1 : x[1] > y[1] ? 1 : 0); };
 const lesNum = l => { const m = /(\d+)/.exec(l || ''); return m ? +m[1] : 999; };
 const groupBy = (list, key) => { const m = new Map(); for (const r of list) { const k = key(r); if (!m.has(k)) m.set(k, []); m.get(k).push(r); } return m; };
 const studentsOf = list => new Set(list.map(r => r.sec + '|' + r.student)).size;
 const counts = list => { const c = { Assignment: 0, Notebook: 0, Book: 0, Test: 0 }; for (const r of list) c[r.item]++; return c; };
+const newestFirst = (a, b) => (b.date || '').localeCompare(a.date || '') || bySec(a.sec, b.sec) || a.subject.localeCompare(b.subject) || a.student.localeCompare(b.student);
+const listText = (sel, all, pre = '') => !sel.length || sel.length === all.length ? '' : sel.map(x => pre + x).join(', ');
 
-function buildChips() {
-  const mk = (box, vals, key, lab) => { box.innerHTML = ''; for (const v of vals) { const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = lab ? lab[v] : v; b.dataset.v = v;
-    b.onclick = () => { let cur = D[key]; cur = cur.includes(v) ? cur.filter(x => x !== v) : [...cur, v]; if (!cur.length) cur = vals.slice(); D[key] = cur; dRender(); }; box.appendChild(b); } };
-  mk($('f-items'), ITEMS, 'items'); mk($('f-stats'), STATS, 'stats', SLAB);
+// multi-select chip rows: an "All" chip plus one chip per value; an empty selection means all
+function multiChips(box, vals, get, set, lab, onChange) {
+  box.innerHTML = '';
+  const mk = (txt, v) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = txt; b.dataset.v = v; box.appendChild(b); return b; };
+  mk('All', '*').onclick = () => { set([]); onChange(); };
+  for (const v of vals) mk(lab ? lab(v) : v, v).onclick = () => { const cur = get(); set(cur.includes(v) ? cur.filter(x => x !== v) : [...cur, v]); onChange(); };
 }
-buildChips();
-$('f-cls').onchange = e => { D.cls = e.target.value; D.sec = ''; dRender(); };
-$('f-sec').onchange = e => { D.sec = e.target.value; dRender(); };
+function paintChips(box, sel) { box.querySelectorAll('.chip').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === '*' ? !sel.length : sel.includes(b.dataset.v))); }
+function toggleChips(box, vals, key, lab) {   // items / reasons: at least one stays on
+  box.innerHTML = '';
+  for (const v of vals) { const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = lab ? lab[v] : v; b.dataset.v = v;
+    b.onclick = () => { let cur = D[key]; cur = cur.includes(v) ? cur.filter(x => x !== v) : [...cur, v]; if (!cur.length) cur = vals.slice(); D[key] = cur; dRender(); }; box.appendChild(b); }
+}
+let SUBJECTS = [];
+function buildFilters() {
+  multiChips($('f-cls'), CLASSES, () => D.cls, v => D.cls = v, v => 'Class ' + v, dRender);
+  multiChips($('f-sec'), SECS, () => D.secs, v => D.secs = v, null, dRender);
+  SUBJECTS = [...new Set((D.rows || []).map(r => r.subject))].filter(x => /[A-Za-z]/.test(x)).sort();
+  multiChips($('f-subs'), SUBJECTS, () => D.subs, v => D.subs = v, null, dRender);
+  toggleChips($('f-items'), ITEMS, 'items'); toggleChips($('f-stats'), STATS, 'stats', SLAB);
+  const by = $('cmp-by'); by.innerHTML = '';
+  for (const [v, t] of [['sec', 'Section'], ['cls', 'Class'], ['subject', 'Subject'], ['lesson', 'Lesson'], ['date', 'Date'], ['student', 'Student']]) {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = t; b.dataset.v = v; b.onclick = () => { D.by = v; dRenderCompare(); }; by.appendChild(b);
+  }
+}
 $('f-role').onchange = e => { D.role = e.target.value; dRender(); };
-$('f-reset').onclick = () => { Object.assign(D, { cls: '1', sec: '', items: ITEMS.slice(), stats: STATS.slice(), role: 'all', q: '' }); $('d-q').value = ''; dRender(); };
+$('f-from').onchange = e => { D.from = e.target.value; dRender(); };
+$('f-to').onchange = e => { D.to = e.target.value; dRender(); };
+$('f-reset').onclick = () => { Object.assign(D, { cls: ['1'], secs: [], subs: [], items: ITEMS.slice(), stats: STATS.slice(), role: 'all', from: '', to: '', q: '' }); $('d-q').value = ''; $('f-from').value = ''; $('f-to').value = ''; dRender(); };
 document.querySelectorAll('.dtab').forEach(b => b.onclick = () => { D.tab = b.dataset.tab; dRender(); });
 $('d-q').addEventListener('input', e => { D.q = e.target.value; dRenderTable(); });
 
 function dLoad() {}
-const base = () => D.rows.filter(r => D.items.includes(r.item) && D.stats.includes(r.status) && (D.role === 'all' || r.role === D.role));
-const inScope = list => list.filter(r => (!D.cls || r.cls === D.cls) && (!D.sec || r.sec === D.cls + D.sec));
-const scopeText = () => D.cls ? `Class ${D.cls}${D.sec || ''}${D.sec ? '' : ' · all sections'}` : 'Whole school';
+// base: everything except class and section (the class-wise table compares all sections)
+const base = () => D.rows.filter(r => D.items.includes(r.item) && D.stats.includes(r.status) && (D.role === 'all' || r.role === D.role)
+  && (!D.subs.length || D.subs.includes(r.subject)) && (!D.from || (r.date && r.date >= D.from)) && (!D.to || (r.date && r.date <= D.to)));
+const inScope = list => list.filter(r => (!D.cls.length || D.cls.includes(r.cls)) && (!D.secs.length || D.secs.includes(r.sec.slice(r.cls.length))));
+function scopeText() {
+  const c = D.cls.length ? 'Class ' + D.cls.join(', ') : 'All classes';
+  const s = listText(D.secs, SECS); const j = listText(D.subs, SUBJECTS);
+  const d = D.from || D.to ? `${D.from ? dfmt(D.from) : 'start'} – ${D.to ? dfmt(D.to) : 'today'}` : '';
+  return [c, s && 'Sec ' + s, j, d].filter(Boolean).join(' · ');
+}
 
 function dRender() {
-  $('f-cls').value = D.cls; $('f-sec').value = D.sec; $('f-sec').disabled = !D.cls; $('f-role').value = D.role;
+  $('f-role').value = D.role;
+  paintChips($('f-cls'), D.cls); paintChips($('f-sec'), D.secs); paintChips($('f-subs'), D.subs);
   $('f-items').querySelectorAll('.chip').forEach(b => b.setAttribute('aria-pressed', D.items.includes(b.dataset.v)));
   $('f-stats').querySelectorAll('.chip').forEach(b => b.setAttribute('aria-pressed', D.stats.includes(b.dataset.v)));
   document.querySelectorAll('.dtab').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === D.tab));
   if (!D.rows) return;
   const b = base(), s = inScope(b);
-  // takeaway
   const top = [...groupBy(b, r => r.sec)].sort((x, y) => y[1].length - x[1].length)[0];
   const ds = D.rows.map(r => r.date).filter(Boolean).sort();
   const t = $('d-take'); t.innerHTML = '';
@@ -507,14 +621,13 @@ function dRender() {
   add('Across the school, '); add(fmtN(b.length), 1); add(' pending entries for '); add(fmtN(studentsOf(b)), 1); add(' students.');
   if (top) { add(' Most in '); add(`${top[0]} (${fmtN(top[1].length)})`, 1); add('.'); }
   if (ds.length) { add(' Checks from '); add(`${dfmt(ds[0])} to ${dfmt(ds[ds.length - 1])}`, 1); add('.'); }
-  // tiles
   const c = counts(s), tiles = [['Pending entries · ' + scopeText(), s.length, true], ['Students with pending work', studentsOf(s)],
     ['Assignments', c.Assignment], ['Notebooks', c.Notebook], ['Books', c.Book], ['Tests (below 60% · Ab · NG)', c.Test]];
   const tb = $('d-tiles'); tb.innerHTML = '';
   for (const [l, v, hot] of tiles) { const d = document.createElement('div'); d.className = 'tile' + (hot && v ? ' hot' : ''); const a = document.createElement('span'); a.className = 'tl'; a.textContent = l; const n = document.createElement('span'); n.className = 'tv'; n.textContent = fmtN(v); d.append(a, n); tb.appendChild(d); }
-  $('d-scope').textContent = D.tab === 'class' ? '· whole school' : '· ' + scopeText();
+  $('d-scope').textContent = D.tab === 'class' ? '· every section' : '· ' + scopeText();
   $('d-scope2').textContent = '· ' + scopeText();
-  dRenderTable(); dRenderNames(s);
+  dRenderTable(); dRenderNames(s); dRenderCompare();
 }
 function cell(tr, v, cls) { const td = document.createElement('td'); td.textContent = v; if (cls) td.className = cls; tr.appendChild(td); return td; }
 function ncell(tr, v, hot) { return cell(tr, v ? fmtN(v) : '–', v ? (hot ? 'hotv' : '') : 'zero'); }
@@ -523,7 +636,7 @@ function dRenderTable() {
   if (!D.rows) return;
   const body = $('d-tbody'); body.replaceChildren(); const b = base(), s = inScope(b);
   $('d-q').hidden = D.tab !== 'student';
-  const NOTE = { class: 'Every section, for the item and reason filters. Tap a section to see its names below.', subject: 'Subjects in the class and section picked.',
+  const NOTE = { class: 'Every section, for the subject, item, reason and date filters. Tap a section to see its names.', subject: 'Subjects in the classes and sections picked.',
     staff: 'Pending entries in the records each mentor or CM keeps. A high count can mean strict checking as much as students falling behind.', student: 'Students most pending first (top 400).' };
   $('d-note').textContent = NOTE[D.tab];
   const none = n => { const tr = document.createElement('tr'); const td = cell(tr, 'Nothing pending for these filters.', 'l'); td.colSpan = n; body.appendChild(tr); };
@@ -533,11 +646,13 @@ function dRenderTable() {
     const g = [...groupBy(b, r => r.sec)].sort((x, y) => bySec(x[0], y[0])); if (!g.length) return none(7);
     const max = Math.max(1, ...g.map(x => x[1].length));
     for (const [sec, list] of g) {
-      const tr = document.createElement('tr'); tr.className = 'click' + (D.cls && sec === D.cls + D.sec ? ' on' : '');
+      const m = /^(\d+)(.*)$/.exec(sec);
+      const on = D.cls.length === 1 && D.cls[0] === m[1] && D.secs.length === 1 && D.secs[0] === m[2];
+      const tr = document.createElement('tr'); tr.className = 'click' + (on ? ' on' : '');
       cell(tr, sec, 'l'); itemCells(tr, list);
       const td = ncell(tr, list.length, list.length / max > .6); const bar = document.createElement('span'); bar.className = 'minibar'; bar.style.width = Math.round(40 * list.length / max) + 'px'; td.appendChild(bar);
       ncell(tr, studentsOf(list));
-      tr.onclick = () => { const m = /^(\d+)(.*)$/.exec(sec); D.cls = m[1]; D.sec = m[2]; dRender(); $('d-names-card').scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+      tr.onclick = () => { D.cls = [m[1]]; D.secs = m[2] ? [m[2]] : []; dRender(); $('d-names-card').scrollIntoView({ behavior: 'smooth', block: 'start' }); };
       body.appendChild(tr);
     }
   } else if (D.tab === 'subject') {
@@ -561,19 +676,20 @@ function dRenderTable() {
   }
 }
 function dRenderNames(s) {
-  const box = $('d-names'); box.replaceChildren(); $('d-pick').hidden = !!D.cls; if (!D.cls) return;
+  const box = $('d-names'); box.replaceChildren(); const show = D.cls.length && D.cls.length <= 3; $('d-pick').hidden = !!show; if (!show) return;
   if (!s.length) { const p = document.createElement('p'); p.className = 'pickhint'; p.textContent = 'Nothing pending for these filters.'; box.appendChild(p); return; }
   for (const it of ITEMS) {
     const list = s.filter(r => r.item === it); if (!list.length) continue;
     const sec = document.createElement('div'); sec.className = 'item';
-    const h = document.createElement('h3'); h.textContent = it + 's '; const hs = document.createElement('span'); hs.textContent = `${fmtN(list.length)} entries · ${fmtN(studentsOf(list))} students`; h.appendChild(hs); sec.appendChild(h);
+    const h = document.createElement('h3'); h.textContent = it + 's '; const hs = document.createElement('span'); hs.textContent = `${fmtN(list.length)} entries · ${fmtN(studentsOf(list))} students · newest first`; h.appendChild(hs); sec.appendChild(h);
     const grid = document.createElement('div'); grid.className = 'ggrid';
-    const g = [...groupBy(list, r => [r.subject, r.lesson, r.sec].join('|'))].sort((x, y) => { const a = x[0].split('|'), b = y[0].split('|'); return a[0].localeCompare(b[0]) || lesNum(a[1]) - lesNum(b[1]) || a[1].localeCompare(b[1]) || bySec(a[2], b[2]); });
+    const g = [...groupBy(list, r => [r.subject, r.lesson, r.sec].join('|'))].map(([k, rs]) => [k, rs, rs.reduce((m, r) => (r.date || '') > m ? r.date : m, '')])
+      .sort((x, y) => y[2].localeCompare(x[2]) || bySec(x[0].split('|')[2], y[0].split('|')[2]) || x[0].localeCompare(y[0]));
     for (const [k, rs] of g) {
       const [sj, les, sc] = k.split('|');
       const card = document.createElement('div'); card.className = 'grp';
       const gh = document.createElement('div'); gh.className = 'gh'; const t = document.createElement('span'); t.style.color = 'inherit'; t.style.fontWeight = '700'; t.textContent = `${sj} ${les === '—' ? '' : les}`.trim(); const n = document.createElement('span'); n.textContent = `${sc} · ${rs.length}`; gh.append(t, n); card.appendChild(gh);
-      const gm = document.createElement('div'); gm.className = 'gm'; gm.textContent = `${[...new Set(rs.map(r => r.date))].sort().map(dfmt).join(', ')} · ${[...new Set(rs.map(r => r.staff))].join(', ')}`; card.appendChild(gm);
+      const gm = document.createElement('div'); gm.className = 'gm'; gm.textContent = `${[...new Set(rs.map(r => r.date))].sort().reverse().map(dfmt).join(', ')} · ${[...new Set(rs.map(r => r.staff))].join(', ')}`; card.appendChild(gm);
       const nl = document.createElement('div'); nl.className = 'nl';
       for (const [nm, xs] of [...groupBy(rs, r => r.student)].sort((x, y) => x[0].localeCompare(y[0]))) {
         const ch = document.createElement('span'); ch.className = 'nm-c ' + SCLS[xs[xs.length - 1].status]; ch.textContent = nm;
@@ -585,18 +701,194 @@ function dRenderNames(s) {
   }
 }
 
-// views + hash: #dash = dashboard, #A1 = category, #A1-3 = one PDF
+// ---------- compare and share ----------
+const CMP_LIMIT = 300;
+let CMP_ROWS = [];
+function dRenderCompare() {
+  if (!D.rows) return;
+  $('cmp-by').querySelectorAll('.chip').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === D.by));
+  const s = inScope(base()).sort(newestFirst); CMP_ROWS = s;
+  const lab = { sec: 'section', cls: 'class', subject: 'subject', lesson: 'lesson', date: 'date', student: 'student' }[D.by];
+  $('cmp-scope').textContent = '· ' + scopeText();
+  $('cmp-title').textContent = `Defaulters by ${lab} · ${scopeText()}`;
+  $('cmp-sub').textContent = `${fmtN(s.length)} entries · ${fmtN(studentsOf(s))} students · data as of ${AS_OF}`;
+  const key = { sec: r => r.sec, cls: r => 'Class ' + r.cls, subject: r => r.subject, lesson: r => `${r.subject} ${r.lesson}`, date: r => r.date || '', student: r => `${r.student} (${r.sec})` }[D.by];
+  let g = [...groupBy(s, key)];
+  if (D.by === 'sec') g.sort((x, y) => bySec(x[0], y[0]));
+  else if (D.by === 'cls') g.sort((x, y) => +x[0].slice(6) - +y[0].slice(6));
+  else if (D.by === 'date') g.sort((x, y) => y[0].localeCompare(x[0]));
+  else g.sort((x, y) => y[1].length - x[1].length);
+  const cut = D.by === 'student' || D.by === 'lesson' ? 25 : 40; const more = g.length - cut; g = g.slice(0, cut);
+  const max = Math.max(1, ...g.map(x => x[1].length));
+  const chart = $('cmp-chart'); chart.replaceChildren();
+  if (!g.length) { const p = document.createElement('p'); p.className = 'note'; p.textContent = 'Nothing pending for these filters.'; chart.appendChild(p); }
+  for (const [k, list] of g) {
+    const row = document.createElement('div'); row.className = 'brow';
+    const l = document.createElement('span'); l.className = 'bl'; l.textContent = D.by === 'date' ? dfmt(k) : k;
+    const track = document.createElement('span'); track.className = 'bt';
+    const c = counts(list);
+    for (const it of ITEMS) if (c[it]) { const seg = document.createElement('span'); seg.className = 'bs'; seg.style.width = (100 * c[it] / max) + '%'; seg.style.background = ITEMC[it]; seg.title = `${it}: ${c[it]}`; track.appendChild(seg); }
+    const v = document.createElement('span'); v.className = 'bv'; v.textContent = `${fmtN(list.length)} · ${studentsOf(list)} st`;
+    row.append(l, track, v); chart.appendChild(row);
+  }
+  if (more > 0) { const p = document.createElement('p'); p.className = 'note'; p.textContent = `+ ${more} more ${lab}s with fewer entries`; chart.appendChild(p); }
+  const key2 = $('cmp-key'); key2.replaceChildren();
+  for (const it of ITEMS) { const k = document.createElement('span'); const sw = document.createElement('i'); sw.style.background = ITEMC[it]; k.append(sw, it); key2.appendChild(k); }
+  const tb = $('cmp-tbody'); tb.replaceChildren();
+  for (const r of s.slice(0, CMP_LIMIT)) {
+    const tr = document.createElement('tr');
+    cell(tr, dfmt(r.date), 'l'); cell(tr, r.sec, 'l'); cell(tr, r.subject, 'l'); cell(tr, r.lesson === '—' ? '' : r.lesson, 'l'); cell(tr, r.item, 'l');
+    cell(tr, r.student, 'l b'); cell(tr, r.score ? `${r.score} (below 60%)` : r.status, 'l ' + SCLS[r.status]); cell(tr, r.staff, 'l');
+    tb.appendChild(tr);
+  }
+  $('cmp-more').textContent = s.length > CMP_LIMIT ? `Showing the newest ${CMP_LIMIT} of ${fmtN(s.length)} entries. Narrow the filters (class, section, subject, dates) to see the rest, or use Copy text for all of them.` : '';
+}
+function cmpText() {
+  const s = CMP_ROWS; if (!s.length) return 'Nothing pending for these filters.';
+  const out = [`*FIS defaulters · ${scopeText()}*`, `${s.length} entries · ${studentsOf(s)} students · data as of ${AS_OF}`, ''];
+  for (const [k, rs] of groupBy(s, r => [r.date, r.sec, r.subject, r.lesson, r.item].join('|'))) {
+    const [d, sec, sj, les, it] = k.split('|');
+    out.push(`*${dfmt(d)} · ${sec} · ${sj}${les && les !== '—' ? ' ' + les : ''} · ${it}* (${rs.length})`);
+    out.push(rs.map(r => `${r.student} (${r.score || SCODE[r.status]})`).join(', '));
+    out.push('');
+  }
+  return out.join('\n').trim();
+}
+async function copyText(txt, what) {
+  try { await navigator.clipboard.writeText(txt); toast(what + ' copied. Paste it in WhatsApp.'); }
+  catch (e) { const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); let ok = false; try { ok = document.execCommand('copy'); } catch (e2) {} ta.remove(); toast(ok ? what + ' copied.' : 'Could not copy on this phone. Try Share image.'); }
+}
+async function shotBlob(el) {
+  if (!window.html2canvas) throw new Error('The image tool did not load. Check the internet and reload.');
+  const bg = getComputedStyle(el).backgroundColor;
+  const w = Math.max(el.clientWidth, ...[...el.querySelectorAll('table')].map(t => t.scrollWidth + 34));
+  const h = el.scrollHeight + 20;
+  const scale = Math.max(0.6, Math.min(2, Math.sqrt(14e6 / (w * h))));   // keep under phone canvas limits
+  el.dataset.shot = '1';
+  let c; try {
+    c = await html2canvas(el, { backgroundColor: bg, scale, useCORS: true, logging: false, windowWidth: Math.max(w + 40, 760),
+      onclone: d => { const x = d.querySelector('[data-shot="1"]'); if (x) { x.classList.add('cap'); x.style.width = w + 'px'; } } });
+  } finally { delete el.dataset.shot; }
+  return new Promise((ok, bad) => c.toBlob(b => b ? ok(b) : bad(new Error('Could not make the image.')), 'image/png'));
+}
+async function imageAction(el, name, mode) {
+  try {
+    toast('Making the image…');
+    const blob = await shotBlob(el); const file = new File([blob], name + '.png', { type: 'image/png' });
+    if (mode === 'share') {
+      if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: name }); toast('Shared.'); return; }
+      mode = 'save';
+    }
+    if (mode === 'copy') {
+      if (navigator.clipboard && window.ClipboardItem) { await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]); toast('Image copied. Paste it in WhatsApp or a chat.'); return; }
+      toast('This browser cannot copy images. Saving it instead.');
+    }
+    const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = file.name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 60000);
+    toast('Image saved: ' + file.name);
+  } catch (e) { if (e?.name !== 'AbortError') toast(e?.message || 'Could not make the image.'); }
+}
+const cmpName = () => ('FIS defaulters ' + scopeText()).replace(/[^\w\- ,]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80);
+$('cmp-share').onclick = () => imageAction($('cmp-shot'), cmpName(), 'share');
+$('cmp-copyimg').onclick = () => imageAction($('cmp-shot'), cmpName(), 'copy');
+$('cmp-saveimg').onclick = () => imageAction($('cmp-shot'), cmpName(), 'save');
+$('cmp-copytxt').onclick = () => copyText(cmpText(), 'Defaulter list');
+
+// ---------- poor performers (below 60% in tests in a row) ----------
+const P = { cls: ['1'], secs: [], subs: [], run: 2, show: 10 };
+let P_SUBJECTS = [];
+function buildPoorFilters() {
+  multiChips($('p-cls'), CLASSES, () => P.cls, v => P.cls = v, v => 'Class ' + v, renderPoor);
+  multiChips($('p-sec'), SECS, () => P.secs, v => P.secs = v, null, renderPoor);
+  P_SUBJECTS = [...new Set(D.tests.map(t => t.subj))].sort();
+  multiChips($('p-subs'), P_SUBJECTS, () => P.subs, v => P.subs = v, null, renderPoor);
+}
+$('p-run').onchange = e => { P.run = +e.target.value; renderPoor(); };
+$('p-show').onchange = e => { P.show = +e.target.value; renderPoor(); };
+const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const low = (v, mx) => typeof v === 'number' && mx && v / mx * 100 < 60;
+function poorOf(sec) {
+  const tests = D.tests.filter(t => t.sec === sec && (!P.subs.length || P.subs.includes(t.subj))).sort((a, b) => (b.date || '').localeCompare(a.date || '') || a.subj.localeCompare(b.subj));
+  const names = [...new Set(tests.flatMap(t => Object.keys(t.marks)))];
+  const out = [];
+  for (const nm of names) {
+    let run = 0, best = 0, latest = 0, lowN = 0;
+    for (const t of tests.slice().reverse()) {          // oldest to newest
+      const v = t.marks[nm];
+      if (v === 'A' || v === 'NG' || v === '' || v === undefined) continue;   // absent / not given: skipped
+      if (low(v, t.max)) { run++; lowN++; best = Math.max(best, run); } else run = 0;
+    }
+    latest = run;
+    if (best >= P.run) out.push({ nm, best, latest, lowN });
+  }
+  out.sort((a, b) => b.latest - a.latest || b.best - a.best || b.lowN - a.lowN || a.nm.localeCompare(b.nm));
+  return { tests, list: out };
+}
+function poorText(sec, r) {
+  const lines = [`*Poor performers · ${sec}* (below 60% in ${P.run}+ tests in a row) · data as of ${AS_OF}`];
+  r.list.forEach((p, i) => {
+    const marks = r.tests.map(t => { const v = t.marks[p.nm]; return v === undefined || v === '' ? null : `${SHORT[t.subj] || t.subj} ${dshort(t.date)}: ${v === 'A' ? 'Ab' : v === 'NG' ? 'NG' : v + '/' + t.max}`; }).filter(Boolean).slice(0, 6);
+    lines.push(`${i + 1}. ${p.nm} – ${p.best} low in a row${p.latest >= P.run ? ' (still low)' : ''}\n   ${marks.join(' · ')}`);
+  });
+  return lines.join('\n');
+}
+function renderPoor() {
+  paintChips($('p-cls'), P.cls); paintChips($('p-sec'), P.secs); paintChips($('p-subs'), P.subs); $('p-run').value = String(P.run); $('p-show').value = String(P.show);
+  const box = $('p-list'); box.replaceChildren();
+  const secs = [...new Set(D.tests.map(t => t.sec))].filter(s => { const m = /^(\d+)(.*)$/.exec(s); return (!P.cls.length || P.cls.includes(m[1])) && (!P.secs.length || P.secs.includes(m[2])); }).sort(bySec);
+  let total = 0;
+  for (const sec of secs) {
+    const r = poorOf(sec); if (!r.tests.length) continue; total += r.list.length;
+    const card = document.createElement('section'); card.className = 'panel pcard';
+    const h = document.createElement('div'); h.className = 'pc-h';
+    const tt = document.createElement('h2'); tt.textContent = `Class ${sec} `; const sm = document.createElement('small'); sm.textContent = `${r.list.length} student${r.list.length === 1 ? '' : 's'} · ${r.tests.length} tests` + (P.show && r.tests.length > P.show ? ` (latest ${P.show} shown)` : ''); tt.appendChild(sm);
+    const acts = document.createElement('div'); acts.className = 'acts';
+    const shot = document.createElement('div'); shot.className = 'shot';
+    const mkb = (t, cls, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn ' + cls; b.textContent = t; b.onclick = fn; acts.appendChild(b); };
+    const nm = `FIS poor performers ${sec}`;
+    mkb('Share image', 'wa', () => imageAction(shot, nm, 'share')); mkb('Copy image', '', () => imageAction(shot, nm, 'copy')); mkb('Copy text', '', () => copyText(poorText(sec, r), 'Poor performer list'));
+    h.append(tt, acts); card.appendChild(h);
+    const sh = document.createElement('div'); sh.className = 'shot-h'; const sb = document.createElement('b'); sb.textContent = `Poor performers — Class ${sec}`; const ss = document.createElement('span'); ss.textContent = `below 60% in ${P.run}+ tests in a row · newest test first · data as of ${AS_OF}`; sh.append(sb, ss); shot.appendChild(sh);
+    if (!r.list.length) { const p = document.createElement('p'); p.className = 'note'; p.textContent = 'No student has ' + P.run + ' low tests in a row.'; shot.appendChild(p); card.appendChild(shot); box.appendChild(card); continue; }
+    const wrap = document.createElement('div'); wrap.className = 'tw ptw';
+    const tbl = document.createElement('table'); tbl.className = 'tb ptb';
+    const hr = document.createElement('tr');
+    const th = (t, l) => { const e = document.createElement('th'); e.innerHTML = t; if (l) e.className = 'l'; hr.appendChild(e); };
+    th('#'); th('Student', 1);
+    const cols = P.show ? r.tests.slice(0, P.show) : r.tests;
+    for (const t of cols) th(`${esc(SHORT[t.subj] || t.subj)}<br>${dshort(t.date)}<br><span class="mx">/${esc(t.max)}</span>`);
+    th('Status', 1);
+    const thead = document.createElement('thead'); thead.appendChild(hr); tbl.appendChild(thead);
+    const tbody = document.createElement('tbody');
+    r.list.forEach((p, i) => {
+      const tr = document.createElement('tr');
+      cell(tr, String(i + 1)); cell(tr, p.nm, 'l b');
+      for (const t of cols) {
+        const v = t.marks[p.nm];
+        if (v === 'A') cell(tr, 'Ab', 'zero'); else if (v === 'NG') cell(tr, 'NG', 'zero'); else if (v === '' || v === undefined) cell(tr, '–', 'zero');
+        else cell(tr, String(v), low(v, t.max) ? 'hotv' : '');
+      }
+      cell(tr, `${p.best} low in a row${p.latest >= P.run ? ' · still low' : ''}`, 'l w');
+      tbody.appendChild(tr);
+    });
+    tbl.appendChild(tbody); wrap.appendChild(tbl); shot.appendChild(wrap); card.appendChild(shot); box.appendChild(card);
+  }
+  $('p-sum').textContent = secs.length ? `${total} poor performer${total === 1 ? '' : 's'} in ${secs.length} section${secs.length === 1 ? '' : 's'}. Ab and NG are skipped when counting tests in a row. Red = below 60%.` : 'No tests for these filters.';
+}
+
+// views + hash: #dash = dashboard, #poor = poor performers, #A1 = category, #A1-3 = one PDF
 function showView(v) {
   view = v; $('view-pdf').hidden = v !== 'pdf'; $('view-dash').hidden = v !== 'dash';
   $('v-pdf').setAttribute('aria-pressed', v === 'pdf'); $('v-dash').setAttribute('aria-pressed', v === 'dash');
   if (v === 'dash') { dLoad(); dRender(); } else render();
 }
-document.querySelectorAll('.views button').forEach(b => b.onclick = () => { showView(b.dataset.view); setHash(b.dataset.view === 'dash' ? 'dash' : cat); });
+document.querySelectorAll('.views button').forEach(b => b.onclick = () => { showView(b.dataset.view); setHash(b.dataset.view === 'dash' ? 'dash' : seg === 'P' ? 'poor' : cat); });
 let settingHash = false;
 function setHash(h) { if (location.hash.slice(1) === h) return; settingHash = true; location.hash = h; setTimeout(() => settingHash = false, 0); }
 function fromHash() {
   const raw = location.hash.slice(1); const h = raw.toUpperCase();
   if (raw === 'dash') { showView('dash'); return; }
+  if (raw === 'poor') { seg = 'P'; showView('pdf'); return; }
+  if (seg === 'P') seg = 'A';
   showView('pdf');
   const f = FILES.find(x => x[1] === h);
   if (f) { seg = f[0][0]; cat = f[0]; render(); openReader(f); return; }
