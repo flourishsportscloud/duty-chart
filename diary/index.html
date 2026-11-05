@@ -78,6 +78,8 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .stbl .xd td{background:var(--bg);font-size:13px;line-height:1.5}
 .stbl .xd div{padding:2px 0} .stbl .xd small{color:var(--muted)}
 .stbl .ns{font-size:11px;color:var(--muted);display:block}
+.stbl td.dnames{font-size:12.5px;line-height:1.4;min-width:140px}
+.stbl td.dnames div{padding:1px 0} .stbl td.dnames small{color:var(--muted)} .stbl td.dnames .muted{color:var(--muted)}
 .pen.all{width:auto;padding:0 10px}
 .subbar{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px 12px;margin-bottom:8px;border:1.5px solid var(--warn);background:var(--warn-soft);border-radius:10px}
 .subbar.done{border-color:var(--ok);background:var(--ok-soft)}
@@ -560,16 +562,12 @@ function summaryRow(c, sc){
   tr.appendChild(el("td", null, k.present + "/" + k.total));
   tr.appendChild(el("td", k.absent.length ? "hot" : "", String(k.absent.length)));
   tr.appendChild(el("td", k.def.length ? "wn" : "", String(k.def.length)));
-  const td = el("td"); const d = el("button","sec1", sumOpen.has(id) ? "Hide" : "Names"); d.type = "button";
-  d.onclick = () => { if (sumOpen.has(id)) sumOpen.delete(id); else sumOpen.add(id); renderSummary(); };
-  td.appendChild(d); tr.appendChild(td); out.push(tr);
-  if (sumOpen.has(id)) {
-    const xr = el("tr","xd"), xd = el("td"); xd.colSpan = 5;
-    if (!k.absent.length && !k.def.length) xd.appendChild(el("div", null, "No absentees or defaulters."));
-    k.absent.forEach(x => { const dv = el("div"); dv.appendChild(el("b", null, (x.i + 1) + ". " + x.n)); dv.appendChild(el("small", null, " — Absent")); xd.appendChild(dv); });
-    k.def.forEach(x => { const dv = el("div"); dv.appendChild(el("b", null, (x.i + 1) + ". " + x.n)); dv.appendChild(el("small", null, " — " + x.fl.join(", "))); xd.appendChild(dv); });
-    xr.appendChild(xd); out.push(xr);
-  }
+  // Details: defaulter names (with what they missed) and absentees, shown directly in the row
+  const td = el("td","dnames");
+  if (!k.absent.length && !k.def.length) td.appendChild(el("span","muted","–"));
+  k.def.forEach(x => { const dv = el("div"); dv.appendChild(el("b", null, (x.i + 1) + ". " + x.n)); dv.appendChild(el("small", null, " – " + x.fl.join(", "))); td.appendChild(dv); });
+  k.absent.forEach(x => { const dv = el("div"); dv.appendChild(el("b", null, (x.i + 1) + ". " + x.n)); dv.appendChild(el("small", null, " – Absent")); td.appendChild(dv); });
+  tr.appendChild(td); out.push(tr);
   return out;
 }
 function renderMark(){
@@ -1198,7 +1196,7 @@ setInterval(() => {
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && me) { retryDirty(); refresh(); } });
 
 /* ---------- auto-update: if a newer page is published, reload into it ---------- */
-const BUILD = "202611051147";
+const BUILD = "202611051216";
 (function(){
   const run = () => fetch(location.pathname + "?v=" + Date.now(), {cache:"no-store"}).then(r => r.text()).then(t => {
     const m = t.match(/const BUILD = "(\d+)"/);
