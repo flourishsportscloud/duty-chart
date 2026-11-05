@@ -95,7 +95,7 @@ tr.grpsep td{background:#f4f8f6;font-weight:700}
 
 <script>
 /* ---------- FIS sync layer: Google Sheet via Apps Script (replaces the artifact database) ---------- */
-const API_URL=new URLSearchParams(location.search).get('api')||'';
+const API_URL=new URLSearchParams(location.search).get('api')||'https://script.google.com/macros/s/AKfycbzDf3rfh9w_8CfPygfsswDhjbNbHkfImwp171va5xEz9fWO6B_wHf53xr4pgvx7FFDhow/exec';
 const FISDB=(()=>{
   const CK='fis_support_cache_v1',OK='fis_support_outbox_v1';
   let store={},rev=0,outbox=[],busy=false,state=API_URL?'connecting':'setup',blobWant={};
