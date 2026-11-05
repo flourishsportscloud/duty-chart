@@ -1196,4 +1196,14 @@ setInterval(() => {
   if (!typing) refresh();
 }, 20000);
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && me) { retryDirty(); refresh(); } });
+
+/* ---------- auto-update: if a newer page is published, reload into it ---------- */
+const BUILD = "202611051147";
+(function(){
+  const run = () => fetch(location.pathname + "?v=" + Date.now(), {cache:"no-store"}).then(r => r.text()).then(t => {
+    const m = t.match(/const BUILD = "(\d+)"/);
+    if (m && m[1] !== BUILD) location.replace(location.pathname + "?v=" + m[1] + location.hash);
+  }).catch(() => {});
+  run(); document.addEventListener("visibilitychange", () => { if (!document.hidden) run(); });
+})();
 </script>
