@@ -68,6 +68,17 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .mk.bad{background:var(--bad-soft);border-color:var(--bad)} .mk.bad span{color:var(--bad)}
 .mk.warn{background:var(--warn-soft);border-color:var(--warn)} .mk.warn span{color:var(--warn)}
 .mk:disabled{opacity:.35;cursor:default}
+.sumhead{display:flex;justify-content:space-between;align-items:center;margin:12px 0 6px}
+.stbl{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+.stbl th{font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600;text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+.stbl td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.stbl tr.cur td{background:var(--accent-soft)}
+.stbl .sec1{font-weight:700;background:none;border:0;color:var(--accent);padding:0;cursor:pointer;font-size:14px}
+.stbl .hot{color:var(--bad);font-weight:700} .stbl .wn{color:var(--warn);font-weight:700}
+.stbl .xd td{background:var(--bg);font-size:13px;line-height:1.5}
+.stbl .xd div{padding:2px 0} .stbl .xd small{color:var(--muted)}
+.stbl .ns{font-size:11px;color:var(--muted);display:block}
+.pen.all{width:auto;padding:0 10px}
 .subbar{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px 12px;margin-bottom:8px;border:1.5px solid var(--warn);background:var(--warn-soft);border-radius:10px}
 .subbar.done{border-color:var(--ok);background:var(--ok-soft)}
 .subbar .subtxt{font-size:13px;line-height:1.35}
@@ -234,6 +245,8 @@ h3.grp{font-family:var(--font-display);font-size:13px;letter-spacing:.07em;text-
   </nav>
 
   <div id="viewMark">
+  <div class="sumhead"><h2 class="sec" style="margin:0">Class summary</h2><button class="tab" id="sumToggle" type="button">All classes</button></div>
+  <div id="summary"></div>
   <div class="bar">
     <div class="chips" id="chips" role="group" aria-label="Class"></div>
     <div class="tabs" id="tabs" role="tablist" aria-label="Section"></div>
@@ -484,6 +497,10 @@ function renderList(){
     if (m.t) { const lt = Math.max.apply(null, Object.values(m.t)); head.appendChild(el("span","when", fmtT(lt))); }
     const pen = el("button","pen" + (m.r ? " has" : ""), m.r ? "Note" : "+ Note"); pen.type = "button";
     pen.style.width = "auto"; pen.style.padding = "0 10px";
+    const allBtn = el("button","pen all", FLAGS.every(f => m[f[0]] === f[2]) ? "Clear all" : "All ✗"); allBtn.type = "button"; allBtn.disabled = abs;
+    allBtn.setAttribute("aria-label", "Mark all diary segments for " + n);
+    allBtn.onclick = () => { const on = !FLAGS.every(f => m[f[0]] === f[2]), p = {}; FLAGS.forEach(f => { p[f[0]] = on ? f[2] : 0; }); setMark(cls,sec,i,p); render(); };
+    head.appendChild(allBtn);
     pen.onclick = () => { const k = cls+sec+i; if (openRem.has(k)) openRem.delete(k); else openRem.add(k); renderList(); };
     head.appendChild(pen); card.appendChild(head);
     const mk = el("div","marks");
@@ -507,7 +524,51 @@ function renderList(){
     box.appendChild(card);
   });
 }
+/* ---------- class summary table ---------- */
+const FLAGS = [["d","Diary",1],["e","English",2],["s","Sign",2],["b","Behaviour",2],["v","TV hr",2],["y","Study hr",2],["p","Play hr",2]];
+function kidFlags(m){ return FLAGS.filter(f => m[f[0]] === f[2]).map(f => f[1]); }
+function secSummary(c, s){
+  const names = ROSTER[c][s], absent = [], def = [];
+  names.forEach((n, i) => { const m = mark(c, s, i); if (m.a) absent.push({i, n}); else { const fl = kidFlags(m); if (fl.length) def.push({i, n, fl}); } });
+  return {total:names.length, absent, def};
+}
+let sumAll = false; const sumOpen = new Set();
+function renderSummary(){
+  const box = $("summary"); box.textContent = "";
+  $("sumToggle").textContent = sumAll ? "This class only" : "All classes";
+  const wrap = el("div","tscroll"), tbl = el("table","stbl");
+  const hr = el("tr"); ["Section","Present","Absent","Defaulter","Details"].forEach(h => hr.appendChild(el("th", null, h))); tbl.appendChild(hr);
+  const cl = sumAll ? Array.from({length:11}, (_, k) => k + 1) : [cls];
+  cl.forEach(c => sections(c).forEach(sc => {
+    const r = summaryRow(c, sc); r.forEach(x => tbl.appendChild(x));
+  }));
+  wrap.appendChild(tbl); box.appendChild(wrap);
+}
+function summaryRow(c, sc){
+  const k = secSummary(c, sc), id = c + sc, out = [];
+  const tr = el("tr", c === cls && sc === sec ? "cur" : "");
+  const t1 = el("td"); const b = el("button","sec1", c + sc); b.type = "button";
+  b.onclick = () => { cls = c; sec = sc; render(); }; t1.appendChild(b);
+  if (!secDone(c, sc)) t1.appendChild(el("span","ns","not submitted"));
+  tr.appendChild(t1);
+  tr.appendChild(el("td", null, (k.total - k.absent.length) + "/" + k.total));
+  tr.appendChild(el("td", k.absent.length ? "hot" : "", String(k.absent.length)));
+  tr.appendChild(el("td", k.def.length ? "wn" : "", String(k.def.length)));
+  const td = el("td"); const d = el("button","sec1", sumOpen.has(id) ? "Hide" : "Names"); d.type = "button";
+  d.onclick = () => { if (sumOpen.has(id)) sumOpen.delete(id); else sumOpen.add(id); renderSummary(); };
+  td.appendChild(d); tr.appendChild(td); out.push(tr);
+  if (sumOpen.has(id)) {
+    const xr = el("tr","xd"), xd = el("td"); xd.colSpan = 5;
+    if (!k.absent.length && !k.def.length) xd.appendChild(el("div", null, "No absentees or defaulters."));
+    k.absent.forEach(x => { const dv = el("div"); dv.appendChild(el("b", null, (x.i + 1) + ". " + x.n)); dv.appendChild(el("small", null, " — Absent")); xd.appendChild(dv); });
+    k.def.forEach(x => { const dv = el("div"); dv.appendChild(el("b", null, (x.i + 1) + ". " + x.n)); dv.appendChild(el("small", null, " — " + x.fl.join(", "))); xd.appendChild(dv); });
+    xr.appendChild(xd); out.push(xr);
+  }
+  return out;
+}
+$("sumToggle").onclick = () => { sumAll = !sumAll; renderSummary(); };
 function renderMark(){
+  renderSummary();
   renderChips(); renderTabs();
   const ae = document.activeElement;
   if (ae && ae.tagName === "TEXTAREA" && $("list").contains(ae)) return; // don't disturb typing
