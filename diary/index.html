@@ -68,10 +68,10 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .mk.bad{background:var(--bad-soft);border-color:var(--bad)} .mk.bad span{color:var(--bad)}
 .mk.warn{background:var(--warn-soft);border-color:var(--warn)} .mk.warn span{color:var(--warn)}
 .mk:disabled{opacity:.35;cursor:default}
-.sumhead{display:flex;justify-content:space-between;align-items:center;margin:12px 0 6px}
+.sumwrap{max-height:34vh;overflow-y:auto;margin-top:4px}
 .stbl{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
-.stbl th{font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600;text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
-.stbl td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.stbl th{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600;text-align:left;padding:5px 8px;border-bottom:1px solid var(--line)}
+.stbl td{padding:5px 8px;border-bottom:1px solid var(--line);vertical-align:top}
 .stbl tr.cur td{background:var(--accent-soft)}
 .stbl .sec1{font-weight:700;background:none;border:0;color:var(--accent);padding:0;cursor:pointer;font-size:14px}
 .stbl .hot{color:var(--bad);font-weight:700} .stbl .wn{color:var(--warn);font-weight:700}
@@ -245,11 +245,10 @@ h3.grp{font-family:var(--font-display);font-size:13px;letter-spacing:.07em;text-
   </nav>
 
   <div id="viewMark">
-  <div class="sumhead"><h2 class="sec" style="margin:0">Class summary</h2><button class="tab" id="sumToggle" type="button">All classes</button></div>
-  <div id="summary"></div>
   <div class="bar">
     <div class="chips" id="chips" role="group" aria-label="Class"></div>
     <div class="tabs" id="tabs" role="tablist" aria-label="Section"></div>
+    <div id="summary"></div>
   </div>
   <div class="status" id="status" aria-live="polite"></div>
   <div class="list" id="list"></div>
@@ -443,14 +442,15 @@ function renderChips(){
   }
 }
 function counts(c, s){
-  const names = ROSTER[c][s]; let absent = 0, def = 0, enNo = 0, sgNo = 0, bad = 0, tvNo = 0, stNo = 0, plNo = 0;
+  const names = ROSTER[c][s]; let absent = 0, present = 0, def = 0, enNo = 0, sgNo = 0, bad = 0, tvNo = 0, stNo = 0, plNo = 0;
   names.forEach((n,i) => {
     const m = mark(c,s,i);
-    if (m.a) { absent++; return; }
-    if (m.d) def++; if (m.e === 2) enNo++; if (m.s === 2) sgNo++; if (m.b === 2) bad++;
+    if (m.a === 1) { absent++; return; }
+    if (m.a === 2) present++;
+    if (m.d === 1) def++; if (m.e === 2) enNo++; if (m.s === 2) sgNo++; if (m.b === 2) bad++;
     if (m.v === 2) tvNo++; if (m.y === 2) stNo++; if (m.p === 2) plNo++;
   });
-  return {total:names.length, absent, present:names.length-absent, def, enNo, sgNo, bad, tvNo, stNo, plNo};
+  return {total:names.length, absent, present, def, enNo, sgNo, bad, tvNo, stNo, plNo};
 }
 function renderTabs(){
   const box = $("tabs"); box.textContent = "";
@@ -460,10 +460,6 @@ function renderTabs(){
     b.onclick = () => { sec = s; render(); };
     box.appendChild(b);
   });
-  const k = counts(cls, sec), st = el("div","stats");
-  const add = (cn, lab, v) => { const sp = el("span", cn); sp.append(lab + " "); sp.appendChild(el("b", null, String(v))); st.appendChild(sp); };
-  add("", "Present", k.present + "/" + k.total); add("bad", "Absent", k.absent); add("warn", "Defaulters", k.def);
-  box.appendChild(st);
 }
 function markBtn(label, text, tone, onclick, disabled){
   const b = el("button","mk" + (tone ? " " + tone : "")); b.type = "button";
@@ -476,7 +472,7 @@ function submitBar(){
   const sb = subOf(cls, sec), k = counts(cls, sec), bar = el("div", "subbar" + (sb ? " done" : ""));
   const txt = el("div", "subtxt");
   if (sb) txt.textContent = "Submitted " + fmtT(sb.at) + (sb.u ? " by " + sb.u : "") + " · " + k.def + " diary defaulters";
-  else txt.textContent = "Everyone is pre-marked Present · OK · Yes · Good. Change only the defaulters, then tap Submit.";
+  else txt.textContent = "Mark every child (or tap Select all for a child who is fine), then tap Submit.";
   bar.appendChild(txt);
   const b = el("button", "btn", sb ? "Submit again" : "Submit " + cls + " " + sec); b.type = "button";
   b.onclick = () => { submitSec(cls, sec); render(); toast("Section " + cls + " " + sec + " submitted"); };
@@ -489,7 +485,7 @@ function renderList(){
   if (!names || !names.length){ box.appendChild(el("div","empty","No students in this section.")); return; }
   box.appendChild(submitBar());
   names.forEach((n, i) => {
-    const m = mark(cls, sec, i), abs = !!m.a;
+    const m = mark(cls, sec, i), abs = m.a === 1;
     const card = el("div","stu" + (abs ? " absent" : ""));
     const head = el("div","head");
     head.appendChild(el("span","roll", String(i+1)));
@@ -497,22 +493,29 @@ function renderList(){
     if (m.t) { const lt = Math.max.apply(null, Object.values(m.t)); head.appendChild(el("span","when", fmtT(lt))); }
     const pen = el("button","pen" + (m.r ? " has" : ""), m.r ? "Note" : "+ Note"); pen.type = "button";
     pen.style.width = "auto"; pen.style.padding = "0 10px";
-    const allBtn = el("button","pen all", FLAGS.every(f => m[f[0]] === f[2]) ? "Clear all" : "All ✗"); allBtn.type = "button"; allBtn.disabled = abs;
-    allBtn.setAttribute("aria-label", "Mark all diary segments for " + n);
-    allBtn.onclick = () => { const on = !FLAGS.every(f => m[f[0]] === f[2]), p = {}; FLAGS.forEach(f => { p[f[0]] = on ? f[2] : 0; }); setMark(cls,sec,i,p); render(); };
+    const ALLOK = {a:2, d:2, e:1, s:1, b:1, v:1, y:1, p:1};
+    const isAll = Object.keys(ALLOK).every(f => m[f] === ALLOK[f]);
+    const allBtn = el("button","pen all", isAll ? "Clear all" : "Select all"); allBtn.type = "button";
+    allBtn.setAttribute("aria-label", (isAll ? "Clear all marks for " : "Mark everything OK for ") + n);
+    allBtn.onclick = () => { const p = {}; Object.keys(ALLOK).forEach(f => { p[f] = isAll ? 0 : ALLOK[f]; }); setMark(cls,sec,i,p); render(); };
     head.appendChild(allBtn);
     pen.onclick = () => { const k = cls+sec+i; if (openRem.has(k)) openRem.delete(k); else openRem.add(k); renderList(); };
     head.appendChild(pen); card.appendChild(head);
     const mk = el("div","marks");
-    const nb = (label, f, yes, no) => markBtn(label, m[f] === 2 ? no : yes, m[f] === 2 ? "bad" : "ok", () => { setMark(cls,sec,i,{[f]: flip2(m[f])}); render(); }, abs);
-    mk.appendChild(markBtn("Attend", abs ? "A" : "P", abs ? "bad" : "ok", () => { setMark(cls,sec,i,{a: abs ? 0 : 1}); render(); }));
-    mk.appendChild(markBtn("Diary", m.d ? "DEF" : "OK", m.d ? "warn" : "ok", () => { setMark(cls,sec,i,{d: m.d ? 0 : 1}); render(); }, abs));
-    mk.appendChild(nb("English","e","Yes","No"));
-    mk.appendChild(nb("Sign","s","Yes","No"));
-    mk.appendChild(nb("Behav","b","Good","Bad"));
-    mk.appendChild(nb("TV hr","v","Yes","No"));
-    mk.appendChild(nb("Study hr","y","Yes","No"));
-    mk.appendChild(nb("Play hr","p","Yes","No"));
+    // value codes: attendance a: 2 present / 1 absent · diary d: 2 OK / 1 defaulter · all others: 1 good / 2 bad
+    const tri = (label, f, yes, no, noTone) => {
+      const good = (f === "a" || f === "d") ? 2 : 1, bad = 3 - good, v = m[f];
+      return markBtn(label, v === good ? yes : v === bad ? no : "–", v === good ? "ok" : v === bad ? noTone : "",
+        () => { setMark(cls,sec,i,{[f]: v === good ? bad : v === bad ? 0 : good}); render(); }, f !== "a" && abs);
+    };
+    mk.appendChild(tri("Attend","a","P","A","bad"));
+    mk.appendChild(tri("Diary","d","OK","DEF","warn"));
+    mk.appendChild(tri("English","e","Yes","No","bad"));
+    mk.appendChild(tri("Sign","s","Yes","No","bad"));
+    mk.appendChild(tri("Behav","b","Good","Bad","bad"));
+    mk.appendChild(tri("TV hr","v","Yes","No","bad"));
+    mk.appendChild(tri("Study hr","y","Yes","No","bad"));
+    mk.appendChild(tri("Play hr","p","Yes","No","bad"));
     card.appendChild(mk);
     if (m.r || openRem.has(cls+sec+i)){
       const r = el("div","rem"); const ta = el("textarea"); ta.id = "rem-" + cls + sec + i;
@@ -528,18 +531,17 @@ function renderList(){
 const FLAGS = [["d","Diary",1],["e","English",2],["s","Sign",2],["b","Behaviour",2],["v","TV hr",2],["y","Study hr",2],["p","Play hr",2]];
 function kidFlags(m){ return FLAGS.filter(f => m[f[0]] === f[2]).map(f => f[1]); }
 function secSummary(c, s){
-  const names = ROSTER[c][s], absent = [], def = [];
-  names.forEach((n, i) => { const m = mark(c, s, i); if (m.a) absent.push({i, n}); else { const fl = kidFlags(m); if (fl.length) def.push({i, n, fl}); } });
-  return {total:names.length, absent, def};
+  const names = ROSTER[c][s], absent = [], def = []; let present = 0;
+  names.forEach((n, i) => { if (mark(c, s, i).a === 2) present++; });
+  names.forEach((n, i) => { const m = mark(c, s, i); if (m.a === 1) absent.push({i, n}); else { const fl = kidFlags(m); if (fl.length) def.push({i, n, fl}); } });
+  return {total:names.length, present, absent, def};
 }
 let sumAll = false; const sumOpen = new Set();
 function renderSummary(){
   const box = $("summary"); box.textContent = "";
-  $("sumToggle").textContent = sumAll ? "This class only" : "All classes";
-  const wrap = el("div","tscroll"), tbl = el("table","stbl");
+  const wrap = el("div","tscroll sumwrap"), tbl = el("table","stbl");
   const hr = el("tr"); ["Section","Present","Absent","Defaulter","Details"].forEach(h => hr.appendChild(el("th", null, h))); tbl.appendChild(hr);
-  const cl = sumAll ? Array.from({length:11}, (_, k) => k + 1) : [cls];
-  cl.forEach(c => sections(c).forEach(sc => {
+  [cls].forEach(c => sections(c).forEach(sc => {
     const r = summaryRow(c, sc); r.forEach(x => tbl.appendChild(x));
   }));
   wrap.appendChild(tbl); box.appendChild(wrap);
@@ -551,7 +553,7 @@ function summaryRow(c, sc){
   b.onclick = () => { cls = c; sec = sc; render(); }; t1.appendChild(b);
   if (!secDone(c, sc)) t1.appendChild(el("span","ns","not submitted"));
   tr.appendChild(t1);
-  tr.appendChild(el("td", null, (k.total - k.absent.length) + "/" + k.total));
+  tr.appendChild(el("td", null, k.present + "/" + k.total));
   tr.appendChild(el("td", k.absent.length ? "hot" : "", String(k.absent.length)));
   tr.appendChild(el("td", k.def.length ? "wn" : "", String(k.def.length)));
   const td = el("td"); const d = el("button","sec1", sumOpen.has(id) ? "Hide" : "Names"); d.type = "button";
@@ -566,7 +568,6 @@ function summaryRow(c, sc){
   }
   return out;
 }
-$("sumToggle").onclick = () => { sumAll = !sumAll; renderSummary(); };
 function renderMark(){
   renderSummary();
   renderChips(); renderTabs();
@@ -600,7 +601,7 @@ function reportFor(c, withNames){
     const k = counts(c, s);
     let t = "*" + c + ORD[c].replace(/^\d+/, "") + " " + s + " -* " + k.def;
     if (withNames && k.def){
-      const nm = []; ROSTER[c][s].forEach((n,i) => { const m = mark(c,s,i); if (!m.a && m.d) nm.push(n); });
+      const nm = []; ROSTER[c][s].forEach((n,i) => { const m = mark(c,s,i); if (m.a !== 1 && m.d === 1) nm.push(n); });
       t += " (" + nm.join(", ") + ")";
     }
     lines.push(t);
@@ -621,8 +622,8 @@ function buildReport(){
 $("date").value = date;
 $("date").onchange = e => { if (!e.target.value) return; date = e.target.value; render(); refresh(); };
 $("btnAllPresent").onclick = () => {
-  ROSTER[cls][sec].forEach((n,i) => { if (mark(cls,sec,i).a) setMark(cls,sec,i,{a:0}); });
-  render(); toast("All marked present");
+  ROSTER[cls][sec].forEach((n,i) => { if (!mark(cls,sec,i).a) setMark(cls,sec,i,{a:2}); });
+  render(); toast("Unmarked children set to present");
 };
 $("btnReport").onclick = () => { buildReport(); $("sheet").hidden = false; };
 $("rclose").onclick = () => { $("sheet").hidden = true; };
@@ -680,15 +681,20 @@ function gap(from, to){
   return m < 1 ? "under 1 min" : m < 60 ? m + " min" : m < 1440 ? Math.floor(m/60) + " h " + (m%60) + " min" : Math.floor(m/1440) + " d " + Math.floor((m%1440)/60) + " h";
 }
 function flagged(m, cat){
-  if (!m || m.a) return false;
-  return cat === "def" ? !!m.d : cat === "eng" ? m.e === 2 : cat === "sig" ? m.s === 2 : cat === "beh" ? m.b === 2 : cat === "tv" ? m.v === 2 : cat === "study" ? m.y === 2 : m.p === 2;
+  if (!m || m.a === 1) return false;
+  return cat === "def" ? m.d === 1 : cat === "eng" ? m.e === 2 : cat === "sig" ? m.s === 2 : cat === "beh" ? m.b === 2 : cat === "tv" ? m.v === 2 : cat === "study" ? m.y === 2 : m.p === 2;
+}
+function goodMark(m, cat){
+  return cat === "def" ? m.d === 2 : cat === "eng" ? m.e === 1 : cat === "sig" ? m.s === 1 : cat === "beh" ? m.b === 1 : cat === "tv" ? m.v === 1 : cat === "study" ? m.y === 1 : m.p === 1;
 }
 function streak(c, s, i, cat){
   const k = key(s,i); let n = 0, start = null;
   for (let b = 0; b < 14; b++){
     const dt = shiftDate(date, -b), d = docs[dt + "_" + c];
     if (!d || !secDone(c, s, dt)) continue;
-    if (flagged(d.m[k], cat)) { n++; start = dt; } else break;
+    const mm = d.m[k] || {};
+    if (flagged(mm, cat)) { n++; start = dt; }
+    else if (goodMark(mm, cat)) break;
   }
   return {n, start};
 }
@@ -696,8 +702,8 @@ function issuesFor(c, s, i, seg, dt){
   const m = mark(c, s, i, dt), t = m.t || {}, out = [];
   if (seg === "rem") {
     if (m.r && m.r.trim()) out.push({cat:"rem", text:m.r.trim(), at:t.r});
-  } else if (!m.a) {
-    if (m.d) out.push({cat:"def", at:t.d});
+  } else if (m.a !== 1) {
+    if (m.d === 1) out.push({cat:"def", at:t.d});
     if (m.e === 2) out.push({cat:"eng", at:t.e});
     if (m.s === 2) out.push({cat:"sig", at:t.s});
     if (m.b === 2) out.push({cat:"beh", at:t.b});

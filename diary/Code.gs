@@ -38,8 +38,8 @@ function needPL(ctx,token){const u=needUser(ctx,token);if(u.role!=="pl"&&u.role!
 function cleanMark(x,me){
   if(!x||typeof x!=="object")return null;
   const o={};
-  ["a","d"].forEach(f=>{if(x[f])o[f]=1});
-  ["e","s","b","v","y","p"].forEach(f=>{const v=Number(x[f]);if(v===1||v===2)o[f]=v});
+  // a: 2 present / 1 absent · d: 2 OK / 1 defaulter · e,s,b,v,y,p: 1 good / 2 bad
+  ["a","d","e","s","b","v","y","p"].forEach(f=>{const v=Number(x[f]);if(v===1||v===2)o[f]=v});
   if(typeof x.r==="string"&&x.r.trim())o.r=x.r.trim().slice(0,500);
   if(!Object.keys(o).length)return null;
   if(x.t&&typeof x.t==="object"){
