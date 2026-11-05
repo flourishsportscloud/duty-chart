@@ -332,7 +332,7 @@ function pwHTML(){
 function loginsHTML(){
   if(!S.users){api('listUsers').then(u=>{S.users=u;render(true)}).catch(e=>showMsg(e.message));return '<div class="card">Loading…</div>'}
   return `<div class="card"><h3>Staff logins</h3><div class="muted" style="margin-bottom:6px">Set a new password for anyone who forgot theirs. It logs them out on every phone; share the new password with them privately.</div>`+
-    S.users.map(u=>`<div class="pwrow"><div><b>${esc(u.name)}</b><br><span class="muted">${u.role==='pl'?'PL':u.role==='admin'?'Admin · dashboard':'Senior · dashboard'}${u.set?'':' · not set'}</span></div><input id="up_${u.id}" type="text" placeholder="New password" autocomplete="off"><button class="btn" data-act="setuserpw" data-u="${u.id}">Set</button></div>`).join('')+
+    S.users.map(u=>`<div class="pwrow"><div><b>${esc(u.name)}</b><br><span class="muted">${u.role==='pl'?'PL':u.role==='pm'?'PM (PM Plan app)':u.role==='admin'?'Admin · dashboard':'Senior · dashboard'}${u.set?'':' · not set'}</span></div><input id="up_${u.id}" type="text" placeholder="New password" autocomplete="off"><button class="btn" data-act="setuserpw" data-u="${u.id}">Set</button></div>`).join('')+
     `<button class="btn sec" data-act="closeview">Close</button></div>`;
 }
 function persistCfg(patch){

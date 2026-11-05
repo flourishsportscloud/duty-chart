@@ -5,6 +5,7 @@
    - every tick time is stamped by the server, so nothing can be back-dated
    - only the seniors (Sarita, Dean, Director–Admin) can change block due times
    - every PL request needs a login token; a PL sees and updates only their own plan
+   - PM logins (role "pm") work only in PM Plan – Live
 */
 const TZ="Asia/Kolkata";
 const PLS=["poonam","garima","renu"];
@@ -28,7 +29,8 @@ function getTimes_(){const r=rows_("Config").find(x=>x[0]==="times");return r?pa
 function wkOf_(date){const d=new Date(date+"T00:00:00Z");d.setUTCDate(d.getUTCDate()-((d.getUTCDay()+6)%7));return d.toISOString().slice(0,10)}
 /* ---------- PL logins (passwords stored only as salted hashes in the Users tab) ---------- */
 const PL_USERS=[["poonam","Poonam","pl"],["garima","Garima","pl"],["renu","Renu Harsh","pl"],
-  ["sarita","Sarita (Head of Secondary)","senior"],["dean","Dean of Academics","senior"],["director","Director–Admin","admin"]];
+  ["sarita","Sarita (Head of Secondary)","senior"],["dean","Dean of Academics","senior"],["director","Director–Admin","admin"],
+  ["shally","Shally","pm"],["neetu","Neetu","pm"],["divyanshi","Divyanshi","pm"],["diksha","Diksha","pm"]];
 const TOKEN_DAYS=120;
 const H_={
   sha:s=>Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,s,Utilities.Charset.UTF_8)),
@@ -46,7 +48,8 @@ function users_(){
 }
 function writeUser_(u){const sh=sheet_("Users");const row=[u.id,u.name,u.role,u.salt,u.hash,u.ver];
   if(u.row)sh.getRange(u.row,1,1,6).setValues([row]);else sh.appendRow(row)}
-function pub_(u){return {id:u.id,name:u.name,role:u.role,senior:u.role!=="pl",admin:u.role==="admin"}}
+function pub_(u){return {id:u.id,name:u.name,role:u.role,senior:u.role==="senior"||u.role==="admin",admin:u.role==="admin"}}
+function notPm_(me){if(me.role==="pm")fail("This login is for PM Plan – Live.");return me}
 function token_(u){const exp=Date.now()+TOKEN_DAYS*864e5;const body=u.id+"|"+exp+"|"+u.ver;return H_.b64(body)+"."+H_.hmac(body,secret_())}
 function me_(token){
   const t=String(token||"").split(".");if(t.length!==2)fail("Please log in again.");
@@ -77,7 +80,7 @@ function bootstrap_(map){
 }
 
 function state_(token,wk){
-  const me=me_(token);
+  const me=notPm_(me_(token));
   if(!isoDate(wk))fail("Bad week.");
   const docs={};
   rows_("Plan").forEach(r=>{const p=String(r[0]).split("_");if(p.length===3&&isoDate(p[2])&&wkOf_(p[2])===wk&&(me.role!=="pl"||p[0]===me.id)){const j=parse_(r[5]);docs[r[0]]={pl:p[0],mode:p[1],date:p[2],wk:wk,cells:j.cells||{},rem:j.rem||{}}}});
@@ -85,7 +88,7 @@ function state_(token,wk){
 }
 
 function save_(token,id,patch){
-  const me=me_(token);const name=me.name;
+  const me=notPm_(me_(token));const name=me.name;
   const p=String(id||"").split("_");
   const pl=p[0],mode=p[1],date=p[2];
   if(PLS.indexOf(pl)<0||MODES.indexOf(mode)<0||!isoDate(date))fail("Bad record.");
@@ -118,7 +121,7 @@ function save_(token,id,patch){
 }
 
 function setTime_(token,b,v){
-  const me=me_(token);const who=me.name;
+  const me=notPm_(me_(token));const who=me.name;
   if(me.role==="pl")fail("Only the seniors can change due times.");
   if(!/^(dp|de)\d{1,2}$/.test(String(b)))fail("Bad block.");
   if(!(v==="none"||v==="def"||/^\d\d:\d\d$/.test(String(v))))fail("Bad time.");
@@ -130,28 +133,33 @@ function setTime_(token,b,v){
 }
 
 /* ===== PM Plan – Live (Classes 1–5) — same script, separate "PM Plan" sheet =====
-   Daily plan (dp) can be updated only today; the weekly Observation Update (wk) only during the current week.
-   Each PM's plan: that PM and the seniors (Dean of Academics, Director–Admin). Only seniors change due times. */
-const PM_PEOPLE={shally:"Shally",neetu:"Neetu",divyanshi:"Divyanshi",diksha:"Diksha"};
-const PM_SENIORS=["Dean of Academics","Director–Admin"];
-const PM_BLOCKS=["att","morn","admin","welfare","reports","comm","audit","next","campus"];
-function pmState_(wk){
+   Records: <pm>_dp_<date> (Day Plan), <pm>_de_<date> (Day End), <pm>_wk_<monday> (weekly Observation Update).
+   Every request needs a PM Plan login: a PM sees and updates only their own plan; the Dean of Academics
+   and the Director–Admin see and update all PMs and are the only ones who can change due times. */
+const PM_IDS=["shally","neetu","divyanshi","diksha"];
+const PM_SENIOR_IDS=["dean","director"];
+const PM_BLOCKS=["att","morn","admin","welfare","reports","comm","audit","next","campus","de1","de2","de3"];
+function pmMe_(token){
+  const me=me_(token);
+  if(me.role!=="pm"&&PM_SENIOR_IDS.indexOf(me.id)<0)fail("This login is not for PM Plan – Live.");
+  return me;
+}
+function pmState_(token,wk){
+  const me=pmMe_(token);
   if(!isoDate(wk))fail("Bad week.");
   const docs={};
   rows_("PM Plan").forEach(r=>{const p=String(r[0]).split("_");
-    if(p.length===3&&isoDate(p[2])&&String(r[4]).replace(/^'/,"")===wk){const j=parse_(r[5]);docs[r[0]]={pl:p[0],mode:p[1],date:p[2],wk:wk,cells:j.cells||{},rem:j.rem||{}}}});
+    if(p.length===3&&isoDate(p[2])&&String(r[4]).replace(/^'/,"")===wk&&(me.role!=="pm"||p[0]===me.id)){const j=parse_(r[5]);docs[r[0]]={pl:p[0],mode:p[1],date:p[2],wk:wk,cells:j.cells||{},rem:j.rem||{}}}});
   const c=rows_("Config").find(x=>x[0]==="pmtimes");
-  return {today:today_(),docs,times:c?parse_(c[1]):{}};
+  return {today:today_(),docs,times:c?parse_(c[1]):{},me:pub_(me)};
 }
-function pmSave_(id,patch,who){
+function pmSave_(token,id,patch){
+  const me=pmMe_(token);const name=me.name;
   const p=String(id||"").split("_");const pl=p[0],mode=p[1],date=p[2];
-  if(!PM_PEOPLE[pl]||["dp","wk"].indexOf(mode)<0||!isoDate(date))fail("Bad record.");
-  if(mode==="dp"&&date!==today_())fail("Only today's plan can be updated.");
+  if(PM_IDS.indexOf(pl)<0||["dp","de","wk"].indexOf(mode)<0||!isoDate(date))fail("Bad record.");
+  if(mode!=="wk"&&date!==today_())fail("Only today's plan can be updated.");
   if(mode==="wk"&&date!==wkOf_(today_()))fail("Only this week's observation update can be changed.");
-  const name=String(who||"");
-  const all_=Object.keys(PM_PEOPLE).map(k=>PM_PEOPLE[k]).concat(PM_SENIORS);
-  if(all_.indexOf(name)<0)fail("Pick your name first.");
-  if(name!==PM_PEOPLE[pl]&&PM_SENIORS.indexOf(name)<0)fail("Only "+PM_PEOPLE[pl]+" and the seniors can update this plan.");
+  if(me.role==="pm"&&me.id!==pl)fail("You can update only your own plan.");
   const wk=mode==="wk"?date:wkOf_(date);
   const sh=sheet_("PM Plan");const all=rows_("PM Plan");
   const idx=all.findIndex(r=>r[0]===id);
@@ -172,15 +180,24 @@ function pmSave_(id,patch,who){
   sheet_("Log").appendRow([Utilities.formatDate(new Date(now),TZ,"yyyy-MM-dd HH:mm"),name,"PM "+id,n+" change(s)"]);
   return {pl,mode,date,wk,cells:j.cells,rem:j.rem};
 }
-function pmSetTime_(b,v,who){
-  if(PM_SENIORS.indexOf(String(who||""))<0)fail("Only the seniors can change due times.");
+function pmSetTime_(token,b,v){
+  const me=pmMe_(token);
+  if(me.role==="pm")fail("Only the Dean and the Director–Admin can change due times.");
   if(PM_BLOCKS.indexOf(String(b))<0)fail("Bad block.");
   if(!(v==="none"||v==="def"||/^\d\d:\d\d$/.test(String(v))))fail("Bad time.");
   const sh=sheet_("Config");const all=rows_("Config");const idx=all.findIndex(r=>r[0]==="pmtimes");
   const t=idx>=0?parse_(all[idx][1]):{};t[b]=v;
-  const row=["pmtimes",JSON.stringify(t),who,new Date()];
+  const row=["pmtimes",JSON.stringify(t),me.name,new Date()];
   if(idx>=0)sh.getRange(idx+2,1,1,4).setValues([row]);else sh.appendRow(row);
   return t;
+}
+/* Run once from the Apps Script editor (not reachable from the web): gives every PM login that has no
+   password yet a starting password and prints them in the Execution log. Logins already set are left alone. */
+function setupPmLogins(){
+  const out=[];
+  users_().forEach(u=>{if(u.role==="pm"&&!u.hash){const pw=u.id.slice(0,1).toUpperCase()+u.id.slice(1,4)+"@"+(1000+Math.floor(Math.random()*9000));setPw_(u,pw);out.push(u.name+" : "+pw)}});
+  Logger.log(out.length?out.join("\n"):"All PM logins already have passwords.");
+  return out;
 }
 
 function doPost(e){
@@ -191,7 +208,7 @@ function doPost(e){
     const tk=req.token;
     if(req.fn==="state")v=state_(tk,a[0]);
     else if(req.fn==="login")v=login_(a[0],a[1]);
-    else if(req.fn==="pmState")v=pmState_(a[0]);
+    else if(req.fn==="pmState")v=pmState_(tk,a[0]);
     else{
       lock.waitLock(20000);
       if(req.fn==="save")v=save_(tk,a[0],a[1]);
@@ -199,8 +216,8 @@ function doPost(e){
       else if(req.fn==="changePw")v=changePw_(tk,a[0],a[1]);
       else if(req.fn==="listUsers")v=listUsers_(tk);
       else if(req.fn==="bootstrap")v=bootstrap_(a[0]);
-      else if(req.fn==="pmSave")v=pmSave_(a[0],a[1],a[2]);
-      else if(req.fn==="pmSetTime")v=pmSetTime_(a[0],a[1],a[2]);
+      else if(req.fn==="pmSave")v=pmSave_(tk,a[0],a[1]);
+      else if(req.fn==="pmSetTime")v=pmSetTime_(tk,a[0],a[1]);
       else fail("Unknown request.");
     }
     out={ok:true,v};
