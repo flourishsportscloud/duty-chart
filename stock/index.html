@@ -1416,7 +1416,7 @@ img[data-pid]:not([src]) { visibility: hidden; }
     }
   }
   /* ---------- storage: Google Sheet through an Apps Script web app (see SETUP.md) ---------- */
-  var API_URL = "";   // paste the Web app URL (ends in /exec) between the quotes, or open the page with ?api=<that URL>
+  var API_URL = "https://script.google.com/macros/s/AKfycbypsYMvyOE9gr1AscFaT9MWLotLamAhUktCfLOox7e9rTyraSaR8iTo30PmHtllMIxI/exec";   // paste the Web app URL (ends in /exec) between the quotes, or open the page with ?api=<that URL>
   try { API_URL = new URLSearchParams(location.search).get('api') || API_URL; } catch (e) { }
   var PH = {}, PHq = {}, PHbusy = false;
   function call(fn, args) {
