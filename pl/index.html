@@ -104,6 +104,8 @@ nav button small{display:block;font-weight:400;font-size:10px;opacity:.8}
 .box.n{background:#fde8e8;border:2px solid var(--red)}.box.n .sy{color:var(--red)}
 .box.a{background:#eceff5;border:2px solid var(--grey)}.box.a .sy{color:var(--grey)}
 .box.ro{cursor:default}
+.box.obs.oc{border:2px solid var(--oc);background:color-mix(in srgb,var(--oc) 16%,#fff)}.box.obs.oc .sy{color:var(--oc)}
+.obsleg{display:flex;flex-wrap:wrap;gap:4px 8px;font-size:10px;color:var(--mut);margin-top:3px}.obsleg i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:3px;vertical-align:-1px}
 .box.obs .tm{font-size:10px;line-height:12px;text-align:left;padding:0 2px}
 .row.de{display:flex;align-items:center;gap:8px}
 .row.de .rl{flex:1;margin:0}
@@ -151,8 +153,7 @@ const DP=[
  {id:'assembly',name:'Assembly',rem:'r',subs:[['prayer','Prayer'],['fb','FB'],['tann',"Teacher's Announcement"],['uniform','Uniform'],['talk','Talk Hour']]},
  {id:'testobs',name:'Test Observation',rem:'r'},
  {id:'defaulters',name:'Defaulters',rem:'r',subs:[['late','Late Comers'],['uniform','Uniform']]}]},
-{id:'dp8',name:'Lesson / Learning Inspection',time:null,items:[{id:'lessoninsp',name:'Lesson Inspection'},{id:'learninginsp',name:'Learning Inspection'}]},
-{id:'dp9',name:'Teaching Observation Report',time:null,items:[{id:'tor',name:'Teaching Observation Report',rem:'n',multi:1}]},
+{id:'dp8',name:'Class Observation',time:null,items:[{id:'lessoninsp',name:'Lesson Inspection',rem:'r',multi:1},{id:'learninginsp',name:'Learning Inspection',rem:'r',multi:1},{id:'tor',name:'Teaching Observation Report',rem:'n',multi:1}]},
 {id:'dp2',name:'Reports',time:'10:45',items:[
  {id:'diary',name:'Diary Report'},{id:'collrep',name:'Collection Report'},{id:'defsubrev',name:'Defaulter Submission Review'}]},
 {id:'dp3',name:'Activity',time:null,items:[
@@ -162,8 +163,8 @@ const DP=[
 {id:'dp4',name:'Lunch Round',time:'11:30',items:[{id:'stayback',name:'Stayback'},{id:'lunchann',name:'PL Announcement'}]},
 {id:'dp5',name:'Action',time:'14:30',items:[
  {id:'diarydef',name:'Diary Defaulter',rem:'r'},{id:'hwdef',name:'Home Work Defaulter',rem:'r'},{id:'absent',name:'Absentees Work',rem:'r'},
- {id:'testmarks',name:'Test Marks Defaulter',rem:'r'},{id:'hwquality',name:'HW Submission Quality',rem:'r'}]},
-{id:'dp6',name:'Distribution Round',time:'12:30',items:[{id:'distround',name:'Distribution Round & Report'}]},
+ {id:'testmarks',name:'Test Marks Defaulter',rem:'r'},{id:'hwquality',name:'HW Submission Quality',rem:'r'},{id:'mathspractice',name:'Maths Practice',rem:'r'}]},
+{id:'dp6',name:'Distribution Round',time:'12:30',items:[{id:'distround',name:'Distribution Round & Report',rem:'r'}]},
 {id:'dp7',name:'PL Round',time:'14:30',yn:true,items:[
  {id:'club10',name:'Club 10'},{id:'stationery',name:'Stationery'},{id:'bookreading',name:'Book Reading'},{id:'acadmot',name:'Academic Motivation'},{id:'plann',name:'Announcement'}]}
 ];
@@ -367,6 +368,9 @@ function setCells(plId,list){
   list.forEach(x=>{const key=x[0]+'__'+x[1];const c=mkCell(x[0],x[2],now,mode,date);doc.cells[key]=c;patch.cells[key]=clone(c)});
   persist(id,patch);render();
 }
+const OBS_MAX=7;
+const OBS_COL=['','#d64545','#e0b000','#9bc53d','#1e9e5a','#14a3a3','#3a63c8','#7b4fc9'];
+const OBS_NAME=['','Red','Yellow','Light green','Green','Teal','Blue','Purple'];
 function applyOps(cell,ops,by){
   const obs=((cell&&cell.obs)||[]).slice();
   ops.forEach(o=>{if(o==='add')obs.push(Date.now());else if(o==='pop')obs.pop()});
@@ -375,6 +379,7 @@ function applyOps(cell,ops,by){
 function doObs(plId,rk,sec,op){
   if(!canAct(plId))return;
   const mode=S.mode,date=S.date,id=docId(plId,mode,date),doc=ensureDoc(id,plId,mode,date),key=rk+'__'+sec;
+  if(op==='add'&&((doc.cells[key]&&doc.cells[key].obs)||[]).length>=OBS_MAX)return;
   doc.cells[key]=applyOps(doc.cells[key],[op],whoName());
   persist(id,{cells:{[key]:{ops:[op]}}});render();
 }
@@ -489,9 +494,10 @@ function boxHTML(pl,r,sec,c,yn,editable,showSec){
   return `<button class="box ${cls} ${editable?'':'ro'}"${by} data-act="tick" data-pl="${pl.id}" data-row="${r.key}" data-sec="${sec}"><span class="sl">${showSec?esc(sec):''}</span><span class="sy">${sym}</span>${tm}</button>`;
 }
 function obsBoxHTML(pl,r,sec,c,yn,editable){
-  const obs=(c&&c.obs)||[];const cls=obs.length?'d':'';
+  const obs=(c&&c.obs)||[];const n=Math.min(obs.length,OBS_MAX);const cls=n?'oc':'';
+  const st=n?` style="--oc:${OBS_COL[n]}"`:'';
   const list=obs.map((t,i)=>`${i+1}-${fmtT(t).replace(/ [AP]M$/,'')}`).join('<br>');
-  return `<button class="box obs ${cls} ${editable?'':'ro'}" data-act="obsadd" data-pl="${pl.id}" data-row="${r.key}" data-sec="${sec}"><span class="sl">${esc(sec)}</span><span class="sy">${obs.length||'+'}</span><span class="tm">${list}</span></button>`;
+  return `<button class="box obs ${cls} ${editable?'':'ro'}"${st} data-act="obsadd" data-pl="${pl.id}" data-row="${r.key}" data-sec="${sec}"><span class="sl">${esc(sec)}</span><span class="sy">${obs.length||'+'}</span><span class="tm">${list}</span></button>`;
 }
 function remPanel(pl,r,doc,editable){
   return `<div class="rembox">`+pl.sections.map(s=>{
@@ -515,7 +521,7 @@ function rowHTML(pl,r,doc,mode,editable,yn){
   else h+=`<button class="mini ${editable?'':'ro'}" data-act="allrow" data-pl="${pl.id}" data-row="${r.key}">all ✓</button>`;
   h+=`</span></div>`;
   h+=`<div class="boxes">`+secs.map(s=>(r.item.multi?obsBoxHTML:boxHTML)(pl,r,s,doc&&doc.cells[r.key+'__'+s],yn,editable,!de)).join('')+`</div>`;
-  if(r.item.multi)h+=`<div class="muted" style="margin-top:3px">Tap a section each time you observe — every observation is saved with its time.</div>`;
+  if(r.item.multi)h+=`<div class="muted" style="margin-top:3px">Tap a section each time you observe (up to ${OBS_MAX}) — every observation is saved with its time.</div><div class="obsleg">`+OBS_NAME.slice(1).map((nm,i)=>`<span><i style="background:${OBS_COL[i+1]}"></i>${i+1} ${nm}</span>`).join('')+`</div>`;
   if(r.rem&&open&&!de)h+=remPanel(pl,r,doc,editable);
   return h+'</div>';
 }
