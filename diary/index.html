@@ -446,8 +446,8 @@ function counts(c, s){
   names.forEach((n,i) => {
     const m = mark(c,s,i);
     if (m.a === 1) { absent++; return; }
-    if (m.a === 2) present++;
-    if (m.d === 1) def++; if (m.e === 2) enNo++; if (m.s === 2) sgNo++; if (m.b === 2) bad++;
+    if (m.a === 2 || m.a === 3) present++;
+    if (m.d === 1 || m.a === 3) def++; if (m.e === 2) enNo++; if (m.s === 2) sgNo++; if (m.b === 2) bad++;
     if (m.v === 2) tvNo++; if (m.y === 2) stNo++; if (m.p === 2) plNo++;
   });
   return {total:names.length, absent, present, def, enNo, sgNo, bad, tvNo, stNo, plNo};
@@ -508,7 +508,11 @@ function renderList(){
       return markBtn(label, v === good ? yes : v === bad ? no : "–", v === good ? "ok" : v === bad ? noTone : "",
         () => { setMark(cls,sec,i,{[f]: v === good ? bad : v === bad ? 0 : good}); render(); }, f !== "a" && abs);
     };
-    mk.appendChild(tri("Attend","a","P","A","bad"));
+    {  // attendance: blank → P (2) → A (1) → NB, diary not brought (3) → blank
+      const av = m.a, nx = {0:2, 2:1, 1:3, 3:0}[av || 0];
+      mk.appendChild(markBtn("Attend", av === 2 ? "P" : av === 1 ? "A" : av === 3 ? "NB" : "–", av === 2 ? "ok" : av === 1 ? "bad" : av === 3 ? "warn" : "",
+        () => { setMark(cls,sec,i,{a: nx}); render(); }));
+    }
     mk.appendChild(tri("Diary","d","OK","DEF","warn"));
     mk.appendChild(tri("English","e","Yes","No","bad"));
     mk.appendChild(tri("Sign","s","Yes","No","bad"));
@@ -528,11 +532,11 @@ function renderList(){
   });
 }
 /* ---------- class summary table ---------- */
-const FLAGS = [["d","Diary",1],["e","English",2],["s","Sign",2],["b","Behaviour",2],["v","TV hr",2],["y","Study hr",2],["p","Play hr",2]];
+const FLAGS = [["a","Diary not brought",3],["d","Diary",1],["e","English",2],["s","Sign",2],["b","Behaviour",2],["v","TV hr",2],["y","Study hr",2],["p","Play hr",2]];
 function kidFlags(m){ return FLAGS.filter(f => m[f[0]] === f[2]).map(f => f[1]); }
 function secSummary(c, s){
   const names = ROSTER[c][s], absent = [], def = []; let present = 0;
-  names.forEach((n, i) => { if (mark(c, s, i).a === 2) present++; });
+  names.forEach((n, i) => { const a = mark(c, s, i).a; if (a === 2 || a === 3) present++; });
   names.forEach((n, i) => { const m = mark(c, s, i); if (m.a === 1) absent.push({i, n}); else { const fl = kidFlags(m); if (fl.length) def.push({i, n, fl}); } });
   return {total:names.length, present, absent, def};
 }
@@ -601,7 +605,7 @@ function reportFor(c, withNames){
     const k = counts(c, s);
     let t = "*" + c + ORD[c].replace(/^\d+/, "") + " " + s + " -* " + k.def;
     if (withNames && k.def){
-      const nm = []; ROSTER[c][s].forEach((n,i) => { const m = mark(c,s,i); if (m.a !== 1 && m.d === 1) nm.push(n); });
+      const nm = []; ROSTER[c][s].forEach((n,i) => { const m = mark(c,s,i); if (m.a !== 1 && (m.d === 1 || m.a === 3)) nm.push(n); });
       t += " (" + nm.join(", ") + ")";
     }
     lines.push(t);
@@ -682,7 +686,7 @@ function gap(from, to){
 }
 function flagged(m, cat){
   if (!m || m.a === 1) return false;
-  return cat === "def" ? m.d === 1 : cat === "eng" ? m.e === 2 : cat === "sig" ? m.s === 2 : cat === "beh" ? m.b === 2 : cat === "tv" ? m.v === 2 : cat === "study" ? m.y === 2 : m.p === 2;
+  return cat === "def" ? (m.d === 1 || m.a === 3) : cat === "eng" ? m.e === 2 : cat === "sig" ? m.s === 2 : cat === "beh" ? m.b === 2 : cat === "tv" ? m.v === 2 : cat === "study" ? m.y === 2 : m.p === 2;
 }
 function goodMark(m, cat){
   return cat === "def" ? m.d === 2 : cat === "eng" ? m.e === 1 : cat === "sig" ? m.s === 1 : cat === "beh" ? m.b === 1 : cat === "tv" ? m.v === 1 : cat === "study" ? m.y === 1 : m.p === 1;
@@ -703,7 +707,7 @@ function issuesFor(c, s, i, seg, dt){
   if (seg === "rem") {
     if (m.r && m.r.trim()) out.push({cat:"rem", text:m.r.trim(), at:t.r});
   } else if (m.a !== 1) {
-    if (m.d === 1) out.push({cat:"def", at:t.d});
+    if (m.d === 1 || m.a === 3) out.push({cat:"def", at:m.d === 1 ? t.d : t.a});
     if (m.e === 2) out.push({cat:"eng", at:t.e});
     if (m.s === 2) out.push({cat:"sig", at:t.s});
     if (m.b === 2) out.push({cat:"beh", at:t.b});
