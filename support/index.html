@@ -200,14 +200,14 @@ const DEF_CHK={
  water:['Present at the area','Water flowing / pressure OK','Area fully watered'],
  garden:['Present at work','Working on allotted task','Tools & safety','Work area tidy'],
  clean:['Present at the area','Cleaning quality','Materials / equipment','Uniform'],
- guard:['# 👮 Guard on duty','At assigned position / post','Alert – not sleeping, not on phone','Uniform, cap & ID card','Behaviour with visitors & parents','Language – polite, no shouting','Gate kept closed / entry controlled',
-  '# 🏠 Guard room','Guard room clean & tidy','Lights & fan working','No outsiders sitting in guard room',
-  '# 🧰 Material in guard room','Torch (charged)','Lathi / stick','Whistle','First-aid box','Fire extinguisher (in date)','Phone / walkie-talkie working','Key box locked',
-  '# 📒 Registers','Visitor register updated','Vehicle register updated','Material in / out register','Key register',
-  '# 🚻 Guard room washroom','Washroom clean','No bad smell','Water available','Soap & dustbin'],
+ guard:['At assigned post','Alert – not sleeping','Not busy on mobile phone','Uniform, cap & ID card','Behaviour with visitors & parents','Language – polite','Gate / entry controlled','Visitors stopped, asked & noted'],
+ groom:['# 🏠 Room','Clean & tidy','Lights & fan working','No outsiders sitting','CCTV screen working',
+  '# 🧰 Material','Torch (charged)','Lathi / stick','Whistle','First-aid box','Fire extinguisher (in date)','Phone / walkie-talkie working','Key box locked',
+  '# 📒 Registers','Visitor register up to date','Vehicle register up to date','Material in / out register','Key register',
+  '# 🚻 Washroom','Clean','No bad smell','Water available','Soap & dustbin'],
  wash:['Smell','Lights','Floor cleaning','Urinals','WC cabins & doors / flush','Washbasins & taps','Water supply','Supplies (soap / tissue)','Dustbins']
 };
-const DEF_SET={start:{water:'07:00',garden:'07:00',clean:'07:00',guard:'08:00'},every:{water:60,garden:120,clean:60,guard:120},end:{water:'15:00',garden:'15:00',clean:'15:00',guard:''}};
+const DEF_SET={start:{water:'07:00',garden:'07:00',clean:'07:00',guard:'08:00'},every:{water:60,garden:120,clean:60,guard:120,groom:240},end:{water:'15:00',garden:'15:00',clean:'15:00',guard:''}};
 const STATUS=['On duty','Working','Break','Done'];
 const SUBS={
  water:[['people','👷 Watermen'],['hist','📅 Date-wise history']],
@@ -233,7 +233,7 @@ const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const tag=(c,t)=>`<span class="tag ${c}">${t}</span>`;
 
 let S={tab:'today',group:'water',sub:{},date:today(),pid:null,rep:'day',month:today().slice(0,7),rpid:'',role:ls('fis_role')||'staff',me:ls('fis_me')||'',vg:'all',chart:'person',iss:'open'};
-let staff=[],areas=clone(DEF),CFG={wash:clone(DEF_WASH),checks:clone(DEF_CHK),set:clone(DEF_SET),routines:[],cplan:[]};let synced=false;
+let staff=[],areas=clone(DEF),CFG={wash:clone(DEF_WASH),checks:clone(DEF_CHK),set:clone(DEF_SET),routines:[],cplan:[],groom:mk('groom',['Main Gate Guard Room','Back Gate Cabin'])};let synced=false;
 const COLL=['log','visits','wash','green','issues','tasks','refs','routine'];
 const D={};COLL.forEach(c=>D[c]={});
 let db=null,lastCsv='';
@@ -258,7 +258,8 @@ async function initDb(){
     if(r._id==='wash'&&r.list&&r.list.length)CFG.wash=r.list;
     if(r._id==='routines')CFG.routines=r.list||[];
     if(r._id==='cplan')CFG.cplan=r.list||[];
-    if(r._id==='checks')Object.keys(DEF_CHK).forEach(k=>{if(r[k]&&!(k==='guard'&&!r[k].some(c=>c.startsWith('# '))))CFG.checks[k]=r[k]});
+    if(r._id==='checks')Object.keys(DEF_CHK).forEach(k=>{if(r[k]&&!(k==='guard'&&r[k].some(c=>c.startsWith('# '))))CFG.checks[k]=r[k]});
+    if(r._id==='groom'&&r.list&&r.list.length)CFG.groom=r.list;
     if(r._id==='settings'){if(r.start)Object.assign(CFG.set.start,r.start);if(r.every)Object.assign(CFG.set.every,r.every);if(r.end)Object.assign(CFG.set.end,r.end)}
   });rsoon()});
   db.start();
@@ -450,18 +451,42 @@ function board(){
    ${sup()?`<div style="margin-top:8px"><button class="btn sm sec" data-act="addarea" data-v="water">＋ Add water point</button></div>`:''}</div>
   <div class="card"><h3>🔍 Supervisor review log – ${fmtD(S.date)} (${all.length})</h3>${all.length?`<div class="tw"><table><tr><th>Time</th><th>Area</th><th>Result</th><th>Remark</th><th>Photo</th><th>Waterman</th><th>By</th></tr>${all.map(v=>`<tr><td><b>${v.t}</b></td><td>${esc(v.where)}</td><td>${wResTag(v)}</td><td>${esc(v.remark)}</td><td>${img(v.ph,'','s')}</td><td>${esc(v.who||'–')}</td><td>${esc(v.by)}</td></tr>`).join('')}</table></div>`:'<div class="empty">No review yet. Tap 🔍 Review on an area – photo and remark are saved with the time.</div>'}</div>`;
 }
-function guardLog(){
+/* ---------- guard: person round (per guard) + guard room inspection (per room, not per person) ---------- */
+const secOf=list=>{const sec=[];let c=null;list.forEach(x=>{if(x.startsWith('# ')){c={h:x.slice(2),k:[]};sec.push(c)}else{if(!c){c={h:'Checklist',k:[]};sec.push(c)}c.k.push(x)}});return sec};
+const secCell=(v,s)=>{const k=s.k.filter(x=>v.checks&&v.checks[x]),b=k.filter(x=>v.checks[x]==='bad');return !k.length?'<span style="color:var(--mute)">–</span>':b.length?tag('bad','✖ '+b.length)+'<br><small>'+b.map(esc).join(', ')+'</small>':tag('ok','✔ '+k.length)};
+const badList=c=>Object.keys(c||{}).filter(k=>c[k]==='bad');
+function guardRound(){
   const ps=gStaff('guard'),vs=Object.values(D.visits).filter(v=>v.group==='guard'&&v.type==='Check-in'&&v.date===S.date).sort((a,b)=>b.t.localeCompare(a.t));
-  const items=CFG.checks.guard.filter(c=>!c.startsWith('# '));
-  const due=ps.map(p=>({p,l:getLog(p,'guard')})).filter(x=>dueInfo(x.p,'guard',x.l));
-  const sec=[];let cur=null;CFG.checks.guard.forEach(c=>{if(c.startsWith('# ')){cur={h:c.slice(2),k:[]};sec.push(cur)}else if(cur)cur.k.push(c)});
-  const badAll={};vs.forEach(v=>Object.keys(v.checks||{}).forEach(k=>{if(v.checks[k]==='bad')badAll[k]=(badAll[k]||0)+1}));
-  const secCell=(v,s)=>{const k=s.k.filter(x=>v.checks&&v.checks[x]),b=k.filter(x=>v.checks[x]==='bad');return !k.length?'<span style="color:var(--mute)">–</span>':b.length?tag('bad','✖ '+b.length)+'<br><small>'+b.map(esc).join(', ')+'</small>':tag('ok','✔ '+k.length)};
-  return `<div class="card"><div class="row" style="justify-content:space-between"><h3 style="margin:0">🛡️ Guard observations – ${fmtD(S.date)} (${vs.length})</h3><small style="color:var(--mute)">${items.length} checkpoints · visit every ${CFG.set.every.guard} min</small></div>
-   ${due.length?`<div class="banner bad" style="margin-top:8px">⏰ Visit due: ${due.map(x=>'<b>'+esc(x.p.name)+'</b>'+(x.l.post?' ('+esc(x.l.post)+')':'')).join(', ')}</div>`:''}
-   ${Object.keys(badAll).length?`<div class="banner" style="margin-top:8px">Not OK today: ${Object.entries(badAll).map(([k,n])=>esc(k)+(n>1?' ×'+n:'')).join(' · ')}</div>`:''}
-   <div class="row" style="margin:8px 0">${ps.filter(p=>{const l=getLog(p,'guard');return l.in&&!l.out}).map(p=>`<button class="btn sm" data-act="checkin" data-p="${p.id}">🔍 Observe ${esc(p.name)}</button>`).join('')||'<small style="color:var(--mute)">No guard logged in yet.</small>'}</div>
-   ${vs.length?`<div class="tw"><table><tr><th>Time</th><th>Guard · post</th>${sec.map(s=>`<th>${esc(s.h)}</th>`).join('')}<th>Remark / action</th><th>Photos</th><th>By</th></tr>${vs.map(v=>`<tr><td><b>${v.t}</b></td><td>${esc(v.who||'')}${v.where?'<br><small>'+esc(v.where)+'</small>':''}</td>${sec.map(s=>`<td>${secCell(v,s)}</td>`).join('')}<td>${esc(v.remark||'')}</td><td style="min-width:200px">${vph(v,'s')}</td><td>${esc(v.by||'')}</td></tr>`).join('')}</table></div>`:'<div class="empty">No observation yet. Tap 🔍 Observe on a guard who is on duty.</div>'}</div>`;
+  const on=ps.map(p=>({p,l:getLog(p,'guard')})).filter(x=>x.l.in&&!x.l.out);
+  const isT=S.date===today();
+  const cards=on.map(({p,l})=>{const mv=vs.filter(v=>v.pid===p.id),lv=mv[0],du=dueInfo(p,'guard',l),bad=lv?badList(lv.checks):[];
+    return `<div class="gc ${du?'miss':''}"><b>👮 ${esc(p.name)}</b> <small>${esc(l.shift||'')} · ${esc(l.post||'post not set')}</small>
+     <div style="font-size:13px;margin:6px 0">${lv?`Last seen <b>${lv.t}</b>${isT?' ('+ago(lv.t)+')':''} · ${mv.length} visit${mv.length>1?'s':''}<br>${bad.length?tag('bad','✖ '+bad.map(esc).join(', ')):tag('ok','All OK')}`:'<span style="color:var(--bad)">Not observed yet</span>'}</div>
+     ${du?`<div style="margin-bottom:6px">${du}</div>`:''}<button class="btn sm" data-act="checkin" data-p="${p.id}">🔍 Observe</button></div>`}).join('');
+  const sec=secOf(CFG.checks.guard);
+  return `<div class="card"><h3>👮 Guard round – people (${vs.length} observations)</h3><small style="color:var(--mute)">Quick check of the guard himself: post, alertness, uniform, behaviour. Every ${CFG.set.every.guard} min per guard.</small>
+   <div class="gcards" style="margin-top:10px">${cards||'<div class="empty">No guard on duty right now.</div>'}</div>
+   ${vs.length?`<div class="tw" style="margin-top:10px"><table><tr><th>Time</th><th>Guard</th><th>Post</th><th>Result</th><th>Remark / action</th><th>Photo</th><th>By</th></tr>${vs.map(v=>`<tr><td><b>${v.t}</b></td><td>${esc(v.who||'')}</td><td>${esc(v.where||'')}</td><td>${badList(v.checks).length?badList(v.checks).map(x=>tag('bad','✖ '+esc(x))).join(' '):tag('ok','✔ All OK')}</td><td>${esc(v.remark||'')}</td><td>${vph(v,'s')}</td><td>${esc(v.by||'')}</td></tr>`).join('')}</table></div>`:''}</div>`;
+}
+function guardRooms(){
+  const rooms=CFG.groom,vs=Object.values(D.visits).filter(v=>v.type==='Guard room inspection'&&v.date===S.date).sort((a,b)=>b.t.localeCompare(a.t));
+  const isT=S.date===today(),ev=CFG.set.every.groom||240,sec=secOf(CFG.checks.groom);
+  const cards=rooms.map(r=>{const rv=vs.filter(v=>v.rid===r.id),lv=rv[0],bad=lv?badList(lv.checks):[];
+    const due=isT&&(!lv||nowM()-mins(lv.t)>ev)&&nowM()>=mins(CFG.set.start.guard||'08:00');
+    return `<div class="gc ${due?'miss':''}"><b>🏠 ${esc(r.name)}</b>
+     <div class="ph" style="margin:6px 0">${refImg(r.id)}${lv&&lv.ph?img(lv.ph):''}</div>
+     <div style="font-size:13px">${lv?`Inspected <b>${lv.t}</b>${isT?' ('+ago(lv.t)+')':''} · ${rv.length}×<br>${sec.map(s=>{const b=s.k.filter(k=>lv.checks&&lv.checks[k]==='bad');return `<div>${esc(s.h)}: ${b.length?'<b style="color:var(--bad)">✖ '+b.map(esc).join(', ')+'</b>':'<span style="color:var(--ok)">✔</span>'}</div>`}).join('')}`:'<span style="color:var(--bad)">Not inspected</span>'}</div>
+     ${due?`<div style="margin:6px 0">${tag('a','⏰ Inspection due')}</div>`:''}<button class="btn sm" style="margin-top:6px" data-act="ginspect" data-v="${r.id}">🔍 Inspect room</button></div>`}).join('');
+  return `<div class="card"><h3>🏠 Guard rooms – place inspection (${vs.length})</h3><small style="color:var(--mute)">Checked against the room, not the guard: room, material, registers, washroom. Due every ${Math.round(ev/60)} h.</small>
+   <div class="gcards" style="margin-top:10px">${cards||'<div class="empty">Add guard rooms in Manage.</div>'}</div>
+   ${vs.length?`<div class="tw" style="margin-top:10px"><table><tr><th>Time</th><th>Room</th>${sec.map(s=>`<th>${esc(s.h)}</th>`).join('')}<th>Remark / action</th><th>Photos</th><th>By</th></tr>${vs.map(v=>`<tr><td><b>${v.t}</b></td><td>${esc(v.where||'')}</td>${sec.map(s=>`<td>${secCell(v,s)}</td>`).join('')}<td>${esc(v.remark||'')}</td><td style="min-width:200px">${vph(v,'s')}</td><td>${esc(v.by||'')}</td></tr>`).join('')}</table></div>`:''}</div>`;
+}
+function guardLog(){
+  const all=Object.values(D.visits).filter(v=>v.date===S.date&&(v.group==='guard'&&v.type==='Check-in'||v.type==='Guard room inspection'));
+  const last={};all.sort((a,b)=>a.t.localeCompare(b.t)).forEach(v=>{last[v.type==='Check-in'?'p'+v.pid:'r'+v.rid]=v});
+  const cur=Object.values(last),bad={};cur.forEach(v=>badList(v.checks).forEach(k=>{bad[(v.type==='Check-in'?v.who:v.where)+': '+k]=1}));
+  const acts=cur.filter(v=>v.act).sort((a,b)=>b.t.localeCompare(a.t));
+  return (Object.keys(bad).length||acts.length?`<div class="card" style="border-color:#fca5a5"><h3>⚠️ Needs attention now</h3><small style="color:var(--mute)">From the latest visit to each guard and room – clears when the next visit finds it OK.</small><div style="margin-top:6px"></div>${Object.entries(bad).map(([k,n])=>tag('bad','✖ '+esc(k))).join(' ')}${acts.length?`<div style="margin-top:8px">${acts.map(v=>`<div class="obs inc"><small>${v.t} · ${esc(v.who||v.where||'')}</small><br>Action: ${esc(v.act)}</div>`).join('')}</div>`:''}</div>`:'')+guardRound()+guardRooms();
 }
 function rWHist(){
   const ds=[];for(let i=6;i>=0;i--)ds.push(shiftD(S.date,-i));
@@ -913,7 +938,7 @@ function rReports(){
 }
 
 /* ---------- manage ---------- */
-function listOf(g){return g==='wash'?CFG.wash:areas[g]}
+function listOf(g){return g==='wash'?CFG.wash:g==='groom'?CFG.groom:areas[g]}
 function areaMgr(g,label){
   return `<b style="font-size:13px">${label}</b>`+listOf(g).map(a=>`<div class="mg">${refImg(a.id,'s')}<span>${esc(a.name)}</span><button class="btn sec sm" data-act="setref" data-v="${a.id}">📷 ${refData(a.id)?'Retake':'Image'}</button><button class="btn sec sm" data-act="rnarea" data-g="${g}" data-v="${a.id}">Rename</button><button class="btn bad sm" data-act="rmarea" data-g="${g}" data-v="${a.id}">Remove</button></div>`).join('')+
    `<button class="btn sm" data-act="addarea" data-v="${g}">＋ Add</button>`;
@@ -926,13 +951,13 @@ function rManage(){
   return GK.map(g=>`<div class="card"><h3>${G[g].ico} ${G[g].label}</h3>
    <b style="font-size:13px">Staff</b>${gStaff(g).map(p=>`<div class="mg"><span>${esc(p.name)}${p.phone?` <small style="color:var(--mute)">${esc(p.phone)}</small>`:''}</span><button class="btn bad sm" data-act="rmstaff" data-v="${p.id}">Remove</button></div>`).join('')||'<div class="empty" style="padding:8px">None yet</div>'}
    <button class="btn sm" data-act="addstaff" data-v="${g}">＋ Add person</button>${hr}
-   ${areaMgr(g,G[g].al)}${hr}${chkMgr(g,'Supervisor check-in checkpoints')}${hr}
+   ${areaMgr(g,G[g].al)}${hr}${chkMgr(g,g==='guard'?'Guard round checkpoints (the guard himself)':'Supervisor check-in checkpoints')}${hr}${g==='guard'?areaMgr('groom','Guard rooms')+hr+chkMgr('groom','Guard room inspection checklist (room, material, registers, washroom)')+hr:''}
    <div class="mg"><span>Duty ${CFG.set.start[g]}${CFG.set.end[g]?'–'+CFG.set.end[g]:''} (login after start = Late, logout before end = Left early) · check-in due every <b>${CFG.set.every[g]} min</b></span><button class="btn sec sm" data-act="setcfg" data-v="${g}">Change</button></div></div>`).join('')+
   `<div class="card"><h3>🚻 Washrooms</h3>${areaMgr('wash','Washrooms (add floors / sides)')}${hr}${chkMgr('wash','Washroom checklist')}</div>${routineMgr()}
    <div class="card"><small style="color:var(--mute)">Removing a person or area keeps past records. Everything you save goes to the FIS Support Staff Google Sheet.</small></div>`;
 }
 const saveStaff=()=>put('cfg','staff',{list:staff});
-function saveAreas(g){if(g==='wash')put('cfg','wash',{list:CFG.wash});else put('cfg','areas',areas)}
+function saveAreas(g){if(g==='groom')put('cfg','groom',{list:CFG.groom});else if(g==='wash')put('cfg','wash',{list:CFG.wash});else put('cfg','areas',areas)}
 const saveChecks=()=>put('cfg','checks',CFG.checks);
 
 /* ---------- actions ---------- */
@@ -983,7 +1008,7 @@ const ACT={
   checkin:async()=>{
     const p=cur(),g=S.group,gd=g==='guard',l0=getLog(p);
     const fields=gd?[{k:'post',label:'Post / gate',type:'select',opts:['–'].concat(areas.guard.map(a=>a.name)),val:l0.post||'–'},{k:'r',label:'Remark',type:'textarea',ph:'What did you observe?'},{k:'act',label:'Action needed (if any)',ph:'e.g. Torch battery to be replaced'}]:[{k:'r',label:'Remark',type:'textarea',ph:'What did you observe?'}];
-    const r=await ask((gd?'Guard observation – ':'Check-in – ')+p.name+' ('+hhmm()+')',fields,gd?'Save observation':'Save check-in',{checks:CFG.checks[g],photos:g==='garden'?['Before','After']:gd?['Guard at post','Guard room','Register','Washroom']:['Photo'],need:gd?['Guard at post']:[]});
+    const r=await ask((gd?'Guard round – ':'Check-in – ')+p.name+' ('+hhmm()+')',fields,gd?'Save observation':'Save check-in',{checks:CFG.checks[g],photos:g==='garden'?['Before','After']:gd?['Guard at post']:['Photo'],need:gd?['Guard at post']:[]});
     if(!r)return;
     const phs=await savePics(r.pics);
     const post=gd&&r.post!=='–'?r.post:'';
@@ -1022,6 +1047,14 @@ const ACT={
       else if(r.s.startsWith('Poor')){x.st='issue'}},'clean');
     logVisit({group:'clean',type:'Audit',pid:p.id,who:p.name,where:aName(a)+' '+a.from+'–'+a.to,remark:r.s+(r.n?' – '+r.n:''),ph});
     toast('Audit '+(n+1)+' saved '+t);
+  },
+  ginspect:async d=>{
+    const rm=CFG.groom.find(x=>x.id===d.v);if(!rm)return;
+    const r=await ask('Guard room inspection – '+rm.name+' ('+hhmm()+')',[{k:'r',label:'Remark',type:'textarea',ph:'What did you find?'},{k:'act',label:'Action needed (if any)',ph:'e.g. Torch battery to be replaced'}],'Save inspection',{checks:CFG.checks.groom,photos:['Room','Material','Register','Washroom'],need:['Room']});
+    if(!r)return;
+    const phs=await savePics(r.pics);
+    logVisit({group:'guard',type:'Guard room inspection',rid:rm.id,where:rm.name,checks:r.checks,remark:[r.r,r.act?'Action: '+r.act:''].filter(Boolean).join(' · '),act:r.act||'',phs,ph:phs[0]?phs[0].id:''});
+    toast('Inspection saved '+hhmm());
   },
   ctick:async d=>{
     const p=cur(),a=getLog(p,'clean').alloc.find(x=>x.id===d.v);if(!a)return;
@@ -1225,7 +1258,7 @@ const ACT={
   },
   rmstaff:d=>{staff=staff.filter(p=>p.id!==d.v);if(S.pid===d.v)S.pid=null;render();saveStaff()},
   addarea:async d=>{
-    const r=await ask('Add to '+(d.v==='wash'?'washrooms':G[d.v].al),[{k:'n',label:'Name'}],'Add',{photo:true});
+    const r=await ask('Add to '+(d.v==='wash'?'washrooms':d.v==='groom'?'guard rooms':G[d.v].al),[{k:'n',label:'Name'}],'Add',{photo:true});
     if(!r||!r.n)return;
     const id=d.v+uid();listOf(d.v).push({id,name:r.n});
     if(r.photo)save('refs',id,{data:r.photo,t:new Date().toISOString(),by:S.me});
@@ -1236,7 +1269,7 @@ const ACT={
     if(r&&r.n){a.name=r.n;render();saveAreas(d.g)}
   },
   rmarea:d=>{
-    if(d.g==='wash')CFG.wash=CFG.wash.filter(x=>x.id!==d.v);else areas[d.g]=areas[d.g].filter(x=>x.id!==d.v);
+    if(d.g==='groom')CFG.groom=CFG.groom.filter(x=>x.id!==d.v);else if(d.g==='wash')CFG.wash=CFG.wash.filter(x=>x.id!==d.v);else areas[d.g]=areas[d.g].filter(x=>x.id!==d.v);
     render();saveAreas(d.g);
   },
   addchk:async d=>{const r=await ask('Add checkpoint',[{k:'n',label:'Checkpoint (start with # and a space for a section heading, e.g. # Registers)'}],'Add');if(r&&r.n){CFG.checks[d.v].push(r.n);render();saveChecks()}},
