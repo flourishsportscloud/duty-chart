@@ -208,7 +208,7 @@ const STATUS=['On duty','Working','Break','Done'];
 const SUBS={
  water:[['people','👷 Watermen'],['hist','📅 Date-wise history']],
  garden:[['people','👷 Gardeners & tasks'],['green','🌳 Greenery health'],['damage','🥀 Damaged plants'],['develop','🏗 Yet to develop'],['tasks','🗒 Task bank']],
- clean:[['people','👷 Cleaners'],['chart','🕐 Time chart'],['routine','🔁 Weekly / machine tasks'],['wash','🚻 Washrooms']],
+ clean:[['people','✅ Today'],['plan','📅 Plan (week / month)'],['chart','🕐 Time chart'],['week','📊 Weekly table'],['routine','🔁 Machine tasks'],['wash','🚻 Washrooms']],
  guard:[['people','👷 Guards']]
 };
 
@@ -229,7 +229,7 @@ const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const tag=(c,t)=>`<span class="tag ${c}">${t}</span>`;
 
 let S={tab:'today',group:'water',sub:{},date:today(),pid:null,rep:'day',month:today().slice(0,7),rpid:'',role:ls('fis_role')||'staff',me:ls('fis_me')||'',vg:'all',chart:'person',iss:'open'};
-let staff=[],areas=clone(DEF),CFG={wash:clone(DEF_WASH),checks:clone(DEF_CHK),set:clone(DEF_SET),routines:[]};
+let staff=[],areas=clone(DEF),CFG={wash:clone(DEF_WASH),checks:clone(DEF_CHK),set:clone(DEF_SET),routines:[],cplan:[]};let synced=false;
 const COLL=['log','visits','wash','green','issues','tasks','refs','routine'];
 const D={};COLL.forEach(c=>D[c]={});
 let db=null,lastCsv='';
@@ -246,13 +246,14 @@ async function initDb(){
     else if(st==='setup'){lv.textContent='setting up · saved on this device'+w;lv.className='live off'}
     else if(st==='offline'){lv.textContent='offline · will sync'+w;lv.className='live off'}
     else{lv.textContent='connecting';lv.className='live off'}};
-  db.onState(show);show(db.state(),db.pending());
+  db.onState((st,n)=>{if((st==='live'||st==='setup')&&!synced){synced=true;rsoon()}show(st,n)});if(db.state()==='setup')synced=true;show(db.state(),db.pending());
   COLL.forEach(c=>db.collection(c).onSnapshot(s=>{const m={};rows(s).forEach(r=>{m[r._id]=r});D[c]=m;rsoon()}));
   db.collection('cfg').onSnapshot(s=>{rows(s).forEach(r=>{
     if(r._id==='staff')staff=r.list||[];
     if(r._id==='areas')GK.forEach(g=>{areas[g]=(r[g]&&r[g].length)?r[g]:clone(DEF[g])});
     if(r._id==='wash'&&r.list&&r.list.length)CFG.wash=r.list;
     if(r._id==='routines')CFG.routines=r.list||[];
+    if(r._id==='cplan')CFG.cplan=r.list||[];
     if(r._id==='checks')Object.keys(DEF_CHK).forEach(k=>{if(r[k])CFG.checks[k]=r[k]});
     if(r._id==='settings'){if(r.start)Object.assign(CFG.set.start,r.start);if(r.every)Object.assign(CFG.set.every,r.every);if(r.end)Object.assign(CFG.set.end,r.end)}
   });rsoon()});
@@ -289,8 +290,8 @@ const refImg=(id,cls='')=>refData(id)?`<img class="th ${cls}" data-ph="ref_${esc
 const lid=(pid,g=S.group,d=S.date)=>d+'_'+g+'_'+pid;
 function blank(p,g=S.group,d=S.date){return{id:lid(p.id,g,d),date:d,group:g,pid:p.id,name:p.name,att:'',in:'',out:'',lunchOut:'',lunchIn:'',status:'',shift:'',post:'',areas:{},alloc:[],obs:[],last:''}}
 const getLog=(p,g=S.group,d=S.date)=>D.log[lid(p.id,g,d)]||blank(p,g,d);
-function mutate(p,fn,g=S.group){
-  const l=clone(getLog(p,g));fn(l);l.last=new Date().toISOString();l.lastBy=S.me;save('log',l.id,l);
+function mutate(p,fn,g=S.group,d=S.date){
+  const l=clone(getLog(p,g,d));fn(l);l.last=new Date().toISOString();l.lastBy=S.me;save('log',l.id,l);
 }
 const gStaff=g=>staff.filter(p=>p.group===g);
 const doneN=l=>Object.values(l.areas||{}).filter(a=>a.st==='done').length;
@@ -375,7 +376,9 @@ function rToday(){
   const g=S.group;let h=groupTabs()+dateBar();
   const subs=SUBS[g],cur=S.sub[g]||'people';
   if(subs.length>1)h+=seg(subs,cur,'sub');
-  if(cur==='people')h+=rPeople(g);
+  if(cur==='people')h+=g==='clean'?rCleanSimple():rPeople(g);
+  else if(cur==='plan')h+=rPlan();
+  else if(cur==='week')h+=dateBar()+weekClean();
   else if(cur==='hist')h+=rWHist();
   else if(cur==='green')h+=rGreen();
   else if(cur==='damage'||cur==='develop')h+=rIssues(cur);
@@ -412,7 +415,6 @@ function rPeople(g){
   const p=ps.find(x=>x.id===S.pid);
   if(p)h+=person(p);
   if(g==='water')h+=board()+weekWater();
-  if(g==='clean')h+=weekClean();
   return h;
 }
 function sortedDone(l){return Object.entries(l.areas||{}).filter(([k,x])=>x.st==='done'&&x.t).sort((a,b)=>a[1].t.localeCompare(b[1].t)).map(e=>e[0])}
@@ -548,10 +550,83 @@ function cleanAlloc(p,l){
   return `<div class="card"><h3>Cleaning allocation (${al.filter(a=>a.st==='done').length}/${al.length} done)</h3>
    ${sup()?`<div class="row" style="margin-bottom:8px"><button class="btn sm" data-act="alloc">＋ Allocate area & time</button></div>`:''}`+
    (al.map(a=>{const ar=areas.clean.find(x=>x.id===a.aid),d=a.st==='done',over=S.date===today()&&!d&&a.to<nowT,cs=a.checks||[];
-     return `<div class="ar ${d?'done':''}"><div class="arh"><b>${a.from}–${a.to} · ${esc(ar?ar.name:'(removed area)')}</b><span>${aTag(a)} ${over?tag('a','Overdue'):''}</span></div>
+     return `<div class="ar ${d?'done':''}"><div class="arh"><b>${a.from}–${a.to} · ${esc(aName(a))}</b><span>${aTag(a)} ${over?tag('a','Overdue'):''}</span></div>
       ${a.note?`<div style="font-size:13px;color:var(--mute);margin-bottom:6px">${esc(a.note)}</div>`:''}
       <div class="row" style="margin-bottom:6px">${(!a.st||a.st==='pending')?`<button class="btn warn sm" data-act="alcp" data-v="${a.id}" data-s="Working">▶ Start (photo)</button>`:''}<button class="btn sm" data-act="alcp" data-v="${a.id}" data-s="Working">📍 Check point (photo)</button><button class="btn ok sm" data-act="alcp" data-v="${a.id}" data-s="Done">✔ Done (photo)</button><button class="btn sec sm" data-act="alreset" data-v="${a.id}">Reset</button>${sup()?`<button class="btn sec sm" data-act="almove" data-v="${a.id}">Move to…</button><button class="btn bad sm" data-act="aldel" data-v="${a.id}">✕</button>`:''}</div>
       ${cs.map(c=>`<div class="obs"><small>📍 ${c.t} · ${esc(c.s)}${c.by?' · '+esc(c.by):''}</small>${c.note?`<div>${esc(c.note)}</div>`:''}<div style="margin-top:4px">${img(c.ph)}</div></div>`).join('')||'<small style="color:var(--mute)">No check point yet – every supervisor visit adds a time + photo.</small>'}</div>`}).join('')||'<div class="empty" style="padding:10px">Nothing allocated yet.</div>')+`</div>`;
+}
+/* ---------- cleaner: simple daily checklist driven by a week / month plan ---------- */
+const WD=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const wdOf=k=>{const [y,m,d]=k.split('-').map(Number);return (new Date(y,m-1,d).getDay()+6)%7};
+const aName=a=>a.task||((areas.clean.find(x=>x.id===a.aid)||{}).name)||'(removed area)';
+const planMatch=(it,d)=>(!it.start||it.start<=d)&&(it.rep==='month'?Number(d.slice(8))===Number(it.dom):(it.days||[]).includes(wdOf(d)));
+const ord=n=>n+((n%100>10&&n%100<14)?'th':(['th','st','nd','rd'][n%10]||'th'));
+const repText=it=>it.rep==='month'?'Monthly on the '+ord(Number(it.dom)):(it.days||[]).length===7?'Every day':(it.days||[]).join()==='0,1,2,3,4,5'?'Mon – Sat':(it.days||[]).length===1?'Weekly – '+WD[it.days[0]]:(it.days||[]).map(i=>WD[i]).join(', ');
+const savePlan=()=>put('cfg','cplan',{list:CFG.cplan});
+function ensurePlan(){
+  if(!synced||S.date<today()||!CFG.cplan.length)return;
+  gStaff('clean').forEach(p=>{
+    const l=getLog(p,'clean'),items=CFG.cplan.filter(it=>it.pid===p.id&&planMatch(it,S.date));
+    const miss=items.filter(it=>!(l.alloc||[]).some(a=>a.pl===it.id)&&!(l.skip||[]).includes(it.id));
+    if(miss.length)mutate(p,x=>{miss.forEach(it=>x.alloc.push({id:'a'+uid(),pl:it.id,aid:it.aid||'',task:it.task||'',from:it.from,to:it.to,st:'pending',t:'',note:it.note||'',ph:'',checks:[]}))},'clean');
+  });
+}
+function rCleanSimple(){
+  ensurePlan();
+  const ps=gStaff('clean'),nowT=hhmm(),isT=S.date===today();
+  if(!ps.length)return `<div class="card empty">No cleaners added yet.${sup()?'<br><button class="btn" data-act="tab" data-v="manage" style="margin-top:10px">Add cleaners in Manage</button>':''}</div>`;
+  return ps.map(p=>{
+    const l=getLog(p,'clean'),al=(l.alloc||[]).slice().sort((a,b)=>a.from.localeCompare(b.from)),dn=al.filter(a=>a.st==='done').length,off=l.att==='A'||l.att==='L';
+    const rows=al.map(a=>{const d=a.st==='done',over=isT&&!d&&a.to<nowT;
+      return `<tr style="${d?'background:#f0fdf4':over?'background:#fff7f7':''}"><td style="white-space:nowrap;${over?'color:var(--bad);font-weight:600':''}">${a.from}–${a.to}</td>
+       <td><b>${esc(aName(a))}</b>${a.note?`<br><small style="color:var(--mute)">${esc(a.note)}</small>`:''}${a.pl?'':' '+tag('','today only')}${a.st==='issue'?' '+tag('bad','Not done '+a.t):a.st==='working'?' '+tag('working','Working '+a.t):''}</td>
+       <td>${d?`<button class="btn ok sm" data-act="ctick" data-p="${p.id}" data-v="${a.id}">✔ ${a.t}</button>`:`<button class="btn sm ${over?'bad':''}" data-act="ctick" data-p="${p.id}" data-v="${a.id}">☐ Tick</button>`}</td>
+       <td>${a.ph?img(a.ph,'','s'):'<small style="color:var(--mute)">–</small>'}</td>
+       ${sup()?`<td style="white-space:nowrap"><button class="btn sec sm" data-act="cedit" data-p="${p.id}" data-v="${a.id}" title="Change">✏️</button> <button class="btn sec sm" data-act="cdel" data-p="${p.id}" data-v="${a.id}" title="Remove">✕</button></td>`:''}</tr>`}).join('');
+    return `<div class="card"><div class="row" style="justify-content:space-between;margin-bottom:6px">
+      <h3 style="margin:0">🧹 ${esc(p.name)} ${attTag(l.att)} ${flags(l)?tag('a',flags(l)):''}</h3>
+      <div class="row">${!l.in&&!off?`<button class="btn ok sm" data-act="login" data-p="${p.id}">▶ In</button>`:''}${l.in?`<small>In <b>${l.in}</b></small>`:''}
+       ${l.in&&!l.out&&!l.lunchOut?`<button class="btn sec sm" data-act="lunch" data-p="${p.id}" data-v="out">🍽 Lunch</button>`:''}${l.lunchOut&&!l.lunchIn?`<button class="btn sec sm" data-act="lunch" data-p="${p.id}" data-v="in">🍽 Back</button>`:''}${l.lunchOut?`<small>Lunch ${l.lunchOut}${l.lunchIn?'–'+l.lunchIn:''}</small>`:''}
+       ${l.in&&!l.out?`<button class="btn warn sm" data-act="logout" data-p="${p.id}">⏹ Out</button>`:''}${l.out?`<small>Out <b>${l.out}</b></small>`:''}
+       <select class="inl" style="width:auto;padding:6px" data-act="attsel" data-p="${p.id}"><option value="">Attendance…</option>${['P','H','A','L'].map(x=>`<option value="${x}" ${l.att===x?'selected':''}>${attName[x]}</option>`).join('')}</select>
+       ${sup()?`<button class="btn sec sm" data-act="checkin" data-p="${p.id}">✅ Check-in</button>`:''}</div></div>
+     ${off&&al.some(a=>a.st!=='done')?`<div class="banner">${esc(p.name)} is ${attName[l.att].toLowerCase()} today – move the tasks with ✏️ or remove them.</div>`:''}
+     ${al.length?`<div class="tw"><table><tr><th>Time</th><th>Task / area</th><th>Tick</th><th>Image</th>${sup()?'<th></th>':''}</tr>${rows}</table></div>`:'<div class="empty" style="padding:10px">No tasks for this day.</div>'}
+     <div class="row" style="justify-content:space-between;margin-top:8px"><small style="color:var(--mute)"><b>${dn}/${al.length}</b> done</small>${sup()?`<button class="btn sm sec" data-act="cadd" data-p="${p.id}">＋ Add task</button>`:''}</div></div>`}).join('');
+}
+function rPlan(){
+  const ps=gStaff('clean');
+  let h=`<div class="card"><h3>📅 Cleaning plan – repeats automatically</h3><small style="color:var(--mute)">Set each cleaner's tasks once. Every day the matching tasks appear on the Today list by themselves. Changes apply from today onward; past days stay as they were.</small></div>`;
+  if(!ps.length)return h+'<div class="card empty">Add cleaners in Manage first.</div>';
+  h+=`<div class="card"><h3>Week at a glance</h3><div class="tw"><table><tr><th>Cleaner</th>${WD.map(d=>`<th style="text-align:center">${d}</th>`).join('')}<th>Monthly</th></tr>${ps.map(p=>`<tr><td><b>${esc(p.name)}</b></td>${WD.map((_,i)=>{const n=CFG.cplan.filter(it=>it.pid===p.id&&it.rep!=='month'&&(it.days||[]).includes(i)).length;return `<td style="text-align:center">${n?n+(n>1?' tasks':' task'):'<span style="color:var(--mute)">–</span>'}</td>`}).join('')}<td style="text-align:center">${CFG.cplan.filter(it=>it.pid===p.id&&it.rep==='month').length||'–'}</td></tr>`).join('')}</table></div></div>`;
+  return h+ps.map(p=>{
+    const its=CFG.cplan.filter(it=>it.pid===p.id).sort((a,b)=>(a.rep==='month')-(b.rep==='month')||a.from.localeCompare(b.from));
+    return `<div class="card"><div class="row" style="justify-content:space-between"><h3 style="margin:0">🧹 ${esc(p.name)}</h3>${sup()?`<button class="btn sm" data-act="cadd" data-p="${p.id}" data-plan="1">＋ Add to plan</button>`:''}</div>
+     ${its.length?`<div class="tw" style="margin-top:8px"><table><tr><th>Time</th><th>Task / area</th><th>Repeats</th>${sup()?'<th></th>':''}</tr>${its.map(it=>`<tr><td style="white-space:nowrap">${it.from}–${it.to}</td><td><b>${esc(aName(it))}</b>${it.note?`<br><small style="color:var(--mute)">${esc(it.note)}</small>`:''}</td><td>${tag(it.rep==='month'?'working':'',repText(it))}</td>${sup()?`<td style="white-space:nowrap"><button class="btn sec sm" data-act="pedit" data-v="${it.id}">✏️</button> <button class="btn sec sm" data-act="pdel" data-v="${it.id}">✕</button></td>`:''}</tr>`).join('')}</table></div>`:'<div class="empty" style="padding:10px">No plan yet.</div>'}</div>`}).join('');
+}
+async function taskDialog(title,o,mode){
+  const cs=gStaff('clean'),wd=wdOf(S.date),dom=Number(S.date.slice(8));
+  const areaOpts=[{v:'',l:'– Other task (type below) –'}].concat(areas.clean.map(a=>({v:a.id,l:a.name})));
+  const reps=[{v:'once',l:'Today only ('+fmtS(S.date)+')'},{v:'ms',l:'Every day Mon – Sat'},{v:'all',l:'Every day incl. Sunday'},{v:'wk',l:'Weekly – every '+WD[wd]},{v:'mo',l:'Monthly – on the '+ord(dom)},{v:'cus',l:'Selected days (type below)'}];
+  const f=[{k:'p',label:'Cleaner',type:'select',opts:cs.map(x=>({v:x.id,l:x.name})),val:o.pid},{k:'f',label:'From',type:'time',val:o.from||''},{k:'t',label:'To',type:'time',val:o.to||''},{k:'a',label:'Area',type:'select',opts:areaOpts,val:o.aid||''},{k:'x',label:'Other task (if not an area)',val:o.task||'',ph:'e.g. Clean water cooler'},{k:'n',label:'Note (optional)',val:o.note||''},
+    {k:'r',label:'Repeat',type:'select',opts:mode==='plan'?reps.slice(1):reps,val:o.rep||(mode==='plan'?'ms':'once')},{k:'cd',label:'Selected days (only for "Selected days", e.g. Mon, Wed, Fri)',val:o.cd||''}];
+  const r=await ask(title,f,'Save');
+  if(!r)return null;
+  if(!r.f||!r.t){toast('Enter From and To time');return null}
+  if(!r.a&&!r.x){toast('Choose an area or type the task');return null}
+  r.task=r.a?'':r.x;
+  if(r.r==='ms')r.days=[0,1,2,3,4,5];else if(r.r==='all')r.days=[0,1,2,3,4,5,6];else if(r.r==='wk')r.days=[wd];
+  else if(r.r==='cus'){r.days=WD.map((d,i)=>new RegExp(d,'i').test(r.cd)?i:-1).filter(i=>i>=0);if(!r.days.length){toast('Type the days, e.g. Mon, Wed');return null}}
+  return r;
+}
+function planItem(r,id){const it={id:id||'pl'+uid(),pid:r.p,aid:r.a,task:r.task,from:r.f,to:r.t,note:r.n,start:S.date<today()?today():S.date};if(r.r==='mo'){it.rep='month';it.dom=Number(S.date.slice(8))}else{it.rep='days';it.days=r.days}return it}
+/* pending (not ticked) copies of a plan item from today onward follow the plan change */
+function syncPlanItem(it,removed){
+  Object.values(D.log).filter(l=>l.group==='clean'&&l.date>=today()&&(l.alloc||[]).some(a=>a.pl===it.id&&a.st!=='done')).forEach(l=>{
+    const p=staff.find(x=>x.id===l.pid);if(!p)return;
+    mutate(p,x=>{x.alloc=x.alloc.filter(a=>!(a.pl===it.id&&a.st!=='done'&&(removed||x.pid!==it.pid||!planMatch(it,x.date))));
+      if(!removed)x.alloc.forEach(a=>{if(a.pl===it.id&&a.st!=='done'){a.aid=it.aid;a.task=it.task;a.from=it.from;a.to=it.to;a.note=it.note}})},'clean',l.date);
+  });
 }
 function rChart(){
   const ps=gStaff('clean');
@@ -565,7 +640,7 @@ function rChart(){
       const l=getLog(p,'clean'),ev=[];
       if(l.att==='A'||l.att==='L')ev.push({k:'00:00',time:'–',txt:attName[l.att],st:'',t:'',ph:''});
       if(l.in)ev.push({k:l.in,time:l.in,txt:'Logged in'+(late(l)?' (late)':'')+(l.att==='H'?' – half day':''),st:'',t:'',ph:''});
-      (l.alloc||[]).forEach(a=>{const ar=areas.clean.find(x=>x.id===a.aid),nm=ar?ar.name:'(removed)';
+      (l.alloc||[]).forEach(a=>{const ar=areas.clean.find(x=>x.id===a.aid),nm=aName(a);
         ev.push({k:a.from,time:a.from+'–'+a.to,txt:nm+(a.note?' – '+a.note:''),st:aTag(a),stx:a.st,t:a.t||'',ph:''});
         (a.checks||[]).forEach(c=>ev.push({k:a.from+'~'+c.t,time:c.t,txt:'📍 Check point – '+nm+' – '+c.s+(c.note?' – '+c.note:''),st:'',stx:c.s,t:c.t,ph:c.ph}))});
       if(l.lunchOut)ev.push({k:l.lunchOut,time:l.lunchOut,txt:'Out for lunch',st:'',t:'',ph:''});
@@ -582,7 +657,7 @@ function rChart(){
     const cell=(l,x)=>{
       const a0=x*60,a1=a0+60,inH=t=>t&&mins(t)>=a0&&mins(t)<a1;let o='';
       if(inH(l.in))o+=`<div>▶ In ${l.in}${late(l)?' <b style="color:var(--bad)">late</b>':''}</div>`;
-      (l.alloc||[]).filter(a=>mins(a.from)<a1&&mins(a.to)>a0).sort((a,b)=>a.from.localeCompare(b.from)).forEach(a=>{const ar=areas.clean.find(z=>z.id===a.aid),n=(a.checks||[]).length,ic=a.st==='done'?'✔':a.st==='working'?'⏳':a.st==='issue'?'✖':'○';o+=`<div>${ic} <b>${esc(ar?ar.name:'(removed)')}</b> <small>${a.from}–${a.to}</small>${n?` 📍${n}`:''}</div>`});
+      (l.alloc||[]).filter(a=>mins(a.from)<a1&&mins(a.to)>a0).sort((a,b)=>a.from.localeCompare(b.from)).forEach(a=>{const ar=areas.clean.find(z=>z.id===a.aid),n=(a.checks||[]).length,ic=a.st==='done'?'✔':a.st==='working'?'⏳':a.st==='issue'?'✖':'○';o+=`<div>${ic} <b>${esc(aName(a))}</b> <small>${a.from}–${a.to}</small>${n?` 📍${n}`:''}</div>`});
       if(inH(l.lunchOut))o+=`<div>🍽 out ${l.lunchOut}</div>`;
       if(inH(l.lunchIn))o+=`<div>🍽 back ${l.lunchIn}</div>`;
       if(inH(l.out))o+=`<div>⏹ Out ${l.out}${early(l)?' <b style="color:var(--bad)">early</b>':''}</div>`;
@@ -866,6 +941,57 @@ const ACT={
     logVisit({group:'water',type:'Water review',aid:a.id,where:a.name,who,res:r.res,remark:r.r,ph});
     toast('Review saved '+hhmm());
   },
+  attsel:(d,e)=>{const v=e.value;if(!v)return;mutate(cur(),l=>{l.att=v;if(v==='A'||v==='L'){l.in='';l.out=''}},'clean')},
+  ctick:async d=>{
+    const p=cur(),a=getLog(p,'clean').alloc.find(x=>x.id===d.v);if(!a)return;
+    if(a.st==='done'){
+      const r=await ask(aName(a)+' – done at '+a.t,[{k:'u',label:'Change',type:'select',opts:['Keep as done','Undo tick (not done)','Replace photo']}],'OK');
+      if(!r||r.u.startsWith('Keep'))return;
+      if(r.u.startsWith('Undo')){mutate(p,l=>{const x=l.alloc.find(z=>z.id===d.v);x.st='pending';x.t='';x.ph=''},'clean');return}
+    }
+    const data=await pickPhoto();if(!data){toast('Take a photo to tick the task');return}
+    const ph=await savePhoto(data),t=hhmm();
+    mutate(p,l=>{const x=l.alloc.find(z=>z.id===d.v);if(x.st!=='done')x.t=t;x.st='done';x.ph=ph;(x.checks=x.checks||[]).push({t,s:'Done',ph,by:S.me})},'clean');
+    logVisit({group:'clean',type:'Task done',pid:p.id,who:p.name,where:aName(a)+' '+a.from+'–'+a.to,ph});
+  },
+  cadd:async d=>{
+    const plan=!!d.plan,r=await taskDialog(plan?'Add to plan':'Add task',{pid:d.p,from:hhmm()},plan?'plan':'day');
+    if(!r)return;const tp=staff.find(x=>x.id===r.p);
+    if(r.r!=='once'){const it=planItem(r);CFG.cplan.push(it);savePlan();toast('Added to plan – '+repText(it));render();return}
+    mutate(tp,l=>{l.alloc.push({id:'a'+uid(),aid:r.a,task:r.task,from:r.f,to:r.t,st:'pending',t:'',note:r.n,ph:'',checks:[]})},'clean');
+    logVisit({group:'clean',type:'Task added',pid:tp.id,who:tp.name,where:aName({aid:r.a,task:r.task})+' '+r.f+'–'+r.t});
+  },
+  cedit:async d=>{
+    const p=cur(),a=getLog(p,'clean').alloc.find(x=>x.id===d.v);if(!a)return;
+    const f=[{k:'p',label:'Cleaner',type:'select',opts:gStaff('clean').map(x=>({v:x.id,l:x.name})),val:p.id},{k:'f',label:'From',type:'time',val:a.from},{k:'t',label:'To',type:'time',val:a.to},{k:'a',label:'Area',type:'select',opts:[{v:'',l:'– Other task (type below) –'}].concat(areas.clean.map(z=>({v:z.id,l:z.name}))),val:a.aid||''},{k:'x',label:'Other task (if not an area)',val:a.task||''},{k:'n',label:'Note',val:a.note||''}];
+    if(a.pl)f.push({k:'s',label:'Apply change to',type:'select',opts:['Today only','Today and every day going forward (plan)']});
+    const r=await ask('Change task',f,'Save');if(!r)return;
+    if(!r.a&&!r.x){toast('Choose an area or type the task');return}
+    const upd={aid:r.a,task:r.a?'':r.x,from:r.f||a.from,to:r.t||a.to,note:r.n},fwd=(r.s||'').startsWith('Today and');
+    if(a.pl&&fwd){const it=CFG.cplan.find(z=>z.id===a.pl);if(it){Object.assign(it,upd,{pid:r.p});savePlan()}}
+    if(r.p!==p.id){
+      const tp=staff.find(x=>x.id===r.p),moved=Object.assign(clone(a),upd,{id:'a'+uid()});if(!fwd)delete moved.pl;
+      mutate(p,l=>{l.alloc=l.alloc.filter(z=>z.id!==a.id);if(a.pl&&!fwd){l.skip=l.skip||[];l.skip.push(a.pl)}},'clean');
+      mutate(tp,l=>{l.alloc.push(moved)},'clean');
+      logVisit({group:'clean',type:'Task moved',pid:tp.id,who:p.name+' → '+tp.name,where:aName(moved)+' '+moved.from+'–'+moved.to});
+    }else mutate(p,l=>{const x=l.alloc.find(z=>z.id===a.id);if(x)Object.assign(x,upd)},'clean');
+    if(a.pl&&fwd){const it=CFG.cplan.find(z=>z.id===a.pl);if(it)setTimeout(()=>syncPlanItem(it,false),50)}
+  },
+  cdel:async d=>{
+    const p=cur(),a=getLog(p,'clean').alloc.find(x=>x.id===d.v);if(!a)return;
+    const r=await ask('Remove – '+aName(a)+' '+a.from+'–'+a.to,[{k:'s',label:'Remove',type:'select',opts:a.pl?['Today only','From the plan (today and every day going forward)']:['Today only']}],'Remove');
+    if(!r)return;
+    mutate(p,l=>{l.alloc=l.alloc.filter(z=>z.id!==a.id);if(a.pl){l.skip=l.skip||[];l.skip.push(a.pl)}},'clean');
+    if(r.s.startsWith('From')){const it=CFG.cplan.find(z=>z.id===a.pl);CFG.cplan=CFG.cplan.filter(z=>z.id!==a.pl);savePlan();if(it)syncPlanItem(it,true)}
+  },
+  pedit:async d=>{
+    const it=CFG.cplan.find(z=>z.id===d.v);if(!it)return;
+    const ds=it.days||[],rp=it.rep==='month'?'mo':ds.length===7?'all':ds.join()==='0,1,2,3,4,5'?'ms':'cus';
+    const r=await taskDialog('Change plan task',{pid:it.pid,from:it.from,to:it.to,aid:it.aid,task:it.task,note:it.note,rep:rp,cd:ds.map(i=>WD[i]).join(', ')},'plan');
+    if(!r)return;const keepDom=it.rep==='month'&&r.r==='mo'?it.dom:null;Object.assign(it,planItem(r,it.id),{start:it.start});if(keepDom)it.dom=keepDom;if(it.rep!=='month')delete it.dom;else delete it.days;
+    savePlan();syncPlanItem(it,false);render();
+  },
+  pdel:d=>{const it=CFG.cplan.find(z=>z.id===d.v);if(!it)return;CFG.cplan=CFG.cplan.filter(z=>z.id!==d.v);savePlan();syncPlanItem(it,true);render();toast('Removed from plan')},
   areareset:d=>{mutate(cur(),l=>{const x=l.areas[d.a]||{};x.st='';x.t='';x.checks=[];x.photo='';x.w='';l.areas[d.a]=x})},
   photo:async d=>{
     const data=await pickPhoto();if(!data)return;
@@ -1046,6 +1172,7 @@ document.addEventListener('click',e=>{
   if(th&&th.src){const L=document.getElementById('layer');L.innerHTML=`<div class="lb"><img src="${th.src}" alt=""></div>`;L.onclick=()=>{L.innerHTML='';L.onclick=null};return}
   const el=e.target.closest('[data-act]');
   if(!el||el.tagName==='INPUT'||el.tagName==='SELECT')return;
+  if(el.dataset.p)S.pid=el.dataset.p;
   const f=ACT[el.dataset.act];if(f)f(el.dataset,el);
 });
 document.addEventListener('change',e=>{
