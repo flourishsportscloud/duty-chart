@@ -7,7 +7,7 @@
    - tick times are stamped by the server; only the Dean and the Director–Admin change due times
 */
 const TZ="Asia/Kolkata";
-const COLS={"PM Plan":["id","pl","mode","date","wk","json","updated"],Users:["id","name","role","salt","hash","ver"],Config:["key","json","by","at"],Log:["time","who","doc","what"]};
+const COLS={"PM Plan":["id","pl","mode","date","wk","json","updated"],Users:["id","name","role","salt","hash","ver"],Config:["key","json","by","at"],Photos:["id","doc","key","by","at","data"],Log:["time","who","doc","what"]};
 
 function fail(m){throw new Error(m)}
 function isoDate(v){return /^\d{4}-\d\d-\d\d$/.test(String(v||""))}
@@ -68,7 +68,7 @@ function listUsers_(token){const me=me_(token);if(me.role!=="admin")fail("Only t
 
 const PM_IDS=["shally","neetu","divyanshi","diksha"];
 const PM_SENIOR_IDS=["dean","director"];
-const PM_BLOCKS=["att","morn","admin","welfare","reports","comm","audit","next","campus","de1","de2","de3"];
+const PM_BLOCKS=["att","morn","admin","welfare","reports","comm","audit","next","campus","de1","de2","de3","de4","de5"];
 function pmMe_(token){
   const me=me_(token);
     return me;
@@ -82,13 +82,17 @@ function pmState_(token,wk){
   const c=rows_("Config").find(x=>x[0]==="pmtimes");
   return {today:today_(),docs,times:c?parse_(c[1]):{},me:pub_(me)};
 }
-function pmSave_(token,id,patch){
-  const me=pmMe_(token);const name=me.name;
+function pmCheck_(me,id){
   const p=String(id||"").split("_");const pl=p[0],mode=p[1],date=p[2];
   if(PM_IDS.indexOf(pl)<0||["dp","de","wk"].indexOf(mode)<0||!isoDate(date))fail("Bad record.");
   if(mode!=="wk"&&date!==today_())fail("Only today's plan can be updated.");
-  if(mode==="wk"&&date!==wkOf_(today_()))fail("Only this week's observation update can be changed.");
+  if(mode==="wk"&&date!==wkOf_(today_()))fail("Only this week's items can be changed.");
   if(me.role==="pm"&&me.id!==pl)fail("You can update only your own plan.");
+  return {pl,mode,date};
+}
+function pmSave_(token,id,patch){
+  const me=pmMe_(token);const name=me.name;
+  const c0=pmCheck_(me,id);const pl=c0.pl,mode=c0.mode,date=c0.date;
   const wk=mode==="wk"?date:wkOf_(date);
   const sh=sheet_("PM Plan");const all=rows_("PM Plan");
   const idx=all.findIndex(r=>r[0]===id);
@@ -102,7 +106,11 @@ function pmSave_(token,id,patch){
   });
   Object.keys((patch&&patch.rem)||{}).forEach(k=>{
     const e=patch.rem[k]||{};
-    j.rem[String(k).slice(0,80)]={x:String(e.x||"").slice(0,500),by:name,at:now};n++;
+    const key=String(k).slice(0,80);const old=j.rem[key]||{};
+    const o={x:String(e.x||"").slice(0,500),by:name,at:now};
+    if(e.n!==undefined)o.n=(e.n===""||e.n==null||isNaN(Number(e.n)))?"":Number(e.n);
+    if(old.ph)o.ph=old.ph;
+    j.rem[key]=o;n++;
   });
   const row=[id,pl,mode,"'"+date,"'"+wk,JSON.stringify(j),new Date(now)];
   if(idx>=0)sh.getRange(idx+2,1,1,row.length).setValues([row]);else sh.appendRow(row);
@@ -119,6 +127,31 @@ function pmSetTime_(token,b,v){
   const row=["pmtimes",JSON.stringify(t),me.name,new Date()];
   if(idx>=0)sh.getRange(idx+2,1,1,4).setValues([row]);else sh.appendRow(row);
   return t;
+}
+/* Image log: a small JPEG (resized in the browser) is kept in the Photos tab; the record keeps its id. */
+function pmPhoto_(token,id,key,data){
+  const me=pmMe_(token);const c0=pmCheck_(me,id);
+  key=String(key||"").slice(0,80);data=String(data||"");
+  if(!/^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(data))fail("Bad photo.");
+  if(data.length>48000)fail("Photo is too large.");
+  const sh=sheet_("PM Plan");const all=rows_("PM Plan");const idx=all.findIndex(r=>r[0]===id);
+  const j=idx>=0?parse_(all[idx][5]):{};j.cells=j.cells||{};j.rem=j.rem||{};
+  const e=j.rem[key]||{x:""};e.ph=e.ph||[];if(e.ph.length>=5)fail("Up to 5 photos per section.");
+  const now=Date.now();const pid=Utilities.getUuid().replace(/-/g,"").slice(0,16);
+  sheet_("Photos").appendRow([pid,id,key,me.name,new Date(now),data]);
+  e.ph.push({id:pid,at:now,by:me.name});j.rem[key]=e;
+  j.cells[key]={s:"D",by:me.name,at:now,l:0};
+  const wk=c0.mode==="wk"?c0.date:wkOf_(c0.date);
+  const row=[id,c0.pl,c0.mode,"'"+c0.date,"'"+wk,JSON.stringify(j),new Date(now)];
+  if(idx>=0)sh.getRange(idx+2,1,1,row.length).setValues([row]);else sh.appendRow(row);
+  sheet_("Log").appendRow([Utilities.formatDate(new Date(now),TZ,"yyyy-MM-dd HH:mm"),me.name,"PM "+id,"photo "+key]);
+  return {pl:c0.pl,mode:c0.mode,date:c0.date,wk,cells:j.cells,rem:j.rem};
+}
+function pmPhotoGet_(token,pid){
+  const me=pmMe_(token);
+  const r=rows_("Photos").find(x=>x[0]===String(pid));if(!r)fail("Photo not found.");
+  if(me.role==="pm"&&String(r[1]).split("_")[0]!==me.id)fail("Not your photo.");
+  return {id:r[0],by:r[3],data:r[5]};
 }
 /* Run once from the Apps Script editor (not reachable from the web): gives every login that has no
    password yet a starting password and prints them in the Execution log. Logins already set are left alone. */
@@ -137,10 +170,12 @@ function doPost(e){
     let v;
     if(req.fn==="login")v=login_(a[0],a[1]);
     else if(req.fn==="pmState")v=pmState_(tk,a[0]);
+    else if(req.fn==="pmPhotoGet")v=pmPhotoGet_(tk,a[0]);
     else{
       lock.waitLock(20000);
       if(req.fn==="pmSave")v=pmSave_(tk,a[0],a[1]);
       else if(req.fn==="pmSetTime")v=pmSetTime_(tk,a[0],a[1]);
+      else if(req.fn==="pmPhoto")v=pmPhoto_(tk,a[0],a[1],a[2]);
       else if(req.fn==="changePw")v=changePw_(tk,a[0],a[1]);
       else if(req.fn==="listUsers")v=listUsers_(tk);
       else fail("Unknown request.");
