@@ -300,10 +300,12 @@ const gStaff=g=>staff.filter(p=>p.group===g);
 const doneN=l=>Object.values(l.areas||{}).filter(a=>a.st==='done').length;
 const lastT=l=>l.last?new Date(l.last).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'–';
 const late=l=>!!(l.in&&l.group!=='guard'&&l.att==='P'&&l.in>(CFG.set.start[l.group]||'99:99'));
-const sup=()=>S.role==='sup';
+const ROLES=['Staff','Supervisor','Manager','Director'];
+const roleName=()=>S.role==='sup'?'Supervisor':ROLES.includes(S.role)?S.role:'Staff';
+const sup=()=>roleName()!=='Staff';
 const early=l=>!!(l.out&&l.group!=='guard'&&l.att==='P'&&CFG.set.end&&CFG.set.end[l.group]&&l.out<CFG.set.end[l.group]);
 const flags=l=>[late(l)?'Late':'',early(l)?'Left early':''].filter(Boolean).join(', ');
-function logVisit(o){const id='v'+uid();save('visits',id,Object.assign({id,date:S.date,t:hhmm(),by:S.me,ts:new Date().toISOString()},o))}
+function logVisit(o){const id='v'+uid();save('visits',id,Object.assign({id,date:S.date,t:hhmm(),by:S.me+(roleName()!=='Supervisor'?' ('+roleName()+')':''),ts:new Date().toISOString()},o))}
 const pVisits=(p,g,d)=>Object.values(D.visits).filter(v=>(v.type==='Check-in'||v.type==='Guard audit')&&v.pid===p.id&&v.group===g&&v.date===d).sort((a,b)=>a.t.localeCompare(b.t));
 function chkHtml(c){
   const k=Object.keys(c||{}).filter(x=>c[x]);
@@ -360,7 +362,7 @@ function csv(r){return r.map(x=>x.map(c=>'"'+String(c).replace(/"/g,'""')+'"').j
 
 /* ---------- main render ---------- */
 function render(){
-  document.getElementById('me').textContent='👤 '+(S.me||'Set name')+' · '+(sup()?'Supervisor':'Staff');
+  document.getElementById('me').textContent='👤 '+(S.me||'Set name')+' · '+roleName();
   if(S.tab==='manage'&&!sup())S.tab='today';
   const tabs=[['today','📋 Today'],['visits','🧭 Supervisor log'],['reports','📊 Reports']];
   if(sup())tabs.push(['manage','⚙️ Manage']);
@@ -1014,8 +1016,8 @@ const ACT={
   issfilter:()=>{S.iss=S.iss==='open'?'all':'open';render()},
   copy:()=>{try{navigator.clipboard.writeText(lastCsv).then(()=>toast('Copied – paste into Sheets/Excel'),()=>toast('Copy blocked'))}catch(e){toast('Copy blocked')}},
   whoami:async()=>{
-    const r=await ask('Who is using this?',[{k:'me',label:'Your name',val:S.me},{k:'role',label:'Role',type:'select',opts:['Staff','Supervisor'],val:sup()?'Supervisor':'Staff'}]);
-    if(r){S.me=r.me;S.role=r.role==='Supervisor'?'sup':'staff';ls('fis_me',S.me);ls('fis_role',S.role);render()}
+    const r=await ask('Who is using this?',[{k:'me',label:'Your name',val:S.me},{k:'role',label:'Role',type:'select',opts:ROLES,val:roleName()}]);
+    if(r){S.me=r.me;S.role=r.role;ls('fis_me',S.me);ls('fis_role',S.role);render()}
   },
   login:async()=>{
     const p=cur();let shift='',post='';
@@ -1340,7 +1342,7 @@ function tick(){document.getElementById('clock').textContent=new Date().toLocale
 tick();setInterval(tick,20000);
 setInterval(()=>{if(!document.getElementById('layer').innerHTML)render()},120000);
 render();
-initDb().then(async()=>{if(!S.me){const r=await ask('Welcome – who are you?',[{k:'me',label:'Your name'},{k:'role',label:'Role',type:'select',opts:['Staff','Supervisor'],val:'Supervisor'}],'Start');if(r&&r.me){S.me=r.me;S.role=r.role==='Supervisor'?'sup':'staff';ls('fis_me',S.me);ls('fis_role',S.role);render()}}});
+initDb().then(async()=>{if(!S.me){const r=await ask('Welcome – who are you?',[{k:'me',label:'Your name'},{k:'role',label:'Role',type:'select',opts:ROLES,val:'Supervisor'}],'Start');if(r&&r.me){S.me=r.me;S.role=r.role;ls('fis_me',S.me);ls('fis_role',S.role);render()}}});
 </script>
 </body>
 </html>
