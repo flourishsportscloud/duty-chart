@@ -21,7 +21,7 @@ function rows_(name){const sh=sheet_(name);const n=sh.getLastRow();if(n<2)return
 function parse_(s){try{return JSON.parse(s)||{}}catch(e){return {}}}
 function wkOf_(date){const d=new Date(date+"T00:00:00Z");d.setUTCDate(d.getUTCDate()-((d.getUTCDay()+6)%7));return d.toISOString().slice(0,10)}
 /* ---------- Logins ---------- */
-const PL_USERS=[["shally","Shally","pm"],["neetu","Neetu","pm"],["divyanshi","Divyanshi","pm"],["diksha","Diksha","pm"],
+const PL_USERS=[["shally","Sanjana","pm"],["neetu","Neetu","pm"],["divyanshi","Divyanshi","pm"],["diksha","Diksha","pm"],
   ["dean","Dean of Academics","senior"],["director","Director–Admin","admin"]];
 const TOKEN_DAYS=120;
 const H_={
@@ -158,6 +158,15 @@ function pmPhotoGet_(token,pid){
   const r=rows_("Photos").find(x=>x[0]===String(pid));if(!r)fail("Photo not found.");
   if(me.role==="pm"&&String(r[1]).split("_")[0]!==me.id)fail("Not your photo.");
   return {id:r[0],by:r[3],data:r[5]};
+}
+/* Run from the Apps Script editor only: gives EVERY login a new password (logs everyone out) and prints them in the Execution log. */
+function resetAllLogins(){
+  Object.keys(COLS).forEach(sheet_);
+  const out=[];
+  users_().forEach(u=>{const pw=u.name.replace(/[^A-Za-z]/g,"").slice(0,4)+"@"+(1000+Math.floor(Math.random()*9000));setPw_(u,pw);out.push(u.name+" : "+pw)});
+  sheet_("Log").appendRow([Utilities.formatDate(new Date(),TZ,"yyyy-MM-dd HH:mm"),"Editor","password","reset all"]);
+  Logger.log(out.join("\n"));
+  return out;
 }
 /* Run once from the Apps Script editor (not reachable from the web): gives every login that has no
    password yet a starting password and prints them in the Execution log. Logins already set are left alone. */
