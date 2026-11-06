@@ -293,7 +293,7 @@ input[type=checkbox] { width: 24px; height: 24px; flex: none; accent-color: var(
     if (quiet && sig === lastSig && S.me) return;
     lastSig = sig;
     if (!pollOn) { pollOn = true; setInterval(poll, 20000); document.addEventListener("visibilitychange", poll); }
-    S.me = st.me; S.name = st.me.name; S.profileName = true; S.isMgr = st.me.role !== "staff"; S.isAdmin = st.me.role === "admin"; S.users = st.users || [];
+    S.me = st.me; S.name = st.me.name; S.profileName = true; S.isMgr = st.me.role !== "staff"; S.isAdmin = st.me.role === "admin"; S.users = st.users || []; S.codes = st.codes || {};
     S.found = st.found || []; S.comps = st.comps || []; S.hist = st.hist || []; S.rdy = { f: true, c: true, h: true }; S.fail = false;
     refresh();
   }
@@ -302,7 +302,7 @@ input[type=checkbox] { width: 24px; height: 24px; flex: none; accent-color: var(
     TOKEN = ""; try { localStorage.removeItem("lf-token"); } catch (e) {}
     S.me = null; S.isMgr = false; S.isAdmin = false; S.rdy = { f: false, c: false, h: false }; S.found = []; S.comps = []; S.hist = []; S.proofs = {}; PH = {}; PHq = {}; lastSig = "";
     $("#case").hidden = true; S.caseId = ""; closeSheet();
-    renderAuth("login", expired ? "Please log in again." : "");
+    renderAuth("code", expired ? "Please open the desk again." : "");
   }
   function saveText(name, text) {
     var b = new Blob([text], { type: "text/csv;charset=utf-8" }), a = document.createElement("a");
@@ -1110,20 +1110,23 @@ input[type=checkbox] { width: 24px; height: 24px; flex: none; accent-color: var(
   /* ---------- start ---------- */
   function renderAuth(mode, msg) {
     $("#bar").innerHTML = ""; $("#who").innerHTML = "";
-    var first = mode === "setup";
-    $("#screen").innerHTML = '<div class="card"><form id="af" class="stack" novalidate><h2>' + (first ? "First time? Set password" : "Log in") + "</h2>" +
+    var first = mode === "setup", byCode = mode === "code";
+    $("#screen").innerHTML = '<div class="card"><form id="af" class="stack" novalidate><h2>' + (byCode ? "Open the desk" : first ? "First time? Set password" : "Personal login") + "</h2>" +
       fld("au-n", "Your name", '<input type="text" id="au-n" maxlength="40" autocomplete="username">') +
-      fld("au-p", first ? "Choose a password (6 or more characters)" : "Password", '<input type="password" id="au-p" maxlength="60" autocomplete="' + (first ? "new-password" : "current-password") + '">') +
-      (first ? fld("au-r", "I am", '<select id="au-r"><option value="staff">Staff</option><option value="incharge">Incharge (manager)</option><option value="admin">Admin</option></select>') + '<p class="rsub">The admin approves every new login. Use your full name so the log shows who did what.</p>' : "") +
-      '<p class="err" id="au-e" role="alert">' + esc(msg || "") + '</p><button type="submit" class="btn primary block" id="au-go">' + (first ? "Create login" : "Log in") + '</button>' +
-      '<button type="button" class="btn ghost block" id="au-sw">' + (first ? "I already have a login" : "First time? Set password") + "</button></form></div>";
-    $("#au-sw").addEventListener("click", function () { renderAuth(first ? "login" : "setup", ""); });
+      (byCode ? fld("au-p", "Staff code", '<input type="password" id="au-p" maxlength="60" autocomplete="off">') + '<p class="rsub">Use the staff code shared by the school. Type your full name so the log shows who did what.</p>'
+        : fld("au-p", first ? "Choose a password (6 or more characters)" : "Password", '<input type="password" id="au-p" maxlength="60" autocomplete="' + (first ? "new-password" : "current-password") + '">')) +
+      (first ? fld("au-r", "I am", '<select id="au-r"><option value="staff">Staff</option><option value="incharge">Incharge (manager)</option><option value="admin">Admin</option></select>') + '<p class="rsub">The admin approves every new personal login.</p>' : "") +
+      '<p class="err" id="au-e" role="alert">' + esc(msg || "") + '</p><button type="submit" class="btn primary block" id="au-go">' + (byCode ? "Open" : first ? "Create login" : "Log in") + "</button>" +
+      (byCode ? '<button type="button" class="btn ghost block" data-sw="login">Admin / personal login</button>' :
+        '<button type="button" class="btn ghost block" data-sw="code">Use the staff code</button>' +
+        '<button type="button" class="btn ghost block" data-sw="' + (first ? "login" : "setup") + '">' + (first ? "I already have a login" : "First time? Set password") + "</button>") + "</form></div>";
+    $("#af").addEventListener("click", function (e) { var b = e.target.closest("[data-sw]"); if (b) renderAuth(b.getAttribute("data-sw"), ""); });
     $("#af").addEventListener("submit", function (e) {
       e.preventDefault();
       var n = val("au-n"), pw = document.getElementById("au-p").value;
-      if (!n || !pw) { $("#au-e").textContent = "Type your name and password."; return; }
+      if (!n || !pw) { $("#au-e").textContent = byCode ? "Type your name and the staff code." : "Type your name and password."; return; }
       var b = $("#au-go"); b.disabled = true;
-      call(first ? "setup" : "login", first ? [n, pw, val("au-r")] : [n, pw]).then(function (r) {
+      call(byCode ? "codeLogin" : first ? "setup" : "login", first ? [n, pw, val("au-r")] : [n, pw]).then(function (r) {
         if (r.pending) { renderAuth("login", "Your login is created. It is waiting for the admin to approve it."); return; }
         TOKEN = r.token; try { localStorage.setItem("lf-token", TOKEN); } catch (x) {}
         applyState(r.state); goRoute();
@@ -1131,18 +1134,34 @@ input[type=checkbox] { width: 24px; height: 24px; flex: none; accent-color: var(
     });
   }
   function teamSheet() {
-    var rows = S.users.slice().sort(function (a, b) { return (a.status === "pending" ? 0 : 1) - (b.status === "pending" ? 0 : 1) || a.name.localeCompare(b.name); }).map(function (u, i) {
-      var idx = S.users.indexOf(u);
-      return '<div class="row"><div class="rtop"><h3>' + esc(u.name) + '</h3><span class="tags">' + pill(u.status === "active" ? "p-green" : "p-amber", u.status === "active" ? "Active" : u.status === "pending" ? "Waiting for approval" : "Password reset") + "</span></div>" +
-        '<div class="field"><label for="tr-' + idx + '">Role</label><select id="tr-' + idx + '">' + opts([["staff", "Staff"], ["incharge", "Incharge (manager)"], ["admin", "Admin"]], u.role) + "</select></div>" +
-        '<div class="actions">' + (u.status === "pending" ? '<button type="button" class="btn small primary" data-u="approve" data-i="' + idx + '">Approve</button>' : '<button type="button" class="btn small" data-u="role" data-i="' + idx + '">Save role</button>') +
-        (u.name !== S.name ? '<button type="button" class="btn small" data-u="reset" data-i="' + idx + '">Reset password</button><button type="button" class="btn small danger" data-u="remove" data-i="' + idx + '">Remove</button>' : "") + "</div></div>";
+    var rows = S.users.slice().sort(function (a, b) { return (a.status === "pending" ? 0 : 1) - (b.status === "pending" ? 0 : 1) || a.name.localeCompare(b.name); }).map(function (u) {
+      var idx = S.users.indexOf(u), label = u.viaCode ? "Uses staff code" : u.status === "active" ? "Active" : u.status === "pending" ? "Waiting for approval" : "Password reset";
+      var acts = "";
+      if (!u.viaCode) acts += u.status === "pending" ? '<button type="button" class="btn small primary" data-u="approve" data-i="' + idx + '">Approve</button>' : '<button type="button" class="btn small" data-u="role" data-i="' + idx + '">Save role</button>';
+      if (u.name !== S.name) { if (!u.viaCode) acts += '<button type="button" class="btn small" data-u="reset" data-i="' + idx + '">Reset password</button>'; acts += '<button type="button" class="btn small danger" data-u="remove" data-i="' + idx + '">Remove</button>'; }
+      return '<div class="row"><div class="rtop"><h3>' + esc(u.name) + '</h3><span class="tags">' + pill(u.status === "active" ? "p-green" : "p-amber", label) + "</span></div>" +
+        (u.viaCode ? "" : '<div class="field"><label for="tr-' + idx + '">Role</label><select id="tr-' + idx + '">' + opts([["staff", "Staff"], ["incharge", "Incharge (manager)"], ["admin", "Admin"]], u.role) + "</select></div>") +
+        '<div class="actions">' + acts + "</div></div>";
     }).join("");
-    openSheet("Team logins", '<div class="list">' + (rows || emptyBox("No logins yet", "People create their own login on the first screen.")) + '</div><p class="err" id="tm-e" role="alert"></p>', function (sh) {
+    var codes = S.codes || {};
+    function codeBox(k, title) {
+      return '<div class="row"><div class="rtop"><h3>' + title + '</h3><span class="tags">' + pill(codes[k] ? "p-green" : "p-amber", codes[k] ? "Code is set" : "Not set") + "</span></div>" +
+        '<div class="field"><label for="cd-' + k + '">New code (6 or more characters)</label><input type="text" id="cd-' + k + '" maxlength="40" autocomplete="off"></div>' +
+        '<div class="actions"><button type="button" class="btn small primary" data-c="set" data-k="' + k + '">Save code</button>' + (codes[k] ? '<button type="button" class="btn small" data-c="clear" data-k="' + k + '">Turn off</button>' : "") + "</div></div>";
+    }
+    openSheet("Team logins", '<h3 class="rsub">Shared codes</h3><p class="rsub">Staff open the desk with their name and a code. Changing a code signs everyone out until they type the new one.</p><div class="list">' + codeBox("staff", "Staff code") + codeBox("incharge", "Incharge code (can hand over restricted items)") + "</div>" +
+      '<h3 class="rsub">People</h3><div class="list">' + (rows || emptyBox("No logins yet", "People appear here after they open the desk.")) + '</div><p class="err" id="tm-e" role="alert"></p>', function (sh) {
       sh.addEventListener("click", function (e) {
+        var c = e.target.closest("[data-c]");
+        if (c) {
+          var k = c.getAttribute("data-k"), v = c.getAttribute("data-c") === "clear" ? "" : document.getElementById("cd-" + k).value;
+          c.disabled = true;
+          tcall("setCode", [k, v]).then(function (st) { applyState(st); teamSheet(); }, function (err) { $("#tm-e").textContent = err.message; c.disabled = false; });
+          return;
+        }
         var b = e.target.closest("[data-u]"); if (!b) return;
         var u = S.users[+b.getAttribute("data-i")], act = b.getAttribute("data-u"); if (!u) return;
-        var role = document.getElementById("tr-" + b.getAttribute("data-i")).value, p;
+        var rs = document.getElementById("tr-" + b.getAttribute("data-i")), role = rs ? rs.value : u.role, p;
         if (act === "approve" || act === "role") p = tcall("approve", [u.name, role]);
         else if (act === "reset") p = tcall("resetUser", [u.name]);
         else p = tcall("removeUser", [u.name]);
@@ -1155,7 +1174,7 @@ input[type=checkbox] { width: 24px; height: 24px; flex: none; accent-color: var(
     renderWho(); renderBar();
     if (!API_URL) { S.noDb = true; renderScreen(); return; }
     try { TOKEN = localStorage.getItem("lf-token") || ""; } catch (e) {}
-    if (!TOKEN) { renderAuth("login", ""); return; }
+    if (!TOKEN) { renderAuth("code", ""); return; }
     $("#screen").innerHTML = emptyBox("Loading records", "One moment.");
     try {
       var st = await tcall("state");

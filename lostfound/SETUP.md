@@ -43,3 +43,14 @@ The sheet holds photos of students with their items, staff names and parent name
 ## Updating the script later
 
 After pasting a new `Code.gs`: **Deploy → Manage deployments → ✏️ Edit → Version: New version → Deploy**. The URL stays the same.
+
+## Shared staff code (no personal password)
+
+Staff and incharges can open the desk with their name plus one shared code, with no sign-up or approval.
+
+1. The admin logs in with a personal login, opens **Team logins** and saves a **Staff code** (and, if wanted, an **Incharge code** for handing over restricted items).
+2. Staff open the page, type their full name and the code, and tap **Open**.
+3. Changing or turning off a code signs everyone who used it out until they type the new one.
+4. The admin and any personal logins keep working through **Admin / personal login**. A name that has a personal login cannot be used with the code.
+
+Anyone who knows the code can type any other name, so share it only with staff and change it if it leaks.
