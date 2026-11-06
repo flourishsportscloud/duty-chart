@@ -9,6 +9,7 @@
    - photos are kept in the Photos sheet and are sent only to a logged-in person
 */
 const ROLES=["staff","incharge","admin"];
+const OPEN=true;   // no passwords: staff just type their name. Set to false to go back to logins.
 const TOKEN_DAYS=120;
 const TZ="Asia/Kolkata";
 const CHUNK=40000;          // a sheet cell holds at most 50,000 characters
@@ -26,6 +27,10 @@ function addDays(iso,n){const d=new Date(iso+"T00:00:00Z");d.setUTCDate(d.getUTC
 function hashPw(H,salt,pw){let h=salt+"|"+pw;for(let i=0;i<500;i++)h=H.sha(h+"|"+salt);return h}
 function makeToken(H,secret,u,now){const exp=now+TOKEN_DAYS*864e5;const body=u.name+"|"+exp+"|"+u.ver;return H.b64(body)+"."+H.hmac(body,secret)}
 function readToken(H,secret,DB,token,now){
+  if(OPEN){
+    const n=typeof token==="string"&&token.indexOf("open:")===0?token.slice(5).replace(/[\u0000-\u001f]/g,"").trim().slice(0,40):"";
+    return n.length>=2?{name:n,role:"incharge",status:"active",ver:"1"}:null;
+  }
   if(!token)return null;
   const [b,sig]=String(token).split(".");if(!b||!sig)return null;
   let body;try{body=H.unb64(b)}catch(e){return null}
@@ -175,7 +180,7 @@ const API={
 
   // admin only: loads stock orders and purchases that cover every case (pending, bought, handed over, refund, not available, ...)
   seedDemo(ctx,token){
-    const me=needAdmin(ctx,token);
+    const me=OPEN?needUser(ctx,token):needAdmin(ctx,token);
     if(requests_().some(r=>r.sample))fail("Sample data is already loaded.");
     const days=Math.round((Date.parse(ctx.today+"T00:00:00Z")-Date.parse(DEMO_BASE+"T00:00:00Z"))/864e5);
     const nowIso=new Date(ctx.now).toISOString();
@@ -188,7 +193,7 @@ const API={
   },
 
   deleteDemo(ctx,token){
-    const me=needAdmin(ctx,token);
+    const me=OPEN?needUser(ctx,token):needAdmin(ctx,token);
     readAll_("Requests").filter(r=>parse_(r.json).sample).forEach(r=>deleteRow_("Requests",r.id));
     bump_();ctx.log(me.name,"delete sample data","","");
     return publicState(ctx,me);
