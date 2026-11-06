@@ -208,7 +208,7 @@ const STATUS=['On duty','Working','Break','Done'];
 const SUBS={
  water:[['people','👷 Watermen'],['hist','📅 Date-wise history']],
  garden:[['people','👷 Gardeners & tasks'],['green','🌳 Greenery health'],['damage','🥀 Damaged plants'],['develop','🏗 Yet to develop'],['tasks','🗒 Task bank']],
- clean:[['people','✅ Today'],['plan','📅 Plan (week / month)'],['chart','🕐 Time chart'],['week','📊 Weekly table'],['routine','🔁 Machine tasks'],['wash','🚻 Washrooms']],
+ clean:[['people','✅ Today'],['timeline','🕒 Timeline'],['plan','📅 Plan (week / month)'],['chart','🕐 Time chart'],['week','📊 Weekly table'],['routine','🔁 Machine tasks'],['wash','🚻 Washrooms']],
  guard:[['people','👷 Guards']]
 };
 
@@ -378,7 +378,8 @@ function rToday(){
   if(subs.length>1)h+=seg(subs,cur,'sub');
   if(cur==='people')h+=g==='clean'?rCleanSimple():rPeople(g);
   else if(cur==='plan')h+=rPlan();
-  else if(cur==='week')h+=dateBar()+weekClean();
+  else if(cur==='timeline')h+=rTimeline();
+  else if(cur==='week')h+=weekClean();
   else if(cur==='hist')h+=rWHist();
   else if(cur==='green')h+=rGreen();
   else if(cur==='damage'||cur==='develop')h+=rIssues(cur);
@@ -579,10 +580,10 @@ function rCleanSimple(){
     const l=getLog(p,'clean'),al=(l.alloc||[]).slice().sort((a,b)=>a.from.localeCompare(b.from)),dn=al.filter(a=>a.st==='done').length,off=l.att==='A'||l.att==='L';
     const rows=al.map(a=>{const d=a.st==='done',over=isT&&!d&&a.to<nowT;
       return `<tr style="${d?'background:#f0fdf4':over?'background:#fff7f7':''}"><td style="white-space:nowrap;${over?'color:var(--bad);font-weight:600':''}">${a.from}–${a.to}</td>
-       <td><b>${esc(aName(a))}</b>${a.note?`<br><small style="color:var(--mute)">${esc(a.note)}</small>`:''}${a.pl?'':' '+tag('','today only')}${a.st==='issue'?' '+tag('bad','Not done '+a.t):a.st==='working'?' '+tag('working','Working '+a.t):''}</td>
+       <td><b>${esc(aName(a))}</b>${a.note?`<br><small style="color:var(--mute)">${esc(a.note)}</small>`:''}${a.pl?'':' '+tag('','today only')}${a.st==='issue'?' '+tag('bad','Not done '+a.t):a.st==='working'?' '+tag('working','Working '+a.t):''}${audLine(a)}</td>
        <td>${d?`<button class="btn ok sm" data-act="ctick" data-p="${p.id}" data-v="${a.id}">✔ ${a.t}</button>`:`<button class="btn sm ${over?'bad':''}" data-act="ctick" data-p="${p.id}" data-v="${a.id}">☐ Tick</button>`}</td>
        <td>${a.ph?img(a.ph,'','s'):'<small style="color:var(--mute)">–</small>'}</td>
-       ${sup()?`<td style="white-space:nowrap"><button class="btn sec sm" data-act="cedit" data-p="${p.id}" data-v="${a.id}" title="Change">✏️</button> <button class="btn sec sm" data-act="cdel" data-p="${p.id}" data-v="${a.id}" title="Remove">✕</button></td>`:''}</tr>`}).join('');
+       ${sup()?`<td style="white-space:nowrap"><button class="btn sm" data-act="caudit" data-p="${p.id}" data-v="${a.id}" title="Supervisor audit">🔍 Audit</button> <button class="btn sec sm" data-act="cedit" data-p="${p.id}" data-v="${a.id}" title="Change">✏️</button> <button class="btn sec sm" data-act="cdel" data-p="${p.id}" data-v="${a.id}" title="Remove">✕</button></td>`:''}</tr>`}).join('');
     return `<div class="card"><div class="row" style="justify-content:space-between;margin-bottom:6px">
       <h3 style="margin:0">🧹 ${esc(p.name)} ${attTag(l.att)} ${flags(l)?tag('a',flags(l)):''}</h3>
       <div class="row">${!l.in&&!off?`<button class="btn ok sm" data-act="login" data-p="${p.id}">▶ In</button>`:''}${l.in?`<small>In <b>${l.in}</b></small>`:''}
@@ -627,6 +628,53 @@ function syncPlanItem(it,removed){
     mutate(p,x=>{x.alloc=x.alloc.filter(a=>!(a.pl===it.id&&a.st!=='done'&&(removed||x.pid!==it.pid||!planMatch(it,x.date))));
       if(!removed)x.alloc.forEach(a=>{if(a.pl===it.id&&a.st!=='done'){a.aid=it.aid;a.task=it.task;a.from=it.from;a.to=it.to;a.note=it.note}})},'clean',l.date);
   });
+}
+/* ---------- cleaner: supervisor audits + daily timeline (time rows x cleaners) ---------- */
+const AUD_OK=s=>/^(Working|Done)/.test(s||'');
+const audChip=c=>`<span class="tag ${AUD_OK(c.s)?'ok':'bad'}" title="${esc((c.note||'')+(c.by?' – '+c.by:''))}">🔍 ${c.t} ${AUD_OK(c.s)?'✔':'✖'} ${esc(c.s)}</span>`;
+const audits=a=>(a.checks||[]).filter(c=>c.audit);
+function audLine(a){const au=audits(a);if(!au.length)return '';
+  return `<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px;align-items:center">${au.map(c=>`${audChip(c)}${c.ph?img(c.ph,'','s'):''}`).join('')}</div>`}
+function rTimeline(){
+  const ps=gStaff('clean'),isT=S.date===today(),nowT=hhmm(),SL=30;
+  let h='';
+  if(!ps.length)return h+'<div class="card empty">Add cleaners in Manage first.</div>';
+  const L=ps.map(p=>getLog(p,'clean'));
+  let s0=mins('07:00'),s1=mins('14:30');
+  L.forEach(l=>{(l.alloc||[]).forEach(a=>{s0=Math.min(s0,mins(a.from));s1=Math.max(s1,mins(a.to))});[l.in,l.out].forEach(t=>{if(t){s0=Math.min(s0,mins(t));s1=Math.max(s1,mins(t)+1)}})});
+  s0=Math.floor(s0/SL)*SL;s1=Math.ceil(s1/SL)*SL;
+  const vis=Object.values(D.visits).filter(v=>v.date===S.date&&v.group==='clean'&&/Audit|Check-in|Washroom/.test(v.type));
+  const hm=m=>pad(Math.floor(m/60))+':'+pad(m%60);
+  let rows='';
+  for(let m=s0;m<s1;m+=SL){
+    const a0=m,a1=m+SL,inS=t=>t&&mins(t)>=a0&&mins(t)<a1,now=isT&&mins(nowT)>=a0&&mins(nowT)<a1;
+    const cells=ps.map((p,i)=>{
+      const l=L[i];if(l.att==='A'||l.att==='L')return `<td style="background:#f4f4f2;color:var(--mute);text-align:center">${m===s0?attName[l.att]:''}</td>`;
+      let o='';
+      if(inS(l.in))o+=`<div><small>▶ In ${l.in}${late(l)?' <b style="color:var(--bad)">late</b>':''}</small></div>`;
+      if(inS(l.lunchOut))o+=`<div><small>🍽 Lunch ${l.lunchOut}</small></div>`;
+      if(inS(l.lunchIn))o+=`<div><small>🍽 Back ${l.lunchIn}</small></div>`;
+      const act=(l.alloc||[]).filter(a=>mins(a.from)<a1&&mins(a.to)>a0).sort((x,y)=>x.from.localeCompare(y.from));
+      let bg='';
+      act.forEach(a=>{
+        const first=mins(a.from)>=a0||m===s0,d=a.st==='done',bad=a.st==='issue',over=isT&&!d&&a.to<nowT;
+        bg=d?'#f0fdf4':bad||over?'#fff1f1':a.st==='working'?'#fffbeb':'#f6f8fb';
+        o+=first?`<div><b>${esc(aName(a))}</b> <small>${a.from}–${a.to}</small></div>`:`<div style="color:var(--mute)"><small>↳ ${esc(aName(a))}</small></div>`;
+        if(d&&inS(a.t))o+=`<div>${tag('done','✔ done '+a.t)}</div>`;
+        else if(!d&&(over||bad)&&mins(a.to)>a0&&mins(a.to)<=a1)o+=`<div>${tag('bad',bad?'not done':'not ticked')}</div>`;
+        audits(a).filter(c=>inS(c.t)).forEach(c=>{o+=`<div style="margin-top:2px">${audChip(c)} ${c.ph?img(c.ph,'','s'):''}</div>`});
+      });
+      if(inS(l.out))o+=`<div><small>⏹ Out ${l.out}${early(l)?' <b style="color:var(--bad)">early</b>':''}</small></div>`;
+      if(!act.length&&!o&&l.in&&!(l.out&&mins(l.out)<a0)&&mins(l.in)<a1&&!(l.lunchOut&&mins(l.lunchOut)<a1&&(!l.lunchIn||mins(l.lunchIn)>=a0)))o=`<small style="color:var(--bad)">No task</small>`;
+      if(l.lunchOut&&mins(l.lunchOut)<a1&&(!l.lunchIn||mins(l.lunchIn)>a0)&&!act.length)bg='#f4f4f2';
+      return `<td style="vertical-align:top;min-width:150px;${bg?'background:'+bg:''}">${o}</td>`;
+    }).join('');
+    const sv=vis.filter(v=>inS(v.t)).sort((a,b)=>a.t.localeCompare(b.t)).map(v=>v.type==='Audit'?`<div><small><b>${v.t}</b> 🔍 ${esc(v.who||'')} · ${esc((v.where||'').replace(/ \d\d:\d\d–\d\d:\d\d$/,''))} ${AUD_OK(v.remark)?'<b style="color:var(--ok)">✔</b>':'<b style="color:var(--bad)">✖</b>'}</small></div>`:`<div><small><b>${v.t}</b> ${v.type==='Washroom inspection'?'🚻':'✅'} ${esc(v.type==='Washroom inspection'?v.where:v.type+(v.who?' · '+v.who:''))}</small></div>`).join('');
+    rows+=`<tr style="${now?'outline:2px solid var(--acc);outline-offset:-2px':''}"><th style="position:sticky;left:0;background:${now?'var(--acc)':'#eef3f0'};color:${now?'#fff':'var(--ink)'};white-space:nowrap;vertical-align:top;z-index:1">${hm(a0)}${now?'<br><small>NOW</small>':''}</th>${cells}<td style="vertical-align:top;min-width:160px;background:#faf7ff">${sv}</td></tr>`;
+  }
+  const totA=L.reduce((n,l)=>n+(l.alloc||[]).reduce((k,a)=>k+audits(a).length,0),0);
+  return h+`<div class="card"><div class="row" style="justify-content:space-between"><h3 style="margin:0">🕒 Cleaning timeline – ${fmtD(S.date)}</h3><small style="color:var(--mute)">${totA} supervisor audits · green done · yellow working · red not done / overdue · grey lunch / absent</small></div>
+   <div class="tw" style="margin-top:8px"><table><tr><th style="position:sticky;left:0;z-index:2">Time</th>${ps.map((p,i)=>`<th>${esc(p.name)}<br>${attTag(L[i].att)}</th>`).join('')}<th>🔍 Supervisor</th></tr>${rows}</table></div></div>`;
 }
 function rChart(){
   const ps=gStaff('clean');
@@ -942,6 +990,18 @@ const ACT={
     toast('Review saved '+hhmm());
   },
   attsel:(d,e)=>{const v=e.value;if(!v)return;mutate(cur(),l=>{l.att=v;if(v==='A'||v==='L'){l.in='';l.out=''}},'clean')},
+  caudit:async d=>{
+    const p=cur(),a=getLog(p,'clean').alloc.find(x=>x.id===d.v);if(!a)return;
+    const n=audits(a).length;
+    const r=await ask('Audit '+(n+1)+' – '+p.name+' · '+aName(a)+' '+a.from+'–'+a.to+' ('+hhmm()+')',[{k:'s',label:'What did you find?',type:'select',opts:['Working properly','Done – good quality','Not started','Not at area','Poor quality – redo']},{k:'n',label:'Remark',type:'textarea',ph:'What did you see?'}],'Save audit',{photos:['Photo'],need:['Photo']});
+    if(!r)return;
+    const ph=await savePhoto(r.photo),t=hhmm();
+    mutate(p,l=>{const x=l.alloc.find(z=>z.id===d.v);(x.checks=x.checks||[]).push({t,s:r.s,note:r.n,ph,by:S.me,audit:1});
+      if(x.st!=='done'){if(r.s.startsWith('Done')){x.st='done';x.t=t;x.ph=ph}else if(r.s.startsWith('Working')){x.st='working';if(!x.t)x.t=t}else{x.st='issue';x.t=t}}
+      else if(r.s.startsWith('Poor')){x.st='issue'}},'clean');
+    logVisit({group:'clean',type:'Audit',pid:p.id,who:p.name,where:aName(a)+' '+a.from+'–'+a.to,remark:r.s+(r.n?' – '+r.n:''),ph});
+    toast('Audit '+(n+1)+' saved '+t);
+  },
   ctick:async d=>{
     const p=cur(),a=getLog(p,'clean').alloc.find(x=>x.id===d.v);if(!a)return;
     if(a.st==='done'){
