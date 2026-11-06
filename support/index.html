@@ -4,25 +4,26 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Support Staff – Live</title>
-<meta name="theme-color" content="#0f3d33">
+<meta name="theme-color" content="#16253b">
 <link rel="icon" href="../fis/fis-icon-192.png">
 <style>
-:root{--bg:#f4f6f5;--card:#fff;--ink:#14231c;--mute:#5d6f66;--line:#dfe6e2;--ok:#15803d;--okbg:#dcfce7;--warn:#b45309;--warnbg:#fef3c7;--bad:#b91c1c;--badbg:#fee2e2;--acc:#0f766e}
+:root{--bg:#f3f5f8;--card:#fff;--ink:#16202e;--mute:#5f6b7a;--line:#dde3eb;--ok:#137a3f;--okbg:#e3f5ea;--warn:#a15c07;--warnbg:#fdf1dc;--bad:#b42318;--badbg:#fde8e6;--acc:#1f3a5f;--head:#16253b}
 *{box-sizing:border-box}
-body{margin:0;font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink)}
-header{background:#0f3d33;color:#fff;padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:5}
+body{margin:0;font:15px/1.45 'Segoe UI',Roboto,'Helvetica Neue',Arial,system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:var(--head);border-bottom:3px solid var(--acc);color:#fff;padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:5}
 header h1{font-size:16px;margin:0;flex:1;min-width:180px}
 header .clock{font-variant-numeric:tabular-nums;font-size:13px;opacity:.9}
 .me{background:#ffffff22;border:0;color:#fff;border-radius:20px;padding:6px 12px;font-size:13px;cursor:pointer}
 .live{font-size:11px;padding:2px 8px;border-radius:10px;background:#ffffff22}
 .live.on::before{content:"● ";color:#4ade80}.live.off::before{content:"● ";color:#fbbf24}
 nav.top{display:flex;gap:6px;padding:8px 12px;background:#fff;border-bottom:1px solid var(--line);overflow-x:auto}
-nav.top button,.seg button{border:1px solid var(--line);background:#fff;border-radius:20px;padding:7px 14px;font-size:14px;cursor:pointer;white-space:nowrap;color:var(--ink)}
+nav.top button,.seg button{border:1px solid var(--line);background:#fff;border-radius:8px;font-weight:600;padding:7px 14px;font-size:14px;cursor:pointer;white-space:nowrap;color:var(--ink)}
 nav.top button.on,.seg button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
 main{max-width:1000px;margin:0 auto;padding:12px}
 .grp{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
-.grp button{border:2px solid var(--line);background:#fff;border-radius:12px;padding:10px 4px;cursor:pointer;text-align:center;font-size:13px}
-.grp button b{display:block;font-size:20px}.grp button.on{border-color:var(--c);background:color-mix(in srgb,var(--c) 10%,#fff)}
+.grp button{border:1px solid var(--line);border-top:4px solid var(--c);background:#fff;border-radius:10px;padding:10px 6px;cursor:pointer;text-align:left;font-size:13px;color:var(--ink)}
+.grp button .gt{display:block;font-weight:700;font-size:14px;color:var(--c)}.grp button small{display:block}
+.grp button.on{border-color:var(--c);box-shadow:0 0 0 2px var(--c) inset;background:color-mix(in srgb,var(--c) 7%,#fff)}
 .grp small{color:var(--mute)}
 .datebar{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
 .datebar button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 12px;cursor:pointer}
@@ -80,11 +81,34 @@ tr.grpsep td{background:#f4f8f6;font-weight:700}
 .gc{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fcfdfc}
 .gc.miss{border-color:#fca5a5;background:#fff7f7}
 .chk{display:inline-block;margin:2px 3px 2px 0}
+
+.card{border-radius:10px;box-shadow:0 1px 2px #16202e0d}
+.card h3{font-size:15px;letter-spacing:.01em;color:var(--head)}
+th{letter-spacing:.04em}
+.btn{border-radius:8px}
+.tag{border-radius:6px}
+.seg{overflow-x:auto;flex-wrap:nowrap;padding-bottom:2px}
+@media (max-width:640px){
+ body{font-size:14px}
+ header{padding:8px 10px;gap:6px}header h1{font-size:15px;flex-basis:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}header h1 span{display:none}header .clock{display:none}
+ .stack tr:first-child{display:none}
+ .stack tr{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;padding:8px 4px;border-bottom:1px solid var(--line)}
+ .stack td{border:0;padding:0 2px}
+ .stack td:nth-child(2){flex:1 1 60%}
+ main{padding:8px}
+ .grp{grid-template-columns:repeat(2,1fr);gap:6px}
+ .card{padding:10px}
+ th,td{padding:6px 5px;font-size:12.5px}
+ .btn{padding:8px 10px;font-size:13px}.btn.sm{padding:6px 8px;font-size:12px}
+ .gcards{grid-template-columns:1fr}
+ .datebar b{min-width:0;font-size:14px}
+ .modal .box{max-height:94vh}
+}
 </style>
 </head>
 <body>
 <header>
-  <h1><a href="../fis/" style="color:#fff;text-decoration:none;font-size:12px;font-weight:600;background:#ffffff22;padding:3px 8px;border-radius:99px;margin-right:6px">‹ FIS</a>Support Staff – Water · Gardener · Cleaner · Guard</h1>
+  <h1><a href="../fis/" style="color:#fff;text-decoration:none;font-size:12px;font-weight:600;background:#ffffff22;padding:3px 8px;border-radius:6px;margin-right:8px;white-space:nowrap">‹ FIS</a>Support Services <span style="font-weight:400;opacity:.75">· Live</span></h1>
   <span class="clock" id="clock"></span>
   <span class="live off" id="live">connecting</span>
   <button class="me" id="me" data-act="whoami"></button>
@@ -182,10 +206,10 @@ const FISDB=(()=>{
 </script>
 <script>
 const G={
- water:{label:'Watermen',ico:'💧',c:'#0e7490',al:'Water points'},
- garden:{label:'Gardener',ico:'🌿',c:'#15803d',al:'Greenery areas'},
- clean:{label:'Cleaner',ico:'🧹',c:'#b45309',al:'Cleaning areas'},
- guard:{label:'Guard',ico:'🛡️',c:'#4338ca',al:'Posts / gates'}
+ water:{label:'Water Service',sn:'Watermen',ico:'',c:'#0b6e99',al:'Water points'},
+ garden:{label:'Horticulture',sn:'Gardeners',ico:'',c:'#2f7d32',al:'Greenery areas'},
+ clean:{label:'Housekeeping',sn:'Cleaners',ico:'',c:'#a35a00',al:'Cleaning areas'},
+ guard:{label:'Security',sn:'Guards',ico:'',c:'#3b3f9e',al:'Gates'}
 };
 const GK=Object.keys(G);
 const mk=(g,arr)=>arr.map((n,i)=>({id:g+(i+1),name:n}));
@@ -200,17 +224,17 @@ const DEF_CHK={
  water:['Present at the area','Water flowing / pressure OK','Area fully watered'],
  garden:['Present at work','Working on allotted task','Tools & safety','Work area tidy'],
  clean:['Present at the area','Cleaning quality','Materials / equipment','Uniform'],
- guard:['At assigned post','Alert – not sleeping','Not busy on mobile phone','Uniform, cap & ID card','Behaviour with visitors & parents','Language – polite','Gate / entry controlled','Visitors stopped, asked & noted'],
+ guard:['At assigned post','Alert – not sleeping','Not using mobile phone','Uniform, cap & ID card','Behaviour with visitors & parents','Language – polite','Gate / entry controlled','Visitors stopped, asked & noted'],
  groom:['Room clean & tidy','Visitor register updated','Vehicle register updated','Torch, lathi & first-aid box in place','Phone / walkie-talkie working','Washroom clean, water available'],
  wash:['Smell','Lights','Floor cleaning','Urinals','WC cabins & doors / flush','Washbasins & taps','Water supply','Supplies (soap / tissue)','Dustbins']
 };
 const DEF_SET={start:{water:'07:00',garden:'07:00',clean:'07:00',guard:'08:00'},every:{water:60,garden:120,clean:60,guard:120,groom:240},end:{water:'15:00',garden:'15:00',clean:'15:00',guard:''}};
 const STATUS=['On duty','Working','Break','Done'];
 const SUBS={
- water:[['people','👷 Watermen'],['hist','📅 Date-wise history']],
- garden:[['people','👷 Gardeners & tasks'],['green','🌳 Greenery health'],['damage','🥀 Damaged plants'],['develop','🏗 Yet to develop'],['tasks','🗒 Task bank']],
- clean:[['people','✅ Today'],['timeline','🕒 Timeline'],['plan','📅 Plan (week / month)'],['chart','🕐 Time chart'],['week','📊 Weekly table'],['routine','🔁 Machine tasks'],['wash','🚻 Washrooms']],
- guard:[['people','👷 Guards']]
+ water:[['people','Watermen'],['hist','Date-wise History']],
+ garden:[['people','Gardeners & Tasks'],['green','Greenery Health'],['damage','Damaged Plants'],['develop','Areas to Develop'],['tasks','Task Bank']],
+ clean:[['people','Daily Tasks'],['timeline','Timeline'],['plan','Standing Schedule'],['week','Weekly Summary'],['routine','Machine Cleaning'],['wash','Washrooms'],['chart','Time Chart']],
+ guard:[['people','Guards']]
 };
 
 const ls=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}};
@@ -320,6 +344,9 @@ const attName={P:'Present',A:'Absent',L:'Leave',H:'Half day'};
 const attTag=a=>a?tag(a.toLowerCase(),attName[a]):tag('','–');
 
 /* ---------- UI primitives ---------- */
+/* formal display: strip decorative emoji, keep status marks */
+const KEEP={'✔':1,'✖':1,'◀':1,'▶':1};
+function tidy(h){return String(h).replace(/✏️|✏/g,'Edit').replace(/\p{Extended_Pictographic}\uFE0F?/gu,m=>KEEP[m.replace('\uFE0F','')]?m:'').replace(/>\s+</g,'> <')}
 function toast(t){const e=document.createElement('div');e.className='toast';e.textContent=t;document.body.appendChild(e);setTimeout(()=>e.remove(),2800)}
 function ask(title,fields,ok='Save',opt={}){
   return new Promise(res=>{
@@ -333,7 +360,7 @@ function ask(title,fields,ok='Save',opt={}){
       return `<label>${esc(x.label)}</label>${inp}`}).join('');
     const ck=opt.checks?`<label>Checkpoints <button class="btn sm sec" id="allok" style="margin-left:6px">All OK</button></label>`+opt.checks.map((c,i)=>c.startsWith('# ')?`<div style="margin:12px 0 4px;font-weight:700;border-bottom:1px solid var(--line);padding-bottom:3px">${esc(c.slice(2))}</div>`:`<div class="mg"><span>${esc(c)}</span><button class="btn sm sec" data-ci="${i}" data-v="ok">OK</button><button class="btn sm sec" data-ci="${i}" data-v="bad">Not OK</button></div>`).join(''):'';
     const ph=pl.length?`<label>Photo${pl.length>1?'s':''}${need.length?' (* required)':''}</label>`+pl.map((x,i)=>`<div class="ph" style="margin-bottom:6px"><button class="btn sec sm" data-pi="${i}">📷 ${esc(x)}${need.includes(x)?' *':''}</button><img data-pv="${i}" class="pv" style="display:none" alt=""></div>`).join(''):'';
-    L.innerHTML=`<div class="modal"><div class="box"><h3 style="margin:0">${esc(title)}</h3>${f}${ck}${ph}<div class="row" style="margin-top:14px"><button class="btn" id="mok">${ok}</button><button class="btn sec" id="mcn">Cancel</button></div></div></div>`;
+    L.innerHTML=tidy(`<div class="modal"><div class="box"><h3 style="margin:0">${esc(title)}</h3>${f}${ck}${ph}<div class="row" style="margin-top:14px"><button class="btn" id="mok">${ok}</button><button class="btn sec" id="mcn">Cancel</button></div></div></div>`);
     const close=v=>{L.innerHTML='';res(v)};
     const paint=()=>L.querySelectorAll('[data-ci]').forEach(b=>{const c=opt.checks[+b.dataset.ci];b.className='btn sm '+(checks[c]===b.dataset.v?(b.dataset.v==='ok'?'ok':'bad'):'sec')});
     L.querySelectorAll('[data-ci]').forEach(b=>b.onclick=()=>{const c=opt.checks[+b.dataset.ci];checks[c]=checks[c]===b.dataset.v?'':b.dataset.v;paint()});
@@ -362,13 +389,15 @@ function csv(r){return r.map(x=>x.map(c=>'"'+String(c).replace(/"/g,'""')+'"').j
 
 /* ---------- main render ---------- */
 function render(){
-  document.getElementById('me').textContent='👤 '+(S.me||'Set name')+' · '+roleName();
+  document.getElementById('me').textContent=(S.me||'Set name')+' · '+roleName();
   if(S.tab==='manage'&&!sup())S.tab='today';
-  const tabs=[['today','📋 Today'],['visits','🧭 Supervisor log'],['reports','📊 Reports']];
-  if(sup())tabs.push(['manage','⚙️ Manage']);
+  const tabs=[['today','Daily Operations'],['visits','Inspection Log'],['reports','Reports']];
+  if(sup())tabs.push(['manage','Settings']);
   document.getElementById('nav').innerHTML=tabs.map(t=>`<button class="${S.tab===t[0]?'on':''}" data-act="tab" data-v="${t[0]}">${t[1]}</button>`).join('');
+  document.documentElement.style.setProperty('--acc',S.tab==='today'?G[S.group].c:'#1f3a5f');
   const app=document.getElementById('app');
-  app.innerHTML=S.tab==='today'?rToday():S.tab==='visits'?rVisits():S.tab==='reports'?rReports():rManage();
+  app.innerHTML=tidy(S.tab==='today'?rToday():S.tab==='visits'?rVisits():S.tab==='reports'?rReports():rManage());
+  document.getElementById('nav').innerHTML=tidy(document.getElementById('nav').innerHTML);
   hydrate();
 }
 function dateBar(){
@@ -378,7 +407,7 @@ function dateBar(){
 function groupTabs(){
   return `<div class="grp">${GK.map(g=>{
     const ps=gStaff(g),pr=ps.filter(p=>['P','H'].includes(getLog(p,g).att)).length;
-    return `<button class="${S.group===g?'on':''}" style="--c:${G[g].c}" data-act="grp" data-v="${g}"><b>${G[g].ico}</b>${G[g].label}<br><small>${pr}/${ps.length} present</small></button>`}).join('')}</div>`;
+    return `<button class="${S.group===g?'on':''}" style="--c:${G[g].c}" data-act="grp" data-v="${g}"><span class="gt">${G[g].label}</span><small>${G[g].sn}</small><small><b>${pr}</b> / ${ps.length} present</small></button>`}).join('')}</div>`;
 }
 function rToday(){
   const g=S.group;let h=groupTabs()+dateBar();
@@ -652,10 +681,10 @@ function rCleanSimple(){
     const l=getLog(p,'clean'),al=(l.alloc||[]).slice().sort((a,b)=>a.from.localeCompare(b.from)),dn=al.filter(a=>a.st==='done').length,off=l.att==='A'||l.att==='L';
     const rows=al.map(a=>{const d=a.st==='done',over=isT&&!d&&a.to<nowT;
       return `<tr style="${d?'background:#f0fdf4':over?'background:#fff7f7':''}"><td style="white-space:nowrap;${over?'color:var(--bad);font-weight:600':''}">${a.from}–${a.to}</td>
-       <td><b>${esc(aName(a))}</b>${a.note?`<br><small style="color:var(--mute)">${esc(a.note)}</small>`:''}${a.pl?'':' '+tag('','today only')}${a.st==='issue'?' '+tag('bad','Not done '+a.t):a.st==='working'?' '+tag('working','Working '+a.t):''}${audLine(a)}</td>
-       <td>${d?`<button class="btn ok sm" data-act="ctick" data-p="${p.id}" data-v="${a.id}">✔ ${a.t}</button>`:`<button class="btn sm ${over?'bad':''}" data-act="ctick" data-p="${p.id}" data-v="${a.id}">☐ Tick</button>`}</td>
+       <td><b>${esc(aName(a))}</b>${a.note?`<br><small style="color:var(--mute)">${esc(a.note)}</small>`:''}${a.pl?'':' '+tag('','this day only')}${a.st==='issue'?' '+tag('bad','Not done '+a.t):a.st==='working'?' '+tag('working','Working '+a.t):''}${audLine(a)}</td>
+       <td>${d?`<button class="btn ok sm" data-act="ctick" data-p="${p.id}" data-v="${a.id}">✔ ${a.t}</button>`:`<button class="btn sm ${over?'bad':''}" data-act="ctick" data-p="${p.id}" data-v="${a.id}">Mark done</button>`}</td>
        <td>${a.ph?img(a.ph,'','s'):'<small style="color:var(--mute)">–</small>'}</td>
-       ${sup()?`<td style="white-space:nowrap"><button class="btn sm" data-act="caudit" data-p="${p.id}" data-v="${a.id}" title="Supervisor audit">🔍 Audit</button> <button class="btn sec sm" data-act="cedit" data-p="${p.id}" data-v="${a.id}" title="Change">✏️</button> <button class="btn sec sm" data-act="cdel" data-p="${p.id}" data-v="${a.id}" title="Remove">✕</button></td>`:''}</tr>`}).join('');
+       ${`<td style="white-space:nowrap">${sup()?`<button class="btn sm" data-act="caudit" data-p="${p.id}" data-v="${a.id}" title="Supervisor audit">Audit</button> `:''}<button class="btn sec sm" data-act="cedit" data-p="${p.id}" data-v="${a.id}" title="Change">✏️</button> <button class="btn sec sm" data-act="cdel" data-p="${p.id}" data-v="${a.id}" title="Remove">✕</button></td>`}</tr>`}).join('');
     return `<div class="card"><div class="row" style="justify-content:space-between;margin-bottom:6px">
       <h3 style="margin:0">🧹 ${esc(p.name)} ${attTag(l.att)} ${flags(l)?tag('a',flags(l)):''}</h3>
       <div class="row">${!l.in&&!off?`<button class="btn ok sm" data-act="login" data-p="${p.id}">▶ In</button>`:''}${l.in?`<small>In <b>${l.in}</b></small>`:''}
@@ -664,25 +693,25 @@ function rCleanSimple(){
        <select class="inl" style="width:auto;padding:6px" data-act="attsel" data-p="${p.id}"><option value="">Attendance…</option>${['P','H','A','L'].map(x=>`<option value="${x}" ${l.att===x?'selected':''}>${attName[x]}</option>`).join('')}</select>
        ${sup()?`<button class="btn sec sm" data-act="checkin" data-p="${p.id}">✅ Check-in</button>`:''}</div></div>
      ${off&&al.some(a=>a.st!=='done')?`<div class="banner">${esc(p.name)} is ${attName[l.att].toLowerCase()} today – move the tasks with ✏️ or remove them.</div>`:''}
-     ${al.length?`<div class="tw"><table><tr><th>Time</th><th>Task / area</th><th>Tick</th><th>Image</th>${sup()?'<th></th>':''}</tr>${rows}</table></div>`:'<div class="empty" style="padding:10px">No tasks for this day.</div>'}
-     <div class="row" style="justify-content:space-between;margin-top:8px"><small style="color:var(--mute)"><b>${dn}/${al.length}</b> done</small>${sup()?`<button class="btn sm sec" data-act="cadd" data-p="${p.id}">＋ Add task</button>`:''}</div></div>`}).join('');
+     ${al.length?`<div class="tw"><table class="stack"><tr><th>Time</th><th>Task / area</th><th>Tick</th><th>Image</th><th></th></tr>${rows}</table></div>`:'<div class="empty" style="padding:10px">No tasks for this day.</div>'}
+     <div class="row" style="justify-content:space-between;margin-top:8px"><small style="color:var(--mute)"><b>${dn}/${al.length}</b> done</small><button class="btn sm sec" data-act="cadd" data-p="${p.id}">＋ Add task</button></div></div>`}).join('');
 }
 function rPlan(){
   const ps=gStaff('clean');
-  let h=`<div class="card"><h3>📅 Cleaning plan – repeats automatically</h3><small style="color:var(--mute)">Set each cleaner's tasks once. Every day the matching tasks appear on the Today list by themselves. Changes apply from today onward; past days stay as they were.</small></div>`;
+  let h=`<div class="card"><h3>Standing Schedule</h3><small style="color:var(--mute)">A task entered once stays the same every day until it is changed. A change made on one day applies to that day only, unless you choose “every day from now”. Past days are never altered.</small></div>`;
   if(!ps.length)return h+'<div class="card empty">Add cleaners in Manage first.</div>';
   h+=`<div class="card"><h3>Week at a glance</h3><div class="tw"><table><tr><th>Cleaner</th>${WD.map(d=>`<th style="text-align:center">${d}</th>`).join('')}<th>Monthly</th></tr>${ps.map(p=>`<tr><td><b>${esc(p.name)}</b></td>${WD.map((_,i)=>{const n=CFG.cplan.filter(it=>it.pid===p.id&&it.rep!=='month'&&(it.days||[]).includes(i)).length;return `<td style="text-align:center">${n?n+(n>1?' tasks':' task'):'<span style="color:var(--mute)">–</span>'}</td>`}).join('')}<td style="text-align:center">${CFG.cplan.filter(it=>it.pid===p.id&&it.rep==='month').length||'–'}</td></tr>`).join('')}</table></div></div>`;
   return h+ps.map(p=>{
     const its=CFG.cplan.filter(it=>it.pid===p.id).sort((a,b)=>(a.rep==='month')-(b.rep==='month')||a.from.localeCompare(b.from));
-    return `<div class="card"><div class="row" style="justify-content:space-between"><h3 style="margin:0">🧹 ${esc(p.name)}</h3>${sup()?`<button class="btn sm" data-act="cadd" data-p="${p.id}" data-plan="1">＋ Add to plan</button>`:''}</div>
-     ${its.length?`<div class="tw" style="margin-top:8px"><table><tr><th>Time</th><th>Task / area</th><th>Repeats</th>${sup()?'<th></th>':''}</tr>${its.map(it=>`<tr><td style="white-space:nowrap">${it.from}–${it.to}</td><td><b>${esc(aName(it))}</b>${it.note?`<br><small style="color:var(--mute)">${esc(it.note)}</small>`:''}</td><td>${tag(it.rep==='month'?'working':'',repText(it))}</td>${sup()?`<td style="white-space:nowrap"><button class="btn sec sm" data-act="pedit" data-v="${it.id}">✏️</button> <button class="btn sec sm" data-act="pdel" data-v="${it.id}">✕</button></td>`:''}</tr>`).join('')}</table></div>`:'<div class="empty" style="padding:10px">No plan yet.</div>'}</div>`}).join('');
+    return `<div class="card"><div class="row" style="justify-content:space-between"><h3 style="margin:0">🧹 ${esc(p.name)}</h3><button class="btn sm" data-act="cadd" data-p="${p.id}" data-plan="1">＋ Add to schedule</button></div>
+     ${its.length?`<div class="tw" style="margin-top:8px"><table><tr><th>Time</th><th>Task / area</th><th>Repeats</th><th></th></tr>${its.map(it=>`<tr><td style="white-space:nowrap">${it.from}–${it.to}</td><td><b>${esc(aName(it))}</b>${it.note?`<br><small style="color:var(--mute)">${esc(it.note)}</small>`:''}</td><td>${tag(it.rep==='month'?'working':'',repText(it))}</td>${`<td style="white-space:nowrap"><button class="btn sec sm" data-act="pedit" data-v="${it.id}">✏️</button> <button class="btn sec sm" data-act="pdel" data-v="${it.id}">✕</button></td>`}</tr>`).join('')}</table></div>`:'<div class="empty" style="padding:10px">No plan yet.</div>'}</div>`}).join('');
 }
 async function taskDialog(title,o,mode){
   const cs=gStaff('clean'),wd=wdOf(S.date),dom=Number(S.date.slice(8));
   const areaOpts=[{v:'',l:'– Other task (type below) –'}].concat(areas.clean.map(a=>({v:a.id,l:a.name})));
-  const reps=[{v:'once',l:'Today only ('+fmtS(S.date)+')'},{v:'ms',l:'Every day Mon – Sat'},{v:'all',l:'Every day incl. Sunday'},{v:'wk',l:'Weekly – every '+WD[wd]},{v:'mo',l:'Monthly – on the '+ord(dom)},{v:'cus',l:'Selected days (type below)'}];
+  const reps=[{v:'ms',l:'Every day, Mon – Sat (stays until changed)'},{v:'once',l:'This day only ('+fmtS(S.date)+')'},{v:'all',l:'Every day incl. Sunday'},{v:'wk',l:'Weekly – every '+WD[wd]},{v:'mo',l:'Monthly – on the '+ord(dom)},{v:'cus',l:'Selected days (type below)'}];
   const f=[{k:'p',label:'Cleaner',type:'select',opts:cs.map(x=>({v:x.id,l:x.name})),val:o.pid},{k:'f',label:'From',type:'time',val:o.from||''},{k:'t',label:'To',type:'time',val:o.to||''},{k:'a',label:'Area',type:'select',opts:areaOpts,val:o.aid||''},{k:'x',label:'Other task (if not an area)',val:o.task||'',ph:'e.g. Clean water cooler'},{k:'n',label:'Note (optional)',val:o.note||''},
-    {k:'r',label:'Repeat',type:'select',opts:mode==='plan'?reps.slice(1):reps,val:o.rep||(mode==='plan'?'ms':'once')},{k:'cd',label:'Selected days (only for "Selected days", e.g. Mon, Wed, Fri)',val:o.cd||''}];
+    {k:'r',label:'Repeat',type:'select',opts:mode==='plan'?reps.filter(x=>x.v!=='once'):reps,val:o.rep||'ms'},{k:'cd',label:'Selected days (only for "Selected days", e.g. Mon, Wed, Fri)',val:o.cd||''}];
   const r=await ask(title,f,'Save');
   if(!r)return null;
   if(!r.f||!r.t){toast('Enter From and To time');return null}
@@ -737,7 +766,7 @@ function rTimeline(){
         audits(a).filter(c=>inS(c.t)).forEach(c=>{o+=`<div style="margin-top:2px">${audChip(c)} ${c.ph?img(c.ph,'','s'):''}</div>`});
       });
       if(inS(l.out))o+=`<div><small>⏹ Out ${l.out}${early(l)?' <b style="color:var(--bad)">early</b>':''}</small></div>`;
-      if(!act.length&&!o&&l.in&&!(l.out&&mins(l.out)<a0)&&mins(l.in)<a1&&!(l.lunchOut&&mins(l.lunchOut)<a1&&(!l.lunchIn||mins(l.lunchIn)>=a0)))o=`<small style="color:var(--bad)">No task</small>`;
+      if(!act.length&&!o&&l.in&&!(l.out&&mins(l.out)<a0)&&mins(l.in)<a1&&!(l.lunchOut&&mins(l.lunchOut)<a1&&(!l.lunchIn||mins(l.lunchIn)>=a0)))o=`<small style="color:var(--bad)">Unallocated</small>`;
       if(l.lunchOut&&mins(l.lunchOut)<a1&&(!l.lunchIn||mins(l.lunchIn)>a0)&&!act.length)bg='#f4f4f2';
       return `<td style="vertical-align:top;min-width:150px;${bg?'background:'+bg:''}">${o}</td>`;
     }).join('');
@@ -745,7 +774,7 @@ function rTimeline(){
     rows+=`<tr style="${now?'outline:2px solid var(--acc);outline-offset:-2px':''}"><th style="position:sticky;left:0;background:${now?'var(--acc)':'#eef3f0'};color:${now?'#fff':'var(--ink)'};white-space:nowrap;vertical-align:top;z-index:1">${hm(a0)}${now?'<br><small>NOW</small>':''}</th>${cells}<td style="vertical-align:top;min-width:160px;background:#faf7ff">${sv}</td></tr>`;
   }
   const totA=L.reduce((n,l)=>n+(l.alloc||[]).reduce((k,a)=>k+audits(a).length,0),0);
-  return h+`<div class="card"><div class="row" style="justify-content:space-between"><h3 style="margin:0">🕒 Cleaning timeline – ${fmtD(S.date)}</h3><small style="color:var(--mute)">${totA} supervisor audits · green done · yellow working · red not done / overdue · grey lunch / absent</small></div>
+  return h+`<div class="card"><div class="row" style="justify-content:space-between"><h3 style="margin:0">Housekeeping Timeline – ${fmtD(S.date)}</h3><small style="color:var(--mute)">${totA} supervisor audits · green done · yellow working · red not done / overdue · grey lunch / absent</small></div>
    <div class="tw" style="margin-top:8px"><table><tr><th style="position:sticky;left:0;z-index:2">Time</th>${ps.map((p,i)=>`<th>${esc(p.name)}<br>${attTag(L[i].att)}</th>`).join('')}<th>🔍 Supervisor</th></tr>${rows}</table></div></div>`;
 }
 function rChart(){
@@ -1112,19 +1141,19 @@ const ACT={
     logVisit({group:'clean',type:'Task done',pid:p.id,who:p.name,where:aName(a)+' '+a.from+'–'+a.to,ph});
   },
   cadd:async d=>{
-    const plan=!!d.plan,r=await taskDialog(plan?'Add to plan':'Add task',{pid:d.p,from:hhmm()},plan?'plan':'day');
+    const plan=!!d.plan,r=await taskDialog(plan?'Add to schedule':'Add task',{pid:d.p,from:hhmm()},plan?'plan':'day');
     if(!r)return;const tp=staff.find(x=>x.id===r.p);
-    if(r.r!=='once'){const it=planItem(r);CFG.cplan.push(it);savePlan();toast('Added to plan – '+repText(it));render();return}
+    if(r.r!=='once'){const it=planItem(r);CFG.cplan.push(it);savePlan();toast('Added to schedule – '+repText(it));render();return}
     mutate(tp,l=>{l.alloc.push({id:'a'+uid(),aid:r.a,task:r.task,from:r.f,to:r.t,st:'pending',t:'',note:r.n,ph:'',checks:[]})},'clean');
     logVisit({group:'clean',type:'Task added',pid:tp.id,who:tp.name,where:aName({aid:r.a,task:r.task})+' '+r.f+'–'+r.t});
   },
   cedit:async d=>{
     const p=cur(),a=getLog(p,'clean').alloc.find(x=>x.id===d.v);if(!a)return;
     const f=[{k:'p',label:'Cleaner',type:'select',opts:gStaff('clean').map(x=>({v:x.id,l:x.name})),val:p.id},{k:'f',label:'From',type:'time',val:a.from},{k:'t',label:'To',type:'time',val:a.to},{k:'a',label:'Area',type:'select',opts:[{v:'',l:'– Other task (type below) –'}].concat(areas.clean.map(z=>({v:z.id,l:z.name}))),val:a.aid||''},{k:'x',label:'Other task (if not an area)',val:a.task||''},{k:'n',label:'Note',val:a.note||''}];
-    if(a.pl)f.push({k:'s',label:'Apply change to',type:'select',opts:['Today only','Today and every day going forward (plan)']});
+    if(a.pl)f.push({k:'s',label:'Apply change to',type:'select',opts:['This day only','Every day from now (update schedule)']});
     const r=await ask('Change task',f,'Save');if(!r)return;
     if(!r.a&&!r.x){toast('Choose an area or type the task');return}
-    const upd={aid:r.a,task:r.a?'':r.x,from:r.f||a.from,to:r.t||a.to,note:r.n},fwd=(r.s||'').startsWith('Today and');
+    const upd={aid:r.a,task:r.a?'':r.x,from:r.f||a.from,to:r.t||a.to,note:r.n},fwd=(r.s||'').startsWith('Every day');
     if(a.pl&&fwd){const it=CFG.cplan.find(z=>z.id===a.pl);if(it){Object.assign(it,upd,{pid:r.p});savePlan()}}
     if(r.p!==p.id){
       const tp=staff.find(x=>x.id===r.p),moved=Object.assign(clone(a),upd,{id:'a'+uid()});if(!fwd)delete moved.pl;
@@ -1136,10 +1165,10 @@ const ACT={
   },
   cdel:async d=>{
     const p=cur(),a=getLog(p,'clean').alloc.find(x=>x.id===d.v);if(!a)return;
-    const r=await ask('Remove – '+aName(a)+' '+a.from+'–'+a.to,[{k:'s',label:'Remove',type:'select',opts:a.pl?['Today only','From the plan (today and every day going forward)']:['Today only']}],'Remove');
+    const r=await ask('Remove – '+aName(a)+' '+a.from+'–'+a.to,[{k:'s',label:'Remove',type:'select',opts:a.pl?['This day only','Every day from now (remove from schedule)']:['This day only']}],'Remove');
     if(!r)return;
     mutate(p,l=>{l.alloc=l.alloc.filter(z=>z.id!==a.id);if(a.pl){l.skip=l.skip||[];l.skip.push(a.pl)}},'clean');
-    if(r.s.startsWith('From')){const it=CFG.cplan.find(z=>z.id===a.pl);CFG.cplan=CFG.cplan.filter(z=>z.id!==a.pl);savePlan();if(it)syncPlanItem(it,true)}
+    if(r.s.startsWith('Every day')){const it=CFG.cplan.find(z=>z.id===a.pl);CFG.cplan=CFG.cplan.filter(z=>z.id!==a.pl);savePlan();if(it)syncPlanItem(it,true)}
   },
   pedit:async d=>{
     const it=CFG.cplan.find(z=>z.id===d.v);if(!it)return;
