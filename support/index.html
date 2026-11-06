@@ -193,7 +193,7 @@ const DEF={
  water:mk('water',['Main Gate','Reception','Ground Floor','First Floor','Second Floor','Staff Room','Library','Science Lab','Playground','Canteen']),
  garden:mk('garden',['Outer Railing','Outer Plants','Main Gate Beds','Front Lawn','Playground Edge','Rear Garden','Corridor Pots','Terrace Plants']),
  clean:mk('clean',['Front Area','Reception & Lobby','Ground Floor Classes','First Floor Classes','Second Floor Classes','Third Floor Classes','Staircases','Staff Room','Library & Labs','Office Area']),
- guard:mk('guard',['Main Gate','Back Gate','Parking','Playground','Building Round'])
+ guard:mk('guard',['Gate 1','Gate 2','Gate 3'])
 };
 const DEF_WASH=mk('wash',['Ground Floor – Left','Ground Floor – Right','First Floor – Left','First Floor – Right','Second Floor – Left','Second Floor – Right','Third Floor – Left','Third Floor – Right','Office Area']);
 const DEF_CHK={
@@ -230,7 +230,7 @@ const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const tag=(c,t)=>`<span class="tag ${c}">${t}</span>`;
 
 let S={tab:'today',group:'water',sub:{},date:today(),pid:null,rep:'day',month:today().slice(0,7),rpid:'',role:ls('fis_role')||'staff',me:ls('fis_me')||'',vg:'all',chart:'person',iss:'open'};
-let staff=[],areas=clone(DEF),CFG={wash:clone(DEF_WASH),checks:clone(DEF_CHK),set:clone(DEF_SET),routines:[],cplan:[],groom:mk('groom',['Main Gate Guard Room','Back Gate Cabin']),groster:[]};let synced=false;
+let staff=[],areas=clone(DEF),CFG={wash:clone(DEF_WASH),checks:clone(DEF_CHK),set:clone(DEF_SET),routines:[],cplan:[],groom:mk('groom',['Guard Room']),groster:[]};let synced=false;
 const COLL=['log','visits','wash','green','issues','tasks','refs','routine'];
 const D={};COLL.forEach(c=>D[c]={});
 let db=null,lastCsv='';
@@ -452,7 +452,7 @@ function board(){
 }
 /* ---------- guard: post-wise audit (whoever is on duty there) + simple guard room check + duty roster ---------- */
 const GA={
-  found:{l:'Found at',o:['At post','In guard room','Campus round / ramp','Not found'],ok:['At post','Campus round / ramp'],bad:['Not found']},
+  found:{l:'Found at',o:['At gate','In guard room','Campus round / ramp','Not found'],ok:['At gate','Campus round / ramp'],bad:['Not found']},
   posture:{l:'Posture',o:['Standing','Sitting'],ok:['Standing'],bad:[]},
   beh:{l:'Behaviour',o:['Good','Average','Poor'],ok:['Good'],bad:['Poor']},
   lang:{l:'Language',o:['Good','Average','Poor'],ok:['Good'],bad:['Poor']},
@@ -478,7 +478,7 @@ function guardAudits(){
      <div style="font-size:13px;margin:6px 0">On duty: <b>${od?esc(od.p.name):'<span style="color:var(--bad)">nobody set</span>'}</b>${od&&od.from?` <small>(${od.from}–${od.to})</small>`:''}</div>
      <div style="font-size:13px">${lv?`Last audit <b>${lv.t}</b>${isT?' · '+ago(lv.t):''} · ${esc(lv.who)}<br>${gaBad(lv)?tag('bad','Needs attention'):tag('ok','All good')} <small>${pa.length} today</small>`:'<span style="color:var(--mute)">No audit yet</span>'}</div>
      <button class="btn" style="margin-top:8px;width:100%" data-act="gaudit" data-v="${po.id}">🔍 Audit now</button></div>`}).join('');
-  return `<div class="card"><h3>👮 Guard audit – by post</h3><small style="color:var(--mute)">Tap Audit now at the post. The guard on duty there is filled in from the roster – change him if someone else is standing. Due every ${ev} min.</small>
+  return `<div class="card"><h3>👮 Guard audit – by gate</h3><small style="color:var(--mute)">Tap Audit now at the gate. The guard on duty there is filled in from the roster – change him if someone else is standing. Due every ${ev} min.</small>
    <div class="gcards" style="margin-top:10px">${cards||'<div class="empty">Add posts in Manage.</div>'}</div></div>
    <div class="card"><h3>📋 Audit log – ${fmtD(S.date)} (${au.length})</h3>${au.length?`<div class="tw"><table><tr><th>Time</th><th>Post</th><th>Guard</th>${Object.keys(GA).map(k=>`<th>${GA[k].l}</th>`).join('')}<th>Photo</th><th>Remark</th><th>By</th></tr>${au.map(v=>`<tr${gaBad(v)?' style="background:#fff7f7"':''}><td><b>${v.t}</b></td><td>${esc(v.where)}</td><td><b>${esc(v.who)}</b></td>${Object.keys(GA).map(k=>`<td>${gaTag(k,v[k])}</td>`).join('')}<td>${img(v.ph,'','s')}</td><td>${esc(v.remark||'')}</td><td><small>${esc(v.by||'')}</small></td></tr>`).join('')}</table></div>`:'<div class="empty">No audit yet today.</div>'}</div>`;
 }
@@ -489,14 +489,14 @@ function guardRooms(){
     return `<div class="gc ${due?'miss':''}"><div class="row" style="justify-content:space-between"><b>🏠 ${esc(r.name)}</b>${due?tag('a','⏰ due'):''}</div>
      <div style="margin:6px 0;font-size:13px">${lv?items.map(k=>`<div>${lv.checks[k]==='bad'?'<b style="color:var(--bad)">✖</b>':lv.checks[k]==='ok'?'<b style="color:var(--ok)">✔</b>':'·'} ${esc(k)}</div>`).join('')+`<small>Checked ${lv.t} by ${esc(lv.by||'')}</small>`:'<span style="color:var(--mute)">Not checked yet</span>'}</div>
      <button class="btn sm" data-act="ginspect" data-v="${r.id}">🔍 Check room</button></div>`}).join('');
-  return `<div class="card"><h3>🏠 Guard room check</h3><small style="color:var(--mute)">${items.length} quick ticks for the room itself – not for any guard. Due every ${Math.round(ev/60)} h.</small>
+  return `<div class="card"><h3>🏠 Guard room check</h3><small style="color:var(--mute)">${items.length} quick ticks for the guard room itself – not for any guard. Due every ${Math.round(ev/60)} h.</small>
    <div class="gcards" style="margin-top:10px">${cards||'<div class="empty">Add guard rooms in Manage.</div>'}</div>
    ${vs.length?`<div class="tw" style="margin-top:10px"><table><tr><th>Time</th><th>Room</th><th>Result</th><th>Photo</th><th>Remark</th><th>By</th></tr>${vs.map(v=>`<tr><td><b>${v.t}</b></td><td>${esc(v.where)}</td><td>${badList(v.checks).length?badList(v.checks).map(x=>tag('bad','✖ '+esc(x))).join(' '):tag('ok','✔ All OK')}</td><td>${vph(v,'s')}</td><td>${esc(v.remark||'')}</td><td><small>${esc(v.by||'')}</small></td></tr>`).join('')}</table></div>`:''}</div>`;
 }
 function guardRoster(){
   const ps=posts();
   return `<div class="card"><div class="row" style="justify-content:space-between"><h3 style="margin:0">🗓 Duty roster – who stands where, when</h3>${sup()?'<button class="btn sm sec" data-act="gradd">＋ Add duty</button>':''}</div>
-   <small style="color:var(--mute)">Repeats every day. Used to fill the guard name when you audit a post.</small>
+   <small style="color:var(--mute)">Repeats every day. Used to fill the guard name when you audit a gate.</small>
    ${CFG.groster.length?`<div class="tw" style="margin-top:8px"><table><tr><th>Post</th><th>Time</th><th>Guard</th>${sup()?'<th></th>':''}</tr>${ps.map(po=>CFG.groster.filter(r=>r.post===po.id).sort((a,b)=>a.from.localeCompare(b.from)).map(r=>{const p=staff.find(x=>x.id===r.pid),now=S.date===today()&&mins(r.from)<=nowM()&&nowM()<mins(r.to);return `<tr${now?' style="background:#ecfdf5"':''}><td>${esc(po.name)}</td><td>${r.from}–${r.to}${now?' '+tag('ok','now'):''}</td><td><b>${esc(p?p.name:'(removed)')}</b></td>${sup()?`<td><button class="btn sec sm" data-act="gredit" data-v="${r.id}">✏️</button> <button class="btn sec sm" data-act="grdel" data-v="${r.id}">✕</button></td>`:''}</tr>`}).join('')).join('')}</table></div>`:'<div class="empty" style="padding:10px">No roster yet – add who stands at each post and when.</div>'}</div>`;
 }
 function guardLog(){
@@ -504,9 +504,9 @@ function guardLog(){
   const rv=Object.values(D.visits).filter(v=>v.type==='Guard room inspection'&&v.date===S.date).sort((a,b)=>a.t.localeCompare(b.t));
   const lp={},lr={};au.forEach(v=>lp[v.post]=v);rv.forEach(v=>lr[v.rid]=v);
   const items=[];
-  Object.values(lp).forEach(v=>{const b=Object.keys(GA).filter(k=>v[k]&&!GA[k].ok.includes(v[k]));if(b.length)items.push(`<b>${esc(v.where)} – ${esc(v.who)}</b> (${v.t}): ${v.found==='Not found'?'<b style="color:var(--bad)">not found at post</b>':b.map(k=>GA[k].l+': '+esc(v[k])).join(' · ')}`)});
+  Object.values(lp).forEach(v=>{const b=Object.keys(GA).filter(k=>v[k]&&!GA[k].ok.includes(v[k]));if(b.length)items.push(`<b>${esc(v.where)} – ${esc(v.who)}</b> (${v.t}): ${v.found==='Not found'?'<b style="color:var(--bad)">not found at gate</b>':b.map(k=>GA[k].l+': '+esc(v[k])).join(' · ')}`)});
   Object.values(lr).forEach(v=>{const b=badList(v.checks);if(b.length)items.push(`<b>${esc(v.where)}</b> (${v.t}): not OK – ${b.map(esc).join(' · ')}`)});
-  return (items.length?`<div class="card" style="border-color:#fca5a5"><h3>⚠️ Needs attention now</h3>${items.map(x=>`<div class="obs inc">${x}</div>`).join('')}<small style="color:var(--mute)">From the latest audit of each post and room – clears when the next check is fine.</small></div>`:'')+guardAudits()+guardRooms()+guardRoster();
+  return (items.length?`<div class="card" style="border-color:#fca5a5"><h3>⚠️ Needs attention now</h3>${items.map(x=>`<div class="obs inc">${x}</div>`).join('')}<small style="color:var(--mute)">From the latest audit of each gate and the guard room – clears when the next check is fine.</small></div>`:'')+guardAudits()+guardRooms()+guardRoster();
 }
 const badList=c=>Object.keys(c||{}).filter(k=>c[k]==='bad');
 async function rosterDialog(x){
