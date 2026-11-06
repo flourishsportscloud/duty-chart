@@ -99,7 +99,13 @@ function pmSave_(token,id,patch){
   const j=idx>=0?parse_(all[idx][5]):{};j.cells=j.cells||{};j.rem=j.rem||{};
   const now=Date.now();let n=0;
   Object.keys((patch&&patch.cells)||{}).forEach(k=>{
-    const c=patch.cells[k]||{};const s=["","D","N","A"].indexOf(c.s)>=0?c.s:"";
+    const c=patch.cells[k]||{};const key=String(k).slice(0,80);
+    if(Array.isArray(c.ops)){                        // timed checks: the server stamps each one
+      const obs=((j.cells[key]&&j.cells[key].obs)||[]).slice();
+      c.ops.slice(0,20).forEach(o=>{if(o==="add"&&obs.length<10)obs.push(now);else if(o==="pop")obs.pop()});
+      j.cells[key]={s:obs.length?"D":"",by:name,at:now,l:0,obs:obs};n++;return;
+    }
+    const s=["","D","N","A"].indexOf(c.s)>=0?c.s:"";
     const o={s:s,by:name,at:now,l:c.l?1:0};
     if(c.n!==undefined){o.n=(c.n===""||c.n==null||isNaN(Number(c.n)))?"":String(Number(c.n))}
     j.cells[String(k).slice(0,80)]=o;n++;
