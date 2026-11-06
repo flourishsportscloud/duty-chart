@@ -136,6 +136,7 @@ td.g{background:#e3f6ec;color:var(--green)}td.r{background:#fde8e8;color:var(--r
 .blk.over .box:not(.d):not(.n):not(.a){border-color:var(--red);border-style:solid}.blk.over .nbox input:not(.f){border-color:var(--red);border-style:solid}
 .due{border-radius:10px;padding:9px 11px;margin-bottom:10px;font-size:13px;background:#e9eefc;color:#2a3f86}.due.od{background:#fde8e8;color:#a32727}.due.ds{background:#fff4dc;color:#7a5600}.due.ok2{background:#e3f6ec;color:#17794a}
 .legend{font-size:11px;color:var(--mut);margin-top:6px}
+.box.obs .tm{font-size:9px;line-height:11px;text-align:left;padding:0 2px}
 .phs{display:flex;flex-wrap:wrap;gap:6px;flex:1;align-items:center}
 .ph{border:1px solid var(--line);border-radius:8px;padding:2px;background:#fff;width:64px;font-size:9px;color:var(--mut)}
 .ph img{display:block;width:58px;height:58px;object-fit:cover;border-radius:6px;background:#eef1f7}
@@ -166,42 +167,32 @@ const PLS=[
 const SENIORS=[{id:'dean',name:'Dean of Academics'},{id:'director',name:'Director–Admin'}];
 const PEOPLE=[...PLS.map(p=>({id:p.id,name:p.name,pl:p.id})),...SENIORS.map(s=>({id:s.id,name:s.name,senior:true}))];
 
-/* Day Plan — tasks from the Daily Operational Report (6-day sheet). kind:'num' = enter a count per section. */
+/* Day Plan — PM PLAN – DAY PLAN. kind:'num' = a count per section. rem:1 remark, rem:'n' number + remark,
+   rem:'p' photo log. yn:1 shows YES / NO. multi:1 = tap each time you check (every tap is saved with its time).
+   one:1 = one box for the whole PM (not per section). Block ids are fixed server-side for due-time overrides. */
 const DP=[
-{id:'att',name:'Attendance',tag:'numbers',time:'08:30',items:[
- {id:'total',name:'Total Students',kind:'num'},{id:'present',name:'Present',kind:'num'},{id:'absent',name:'Absent',kind:'num'},{id:'late',name:'Late Comers',kind:'num'}]},
-{id:'morn',name:'Morning Operations',tag:'7:30 – 8:15 AM',time:'08:15',items:[
- {id:'assembly',name:'Assembly',rem:1},{id:'testexec',name:'Test execution',rem:1},{id:'fbcase',name:'FB case',rem:1},
- {id:'studybase',name:'Verify StudyBase attendance & Att. Register',rem:1},
- {id:'diaryproof',name:'Diary proof Reading, remarks & Defaulter',rem:1},
- {id:'lunchobs',name:'Lunch Observation & Cases',rem:1},{id:'washcases',name:'Washroom Cases',rem:1},{id:'stayback',name:'Stayback lunch Case',rem:1},
- {id:'dcrtime',name:'DCR Time – Book / Notebook / Assignment Gap',rem:1},
- {id:'dcrsame',name:'DCR – Same / previous day absentees / Defaulter',rem:1},
- {id:'dcraction',name:'DCR Action – Absentee / Incomplete work',rem:1}]},
-{id:'admin',name:'Administrative & Student Monitoring',time:'11:00',items:[
- {id:'route',name:'Review route/transport updates',rem:1},{id:'cocurr',name:'Review Co-Curricular Changes',rem:1},{id:'uniform',name:'Uniform Defaulter',rem:1},
- {id:'stationery',name:'Stationery',rem:1},{id:'lf1',name:'Lost & Found',rem:1},{id:'stayback2',name:'Stay-back monitoring',rem:1},
- {id:'distround',name:'Distribution rounds',rem:1},{id:'overview',name:'Overview – Abacus, Art, Photography, FL',rem:1}]},
-{id:'welfare',name:'Student Welfare',tag:'enter numbers',time:'14:00',items:[
- {id:'medical',name:'Medical',kind:'num'},{id:'lf2',name:'Lost & Found',kind:'num'},{id:'lunchmon',name:'Lunch Break Monitoring',kind:'num'},{id:'early',name:'Early Leavers (& Due Work)',kind:'num'}]},
-{id:'reports',name:'Reports – Status',time:'14:30',items:[
- {id:'assessrep',name:'Assessment Report / Club-10 monitoring',rem:1},{id:'assignrep',name:'Assignment Report',rem:1},{id:'mentorrep',name:'Mentor Checking Report',rem:1},
- {id:'folder',name:'Class Folder Review',rem:1},{id:'registers',name:'Record registers',rem:1},{id:'proofrep',name:'Proofreading Report',rem:1}]},
-{id:'comm',name:'Communication – Numbers & Status',tag:'enter numbers for SMS',time:'15:00',items:[
- {id:'diarysms',name:'Diary Defaulter SMS',kind:'num'},{id:'dcrsms',name:'DCR Defaulter SMS',kind:'num'},{id:'testsms',name:'Test Defaulter SMS',kind:'num'},
- {id:'diaryparent',name:'Diary to Parent',rem:1},{id:'lessonpdf',name:'Lesson PDF',rem:1}]},
-{id:'audit',name:'Class Academic Audit – Status',time:'13:00',items:[
- {id:'lessoninsp',name:'Lesson Inspection',rem:1},{id:'learninginsp',name:'Learning Inspection',rem:1},{id:'teachobs',name:'Teaching Observation',rem:1},
- {id:'lessoninit',name:'Lesson Initiative',rem:1},{id:'motivation',name:'Motivation Activities',rem:1},{id:'bookreading',name:'Book Reading – Review / Library',rem:1}]},
-{id:'next',name:'Next Day Planning',time:'15:30',items:[
- {id:'booknb',name:'Book & Notebook analysis – for Next Day / Same Day',rem:1},{id:'shareplan',name:'Share next day planning points / Reminders',rem:1},
- {id:'epl',name:'EPL / Teaching Aid / Activity collection & supply',rem:1},{id:'schedrev',name:'Schedule Review Discussion',rem:1},
- {id:'testsched',name:'Test schedule / Paper / PDF',rem:1},{id:'pptready',name:'Activity / PPT / Video readiness',rem:1},
- {id:'nextdiary',name:'Next day diary',rem:1},{id:'cmplan',name:'CM Plan',rem:1},{id:'cmrep',name:'CM reports Review',rem:1}]},
-{id:'campus',name:'Campus Monitoring',time:'12:00',items:[
- {id:'washrooms',name:'Washrooms',subs:[['dry','Dryness'],['clean','Cleanliness'],['supplies','Supplies'],['images','Washroom Images'],['lf','Lights/Fans']]},
- {id:'corridors',name:'Corridors',subs:[['lang','Language, Behaviour & Discipline'],['line','Line discipline & Silence'],['teachbreak','Teacher break management'],['helper','Helper supervision']]},
- {id:'infra',name:'Infrastructure',subs:[['furn','Furniture'],['lights','Lights'],['fans','Fans'],['ac','AC'],['water','Water bottles'],['cupb','Classroom cupboards'],['stock','Stock requirements'],['dmr','DMR']]}]}
+{id:'att',name:'Attendance',time:'08:30',items:[
+ {id:'total',name:'Total Attendance',kind:'num'},{id:'present',name:'Present',kind:'num'},{id:'absent',name:'Absent',kind:'num'},
+ {id:'latec',name:'Late Comer',rem:1},{id:'sbverify',name:'Verify SB Attendance & Register',rem:1},
+ {id:'uniformd',name:'Uniform Defaulter',rem:1},{id:'earlyl',name:'Early Leaver',rem:'n'}]},
+{id:'morn',name:'Morning Observation',time:'08:30',items:[
+ {id:'assembly',name:'Assembly',rem:1},{id:'fruit',name:'Fruit Break',rem:1},{id:'testexec',name:'Test Execution',rem:1}]},
+{id:'admin',name:'DCR – Action',time:'10:30',items:[
+ {id:'dcrerr',name:'Errors',rem:1},{id:'dcrabs',name:'Absentees Work Allocation',rem:1},
+ {id:'dcrbook',name:'Book',rem:'n',yn:1},{id:'dcrnb',name:'Notebook',rem:'n',yn:1},{id:'dcrassign',name:'Assignment',rem:'n',yn:1},
+ {id:'dcrincomp',name:'Incomplete Work Action',rem:1},{id:'dcrdef',name:'Defaulters',rem:'n'},{id:'dcrprev',name:'Previous Day Defaulter Collection',rem:1}]},
+{id:'reports',name:'Proof Reading',tag:'number / remark',time:'11:00',items:[
+ {id:'proof',name:'Proof Reading',rem:'n',subs:[['diary','Diary'],['book','Book'],['notebook','Notebook']]}]},
+{id:'comm',name:'PM Rounds',time:'12:30',items:[
+ {id:'lfr',name:'Lost and Found',rem:1},{id:'statrev',name:'Stationery Review',rem:1},{id:'sbmon',name:'Stayback Monitoring',rem:1},
+ {id:'sblunchr',name:'Stayback Lunch',rem:1},{id:'distr',name:'Distribution Round',rem:1},{id:'bookrev',name:'Book Review',rem:1}]},
+{id:'welfare',name:'Student Welfare',time:'14:00',items:[
+ {id:'medicalr',name:'Medical',rem:1},{id:'lunchcase',name:'Lunch Observation – Case',rem:1},{id:'washcase',name:'Washroom Cases',rem:1},{id:'sblunchcase',name:'Stayback Lunch Case',rem:1}]},
+{id:'campus',name:'Washroom',tag:'tap each time you check',time:null,items:[
+ {id:'wr_dry',name:'Dryness',multi:1,one:1},{id:'wr_clean',name:'Cleanliness',multi:1,one:1},{id:'wr_supply',name:'Supplies',multi:1,one:1},
+ {id:'wr_img',name:'Washroom Images',rem:'p',one:1},{id:'wr_light',name:'Lights',multi:1,one:1},{id:'wr_fan',name:'Fans',multi:1,one:1}]},
+{id:'audit',name:'Other Subjects Observations',time:null,items:[
+ {id:'osskill',name:'Skill Course',rem:1},{id:'osfl',name:'Foreign Language',rem:1},{id:'osart',name:'Art',rem:1}]}
 ];
 /* Day End — PM PLAN – DAY END TASKS. sec:1 = marked per section; otherwise one tick per item.
    rem:'n' = number + remark per section, rem:'c' = number + colour, rem:'p' = photo log per section. Ids start with e_ so they never clash with Day Plan rows. */
@@ -243,7 +234,8 @@ const WEROWS=WEEKEND.map(w=>({key:'wk-'+w[0],item:{},label:w[1],block:WEBLOCK,mo
 WKROWS.concat(WEROWS).forEach(r=>ROWMAP[r.key]=r);
 const wkRowsFor=mode=>mode==='de'?WEROWS:WKROWS;
 const DAYN=['Mon','Tue','Wed','Thu','Fri','Sat'];
-const secsOf=(pl,r)=>(r.mode==='dp'||r.item.sec)?pl.sections:['x'];
+const secsOf=(pl,r)=>((r.mode==='dp'&&!r.item.one)||r.item.sec)?pl.sections:['x'];
+const secLbl=s=>s==='x'?'':s;
 
 /* ================= HELPERS ================= */
 const pad=n=>String(n).padStart(2,'0');
@@ -299,12 +291,16 @@ const unacked={},inflight={};
 const hasPend=u=>!!(u&&(Object.keys(u.cells).length||Object.keys(u.rem).length));
 function overlay(id,doc){
   doc.cells=doc.cells||{};doc.rem=doc.rem||{};
-  [inflight[id],unacked[id],typed[id]].forEach(u=>{if(u){Object.assign(doc.cells,clone(u.cells));Object.assign(doc.rem,clone(u.rem))}});
+  [inflight[id],unacked[id],typed[id]].forEach(u=>{if(u){
+    Object.keys(u.cells).forEach(k=>{const c=u.cells[k];doc.cells[k]=c.ops?applyOps(doc.cells[k],c.ops,whoName()):clone(c)});
+    Object.assign(doc.rem,clone(u.rem))}});
   return doc;
 }
 function persist(id,patch){
   const u=unacked[id]=unacked[id]||{cells:{},rem:{}};
-  Object.assign(u.cells,clone(patch.cells||{}));Object.assign(u.rem,clone(patch.rem||{}));
+  Object.keys(patch.cells||{}).forEach(k=>{const c=clone(patch.cells[k]);
+    if(c.ops&&u.cells[k]&&u.cells[k].ops)u.cells[k].ops=u.cells[k].ops.concat(c.ops);else u.cells[k]=c});
+  Object.assign(u.rem,clone(patch.rem||{}));
   saveLocal();
   if(!API_URL)return;
   enqueue(id,()=>sendDoc(id));
@@ -318,7 +314,8 @@ async function sendDoc(id){
   }catch(e){
     delete inflight[id];
     if(e.server){showMsg(e.message);poll()}
-    else{const n=unacked[id];unacked[id]={cells:Object.assign(u.cells,n.cells),rem:Object.assign(u.rem,n.rem)};setConn('err')}
+    else{const n=unacked[id];Object.keys(n.cells).forEach(k=>{const c=n.cells[k];if(c.ops&&u.cells[k]&&u.cells[k].ops)u.cells[k].ops=u.cells[k].ops.concat(c.ops);else u.cells[k]=c});
+      unacked[id]={cells:u.cells,rem:Object.assign(u.rem,n.rem)};setConn('err')}
   }
 }
 let polling=false;
@@ -421,6 +418,21 @@ function setCells(plId,list,wk){
   persist(id,patch);render();
 }
 const NEXT={'':'D',D:'N',N:'A',A:''};
+const OBS_MAX=10;
+function applyOps(cell,ops,by){
+  const obs=((cell&&cell.obs)||[]).slice();
+  ops.forEach(o=>{if(o==='add')obs.push(Date.now());else if(o==='pop')obs.pop()});
+  return {s:obs.length?'D':'',obs:obs,by:by,at:Date.now(),l:0};
+}
+function doObs(plId,rk,sec,op){
+  if(!canAct(plId))return;
+  const mode=S.mode,id=docId(plId,mode,S.date),doc=ensureDoc(id,plId,mode,S.date),key=rk+'__'+sec;
+  const n=((doc.cells[key]&&doc.cells[key].obs)||[]).length;
+  if(op==='add'&&n>=OBS_MAX){showMsg('Up to '+OBS_MAX+' checks a day.');return}
+  if(op==='pop'&&!n)return;
+  doc.cells[key]=applyOps(doc.cells[key],[op],whoName());
+  persist(id,{cells:{[key]:{ops:[op]}}});render();
+}
 function doTick(plId,rk,sec,wk){
   if(!canAct(plId,wk))return;
   const id=wk?docId(plId,'wk',S.wk):docId(plId,S.mode,S.date);const c=S.docs[id]&&S.docs[id].cells[rk+'__'+sec];
@@ -518,13 +530,18 @@ function strip(){
     const c=dayStats(d,list);const dd=parseD(d);
     h+=`<button class="day ${dayClass(c,d)} ${d===today?'today':''} ${d===S.date?'sel':''}" data-act="day" data-v="${d}" ${d>today?'disabled':''}><div class="tg">${d===today?'TODAY':''}</div>${DAYN[i]}<b>${dd.getDate()}</b><div class="pc">${d>today?'🔒':(c.T&&(c.D+c.A+c.N)>0?c.pct+'%':'–')}</div></button>`;
   });
-  h+='</div><div class="legend">Tap a box: ✓ Done → ✗ Not Done → NA → clear. Time is stamped on every tick; after the block’s due time it shows “late”.'+(S.mode==='dp'?' Count rows: type the number.':'')+'</div>';
+  h+='</div><div class="legend">Tap a box: ✓ Done → ✗ Not Done → NA → clear. Time is stamped on every tick; after the block’s due time it shows “late”.'+(S.mode==='dp'?' Count rows: type the number. Washroom: tap each time you check.':'')+'</div>';
   if(S.date<today)h+='<div class="muted" style="margin-top:6px">Showing a past day as recorded — read only.</div>';
   return h+'</div>';
 }
+function obsBoxHTML(pl,r,sec,c,editable){
+  const obs=(c&&c.obs)||[];
+  const list=obs.map((t,i)=>`${i+1}) ${fmtT(t)}`).join('<br>');
+  return `<button class="box obs ${obs.length?'d':''} ${editable?'':'ro'}" data-act="obsadd" data-pl="${pl.id}" data-row="${r.key}" data-sec="${sec}"><span class="sl">${obs.length?'Checks':'Tap'}</span><span class="sy">${obs.length||'+'}</span><span class="tm">${list}</span></button>`;
+}
 function boxHTML(pl,r,sec,c,editable,wk,showSec){
-  const s=(c&&c.s)||'';const cls={D:'d',N:'n',A:'a'}[s]||'';
-  const sym=s==='D'?'✓':s==='N'?'✗':s==='A'?'NA':'·';
+  const s=(c&&c.s)||'';const cls={D:'d',N:'n',A:'a'}[s]||'';const yn=r.item&&r.item.yn;
+  const sym=s==='D'?(yn?'YES':'✓'):s==='N'?(yn?'NO':'✗'):s==='A'?'NA':'·';
   const tm=s&&c.at?`<span class="tm ${c.l?'late':''}">${fmtT(c.at)}${c.l?' · late':''}</span>`:'';
   const by=s&&c&&c.by?` title="${esc(c.by)}"`:'';
   return `<button class="box ${cls} ${editable?'':'ro'}"${by} data-act="tick" ${wk?'data-wk="1"':''} data-pl="${pl.id}" data-row="${r.key}" data-sec="${sec}"><span class="sl">${wk?'Wk':showSec?esc(sec):''}</span><span class="sy">${sym}</span>${tm}</button>`;
@@ -534,9 +551,9 @@ function numBox(pl,r,sec,c,editable){
   return `<label class="nbox"><span class="sl">${esc(sec)}</span><input class="remin ${v!==''?'f':''}" type="number" inputmode="numeric" min="0" data-f="num" data-pl="${pl.id}" data-row="${r.key}" data-sec="${sec}" value="${esc(v)}" ${editable?'':'readonly'}><span class="tm">${v!==''&&c.at?fmtT(c.at):''}</span></label>`;
 }
 function remPanel(pl,r,doc,editable){
-  return `<div class="rembox">`+pl.sections.map(s=>{
+  return `<div class="rembox">`+secsOf(pl,r).map(s=>{
     const e=(doc&&doc.rem&&doc.rem[r.key+'__'+s])||{};
-    let h=`<div class="rr"><div class="sn">${esc(s)}</div>`;
+    let h=`<div class="rr"><div class="sn">${esc(secLbl(s))}</div>`;
     if(r.rem==='p'){
       const ph=e.ph||[];
       h+=`<div class="phs">`+ph.map(p=>`<button class="ph" data-act="photo" data-id="${p.id}"><img alt="Photo" data-pid="${p.id}" src="${PHOTOS[p.id]||''}"><span>${fmtT(p.at)}</span></button>`).join('')+
@@ -549,16 +566,17 @@ function remPanel(pl,r,doc,editable){
     return h;
   }).join('')+`</div>`;
 }
-function remCount(pl,r,doc){let n=0;pl.sections.forEach(s=>{const e=doc&&doc.rem&&doc.rem[r.key+'__'+s];if(e&&((e.n!==''&&e.n!=null)||String(e.x||'').trim()||(e.ph&&e.ph.length)))n++});return n}
+function remCount(pl,r,doc){let n=0;secsOf(pl,r).forEach(s=>{const e=doc&&doc.rem&&doc.rem[r.key+'__'+s];if(e&&((e.n!==''&&e.n!=null)||String(e.x||'').trim()||(e.ph&&e.ph.length)))n++});return n}
 const REMLBL={1:'Remark',n:'# / Remark',c:'# / Colour',p:'📷 Photos'};
 function rowHTML(pl,r,doc,editable){
   const secs=secsOf(pl,r);const one=secs[0]==='x';
   const rcount=r.rem?remCount(pl,r,doc):0;const open=S.openRem[pl.id+'|'+r.key];
   let h=`<div class="row ${r.sub?'sub':''} ${one?'de':''}"><div class="rl"><span class="lbl">${esc(r.label)}</span><span class="rb">`;
   if(r.rem)h+=`<button class="mini ${open?'on':''}" data-act="rem" data-pl="${pl.id}" data-row="${r.key}">${REMLBL[r.rem]}${rcount?' ('+rcount+')':''}</button>`;
-  if(r.kind!=='num'&&!one)h+=`<button class="mini ${editable?'':'ro'}" data-act="allrow" data-pl="${pl.id}" data-row="${r.key}">all ✓</button>`;
+  if(r.item.multi)h+=`<button class="mini ${editable?'':'ro'}" data-act="obsundo" data-pl="${pl.id}" data-row="${r.key}" data-sec="${secs[0]}">↶ Undo last</button>`;
+  else if(r.kind!=='num'&&!one)h+=`<button class="mini ${editable?'':'ro'}" data-act="allrow" data-pl="${pl.id}" data-row="${r.key}">all ${r.item.yn?'YES':'✓'}</button>`;
   h+=`</span></div><div class="boxes">`;
-  h+=secs.map(s=>{const c=doc&&doc.cells[r.key+'__'+s];return r.kind==='num'?numBox(pl,r,s,c,editable):boxHTML(pl,r,s,c,editable,false,!one)}).join('');
+  h+=secs.map(s=>{const c=doc&&doc.cells[r.key+'__'+s];return r.kind==='num'?numBox(pl,r,s,c,editable):r.item.multi?obsBoxHTML(pl,r,s,c,editable):boxHTML(pl,r,s,c,editable,false,!one)}).join('');
   h+=`</div>`;
   if(r.rem&&open)h+=remPanel(pl,r,doc,editable);
   return h+'</div>';
@@ -749,6 +767,8 @@ document.addEventListener('click',ev=>{
     subscribeWeek(S.wk);render(true);
   }
   else if(a==='tick')doTick(t.dataset.pl,t.dataset.row,t.dataset.sec,!!t.dataset.wk);
+  else if(a==='obsadd')doObs(t.dataset.pl,t.dataset.row,t.dataset.sec,'add');
+  else if(a==='obsundo')doObs(t.dataset.pl,t.dataset.row,t.dataset.sec,'pop');
   else if(a==='allrow'){const p=plOf(t.dataset.pl);setCells(p.id,secsOf(p,ROWMAP[t.dataset.row]).map(s=>[t.dataset.row,s,'D']))}
   else if(a==='allitem'){const p=plOf(t.dataset.pl);const list=[];ROWS[S.mode].filter(r=>r.item.id===t.dataset.item).forEach(r=>secsOf(p,r).forEach(s=>list.push([r.key,s,'D'])));setCells(p.id,list)}
   else if(a==='rem'){const k=t.dataset.pl+'|'+t.dataset.row;S.openRem[k]=!S.openRem[k];render(true)}
