@@ -334,7 +334,7 @@ table.sum tr:last-child td { border-bottom: 0; }
     TOKEN = ""; try { localStorage.removeItem("lf-token"); } catch (e) {}
     S.me = null; S.isMgr = false; S.isAdmin = false; S.rdy = { f: false, c: false, h: false }; S.found = []; S.comps = []; S.hist = []; S.proofs = {}; PH = {}; PHq = {}; lastSig = "";
     $("#case").hidden = true; S.caseId = ""; closeSheet();
-    renderAuth("code", expired ? "Please open the desk again." : "");
+    renderAuth("open", expired ? "Please type your name to open the desk again." : "");
   }
   function saveText(name, text) {
     var b = new Blob([text], { type: "text/csv;charset=utf-8" }), a = document.createElement("a");
@@ -1190,27 +1190,32 @@ table.sum tr:last-child td { border-bottom: 0; }
   /* ---------- start ---------- */
   function renderAuth(mode, msg) {
     $("#bar").innerHTML = ""; $("#who").innerHTML = "";
-    var first = mode === "setup", byCode = mode === "code";
-    $("#screen").innerHTML = '<div class="card"><form id="af" class="stack" novalidate><h2>' + (byCode ? "Open the desk" : first ? "First time? Set password" : "Personal login") + "</h2>" +
-      fld("au-n", "Your name", '<input type="text" id="au-n" maxlength="40" autocomplete="username">') +
-      (byCode ? fld("au-p", "Staff code", '<input type="password" id="au-p" maxlength="60" autocomplete="off">') + '<p class="rsub">Use the staff code shared by the school. Type your full name so the log shows who did what.</p>'
+    var first = mode === "setup", byCode = mode === "code", open = mode === "open", saved = "";
+    try { saved = localStorage.getItem("lf-name") || ""; } catch (x) {}
+    $("#screen").innerHTML = '<div class="card"><form id="af" class="stack" novalidate><h2>' + (open ? "Welcome" : byCode ? "Open the desk" : first ? "First time? Set password" : "Personal login") + "</h2>" +
+      fld("au-n", open ? "Your full name" : "Your name", '<input type="text" id="au-n" maxlength="40" autocomplete="name" value="' + esc(saved) + '">') +
+      (open ? '<p class="rsub">Type your full name once. It is saved with every entry you make so the record shows who did what.</p>' :
+        byCode ? fld("au-p", "Staff code", '<input type="password" id="au-p" maxlength="60" autocomplete="off">') + '<p class="rsub">Use the staff code shared by the school. Type your full name so the log shows who did what.</p>'
         : fld("au-p", first ? "Choose a password (6 or more characters)" : "Password", '<input type="password" id="au-p" maxlength="60" autocomplete="' + (first ? "new-password" : "current-password") + '">')) +
       (first ? fld("au-r", "I am", '<select id="au-r"><option value="staff">Staff</option><option value="incharge">Incharge (manager)</option><option value="admin">Admin</option></select>') + '<p class="rsub">The admin approves every new personal login.</p>' : "") +
-      '<p class="err" id="au-e" role="alert">' + esc(msg || "") + '</p><button type="submit" class="btn primary block" id="au-go">' + (byCode ? "Open" : first ? "Create login" : "Log in") + "</button>" +
-      (byCode ? '<button type="button" class="btn ghost block" data-sw="login">Admin / personal login</button>' :
-        '<button type="button" class="btn ghost block" data-sw="code">Use the staff code</button>' +
+      '<p class="err" id="au-e" role="alert">' + esc(msg || "") + '</p><button type="submit" class="btn primary block" id="au-go">' + (open ? "Open the Desk" : byCode ? "Open" : first ? "Create login" : "Log in") + "</button>" +
+      (open || byCode ? '<button type="button" class="btn ghost block" data-sw="login">Admin / personal login</button>' :
+        '<button type="button" class="btn ghost block" data-sw="open">Back to the desk</button>' +
         '<button type="button" class="btn ghost block" data-sw="' + (first ? "login" : "setup") + '">' + (first ? "I already have a login" : "First time? Set password") + "</button>") + "</form></div>";
     $("#af").addEventListener("click", function (e) { var b = e.target.closest("[data-sw]"); if (b) renderAuth(b.getAttribute("data-sw"), ""); });
     $("#af").addEventListener("submit", function (e) {
       e.preventDefault();
-      var n = val("au-n"), pw = document.getElementById("au-p").value;
-      if (!n || !pw) { $("#au-e").textContent = byCode ? "Type your name and the staff code." : "Type your name and password."; return; }
+      var n = val("au-n"), pwEl = document.getElementById("au-p"), pw = pwEl ? pwEl.value : "";
+      if (!n || (!open && !pw)) { $("#au-e").textContent = open ? "Type your full name." : byCode ? "Type your name and the staff code." : "Type your name and password."; return; }
       var b = $("#au-go"); b.disabled = true;
-      call(byCode ? "codeLogin" : first ? "setup" : "login", first ? [n, pw, val("au-r")] : [n, pw]).then(function (r) {
+      call(open ? "openJoin" : byCode ? "codeLogin" : first ? "setup" : "login", open ? [n] : first ? [n, pw, val("au-r")] : [n, pw]).then(function (r) {
         if (r.pending) { renderAuth("login", "Your login is created. It is waiting for the admin to approve it."); return; }
-        TOKEN = r.token; try { localStorage.setItem("lf-token", TOKEN); } catch (x) {}
+        TOKEN = r.token; try { localStorage.setItem("lf-token", TOKEN); localStorage.setItem("lf-name", n); } catch (x) {}
         applyState(r.state); goRoute();
-      }, function (err) { $("#au-e").textContent = err.message || "Could not log in."; b.disabled = false; });
+      }, function (err) {
+        if (open && /staff code/.test(err.message || "")) { renderAuth("code", "The school now asks for the staff code."); return; }
+        $("#au-e").textContent = err.message || "Could not open."; b.disabled = false;
+      });
     });
   }
   function teamSheet() {
@@ -1254,7 +1259,7 @@ table.sum tr:last-child td { border-bottom: 0; }
     renderWho(); renderBar();
     if (!API_URL) { S.noDb = true; renderScreen(); return; }
     try { TOKEN = localStorage.getItem("lf-token") || ""; } catch (e) {}
-    if (!TOKEN) { renderAuth("code", ""); return; }
+    if (!TOKEN) { renderAuth("open", ""); return; }
     $("#screen").innerHTML = emptyBox("Loading records", "One moment.");
     try {
       var st = await tcall("state");
