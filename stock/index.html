@@ -874,7 +874,7 @@ img[data-pid]:not([src]) { visibility: hidden; }
     if (r.status === 'pending' || r.status === 'bought') return { cat: 'pending', html: '<span class="ist i-pending">' + esc(STATUS[r.status]) + '</span>' };
     return { cat: 'problem', html: '<span class="ist i-soldout">' + esc(STATUS[r.status] || r.status) + '</span>' };
   }
-  function lastRemark(r, it) {
+  function rowRemark(r, it) {
     if (it.remark) return it.remark;
     if (r.kind === 'purchase' && r.items.length > 1) return '';
     var l = (r.log || []).filter(function (e) { return e.kind === 'remark'; }).pop();
@@ -906,7 +906,7 @@ img[data-pid]:not([src]) { visibility: hidden; }
         var got = it.state === 'purchased' && it.at ? '<br><span class="muted">' + esc(fmtD(ymd(new Date(it.at)))) + ', ' + esc(fmtT(it.at)) + '</span>' : '';
         buy = '<td>' + price + got + '</td><td>' + (it.img ? '<img class="ilog-img" data-pid="' + esc(it.img) + '" data-blob alt="">' : '-') + '</td>';
       }
-      var rem = lastRemark(r, it);
+      var rem = rowRemark(r, it);
       return '<tr data-id="' + esc(r.id) + '"><td>' + esc(fmtD(ymd(new Date(r.createdAt)))) + '</td><td>' + esc(fmtT(r.createdAt)) + '</td>' +
         '<td class="wrap"><strong>' + esc(it.item) + '</strong>' + (r.sample ? '<br><span class="muted">example</span>' : '') + '</td>' +
         '<td>' + esc(it.qty + (it.unit ? ' ' + it.unit : '')) + '</td><td class="wrap">' + esc(r.department || '-') + '</td>' +
