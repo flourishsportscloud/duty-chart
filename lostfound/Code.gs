@@ -37,6 +37,8 @@ function readToken(H,secret,DB,token,now){
   if(!u||u.status!=="active"||String(u.ver)!==ver)return null;
   return u;
 }
+function isCodeRow(u){return String(u.name).charAt(0)==="#"}
+function codeRow(ctx,kind){return ctx.DB.Users.find(u=>u.name==="#code:"+kind&&u.hash)}
 function needUser(ctx,token){const u=readToken(ctx.H,ctx.secret,ctx.DB,token,ctx.now);if(!u)fail("Please log in again.");return u}
 function needAdmin(ctx,token){const u=needUser(ctx,token);if(u.role!=="admin")fail("Only the admin can do this.");return u}
 function needMgr(u,what){if(!isMgr(u))fail("Only an incharge can "+what+".")}
@@ -49,7 +51,8 @@ function publicState(ctx,me){
   const hist=docs_("history").sort((a,b)=>(b.at||0)-(a.at||0)).slice(0,HIST_LIMIT);
   return {
     today:ctx.today,me:{name:me.name,role:me.role},
-    users:me.role==="admin"?ctx.DB.Users.map(u=>({name:u.name,role:u.role,status:u.status,requestedAt:u.requestedAt||"",approvedAt:u.approvedAt||""})):[],
+    users:me.role==="admin"?ctx.DB.Users.filter(u=>!isCodeRow(u)).map(u=>({name:u.name,role:u.role,status:u.status,viaCode:!u.hash,requestedAt:u.requestedAt||"",approvedAt:u.approvedAt||""})):[],
+    codes:me.role==="admin"?{staff:!!codeRow(ctx,"staff"),incharge:!!codeRow(ctx,"incharge")}:null,
     found:docs_("found"),comps:docs_("complaints"),hist
   };
 }
@@ -173,6 +176,7 @@ const API={
   setup(ctx,name,pw,wantRole){
     const DB=ctx.DB;name=str(name,40);pw=String(pw||"");
     if(!name)fail("Type your name.");
+    if(name.charAt(0)==="#")fail("Type your real name.");
     if(pw.length<6)fail("Password must be at least 6 characters.");
     const role=ROLES.includes(wantRole)?wantRole:"staff";
     const existing=DB.Users.find(x=>x.name.toLowerCase()===name.toLowerCase());
@@ -201,6 +205,42 @@ const API={
     if(hashPw(ctx.H,u.salt,String(pw||""))!==u.hash)fail("Wrong password.");
     if(u.status!=="active")fail("Your login is waiting for the admin to approve it.");
     return {token:makeToken(ctx.H,ctx.secret,u,ctx.now),state:publicState(ctx,u)};
+  },
+
+  // staff / incharge open the app with one shared code + their own name (no personal password)
+  codeLogin(ctx,name,code){
+    name=str(name,40);code=String(code||"").trim();
+    if(!name)fail("Type your name.");
+    if(name.charAt(0)==="#")fail("Type your real name.");
+    if(!code)fail("Type the staff code.");
+    let role="";
+    ["incharge","staff"].forEach(k=>{const c=codeRow(ctx,k);if(!role&&c&&hashPw(ctx.H,c.salt,code)===c.hash)role=k});
+    if(!role)fail("That code is not right. Ask the admin for the staff code.");
+    const existing=ctx.DB.Users.find(x=>x.name.toLowerCase()===name.toLowerCase());
+    if(existing&&existing.hash)fail(existing.name+" has a personal login. Use “Personal login” instead.");
+    let u=existing;
+    if(!u){const at=new Date(ctx.now).toISOString();u={name,role,status:"active",salt:"",hash:"",ver:1,requestedAt:at,approvedAt:at,approvedBy:"(code)"};ctx.DB.Users.push(u)}
+    else if(u.role!==role||u.status!=="active"){u.role=role;u.status="active";ctx.dirty.Users=true}
+    ctx.dirty.Users=true;
+    return {token:makeToken(ctx.H,ctx.secret,u,ctx.now),state:publicState(ctx,u)};
+  },
+  // admin sets (or clears, with an empty value) the shared code for "staff" or "incharge"
+  setCode(ctx,token,kind,code){
+    const me=needAdmin(ctx,token);
+    if(kind!=="staff"&&kind!=="incharge")fail("Unknown code.");
+    code=String(code||"").trim();
+    const nm="#code:"+kind;let row=ctx.DB.Users.find(u=>u.name===nm);
+    if(!code){ctx.DB.Users=ctx.DB.Users.filter(u=>u.name!==nm)}
+    else{
+      if(code.length<6)fail("The code must be at least 6 characters.");
+      const salt=ctx.H.salt();
+      if(!row){row={name:nm,role:"code",status:"code",ver:1};ctx.DB.Users.push(row)}
+      Object.assign(row,{salt,hash:hashPw(ctx.H,salt,code),requestedAt:new Date(ctx.now).toISOString()});
+    }
+    // people who came in with the old code must enter the new one
+    ctx.DB.Users.forEach(u=>{if(!isCodeRow(u)&&!u.hash)u.ver=Number(u.ver||1)+1});
+    ctx.dirty.Users=true;ctx.log(me.name,code?"set "+kind+" code":"clear "+kind+" code","","");
+    return publicState(ctx,me);
   },
 
   // ops = [{op:"set"|"update", col:"found"|"complaints"|"history"|"handovers", id, data}]
