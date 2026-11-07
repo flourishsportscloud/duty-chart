@@ -293,6 +293,21 @@ form.is-stock .est { display: none; }
 .r-expensive input:checked + span { background: var(--violet-bg); border-color: var(--violet); color: var(--violet); }
 .r-soldout input:checked + span { background: var(--red-bg); border-color: var(--red); color: var(--red); }
 .r-other input:checked + span, .r-pending input:checked + span { background: var(--soft); border-color: var(--ink); }
+.i-instock { background: var(--blue-bg); color: var(--blue); }
+.icard.ic-instock { border-color: var(--blue); background: var(--blue-bg); }
+.r-instock input:checked + span { background: var(--blue-bg); border-color: var(--blue); color: var(--blue); }
+.iform .buy-f, .iform .shop-f { display: none; }
+.iform.showbuy .buy-f, .iform.showshop .shop-f { display: block; }
+.iform .itotal { font-weight: 700; margin: 4px 0 10px; }
+.bd-h { font-size: 15px; margin: 20px 0 8px; }
+.bd-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
+.bd-tiles div { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+.bd-tiles b { display: block; font: 600 22px/1.1 var(--mono); font-variant-numeric: tabular-nums; }
+.bd-tiles span { font-size: 12.5px; color: var(--muted); }
+.bd-tiles .hot b { color: var(--red); }
+.board tr[data-id] { cursor: pointer; }
+.board td { vertical-align: top; }
+.board td.wrap { white-space: normal; min-width: 150px; }
 .iform .price-f { display: none; }
 .iform.showprice .price-f { display: flex; }
 .ilog tr[data-id] { cursor: pointer; }
@@ -327,6 +342,9 @@ img[data-pid]:not([src]) { visibility: hidden; }
   <nav class="tabs" id="tabs" role="tablist" aria-label="Views">
     <button class="tab" role="tab" data-tab="today">Today</button>
     <button class="tab" role="tab" data-tab="pending">Pending</button>
+    <button class="tab" role="tab" data-tab="sboard">Stock board</button>
+    <button class="tab" role="tab" data-tab="pboard">Purchase board</button>
+    <button class="tab" role="tab" data-tab="accounts">Accounts</button>
     <button class="tab" role="tab" data-tab="itemlog">Item log</button>
     <button class="tab" role="tab" data-tab="deadlines">Deadline check</button>
     <button class="tab" role="tab" data-tab="datewise">Date wise</button>
@@ -399,10 +417,11 @@ img[data-pid]:not([src]) { visibility: hidden; }
 
   var STATUS = { pending: 'Pending', bought: 'Bought, to hand over', handed: 'Handed over', arranged: 'Arranged', cancelled: 'Cancelled', unapproved: 'Not approved', unavailable: 'Not available in market', refunded: 'Refunded' };
   var REMARKS = ['Waiting for approval', 'Reminder sent', 'Vendor will deliver tomorrow', 'Stock expected next week', 'Budget not available', 'Called the vendor'];
-  var ISTATE = { pending: 'Waiting', purchased: 'Purchased', unavailable: 'Not available', expensive: 'Too expensive', soldout: 'Sold out', skipped: 'Not bought', arranged: 'Arranged', other: 'Other' };
+  var ISTATE = { pending: 'Waiting', purchased: 'Purchased', unavailable: 'Not available', expensive: 'Too expensive', soldout: 'Sold out', skipped: 'Not bought', arranged: 'Arranged', other: 'Other', instock: 'In stock' };
+  var isGot = function (it) { return it.state === 'purchased' || it.state === 'instock'; };
   var isBought = function (it) { return it.state === 'purchased'; };
   function itemTag(state) { return '<span class="ist i-' + esc(state) + '">' + esc(ISTATE[state] || state) + '</span>'; }
-  var HASH = { today: 'today', pending: 'pending', itemlog: 'item-log', deadlines: 'deadlines', datewise: 'datewise', tilldate: 'till-date' };
+  var HASH = { today: 'today', pending: 'pending', sboard: 'stock-board', pboard: 'purchase-board', accounts: 'accounts', itemlog: 'item-log', deadlines: 'deadlines', datewise: 'datewise', tilldate: 'till-date' };
 
   var assets = true;
   var canWrite = true, canDelete = false;
@@ -558,12 +577,19 @@ img[data-pid]:not([src]) { visibility: hidden; }
     document.querySelectorAll('#kindseg button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.kind === S.kind ? 'true' : 'false'); });
     document.querySelectorAll('#statseg button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.stat === S.stat ? 'true' : 'false'); });
     document.querySelectorAll('#respseg button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.resp === S.resp ? 'true' : 'false'); });
-    $('#extra').hidden = S.tab !== 'tilldate';
+    var isBoard = S.tab === 'sboard' || S.tab === 'pboard' || S.tab === 'accounts';
+    $('#extra').hidden = S.tab !== 'tilldate' && S.tab !== 'accounts';
+    $('#statseg').hidden = S.tab !== 'tilldate';
+    $('#kindseg').hidden = isBoard;
+    $('#sum').hidden = isBoard;
     $('#extra2').hidden = S.tab !== 'itemlog';
     var H = {
       today: 'Requests logged today, and older requests that were closed today.',
       pending: 'Cases that are still open, with the nearest deadline first.',
       deadlines: 'Open cases grouped by how close the deadline is.',
+      sboard: 'Stock orders from the store room: what was ordered today, the status of every order, and why items are still pending.',
+      pboard: 'Purchase orders: what was ordered today, the status of every order, and why items are still pending.',
+      accounts: 'Money view for accounts: amount, price per unit, shop and bill for everything bought. Use From and To to pick the dates.',
       itemlog: 'One row per item: date, time, person, deadline, source (stock room or market), status and remark. Tap Stock or Purchase above to split them.',
       datewise: 'All requests grouped by the day they were logged.',
       tilldate: 'Every request so far. Narrow it by status or date.'
@@ -589,6 +615,9 @@ img[data-pid]:not([src]) { visibility: hidden; }
       today: 'Nothing logged today yet. Tap New request to log a stock order or a purchase.',
       pending: 'No pending cases. Every request logged so far is closed.',
       deadlines: 'No open cases to check against a deadline.',
+      sboard: 'No stock orders yet.',
+      pboard: 'No purchase orders yet.',
+      accounts: 'Nothing has been purchased in this date range.',
       itemlog: 'No items to show yet. Log a request to see its items here.',
       datewise: 'No requests yet. Tap New request to log the first one.',
       tilldate: 'No requests in this range.'
@@ -628,6 +657,12 @@ img[data-pid]:not([src]) { visibility: hidden; }
       });
       out = group('Overdue', g.over, 'over') + group('Due today', g.today) + group('Due tomorrow', g.tom) +
         group('Next 7 days', g.week) + group('Later', g.later) + group('No deadline', g.none);
+    } else if (S.tab === 'sboard') {
+      out = board('stock');
+    } else if (S.tab === 'pboard') {
+      out = board('purchase');
+    } else if (S.tab === 'accounts') {
+      out = accountsView();
     } else if (S.tab === 'itemlog') {
       out = itemLog(base);
     } else if (S.tab === 'datewise') {
@@ -663,6 +698,7 @@ img[data-pid]:not([src]) { visibility: hidden; }
           deptTable(rows) + '<div class="grp" style="margin-top:12px">' + rows.map(card).join('') + '</div>';
       }
     }
+    el.classList.toggle('board', S.tab === 'sboard' || S.tab === 'pboard' || S.tab === 'accounts');
     el.innerHTML = out || emptyMsg();
   }
   function renderDatalists() {
@@ -726,9 +762,9 @@ img[data-pid]:not([src]) { visibility: hidden; }
   function field(label, inner, hint) {
     return '<div class="field"><label>' + label + '</label>' + inner + (hint ? '<span class="hint">' + hint + '</span>' : '') + '</div>';
   }
-  function photoField(id, label) {
+  function photoField(id, label, req) {
     if (!assets) return '';
-    return '<div class="field"><span class="lbl">' + label + ' (optional)</span><div class="photo-row">' +
+    return '<div class="field"><span class="lbl">' + label + (req ? ' (required)' : ' (optional)') + '</span><div class="photo-row">' +
       '<label class="btn small" for="' + id + '">Choose photo</label><input class="sr" id="' + id + '" type="file" accept="image/*">' +
       '<span class="hint" id="' + id + '-n">No photo chosen</span></div></div>';
   }
@@ -779,15 +815,21 @@ img[data-pid]:not([src]) { visibility: hidden; }
   }
   function itemForm(r, i) {
     var it = r.items[i], pre = S.preResp || '';
-    var chips = [['purchased', 'Purchased'], ['unavailable', 'Not available'], ['expensive', 'Too expensive'], ['soldout', 'Sold out'], ['other', 'Other'], ['pending', 'Back to waiting']];
+    var chips = [['purchased', 'Purchased'], ['instock', 'In stock'], ['unavailable', 'Not available'], ['expensive', 'Too expensive'], ['soldout', 'Sold out'], ['other', 'Other'], ['pending', 'Back to waiting']];
     var pv = it.price != null ? it.price : (it.quote != null ? it.quote : (it.est != null ? it.est : ''));
     return '<form data-act="item" class="iform" data-i="' + i + '">' +
       '<div class="chiprow">' + chips.map(function (c) {
         return '<label class="rchip r-' + c[0] + '"><input type="radio" name="resp" value="' + c[0] + '"' + (pre === c[0] ? ' checked' : '') + '><span>' + c[1] + '</span></label>';
       }).join('') + '</div>' +
       '<div class="field price-f"><label>Price per unit (Rs)</label><input id="f-iprice" type="number" inputmode="decimal" min="0" step="any" value="' + esc(pv) + '"></div>' +
+      '<div class="buy-f"><div class="itotal">Total: <span id="f-itotal">-</span></div></div>' +
+      '<div class="shop-f">' + field('From which shop', '<input id="f-ishop" type="text" value="' + esc(it.shop || '') + '" placeholder="Shop or market name">') + '</div>' +
+      '<div class="buy-f"><div class="field"><span class="lbl">Bill</span><div class="chiprow">' +
+      '<label class="rchip r-purchased"><input type="radio" name="bill" value="yes"' + (it.bill === 'yes' ? ' checked' : '') + '><span>Bill: Yes</span></label>' +
+      '<label class="rchip r-soldout"><input type="radio" name="bill" value="no"' + (it.bill === 'no' ? ' checked' : '') + '><span>Bill: No</span></label></div></div>' +
+      photoField('f-ibill', 'Bill photo') + '</div>' +
       field('Remark', '<input id="f-iremark" type="text" placeholder="For example: shop closed, asking Rs 90 against Rs 56">') +
-      photoField('f-iimg', 'Photo') +
+      photoField('f-iimg', 'Item photo') +
       '<div class="row"><button class="btn primary" type="submit">Save</button><button class="btn" type="button" data-mode="view">Cancel</button></div></form>';
   }
   function syncItemForm() {
@@ -795,6 +837,10 @@ img[data-pid]:not([src]) { visibility: hidden; }
     if (!f) return;
     var c = f.querySelector('input[name="resp"]:checked'), val = c ? c.value : '';
     f.classList.toggle('showprice', val === 'purchased' || val === 'expensive');
+    f.classList.toggle('showbuy', val === 'purchased');
+    f.classList.toggle('showshop', val === 'purchased' || val === 'expensive' || val === 'soldout' || val === 'unavailable');
+    var rr = cur(), ii = rr && rr.items[Number(f.dataset.i)], pe = f.querySelector('#f-iprice'), te = f.querySelector('#f-itotal');
+    if (te && ii) { var pn = pe && pe.value !== '' ? Number(pe.value) : NaN; te.textContent = pn >= 0 ? money(round2(pn * Number(ii.qty || 0))) + ' (' + ii.qty + (ii.unit ? ' ' + ii.unit : '') + ' x ' + money(pn) + ')' : '-'; }
     var lab = f.querySelector('.price-f label');
     if (lab) lab.textContent = val === 'expensive' ? 'Price quoted per unit (Rs)' : 'Price per unit (Rs)';
   }
@@ -807,14 +853,17 @@ img[data-pid]:not([src]) { visibility: hidden; }
       if (it.state === 'purchased') detail = it.price != null ? esc(money(it.price)) + ' per unit' + (it.lineTotal != null ? ' · total <b>' + esc(money(it.lineTotal)) + '</b>' : '') : 'Price not entered';
       else if (it.state === 'expensive' && it.quote != null) detail = 'Quoted ' + esc(money(it.quote)) + ' per unit' + (it.est != null ? ' against ' + esc(money(it.est)) + ' expected' : '');
       else if (it.state === 'pending' && it.est != null) detail = 'Expected ' + esc(money(it.est)) + ' per unit';
+      else if (it.state === 'instock') detail = 'Issued from the store room';
+      if (it.shop) detail += (detail ? ' · ' : '') + 'from ' + esc(it.shop);
+      if (it.state === 'purchased') detail += ' · bill: ' + (it.bill === 'yes' ? 'yes' : (it.bill === 'no' ? 'no' : 'not recorded'));
       var when = it.at ? esc(fmtDT(it.at)) + (it.by ? ' by ' + esc(it.by) : '') + ' · ' + esc(elapsedText(r.createdAt, it.at)) + ' after the order' : '';
       var remark = it.remark ? '<div class="ic-remark"><b>Remark:</b> ' + esc(it.remark) + (it.remarkAt ? ' <span class="muted">(' + esc(it.remarkBy || '') + ', ' + esc(fmtDTs(it.remarkAt)) + ')</span>' : '') + '</div>' : '';
-      var img = it.img ? '<img class="ic-img" data-pid="' + esc(it.img) + '" data-blob alt="Photo of ' + esc(it.item) + '">' : '';
+      var img = (it.img ? '<img class="ic-img" data-pid="' + esc(it.img) + '" data-blob alt="Photo of ' + esc(it.item) + '">' : '') + (it.billImg ? '<img class="ic-img" data-pid="' + esc(it.billImg) + '" data-blob alt="Bill of ' + esc(it.item) + '">' : '');
       var inForm = S.mode === 'item' && S.itemIdx === i, acts = '';
       if (editable && !inForm) {
         var b = function (resp, t, cls) { return '<button class="btn small ' + (cls || '') + '" type="button" data-item="' + i + '" data-resp="' + resp + '">' + t + '</button>'; };
         acts = it.state === 'pending'
-          ? '<div class="ic-actions">' + b('purchased', 'Purchased', 'go') + b('unavailable', 'Not available') + b('expensive', 'Too expensive') + b('soldout', 'Sold out') + b('', 'Remark') + '</div>'
+          ? '<div class="ic-actions">' + b('purchased', 'Purchased', 'go') + b('instock', 'In stock') + b('unavailable', 'Not available') + b('expensive', 'Too expensive') + b('soldout', 'Sold out') + b('', 'Remark') + '</div>'
           : '<div class="ic-actions">' + b(it.state, 'Change response') + b('', 'Add remark') + '</div>';
       }
       return '<div class="icard ic-' + esc(it.state) + '"><div class="ic-top"><strong>' + esc(it.item) + '</strong><span class="qty">' + q + '</span></div>' +
@@ -828,8 +877,8 @@ img[data-pid]:not([src]) { visibility: hidden; }
   }
   function applyItems(r, items, entries, now, actor) {
     var anyP = items.some(function (x) { return x.state === 'pending'; });
-    var bought = items.filter(isBought), st = r.status;
-    if (st === 'pending' || st === 'bought') st = (!anyP && bought.length) ? 'bought' : 'pending';
+    var bought = items.filter(isBought), got = items.filter(isGot), st = r.status;
+    if (st === 'pending' || st === 'bought') st = (!anyP && got.length) ? 'bought' : 'pending';
     var priced = bought.filter(function (x) { return x.lineTotal != null; });
     var last = bought.slice().sort(function (a, b) { return String(a.at || '').localeCompare(String(b.at || '')); }).pop();
     var total = priced.length ? round2(priced.reduce(function (a, x) { return a + Number(x.lineTotal); }, 0)) : null;
@@ -868,7 +917,7 @@ img[data-pid]:not([src]) { visibility: hidden; }
     if (r.status === 'handed' || r.status === 'refunded' || r.status === 'cancelled' || r.status === 'unapproved') return { cat: r.status === 'handed' ? 'done' : 'problem', html: '<span class="ist i-' + (r.status === 'handed' ? 'purchased' : 'soldout') + '">' + esc(STATUS[r.status]) + '</span>' };
     if (r.kind === 'purchase') {
       var st = it.state;
-      return { cat: st === 'pending' ? 'pending' : (st === 'purchased' || st === 'arranged' ? 'done' : 'problem'), html: itemTag(st) };
+      return { cat: st === 'pending' ? 'pending' : (st === 'purchased' || st === 'arranged' || st === 'instock' ? 'done' : 'problem'), html: itemTag(st) };
     }
     if (r.status === 'pending' && !r.approvedBy) return { cat: 'pending', html: '<span class="ist i-pending">Needs approval</span>' };
     if (r.status === 'pending' || r.status === 'bought') return { cat: 'pending', html: '<span class="ist i-pending">' + esc(STATUS[r.status]) + '</span>' };
@@ -918,6 +967,115 @@ img[data-pid]:not([src]) { visibility: hidden; }
     var head = '<th>Date</th><th>Time</th><th>Item name</th><th>Quantity</th><th>Department</th><th>Person</th><th>Deadline</th><th>Source</th><th>Status</th><th>Remark</th>' + (showBuy ? '<th>Price / bought</th><th>Photo</th>' : '') + '<th>Time check</th>';
     return totals + '<div class="tbl-wrap" style="margin-top:10px"><table class="dtbl ilog"><thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table></div>';
   }
+  function reqLabel(r) {
+    if (r.status === 'pending' && !r.approvedBy) return 'Needs approval';
+    if (r.status === 'pending') {
+      var nb = (r.items || []).filter(isGot).length;
+      return r.kind === 'purchase' && nb ? 'Part done (' + nb + ' of ' + r.items.length + ')' : 'Approved, waiting';
+    }
+    return STATUS[r.status] || r.status;
+  }
+  function whyText(r, it) {
+    var parts = [];
+    if (!r.approvedBy) parts.push('Not approved yet');
+    if (r.status === 'bought') parts.push('Bought, waiting for handover');
+    else if (r.kind === 'purchase' && it) {
+      if (it.state === 'expensive') parts.push('Too expensive' + (it.quote != null ? ' (quoted ' + money(it.quote) + (it.est != null ? ' against ' + money(it.est) : '') + ')' : ''));
+      else if (it.state === 'soldout') parts.push('Sold out');
+      else if (it.state === 'unavailable') parts.push('Not available in market');
+    }
+    var rm = rowRemark(r, it || {});
+    if (rm) parts.push(rm);
+    return parts.length ? parts.join('. ') : 'No update yet';
+  }
+  function boardRows(kind) {
+    return S.items.filter(function (r) { return r.kind === kind && (!S.dept || r.department === S.dept) && matchQ(r); });
+  }
+  function statusTable(rows, t) {
+    var map = {};
+    rows.forEach(function (r) {
+      var k = reqLabel(r), o = map[k] || (map[k] = { all: 0, today: 0 });
+      o.all++; if (ymd(new Date(r.createdAt)) === t) o.today++;
+    });
+    var keys = Object.keys(map).sort(function (a, b) { return map[b].all - map[a].all; });
+    if (!keys.length) return '';
+    return '<div class="tbl-wrap"><table class="dtbl"><thead><tr><th>Status</th><th>Ordered today</th><th>All orders</th></tr></thead><tbody>' +
+      keys.map(function (k) { return '<tr><td>' + esc(k) + '</td><td>' + map[k].today + '</td><td>' + map[k].all + '</td></tr>'; }).join('') + '</tbody></table></div>';
+  }
+  function board(kind) {
+    var rows = boardRows(kind), t = todayStr();
+    if (!rows.length) return '';
+    var today = rows.filter(function (r) { return ymd(new Date(r.createdAt)) === t; }).sort(byCreatedDesc);
+    var open = rows.filter(isOpen);
+    var over = open.filter(function (r) { return hasDl(r) && daysTo(r.deadline) < 0; }).length;
+    var doneToday = rows.filter(function (r) { var c = closedAt(r); return !isOpen(r) && c && ymd(new Date(c)) === t; }).length;
+    var nItems = today.reduce(function (a, r) { return a + r.items.length; }, 0);
+    var tiles = '<div class="bd-tiles"><div><b>' + today.length + '</b><span>Orders placed today</span></div><div><b>' + nItems + '</b><span>Items ordered today</span></div><div><b>' + open.length + '</b><span>Open orders</span></div><div class="' + (over ? 'hot' : '') + '"><b>' + over + '</b><span>Overdue</span></div><div><b>' + doneToday + '</b><span>Closed today</span></div></div>';
+    var todayTbl = today.length ? '<div class="tbl-wrap"><table class="dtbl"><thead><tr><th>Time</th><th>Order</th><th>Items</th><th>Department</th><th>Person</th><th>Deadline</th><th>Status</th></tr></thead><tbody>' +
+      today.map(function (r) {
+        return '<tr data-id="' + esc(r.id) + '"><td>' + esc(fmtT(r.createdAt)) + '</td><td class="wrap"><strong>' + esc(r.item) + '</strong></td><td>' + r.items.length + '</td><td class="wrap">' + esc(r.department || '-') + '</td><td class="wrap">' + esc(r.staff || '-') + '</td><td>' + (hasDl(r) ? esc(fmtD(r.deadline)) : '-') + '</td><td>' + esc(reqLabel(r)) + '</td></tr>';
+      }).join('') + '</tbody></table></div>' : '<p class="hint">No ' + (kind === 'stock' ? 'stock orders' : 'purchase orders') + ' were placed today.</p>';
+    var pend = [];
+    open.sort(function (a, b) { return (a.deadline || '9999').localeCompare(b.deadline || '9999'); }).forEach(function (r) {
+      var its = r.items;
+      if (kind === 'purchase' && r.status === 'pending') {
+        var w = its.filter(function (x) { return !isGot(x) && x.state !== 'arranged'; });
+        if (w.length) its = w;
+      }
+      its.forEach(function (it) { pend.push({ r: r, it: it }); });
+    });
+    var pendTbl = pend.length ? '<div class="tbl-wrap"><table class="dtbl"><thead><tr><th>Item</th><th>Quantity</th><th>Department</th><th>Person</th><th>Deadline</th><th>Waiting</th><th>Why it is pending</th></tr></thead><tbody>' +
+      pend.map(function (x) {
+        var r = x.r, it = x.it, d = dueInfo(r);
+        return '<tr data-id="' + esc(r.id) + '"><td class="wrap"><strong>' + esc(it.item) + '</strong></td><td>' + esc(it.qty + (it.unit ? ' ' + it.unit : '')) + '</td><td class="wrap">' + esc(r.department || '-') + '</td><td class="wrap">' + esc(r.staff || '-') + '</td><td class="wrap ' + d.cls + '">' + (hasDl(r) ? esc(fmtD(r.deadline)) : '-') + '<br><span class="muted">' + esc(d.text) + '</span></td><td>' + esc(elapsedText(r.createdAt, new Date().toISOString())) + '</td><td class="wrap">' + esc(whyText(r, it)) + '</td></tr>';
+      }).join('') + '</tbody></table></div>' : '<p class="hint">Nothing is pending.</p>';
+    var label = kind === 'stock' ? 'stock orders' : 'purchase orders';
+    return tiles + '<h2 class="bd-h">Today\'s ' + label + '</h2>' + todayTbl +
+      '<h2 class="bd-h">Status of all ' + label + '</h2>' + statusTable(rows, t) +
+      '<h2 class="bd-h">Why items are pending (' + pend.length + ')</h2>' + pendTbl;
+  }
+  function accountsView() {
+    var rows = [];
+    S.items.forEach(function (r) {
+      if ((S.dept && r.department !== S.dept) || !matchQ(r)) return;
+      r.items.forEach(function (it) {
+        if (it.state !== 'purchased') return;
+        var at = it.at || r.boughtAt || r.createdAt, d = ymd(new Date(at));
+        if (S.from && d < S.from) return;
+        if (S.to && d > S.to) return;
+        rows.push({ r: r, it: it, at: at });
+      });
+    });
+    if (!rows.length) return '';
+    rows.sort(function (a, b) { return String(b.at).localeCompare(String(a.at)); });
+    var shopOf = function (x) { return x.it.shop || x.r.shop || String(x.r.buyNote || '').split(',')[0].trim() || 'Not entered'; };
+    var billOf = function (x) { return x.it.bill || ((x.it.billImg || x.r.billImg) ? 'yes' : ''); };
+    var spent = 0, noBill = 0, noPrice = 0, shops = {}, refund = 0, seen = {};
+    rows.forEach(function (x) {
+      var lt = x.it.lineTotal != null ? Number(x.it.lineTotal) : null;
+      if (lt == null) noPrice++; else spent += lt;
+      var b = billOf(x); if (b !== 'yes') noBill++;
+      var k = shopOf(x), o = shops[k] || (shops[k] = { n: 0, amt: 0, nb: 0 });
+      o.n++; o.amt += lt || 0; if (b !== 'yes') o.nb++;
+      if (x.r.status === 'refunded' && !seen[x.r.id]) { seen[x.r.id] = 1; refund += Number(x.r.refundAmount || 0); }
+    });
+    var tiles = '<div class="bd-tiles"><div><b>' + esc(money(round2(spent))) + '</b><span>Spent</span></div><div><b>' + esc(money(round2(refund))) + '</b><span>Refunded</span></div><div><b>' + esc(money(round2(spent - refund))) + '</b><span>Net spent</span></div><div><b>' + rows.length + '</b><span>Items bought</span></div><div class="' + (noBill ? 'hot' : '') + '"><b>' + noBill + '</b><span>Without a bill</span></div>' + (noPrice ? '<div class="hot"><b>' + noPrice + '</b><span>Price not entered</span></div>' : '') + '</div>';
+    var shopTbl = '<div class="tbl-wrap"><table class="dtbl"><thead><tr><th>Shop</th><th>Items</th><th>Amount</th><th>Without a bill</th></tr></thead><tbody>' +
+      Object.keys(shops).sort(function (a, b) { return shops[b].amt - shops[a].amt; }).map(function (k) {
+        return '<tr><td class="wrap">' + esc(k) + '</td><td>' + shops[k].n + '</td><td>' + esc(money(round2(shops[k].amt))) + '</td><td>' + shops[k].nb + '</td></tr>';
+      }).join('') + '</tbody></table></div>';
+    var body = rows.map(function (x) {
+      var r = x.r, it = x.it, b = billOf(x), bp = it.billImg || r.billImg;
+      return '<tr data-id="' + esc(r.id) + '"><td>' + esc(fmtD(ymd(new Date(x.at)))) + '<br><span class="muted">' + esc(fmtT(x.at)) + '</span></td>' +
+        '<td class="wrap"><strong>' + esc(it.item) + '</strong></td><td>' + esc(it.qty + (it.unit ? ' ' + it.unit : '')) + '</td>' +
+        '<td>' + (it.price != null ? esc(money(it.price)) : '-') + '</td><td><b>' + (it.lineTotal != null ? esc(money(it.lineTotal)) : '-') + '</b></td>' +
+        '<td class="wrap">' + esc(shopOf(x)) + '</td>' +
+        '<td>' + (b === 'yes' ? 'Yes' : (b === 'no' ? '<span class="due-over">No bill</span>' : '<span class="muted">Not recorded</span>')) + (bp ? '<br><img class="ilog-img" data-pid="' + esc(bp) + '" data-blob alt="">' : '') + '</td>' +
+        '<td class="wrap">' + esc(it.by || r.buyer || '-') + '</td><td class="wrap">' + esc(r.department || '-') + '</td><td class="wrap">' + esc(r.staff || '-') + '</td><td>' + esc(reqLabel(r)) + '</td></tr>';
+    }).join('');
+    return tiles + '<h2 class="bd-h">By shop</h2>' + shopTbl + '<h2 class="bd-h">Every purchase</h2>' +
+      '<div class="tbl-wrap"><table class="dtbl"><thead><tr><th>Bought on</th><th>Item</th><th>Quantity</th><th>Price per unit</th><th>Total</th><th>Shop</th><th>Bill</th><th>Bought by</th><th>Department</th><th>Person</th><th>Status</th></tr></thead><tbody>' + body + '</tbody></table></div>';
+  }
   function factSec(title, rows) {
     return rows.length ? '<div class="sec"><h3 class="sec-h">' + title + '</h3><dl class="facts">' + rows.join('') + '</dl></div>' : '';
   }
@@ -934,10 +1092,13 @@ img[data-pid]:not([src]) { visibility: hidden; }
     if (r.price != null && r.items.length === 1) row(buy, 'Price per unit', esc(money(r.price)));
     if (r.total != null) row(buy, 'Total price', '<strong>' + esc(money(r.total)) + '</strong>');
     if (r.buyNote) row(buy, 'Note', esc(r.buyNote));
+    var shops = {}; (r.items || []).forEach(function (x) { if (x.shop) shops[x.shop] = 1; });
+    if (Object.keys(shops).length) row(buy, 'Shop', esc(Object.keys(shops).join(', ')));
     if (r.handedAt) {
       row(out, 'Handed over to', esc(r.handedTo || '-'));
       row(out, 'Handed over by', esc(r.handedBy || '-'));
       row(out, 'Handed over on', esc(fmtDT(r.handedAt)));
+      row(out, 'Receiver accepted', r.accepted === 'yes' ? 'Yes' : (r.accepted === 'no' ? '<strong>No, not accepted</strong>' : '<span class="muted">Not yet</span>'));
     }
     if (r.keptAt) row(out, 'Kept at', esc(r.keptAt));
     if (r.handNote) row(out, 'Handover note', esc(r.handNote));
@@ -994,7 +1155,11 @@ img[data-pid]:not([src]) { visibility: hidden; }
       photoField('f-bill', 'Bill photo') + field('Note', '<input id="f-note" type="text" placeholder="Shop, bill number, anything useful">') + formBtns('Mark bought') + '</form>';
         if (m === 'handover') return '<form data-act="handover"><h3>Hand over</h3>' +
       '<div class="two">' + field('Handed over to', '<input id="f-to" type="text" required list="dl-staff" value="' + esc(r.staff) + '">') + field('Handed by', '<input id="f-from" type="text" required list="dl-staff" value="' + by + '">') + '</div>' +
-      (pur ? field('Place to keep', '<input id="f-place" type="text" placeholder="Shelf, cupboard or room where it is kept">') : '') +
+      field('Place to keep', '<input id="f-place" type="text" placeholder="Shelf, cupboard or room where it is kept">') +
+      '<div class="field"><span class="lbl">Did the receiver accept it?</span><div class="chiprow">' +
+      '<label class="rchip r-purchased"><input type="radio" name="acc" value="yes" checked><span>Accepted</span></label>' +
+      '<label class="rchip r-soldout"><input type="radio" name="acc" value="no"><span>Not accepted</span></label>' +
+      '<label class="rchip r-pending"><input type="radio" name="acc" value=""><span>Not yet</span></label></div></div>' +
       photoField('f-hand', 'Handover photo') + field('Note', '<input id="f-note" type="text">') + formBtns('Mark handed over') + '</form>';
     if (m === 'forward') return '<form data-act="forward"><h3>' + (pur ? 'Send to store instead of buying' : 'Not in stock, send to purchase') + '</h3>' +
       field('Your name', '<input id="f-by" type="text" required list="dl-staff" value="' + by + '">') + field('Remark', '<input id="f-note" type="text" placeholder="Optional">') + formBtns(pur ? 'Send to store' : 'Send to purchase') + '</form>';
@@ -1033,7 +1198,7 @@ img[data-pid]:not([src]) { visibility: hidden; }
       '<div class="field"><span class="lbl">Items in this order</span><div id="item-rows" class="irows">' + itemRow() + '</div>' +
       '<div><button class="btn small" type="button" data-add-row>Add another item</button></div></div>' +
       field('Deadline', '<input id="f-date" type="date" required min="' + todayStr() + '">') +
-      photoField('f-ref', 'Reference photo') +
+      photoField('f-ref', 'Reference photo', true) +
       field('Approved by', '<input id="f-appr" type="text" list="dl-staff" placeholder="Optional">') +
       '<p class="hint">The date and time of logging are recorded automatically.</p>' +
       '<div class="row"><button class="btn primary" type="submit">Log request</button><button class="btn" type="button" data-close>Cancel</button></div></form>';
@@ -1149,6 +1314,8 @@ img[data-pid]:not([src]) { visibility: hidden; }
         if (!nm || !(Number(q) > 0)) { badRow = true; return; }
         lines.push({ item: nm, qty: Number(q), unit: un, est: kind === 'purchase' && es !== '' && Number(es) >= 0 ? Number(es) : null });
       });
+      var refEl = f.querySelector('#f-ref');
+      if (assets && refEl && !(refEl.files && refEl.files[0])) { toast('Add a reference photo of the item.'); return; }
       if (!staff || !dept || !date || badRow || !lines.length) { toast(badRow ? 'Every item needs a name and a quantity.' : 'Fill in department, person, at least one item and the deadline.'); return; }
       var title = lines.length === 1 ? lines[0].item : lines[0].item + ' and ' + (lines.length - 1) + ' more';
       run(f, async function () {
@@ -1200,9 +1367,10 @@ img[data-pid]:not([src]) { visibility: hidden; }
       if (!to || !from) { toast('Enter who received it and who handed it over.'); return; }
       run(f, async function () {
         var handImg = await uploadPhoto(f, 'f-hand');
-        var fields = { status: 'handed', handedTo: to, handedBy: from, handedAt: new Date().toISOString(), handImg: handImg, handNote: v('f-note') };
-        if (r.kind === 'purchase' && v('f-place')) fields.keptAt = v('f-place');
-        await patch(id, fields, 'Handed over to ' + to + ' by ' + from + (fields.keptAt ? ', kept at ' + fields.keptAt : ''), from);
+        var accEl = f.querySelector('input[name="acc"]:checked'), accV = accEl ? accEl.value : '';
+        var fields = { status: 'handed', handedTo: to, handedBy: from, handedAt: new Date().toISOString(), handImg: handImg, handNote: v('f-note'), accepted: accV, acceptedAt: accV ? new Date().toISOString() : null };
+        if (v('f-place')) fields.keptAt = v('f-place');
+        await patch(id, fields, 'Handed over to ' + to + ' by ' + from + (fields.keptAt ? ', kept at ' + fields.keptAt : '') + (accV === 'yes' ? '. Receiver accepted it' : (accV === 'no' ? '. Receiver did not accept it' : '')), from);
         done('Marked as handed over');
       });
     } else if (act === 'forward') {
@@ -1239,6 +1407,8 @@ img[data-pid]:not([src]) { visibility: hidden; }
       if ((resp === 'purchased' || resp === 'expensive') && pstr !== '' && !(Number(pstr) >= 0)) { toast('Enter a valid price.'); return; }
       run(f, async function () {
         var img = await uploadPhoto(f, 'f-iimg');
+        var billPid = resp === 'purchased' ? await uploadPhoto(f, 'f-ibill') : null;
+        var shopV = v('f-ishop'), billEl = f.querySelector('input[name="bill"]:checked'), billV = billEl ? billEl.value : '';
         var now = new Date().toISOString(), actor = me();
         var items = r.items.map(function (x) { return Object.assign({}, x); });
         var it = items[idx], changed = resp !== it.state, pnum = pstr === '' ? null : Number(pstr);
@@ -1250,9 +1420,11 @@ img[data-pid]:not([src]) { visibility: hidden; }
         else { it.price = null; it.lineTotal = null; it.quote = null; }
         if (rtext) { it.remark = rtext; it.remarkAt = now; it.remarkBy = actor; }
         if (img) it.img = img;
+        if (shopV) it.shop = shopV;
+        if (resp === 'purchased') { if (billV) it.bill = billV; if (billPid) it.billImg = billPid; }
         var text;
         if (!changed && rtext) text = it.item + ': ' + rtext;
-        else text = it.item + ' · ' + (ISTATE[resp] || resp) + (resp === 'purchased' && it.price != null ? ' at ' + money(it.price) + ' per unit, total ' + money(it.lineTotal) : '') + (resp === 'expensive' && it.quote != null ? ' (quoted ' + money(it.quote) + ' per unit)' : '') + (rtext ? '. ' + rtext : '');
+        else text = it.item + ' · ' + (ISTATE[resp] || resp) + (resp === 'purchased' && it.price != null ? ' at ' + money(it.price) + ' per unit, total ' + money(it.lineTotal) : '') + (shopV && (resp === 'purchased' || resp === 'expensive' || resp === 'soldout' || resp === 'unavailable') ? ', shop ' + shopV : '') + (resp === 'purchased' && billV ? ', bill ' + billV : '') + (resp === 'expensive' && it.quote != null ? ' (quoted ' + money(it.quote) + ' per unit)' : '') + (rtext ? '. ' + rtext : '');
         var fields = applyItems(r, items, [{ at: now, by: actor, kind: rtext ? 'remark' : 'event', text: text }], now, actor);
         await db.doc('requests/' + id).update(fields);
         S.mode = 'view'; S.itemIdx = null; S.preResp = '';
@@ -1358,6 +1530,7 @@ img[data-pid]:not([src]) { visibility: hidden; }
   }
   panel.addEventListener('input', function (e) {
     if (e.target.classList && e.target.classList.contains('b-price')) calcBuy();
+    if (e.target.id === 'f-iprice') syncItemForm();
   });
 
   /* ---------- page events ---------- */
