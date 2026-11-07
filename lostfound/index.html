@@ -1214,6 +1214,7 @@ table.sum tr:last-child td { border-bottom: 0; }
         applyState(r.state); goRoute();
       }, function (err) {
         if (open && /staff code/.test(err.message || "")) { renderAuth("code", "The school now asks for the staff code."); return; }
+        if (open && /personal login/.test(err.message || "")) { renderAuth("login", "Your name has an incharge or admin login. Please log in with your password."); return; }
         $("#au-e").textContent = err.message || "Could not open."; b.disabled = false;
       });
     });

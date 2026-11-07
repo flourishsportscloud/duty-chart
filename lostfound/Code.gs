@@ -231,7 +231,7 @@ const API={
     if(name.charAt(0)==="#")fail("Type your real name.");
     if(codeRow(ctx,"staff")||codeRow(ctx,"incharge"))fail("This desk now needs the staff code.");
     const existing=ctx.DB.Users.find(x=>x.name.toLowerCase()===name.toLowerCase());
-    if(existing&&existing.hash)fail(existing.name+" has a personal login. Use “Admin / personal login” instead.");
+    if(existing&&existing.hash&&existing.role!=="staff")fail(existing.name+" has a personal login. Use “Admin / personal login” instead.");
     let u=existing;
     if(!u){const at=new Date(ctx.now).toISOString();u={name,role:"staff",status:"active",salt:"",hash:"",ver:1,requestedAt:at,approvedAt:at,approvedBy:"(open)"};ctx.DB.Users.push(u)}
     else if(u.role!=="staff"||u.status!=="active"){u.role="staff";u.status="active"}
