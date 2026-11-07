@@ -224,6 +224,20 @@ const API={
     ctx.dirty.Users=true;
     return {token:makeToken(ctx.H,ctx.secret,u,ctx.now),state:publicState(ctx,u)};
   },
+  // open mode: while no code is set, staff just type their name (no password, no code)
+  openJoin(ctx,name){
+    name=str(name,40);
+    if(!name)fail("Type your name.");
+    if(name.charAt(0)==="#")fail("Type your real name.");
+    if(codeRow(ctx,"staff")||codeRow(ctx,"incharge"))fail("This desk now needs the staff code.");
+    const existing=ctx.DB.Users.find(x=>x.name.toLowerCase()===name.toLowerCase());
+    if(existing&&existing.hash)fail(existing.name+" has a personal login. Use “Admin / personal login” instead.");
+    let u=existing;
+    if(!u){const at=new Date(ctx.now).toISOString();u={name,role:"staff",status:"active",salt:"",hash:"",ver:1,requestedAt:at,approvedAt:at,approvedBy:"(open)"};ctx.DB.Users.push(u)}
+    else if(u.role!=="staff"||u.status!=="active"){u.role="staff";u.status="active"}
+    ctx.dirty.Users=true;
+    return {token:makeToken(ctx.H,ctx.secret,u,ctx.now),state:publicState(ctx,u)};
+  },
   // admin sets (or clears, with an empty value) the shared code for "staff" or "incharge"
   setCode(ctx,token,kind,code){
     const me=needAdmin(ctx,token);
