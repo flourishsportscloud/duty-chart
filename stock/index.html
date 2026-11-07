@@ -348,10 +348,10 @@ img[data-pid]:not([src]) { visibility: hidden; }
     <input id="q" type="search" placeholder="Search item, person, department" aria-label="Search">
     <div class="extra" id="extra2" hidden>
       <div class="seg" id="respseg">
-        <button type="button" data-resp="all" aria-pressed="true">All items</button>
+        <button type="button" data-resp="all" aria-pressed="true">All</button>
         <button type="button" data-resp="pending" aria-pressed="false">Waiting</button>
-        <button type="button" data-resp="purchased" aria-pressed="false">Purchased</button>
-        <button type="button" data-resp="problem" aria-pressed="false">Not purchased</button>
+        <button type="button" data-resp="purchased" aria-pressed="false">Done</button>
+        <button type="button" data-resp="problem" aria-pressed="false">Not done</button>
       </div>
     </div>
     <div class="extra" id="extra" hidden>
@@ -564,7 +564,7 @@ img[data-pid]:not([src]) { visibility: hidden; }
       today: 'Requests logged today, and older requests that were closed today.',
       pending: 'Cases that are still open, with the nearest deadline first.',
       deadlines: 'Open cases grouped by how close the deadline is.',
-      itemlog: 'Every item of every purchase order: when it was ordered, the response, when it was bought, remarks and photos.',
+      itemlog: 'One row per item: date, time, person, deadline, source (stock room or market), status and remark. Tap Stock or Purchase above to split them.',
       datewise: 'All requests grouped by the day they were logged.',
       tilldate: 'Every request so far. Narrow it by status or date.'
     };
@@ -589,7 +589,7 @@ img[data-pid]:not([src]) { visibility: hidden; }
       today: 'Nothing logged today yet. Tap New request to log a stock order or a purchase.',
       pending: 'No pending cases. Every request logged so far is closed.',
       deadlines: 'No open cases to check against a deadline.',
-      itemlog: 'No purchase items to show. Log a purchase to see its items here.',
+      itemlog: 'No items to show yet. Log a request to see its items here.',
       datewise: 'No requests yet. Tap New request to log the first one.',
       tilldate: 'No requests in this range.'
     };
@@ -859,37 +859,64 @@ img[data-pid]:not([src]) { visibility: hidden; }
     if (it.at) return { cls: 'due-ok', text: 'Answered after ' + elapsedText(r.createdAt, it.at) };
     return { cls: 'due-ok', text: '-' };
   }
+  function srcText(r) {
+    var o = r.origKind || r.kind;
+    if (o === r.kind) return r.kind === 'stock' ? 'Stock room' : 'Market';
+    return o === 'stock' ? 'Stock room → Market' : 'Market → Stock room';
+  }
+  function rowStatus(r, it) {
+    if (r.status === 'handed' || r.status === 'refunded' || r.status === 'cancelled' || r.status === 'unapproved') return { cat: r.status === 'handed' ? 'done' : 'problem', html: '<span class="ist i-' + (r.status === 'handed' ? 'purchased' : 'soldout') + '">' + esc(STATUS[r.status]) + '</span>' };
+    if (r.kind === 'purchase') {
+      var st = it.state;
+      return { cat: st === 'pending' ? 'pending' : (st === 'purchased' || st === 'arranged' ? 'done' : 'problem'), html: itemTag(st) };
+    }
+    if (r.status === 'pending' && !r.approvedBy) return { cat: 'pending', html: '<span class="ist i-pending">Needs approval</span>' };
+    if (r.status === 'pending' || r.status === 'bought') return { cat: 'pending', html: '<span class="ist i-pending">' + esc(STATUS[r.status]) + '</span>' };
+    return { cat: 'problem', html: '<span class="ist i-soldout">' + esc(STATUS[r.status] || r.status) + '</span>' };
+  }
+  function lastRemark(r, it) {
+    if (it.remark) return it.remark;
+    if (r.kind === 'purchase' && r.items.length > 1) return '';
+    var l = (r.log || []).filter(function (e) { return e.kind === 'remark'; }).pop();
+    return l ? l.text : '';
+  }
   function itemLog(base) {
+    var showBuy = S.kind !== 'stock';
     var rows = [];
-    base.filter(function (r) { return r.kind === 'purchase'; }).sort(byCreatedDesc).forEach(function (r) {
-      r.items.forEach(function (it) { rows.push({ r: r, it: it }); });
+    base.slice().sort(byCreatedDesc).forEach(function (r) {
+      r.items.forEach(function (it) { rows.push({ r: r, it: it, st: rowStatus(r, it) }); });
     });
     rows = rows.filter(function (x) {
-      var st = x.it.state;
-      if (S.resp === 'pending') return st === 'pending';
-      if (S.resp === 'purchased') return st === 'purchased' || st === 'arranged';
-      if (S.resp === 'problem') return st !== 'pending' && st !== 'purchased' && st !== 'arranged';
+      if (S.resp === 'pending') return x.st.cat === 'pending';
+      if (S.resp === 'purchased') return x.st.cat === 'done';
+      if (S.resp === 'problem') return x.st.cat === 'problem';
       return true;
     });
     if (!rows.length) return '';
-    var nBought = rows.filter(function (x) { return isBought(x.it); }).length;
-    var nWait = rows.filter(function (x) { return x.it.state === 'pending'; }).length;
+    var nDone = rows.filter(function (x) { return x.st.cat === 'done'; }).length;
+    var nWait = rows.filter(function (x) { return x.st.cat === 'pending'; }).length;
     var spent = rows.reduce(function (a, x) { return a + (isBought(x.it) && x.it.lineTotal != null ? Number(x.it.lineTotal) : 0); }, 0);
-    var totals = '<div class="totals"><span>Items <b>' + rows.length + '</b></span><span>Purchased <b>' + nBought + '</b></span><span>Waiting <b>' + nWait + '</b></span><span>Not purchased <b>' + (rows.length - nBought - nWait) + '</b></span><span>Spent <b>' + esc(money(round2(spent))) + '</b></span></div>';
+    var totals = '<div class="totals"><span>Items <b>' + rows.length + '</b></span><span>Done <b>' + nDone + '</b></span><span>Waiting <b>' + nWait + '</b></span><span>Not done <b>' + (rows.length - nDone - nWait) + '</b></span>' + (showBuy ? '<span>Spent <b>' + esc(money(round2(spent))) + '</b></span>' : '') + '</div>';
     var body = rows.map(function (x) {
       var r = x.r, it = x.it, tc = timeCheck(r, it);
-      var price = it.state === 'purchased' && it.price != null ? esc(money(it.price)) + '<br><b>' + esc(money(it.lineTotal || 0)) + '</b>'
-        : (it.state === 'expensive' && it.quote != null ? 'quoted ' + esc(money(it.quote)) : (it.est != null ? '<span class="muted">est. ' + esc(money(it.est)) + '</span>' : '-'));
-      var got = it.state === 'purchased' && it.at ? esc(fmtD(ymd(new Date(it.at)))) + '<br><span class="muted">' + esc(fmtT(it.at)) + (it.by ? ' · ' + esc(it.by) : '') + '</span>' : '-';
-      return '<tr data-id="' + esc(r.id) + '"><td>' + esc(fmtD(ymd(new Date(r.createdAt)))) + '<br><span class="muted">' + esc(fmtT(r.createdAt)) + '</span></td>' +
-        '<td class="wrap"><strong>' + esc(it.item) + '</strong><br><span class="muted">#' + esc(code(r)) + (r.sample ? ' · example' : '') + '</span></td>' +
+      var buy = '';
+      if (showBuy) {
+        var price = it.state === 'purchased' && it.price != null ? esc(money(it.price)) + ' each<br><b>' + esc(money(it.lineTotal || 0)) + '</b>'
+          : (it.state === 'expensive' && it.quote != null ? 'quoted ' + esc(money(it.quote)) : (r.kind === 'purchase' && it.est != null ? '<span class="muted">est. ' + esc(money(it.est)) + '</span>' : '-'));
+        var got = it.state === 'purchased' && it.at ? '<br><span class="muted">' + esc(fmtD(ymd(new Date(it.at)))) + ', ' + esc(fmtT(it.at)) + '</span>' : '';
+        buy = '<td>' + price + got + '</td><td>' + (it.img ? '<img class="ilog-img" data-pid="' + esc(it.img) + '" data-blob alt="">' : '-') + '</td>';
+      }
+      var rem = lastRemark(r, it);
+      return '<tr data-id="' + esc(r.id) + '"><td>' + esc(fmtD(ymd(new Date(r.createdAt)))) + '</td><td>' + esc(fmtT(r.createdAt)) + '</td>' +
+        '<td class="wrap"><strong>' + esc(it.item) + '</strong>' + (r.sample ? '<br><span class="muted">example</span>' : '') + '</td>' +
         '<td>' + esc(it.qty + (it.unit ? ' ' + it.unit : '')) + '</td><td class="wrap">' + esc(r.department || '-') + '</td>' +
-        '<td>' + (hasDl(r) ? esc(fmtD(r.deadline)) : '-') + '</td><td>' + itemTag(it.state) + '</td><td>' + got + '</td><td>' + price + '</td>' +
-        '<td class="wrap">' + (it.remark ? esc(it.remark) : '<span class="muted">-</span>') + '</td>' +
-        '<td>' + (it.img ? '<img class="ilog-img" data-pid="' + esc(it.img) + '" data-blob alt="">' : '-') + '</td>' +
+        '<td class="wrap">' + esc(r.staff || '-') + '</td>' +
+        '<td>' + (hasDl(r) ? esc(fmtD(r.deadline)) : '-') + '</td><td class="wrap">' + esc(srcText(r)) + '</td><td>' + x.st.html + '</td>' +
+        '<td class="wrap">' + (rem ? esc(rem) : '<span class="muted">-</span>') + '</td>' + buy +
         '<td class="wrap ' + tc.cls + '">' + esc(tc.text) + '</td></tr>';
     }).join('');
-    return totals + '<div class="tbl-wrap" style="margin-top:10px"><table class="dtbl ilog"><thead><tr><th>Ordered</th><th>Item</th><th>Quantity</th><th>Department</th><th>Deadline</th><th>Response</th><th>Purchased</th><th>Price</th><th>Remark</th><th>Photo</th><th>Time check</th></tr></thead><tbody>' + body + '</tbody></table></div>';
+    var head = '<th>Date</th><th>Time</th><th>Item name</th><th>Quantity</th><th>Department</th><th>Person</th><th>Deadline</th><th>Source</th><th>Status</th><th>Remark</th>' + (showBuy ? '<th>Price / bought</th><th>Photo</th>' : '') + '<th>Time check</th>';
+    return totals + '<div class="tbl-wrap" style="margin-top:10px"><table class="dtbl ilog"><thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table></div>';
   }
   function factSec(title, rows) {
     return rows.length ? '<div class="sec"><h3 class="sec-h">' + title + '</h3><dl class="facts">' + rows.join('') + '</dl></div>' : '';
