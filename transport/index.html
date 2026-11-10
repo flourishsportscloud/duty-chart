@@ -230,7 +230,7 @@ textarea{width:100%;font:13px/1.4 ui-monospace,monospace;border:1px solid var(--
 <div id="fisBoot" style="position:fixed;inset:0;z-index:79;background:#f3f5fa;display:flex;align-items:center;justify-content:center;font:15px system-ui;color:#475467">Loading student list…</div>
 <script>
 (function(){
-  const API_URL=new URLSearchParams(location.search).get('api')||'';
+  const API_URL=new URLSearchParams(location.search).get('api')||'https://script.google.com/macros/s/AKfycbwyAbalpK0Gb71uOqB-CMqvk5BVJGGLuxepr7UlOB-yRf4oLCjNCV0H51got53iEh1JYw/exec';
   const K=k=>'fisTA:'+k;
   const get=k=>{try{return JSON.parse(localStorage.getItem(K(k)))}catch(e){return null}};
   const put=(k,v)=>{try{localStorage.setItem(K(k),JSON.stringify(v))}catch(e){}};
@@ -244,7 +244,7 @@ textarea{width:100%;font:13px/1.4 ui-monospace,monospace;border:1px solid var(--
   };
   window.FIS_LOGOUT=function(){['token','me','roster','gcache','grev','goutbox'].forEach(k=>localStorage.removeItem(K(k)));location.reload()};
   const $=id=>document.getElementById(id);
-  function startApp(r){window.FIS_R=r;window.FIS_ME=get('me')||'';const s=document.createElement('script');s.src='app.js?v=202611101004';s.onload=()=>$('fisBoot').remove();document.body.appendChild(s)}
+  function startApp(r){window.FIS_R=r;window.FIS_ME=get('me')||'';const s=document.createElement('script');s.src='app.js?v=202611101019';s.onload=()=>$('fisBoot').remove();document.body.appendChild(s)}
   function showLogin(msg){$('fisBoot').classList.add('hide');$('fisLogin').classList.remove('hide');$('fisLE').textContent=msg||'';if(!API_URL)$('fisLE').textContent='This app is being set up. Please try again later.'}
   $('fisLoginF').addEventListener('submit',async e=>{e.preventDefault();const n=$('fisLN').value.trim(),p=$('fisLP').value;
     if(n.length<3||!p){$('fisLE').textContent='Type your full name and the password.';return}
