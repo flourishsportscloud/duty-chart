@@ -74,7 +74,9 @@ function rowOf_(sh, key){ if(sh.getLastRow() < 2) return 0;
   const c = sh.getRange(2,1,sh.getLastRow()-1,1).createTextFinder(key).matchEntireCell(true).findNext(); return c ? c.getRow() : 0; }
 function read_(test){
   const sh = sheet_('Docs'), n = sh.getLastRow() - 1; if(n < 1) return [];
-  const head = sh.getRange(2,1,n,HEAD.length).getValues(), hit = [];
+  const head = sh.getRange(2,1,n,HEAD.length).getValues(), hit = [], tz = ss_().getSpreadsheetTimeZone();
+  // Sheets turns "2026-11-10" into a date: put it back to text before comparing
+  head.forEach(v => { if(v[2] instanceof Date) v[2] = Utilities.formatDate(v[2], tz, 'yyyy-MM-dd'); v[0] = String(v[0]); });
   head.forEach((v,i) => { if(test(v)) hit.push(i); }); if(!hit.length) return [];
   const body = sh.getRange(2,HEAD.length+1,n,DOC_CHUNKS).getValues();
   return hit.map(i => { const v = head[i];
@@ -96,11 +98,11 @@ const API = {
     if(!obj || typeof obj !== 'object' || Array.isArray(obj)) fail('Bad record.');
     const json = JSON.stringify(obj); if(json.length > CHUNK*DOC_CHUNKS) fail('This record is too large to save.');
     const rev = rev_(true), sh = sheet_('Docs');
-    const row = [path, p.coll, p.day, rev, false, new Date().toISOString()].concat(Array.from({length: DOC_CHUNKS}, (_, i) => json.slice(i*CHUNK, (i+1)*CHUNK)));
+    const row = [path, p.coll, "'" + p.day, rev, false, new Date().toISOString()].concat(Array.from({length: DOC_CHUNKS}, (_, i) => json.slice(i*CHUNK, (i+1)*CHUNK)));
     const r = rowOf_(sh, path); if(r) sh.getRange(r,1,1,row.length).setValues([row]); else sh.appendRow(row);
     log_(who, path, 'saved'); return {rev: rev}; },
   del(path, who){ const p = parts_(path); const sh = sheet_('Docs'), r = rowOf_(sh, path); if(!r) return {rev: rev_()};
-    const rev = rev_(true); sh.getRange(r,1,1,HEAD.length).setValues([[path, p.coll, p.day, rev, true, new Date().toISOString()]]);
+    const rev = rev_(true); sh.getRange(r,1,1,HEAD.length).setValues([[path, p.coll, "'" + p.day, rev, true, new Date().toISOString()]]);
     sh.getRange(r,HEAD.length+1,1,DOC_CHUNKS).clearContent(); log_(who, path, 'removed'); return {rev: rev}; }
 };
 function doPost(e){

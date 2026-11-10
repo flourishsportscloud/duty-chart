@@ -69,6 +69,7 @@ const GAS=(()=>{
   const dayOf=p=>p.startsWith('config/')?'config':p.split('/')[1];
   const keep=()=>new Set(['config',S.date,todayStr()]);
   let cache=LS.get('gcache',{}),rev=LS.get('grev',0),outbox=LS.get('goutbox',[]);
+  if(LS.get('gver',0)!==2){cache={};rev=0;LS.set('gver',2)}   // v2: reload everything once after the date-matching fix
   const loaded=new Set(rev?Object.keys(cache).map(dayOf).concat(['config']):[]);
   const subs=new Set(),dayP={};let busy=false,state='',lastErr='';
   function persist(){const k=keep(),c={};Object.keys(cache).forEach(p=>{if(k.has(dayOf(p)))c[p]=cache[p]});LS.set('gcache',c);LS.set('grev',rev);LS.set('goutbox',outbox)}
@@ -80,7 +81,7 @@ const GAS=(()=>{
     return {metadata:{fromCache:!loaded.has(dayOf(pre))},docs}}
   function ensure(days){const need=[...new Set(days)].filter(d=>d!=='config'&&!loaded.has(d)&&!dayP[d]);
     if(need.length||(!loaded.has('config')&&!dayP.config)){
-      const p=call('days',[need]).then(r=>{if(!rev)rev=r.rev;apply(r.docs);loaded.add('config');need.forEach(d=>loaded.add(d));persist();fireAll();status(outbox.length?'Saving…':'Live ✓')})
+      const p=call('days',[need]).then(r=>{rev=rev?Math.min(rev,r.rev):r.rev;apply(r.docs);loaded.add('config');need.forEach(d=>loaded.add(d));persist();fireAll();status(outbox.length?'Saving…':'Live ✓')})
         .catch(e=>{status(e.net?'Offline – saved on this phone':'Sync error');throw e}).finally(()=>{need.forEach(d=>delete dayP[d]);if(!need.length)delete dayP.config});
       need.forEach(d=>dayP[d]=p);if(!need.length)dayP.config=p;}
     return Promise.all([...new Set(days)].map(d=>dayP[d]||dayP.config).filter(Boolean)).catch(()=>{});}
