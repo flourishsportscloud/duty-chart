@@ -178,6 +178,17 @@ function setupPmLogins(){
   return out;
 }
 
+/* Run once from the Apps Script editor (not reachable from the web): sets EVERY login to FirstName#1111
+   (e.g. Poonam#1111, Dean#1111, Director#1111) and logs everyone out. Change them afterwards from the Logins screen. */
+function setNamePasswords(){
+  Object.keys(COLS).forEach(sheet_);
+  const out=[];
+  users_().forEach(u=>{const pw=u.name.split(/[^A-Za-z]+/)[0]+"#1111";setPw_(u,pw);out.push(u.name+" : "+pw)});
+  sheet_("Log").appendRow([Utilities.formatDate(new Date(),TZ,"yyyy-MM-dd HH:mm"),"Editor","password","set FirstName#1111"]);
+  Logger.log(out.join("\n"));
+  return out;
+}
+
 function doPost(e){
   let out;const lock=LockService.getScriptLock();
   try{
