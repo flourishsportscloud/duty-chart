@@ -4,6 +4,12 @@ The page (`transport/index.html` + `app.js`) is hosted on GitHub Pages and opens
 
 **Student names are not stored in this GitHub repository** (it is public). The student list is kept only in the Google Sheet and is sent to a phone only after a staff login.
 
+## Current setup (done 10 Nov 2026)
+
+- Sheet: **Student Entry Exit Data** in the flourishsportscloud Drive (Roster tab imported).
+- Script: standalone Apps Script project **Student Entry Exit API** (it opens the sheet by `SHEET_ID` in `Code.gs`), deployed as a web app (Execute as: Me, Who has access: Anyone). The `/exec` URL is built into `transport/index.html`.
+- Still to do by the Director: add the `STAFF_SUFFIX` Script Property (step 4 below). Until then logins show "The staff password is not set up yet".
+
 ## 1. Create the Google Sheet and script (about 10 minutes)
 
 1. Create a new Google Sheet named **Student Entry Exit Data**.
