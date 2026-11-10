@@ -300,7 +300,7 @@ function logout(expired){
   render(true);if(expired)showMsg('Please log in again.');
 }
 async function doLogin(){
-  const id=document.getElementById('lid').value,pw=document.getElementById('lpw').value;
+  const id=document.getElementById('lid').value,pw=document.getElementById('lpw').value.trim();
   if(!id||!pw){showMsg('Choose your name and type your password.');return}
   S.busy=true;render(true);
   try{const v=await api('login',[id,pw]);setSession(v);showMsg('');S.busy=false;render(true);poll()}
@@ -319,9 +319,10 @@ function showOk(t){const el=document.getElementById('msg');el.innerHTML=`<div cl
 function loginHTML(){
   return `<div class="card login"><h3 style="font-size:17px">Log in</h3><div class="muted">PL Plan – Live · FIS</div>
   <label for="lid">Your name</label><select id="lid"><option value="">— choose —</option>${PEOPLE.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select>
-  <label for="lpw">Password</label><input id="lpw" type="password" autocomplete="current-password">
+  <label for="lpw">Password</label><input id="lpw" type="password" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false">
+  <label style="display:flex;align-items:center;gap:6px;font-weight:400;margin-top:6px"><input type="checkbox" onchange="document.getElementById('lpw').type=this.checked?'text':'password'" style="width:auto;margin:0"> Show password</label>
   <button class="btn" data-act="login" ${S.busy?'disabled':''}>${S.busy?'Logging in…':'Log in'}</button>
-  <div class="muted" style="margin-top:10px">Forgot your password? Ask the Director–Admin to set a new one.</div></div>`;
+  <div class="muted" style="margin-top:10px">Wrong password? Passwords are case-sensitive (e.g. Harsh#1111). Forgot it? Ask the Director–Admin to set a new one.</div></div>`;
 }
 function pwHTML(){
   return `<div class="card login"><h3>Change my password</h3>
