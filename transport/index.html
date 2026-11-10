@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Student Entry Exit Report</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f3f5f9;--card:#fff;--ink:#17233d;--mute:#5f6b80;--line:#e1e6ee;
+  --brand:#1c3461;--brand2:#e9eef7;--mag:#e5256a;--pur:#6a3a92;--sky:#5bbde8;--amb:#f2a93b;
+  --p:#1f8a5b;--pbg:#e4f4ec;--a:#c8323c;--abg:#fbe7e8;--late:#a8670a;--latebg:#fdf1dc;
+  --sb:#6a3a92;--sbbg:#f1eaf8;--early:#1b74ab;--earlybg:#e3f2fb;--walk:#11706f;--walkbg:#dff3f2;
+  --un:#8a94a6;--unbg:#eef1f5;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:15px}
+header{background:var(--brand);color:#fff;padding:10px 14px 0;position:sticky;top:0;z-index:20;box-shadow:0 2px 10px rgba(16,30,60,.25);border-top:4px solid var(--mag)}
+.logo{width:44px;height:44px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none}
+.logo img{width:36px;height:auto}
+.hrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hrow h1{font-size:16px;margin:0;font-weight:700;letter-spacing:.2px;flex:1;min-width:160px;line-height:1.25}
+.hrow h1 small{display:block;font-weight:500;font-size:11.5px;opacity:.8;letter-spacing:.3px;text-transform:uppercase}
+.hrow input[type=date]{border:0;border-radius:8px;padding:7px 9px;font:inherit;font-size:14px}
+.sync{font-size:11px;padding:3px 8px;border-radius:20px;background:rgba(255,255,255,.18)}
+nav{display:flex;gap:2px;overflow-x:auto;margin-top:10px}
+nav{scrollbar-width:none}nav::-webkit-scrollbar{display:none}
+nav button{background:none;border:0;color:#c9d4ea;font:inherit;font-weight:600;font-size:13.5px;padding:11px 12px;border-bottom:3px solid transparent;white-space:nowrap;cursor:pointer}
+nav button.on{color:#fff;border-color:var(--amb)}
+nav button b{display:inline-block;min-width:18px;height:18px;line-height:18px;border-radius:9px;background:rgba(255,255,255,.16);font-size:11px;margin-right:6px;text-align:center}
+nav button.on b{background:var(--amb);color:var(--brand)}
+main{padding:12px;max-width:1100px;margin:0 auto;padding-bottom:40px}
+@media (max-width:560px){main{padding:10px}.card{padding:12px}.hrow input[type=date]{font-size:13px;padding:6px 8px}}
+.card{background:var(--card);border-radius:12px;padding:14px;box-shadow:0 1px 2px rgba(20,33,61,.06);border:1px solid var(--line);margin-bottom:12px}
+h2{color:var(--brand);font-weight:700;letter-spacing:.1px}
+.seck{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-weight:600;font-size:14px;cursor:pointer}.seck input{width:17px;height:17px;accent-color:var(--brand)}
+.chip{font:inherit;font-size:12.5px;font-weight:600;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:16px;padding:5px 10px;cursor:pointer;min-width:34px}.chip.on{background:var(--brand);color:#fff;border-color:var(--brand)}.chip.grade{min-width:84px;text-align:left;background:var(--brand2);color:var(--brand);border-color:transparent}.chip.grade.on{background:var(--mag);color:#fff}
+.sbcols{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:16px}.sbcol{min-width:0}@media (max-width:900px){.sbcols{grid-template-columns:1fr}.sbcol+.sbcol{border-top:1px solid var(--line);padding-top:12px}}
+.achart{display:flex;flex-direction:column;gap:5px}.arow{display:flex;align-items:center;gap:8px}.alab{width:64px;font-size:12px;font-weight:600;flex:none}.atrack{position:relative;flex:1;height:16px;background:var(--bg);border-radius:4px;display:flex;overflow:hidden}.atrack.axis{background:none;height:14px;overflow:visible}.atrack.axis span{position:absolute;font-size:10.5px;color:var(--mute);white-space:nowrap;transform:translateX(-50%)}.atrack.axis span[style*='left:0']{transform:none}.atrack.axis span[style*='right:0']{transform:none}.abar{height:100%;background:var(--sky);border-radius:4px}.abar.late{background:var(--a)}.acut{position:absolute;top:0;bottom:0;width:2px;background:var(--a);opacity:.6}.aval{width:66px;font-size:12px;text-align:right;flex:none}.aval.late{color:var(--a);font-weight:700}.sbar{height:100%}.lg{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.nmblk{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px}.nmblk summary{cursor:pointer;font-size:14px;list-style:none;display:flex;align-items:center;gap:8px}
+.secthead{display:flex;align-items:center;gap:8px;margin:2px 0 12px}.secthead i{width:4px;height:22px;border-radius:2px;background:var(--mag);display:inline-block}.secthead span{font-size:17px;font-weight:700;color:var(--brand)}.secthead small{color:var(--mute);font-size:12px;font-weight:500}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+label.f{font-size:12px;color:var(--mute);font-weight:600;display:block;margin-bottom:4px}
+select,input[type=text],input[type=search],input[type=time]{font:inherit;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;min-width:0}
+select{min-width:200px}
+.btn{font:inherit;font-weight:600;border:0;border-radius:9px;padding:9px 14px;cursor:pointer;background:var(--brand);color:#fff}
+.btn.ghost{background:var(--brand2);color:var(--brand)}
+.btn.green{background:var(--p)}
+.btn.sm{padding:6px 10px;font-size:13px}
+.btn:disabled{opacity:.45;cursor:default}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.vcard{border:1px solid var(--line);border-radius:12px;padding:12px;cursor:pointer;background:#fff;text-align:left;font:inherit}
+.vcard:hover{border-color:var(--brand)}
+.vcard b{font-size:16px}
+.vcard .st{font-size:12px;margin-top:6px;color:var(--mute)}
+.pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px}
+.pill.done{background:var(--pbg);color:var(--p)}.pill.pend{background:var(--unbg);color:var(--mute)}.pill.part{background:var(--latebg);color:var(--late)}
+.kid{display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--line)}
+.kid:last-child{border-bottom:0}
+.kid .n{width:26px;color:var(--mute);font-size:12px;text-align:right}
+.kid .nm{flex:1;min-width:0}
+.kid .nm div{font-weight:600}
+.kid .nm span{font-size:12px;color:var(--mute)}
+.tg{min-width:84px;font:inherit;font-weight:700;font-size:13px;border-radius:9px;border:0;padding:9px 6px;cursor:pointer}
+.tg.P{background:var(--p);color:#fff}.tg.A{background:var(--a);color:#fff}.tg.U{background:var(--unbg);color:var(--un)}
+.tg.SB{background:var(--sb);color:#fff}.tg.noSB{background:var(--unbg);color:var(--un)}
+.tag{font-size:11px;font-weight:700;padding:2px 7px;border-radius:6px;white-space:nowrap}
+.t-P{background:var(--pbg);color:var(--p)}.t-A{background:var(--abg);color:var(--a)}.t-U{background:var(--unbg);color:var(--un)}.t-PRES{background:var(--pbg);color:var(--p)}
+.t-LATE{background:var(--latebg);color:var(--late)}.t-WALKIN{background:var(--walkbg);color:var(--walk)}
+.t-EARLY{background:var(--earlybg);color:var(--early)}.t-GOWALK{background:var(--walkbg);color:var(--walk)}
+.t-SB{background:var(--sbbg);color:var(--sb)}.t-ABS{background:var(--abg);color:var(--a)}.t-U{background:var(--unbg);color:var(--un)}.t-W,.t-HOME{background:var(--walkbg);color:var(--walk)}.t-VEH{background:var(--brand2);color:var(--brand)}
+.counts{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.counts div{background:var(--bg);border-radius:9px;padding:6px 10px;font-size:12px;color:var(--mute)}
+.counts b{display:block;font-size:18px;color:var(--ink)}
+.stick{position:sticky;bottom:0;background:#fff;padding:10px;border-top:1px solid var(--line);margin:0 -14px -14px;border-radius:0 0 14px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
+th{background:#f0f3fa;font-size:11px;text-transform:uppercase;letter-spacing:.3px;color:var(--mute);position:sticky;top:0}
+td:first-child,th:first-child,td.l{text-align:left}
+tr.tot td{font-weight:800;background:#f7f8fc}
+tbody tr.click{cursor:pointer}tbody tr.click:hover{background:#f7f9ff}
+.tw{overflow:auto;max-height:70vh;border:1px solid var(--line);border-radius:10px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:12px}
+.kpi{background:#fff;border-radius:12px;padding:12px;box-shadow:0 1px 3px rgba(20,33,61,.08)}
+.kpi span{font-size:12px;color:var(--mute);font-weight:600}.kpi b{display:block;font-size:24px;margin-top:2px}
+.flow{display:flex;gap:6px;flex-wrap:wrap;font-size:12px;color:var(--mute);margin-bottom:10px}
+.flow span{background:#fff;border:1px solid var(--line);border-radius:20px;padding:4px 10px}
+.flow span.on{border-color:var(--brand);color:var(--brand);font-weight:700}
+.muted{color:var(--mute);font-size:13px}
+.banner{background:#fff6dc;color:#7a5200;border-radius:10px;padding:9px 12px;font-size:13px;margin-bottom:12px}
+.res{border:1px solid var(--line);border-radius:10px;margin-top:8px;max-height:340px;overflow:auto}
+.res .kid{padding:9px 10px;cursor:pointer}.res .kid:hover{background:#f7f9ff}
+.opts{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
+.opt{font:inherit;font-weight:700;border-radius:10px;border:2px solid transparent;padding:12px 8px;cursor:pointer}
+.opt small{display:block;font-weight:500;font-size:11px;margin-top:3px;opacity:.85}
+.opt.sel{border-color:var(--ink)}
+.modal{position:fixed;inset:0;background:rgba(10,20,40,.45);display:flex;align-items:flex-start;justify-content:center;z-index:50;padding:30px 10px;overflow:auto}
+.modal .card{max-width:760px;width:100%}
+.x{float:right;background:none;border:0;font-size:22px;cursor:pointer;color:var(--mute)}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#14213d;color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;z-index:60;opacity:0;transition:.25s;pointer-events:none}
+.toast.on{opacity:1}
+h2{font-size:16px;margin:0 0 8px}
+h3{font-size:14px;margin:14px 0 6px;color:var(--mute);text-transform:uppercase;letter-spacing:.4px}
+.hide{display:none!important}
+textarea{width:100%;font:13px/1.4 ui-monospace,monospace;border:1px solid var(--line);border-radius:9px;padding:9px;min-height:160px}
+@media (max-width:560px){select{min-width:0;width:100%}.opts{grid-template-columns:1fr 1fr}th,td{padding:6px 4px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="hrow">
+    <div class="logo"><img src="data:image/png;base64,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" alt="FIS"></div>
+    <h1>Student Entry Exit Report<small>Flourish International School</small></h1>
+    <input type="date" id="date" aria-label="Date">
+    <span class="sync" id="sync">Connecting…</span>
+  </div>
+  <nav id="nav">
+    <button data-v="duty" class="on"><b>1</b>Morning Attendance</button>
+    <button data-v="school"><b>2</b>Front Office</button>
+    <button data-v="sb"><b>3</b>Student Information</button>
+    <button data-v="dep"><b>4</b>Departure</button>
+    <button data-v="dash">Reports</button>
+    <button data-v="alloc">Settings</button>
+  </nav>
+</header>
+<main>
+  <div class="banner hide" id="localBanner">No network: entries are kept on this phone and will upload when the network is back.</div>
+
+
+  <!-- DUTY -->
+  <section id="v-duty">
+    <div class="card">
+      <label class="f">Marked by (Transport In-charge)</label>
+      <div class="row"><select id="dutyStaff"></select><span class="muted" id="dutyHint"></span></div>
+    </div>
+    <div class="card" id="dutyList"></div>
+    <div class="card hide" id="dutyVeh"></div>
+  </section>
+
+  <!-- GATE -->
+
+  <!-- STAYBACK -->
+  <section id="v-sb" class="hide">
+    <div class="card">
+      <div class="row hide" id="sbSegs"></div>
+      <div class="row">
+        <div><label class="f">Marked by</label><select id="sbBy" style="min-width:210px"></select></div>
+        
+        <div id="sbModeWrap"><label class="f">Mode</label><select id="sbMode"><option value="day">Mark today</option><option value="reg">Edit regular SB list</option></select></div>
+      </div>
+      <div id="sbChips" style="margin-top:10px"></div>
+      <p class="muted" id="sbHint" style="margin:10px 0 0"></p>
+    </div>
+    <div class="card" id="sbList"></div>
+    <div class="card"><h2 id="sbSumH">Class-wise stayback summary</h2><div id="sbSum"></div></div>
+  </section>
+
+  <!-- DASH -->
+  <section id="v-dash" class="hide">
+    <div class="kpis" id="kpis"></div>
+    <div class="card">
+      <div class="row" style="justify-content:space-between;margin-bottom:10px">
+        <div class="row"><select id="dashV" style="min-width:170px"><option value="">Morning Attendance</option><option value="dep">Departure</option><option value="week">Weekly – datewise P/A</option><option value="arr">Arrival Time &amp; Uniform – charts</option><option value="rec">Student Records – Late / Early / SB / Missed SB / Missed bus</option></select><select id="dashF" style="min-width:150px"><option value="">All vehicles</option><option>Bus</option><option>Van</option><option>Pre-Primary</option><option>Auto</option></select>
+        <select id="dashS" style="min-width:150px"><option value="">All staff</option></select></div>
+        <button class="btn ghost sm" id="copyRep">Copy Report (WhatsApp)</button>
+      </div>
+      <div class="tw"><table id="dashT"></table></div>
+      <p class="muted" id="dashNote">Tap a vehicle for the student-wise IN / OUT sheet. Departure = Present in school − Leaving early − Going by walk − Stayback.</p>
+    </div>
+    <div class="card" id="dashExtra"></div>
+  </section>
+
+  <!-- DEPARTURE -->
+  <section id="v-dep" class="hide">
+    <div class="card">
+      <label class="f">Marked by (Departure In-charge)</label>
+      <div class="row"><select id="depStaff"></select><span class="muted">Students boarding the vehicle are listed first; absentees, early leavers, stayback and parent pick-ups are listed separately with the reason.</span></div>
+    </div>
+    <div class="card" id="depList"></div>
+    <div class="card hide" id="depVeh"></div>
+  </section>
+
+  <!-- SCHOOL -->
+  <section id="v-school" class="hide">
+    <div class="card">
+      <div class="row">
+        <div><label class="f">Class</label><select id="schCls"><option value="">All classes</option></select></div>
+        <div><label class="f">Entry-Exit Mode</label><select id="schMode" style="min-width:140px"><option value="">All modes</option><option>Bus</option><option>Auto</option><option>School Van</option><option>By Walk</option><option>Private Van</option></select></div>
+        <div><label class="f">Status</label><select id="schSt" style="min-width:170px"><option value="">All students</option><option value="ABS">Absent</option><option value="U">Not marked</option><option value="LATE">Late Arrival</option><option value="EARLY">Leaving Early</option><option value="SB">Stayback</option><option value="GOWALK">Going by walk</option><option value="VEH">Going in vehicle</option><option value="FO">Marked by Front Office</option><option value="SPW">Special list – vehicle in, parent pick-up out</option></select></div>
+        <div style="flex:1;min-width:160px"><label class="f">Search name</label><input type="search" id="schQ" placeholder="Student name" style="width:100%"></div>
+      </div>
+      <div class="row" style="margin-top:10px"><div><label class="f">Front Office – marked by</label><select id="gateBy"><option>Megha Ma'am (Front Office)</option><option>Harshvardhan Soni Sir (Front Office)</option></select></div><button class="btn ghost sm" id="copySch" style="align-self:flex-end">Copy List (WhatsApp)</button></div><p class="muted" style="margin:10px 0 0">Tap any student to mark Late comer, Came by walk, Absent, Early leaver, Going by walk, Stayback or On vehicle. Front Office marks override vehicle duty and PL stayback and update the Vehicle, Departure, Stayback and Dashboard lists automatically.</p>
+    </div>
+    <div class="card" id="schList"></div>
+  </section>
+
+  <!-- ALLOC -->
+  <section id="v-alloc" class="hide">
+    <div class="card"><div class="row" style="justify-content:space-between"><div><h2 style="margin:0">Signed in</h2><span class="muted" id="whoName"></span></div><button class="btn ghost sm" id="signOut">Sign out</button></div></div>
+    <div class="card">
+      <h2>School Timing</h2>
+      <div class="row" style="margin-bottom:6px"><label class="f" style="margin:0">Late Arrival after</label><input type="time" id="lateAfter"><span class="muted">Front Office IN time after this is marked Late Arrival automatically.</span></div>
+    </div>
+    <div class="card">
+      <h2>Managers – Full Access</h2>
+      <p class="muted">Managers appear in every "Who is marking" list. They see all vehicles in Vehicle Duty and Departure, can mark as Front Office in the School Chart, and can mark Stayback for any class.</p>
+      <div id="mgrList" class="row" style="margin:8px 0"></div>
+      <div class="row"><input type="text" id="mgrName" placeholder="Manager name, e.g. Poonam Ma'am" style="flex:1;min-width:180px"><button class="btn" id="mgrAdd">Add Manager</button></div>
+    </div>
+    <div class="card">
+      <h2>Duty Allocation</h2>
+      <p class="muted">Default: Bus/Van 1-3 Juhi · 4-6 Priyanka S · 7-9 Mansi · 10-12 Komal · 13-15 Bhagyashree · 16-18 Ram · 19-22 Chandan · 23-26 Rashmi · 27-30 Renuka · 31-34 Vijay · 35-38 Yashika · Autos Saurabh &amp; Anoop. Pre-primary Bus A–H and Van I are unallocated — assign them here. Changes apply to all dates and all users.</p>
+      <div class="tw"><table id="allocT"></table></div>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast"></div>
+<div id="modalRoot"></div>
+
+<div id="fisLogin" class="hide" style="position:fixed;inset:0;z-index:80;background:#f3f5fa;display:flex;align-items:center;justify-content:center;padding:18px">
+  <form id="fisLoginF" class="card" style="width:100%;max-width:380px" novalidate>
+    <h2 style="font-size:18px">Student Entry Exit Report</h2>
+    <p class="muted" style="margin:0 0 12px">Staff login · Flourish International School</p>
+    <label class="f">Your full name</label><input type="text" id="fisLN" autocomplete="name" style="width:100%" placeholder="e.g. Megha Sharma">
+    <label class="f" style="margin-top:10px">FIS staff password</label><input type="password" id="fisLP" autocomplete="current-password" style="width:100%" placeholder="Your first name + the FIS staff code">
+    <p id="fisLE" style="color:#b42318;min-height:18px;margin:8px 0"></p>
+    <button class="btn" type="submit" style="width:100%">Log in</button>
+  </form>
+</div>
+<div id="fisBoot" style="position:fixed;inset:0;z-index:79;background:#f3f5fa;display:flex;align-items:center;justify-content:center;font:15px system-ui;color:#475467">Loading student list…</div>
+<script>
+(function(){
+  const API_URL=new URLSearchParams(location.search).get('api')||'';
+  const K=k=>'fisTA:'+k;
+  const get=k=>{try{return JSON.parse(localStorage.getItem(K(k)))}catch(e){return null}};
+  const put=(k,v)=>{try{localStorage.setItem(K(k),JSON.stringify(v))}catch(e){}};
+  window.FIS_CALL=async function(fn,args){
+    if(!API_URL){const x=new Error('offline');x.net=1;throw x}
+    let r,j;
+    try{r=await fetch(API_URL,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn,args:args||[],token:get('token')})});j=await r.json()}
+    catch(e){const x=new Error('offline');x.net=1;throw x}
+    if(!j.ok){if(j.login&&fn!=='login'){window.FIS_LOGOUT();}throw new Error(j.err==='LOGIN'?'Please log in again.':j.err)}
+    return j.v;
+  };
+  window.FIS_LOGOUT=function(){['token','me','roster','gcache','grev','goutbox'].forEach(k=>localStorage.removeItem(K(k)));location.reload()};
+  const $=id=>document.getElementById(id);
+  function startApp(r){window.FIS_R=r;window.FIS_ME=get('me')||'';const s=document.createElement('script');s.src='app.js?v=202611101004';s.onload=()=>$('fisBoot').remove();document.body.appendChild(s)}
+  function showLogin(msg){$('fisBoot').classList.add('hide');$('fisLogin').classList.remove('hide');$('fisLE').textContent=msg||'';if(!API_URL)$('fisLE').textContent='This app is being set up. Please try again later.'}
+  $('fisLoginF').addEventListener('submit',async e=>{e.preventDefault();const n=$('fisLN').value.trim(),p=$('fisLP').value;
+    if(n.length<3||!p){$('fisLE').textContent='Type your full name and the password.';return}
+    $('fisLE').textContent='Checking…';
+    try{const v=await window.FIS_CALL('login',[n,p]);put('token',v.token);put('me',v.name);
+      const r=await window.FIS_CALL('roster',[]);put('roster',r);$('fisLogin').remove();$('fisBoot').classList.remove('hide');startApp(r)}
+    catch(x){$('fisLE').textContent=x.net?'No network. Check the internet and try again.':x.message}});
+  (async()=>{
+    if(!get('token'))return showLogin();
+    const cached=get('roster');
+    if(cached){startApp(cached);window.FIS_CALL('roster',[]).then(r=>put('roster',r)).catch(()=>{});return}
+    try{const r=await window.FIS_CALL('roster',[]);put('roster',r);startApp(r)}
+    catch(x){if(x.net){$('fisBoot').textContent='No network. Connect to the internet and reopen the app.'}else showLogin(x.message)}
+  })();
+})();
+</script>
+</body>
+</html>
