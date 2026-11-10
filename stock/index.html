@@ -1646,7 +1646,7 @@ img[data-pid]:not([src]) { visibility: hidden; }
     if (!st || !st.me) { logout(true); return; }
     ME = st.me; USERS = st.users || []; lastRev = st.rev || '';
     canWrite = true; canDelete = ME.role !== 'staff';
-    $('#me').value = ME.name; $('#outbtn').hidden = false; $('#outbtn').textContent = 'Change name'; $('#teambtn').hidden = true;
+    $('#me').value = ME.name; $('#outbtn').hidden = false; $('#outbtn').textContent = ME.role === 'staff' ? 'Change name' : 'Log out'; $('#teambtn').hidden = ME.role !== 'admin';
     $('#teambtn').textContent = 'Team logins' + (USERS.some(function (u) { return u.status === 'pending'; }) ? ' (new)' : '');
     $('#authwrap').hidden = true;
     if (st.items) onData({ docs: st.items.map(function (r) { return { id: r.id, data: function () { return r; } }; }) });
@@ -1664,7 +1664,7 @@ img[data-pid]:not([src]) { visibility: hidden; }
     $('#me').value = ''; $('#outbtn').hidden = true; $('#teambtn').hidden = true;
     closeSheet();
     S.items = []; S.loaded = false; render();
-    renderAuth('login', '');
+    renderAuth('open', expired === true ? 'Please type your name to open the desk again.' : '');
   }
   /* photos are fetched when they are first shown */
   function loadPhotos() {
@@ -1688,23 +1688,30 @@ img[data-pid]:not([src]) { visibility: hidden; }
 
   function fld(id, label, input) { return '<label for="' + id + '">' + label + input + '</label>'; }
   function renderAuth(mode, msg) {
-    var w = $('#authwrap');
+    var open = mode === 'open', first = mode === 'setup', w = $('#authwrap');
     w.hidden = false;
-    w.innerHTML = '<div class="authbox"><h2>Stock and Purchase Desk</h2><p>Type your name to start. No password needed.</p><form id="af" style="display:flex;flex-direction:column;gap:12px" novalidate>' +
-      fld('au-n', 'Your full name', '<input type="text" id="au-n" maxlength="40" autocomplete="name" value="' + esc(lsGet('fis-sp-name') || '') + '">') +
-      '<p>Your name is stamped on everything you log, buy or hand over. Use your full name.</p>' +
-      '<p class="err" id="au-e" role="alert">' + esc(msg || '') + '</p><button type="submit" class="btn primary" id="au-go">Start</button></form></div>';
+    w.innerHTML = '<div class="authbox"><h2>Stock and Purchase Desk</h2><p>' + (open ? 'Staff: type your name to start. No password needed.' : (first ? 'First time? Choose a password.' : 'Incharge or admin login.')) + '</p><form id="af" style="display:flex;flex-direction:column;gap:12px" novalidate>' +
+      fld('au-n', open ? 'Your full name' : 'Your name', '<input type="text" id="au-n" maxlength="40" autocomplete="' + (open ? 'name' : 'username') + '" value="' + esc(lsGet('fis-sp-name') || '') + '">') +
+      (open ? '<p>Your name is stamped on everything you log, buy or hand over. Use your full name.</p>'
+        : fld('au-p', first ? 'Choose a password (6 or more characters)' : 'Password', '<input type="password" id="au-p" maxlength="60" autocomplete="' + (first ? 'new-password' : 'current-password') + '">')) +
+      (first ? fld('au-r', 'I am', '<select id="au-r"><option value="incharge">Incharge (manager)</option><option value="admin">Admin</option><option value="staff">Staff</option></select>') + '<p>The admin approves every new password login. The first admin is approved automatically.</p>' : '') +
+      '<p class="err" id="au-e" role="alert">' + esc(msg || '') + '</p><button type="submit" class="btn primary" id="au-go">' + (open ? 'Start' : (first ? 'Create login' : 'Log in')) + '</button>' +
+      (open ? '<button type="button" class="btn" data-sw="login">Incharge / admin login</button>'
+        : '<button type="button" class="btn" data-sw="' + (first ? 'login' : 'setup') + '">' + (first ? 'I already have a login' : 'First time? Set password') + '</button><button type="button" class="btn" data-sw="open">Staff: open with my name</button>') + '</form></div>';
+    $('#af').addEventListener('click', function (e) { var b = e.target.closest('[data-sw]'); if (b) renderAuth(b.getAttribute('data-sw'), ''); });
     $('#af').addEventListener('submit', function (e) {
       e.preventDefault();
-      var n = $('#au-n').value.trim().replace(/\s+/g, ' ');
-      if (n.length < 2) { $('#au-e').textContent = 'Type your full name.'; return; }
+      var n = $('#au-n').value.trim().replace(/\s+/g, ' '), pwEl = $('#au-p'), pw = pwEl ? pwEl.value : '';
+      if (n.length < 2 || (!open && !pw)) { $('#au-e').textContent = open ? 'Type your full name.' : 'Type your name and password.'; return; }
       var b = $('#au-go'); b.disabled = true;
-      TOKEN = 'open:' + n;
-      call('state', [TOKEN, '']).then(function (st) {
-        if (!st || !st.me) throw new Error('Could not start. Try again.');
-        lsSet('fis-sp-token', TOKEN); lsSet('fis-sp-name', n);
-        applyState(st);
-      }, function (err) { TOKEN = ''; $('#au-e').textContent = err.message || 'Could not start.'; b.disabled = false; });
+      call(open ? 'openJoin' : (first ? 'setup' : 'login'), open ? [n] : (first ? [n, pw, $('#au-r').value] : [n, pw])).then(function (r) {
+        if (r.pending) { renderAuth('login', 'Your login is created. It is waiting for the admin to approve it.'); return; }
+        TOKEN = r.token; lsSet('fis-sp-token', TOKEN); lsSet('fis-sp-name', n);
+        applyState(r.state);
+      }, function (err) {
+        if (open && /personal login/.test(err.message || '')) { renderAuth('login', 'Your name has an incharge or admin login. Please log in with your password.'); return; }
+        $('#au-e').textContent = err.message || 'Could not log in.'; b.disabled = false;
+      });
     });
   }
   function teamSheet() {
@@ -1742,7 +1749,7 @@ img[data-pid]:not([src]) { visibility: hidden; }
       return;
     }
     TOKEN = lsGet('fis-sp-token');
-    if (!TOKEN) { renderAuth('login', ''); return; }
+    if (!TOKEN) { renderAuth('open', ''); return; }
     try {
       var st = await tcall('state', ['']);
       if (!st || !st.me) { logout(false); return; }

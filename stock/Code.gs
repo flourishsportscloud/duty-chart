@@ -9,7 +9,7 @@
    - photos are kept in the Photos sheet and are sent only to a logged-in person
 */
 const ROLES=["staff","incharge","admin"];
-const OPEN=true;   // no passwords: staff just type their name. Set to false to go back to logins.
+const OPEN=false;  // false = staff open with their name, incharge and admin use a personal password. true = nobody needs a password.
 const TOKEN_DAYS=120;
 const TZ="Asia/Kolkata";
 const CHUNK=40000;          // a sheet cell holds at most 50,000 characters
@@ -154,6 +154,20 @@ const API={
     return {token:makeToken(ctx.H,ctx.secret,u,ctx.now),state:publicState(ctx,u)};
   },
 
+  // staff open the app by typing their name (no password). Names that already have an incharge or admin login must use the password.
+  openJoin(ctx,name){
+    name=str(name,40);
+    if(name.length<2)fail("Type your full name.");
+    if(name.charAt(0)==="#")fail("Type your real name.");
+    const existing=ctx.DB.Users.find(x=>x.name.toLowerCase()===name.toLowerCase());
+    if(existing&&existing.hash&&existing.role!=="staff")fail(existing.name+" has a personal login. Use the incharge or admin login instead.");
+    let u=existing;
+    if(!u){const at=new Date(ctx.now).toISOString();u={name,role:"staff",status:"active",salt:"",hash:"",ver:1,requestedAt:at,approvedAt:at,approvedBy:"(open)"};ctx.DB.Users.push(u)}
+    else if(u.role!=="staff"||u.status!=="active"){u.role="staff";u.status="active"}
+    ctx.dirty.Users=true;
+    return {token:makeToken(ctx.H,ctx.secret,u,ctx.now),state:publicState(ctx,u)};
+  },
+
   // ops = [{op:"set"|"update"|"delete", id, data}]
   write(ctx,token,ops){
     const me=needUser(ctx,token);
@@ -180,7 +194,7 @@ const API={
 
   // admin only: loads stock orders and purchases that cover every case (pending, bought, handed over, refund, not available, ...)
   seedDemo(ctx,token){
-    const me=OPEN?needUser(ctx,token):needAdmin(ctx,token);
+    const me=OPEN?needUser(ctx,token):needUser(ctx,token);needMgr(me,"load sample data");
     if(requests_().some(r=>r.sample))fail("Sample data is already loaded.");
     const days=Math.round((Date.parse(ctx.today+"T00:00:00Z")-Date.parse(DEMO_BASE+"T00:00:00Z"))/864e5);
     const nowIso=new Date(ctx.now).toISOString();
@@ -193,7 +207,7 @@ const API={
   },
 
   deleteDemo(ctx,token){
-    const me=OPEN?needUser(ctx,token):needAdmin(ctx,token);
+    const me=needUser(ctx,token);needMgr(me,"remove sample data");
     readAll_("Requests").filter(r=>parse_(r.json).sample).forEach(r=>deleteRow_("Requests",r.id));
     bump_();ctx.log(me.name,"delete sample data","","");
     return publicState(ctx,me);
