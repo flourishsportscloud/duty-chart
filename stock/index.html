@@ -1625,7 +1625,14 @@ img[data-pid]:not([src]) { visibility: hidden; }
       .then(function (j) { if (!j.ok) throw new Error(j.err || 'Something went wrong.'); return j.v; });
   }
   function tcall(fn, args) {
-    return call(fn, [TOKEN].concat(args || [])).catch(function (e) { if (/log in again/i.test(e && e.message)) logout(true); throw e; });
+    var tk = TOKEN;
+    function go() { return call(fn, [TOKEN].concat(args || [])); }
+    return go().catch(function (e) {
+      if (!/log in again/i.test(e && e.message)) throw e;
+      /* the server can answer "log in again" for a moment while the staff list is being saved: ask once more before signing out */
+      return new Promise(function (r) { setTimeout(r, 1500); }).then(function () { if (TOKEN !== tk) throw e; return go(); })
+        .catch(function (e2) { if (TOKEN === tk && /log in again/i.test(e2 && e2.message)) logout(true); throw e2; });
+    });
   }
   function newId() { return 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
   function wr(ops) { return tcall('write', [ops]).then(applyState); }
@@ -1656,7 +1663,13 @@ img[data-pid]:not([src]) { visibility: hidden; }
     if (!TOKEN || !ME || document.hidden || S.busy) return;
     var a = document.activeElement;
     if (a && panel.contains(a) && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return;
-    tcall('state', [lastRev]).then(function (st) { if (!st.same) applyState(st); }, function () { });
+    var tk = TOKEN;
+    tcall('state', [lastRev]).then(function (st) {
+      if (st && !st.me) { /* maybe a brief server hiccup: check once more before signing out */
+        return new Promise(function (r) { setTimeout(r, 1500); }).then(function () { if (TOKEN !== tk) return; return tcall('state', ['']).then(applyState); });
+      }
+      if (!st.same) applyState(st);
+    }, function () { });
   }
   function logout(expired) {
     TOKEN = ''; ME = null; lastRev = ''; PH = {}; PHq = {};
@@ -1752,6 +1765,7 @@ img[data-pid]:not([src]) { visibility: hidden; }
     if (!TOKEN) { renderAuth('open', ''); return; }
     try {
       var st = await tcall('state', ['']);
+      if (!st || !st.me) { await new Promise(function (r) { setTimeout(r, 1500); }); st = await tcall('state', ['']); }
       if (!st || !st.me) { logout(false); return; }
       applyState(st);
     } catch (e) {

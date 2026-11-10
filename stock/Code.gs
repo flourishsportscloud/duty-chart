@@ -162,6 +162,7 @@ const API={
     const existing=ctx.DB.Users.find(x=>x.name.toLowerCase()===name.toLowerCase());
     if(existing&&existing.hash&&existing.role!=="staff")fail(existing.name+" has a personal login. Use the incharge or admin login instead.");
     let u=existing;
+    if(u&&u.role==="staff"&&u.status==="active")return {token:makeToken(ctx.H,ctx.secret,u,ctx.now),state:publicState(ctx,u)};
     if(!u){const at=new Date(ctx.now).toISOString();u={name,role:"staff",status:"active",salt:"",hash:"",ver:1,requestedAt:at,approvedAt:at,approvedBy:"(open)"};ctx.DB.Users.push(u)}
     else if(u.role!=="staff"||u.status!=="active"){u.role="staff";u.status="active"}
     ctx.dirty.Users=true;
@@ -301,12 +302,13 @@ function appendRows_(name,rows){
 }
 function deleteRow_(name,id){const sh=sheet_(name),r=rowIndex_(sh,id);if(r)sh.deleteRow(r)}
 function write_(name,objs){
+  /* overwrite in place (never blank the sheet first) so a reader running at the same moment still sees every row */
   const sh=sheet_(name),cols=COLS[name],old=sh.getLastRow()-1;
-  if(old>0)sh.getRange(2,1,old,cols.length).clearContent();
   if(objs.length){
     const data=objs.map(o=>cols.map(c=>o[c]==null?"":o[c]));
     sh.getRange(2,1,data.length,cols.length).setNumberFormat("@").setValues(data);
   }
+  if(old>objs.length)sh.getRange(2+objs.length,1,old-objs.length,cols.length).clearContent();
 }
 function loadDB_(){return {Users:readAll_("Users").map(u=>Object.assign({},u,{ver:Number(u.ver||1)}))}}
 function saveDB_(DB,dirty){if(dirty.Users)write_("Users",DB.Users)}
