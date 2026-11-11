@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="../fis/fis-icon-192.png">
+<style>html,body{margin:0}[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
+<title>Transport Daily Report</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: sticky date bar, then one stacked card per time window, current window highlighted */
+:root{
+  --bg:#eef0f2; --surface:#ffffff; --ink:#1b2128; --muted:#5d6670; --line:#d9dde2;
+  --accent:#e8a400; --accent-ink:#3a2a00; --accent-soft:#fff3cf;
+  --done:#1f8a4c; --done-soft:#e1f4e8; --miss:#c4372c; --miss-soft:#fbe4e1; --na:#6d7680; --na-soft:#e9ecef; --blue:#1f5fd6;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12161b; --surface:#1b2128; --ink:#e8ebee; --muted:#9aa3ad; --line:#2c343d;
+  --accent:#f2b51d; --accent-ink:#2a1e00; --accent-soft:#3a2f12;
+  --done:#4cc27e; --done-soft:#173524; --miss:#ff7a6e; --miss-soft:#3c1d1a; --na:#a1aab3; --na-soft:#262d35; --blue:#7fa9ff; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12161b; --surface:#1b2128; --ink:#e8ebee; --muted:#9aa3ad; --line:#2c343d;
+  --accent:#f2b51d; --accent-ink:#2a1e00; --accent-soft:#3a2f12;
+  --done:#4cc27e; --done-soft:#173524; --miss:#ff7a6e; --miss-soft:#3c1d1a; --na:#a1aab3; --na-soft:#262d35; --blue:#7fa9ff; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.4}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--ink)}
+.wrap{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+header.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--ink);color:var(--bg);margin:0 calc(-1*max(16px,env(safe-area-inset-left,0px)));padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px))}
+.bar-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+h1{font-family:var(--display);font-size:22px;letter-spacing:.02em;text-transform:uppercase;margin:0;flex:1 1 auto;text-wrap:balance}
+h1 span{color:var(--accent)}
+.datebox{display:flex;align-items:center;gap:4px}
+.datebox button,.datebox input{font:inherit;border:1px solid color-mix(in srgb,var(--bg) 30%,transparent);background:transparent;color:var(--bg);border-radius:6px;height:34px}
+.datebox button{width:34px;cursor:pointer;font-size:18px}
+.datebox input{padding:0 8px;color-scheme:dark;font-family:var(--mono);font-size:13px}
+:root[data-theme="light"] .datebox input{color-scheme:dark}
+.prog{margin-top:8px;display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:12px}
+.prog .track{flex:1;height:6px;background:color-mix(in srgb,var(--bg) 20%,transparent);border-radius:3px;overflow:hidden;display:flex}
+.prog .d{background:var(--done)} .prog .m{background:var(--miss)} .prog .n{background:var(--na)}
+.status{font-size:12px;color:var(--muted);margin:10px 0 4px;min-height:1.2em}
+.meta{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.meta label{display:flex;flex-direction:column;gap:4px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.meta input,.meta textarea,.note{font:inherit;font-size:14px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%;text-transform:none;letter-spacing:0}
+.meta .full{grid-column:1/-1}
+.meta textarea{min-height:56px;resize:vertical}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:4px 0 14px}
+.legend b{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:5px;margin-right:4px;font-size:12px}
+section.win{background:var(--surface);border:1px solid var(--line);border-radius:10px;margin-bottom:14px;overflow:hidden}
+section.win.now{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.win-h{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);cursor:pointer;user-select:none}
+.time{font-family:var(--mono);font-size:13px;background:var(--ink);color:var(--bg);padding:3px 8px;border-radius:4px;white-space:nowrap}
+.win.now .time{background:var(--accent);color:var(--accent-ink)}
+.win-h h2{font-family:var(--display);font-size:18px;text-transform:uppercase;letter-spacing:.03em;margin:0;flex:1;min-width:0}
+.nowtag{font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--accent-ink);background:var(--accent);padding:2px 6px;border-radius:3px}
+.cnt{font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap}
+.cnt.full{color:var(--done)}
+.chev{color:var(--muted);transition:transform .15s}
+.win.closed .chev{transform:rotate(-90deg)}
+.win.closed .rows{display:none}
+.group{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:10px 14px 2px}
+.row{display:grid;grid-template-columns:40px 1fr;gap:4px 10px;align-items:center;padding:7px 14px;border-top:1px solid color-mix(in srgb,var(--line) 60%,transparent)}
+.row:first-child{border-top:0}
+.tick{width:40px;height:36px;border-radius:7px;border:1.5px solid var(--line);background:transparent;cursor:pointer;font-size:17px;font-weight:700;color:var(--muted);display:grid;place-items:center}
+.tick:focus-visible,.datebox button:focus-visible,.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tick.done{background:var(--done-soft);border-color:var(--done);color:var(--done)}
+.tick.miss{background:var(--miss-soft);border-color:var(--miss);color:var(--miss)}
+.tick.na{background:var(--na-soft);border-color:var(--na);color:var(--na);font-size:11px}
+.task{display:flex;align-items:center;gap:8px;min-width:0}
+.task span{flex:1;min-width:0}
+.row.miss .task span{color:var(--miss)}
+.addnote{border:0;background:none;color:var(--muted);cursor:pointer;font-size:12px;padding:4px 6px;border-radius:4px;white-space:nowrap}
+.addnote.has{color:var(--accent-ink);background:var(--accent-soft)}
+:root:not([data-theme="light"]) .addnote.has{color:var(--accent)}
+.note{grid-column:2;font-size:13px;padding:6px 8px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 10px}
+.btn{font:inherit;font-weight:600;border-radius:7px;padding:9px 14px;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+h3{font-family:var(--display);text-transform:uppercase;letter-spacing:.04em;font-size:17px;margin:26px 0 8px}
+.hist-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+th,td{padding:7px 10px;text-align:center;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+td:first-child,th:first-child{text-align:left}
+td button{font:inherit;color:var(--ink);background:none;border:0;cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:0}
+.pct{font-family:var(--mono);font-size:12px;padding:2px 6px;border-radius:4px}
+.p-hi{background:var(--done-soft);color:var(--done)} .p-mid{background:var(--accent-soft);color:var(--ink)} .p-lo{background:var(--miss-soft);color:var(--miss)} .p-0{color:var(--muted)}
+#copybox{width:100%;min-height:200px;font-family:var(--mono);font-size:12px;margin-top:8px;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:8px}
+.veh{display:grid;grid-template-columns:92px minmax(0,1fr);gap:8px;align-items:center;padding:8px 14px;border-top:1px solid color-mix(in srgb,var(--line) 60%,transparent)}
+.vlabel b{font-family:var(--display);text-transform:uppercase;font-size:16px;letter-spacing:.03em;display:block}
+.vlabel span{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.slots{display:grid;grid-template-columns:1fr 1fr;gap:6px;min-width:0}
+.slot{font:inherit;text-align:left;border:1.5px solid var(--line);border-radius:7px;background:transparent;color:var(--ink);padding:5px 8px;cursor:pointer;display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:6px;min-width:0}
+.slot small{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.slot span{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.slot em{grid-column:2;grid-row:1/3;align-self:center;font-style:normal;font-family:var(--mono);font-weight:700;font-size:13px;color:var(--done)}
+.slot.A{border-color:var(--miss);background:var(--miss-soft)} .slot.A em{color:var(--miss)}
+.slot .cv{grid-column:1/-1;font-size:11px;font-weight:600;color:var(--done)} .slot.unc .cv{color:var(--miss)}
+.slot.none{border-style:dashed;color:var(--muted);cursor:default;font-size:12px;align-content:center}
+.slot:focus-visible,.res select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.alert,.ok{margin:10px 14px 4px;padding:8px 10px;border-radius:6px;font-weight:600;font-size:13px}
+.alert{background:var(--miss-soft);color:var(--miss)} .ok{background:var(--done-soft);color:var(--done)}
+.res{display:grid;grid-template-columns:minmax(0,1fr) 40px minmax(0,1.3fr);gap:8px;align-items:center;padding:8px 14px;border-top:1px solid color-mix(in srgb,var(--line) 60%,transparent)}
+.res select{font:inherit;font-size:13px;padding:7px 6px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);width:100%;min-width:0}
+.res .tick{font-size:14px}
+.redit{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:6px 8px;padding:10px 14px;border-top:1px solid color-mix(in srgb,var(--line) 60%,transparent)}
+.redit b{grid-column:1/-1;font-family:var(--display);text-transform:uppercase;font-size:15px}
+.redit label{display:flex;flex-direction:column;gap:2px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.redit input{text-transform:none;letter-spacing:0}
+.chart-wrap{overflow-x:auto;max-width:100%;padding:10px 0 4px}
+table.chart{width:auto;border-collapse:collapse;font-size:12px}
+.chart th,.chart td{padding:0;border:1px solid var(--line);text-align:center;min-width:28px;height:30px;letter-spacing:0;text-transform:none}
+.chart th{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.chart .nm{position:sticky;left:0;z-index:1;background:var(--surface);text-align:left;padding:0 8px;min-width:150px;white-space:nowrap;font-weight:600;font-size:12px;color:var(--ink);font-family:var(--body)}
+.chart td.nm span{color:var(--muted);font-family:var(--mono);font-size:10px;display:inline-block;width:20px}
+.chart .sun{background:repeating-linear-gradient(45deg,var(--na-soft) 0 4px,transparent 4px 8px)}
+.chart th .mo{display:block;font-size:8px;line-height:1;color:var(--muted);font-weight:700}
+.chart .m1{border-left:2px solid var(--ink)}
+.chart th.cur{background:var(--accent);color:var(--accent-ink)} .chart td.cur{background:var(--accent-soft)}
+.cm{display:grid;place-items:center;width:100%;height:100%;min-height:30px;border:0;background:transparent;cursor:pointer;font-family:var(--display);font-weight:700;font-size:16px;color:var(--muted);padding:0}
+.cm:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.cm.A{color:var(--miss)} .cm.U{color:var(--blue)}
+.chart .tot{font-family:var(--mono);font-weight:700;min-width:32px} .ta{color:var(--miss)} .tu{color:var(--blue)}
+.sal-wrap{overflow-x:auto;max-width:100%}
+table.sal{font-size:13px;width:100%;min-width:640px}
+.sal th,.sal td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap;vertical-align:middle}
+.sal th{font-size:10px}
+.sal td.num,.sal th.num{text-align:right;font-family:var(--mono);font-size:12px}
+.sal .who b{display:block;font-weight:600} .sal .who small,.sal .doj small{color:var(--muted);font-size:11px}
+.incs{display:flex;flex-wrap:wrap;gap:4px;white-space:normal;min-width:180px}
+.chip{font-family:var(--mono);font-size:11px;padding:2px 6px;border-radius:4px;background:var(--na-soft);color:var(--ink)}
+.chip i{font-style:normal;color:var(--muted)}
+.cur{font-weight:700} .rise{color:var(--done);font-size:11px;font-family:var(--mono);display:block}
+.sal tfoot td{font-weight:700;border-bottom:0}
+.sedit td{background:var(--accent-soft);white-space:normal}
+.sedit .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;align-items:end}
+.sedit label{display:flex;flex-direction:column;gap:2px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.sedit input{text-transform:none;letter-spacing:0}
+.lock{padding:14px;color:var(--muted)}
+.vd{display:block;font-family:var(--mono);font-size:12px;padding:4px 6px;border-radius:5px;white-space:nowrap}
+.vd small{display:block;font-family:var(--body);font-size:10px;font-weight:600}
+.vd.ok{background:var(--done-soft);color:var(--done)} .vd.soon{background:var(--accent-soft);color:var(--ink)} .vd.due{background:var(--miss-soft);color:var(--miss)} .vd.exp,.vd.none{background:var(--miss);color:var(--surface)}
+.vd.nr{background:var(--na-soft);color:var(--muted)}
+.vd.exp small,.vd.none small{color:var(--surface)}
+table.veh{min-width:620px} .veh td{padding:5px 6px}
+.plan{padding:4px 14px 14px}
+.plan h4{font-family:var(--display);text-transform:uppercase;letter-spacing:.04em;font-size:15px;margin:14px 0 6px;display:flex;gap:8px;align-items:baseline}
+.plan h4 small{font-family:var(--body);font-size:11px;color:var(--muted);text-transform:none;letter-spacing:0;font-weight:500}
+.pl{display:grid;grid-template-columns:86px minmax(0,1fr) 110px;gap:4px 10px;padding:7px 0;border-top:1px solid color-mix(in srgb,var(--line) 60%,transparent);font-size:13px;align-items:center}
+.pl .d{font-family:var(--mono);font-size:12px} .pl .v{color:var(--muted);font-size:12px} .pl .r{font-size:11px;color:var(--muted);text-align:right}
+.pl .r b{display:block;color:var(--ink);font-family:var(--mono);font-size:12px}
+.pl.past .r b{color:var(--miss)}
+.dalert{margin:12px 0 0;padding:10px 12px;border-radius:8px;background:var(--miss-soft);color:var(--miss);font-weight:600;font-size:13px;border:1px solid var(--miss)}
+.dalert button{font:inherit;background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer;padding:0}
+@media (max-width:520px){.pl{grid-template-columns:76px minmax(0,1fr)}.pl .r{grid-column:2;text-align:left}}
+table.svc{min-width:760px} .svc td{padding:6px 8px}
+.hist{display:flex;flex-wrap:wrap;gap:3px;max-width:230px;white-space:normal}
+.hist .chip{font-size:10px;padding:1px 5px}
+.svc .km{font-family:var(--mono);font-size:12px;text-align:right}
+.svc .km small{display:block;font-family:var(--body);font-size:10px;color:var(--muted)}
+.tag{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 6px;border-radius:3px;background:var(--na-soft);color:var(--muted)}
+.btns{display:flex;gap:4px;flex-wrap:wrap}
+.btn.xs{padding:4px 8px;font-size:11px}
+.eod{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px 14px;padding:12px 14px}
+.eod label{display:flex;flex-direction:column;gap:3px;font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+.eod textarea,.eod input{text-transform:none;letter-spacing:0;min-height:38px}
+.eod textarea{resize:vertical;min-height:58px}
+.eod .auto{font-size:11px;text-transform:none;letter-spacing:0;font-weight:500;color:var(--done)}
+.eod h5{grid-column:1/-1;margin:6px 0 0;font-family:var(--display);font-size:15px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink)}
+.wa{margin:0 14px 14px;padding:12px;border-radius:8px;background:var(--na-soft);font-family:var(--body);font-size:13px;white-space:pre-wrap;line-height:1.5;max-height:420px;overflow:auto}
+.chips{display:flex;flex-wrap:wrap;gap:6px;padding:8px 14px}
+.pchip{font:inherit;font-size:12px;border:1.5px solid var(--line);background:transparent;color:var(--ink);border-radius:16px;padding:5px 10px;cursor:pointer}
+.pchip.on{background:var(--miss-soft);border-color:var(--miss);color:var(--miss);font-weight:700}
+.pchip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.covrow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:8px;align-items:center;padding:6px 14px;font-size:13px}
+.covrow select{font:inherit;font-size:13px;padding:6px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);width:100%}
+.btn.sm{padding:5px 10px;font-size:12px}
+@media (max-width:520px){.meta{grid-template-columns:1fr}h1{font-size:19px}.veh{grid-template-columns:1fr}.res{grid-template-columns:minmax(0,1fr) 40px}.res select{grid-column:1/-1}}
+@media (prefers-reduced-motion:reduce){.chev{transition:none}}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header class="bar">
+    <div class="bar-top">
+      <h1>Transport <span>Daily</span> Report</h1>
+      <div class="datebox">
+        <button id="prev" aria-label="Previous day">‹</button>
+        <input type="date" id="date" aria-label="Report date">
+        <button id="next" aria-label="Next day">›</button>
+      </div>
+    </div>
+    <div class="prog"><div class="track" id="track"></div><span id="progtxt">0/0</span></div>
+  </header>
+
+  <div id="docAlert"></div>
+  <div id="svcAlert"></div>
+  <div class="status" id="status">Loading saved report…</div>
+
+  <div class="meta">
+    <label>Reported by<input id="by" placeholder="Name of transport in-charge"></label>
+    <label>Buses / vans out today<input id="fleet" placeholder="e.g. 18 buses, 21 vans"></label>
+    <label class="full">Day remarks (breakdowns, absentees, complaints)<textarea id="dayNote" placeholder="Anything the Principal / Admin should know about today"></textarea></label>
+  </div>
+
+  <section class="win" id="staff">
+    <div class="win-h" data-w="staff"><span class="time">Staff</span><h2>Driver &amp; Conductor Attendance</h2>
+      <button class="btn sm" id="editRoster">Edit names</button><span class="cnt" id="staffSum"></span><span class="chev">▾</span></div>
+    <div class="rows" id="staffBody"></div>
+  </section>
+
+  <section class="win" id="chartSec">
+    <div class="win-h" data-w="chartSec"><span class="time">Register</span><h2>Uniform &amp; Absentee Chart · <span id="chartTitle"></span></h2><span class="chev">▾</span></div>
+    <div class="rows">
+      <div class="legend" style="padding:10px 14px 0;margin:0">Tap a day to mark:
+        <span><b class="cm A" style="width:20px;height:20px;min-height:0">A</b>Absent</span>
+        <span><b class="cm U" style="width:20px;height:20px;min-height:0">U</b>Without uniform</span>
+        <span>Tap again to clear · Sundays greyed</span></div>
+      <div class="chart-wrap"><table id="chart" class="chart"></table></div>
+    </div>
+  </section>
+
+  <section class="win" id="vehSec">
+    <div class="win-h" data-w="vehSec"><span class="time">Docs</span><h2>Vehicle Documents &amp; Renewal Plan</h2><span class="cnt" id="vehSum"></span><span class="chev">▾</span></div>
+    <div class="rows" id="vehBody"><div class="lock">Loading vehicle documents…</div></div>
+  </section>
+
+  <section class="win" id="svcSec">
+    <div class="win-h" data-w="svcSec"><span class="time">Service</span><h2>Bus &amp; Van Service Schedule</h2><span class="cnt" id="svcSum"></span><span class="chev">▾</span></div>
+    <div class="rows" id="svcBody"><div class="lock">Loading service records…</div></div>
+  </section>
+
+  <section class="win" id="salSec">
+    <div class="win-h" data-w="salSec"><span class="time">Salary</span><h2>Salary &amp; Increments</h2><span class="cnt" id="salSum"></span><span class="chev">▾</span></div>
+    <div class="rows" id="salBody"><div class="group">Loading…</div></div>
+  </section>
+
+  <div class="legend">
+    Tap the box to change status:
+    <span><b style="border:1.5px solid var(--line)"></b>Pending</span>
+    <span><b style="background:var(--done-soft);color:var(--done)">✓</b>Done</span>
+    <span><b style="background:var(--miss-soft);color:var(--miss)">✗</b>Not done</span>
+    <span><b style="background:var(--na-soft);color:var(--na);font-size:9px">NA</b>Not applicable</span>
+  </div>
+
+  <div id="windows"></div>
+
+  <section class="win" id="crSec">
+    <div class="win-h" data-w="crSec"><span class="time">FO</span><h2>Complaints &amp; Requests</h2><span class="chev">▾</span></div>
+    <div class="rows"><div class="lock" style="color:var(--ink)">Complaints, requests and transport changes are read live from the Daily FO, with Student-wise, Bus-wise and Driver-wise views and follow-up status.<div class="actions" style="margin:10px 0 0"><a class="btn primary" style="text-decoration:none" href="../complaints/">Open Complaints &amp; Requests dashboard</a></div><div style="font-size:12px;color:var(--muted);margin-top:8px">Also in the FIS Application.</div></div></div>
+  </section>
+
+  <section class="win" id="nplSec">
+    <div class="win-h" data-w="nplSec"><span class="time">Kal</span><h2>Next-Day Plan (Hindi)</h2><span class="cnt" id="nplSum"></span><span class="chev">▾</span></div>
+    <div class="rows" id="nplBody"></div>
+  </section>
+
+  <section class="win" id="eodSec">
+    <div class="win-h" data-w="eodSec"><span class="time">Day End</span><h2>Day-End Summary</h2><span class="cnt" id="eodSum"></span><span class="chev">▾</span></div>
+    <div class="rows" id="eodBody"></div>
+  </section>
+
+  <div class="actions">
+    <button class="btn primary" id="copy">Copy WhatsApp report</button>
+    <button class="btn" id="expand">Expand all</button>
+    <button class="btn" id="collapse">Collapse done windows</button>
+  </div>
+  <textarea id="copybox" hidden readonly></textarea>
+
+  <h3>Last 14 days</h3>
+  <div class="hist-wrap"><table id="hist"><thead></thead><tbody><tr><td>Loading…</td></tr></tbody></table></div>
+</div>
+
+<div style="text-align:center;margin:24px 0 8px;font-size:12px;color:var(--muted)">FIS Application · <a href="../fis/" style="color:inherit">All apps</a> · <button id="fl-out" style="font:inherit;font-size:12px;background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer">Sign out</button></div>
+
+<div id="fisLogin" hidden style="position:fixed;inset:0;z-index:60;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-left,0px))">
+  <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px;width:min(380px,100%)">
+    <h1 style="color:var(--ink);font-size:22px;margin:0 0 4px">Transport <span style="color:var(--accent)">Daily</span> Report</h1>
+    <p style="color:var(--muted);font-size:13px;margin:0 0 14px">FIS staff login · same password as the other FIS apps</p>
+    <label style="display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px" for="fl-n">Full name</label>
+    <input id="fl-n" autocomplete="name" style="width:100%;font:inherit;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)">
+    <label style="display:block;font-size:12px;font-weight:600;color:var(--muted);margin:10px 0 4px" for="fl-p">Password</label>
+    <input id="fl-p" type="password" autocomplete="current-password" style="width:100%;font:inherit;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)">
+    <div style="margin-top:14px;display:flex;gap:10px;align-items:center"><button class="btn primary" id="fl-go">Log in</button><span id="fl-err" style="font-size:13px;color:var(--miss)"></span></div>
+  </div>
+</div>
+<script>
+/* FIS data store: same calls the report used before (doc / collection / onSnapshot), backed by the
+   Student Entry Exit API web app and the "Transport Daily Data" Google Sheet. Polls every 15 s. */
+const FISDB=(function(){
+  const API_URL=new URLSearchParams(location.search).get('api')||'TD_API_URL';
+  const LS={get(k){try{return JSON.parse(localStorage.getItem('td_'+k))}catch(e){return null}},set(k,v){try{localStorage.setItem('td_'+k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem('td_'+k)}catch(e){}}};
+  let token=LS.get('token'),who=LS.get('name')||'',docs={},rev=0,admin=false,subs=new Set(),started=null,timer=null;
+  const clone=o=>o==null?o:JSON.parse(JSON.stringify(o));
+  async function call(fn,args){const r=await fetch(API_URL,{method:'POST',body:JSON.stringify({fn,args,token})});const j=await r.json();
+    if(!j.ok){if(j.login){LS.del('token');token=null;showLogin('Please log in again.')}const e=new Error(j.err||'Error');e.code=/admin|Only/.test(j.err||'')?'permission_denied':(j.login?'unauthenticated':'error');throw e}return j.v}
+  function notify(keys){subs.forEach(f=>{try{f(keys)}catch(e){}})}
+  async function poll(){try{const v=await call('td_since',[token,rev]);const keys=Object.keys(v.docs);keys.forEach(k=>docs[k]=v.docs[k]);rev=v.rev;admin=!!v.admin;if(keys.length)notify(keys)}catch(e){}}
+  function merge(a,b){for(const k in b){const v=b[k];if(v&&typeof v==='object'&&!Array.isArray(v)){if(!a[k]||typeof a[k]!=='object')a[k]={};merge(a[k],v)}else a[k]=v}return a}
+  const snap=p=>({id:p.split('/').pop(),exists:p in docs,data:()=>clone(docs[p])});
+  async function write(p,o,isMerge){const prev=clone(docs[p]);docs[p]=isMerge?merge(clone(docs[p])||{},clone(o)):clone(o);notify([p]);
+    try{const v=await call(isMerge?'td_update':'td_set',[token,p,o]);if(v&&v.rev>rev&&v.rev===rev+1)rev=v.rev}catch(e){if(prev===undefined)delete docs[p];else docs[p]=prev;notify([p]);throw e}}
+  function query(coll,conds,ord,lim){
+    const run=()=>{let L=Object.keys(docs).filter(k=>k.startsWith(coll+'/')&&k.split('/').length===2).map(k=>({id:k.split('/')[1],v:docs[k]}));
+      conds.forEach(([f,op,val])=>{L=L.filter(d=>{const x=d.v&&d.v[f];return op==='>='?x>=val:op==='<='?x<=val:op==='>'?x>val:op==='<'?x<val:op==='=='?x===val:true})});
+      if(ord)L.sort((a,b)=>{const x=a.v&&a.v[ord[0]],y=b.v&&b.v[ord[0]];return (x<y?-1:x>y?1:0)*(ord[1]==='desc'?-1:1)});
+      if(lim)L=L.slice(0,lim);return{docs:L.map(d=>({id:d.id,exists:true,data:()=>clone(d.v)}))}};
+    const deny=coll==='salary'&&!admin;
+    return{where:(f,op,v)=>query(coll,conds.concat([[f,op,v]]),ord,lim),orderBy:(f,dir)=>query(coll,conds,[f,dir||'asc'],lim),limit:n=>query(coll,conds,ord,n),
+      get:async()=>{if(deny){const e=new Error('denied');e.code='permission_denied';throw e}return run()},
+      onSnapshot(cb,err){if(deny){setTimeout(()=>err&&err({code:'permission_denied'}),0);return()=>{}}
+        const f=keys=>{if(!keys||keys.some(k=>k.startsWith(coll+'/')))cb(run())};subs.add(f);setTimeout(()=>f(null),0);return()=>subs.delete(f)}}}
+  const db={doc:p=>({get:async()=>snap(p),set:o=>write(p,o,false),update:o=>write(p,o,true),
+      onSnapshot(cb){const f=keys=>{if(!keys||keys.includes(p))cb(snap(p))};subs.add(f);setTimeout(()=>f(null),0);return()=>subs.delete(f)}}),
+    collection:c=>query(c,[],null,null)};
+  let resolveReady;const readyP=new Promise(r=>resolveReady=r);
+  function showLogin(msg){const L=document.getElementById('fisLogin');L.hidden=false;document.getElementById('fl-n').value=who||'';document.getElementById('fl-err').textContent=msg||''}
+  async function start(){await poll();if(!token)return;if(!timer){timer=setInterval(()=>{if(!document.hidden)poll()},15000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll()})}
+    document.getElementById('fisLogin').hidden=true;resolveReady(db)}
+  document.addEventListener('click',async e=>{if(e.target.id==='fl-go'){const n=document.getElementById('fl-n').value,pw=document.getElementById('fl-p').value;document.getElementById('fl-err').textContent='Checking…';
+      try{const v=await call('login',[n,pw]);token=v.token;who=v.name;LS.set('token',token);LS.set('name',who);document.getElementById('fl-err').textContent='';start()}catch(x){document.getElementById('fl-err').textContent=x.message==='LOGIN'?'Please try again.':x.message}}
+    if(e.target.id==='fl-out'){LS.del('token');token=null;location.reload()}});
+  document.addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.target.id==='fl-p'||e.target.id==='fl-n'))document.getElementById('fl-go').click()});
+  addEventListener('DOMContentLoaded',()=>{if(token)start();else showLogin()});
+  return{ready:()=>readyP,isAdmin:()=>admin,name:()=>who};
+})();
+</script>
+<script>
+const W=[
+ {id:"w1",t:"5:30–6:30",s:"05:30",e:"06:30",n:"Early Morning",g:[
+   ["Bus Staff",[["a1","Reminders & Thumbs up"],["a2","Late reach SMS by Kamal"],["a3","Driver call by Kamal"],["a4","Conductor call by me"],["a5","All buses out message"]]],
+   ["Pvt Van",[["a6","Pvt Vans 17–38 (21 Vans)"],["a7","Defaulter Calls"]]]]},
+ {id:"w2",t:"6:30–7:45",s:"06:30",e:"07:45",n:"Arrival & Assembly",g:[[null,[
+   ["b1","Staff duty in assembly"],["b2","Staff Meeting & Adjustment"],["b3","Camera Check"],["b4","Bus Arrivals"],["b5","Pre Round (Adjustment & Departure)"],["b6","Late Comer List Update"],["b7","Late Comer Action and SMS in Admin"]]]]},
+ {id:"w3",t:"7:45–8:15",s:"07:45",e:"08:15",n:"Morning Departure",g:[[null,[
+   ["c1","Morning Departure Report & SMS"],["c2","Transport Staff Attendance"],["c3","Bus & Van List Checked"],["c4","Auto List Checked"],["c5","GLC List"],["c6","Transport Call update in front office"]]]]},
+ {id:"w4",t:"8:15–8:45",s:"08:15",e:"08:45",n:"Registers & Slips",g:[[null,[
+   ["d1","Diesel Slip"],["d2","Defaulter Chart"],["d3","Kids Attendance"],["d4","Timing Register by Bus Driver"],["d5","Driver Reporting Register"],["d6","Conductor Reporting Register"]]]]},
+ {id:"w5",t:"8:45–10:30",s:"08:45",e:"10:30",n:"Checks & Follow-ups",g:[[null,[
+   ["e1","Timing Register by Bus Driver Check"],["e2","Driver Reporting Register Check"],["e3","Conductor Reporting Register Check"],["e4","Late Arrival Message in both Groups"],["e5","Auto Group Check"],["e6","Late kids at Stop in Front Office"],["e7","Supervisor Meeting"],["e8","Cleaning & Lost & Found Update in groups"],["e9","Maintenance Calls at Company"],["e10","Bus Report Chart Update"],["e11","Transport Complaint Record"],["e12","Kamal Task in Group"],["e13","Defaulter Chart Photo"],["e14","Bus Reporting Photo"],["e15","Transport Change – Admin Register"]]]]},
+ {id:"w6",t:"12:30–2:10",s:"12:30",e:"14:10",n:"Pre-Departure",g:[[null,[
+   ["f1","GLC Marking"],["f2","Pre Bus – Marking"],["f3","Pre Departure"],["f4","Defaulter Chart"]]]]},
+ {id:"w7",t:"2:10–4:00",s:"14:10",e:"16:00",n:"Departure",g:[[null,[
+   ["g1","Departure Staff Duty SMS"],["g2","Stay back Marking"],["g3","Primary Bus Marking"],["g4","Auto Marking"],["g5","Primary Departure"],["g6","Staff Duty"],["g7","Camera Check at departure"],["g8","Bus Adjustment SMS"],["g9","Transport Staff Attendance"],["g10","Transport Change – Admin Register"]]]]},
+ {id:"w8",t:"4:00–5:00",s:"16:00",e:"17:00",n:"Closing",g:[[null,[
+   ["h1","Bus Round by Kamal"],["h2","Last Child SMS – All Vans Thumbs Up"],["h3","Diesel Filling by Guard"],["h4","Key Photos"]]]]}
+];
+const ALL=W.flatMap(w=>w.g.flatMap(g=>g[1].map(t=>({w:w.id,id:t[0],name:t[1]}))));
+const CYCLE=["","done","miss","na"], SYM={"":"",done:"✓",miss:"✗",na:"NA"};
+const $=id=>document.getElementById(id);
+let db=null, date=todayIST(), state=blank(), unsub=null, closed=new Set();
+try{JSON.parse(localStorage.getItem("closed")||"[]").forEach(x=>closed.add(x))}catch(e){}
+
+function todayIST(){const d=new Date(Date.now()+(330+new Date().getTimezoneOffset())*60000);return d.toISOString().slice(0,10)}
+function nowMinIST(){const d=new Date(Date.now()+(330+new Date().getTimezoneOffset())*60000);return d.getUTCHours()*60+d.getUTCMinutes()}
+function blank(){return{s:{},n:{},by:"",fleet:"",dayNote:"",att:{},cover:{},uni:{},eod:{}}}
+
+/* ---- fleet & staff ---- */
+const ROUTES=[[1,1],[2,1],[3,1],[4,1],[5,1],[6,0],[7,0],[8,1],[9,1],[10,1],[11,0],[12,0],[13,0],[14,1],[15,1],[16,0],[34,0]];
+const VEH=ROUTES.map(([n,b])=>({id:"p"+n,label:(b?"Bus ":"Van ")+n,bus:!!b}));
+const SLOTS=VEH.flatMap(v=>v.bus?[{id:v.id+"d",v,role:"Driver"},{id:v.id+"c",v,role:"Conductor"}]:[{id:v.id+"d",v,role:"Driver"}]);
+const RES=[1,2,3].map(i=>({id:"r"+i,label:"Reserve Driver "+i}));
+let roster={veh:{},area:{},name:{},phone:{},pre:[]}, editRoster=false;
+const vSub=v=>[roster.area[v.id],roster.veh[v.id]].filter(Boolean).join(" · ");
+function absentByName(nm){if(!nm)return false;const k=nm.trim().toLowerCase();
+  return [...SLOTS,...RES].some(s=>state.att[s.id]==="A"&&(roster.name[s.id]||"").trim().toLowerCase()===k)}
+const slotOf=id=>SLOTS.find(s=>s.id===id);
+const personName=(id,fb)=>roster.name[id]||fb;
+const slotText=s=>`${s.v.label} ${s.role}${roster.name[s.id]?" ("+roster.name[s.id]+")":""}`;
+function coverMap(){const m={};RES.forEach(r=>{const t=state.cover[r.id];if(t&&state.att[t]==="A"&&state.att[r.id]!=="A")m[t]=r.id});return m}
+function renderStaff(){
+  const cov=coverMap(), absent=SLOTS.filter(s=>state.att[s.id]==="A"), unc=absent.filter(s=>!cov[s.id]);
+  const total=SLOTS.length+RES.length, absN=absent.length+RES.filter(r=>state.att[r.id]==="A").length;
+  $("staffSum").textContent=`${total-absN}/${total} present`; $("staffSum").className="cnt"+(unc.length?"":" full");
+  $("editRoster").textContent=editRoster?"Done":"Edit names";
+  $("staff").classList.toggle("closed",closed.has("staff"));
+  if(editRoster){
+    $("staffBody").innerHTML=`<div class="group">Names, phone numbers and vehicle numbers stay the same every day</div>`+
+    VEH.map(v=>`<div class="redit"><b>${v.label}</b>
+      <label>Area<input class="note" id="ro-area-${v.id}" data-r="area.${v.id}" value="${esc(roster.area[v.id]||"")}" placeholder="Area"></label>
+      <label>Vehicle no.<input class="note" id="ro-veh-${v.id}" data-r="veh.${v.id}" value="${esc(roster.veh[v.id]||"")}" placeholder="MP 09 …"></label>
+      ${SLOTS.filter(s=>s.v===v).map(s=>`<label>${s.role}<input class="note" id="ro-name-${s.id}" data-r="name.${s.id}" value="${esc(roster.name[s.id]||"")}" placeholder="Name"></label>
+      <label>${s.role} phone<input class="note" id="ro-phone-${s.id}" data-r="phone.${s.id}" value="${esc(roster.phone[s.id]||"")}" inputmode="tel" placeholder="Mobile"></label>`).join("")}</div>`).join("")+
+    RES.map(r=>`<div class="redit"><b>${r.label}</b>
+      <label>Name<input class="note" id="ro-name-${r.id}" data-r="name.${r.id}" value="${esc(roster.name[r.id]||"")}" placeholder="Name"></label>
+      <label>Phone<input class="note" id="ro-phone-${r.id}" data-r="phone.${r.id}" value="${esc(roster.phone[r.id]||"")}" inputmode="tel" placeholder="Mobile"></label></div>`).join("");
+    return;
+  }
+  const slotBtn=s=>{const a=state.att[s.id]==="A",c=cov[s.id];
+    return `<button class="slot ${a?"A":""} ${a&&!c?"unc":""}" data-a="${s.id}" aria-label="${esc(slotText(s))}: ${a?"absent":"present"}"><small>${s.role}${roster.phone[s.id]?" · "+esc(roster.phone[s.id]):""}</small><span>${esc(personName(s.id,"—"))}</span><em>${a?"A":"P"}</em>${a?`<div class="cv">${c?"↳ "+esc(personName(c,RES.find(r=>r.id===c).label)):"Not covered"}</div>`:""}</button>`};
+  const opts=r=>{const cur=state.cover[r.id]||"";const taken=new Set(RES.filter(x=>x.id!==r.id).map(x=>state.cover[x.id]));
+    const list=SLOTS.filter(s=>(state.att[s.id]==="A"&&!taken.has(s.id))||s.id===cur);
+    return `<option value="">Standby</option>`+list.map(s=>`<option value="${s.id}" ${s.id===cur?"selected":""}>${esc(slotText(s))}</option>`).join("")};
+  $("staffBody").innerHTML=
+    (unc.length?`<div class="alert">Not covered: ${unc.map(s=>esc(slotText(s))).join(", ")}</div>`:absent.length?`<div class="ok">All absences covered by reserve drivers.</div>`:"")+
+    `<div class="group">Buses · Driver + Conductor &nbsp;·&nbsp; tap a name to mark P / A</div>`+
+    VEH.filter(v=>v.bus).map(v=>`<div class="veh"><div class="vlabel"><b>${v.label}</b><span>${esc(vSub(v))}</span></div><div class="slots">${SLOTS.filter(s=>s.v===v).map(slotBtn).join("")}</div></div>`).join("")+
+    `<div class="group">Small Vans · Driver only</div>`+
+    VEH.filter(v=>!v.bus).map(v=>`<div class="veh"><div class="vlabel"><b>${v.label}</b><span>${esc(vSub(v))}</span></div><div class="slots">${slotBtn(SLOTS.find(s=>s.v===v))}<div class="slot none">No conductor</div></div></div>`).join("")+
+    `<div class="group">Reserve drivers · can replace any driver or conductor</div>`+
+    RES.map(r=>{const a=state.att[r.id]==="A";return `<div class="res"><div class="task"><span><b>${esc(personName(r.id,r.label))}</b>${roster.name[r.id]?`<br><small style="color:var(--muted)">${r.label}</small>`:""}</span></div>
+      <button class="tick ${a?"miss":"done"}" data-a="${r.id}" aria-label="${esc(r.label)}: ${a?"absent":"present"}">${a?"A":"P"}</button>
+      <select data-c="${r.id}" id="cover-${r.id}" aria-label="${esc(r.label)} assignment" ${a?"disabled":""}>${opts(r)}</select></div>`}).join("")+
+    (roster.pre&&roster.pre.length?`<div class="group">Pre-Primary run · absences carry over from above</div>`+roster.pre.map(p=>{
+      const pc=(nm,ph,role)=>nm?`<div class="slot ${absentByName(nm)?"A unc":""}" style="cursor:default"><small>${role}${ph?" · "+esc(ph):""}</small><span>${esc(nm)}</span><em>${absentByName(nm)?"A":"P"}</em>${absentByName(nm)?'<div class="cv">Absent — arrange replacement</div>':""}</div>`:`<div class="slot none">${role==="Conductor"?"No conductor":"—"}</div>`;
+      return `<div class="veh"><div class="vlabel"><b>${p.code?esc(p.code)+" · "+esc(p.kind):"Spare"}</b><span>${esc(p.area||"")}</span></div><div class="slots">${p.driver?pc(p.driver,p.dphone,"Driver"):'<div class="slot none">No driver</div>'}${pc(p.cond,p.cphone,"Conductor")}</div></div>`}).join(""):"");
+}
+let rosterChain=Promise.resolve(), rosterTimer=null;
+function saveRoster(){clearTimeout(rosterTimer);rosterTimer=setTimeout(()=>{if(!db)return;const snap=JSON.parse(JSON.stringify(roster));
+  rosterChain=rosterChain.then(()=>db.doc("roster/main").set(snap)).then(()=>setStatus("Names saved")).catch(e=>setStatus(e&&e.code==="permission_denied"?"You have view-only access to the names.":"Could not save names — try again."))},600);setStatus("Saving names…")}
+const mins=t=>{const[a,b]=t.split(":");return+a*60+ +b};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt=d=>{const[y,m,dd]=d.split("-");return dd+"/"+m+"/"+y};
+
+function render(){
+  const fa=document.activeElement, fid=fa&&fa.id&&/^(note-|ro-|cover-|se-|ve-|sv-|eod-|tc-)/.test(fa.id)?fa.id:null, sel=fid&&(fa.tagName==="INPUT"||fa.tagName==="TEXTAREA")?[fa.selectionStart,fa.selectionEnd]:null;
+  renderInner(); renderStaff(); ensureMonth(); renderChart(); renderSal(); renderVeh(); renderSvc(); renderEod(); renderNpl();
+  if(fid){const el=$(fid);if(el){el.focus();if(sel)try{el.setSelectionRange(sel[0],sel[1])}catch(e){}}}
+}
+function renderInner(){
+  const now=date===todayIST()?nowMinIST():-1;
+  $("windows").innerHTML=W.map(w=>{
+    const tasks=w.g.flatMap(g=>g[1]); const done=tasks.filter(t=>state.s[t[0]]&&state.s[t[0]]!=="").length;
+    const isNow=now>=mins(w.s)&&now<mins(w.e);
+    const rows=w.g.map(([gn,ts])=>(gn?`<div class="group">${gn}</div>`:"")+ts.map(([id,name])=>{
+      const st=state.s[id]||"", note=state.n[id]||"", open=note||openNotes.has(id);
+      return `<div class="row ${st}"><button class="tick ${st}" data-t="${id}" aria-label="${esc(name)}: ${st||"pending"}">${SYM[st]}</button>
+      <div class="task"><span>${esc(name)}</span><button class="addnote ${note?"has":""}" data-n="${id}">${note?"Note ✎":"+ Note"}</button></div>
+      ${open?`<input class="note" id="note-${id}" data-ni="${id}" value="${esc(note)}" placeholder="Bus no., reason, person…">`:""}</div>`}).join("")).join("");
+    return `<section class="win ${isNow?"now":""} ${closed.has(w.id)?"closed":""}" id="${w.id}">
+      <div class="win-h" data-w="${w.id}"><span class="time">${w.t}</span><h2>${w.n}</h2>${isNow?'<span class="nowtag">NOW</span>':""}
+      <span class="cnt ${done===tasks.length?"full":""}">${done}/${tasks.length}</span><span class="chev">▾</span></div>
+      <div class="rows">${rows}</div></section>`}).join("");
+  const c={done:0,miss:0,na:0};ALL.forEach(t=>{const s=state.s[t.id];if(c[s]!=null)c[s]++});
+  const T=ALL.length;
+  $("track").innerHTML=`<i class="d" style="width:${c.done/T*100}%"></i><i class="m" style="width:${c.miss/T*100}%"></i><i class="n" style="width:${c.na/T*100}%"></i>`;
+  $("progtxt").textContent=`${c.done+c.na}/${T} · ${c.miss} missed`;
+  ["by","fleet","dayNote"].forEach(k=>{if(document.activeElement!==$(k))$(k).value=state[k]||""});
+}
+const openNotes=new Set();
+
+/* ---- saving: one queued write at a time ---- */
+let pendingBy={}, writing=false, timer=null;
+const hasPending=d=>!!(pendingBy[d]&&Object.keys(pendingBy[d]).length);
+function queue(patch,d){d=d||date;pendingBy[d]=deepMerge(pendingBy[d]||{},JSON.parse(JSON.stringify(patch)));clearTimeout(timer);timer=setTimeout(flush,500);setStatus("Saving…")}
+function deepMerge(a,b){for(const k in b){if(b[k]&&typeof b[k]==="object"){a[k]=a[k]||{};deepMerge(a[k],b[k])}else a[k]=b[k]}return a}
+async function flush(){
+  const ds=Object.keys(pendingBy); if(writing||!ds.length)return;
+  if(!db){setStatus("Not saved — log in to save this report.");return}
+  writing=true;const d=ds[0];const p=pendingBy[d];delete pendingBy[d];
+  try{const ref=db.doc("reports/"+d);const snap=await ref.get();
+    p.updatedAt=new Date().toISOString(); p.date=d;
+    if(snap.exists)await ref.update(p);else await ref.set(deepMerge(blank(),p));
+    setStatus("Saved "+new Date().toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"}));
+    loadHistory();
+  }catch(e){pendingBy[d]=deepMerge(p,pendingBy[d]||{});writing=false;setStatus(e&&e.code==="permission_denied"?"You have view-only access to this report.":"Could not save — will retry on your next change.");return}
+  writing=false;if(Object.keys(pendingBy).length)flush();
+}
+
+/* ---- uniform & absentee chart ---- */
+const CHART=["p1d","p2d","p3d","p4d","p5d","p6d","p7d","p8d","p9d","p10d","p11d","p12d","p13d","p14d","r2","p16d","r1","r3","p34d","p15d","p4c","p2c","p5c","p14c","p9c","p10c","p15c","p8c","p1c","p3c"];
+let month="", monthData={}, monthUnsub=null;
+const START="2026-10-01";
+function rangeEnd(){const m=[date.slice(0,7),todayIST().slice(0,7),START.slice(0,7)].sort().pop();const[y,mm]=m.split("-").map(Number);return m+"-"+String(new Date(Date.UTC(y,mm,0)).getUTCDate()).padStart(2,"0")}
+function ensureMonth(){
+  const end=rangeEnd(); if(end===month)return; month=end; monthData={};
+  if(monthUnsub){monthUnsub();monthUnsub=null} if(!db)return;
+  const take=q=>{monthData={};q.docs.forEach(doc=>{const x=doc.data()||{},k=x.date||doc.id;if(k>=START&&k<=end)monthData[k]={att:x.att||{},uni:x.uni||{}}});renderChart()};
+  const fallback=()=>db.collection("reports").orderBy("date","desc").limit(400).get().then(take).catch(()=>{});
+  try{monthUnsub=db.collection("reports").where("date",">=",START).where("date","<=",end).onSnapshot(take,fallback)}catch(e){fallback()}
+}
+function cellVal(d,id){let a,u;
+  if(d===date){a=state.att[id];u=state.uni[id]}
+  else{const x=monthData[d]||{},p=pendingBy[d]||{};a=p.att&&id in p.att?p.att[id]:(x.att||{})[id];u=p.uni&&id in p.uni?p.uni[id]:(x.uni||{})[id]}
+  return a==="A"?"A":u?"U":""}
+function renderChart(){
+  if(!month)return; $("chartSec").classList.toggle("closed",closed.has("chartSec"));
+  const days=[];for(let t=new Date(START+"T00:00:00Z");t.toISOString().slice(0,10)<=month;t.setUTCDate(t.getUTCDate()+1))days.push(t.toISOString().slice(0,10));
+  const MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"], dl=d=>+d.slice(8)===1?`<small class="mo">${MON[+d.slice(5,7)-1]}</small>1`:+d.slice(8);
+  const sun=d=>new Date(d+"T00:00:00Z").getUTCDay()===0;
+  $("chartTitle").textContent="from 1 Oct 2026";
+  let h=`<thead><tr><th class="nm">Driver &amp; Conductor</th>${days.map(d=>`<th class="${sun(d)?"sun":""} ${d===date?"cur":""} ${+d.slice(8)===1?"m1":""}">${dl(d)}</th>`).join("")}<th class="tot ta">A</th><th class="tot tu">U</th></tr></thead><tbody>`;
+  CHART.forEach((id,i)=>{let a=0,u=0;
+    const cells=days.map(d=>{if(sun(d))return `<td class="sun"></td>`;const v=cellVal(d,id);if(v==="A")a++;if(v==="U")u++;
+      return `<td class="${d===date?"cur":""} ${+d.slice(8)===1?"m1":""}"><button class="cm ${v}" data-cm="${d}|${id}" aria-label="${esc(personName(id,id))}, ${fmt(d)}: ${v==="A"?"absent":v==="U"?"without uniform":"present"}">${v}</button></td>`}).join("");
+    h+=`<tr><td class="nm"><span>${i+1}</span>${esc(personName(id,id))}</td>${cells}<td class="tot ta">${a||""}</td><td class="tot tu">${u||""}</td></tr>`});
+  $("chart").innerHTML=h+"</tbody>";
+}
+function setStatus(t){$("status").textContent=t}
+
+/* ---- events ---- */
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-t]"); if(t){const id=t.dataset.t;const st=CYCLE[(CYCLE.indexOf(state.s[id]||"")+1)%4];state.s[id]=st;render();queue({s:{[id]:st}});return}
+  const cm=e.target.closest("[data-cm]"); if(cm){const[d,id]=cm.dataset.cm.split("|");const v=cellVal(d,id),nv=v===""?"A":v==="A"?"U":"";
+    const p={att:{[id]:nv==="A"?"A":"P"},uni:{[id]:nv==="U"}};
+    if(d===date&&nv!=="A")RES.forEach(r=>{if(state.cover[r.id]===id){p.cover=Object.assign(p.cover||{},{[r.id]:""})}});
+    if(d===date)deepMerge(state,p); queue(p,d); render(); return}
+  if(e.target.closest("#editRoster")){editRoster=!editRoster;closed.delete("staff");render();return}
+  const a=e.target.closest("[data-a]"); if(a){const id=a.dataset.a;const v=state.att[id]==="A"?"P":"A";state.att[id]=v;const p={att:{[id]:v}};
+    if(v==="P"){RES.forEach(r=>{if(state.cover[r.id]===id){state.cover[r.id]="";p.cover=Object.assign(p.cover||{},{[r.id]:""})}})}
+    render();queue(p);return}
+  const n=e.target.closest("[data-n]"); if(n){openNotes.add(n.dataset.n);render();const el=$("note-"+n.dataset.n);el&&el.focus();return}
+  const h=e.target.closest("[data-w]"); if(h){const id=h.dataset.w;closed.has(id)?closed.delete(id):closed.add(id);saveClosed();render();return}
+  const hd=e.target.closest("[data-d]"); if(hd){setDate(hd.dataset.d);scrollTo({top:0})}
+});
+document.addEventListener("input",e=>{
+  const rk=e.target.dataset.r; if(rk){const[g,k]=rk.split(".");roster[g][k]=e.target.value;saveRoster();return}
+  const ni=e.target.dataset.ni; if(ni){state.n[ni]=e.target.value;queue({n:{[ni]:e.target.value}});return}
+  if(["by","fleet","dayNote"].includes(e.target.id)){state[e.target.id]=e.target.value;queue({[e.target.id]:e.target.value})}
+});
+document.addEventListener("change",e=>{const c=e.target.dataset.c;if(c){state.cover[c]=e.target.value;render();queue({cover:{[c]:e.target.value}})}});
+function saveClosed(){try{localStorage.setItem("closed",JSON.stringify([...closed]))}catch(e){}}
+$("expand").onclick=()=>{closed.clear();saveClosed();render()};
+$("collapse").onclick=()=>{W.forEach(w=>{const ts=w.g.flatMap(g=>g[1]);if(ts.every(t=>state.s[t[0]]))closed.add(w.id)});saveClosed();render()};
+function shift(n){const d=new Date(date+"T00:00:00Z");d.setUTCDate(d.getUTCDate()+n);setDate(d.toISOString().slice(0,10))}
+$("prev").onclick=()=>shift(-1);$("next").onclick=()=>shift(1);
+$("date").onchange=e=>e.target.value&&setDate(e.target.value);
+
+$("copy").onclick=async()=>{
+  let out=`*Transport Daily Report – ${fmt(date)}*\n`;
+  if(state.by)out+=`Reported by: ${state.by}\n`; if(state.fleet)out+=`Fleet: ${state.fleet}\n`;
+  {const cov=coverMap(),ab=SLOTS.filter(s=>state.att[s.id]==="A"),rAb=RES.filter(r=>state.att[r.id]==="A");
+   out+=`\n*Staff Attendance* (${SLOTS.length+RES.length-ab.length-rAb.length}/${SLOTS.length+RES.length} present)\n`;
+   if(!ab.length&&!rAb.length)out+="All drivers & conductors present ✅\n";
+   ab.forEach(s=>{out+=`❌ ${slotText(s)} absent → ${cov[s.id]?"covered by "+personName(cov[s.id],RES.find(r=>r.id===cov[s.id]).label):"NOT COVERED"}\n`});
+   rAb.forEach(r=>{out+=`❌ ${personName(r.id,r.label)} (reserve) absent\n`});
+   const nu=CHART.filter(id=>state.uni[id]&&state.att[id]!=="A").map(id=>personName(id,id)); if(nu.length)out+=`👕 Without uniform: ${nu.join(", ")}\n`;}
+  W.forEach(w=>{out+=`\n*${w.t} ${w.n}*\n`;w.g.forEach(([gn,ts])=>ts.forEach(([id,name])=>{const s=state.s[id]||"";out+=`${s==="done"?"✅":s==="miss"?"❌":s==="na"?"➖":"⬜"} ${name}${state.n[id]?" – "+state.n[id]:""}\n`}))});
+  const c=ALL.filter(t=>state.s[t.id]==="done").length,m=ALL.filter(t=>state.s[t.id]==="miss").length;
+  out+=`\nDone ${c}/${ALL.length} · Not done ${m}`; if(state.dayNote)out+=`\nRemarks: ${state.dayNote}`;
+  const box=$("copybox");box.value=out;box.hidden=false;
+  try{await navigator.clipboard.writeText(out);setStatus("Report copied — paste it in WhatsApp.")}catch(e){box.select();setStatus("Select the text below and copy it.")}
+};
+
+/* ---- loading ---- */
+function setDate(d){tmr={d:"",data:null};date=d;$("date").value=d;state=blank();openNotes.clear();render();subscribe()}
+function subscribe(){
+  if(unsub){unsub();unsub=null} if(!db){setStatus("Not connected — log in to save.");return}
+  setStatus("Loading "+fmt(date)+"…");
+  unsub=db.doc("reports/"+date).onSnapshot(snap=>{
+    const d=snap.exists?snap.data():null; const keep=pendingBy[date]||{};
+    state=d?{s:{...(d.s||{})},n:{...(d.n||{})},by:d.by||"",fleet:d.fleet||"",dayNote:d.dayNote||"",att:{...(d.att||{})},cover:{...(d.cover||{})},uni:{...(d.uni||{})},eod:{...(d.eod||{})}}:blank();
+    deepMerge(state,JSON.parse(JSON.stringify(keep)));
+    render(); if(!writing&&!hasPending(date))setStatus(d?("Saved report · last update "+(d.updatedAt?new Date(d.updatedAt).toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"}):"")):"No entries yet for "+fmt(date)+" — tap a box to start.");
+  },err=>setStatus("Could not load this report ("+(err&&err.code||"error")+")."));
+}
+async function loadHistory(){
+  const tb=$("hist").querySelector("tbody"), th=$("hist").querySelector("thead");
+  th.innerHTML=`<tr><th>Date</th>${W.map(w=>`<th>${w.t}</th>`).join("")}<th>Total</th><th>Missed</th><th>Staff absent</th></tr>`;
+  if(!db){tb.innerHTML=`<tr><td colspan="${W.length+3}">History appears once reports are saved.</td></tr>`;return}
+  try{const q=await db.collection("reports").orderBy("date","desc").limit(14).get();
+    if(!q.docs.length){tb.innerHTML=`<tr><td colspan="${W.length+3}">No saved days yet. Today's report will appear here after the first tick.</td></tr>`;return}
+    tb.innerHTML=q.docs.map(doc=>{const d=doc.data()||{},s=d.s||{};
+      const cell=ids=>{const f=ids.filter(i=>s[i]).length,p=ids.length?Math.round(f/ids.length*100):0;return `<span class="pct ${p===100?"p-hi":p>=60?"p-mid":p>0?"p-lo":"p-0"}">${p}%</span>`};
+      const miss=ALL.filter(t=>s[t.id]==="miss").length;
+      return `<tr><td><button data-d="${d.date||doc.id}">${fmt(d.date||doc.id)}</button></td>${W.map(w=>`<td>${cell(w.g.flatMap(g=>g[1].map(t=>t[0])))}</td>`).join("")}<td>${cell(ALL.map(t=>t.id))}</td><td>${miss||"–"}</td><td>${Object.values(d.att||{}).filter(x=>x==="A").length||"–"}</td></tr>`}).join("");
+  }catch(e){tb.innerHTML=`<tr><td colspan="${W.length+3}">Could not load history.</td></tr>`}
+}
+
+
+/* ---- salary ---- */
+let sal={}, salState="loading", salEdit=null, salDraft=null;
+const inr=n=>n==null||n===""||isNaN(n)?"–":"₹"+Number(n).toLocaleString("en-IN");
+function svc(doj){if(!doj)return"";const a=new Date(doj+"T00:00:00Z"),b=new Date(todayIST()+"T00:00:00Z");let m=(b.getUTCFullYear()-a.getUTCFullYear())*12+b.getUTCMonth()-a.getUTCMonth();if(b.getUTCDate()<a.getUTCDate())m--;if(m<0)return"";return(m>=12?Math.floor(m/12)+" yr ":"")+(m%12)+" mo"}
+const curSal=x=>{const i=(x.inc||[]).filter(e=>e.amount);return i.length?Number(i[i.length-1].amount):Number(x.join)||null};
+function loadSal(){
+  if(!db){salState="off";renderSal();return}
+  try{db.collection("salary").onSnapshot(q=>{sal={};q.docs.forEach(d=>sal[d.id]=d.data()||{});salState="ok";renderSal()},()=>{salState="locked";renderSal()})}catch(e){salState="locked";renderSal()}
+}
+function renderSal(){
+  const body=$("salBody"); if(!body)return; $("salSec").classList.toggle("closed",closed.has("salSec"));
+  if(salState!=="ok"){$("salSum").textContent="";body.innerHTML=`<div class="lock">${salState==="loading"?"Loading salary records…":salState==="off"?"Log in to see salary records.":"Salary records are visible only to Transport admins."}</div>`;return}
+  const ids=Object.keys(sal).sort((a,b)=>(sal[a].order||99)-(sal[b].order||99));
+  let tot=0,totJ=0;
+  const rows=ids.map((id,i)=>{const x=sal[id],cur=curSal(x),j=Number(x.join)||null;tot+=cur||0;totJ+=j||0;
+    const rise=j&&cur&&cur>j?`<span class="rise">+${Math.round((cur-j)/j*100)}% since joining</span>`:"";
+    let r=`<tr><td class="num">${i+1}</td><td class="who"><b>${esc(x.name||personName(id,id))}</b><small>${esc(x.role||"")}</small></td>
+      <td class="doj">${x.doj?fmt(x.doj):"–"}<br><small>${svc(x.doj)}</small></td><td class="num">${inr(j)}</td>
+      <td><div class="incs">${(x.inc||[]).filter(e=>e.amount).map(e=>`<span class="chip">${inr(e.amount)} <i>${esc(e.label||"")}</i></span>`).join("")||'<span class="chip"><i>No increment yet</i></span>'}</div></td>
+      <td class="num cur">${inr(cur)}${rise}</td><td><button class="btn sm" data-se="${id}">${salEdit===id?"Close":"Edit"}</button></td></tr>`;
+    if(salEdit===id&&salDraft){r+=`<tr class="sedit"><td></td><td colspan="6"><div class="grid">
+      <label>Date of joining<input class="note" type="date" id="se-doj" data-sd="doj" value="${esc(salDraft.doj||"")}"></label>
+      <label>Joining salary (₹)<input class="note" id="se-join" data-sd="join" inputmode="numeric" value="${esc(salDraft.join??"")}"></label></div>
+      <div class="group" style="padding-left:0">Increments (oldest first)</div>
+      ${salDraft.inc.map((e,k)=>`<div class="grid" style="margin-bottom:6px"><label>Year / month<input class="note" id="se-l-${k}" data-sd="l-${k}" value="${esc(e.label||"")}" placeholder="2025 or Dec 2024"></label>
+        <label>New salary (₹)<input class="note" id="se-a-${k}" data-sd="a-${k}" inputmode="numeric" value="${esc(e.amount??"")}"></label>
+        <button class="btn sm" data-sr="${k}">Remove</button></div>`).join("")}
+      <div class="actions" style="margin:8px 0 0"><button class="btn sm" data-sa="1">+ Add increment</button><button class="btn sm primary" data-ss="${id}">Save</button><button class="btn sm" data-sc="1">Cancel</button></div></td></tr>`}
+    return r}).join("");
+  $("salSum").textContent=`${ids.length} staff · ${inr(tot)}/month`;
+  body.innerHTML=`<div class="sal-wrap"><table class="sal"><thead><tr><th class="num">#</th><th>Name</th><th>Joined</th><th class="num">Joining</th><th>Increments</th><th class="num">Current</th><th></th></tr></thead><tbody>${rows}</tbody>
+    <tfoot><tr><td></td><td>Total monthly</td><td></td><td class="num">${inr(totJ)}</td><td></td><td class="num">${inr(tot)}</td><td></td></tr></tfoot></table></div>`;
+}
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-se],[data-sa],[data-sr],[data-ss],[data-sc]"); if(!t)return; e.stopPropagation();
+  if(t.dataset.se){const id=t.dataset.se;if(salEdit===id){salEdit=null;salDraft=null}else{salEdit=id;const x=sal[id]||{};salDraft={doj:x.doj||"",join:x.join??"",inc:JSON.parse(JSON.stringify(x.inc||[]))}}renderSal();return}
+  if(t.dataset.sa){salDraft.inc.push({label:String(new Date().getFullYear()),amount:""});renderSal();return}
+  if(t.dataset.sr){salDraft.inc.splice(+t.dataset.sr,1);renderSal();return}
+  if(t.dataset.sc){salEdit=null;salDraft=null;renderSal();return}
+  if(t.dataset.ss){const id=t.dataset.ss,x=sal[id]||{};
+    const doc={...x,doj:salDraft.doj||"",join:salDraft.join===""?null:Number(salDraft.join),inc:salDraft.inc.filter(e=>e.amount!==""&&e.amount!=null).map(e=>({label:String(e.label||"").trim(),amount:Number(e.amount)}))};
+    setStatus("Saving salary…");db.doc("salary/"+id).set(doc).then(()=>{salEdit=null;salDraft=null;setStatus("Salary saved");renderSal()}).catch(err=>setStatus(err&&err.code==="permission_denied"?"Only the owner or editors can change salaries.":"Could not save salary — try again."))}
+},true);
+document.addEventListener("input",e=>{const k=e.target.dataset.sd;if(!k||!salDraft)return;
+  if(k==="doj"||k==="join")salDraft[k]=e.target.value;else{const[f,i]=k.split("-");salDraft.inc[+i][f==="l"?"label":"amount"]=e.target.value}});
+
+/* ---- vehicle documents ---- */
+const DOCS=[["ins","Insurance"],["permit","Permit"],["fit","Fitness"],["puc","PUC"]];
+let veh={}, vehState="loading", vehEdit=null, vehDraft={};
+document.addEventListener("input",e=>{if(e.target.id&&e.target.id.startsWith("ve-"))vehDraft[e.target.id.slice(3)]=e.target.value});
+const dayDiff=d=>Math.round((new Date(d+"T00:00:00Z")-new Date(todayIST()+"T00:00:00Z"))/864e5);
+function remindOn(d){const t=new Date(d+"T00:00:00Z"),day=t.getUTCDate();t.setUTCDate(1);t.setUTCMonth(t.getUTCMonth()-1);const last=new Date(Date.UTC(t.getUTCFullYear(),t.getUTCMonth()+1,0)).getUTCDate();t.setUTCDate(Math.min(day,last));return t.toISOString().slice(0,10)}
+function docState(d){if(d==="NR")return["nr","Not required (new vehicle)"];if(!d)return["none","Missing"];const n=dayDiff(d);if(n<0)return["exp","Expired "+(-n)+"d ago"];if(n<=30)return["due",n+" days left"];if(n<=60)return["soon",n+" days left"];return["ok",n>=365?Math.floor(n/30.4)+" months":n+" days"]}
+function loadVeh(){if(!db){vehState="off";renderVeh();return}
+  try{db.collection("vehicles").onSnapshot(q=>{veh={};q.docs.forEach(d=>veh[d.id]=d.data()||{});vehState="ok";renderVeh()},()=>{vehState="err";renderVeh()})}catch(e){vehState="err";renderVeh()}}
+function renderVeh(){
+  const body=$("vehBody"); if(!body)return; $("vehSec").classList.toggle("closed",closed.has("vehSec"));
+  if(vehState!=="ok"){body.innerHTML=`<div class="lock">${vehState==="loading"?"Loading vehicle documents…":"Log in to see vehicle documents."}</div>`;$("docAlert").innerHTML="";return}
+  const ids=Object.keys(veh).sort((a,b)=>(veh[a].order||99)-(veh[b].order||99));
+  const urgent=[];let cnt={exp:0,due:0,soon:0};
+  ids.forEach(id=>DOCS.forEach(([k,lab])=>{const d=veh[id][k],[st]=docState(d);if(st==="exp"||st==="none"){cnt.exp++;urgent.push(`${veh[id].no} ${lab} ${d?"expired "+fmt(d):"missing"}`)}else if(st==="due"){cnt.due++;urgent.push(`${veh[id].no} ${lab} expires ${fmt(d)}`)}else if(st==="soon")cnt.soon++}));
+  $("vehSum").textContent=`${ids.length} vehicles · ${cnt.exp+cnt.due} need action`; $("vehSum").className="cnt"+(cnt.exp+cnt.due?"":" full");
+  $("docAlert").innerHTML=urgent.length?`<div class="dalert">Renew now: ${urgent.map(esc).join(" · ")} — <button data-goveh="1">see vehicle documents</button></div>`:"";
+  const cell=(id,k)=>{const d=veh[id][k],[st,txt]=docState(d);return `<span class="vd ${st}">${d&&d!=="NR"?fmt(d):"—"}<small>${txt}</small></span>`};
+  let rows=ids.map((id,i)=>{const x=veh[id];let r=`<tr><td class="num">${i+1}</td><td><b>${esc(x.no||id)}</b></td>${DOCS.map(([k])=>`<td>${cell(id,k)}</td>`).join("")}<td><button class="btn sm" data-ve="${id}">${vehEdit===id?"Close":"Renewed?"}</button></td></tr>`;
+    if(vehEdit===id)r+=`<tr class="sedit"><td></td><td colspan="6"><div class="grid">${DOCS.map(([k,lab])=>`<label>${lab} valid till<input class="note" type="date" id="ve-${k}" value="${esc(vehDraft[k]??x[k]??"")}"></label>`).join("")}</div>
+      <div class="actions" style="margin:8px 0 0"><button class="btn sm primary" data-vs="${id}">Save new dates</button><button class="btn sm" data-ve="${id}">Cancel</button></div></td></tr>`;
+    return r}).join("");
+  // plan: next 12 months
+  const end=new Date(todayIST()+"T00:00:00Z");end.setUTCFullYear(end.getUTCFullYear()+1);const endS=end.toISOString().slice(0,10);
+  const groups={};ids.forEach(id=>DOCS.forEach(([k,lab])=>{const d=veh[id][k];if(!d||d>endS)return;const key=d+"|"+lab;(groups[key]=groups[key]||{d,lab,v:[]}).v.push(veh[id].no)}));
+  const items=Object.values(groups).sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:a.lab<b.lab?-1:1);
+  const MN=["January","February","March","April","May","June","July","August","September","October","November","December"];
+  let plan="",lastM="";items.forEach(it=>{const m=it.d.slice(0,7);if(m!==lastM){const n=items.filter(x=>x.d.startsWith(m)).reduce((a,x)=>a+x.v.length,0);plan+=`<h4>${MN[+m.slice(5)-1]} ${m.slice(0,4)}<small>${n} renewal${n>1?"s":""}</small></h4>`;lastM=m}
+    const rm=remindOn(it.d),past=rm<=todayIST();
+    plan+=`<div class="pl ${past?"past":""}"><span class="d">${fmt(it.d)}</span><span><b>${it.lab}</b> · ${it.v.length} vehicle${it.v.length>1?"s":""}<br><span class="v">${it.v.map(esc).join(", ")}</span></span><span class="r">Remind on<b>${past?"Now — overdue":fmt(rm)}</b></span></div>`});
+  const missing=[];ids.forEach(id=>DOCS.forEach(([k,lab])=>{if(!veh[id][k])missing.push(veh[id].no+" "+lab)}));
+  body.innerHTML=`<div class="legend" style="padding:10px 14px 0;margin:0"><span><b class="vd exp" style="width:14px;height:14px;padding:0"></b>Expired / missing</span><span><b class="vd due" style="width:14px;height:14px;padding:0"></b>Within 30 days</span><span><b class="vd soon" style="width:14px;height:14px;padding:0"></b>31–60 days</span><span><b class="vd ok" style="width:14px;height:14px;padding:0"></b>Valid</span></div>
+    <div class="sal-wrap"><table class="sal veh"><thead><tr><th class="num">#</th><th>Bus no.</th>${DOCS.map(([,l])=>`<th>${l}</th>`).join("")}<th></th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="plan"><div class="group" style="padding:12px 0 0">Renewal plan · next 12 months · reminder one month before each expiry</div>${plan||'<div class="lock">Nothing due in the next 12 months.</div>'}
+    ${missing.length?`<h4>Dates missing<small>enter these when known</small></h4><div class="pl past"><span class="d">—</span><span>${missing.map(esc).join(", ")}</span><span class="r">Remind on<b>Now</b></span></div>`:""}</div>`;
+}
+document.addEventListener("click",e=>{
+  const g=e.target.closest("[data-goveh]");if(g){closed.delete("vehSec");saveClosed();render();$("vehSec").scrollIntoView({behavior:"smooth"});return}
+  const t=e.target.closest("[data-ve],[data-vs]");if(!t)return;e.stopPropagation();
+  if(t.dataset.ve){vehDraft={};vehEdit=vehEdit===t.dataset.ve?null:t.dataset.ve;renderVeh();return}
+  const id=t.dataset.vs,doc={...veh[id]};DOCS.forEach(([k])=>{doc[k]=$("ve-"+k).value||(veh[id][k]==="NR"?"NR":"")});
+  setStatus("Saving vehicle dates…");db.doc("vehicles/"+id).set(doc).then(()=>{vehEdit=null;vehDraft={};setStatus("Vehicle dates saved");renderVeh()}).catch(err=>setStatus(err&&err.code==="permission_denied"?"You have view-only access.":"Could not save — try again."))
+},true);
+
+/* ---- service schedule ---- */
+let SV={}, svcState="loading", svcEdit=null, svcDraft={};
+const addYear=d=>{const t=new Date(d+"T00:00:00Z");t.setUTCFullYear(t.getUTCFullYear()+1);return t.toISOString().slice(0,10)};
+const km=n=>n==null||n===""?"–":Number(n).toLocaleString("en-IN")+" km";
+function svcCalc(x){const h=x.history||[],last=h[h.length-1]||{},lastKm=Number(last.km)||0,iv=Number(x.interval)||10000;
+  const dueKm=lastKm+iv,cur=Number(x.curKm)||lastKm,kmLeft=dueKm-cur;
+  const dueDate=last.date?addYear(last.date):(x.nextDate||""),dLeft=dueDate?dayDiff(dueDate):null;
+  let st="ok",why="";
+  if(kmLeft<=0||(dLeft!=null&&dLeft<0)){st="exp";why=kmLeft<=0?"Over by "+km(-kmLeft):"Date passed "+(-dLeft)+"d ago"}
+  else if(kmLeft<=2000||(dLeft!=null&&dLeft<=30)){st="due";why=kmLeft<=2000?km(kmLeft)+" left":dLeft+" days left"}
+  else why=km(kmLeft)+" left";
+  return{lastKm,dueKm,cur,kmLeft,dueDate,dLeft,st,why,iv,n:h.length}}
+function loadSvc(){if(!db){svcState="off";renderSvc();return}
+  try{db.collection("service").onSnapshot(q=>{SV={};q.docs.forEach(d=>SV[d.id]=d.data()||{});svcState="ok";renderSvc()},()=>{svcState="err";renderSvc()})}catch(e){svcState="err";renderSvc()}}
+function renderSvc(){
+  const body=$("svcBody");if(!body)return;$("svcSec").classList.toggle("closed",closed.has("svcSec"));
+  if(svcState!=="ok"){body.innerHTML=`<div class="lock">${svcState==="loading"?"Loading service records…":"Log in to see service records."}</div>`;$("svcAlert").innerHTML="";return}
+  const ids=Object.keys(SV).sort((a,b)=>(SV[a].order||99)-(SV[b].order||99));
+  const urg=[];ids.forEach(id=>{const c=svcCalc(SV[id]);if(c.st!=="ok")urg.push(`${SV[id].no} (${c.why})`)});
+  $("svcSum").textContent=`${ids.length} vehicles · ${urg.length} due`;$("svcSum").className="cnt"+(urg.length?"":" full");
+  $("svcAlert").innerHTML=urg.length?`<div class="dalert">Service due: ${urg.map(esc).join(" · ")} — <button data-gosvc="1">see service schedule</button></div>`:"";
+  const rows=ids.map((id,i)=>{const x=SV[id],c=svcCalc(x),h=x.history||[];
+    let r=`<tr><td class="num">${i+1}</td><td><span class="tag">${esc(x.type||"")}</span><br><b>${esc(x.no)}</b><br><small style="color:var(--muted)">Every ${km(c.iv)} / 1 yr</small></td>
+      <td><div class="hist">${h.map((e,k)=>`<span class="chip"><i>${k+1}</i> ${Number(e.km).toLocaleString("en-IN")}${e.date?" · "+fmt(e.date):""}</span>`).join("")}</div></td>
+      <td class="km">${km(c.lastKm)}<small>service ${c.n}</small></td>
+      <td class="km">${km(c.cur)}<small>${x.curKmDate?"as of "+fmt(x.curKmDate):""}</small></td>
+      <td class="km">${km(c.dueKm)}<small>${c.dueDate?"or by "+fmt(c.dueDate):"date not set"}</small></td>
+      <td><span class="vd ${c.st}">${c.st==="exp"?"Overdue":c.st==="due"?"Due soon":"OK"}<small>${esc(c.why)}${c.st==="ok"&&c.dLeft!=null?" · "+c.dLeft+"d":""}</small></span></td>
+      <td><div class="btns"><button class="btn xs" data-sk="${id}">Update km</button><button class="btn xs primary" data-sd2="${id}">Service done</button></div></td></tr>`;
+    if(svcEdit&&svcEdit.id===id){const t=svcEdit.mode;
+      r+=`<tr class="sedit"><td></td><td colspan="7"><div class="grid">
+        ${t==="km"?`<label>Current km<input class="note" id="sv-cur" inputmode="numeric" value="${esc(svcDraft.cur??c.cur)}"></label><label>As of date<input class="note" type="date" id="sv-curd" value="${esc(svcDraft.curd??todayIST())}"></label>`
+        :`<label>Service ${c.n+1} done at km<input class="note" id="sv-km" inputmode="numeric" value="${esc(svcDraft.km??c.cur)}"></label><label>Service date<input class="note" type="date" id="sv-date" value="${esc(svcDraft.date??todayIST())}"></label>`}
+        </div><div class="actions" style="margin:8px 0 0"><button class="btn sm primary" data-svs="${id}">Save</button><button class="btn sm" data-svc="1">Cancel</button></div></td></tr>`}
+    return r}).join("");
+  body.innerHTML=`<div class="legend" style="padding:10px 14px 0;margin:0"><span><b class="vd exp" style="width:14px;height:14px;padding:0"></b>Overdue</span><span><b class="vd due" style="width:14px;height:14px;padding:0"></b>Within 2,000 km or 30 days</span><span><b class="vd ok" style="width:14px;height:14px;padding:0"></b>OK</span><span>Next service = last service km + interval, or 1 year after last service — whichever comes first</span></div>
+  <div class="sal-wrap"><table class="sal svc"><thead><tr><th class="num">#</th><th>Vehicle</th><th>Services done (km)</th><th class="num">Last service</th><th class="num">Current km</th><th class="num">Next service</th><th>Status</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+document.addEventListener("input",e=>{const m={"sv-cur":"cur","sv-curd":"curd","sv-km":"km","sv-date":"date"}[e.target.id];if(m)svcDraft[m]=e.target.value});
+document.addEventListener("click",e=>{
+  if(e.target.closest("[data-gosvc]")){closed.delete("svcSec");saveClosed();render();$("svcSec").scrollIntoView({behavior:"smooth"});return}
+  const t=e.target.closest("[data-sk],[data-sd2],[data-svs],[data-svc]");if(!t)return;e.stopPropagation();
+  if(t.dataset.sk||t.dataset.sd2){const id=t.dataset.sk||t.dataset.sd2,mode=t.dataset.sk?"km":"done";svcDraft={};svcEdit=svcEdit&&svcEdit.id===id&&svcEdit.mode===mode?null:{id,mode};renderSvc();return}
+  if(t.dataset.svc){svcEdit=null;svcDraft={};renderSvc();return}
+  const id=t.dataset.svs,x=SV[id],doc=JSON.parse(JSON.stringify(x));
+  if(svcEdit.mode==="km"){const v=Number(($("sv-cur").value||"").replace(/[^0-9]/g,""));if(!v){setStatus("Enter the current km.");return}doc.curKm=v;doc.curKmDate=$("sv-curd").value||todayIST()}
+  else{const v=Number(($("sv-km").value||"").replace(/[^0-9]/g,""));if(!v){setStatus("Enter the km at service.");return}const d=$("sv-date").value||todayIST();doc.history=(doc.history||[]).concat([{km:v,date:d}]);if(!doc.curKm||doc.curKm<v){doc.curKm=v;doc.curKmDate=d}delete doc.nextDate}
+  setStatus("Saving service record…");db.doc("service/"+id).set(doc).then(()=>{svcEdit=null;svcDraft={};setStatus("Service record saved");renderSvc()}).catch(err=>setStatus(err&&err.code==="permission_denied"?"You have view-only access.":"Could not save — try again."))
+},true);
+
+/* ---- day-end summary ---- */
+const EODF=[["late","Late staff",0],["absent","Absent staff",0],["male","Male staff as conductors",0],["uniform","Uniform",0],["complaint","Complained",0],["request","Transport request",0],["problem","Problem",0],["discuss","Need to discuss",1],
+ ["spareVan","Spare van",0],["spareBus","Spare bus",0],["spareDrivers","Spare drivers",1],["tAbsent","Tomorrow absentee",1],["adjust","Adjustments",1]];
+let tmr={d:"",data:null};
+const nextDay=d=>{const t=new Date(d+"T00:00:00Z");t.setUTCDate(t.getUTCDate()+1);return t.toISOString().slice(0,10)};
+const dm=d=>{const M=["January","February","March","April","May","June","July","August","September","October","November","December"];return +d.slice(8)+" "+M[+d.slice(5,7)-1]};
+const allStaff=()=>[...SLOTS.map(x=>({id:x.id,nm:personName(x.id,slotText(x))})),...RES.map(r=>({id:r.id,nm:personName(r.id,r.label)}))];
+function eodAuto(){const st=allStaff(),a={};
+  a.absent=st.filter(x=>state.att[x.id]==="A").map(x=>x.nm).join(", ");
+  a.uniform=st.filter(x=>state.uni[x.id]&&state.att[x.id]!=="A").map(x=>x.nm).join(", ");
+  a.spareDrivers=RES.map(r=>personName(r.id,r.label)).join("\n");
+  const t=tmr.d===nextDay(date)&&tmr.data;
+  if(t){const ta=t.att||{},tc=t.cover||{};a.tAbsent=st.filter(x=>ta[x.id]==="A").map(x=>x.nm).join("\n");
+    a.adjust=RES.filter(r=>tc[r.id]&&ta[tc[r.id]]==="A").map(r=>`${personName(tc[r.id],tc[r.id])} replaced by ${personName(r.id,r.label)}.`).join("\n")}
+  return a}
+const eodVal=(k,a)=>{const v=(state.eod||{})[k];return v!=null&&v!==""?v:(a[k]||"")};
+function eodMsg(){const a=eodAuto(),v=k=>eodVal(k,a).trim(),one=k=>`*${v(k).replace(/\s*\n\s*/g,", ")||"NA"}*`,
+  list=k=>{const it=v(k).split(/\n|,/).map(x=>x.trim()).filter(Boolean);return(it.length?it:["NA"]).map(x=>"- "+x).join("\n")};
+  return `*Today - ${dm(date)}*
+* Late Staff - ${one("late")}
+* Absent staff - ${one("absent")}
+* Male staff as conductors - ${one("male")}
+* Uniform - ${one("uniform")}
+* Complained - ${one("complaint")}
+* Transport Request - ${one("request")}
+* Problem - ${one("problem")}
+
+*Need to discuss*
+${list("discuss")}
+
+*Tomorrow - ${dm(nextDay(date))}*
+Spare Vehicle
+* Spare Van - ${one("spareVan")}
+* Spare Bus - ${one("spareBus")}
+
+Spare Driver
+${list("spareDrivers")}
+
+Tomorrow Absentee
+${list("tAbsent")}
+
+Adjustments
+${list("adjust")}`}
+function renderEod(){const b=$("eodBody");if(!b)return;$("eodSec").classList.toggle("closed",closed.has("eodSec"));
+  const nd=nextDay(date);if(db&&tmr.d!==nd){tmr={d:nd,data:null};db.doc("reports/"+nd).get().then(x=>{if(tmr.d===nd){tmr.data=x.exists?x.data():null;render()}}).catch(()=>{})}
+  const a=eodAuto();const filled=EODF.filter(([k])=>eodVal(k,a).trim()).length;$("eodSum").textContent=`${filled}/${EODF.length} filled`;
+  const fld=([k,l,multi])=>{const own=(state.eod||{})[k]??"",au=a[k]||"";
+    const hint=au?`<span class="auto">Auto: ${esc(au.replace(/\n/g,", "))}${own?" (overridden)":""}</span>`:"";
+    const ph=au?au.replace(/\n/g,", "):(multi?"One per line · blank = NA":"Blank = NA");
+    return `<label>${l}${multi?`<textarea class="note" id="eod-${k}" data-eod="${k}" placeholder="${esc(ph)}">${esc(own)}</textarea>`:`<input class="note" id="eod-${k}" data-eod="${k}" value="${esc(own)}" placeholder="${esc(ph)}">`}${hint}</label>`};
+  b.innerHTML=`<div class="eod"><h5>Today · ${dm(date)}</h5>${EODF.slice(0,8).map(fld).join("")}<h5>Tomorrow · ${dm(nd)}</h5>${EODF.slice(8).map(fld).join("")}</div>
+   <div class="legend" style="padding:0 14px;margin:0 0 6px">Green "Auto" values come from attendance and uniform marks${tmr.data?" (tomorrow's from the "+fmt(nd)+" report)":"; mark tomorrow's absentees and reserve cover on "+fmt(nd)+" to fill those lines"}. Type in a box to override.</div>
+   <div class="actions" style="margin:0 14px 10px"><button class="btn primary" id="eodCopy">Copy for WhatsApp</button></div>
+   <div class="wa" id="eodPrev">${esc(eodMsg())}</div>`}
+document.addEventListener("input",e=>{const k=e.target.dataset.eod;if(!k)return;state.eod=state.eod||{};state.eod[k]=e.target.value;queue({eod:{[k]:e.target.value}});const p=$("eodPrev");if(p)p.textContent=eodMsg()});
+document.addEventListener("click",async e=>{if(!e.target.closest("#eodCopy"))return;const m=eodMsg();
+  try{await navigator.clipboard.writeText(m);setStatus("Day-end summary copied — paste it in WhatsApp.")}catch(err){const r=document.createRange();r.selectNodeContents($("eodPrev"));const sel=getSelection();sel.removeAllRanges();sel.addRange(r);setStatus("Text selected — copy it and paste in WhatsApp.")}});
+
+/* ---- next-day plan (Hindi) ---- */
+const HI={p1d:"समसुदिन",p1c:"संतोष चावरिया",p2d:"सुरेश नायक",p2c:"रुक्षणा",p3d:"महेंद्र",p3c:"विमला",p4d:"दीपक",p4c:"संतोष न्यू",p5d:"भारत",p5c:"आशा",
+ p6d:"अजय गुजराती",p7d:"विकाश",p8d:"अमन",p8c:"आशा न्यू",p9d:"कुशाल",p9c:"पूनम",p10d:"अजीज",p10c:"निर्मला",p11d:"मनीष",p12d:"सुरेश गुजराती",p13d:"जैराज",
+ p14d:"शिवरतन",p14c:"पूजा",p15d:"दिलीप",p15c:"कोमल",p16d:"हनुमान",p34d:"गोपाल",r1:"कमल सिंग",r2:"नितिन",r3:"विश्वबंधु"};
+const hi=id=>HI[id]||personName(id,id);
+function tmrData(){const nd=nextDay(date);if(tmr.d!==nd)return null;if(!tmr.data)tmr.data={att:{},cover:{}};tmr.data.att=tmr.data.att||{};tmr.data.cover=tmr.data.cover||{};return tmr.data}
+function idByName(nm){const k=String(nm||"").trim().toLowerCase();if(!k)return null;const all=[...SLOTS.map(x=>x.id),...RES.map(r=>r.id)];return all.find(id=>(roster.name[id]||"").trim().toLowerCase()===k)||null}
+function planMsg(){const t=tmrData()||{att:{},cover:{}},A=id=>t.att[id]==="A",cov={};
+  RES.forEach(r=>{const x=t.cover[r.id];if(x&&A(x)&&!A(r.id))cov[x]=r.id});
+  const nd=nextDay(date);let m=`*${dm(nd)}*\n*Morning Adjustments*\nFirst Round - 6:00\n`;
+  VEH.forEach((v,i)=>{const d=v.id+"d",c=v.id+"c";let dr=hi(d),co=v.bus?hi(c):null,line;
+    if(!v.bus){line=A(d)?`${hi(d)} - *${cov[d]?hi(cov[d]):"ड्राइवर नहीं"}*`:hi(d)}
+    else{const ds=A(d)?(cov[d]?`*${hi(cov[d])}* (${hi(d)} की जगह)`:`*ड्राइवर नहीं* (${hi(d)} ऐब्सेंट)`):dr;
+      const cs=A(c)?(cov[c]?`*${hi(cov[c])}* (${hi(c)} की जगह)`:`*कंडक्टर नहीं* (${hi(c)} ऐब्सेंट)`):co;line=`${ds} - ${cs}`}
+    m+=`${i+1}. ${line}\n`});
+  m+=`\n*एक्स्ट्रा*\n`+[RES[1],RES[2],RES[0]].map(r=>"- "+hi(r.id).split(" ")[0]).join("\n");
+  const ab=[...SLOTS.map(x=>x.id),...RES.map(r=>r.id)].filter(A);
+  m+=`\n\n*ऐब्सेंट*\n`+(ab.length?ab.map(id=>"- "+hi(id)).join("\n"):"- कोई नहीं");
+  const pre=(roster.pre||[]).filter(p=>p.code);
+  if(pre.length){const used=new Set();m+=`\n\n*Second Round - 7:30*\n`;
+    const sub=(nm,role)=>{const id=idByName(nm);if(!id)return nm;if(!A(id)){used.add(id);return hi(id)}
+      const r=cov[id];if(r&&!used.has(r)&&!pre.some(p=>idByName(p.driver)===r||idByName(p.cond)===r)){used.add(r);return `*${hi(r)}* (${hi(id)} की जगह)`}
+      return `*${role} नहीं* (${hi(id)} ऐब्सेंट)`};
+    pre.forEach(p=>{m+=`${p.code}. ${sub(p.driver,"ड्राइवर")}${p.cond?" - "+sub(p.cond,"कंडक्टर"):""}\n`});
+    const ex=VEH.map(v=>v.id+"d").filter(d=>!A(d)&&!used.has(d));
+    m+=`\nExtra\n`+(ex.length?ex.map(d=>"- "+hi(d)).join("\n"):"- कोई नहीं")}
+  return m}
+function renderNpl(){const b=$("nplBody");if(!b)return;$("nplSec").classList.toggle("closed",closed.has("nplSec"));
+  const nd=nextDay(date),t=tmrData();
+  if(!t){b.innerHTML=`<div class="lock">Loading ${fmt(nd)}…</div>`;return}
+  const st=allStaff(),ab=st.filter(x=>t.att[x.id]==="A");$("nplSum").textContent=`${fmt(nd)} · ${ab.length} absent`;
+  const freeRes=RES.filter(r=>t.att[r.id]!=="A");
+  const covOf=id=>RES.find(r=>t.cover[r.id]===id)?.id||"";
+  b.innerHTML=`<div class="group">Step 1 · Tap tomorrow's absentees (${fmt(nd)})</div>
+   <div class="chips">${st.map(x=>`<button class="pchip ${t.att[x.id]==="A"?"on":""}" data-ta="${x.id}">${esc(x.nm)}</button>`).join("")}</div>
+   ${ab.filter(x=>!RES.some(r=>r.id===x.id)).length?`<div class="group">Step 2 · Who covers?</div>`+ab.filter(x=>!RES.some(r=>r.id===x.id)).map(x=>`<div class="covrow"><span>${esc(x.nm)}</span>
+     <select data-tc="${x.id}" id="tc-${x.id}"><option value="">No cover</option>${freeRes.map(r=>`<option value="${r.id}" ${covOf(x.id)===r.id?"selected":""}>${esc(personName(r.id,r.label))}</option>`).join("")}</select></div>`).join(""):""}
+   <div class="actions" style="margin:10px 14px"><button class="btn primary" id="nplCopy">Copy Hindi plan for WhatsApp</button></div>
+   <div class="wa" id="nplPrev">${esc(planMsg())}</div>`}
+document.addEventListener("click",async e=>{
+  const a=e.target.closest("[data-ta]");if(a){const t=tmrData();if(!t)return;const id=a.dataset.ta,v=t.att[id]==="A"?"P":"A";t.att[id]=v;const p={att:{[id]:v}};
+    if(v==="P"){RES.forEach(r=>{if(t.cover[r.id]===id){t.cover[r.id]="";p.cover=Object.assign(p.cover||{},{[r.id]:""})}});if(t.cover[id]){t.cover[id]="";p.cover=Object.assign(p.cover||{},{[id]:""})}}
+    queue(p,nextDay(date));render();return}
+  if(e.target.closest("#nplCopy")){const m=planMsg();try{await navigator.clipboard.writeText(m);setStatus("Hindi plan copied — paste it in WhatsApp.")}catch(err){const r=document.createRange();r.selectNodeContents($("nplPrev"));const sl=getSelection();sl.removeAllRanges();sl.addRange(r);setStatus("Text selected — copy it and paste in WhatsApp.")}}
+});
+document.addEventListener("change",e=>{const id=e.target.dataset.tc;if(!id)return;const t=tmrData();if(!t)return;const rid=e.target.value,p={cover:{}};
+  RES.forEach(r=>{if(t.cover[r.id]===id&&r.id!==rid){t.cover[r.id]="";p.cover[r.id]=""}});if(rid){t.cover[rid]=id;p.cover[rid]=id}
+  queue(p,nextDay(date));render()});
+
+$("date").value=date; render(); loadHistory();
+setInterval(()=>{if(date===todayIST()&&!document.activeElement?.matches("input,textarea"))render()},60000);
+(async()=>{try{db=await FISDB.ready()}catch(e){db=null}
+  subscribe(); loadHistory(); loadSal(); loadVeh(); loadSvc();
+  if(db)db.doc("roster/main").onSnapshot(s=>{if(document.activeElement?.dataset?.r)return;const d=s.exists?s.data():{};roster={veh:{...(d.veh||{})},area:{...(d.area||{})},name:{...(d.name||{})},phone:{...(d.phone||{})},pre:Array.isArray(d.pre)?d.pre:[]};render()},()=>{});
+})();
+</script>
+
+</body>
+</html>
