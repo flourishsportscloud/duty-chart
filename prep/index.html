@@ -88,9 +88,10 @@ h2{margin:2px 0;font-family:var(--f-display);font-size:clamp(26px,3.4vw,34px);fo
 .X{background:var(--surface);border-color:var(--pend-line);color:var(--pend-ink)}
 .N{background:var(--na-bg);color:var(--na-ink)}
 .tablebox{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow-x:auto}
-.mainbox{overflow:auto;max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);overscroll-behavior:contain}
-.mainbox thead th{position:sticky;top:0;z-index:3;box-shadow:0 1px 0 var(--line)}
-.mainbox thead th.sticky{z-index:4}
+#floatHead{position:fixed;top:0;z-index:40;overflow:hidden;pointer-events:none;visibility:hidden;box-shadow:0 2px 6px rgba(15,20,29,.12);border-bottom:1px solid var(--line);background:var(--surface-2)}
+#floatHead.on{visibility:visible}
+#floatHead table{border-collapse:collapse;table-layout:fixed;min-width:0}
+@media (max-width:760px){#floatHead th.sticky{position:sticky;left:0;z-index:2}}
 table{width:100%;min-width:1640px;border-collapse:collapse;font-size:14px}
 th{background:var(--surface-2);padding:12px 10px;font-size:11.5px;letter-spacing:.06em;color:var(--muted);font-weight:600;text-align:center;text-transform:uppercase;line-height:1.25}
 th.l{text-align:left;padding-left:16px}
@@ -202,7 +203,7 @@ td:not(.c) .meta{margin-inline:0;max-width:none}
   .cell{width:40px;min-height:40px;padding:0;font-size:15px}
   .cell .lbl{display:none}
   td.sl{min-width:150px;max-width:170px;position:sticky;left:0;z-index:1;background:var(--surface);box-shadow:1px 0 0 var(--line)}
-  th.sticky{position:sticky;left:0;top:0;z-index:4}
+  th.sticky{position:sticky;left:0;z-index:2}
   .plan{display:none}
   td.sl .les{white-space:normal;overflow-wrap:anywhere}
   .note{width:120px}
@@ -802,6 +803,33 @@ renderRole();
     $('liveDot').classList.remove('off'); $('liveTxt').textContent='LIVE';
     render();
   },e=>{ $('liveDot').classList.add('off'); $('liveTxt').textContent='OFFLINE'; showMsg('Live updates stopped. Reload the page to reconnect.'); });
+})();
+
+/* Frozen heading: a copy of the table heading pinned to the top of the window */
+(function(){
+  const box=document.querySelector('.mainbox'), src=document.getElementById('thead');
+  const fh=document.createElement('div'); fh.id='floatHead'; fh.setAttribute('aria-hidden','true');
+  const t=document.createElement('table'); const th=document.createElement('thead'); t.appendChild(th); fh.appendChild(t); document.body.appendChild(fh);
+  let busy=false;
+  function build(){
+    const row=src.cloneNode(true); row.removeAttribute('id'); th.replaceChildren(row);
+    const a=src.children, b=row.children;
+    for(let i=0;i<a.length;i++){ const w=a[i].getBoundingClientRect().width; b[i].style.width=b[i].style.minWidth=b[i].style.maxWidth=w+'px'; b[i].style.boxSizing='border-box'; }
+    t.style.width=src.closest('table').getBoundingClientRect().width+'px';
+    pos();
+  }
+  function pos(){
+    const r=box.getBoundingClientRect(), h=src.getBoundingClientRect();
+    const show=h.top<0 && r.bottom>h.height+20 && src.children.length>1;
+    fh.classList.toggle('on',show);
+    if(show){ fh.style.left=(r.left+box.clientLeft)+'px'; fh.style.width=box.clientWidth+'px'; fh.scrollLeft=box.scrollLeft; }
+  }
+  function later(){ if(busy) return; busy=true; requestAnimationFrame(()=>{ busy=false; build(); }); }
+  new MutationObserver(later).observe(src.closest('table'),{childList:true,subtree:true});
+  window.addEventListener('scroll',pos,{passive:true});
+  box.addEventListener('scroll',pos,{passive:true});
+  window.addEventListener('resize',later);
+  later();
 })();
 </script>
 
