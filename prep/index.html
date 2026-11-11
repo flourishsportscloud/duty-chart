@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="icon" href="../fis/fis-icon-192.png">
+<link rel="apple-touch-icon" href="../fis/fis-icon-192.png">
+<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Academic Preparation Tracker</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: navy title band with date tabs → summary → lesson-start table grouped by class wing */
+:root{
+  --band:#13294B; --band-2:#1B3660; --band-line:#2E4A78; --band-ink:#FFFFFF; --band-soft:#C9D3E6; --gold:#F2A900; --gold-ink:#F2C14E;
+  --bg:#F3F4F7; --surface:#FFFFFF; --surface-2:#F7F8FA; --group:#EEF2F9; --line:#E1E5EC; --line-2:#EDF0F4;
+  --ink:#161B26; --muted:#5A6478; --brand:#13294B;
+  --done-bg:#D5F0E6; --done-ink:#0B5E4C; --prog-bg:#FCE7BF; --prog-ink:#7A4A00; --pend-line:#C2410C; --pend-ink:#9A3412; --na-bg:#EEF0F4; --na-ink:#6B7488;
+  --f-display:'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif;
+  --f-body:'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+  --f-mono:'IBM Plex Mono', ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --band:#0D1B33; --band-2:#16284A; --band-line:#2A4170; --band-ink:#FFFFFF; --band-soft:#AEBBD3; --gold:#F2B21E; --gold-ink:#F5C85C;
+  --bg:#0F141D; --surface:#171D29; --surface-2:#1C2331; --group:#1D2840; --line:#2A3345; --line-2:#232B3B;
+  --ink:#E8ECF3; --muted:#9AA4B8; --brand:#AFC4EA;
+  --done-bg:#123F35; --done-ink:#8FE0C4; --prog-bg:#4A3510; --prog-ink:#F7D08A; --pend-line:#F08A5D; --pend-ink:#F6A27E; --na-bg:#232B3B; --na-ink:#8D97AB;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --band:#0D1B33; --band-2:#16284A; --band-line:#2A4170; --band-ink:#FFFFFF; --band-soft:#AEBBD3; --gold:#F2B21E; --gold-ink:#F5C85C;
+  --bg:#0F141D; --surface:#171D29; --surface-2:#1C2331; --group:#1D2840; --line:#2A3345; --line-2:#232B3B;
+  --ink:#E8ECF3; --muted:#9AA4B8; --brand:#AFC4EA;
+  --done-bg:#123F35; --done-ink:#8FE0C4; --prog-bg:#4A3510; --prog-ink:#F7D08A; --pend-line:#F08A5D; --pend-ink:#F6A27E; --na-bg:#232B3B; --na-ink:#8D97AB;
+  color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px}
+.wrap{max-width:1360px;margin:0 auto;padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px))}
+button{font-family:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+header{background:var(--band);color:var(--band-ink);padding-block:28px 0}
+.hd{display:flex;flex-direction:column;gap:18px}
+.top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px}
+.brand{display:flex;align-items:center;gap:14px}
+.logo{width:48px;height:48px;border-radius:12px;background:var(--gold);color:#13294B;display:grid;place-items:center;font-family:var(--f-display);font-weight:800;font-size:20px}
+.school{font-size:13px;letter-spacing:.16em;font-weight:600;color:var(--gold-ink)}
+.sess{font-size:14px;color:var(--band-soft)}
+.live{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--band-line);background:rgba(0,0,0,.18);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600;letter-spacing:.08em}
+.dot{width:9px;height:9px;border-radius:50%;background:#3DDC97}
+.dot.off{background:#8FA3C4}
+h1{margin:0;font-family:var(--f-display);font-weight:800;font-size:clamp(34px,5vw,54px);line-height:1.03;letter-spacing:-.01em;text-wrap:balance}
+.lede{font-size:17px;color:var(--band-soft);max-width:70ch}
+.dates{display:flex;gap:8px;overflow-x:auto;scrollbar-width:thin}
+.dt{flex:none;min-width:96px;min-height:72px;border:1px solid var(--band-line);border-bottom:0;border-radius:12px 12px 0 0;background:var(--band-2);color:var(--band-soft);padding:9px 12px;display:flex;flex-direction:column;align-items:flex-start;gap:1px;cursor:pointer;text-align:left}
+.dt small{font-size:11px;font-weight:600;letter-spacing:.08em}
+.dt b{font-family:var(--f-display);font-size:22px;font-weight:800;color:var(--band-ink)}
+.dt i{font-style:normal;font-size:12px;font-family:var(--f-mono)}
+.dt[aria-pressed="true"]{background:var(--bg);color:var(--muted);border-color:var(--bg)}
+.dt[aria-pressed="true"] b{color:var(--brand)}
+.dt.off{border-style:dashed;background:transparent;cursor:default;color:#8FA3C4}
+.dt.off b{color:#8FA3C4}
+main{padding-block:26px 56px;display:flex;flex-direction:column;gap:22px}
+.dayhead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:14px}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+h2{margin:2px 0;font-family:var(--f-display);font-size:clamp(26px,3.4vw,34px);font-weight:800;color:var(--brand);text-wrap:balance}
+.sub{font-size:14px;color:var(--muted)}
+.pills{display:flex;flex-wrap:wrap;gap:8px}
+.pill{min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--brand);font-size:14px;font-weight:600;cursor:pointer}
+.pill[aria-pressed="true"]{background:var(--band);border-color:var(--band);color:#fff}
+.sum{display:grid;grid-template-columns:minmax(260px,1fr) minmax(0,2fr);gap:16px}
+@media (max-width:860px){.sum{grid-template-columns:1fr}}
+.kpi{background:var(--band);color:#fff;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:10px}
+.kpi .eyebrow{color:var(--gold-ink)}
+.big{font-family:var(--f-display);font-size:54px;font-weight:800;line-height:1}
+.track{height:10px;border-radius:999px;background:var(--band-line);overflow:hidden}
+.fill{height:100%;background:var(--gold);border-radius:999px;transition:width .3s}
+.counts{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--band-soft)}
+.counts b{font-family:var(--f-mono);color:#fff}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 22px;min-width:0}
+.eg{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px 24px;margin-top:12px}
+.eh{display:flex;justify-content:space-between;gap:8px;font-size:14px;font-weight:500;margin-bottom:6px}
+.eh span:last-child{font-family:var(--f-mono);color:var(--brand);font-variant-numeric:tabular-nums}
+.etrack{height:8px;border-radius:999px;background:var(--line-2);overflow:hidden}
+.efill{height:100%;background:var(--brand);border-radius:999px;transition:width .3s}
+.legend{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:center;font-size:13px;color:var(--muted)}
+.chip{display:inline-flex;align-items:center;justify-content:center;gap:5px;border-radius:8px;font-weight:600;font-size:13px;padding:3px 9px;border:1.5px solid transparent;white-space:nowrap}
+.D{background:var(--done-bg);color:var(--done-ink)}
+.P{background:var(--prog-bg);color:var(--prog-ink)}
+.X{background:var(--surface);border-color:var(--pend-line);color:var(--pend-ink)}
+.N{background:var(--na-bg);color:var(--na-ink)}
+.tablebox{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow-x:auto}
+table{width:100%;min-width:1640px;border-collapse:collapse;font-size:14px}
+th{background:var(--surface-2);padding:12px 10px;font-size:11.5px;letter-spacing:.06em;color:var(--muted);font-weight:600;text-align:center;text-transform:uppercase;line-height:1.25}
+th.l{text-align:left;padding-left:16px}
+td{border-top:1px solid var(--line-2);padding:8px 6px;vertical-align:middle}
+td.grp{background:var(--group);color:var(--brand);font-weight:600;font-size:13px;letter-spacing:.06em;padding:11px 16px;border-top:1px solid var(--line)}
+td.grp span{font-weight:500;color:var(--muted);letter-spacing:0}
+.cls{display:inline-block;min-width:46px;text-align:center;padding:5px 8px;border-radius:8px;background:var(--band);color:#fff;font-family:var(--f-mono);font-weight:600;font-size:13px}
+.subj{font-weight:600}
+.les{font-family:var(--f-mono);font-size:12.5px;color:var(--brand);font-weight:600;white-space:nowrap}
+.plan{font-size:12.5px;color:var(--muted);max-width:36ch}
+td.sl{min-width:230px}
+.cell{width:100px;min-height:42px;cursor:pointer}
+.cell:disabled{cursor:default}
+td.c{text-align:center}
+.ready{font-family:var(--f-mono);font-weight:600;color:var(--brand);font-variant-numeric:tabular-nums;white-space:nowrap}
+.who{font-size:11.5px;color:var(--muted);margin-top:2px;white-space:nowrap}
+.note{width:150px;min-height:38px;box-sizing:border-box;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);padding:6px 8px;font:inherit;font-size:13px}
+.empty{padding:36px 20px;text-align:center;color:var(--muted)}
+.msg{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 16px;color:var(--muted);font-size:14px}
+.foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;font-size:13px;color:var(--muted)}
+.rules{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 16px;font-size:14px;color:var(--muted)}
+.rules summary{cursor:pointer;font-weight:600;color:var(--brand);min-height:28px;display:flex;align-items:center}
+.rules ul{margin:8px 0 4px;padding-left:20px;display:grid;gap:4px}
+.cards{display:none;flex-direction:column;gap:12px}
+.cgrp{font-size:12px;font-weight:600;letter-spacing:.08em;color:var(--brand);padding:8px 2px 0}
+.cgrp span{font-weight:500;color:var(--muted);letter-spacing:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.chead{display:flex;gap:10px;align-items:flex-start}
+.chead>div{min-width:0;flex:1}
+.cmeta{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.cgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.cel{display:flex;flex-direction:column;gap:4px;min-width:0}
+.cel>span{font-size:12px;color:var(--muted);font-weight:500}
+.cel .chip{width:100%;min-height:44px;box-sizing:border-box}
+.card .note{width:100%}
+.cdate{font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.04em}
+.rolebar{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:center}
+.seg{display:inline-flex;background:rgba(0,0,0,.22);border:1px solid var(--band-line);border-radius:14px;padding:4px;gap:4px}
+.seg button{min-height:48px;min-width:112px;border:0;border-radius:10px;background:transparent;color:var(--band-soft);padding:6px 16px;display:flex;flex-direction:column;align-items:flex-start;cursor:pointer;text-align:left}
+.seg button b{font-family:var(--f-display);font-size:19px;color:var(--band-ink)}
+.seg button small{font-size:12px}
+.seg button[aria-pressed="true"]{background:var(--gold);color:#3a2a00}
+.seg button[aria-pressed="true"] b{color:#13294B}
+.whoin{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:14px;color:var(--band-soft)}
+.whoin b{color:var(--gold-ink)}
+.whoin input{min-height:44px;width:220px;max-width:100%;box-sizing:border-box;border-radius:10px;border:1px solid var(--band-line);background:var(--band-2);color:#fff;padding:0 12px;font:inherit}
+.whoin input::placeholder{color:#AEBBD3}
+.meta{font-size:10.5px;color:var(--muted);margin-top:3px;line-height:1.3;max-width:110px;margin-inline:auto}
+td:not(.c) .meta{margin-inline:0;max-width:none}
+.rtag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.04em;border-radius:4px;padding:0 4px;color:#fff;background:var(--brand)}
+.rtag.dean{background:#7A3E9D}
+.rtag.pl{background:#0E6E8C}
+.flag{display:inline-block;margin-top:3px;font-size:10.5px;font-weight:700;color:var(--pend-ink);border:1px solid var(--pend-line);border-radius:4px;padding:0 5px}
+.flag.late{color:var(--prog-ink);border-color:var(--prog-ink)}
+.activity{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 16px}
+.activity summary{cursor:pointer;font-weight:600;color:var(--brand);min-height:28px;display:flex;align-items:center;gap:6px}
+.activity summary span{font-weight:400;color:var(--muted);font-size:13px}
+.feed{list-style:none;margin:8px 0 2px;padding:0;display:grid;gap:6px;max-height:260px;overflow:auto}
+.feed li{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:baseline;font-size:13px;border-top:1px solid var(--line-2);padding-top:6px}
+.ftime{font-family:var(--f-mono);font-size:12px;color:var(--muted);min-width:118px}
+.fwho{font-weight:600}
+.fwhat{color:var(--muted);min-width:0}
+.fempty{color:var(--muted)}
+
+.vseg{display:inline-flex;gap:0;border:1px solid var(--band-line);border-radius:12px;overflow:hidden;align-self:flex-start}
+.vseg button{min-height:44px;padding:0 20px;border:0;background:transparent;color:var(--band-soft);font-weight:700;font-size:15px;cursor:pointer}
+.vseg button+button{border-left:1px solid var(--band-line)}
+.vseg button[aria-pressed="true"]{background:var(--band-ink);color:#13294B}
+.when.nodate{background:var(--prog-bg);color:var(--prog-ink)}
+.setdate{min-height:36px;margin-top:4px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);padding:0 6px;font:inherit;font-size:13px;max-width:150px}
+.dlink{color:var(--brand);font-weight:600;text-decoration:underline;text-underline-offset:2px}
+.when{display:inline-block;margin-top:3px;font-size:11px;font-weight:700;border-radius:4px;padding:0 6px}
+.when.today{background:var(--gold);color:#13294B}.when.up{background:var(--group);color:var(--brand)}.when.past{background:var(--na-bg);color:var(--na-ink)}
+.months{display:flex;gap:8px;flex-wrap:wrap}
+.mpill{min-height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--band-line);background:transparent;color:var(--band-soft);font-weight:600;font-size:13px;cursor:pointer}
+.mpill[aria-pressed="true"]{background:var(--band-ink);color:#13294B;border-color:var(--band-ink)}
+.upload{background:var(--surface);border:1.5px dashed var(--brand);border-radius:12px;padding:10px 16px}
+.upload summary{cursor:pointer;font-weight:700;color:var(--brand);min-height:32px;display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px}
+.upload summary span{font-weight:400;color:var(--muted);font-size:13px}
+.up-body{display:flex;flex-direction:column;gap:12px;padding-block:10px 4px}
+.up-row{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end}
+.up-row label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600;color:var(--muted)}
+.up-row input[type=date],.up-row input[type=file],.uptable input{min-height:40px;box-sizing:border-box;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);padding:0 8px;font:inherit;font-size:14px}
+.up-row input[type=file]{padding:6px;max-width:100%}
+.up-file{flex:1 1 260px;min-width:0}
+.btn{min-height:44px;padding:0 18px;border-radius:10px;border:1px solid var(--band);background:var(--band);color:#fff;font-weight:600;font-size:14px;cursor:pointer}
+.btn.ghost{background:var(--surface);color:var(--brand);border-color:var(--line)}
+.btn:disabled{opacity:.55;cursor:default}
+.up-status{font-size:13px;color:var(--muted);flex:1 1 260px}
+.uptable{min-width:880px}
+.uptable td{padding:6px}
+.uptable input[type=text]{width:100%;min-width:60px}
+.uptable .w-date{width:150px}.uptable .w-cls{width:80px}.uptable .w-les{width:110px}
+.tag-new{color:var(--done-ink);background:var(--done-bg);border-radius:6px;padding:2px 6px;font-size:12px;font-weight:600;white-space:nowrap}
+.tag-old{color:var(--prog-ink);background:var(--prog-bg);border-radius:6px;padding:2px 6px;font-size:12px;font-weight:600;white-space:nowrap}
+@media (max-width:760px){
+  .meta{display:none}
+  .seg button{min-width:96px}
+  .whoin input{width:100%}
+  .whoin{width:100%}
+
+  table{min-width:0;font-size:13px}
+  th{padding:10px 4px;font-size:10px;letter-spacing:.02em;width:auto!important;min-width:46px;max-width:64px}
+  th.l{padding-left:10px}
+  td{padding:6px 3px}
+  .cell{width:40px;min-height:40px;padding:0;font-size:15px}
+  .cell .lbl{display:none}
+  td.sl{min-width:150px;max-width:170px;position:sticky;left:0;z-index:1;background:var(--surface);box-shadow:1px 0 0 var(--line)}
+  th.sticky{position:sticky;left:0;z-index:2}
+  .plan{display:none}
+  .note{width:120px}
+  .cls{min-width:36px;font-size:12px}
+  header{padding-block:18px 0}
+  .lede{font-size:15px}
+  .big{font-size:44px}
+  .dt{min-width:84px;min-height:64px}
+  .dt b{font-size:19px}
+  .pills{width:100%}
+  .pill{flex:1 1 40%;padding:0 10px}
+  .eg{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 16px}
+  .eh{font-size:13px}
+  .legend{gap:8px 10px}
+  .foot{flex-direction:column}
+}
+@media (prefers-reduced-motion:reduce){.fill,.efill{transition:none}}
+</style>
+
+</head>
+<body>
+<header>
+  <div class="wrap hd">
+    <div class="top">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">FIS</div>
+        <div><div class="school">FLOURISH INTERNATIONAL SCHOOL</div><div class="sess">Academic Session 2026–27 · Classes 1–11</div></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center"><a href="../fis/" class="live" style="color:#fff;text-decoration:none">‹ FIS apps</a><div class="live" id="live"><span class="dot off" id="liveDot"></span><span id="liveTxt">CONNECTING</span></div></div>
+    </div>
+    <div>
+      <h1>Academic Preparation Tracker</h1>
+      <div class="lede">Lesson-start readiness, date by date: Lesson Plan · Viva · Video Downloaded · EPL / PPT Review · Assignment Answer Key · Test Paper Uploaded · Booklet Underlined · Class Observation</div>
+    </div>
+    <div class="rolebar">
+      <div class="seg" role="group" aria-label="Choose segment">
+        <button type="button" data-role="dean" aria-pressed="false"><b>Dean</b><small>Classes 1–11</small></button>
+        <button type="button" data-role="pl" aria-pressed="true"><b>PL</b><small>Classes 1–11</small></button>
+      </div>
+      <div class="whoin"><span>Updating as <b id="roleName">PL</b> · <b id="meName" style="color:#fff"></b></span><button type="button" class="btn ghost" id="signOut" style="min-height:40px">Sign out</button></div>
+    </div>
+    <div class="vseg" role="group" aria-label="Choose view">
+      <button type="button" data-view="date" aria-pressed="true">Datewise</button>
+      <button type="button" data-view="master" aria-pressed="false">Class Master</button>
+    </div>
+    <div class="months" id="months" role="group" aria-label="Month"></div>
+    <nav class="dates" id="dates" aria-label="Lesson start dates"></nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="dayhead">
+    <div>
+      <div class="eyebrow" id="dayEyebrow">Lessons starting on</div>
+      <h2 id="dayTitle">Loading the planner…</h2>
+      <div class="sub" id="daySub">From the Academic Planners (Classes 1–5 &amp; 6–11), October 2026</div>
+      <div class="sub" id="scopeNote"></div>
+    </div>
+    <div class="pills" id="wings" role="group" aria-label="Filter by wing"></div>
+  </div>
+
+  <section class="sum" aria-label="Summary">
+    <div class="kpi">
+      <div class="eyebrow">Readiness</div>
+      <div><span class="big" id="pct">–</span> <span id="doneOf" style="color:var(--band-soft)"></span></div>
+      <div class="track"><div class="fill" id="bar" style="width:0%"></div></div>
+      <div class="counts"><span>Done <b id="cD">0</b></span><span>In progress <b id="cP">0</b></span><span>Pending <b id="cX">0</b></span></div>
+    </div>
+    <div class="box">
+      <div class="eyebrow">Readiness by element</div>
+      <div class="eg" id="elems"></div>
+    </div>
+  </section>
+
+  <div class="legend">
+    <b class="eyebrow">Status key</b>
+    <span class="chip D">✓ Done</span><span class="chip P">◐ In progress</span><span class="chip X">○ Pending</span><span class="chip N">— N/A</span>
+    <span id="hint">Tap a status to change it: Pending → In progress → Done → N/A → Pending. N/A items are left out of Ready.</span>
+  </div>
+  <details class="rules">
+    <summary>Which classes each element applies to</summary>
+    <ul>
+      <li><b>Lesson Plan</b> – Classes 1–5: English, Science / EVS, S.St.</li>
+      <li><b>EPL / PPT Review</b> – Classes 1–8</li>
+      <li><b>Video Downloaded</b> and <b>Test Paper Uploaded</b> – Classes 1–10</li>
+      <li><b>Booklet Underlined</b> – Classes 6–10</li>
+      <li><b>Viva</b>, <b>Assignment Answer Key</b>, <b>Class Observation</b> – all classes</li>
+      <li><b>English 2 (Grammar) and Hindi 2</b> – no EPL / PPT Review, no Video</li>
+      <li><b>Hindi 2 Assignment Answer Key</b> – Classes 1–2 and 6–8 only</li>
+      <li><b>GK</b> – no Video, no Booklet; Assignment Answer Key only in Classes 1–2</li>
+      <li>Any other item that does not apply can be marked <b>N/A</b> by tapping through to it</li>
+    </ul>
+  </details>
+
+  <div class="msg" id="msg" hidden></div>
+
+  <details class="upload" id="upload" hidden>
+    <summary>Load lessons <span>Lesson file for a new month · Dean and Director only</span></summary>
+    <div class="up-body">
+      <div class="up-row" id="impRow">
+        <label for="impFile" class="up-file">Lesson file from Claude (.json)<input type="file" id="impFile" accept=".json,application/json"></label>
+        <button type="button" class="btn" id="impGo">Load lesson file</button>
+        <span class="up-status" id="impStatus">Send the new month's planner to Claude, then load the lesson file you get back. Lessons with a matching syllabus entry keep their marks.</span>
+      </div>
+      <div class="up-row" id="upRow1" hidden>
+        <label for="upFrom">From date<input type="date" id="upFrom"></label>
+        <label for="upTo">To date<input type="date" id="upTo"></label>
+        <label for="upFiles" class="up-file">Planner files<input type="file" id="upFiles" multiple accept="image/jpeg,image/png,image/webp,.xlsx,.xls,.csv"></label>
+      </div>
+      <div class="up-row" id="upRow2" hidden>
+        <button type="button" class="btn" id="upRead">Read planner</button>
+        <button type="button" class="btn ghost" id="upStop" hidden>Stop</button>
+        <span class="up-status" id="upStatus">Choose the dates, add the planner files (Class 1–5 and 6–11 planners can go together), then tap Read planner. Only lessons that start in those dates are picked.</span>
+      </div>
+      <div id="upPreview" hidden>
+        <div class="tablebox"><table class="uptable"><thead><tr><th class="l">Add</th><th class="l">Date</th><th class="l">Class</th><th class="l">Subject</th><th class="l">Lesson</th><th class="l">Planner text</th><th class="l">Check</th></tr></thead><tbody id="upRows"></tbody></table></div>
+        <div class="up-row"><button type="button" class="btn" id="upSave">Add to tracker</button><button type="button" class="btn ghost" id="upCancel">Discard</button><span class="up-status" id="upSaveStatus"></span></div>
+      </div>
+    </div>
+  </details>
+
+  <details class="activity" open>
+    <summary>Recent updates <span id="feedCount"></span></summary>
+    <ol id="feed" class="feed"></ol>
+  </details>
+
+  <section class="tablebox" aria-label="Lesson preparation status table">
+    <table>
+      <thead><tr id="thead"></tr></thead>
+      <tbody id="tbody"><tr><td colspan="12" class="empty">Lesson starts for 21–31 October will appear here once the planner loads.</td></tr></tbody>
+    </table>
+  </section>
+
+  <div class="foot">
+    <span>Only lessons that <b>start</b> on a date are listed; continuing lessons are not repeated. The Dean and Director add new months with “Load lessons”.</span>
+    <span id="foot2">Dean and PL work on the same record: a change in one segment shows in the other at once, with name and time.</span>
+  </div>
+</main>
+
+
+<div id="fisLogin" hidden style="position:fixed;inset:0;z-index:80;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:18px">
+  <form id="fisLoginF" class="box" style="width:100%;max-width:380px;display:flex;flex-direction:column;gap:8px" novalidate>
+    <div style="display:flex;gap:12px;align-items:center"><div class="logo" aria-hidden="true">FIS</div><div><b style="font-family:var(--f-display);font-size:20px;color:var(--brand)">Academic Preparation Tracker</b><div class="sub">Staff login · Flourish International School</div></div></div>
+    <label for="fisLN" class="eyebrow" style="margin-top:8px">Your full name</label><input class="note" style="width:100%;min-height:44px" type="text" id="fisLN" autocomplete="name" placeholder="e.g. Shubhangi Sharma">
+    <label for="fisLP" class="eyebrow">FIS staff password</label><input class="note" style="width:100%;min-height:44px" type="password" id="fisLP" autocomplete="current-password" placeholder="Your first name + the FIS staff code">
+    <p id="fisLE" style="color:var(--pend-ink);min-height:18px;margin:4px 0"></p>
+    <button class="btn" type="submit">Log in</button>
+  </form>
+</div>
+<script>
+/* FIS backend shim: the tracker talks to the Google Sheet through the Apps Script web app (prep/Code.gs). */
+(function(){
+  const API_URL=new URLSearchParams(location.search).get('api')||'';
+  const K=k=>'fisPrep:'+k;
+  const get=k=>{try{return JSON.parse(localStorage.getItem(K(k)))}catch(e){return null}};
+  const put=(k,v)=>{try{localStorage.setItem(K(k),JSON.stringify(v))}catch(e){}};
+  async function CALL(fn,args){
+    if(!API_URL){const x=new Error('This app is being set up. Please try again later.');x.net=0;throw x}
+    let j;
+    try{const r=await fetch(API_URL,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn,args:args||[],token:get('token')})});j=await r.json()}
+    catch(e){const x=new Error('No network. Check the internet and try again.');x.net=1;throw x}
+    if(!j.ok){if(j.login&&fn!=='login'){window.PREP_LOGOUT();}throw new Error(j.err==='LOGIN'?'Please log in again.':j.err)}
+    return j.v;
+  }
+  window.PREP_CALL=CALL;
+  window.PREP_LOGOUT=function(){['token','me'].forEach(k=>{try{localStorage.removeItem(K(k))}catch(e){}});location.reload()};
+  window.PREP_ME=get('me');
+  // a small stand-in for the shared database the tracker was written for
+  const cache={}, subs={plan:[],status:[]}; let rev=0, ready=false, busy=false;
+  const emit=name=>{ if(!ready) return; const docs=Object.keys(cache).filter(p=>p.startsWith(name+'/')).map(p=>({id:p.slice(name.length+1),data:()=>cache[p]})); subs[name].forEach(s=>{try{s.cb({docs})}catch(e){console.error(e)}}); };
+  const fault=e=>{ Object.values(subs).forEach(l=>l.forEach(s=>s.err&&s.err(e))); };
+  function apply(v,full){ if(full) Object.keys(cache).forEach(k=>delete cache[k]); (v.docs||[]).forEach(d=>{ if(d.del) delete cache[d.p]; else cache[d.p]=d.j; }); rev=v.rev||rev; ready=true; emit('plan'); emit('status'); }
+  async function refresh(full){ if(busy) return; busy=true; try{ apply(full||!ready?await CALL('all',[]):await CALL('sync',[rev]), full||!ready); }catch(e){ if(e.net) fault(e); } busy=false; }
+  window.PREP_REFRESH=refresh;
+  const db={
+    collection:name=>({onSnapshot:(cb,err)=>{ (subs[name]=subs[name]||[]).push({cb,err}); if(ready) emit(name); return ()=>{}; }}),
+    doc:path=>({
+      onSnapshot:()=>()=>{},
+      async set(obj){ const v=await CALL('set',[path,obj]); cache[path]=JSON.parse(JSON.stringify(obj)); rev=Math.max(rev,v.rev||0); emit(path.split('/')[0]); return v; },
+      async update(obj){ const v=await CALL('merge',[path,obj]); cache[path]=v.j; emit(path.split('/')[0]); return v; }
+    })
+  };
+  const user={ me:async()=>({id:(window.PREP_ME||{}).name||'',canEdit:!!(window.PREP_ME||{}).admin}), can:async()=>true, profiles:async()=>({}) };
+  window.claude={use:async n=>n==='db'?db:(n==='user'?user:null)};
+  function startSync(){ refresh(true); setInterval(()=>{ if(!document.hidden) refresh(false); },15000); document.addEventListener('visibilitychange',()=>{ if(!document.hidden) refresh(false); }); }
+  const $=id=>document.getElementById(id);
+  if(!get('token')||!window.PREP_ME){ window.claude={use:async()=>null}; $('fisLogin').hidden=false; if(!API_URL) $('fisLE').textContent='This app is being set up. Please try again later.'; }
+  else { startSync(); CALL('me',[]).then(m=>{ const was=!!window.PREP_ME.admin; window.PREP_ME=Object.assign({},window.PREP_ME,{name:m.name,admin:!!m.admin}); put('me',window.PREP_ME); if(was!==!!m.admin) location.reload(); }).catch(()=>{}); }
+  $('fisLoginF').addEventListener('submit',async e=>{ e.preventDefault(); const n=$('fisLN').value.trim(), p=$('fisLP').value;
+    if(n.length<3||!p){ $('fisLE').textContent='Type your full name and the password.'; return; }
+    $('fisLE').textContent='Checking…';
+    try{ const v=await CALL('login',[n,p]); put('token',v.token); put('me',{name:v.name,admin:!!v.admin}); location.reload(); }
+    catch(x){ $('fisLE').textContent=x.message; } });
+})();
+</script>
+<script>
+const ELEMS=[['lp','Lesson Plan'],['viva','Viva'],['video','Video Downloaded'],['epl','EPL / PPT Review'],['key','Assignment Answer Key'],['test','Test Paper Uploaded'],['book','Booklet Underlined'],['obs','Class Observation']];
+const ENAME=Object.fromEntries(ELEMS); ENAME.obsNote='Observation remark'; ENAME.note='Remarks';
+const LP_SUBJ=/english|eng\b|science|sci\b|evs|s\.?\s?st/i;
+const ENG2=/english\s*grammar|english\s*-\s*2\b/i, HIN2=/hindi\s*(ii\b|-\s*2\b)/i, GK=/^gk\b/i;
+function applies(r,k){ const n=num(r.c);
+  if((ENG2.test(r.s)||HIN2.test(r.s)) && (k==='epl'||k==='video')) return false;
+  if(HIN2.test(r.s) && k==='key') return n<=2 || (n>=6 && n<=8);
+  if(GK.test(r.s)){ if(k==='video'||k==='book') return false; if(k==='key' && n>=3) return false; }
+  if(k==='lp') return n<=5 && LP_SUBJ.test(r.s);
+  if(k==='epl') return n<=8;
+  if(k==='video'||k==='test') return n<=10;
+  if(k==='book') return n>=6 && n<=10;
+  return true; }
+const NEXT={X:'P',P:'D',D:'N',N:'X'};
+const LABEL={D:'✓ Done',P:'◐ Working',X:'○ Pending',N:'— N/A'};
+const WORD={D:'Done',P:'In progress',X:'Pending',N:'N/A'};
+const ROLES={
+  dean:{name:'Dean',scope:'Classes 1–11',inScope:c=>true,wings:[['all','All classes'],['p','Classes 1–5'],['m','Classes 6–8'],['s','Classes 9–11']]},
+  pl:{name:'PL',scope:'Classes 1–11',inScope:c=>true,wings:[['all','All classes'],['p','Classes 1–5'],['m','Classes 6–8'],['s','Classes 9–11']]}
+};
+const WTITLE={p:'PRIMARY WING · CLASSES 1–5',m:'MIDDLE WING · CLASSES 6–8',s:'SECONDARY WING · CLASSES 9–11'};
+let plan=null, planDocs={}, status={}, sel=null, month=null, wing='all', role='pl', db=null, user=null, myId=null, canWrite=true, canEdit=false;
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const monthOf=d=>d.slice(0,7);
+const monthName=m=>MONTHS[+m.slice(5,7)-1]+' '+m.slice(0,4);
+let view='date', mClass=null, mSubj='all';
+const CORDER=['1','2','3','4','5','6ABC','7ABC','8ABC','9A','9B','10A','10B','11A'];
+const cIdx=c=>{const i=CORDER.indexOf(c);return i<0?99:i;};
+try{ role=localStorage.getItem('apt-role')||'pl'; if(!ROLES[role]) role='pl'; view=localStorage.getItem('apt-view')==='master'?'master':'date'; mClass=localStorage.getItem('apt-mclass')||null; }catch(e){}
+function rowsAll(){ const out=[]; if(plan){ plan.dates.forEach(d=>d.rows.forEach(r=>out.push(Object.assign({date:d.d,dlabel:d.label},r)))); (plan.undated||[]).forEach(r=>out.push(Object.assign({date:null,dlabel:'Date not set'},r))); } return out; }
+function allMonths(){ if(!plan) return []; return [...new Set([...plan.dates.map(d=>monthOf(d.d)),...(plan.undated||[]).map(r=>r.m)])].filter(Boolean).sort(); }
+const mOf=r=>r.date?monthOf(r.date):r.m;
+function classesInPlan(){ return [...new Set(rowsAll().map(r=>r.c))].sort((a,b)=>cIdx(a)-cIdx(b)||a.localeCompare(b)); }
+function dShort(iso){ return new Date(iso+'T00:00:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}); }
+
+const $=id=>document.getElementById(id);
+const num=c=>parseInt(c,10);
+const wingOf=c=>num(c)<=5?'p':(num(c)<=8?'m':'s');
+const isoDay=t=>{const d=new Date(t); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+const todayISO=()=>isoDay(Date.now());
+function myName(){ return (window.PREP_ME&&window.PREP_ME.name)||''; }
+function st(row,k){ if(!applies(row,k)) return 'N'; const s=status[row.id]; return (s&&s[k])||'X'; }
+function fixedNA(row,k){ return !applies(row,k); }
+function rowsFor(dateKey){
+  if(!plan) return [];
+  const days=dateKey==='all'?plan.dates.filter(d=>monthOf(d.d)===month):plan.dates.filter(d=>d.d===dateKey);
+  const out=[]; days.forEach(d=>d.rows.forEach(r=>out.push(Object.assign({date:d.d,dlabel:d.label},r))));
+  if(dateKey==='all') (plan.undated||[]).filter(r=>r.m===month).forEach(r=>out.push(Object.assign({date:null,dlabel:'Date not set'},r)));
+  return out.filter(r=>ROLES[role].inScope(r.c)).filter(r=>wing==='all'||wingOf(r.c)===wing);
+}
+function tally(rows){
+  let D=0,P=0,X=0; const eD=ELEMS.map(()=>0), eT=ELEMS.map(()=>0);
+  rows.forEach(r=>ELEMS.forEach(([k],j)=>{const s=st(r,k); if(s==='N')return; eT[j]++; if(s==='D'){D++;eD[j]++} else if(s==='P')P++; else X++;}));
+  const T=D+P+X; return {D,P,X,T,pct:T?Math.round(D*100/T):0,eD,eT};
+}
+function el(tag,attrs,kids){const e=document.createElement(tag); if(attrs)for(const k in attrs){ if(k==='text')e.textContent=attrs[k]; else if(k==='class')e.className=attrs[k]; else if(k.startsWith('on'))e.addEventListener(k.slice(2),attrs[k]); else e.setAttribute(k,attrs[k]); } (kids||[]).forEach(c=>c&&e.appendChild(c)); return e;}
+function chipKids(s){ const t=LABEL[s]; return [document.createTextNode(t.slice(0,1)),el('span',{class:'lbl',text:t.slice(1)})]; }
+function fmtTime(t){ if(!t) return ''; return new Date(t).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}); }
+function metaOf(r,k){ const s=status[r.id]||{}; if(!s[k+'_at']) return null; return {by:s[k+'_by']||'Unnamed',role:s[k+'_role']||'',at:s[k+'_at']}; }
+
+function renderView(){ document.querySelectorAll('.vseg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===view))); }
+function renderRole(){
+  document.querySelectorAll('.seg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.role===role)));
+  $('roleName').textContent=ROLES[role].name;
+  $('meName').textContent=myName();
+  $('scopeNote').textContent='Dean and PL both see and update Classes 1–11 on one shared record.';
+}
+function renderDates(){
+  const nav=$('dates'); nav.textContent='';
+  if(!plan) return;
+  if(view==='master'){
+    $('months').textContent=''; $('months').hidden=true; nav.setAttribute('aria-label','Classes');
+    const cl=classesInPlan(); if(!mClass||!cl.includes(mClass)) mClass=cl[0];
+    cl.forEach(c=>{ const rs=rowsAll().filter(r=>r.c===c), t=tally(rs);
+      nav.appendChild(el('button',{class:'dt','aria-pressed':String(c===mClass),onclick:()=>{mClass=c;mSubj='all';try{localStorage.setItem('apt-mclass',c)}catch(e){};render()}},[el('small',{text:'CLASS'}),el('b',{text:c}),el('i',{text:t.pct+'% · '+rs.length+' lessons'})])); });
+    return;
+  }
+  $('months').hidden=false; nav.setAttribute('aria-label','Lesson start dates');
+  const mb=$('months'); mb.textContent='';
+  const ms=allMonths();
+  ms.forEach(m=>mb.appendChild(el('button',{class:'mpill','aria-pressed':String(m===month),onclick:()=>{month=m;sel='all';render()}},[document.createTextNode(monthName(m))])));
+  const all=[...plan.dates.map(d=>({...d,kind:'day'})),...(plan.off||[]).map(o=>({...o,kind:'off'}))].filter(d=>monthOf(d.d)===month).sort((a,b)=>a.d<b.d?-1:1);
+  const allT=tally(rowsFor('all'));
+  nav.appendChild(el('button',{class:'dt','aria-pressed':String(sel==='all'),onclick:()=>{sel='all';render()}},[el('small',{text:MONTHS[+month.slice(5,7)-1].slice(0,3).toUpperCase()}),el('b',{text:'All'}),el('i',{text:allT.pct+'% ready'})]));
+  all.forEach(d=>{
+    const [dw,dd]=d.label.split(' ');
+    if(d.kind==='off'){ nav.appendChild(el('div',{class:'dt off',title:d.note||''},[el('small',{text:dw.toUpperCase()}),el('b',{text:dd}),el('i',{text:d.note||'No teaching'})])); return; }
+    const rs=rowsFor(d.d), t=tally(rs);
+    nav.appendChild(el('button',{class:'dt','aria-pressed':String(sel===d.d),onclick:()=>{sel=d.d;render()}},[el('small',{text:dw.toUpperCase()}),el('b',{text:dd}),el('i',{text:(t.T?t.pct+'% · ':'')+rs.length+' starts'})]));
+  });
+}
+function renderWings(){
+  const box=$('wings'); box.textContent='';
+  if(view==='master'){
+    box.setAttribute('aria-label','Filter by subject');
+    const subs=[...new Set(rowsAll().filter(r=>r.c===mClass).map(r=>r.s))].sort();
+    if(mSubj!=='all'&&!subs.includes(mSubj)) mSubj='all';
+    [['all','All subjects'],...subs.map(s=>[s,s])].forEach(([k,l])=>box.appendChild(el('button',{class:'pill','aria-pressed':String(mSubj===k),onclick:()=>{mSubj=k;render()}},[document.createTextNode(l)])));
+    return;
+  }
+  box.setAttribute('aria-label','Filter by wing');
+  if(!ROLES[role].wings.some(w=>w[0]===wing)) wing='all';
+  ROLES[role].wings.forEach(([k,l])=>box.appendChild(el('button',{class:'pill','aria-pressed':String(wing===k),onclick:()=>{wing=k;render()}},[document.createTextNode(l)])));
+}
+function renderFeed(){
+  const box=$('feed'); box.textContent='';
+  if(!plan) return;
+  const rows=rowsAll().filter(r=>ROLES[role].inScope(r.c));
+  const ev=[];
+  rows.forEach(r=>{ const s=status[r.id]; if(!s) return;
+    [...ELEMS.map(e=>e[0]),'obsNote','note'].forEach(k=>{ if(s[k+'_at']) ev.push({r,k,at:s[k+'_at'],by:s[k+'_by']||'Unnamed',role:s[k+'_role']||'',v:s[k]}); }); });
+  ev.sort((a,b)=>b.at-a.at);
+  $('feedCount').textContent=ev.length?'('+Math.min(ev.length,30)+' latest)':'';
+  if(!ev.length){ box.appendChild(el('li',{class:'fempty',text:'No named updates yet. Each change made from here on shows who made it, as Dean or PL, and when.'})); return; }
+  ev.slice(0,30).forEach(e=>{
+    const what=(e.k==='obsNote'||e.k==='note')?(ENAME[e.k]+': “'+String(e.v||'').slice(0,60)+'”'):(ENAME[e.k]+' → '+WORD[e.v||'X']);
+    box.appendChild(el('li',null,[
+      el('span',{class:'ftime',text:fmtTime(e.at)}),
+      e.role?el('span',{class:'rtag '+e.role.toLowerCase(),text:e.role}):null,
+      el('span',{class:'fwho',text:e.by}),
+      el('span',{class:'fwhat',text:what+' · Class '+e.r.c+' '+e.r.s+' '+e.r.l+' ('+e.r.dlabel+')'})
+    ]));
+  });
+}
+
+function render(){
+  if(plan){ const ms=allMonths(); if(!month||!ms.includes(month)) month=ms[ms.length-1]; if(sel!=='all'&&!plan.dates.some(d=>d.d===sel)) sel='all'; }
+  renderView(); renderRole(); renderDates(); renderWings(); renderFeed(); renderUploadGate();
+  if(!plan) return;
+  let rows, showDate, groups;
+  if(view==='master'){
+    const sk=r=>mOf(r)+(r.date?'0'+r.date:'1')+'|'+r.s;
+    rows=rowsAll().filter(r=>r.c===mClass&&(mSubj==='all'||r.s===mSubj)).sort((a,b)=>sk(a)<sk(b)?-1:sk(a)>sk(b)?1:0);
+    showDate=true;
+    const ms=[...new Set(rows.map(mOf))].sort();
+    groups=ms.map(m=>({title:monthName(m).toUpperCase(),rows:rows.filter(r=>mOf(r)===m)}));
+    $('dayEyebrow').textContent='Class master';
+    $('dayTitle').textContent='Class '+mClass+(mSubj==='all'?' · all subjects':' · '+mSubj);
+    const ms2=ms.map(monthName); $('daySub').textContent=rows.length+' lesson'+(rows.length===1?'':'s')+(ms2.length?' · '+ms2[0]+(ms2.length>1?' – '+ms2[ms2.length-1]:''):'')+' · marking here shows on each lesson’s start date automatically';
+  } else {
+    rows=rowsFor(sel); showDate=sel==='all';
+    groups=['p','m','s'].map(w=>({title:WTITLE[w],rows:rows.filter(r=>r.date&&wingOf(r.c)===w)}));
+    if(sel==='all'){ const u=rows.filter(r=>!r.date).sort((a,b)=>cIdx(a.c)-cIdx(b.c)||a.s.localeCompare(b.s)); if(u.length) groups.push({title:'DATE NOT SET YET · FROM SYLLABUS',rows:u}); }
+    const day=plan.dates.find(d=>d.d===sel);
+    $('dayEyebrow').textContent='Lessons starting on';
+    $('dayTitle').textContent= sel==='all' ? 'All lessons · '+monthName(month) : day.full;
+    $('daySub').textContent= rows.length+' lesson start'+(rows.length===1?'':'s')+' · '+ROLES[role].name+' view · '+(ROLES[role].wings.find(w=>w[0]===wing)||['','All'])[1];
+  }
+  const t=tally(rows);
+  $('pct').textContent=t.pct+'%'; $('doneOf').textContent=t.D+' of '+t.T+' items done';
+  $('bar').style.width=t.pct+'%'; $('cD').textContent=t.D; $('cP').textContent=t.P; $('cX').textContent=t.X;
+  const eg=$('elems'); eg.textContent='';
+  ELEMS.forEach(([k,n],j)=>{const p=t.eT[j]?Math.round(t.eD[j]*100/t.eT[j]):0;
+    const f=el('div',{class:'efill'}); f.style.width=p+'%';
+    eg.appendChild(el('div',null,[el('div',{class:'eh'},[el('span',{text:n}),el('span',{text:t.eD[j]+'/'+t.eT[j]})]),el('div',{class:'etrack'},[f])]));});
+
+  const th=$('thead'); th.textContent='';
+  if(showDate) th.appendChild(el('th',{class:'l',text:view==='master'?'Start date':'Date',style:'width:'+(view==='master'?'110':'70')+'px'}));
+  th.appendChild(el('th',{class:'l sticky',text:'Subject · Lesson'}));
+  const VIS=ELEMS.filter(([k])=>rows.some(r=>applies(r,k)));
+  VIS.forEach(([,n])=>th.appendChild(el('th',{text:n,style:'width:110px'})));
+  th.appendChild(el('th',{class:'l',text:'Observation Remark'}));
+  th.appendChild(el('th',{text:'Ready',style:'width:96px'}));
+  th.appendChild(el('th',{class:'l',text:'Remarks'}));
+
+  const tb=$('tbody'); tb.textContent='';
+  const span=VIS.length+(showDate?5:4);
+  if(!rows.length){ tb.appendChild(el('tr',null,[el('td',{colspan:span,class:'empty',text:view==='master'?'No lessons for this class yet. Add the planner with “Add lessons from planner”.':'No lessons start on this date for the selected classes.'})])); return; }
+  const today=todayISO();
+  groups.forEach(G=>{
+    const gr=G.rows; if(!gr.length) return;
+    const g=el('td',{colspan:span,class:'grp'}); g.textContent=G.title+' '; g.appendChild(el('span',{text:'· '+gr.length+' lesson'+(view==='master'?'':' start')+(gr.length===1?'':'s')}));
+    tb.appendChild(el('tr',null,[g]));
+    gr.forEach(r=>{
+      const tr=el('tr');
+      if(showDate){
+        if(!r.date){ tr.appendChild(el('td',{style:'padding-left:16px;font-size:13px'},[el('div',{class:'when nodate',text:'Date not set'}),canEdit?dateSetter(r):null])); }
+        else if(view==='master'){ const when=r.date===today?['today','Today']:(r.date>today?['up','Upcoming']:['past','Started']);
+          tr.appendChild(el('td',{style:'padding-left:16px;white-space:nowrap;font-size:13px'},[el('a',{href:'#',class:'dlink',onclick:(e)=>{e.preventDefault();view='date';month=monthOf(r.date);sel=r.date;wing='all';try{localStorage.setItem('apt-view','date')}catch(x){};render();window.scrollTo(0,0);}},[document.createTextNode(dShort(r.date))]),el('div',null,[el('span',{class:'when '+when[0],text:when[1]})])]));
+        } else tr.appendChild(el('td',{style:'padding-left:16px;white-space:nowrap;font-size:13px;color:var(--muted)',text:r.dlabel}));
+      }
+      tr.appendChild(el('td',{class:'sl',style:'padding-left:12px'},[el('div',{style:'display:flex;gap:8px;align-items:flex-start'},[el('span',{class:'cls',text:r.c}),el('div',{style:'min-width:0'},[el('div',null,[el('span',{class:'subj',text:r.s+' '}),el('span',{class:'les',text:r.l})]),r.t?el('div',{class:'plan',text:r.t}):null])])]));
+      VIS.forEach(([k,n])=>tr.appendChild(el('td',{class:'c'},cellKids(r,k,n))));
+      tr.appendChild(el('td',null,[noteInput(r,'obsNote','Observation remark'),noteMeta(r,'obsNote')]));
+      const rd=readyOf(r); const overdue=!!r.date && rd.d<rd.a && todayISO()>r.date;
+      tr.appendChild(el('td',{class:'c'},[el('div',{class:'ready',text:rd.d+'/'+rd.a}),overdue?el('div',{class:'flag',text:'Overdue'}):null]));
+      tr.appendChild(el('td',{style:'padding-right:12px'},[noteInput(r,'note','Add remark'),noteMeta(r,'note')]));
+      tb.appendChild(tr);
+    });
+  });
+}
+function cellKids(r,k,n){
+  const s=st(r,k);
+  if(fixedNA(r,k)) return [el('span',{class:'chip N cell',style:'display:inline-flex','aria-label':'Not applicable'},chipKids('N'))];
+  const m=metaOf(r,k);
+  const tip=m?(WORD[s]+' · '+m.role+' '+m.by+' · '+fmtTime(m.at)):'';
+  const b=el('button',{class:'chip cell '+s,'aria-label':'Class '+r.c+' '+r.s+' '+r.l+', '+n+': '+WORD[s]+(m?', updated by '+m.role+' '+m.by:'')+'. Tap to change.',onclick:()=>setCell(r,k,NEXT[s])},chipKids(s));
+  if(tip) b.title=tip;
+  if(!canWrite) b.disabled=true;
+  const out=[b];
+  if(m){ const late=s==='D' && !!r.date && isoDay(m.at)>r.date;
+    out.push(el('div',{class:'meta'},[m.role?el('span',{class:'rtag '+m.role.toLowerCase(),text:m.role}):null,document.createTextNode(' '+m.by+' · '+fmtTime(m.at))]));
+    if(late) out.push(el('div',{class:'flag late',text:'Done late'}));
+  }
+  return out;
+}
+function dateSetter(r){
+  const inp=el('input',{type:'date',class:'setdate',id:'sd-'+r.id,'aria-label':'Set start date for class '+r.c+' '+r.s+' '+r.l,min:(r.m||'2026-01')+'-01'});
+  inp.addEventListener('change',()=>{ if(inp.value) moveToDate([{id:r.id,date:inp.value}]).then(ok=>{ if(!ok) inp.value=''; }); });
+  return el('div',{style:'margin-top:4px'},[inp]);
+}
+function dayObj(iso){ const dt=new Date(iso+'T00:00:00'); return {d:iso,label:dt.toLocaleDateString('en-GB',{weekday:'short'})+' '+dt.getDate(),full:dt.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).replace(/^(\w+) /,'$1, '),rows:[]}; }
+function docForMonth(work,m){ let id=Object.keys(work).find(k=>(work[k].month===m)||(work[k].dates||[]).some(d=>monthOf(d.d)===m)); if(!id){ id=m; work[id]={month:m,dates:[],off:[],undated:[]}; } return id; }
+// move undated lessons (keeps their id, so marks already made stay) onto a start date; also used by planner upload
+async function moveToDate(list,extraRows){
+  const work=JSON.parse(JSON.stringify(planDocs)), touched=new Set();
+  const take=id=>{ for(const k of Object.keys(work)){ const u=work[k].undated||[]; const i=u.findIndex(x=>x.id===id); if(i>=0){ touched.add(k); return u.splice(i,1)[0]; } } return null; };
+  const put=(row,iso)=>{ const k=docForMonth(work,monthOf(iso)); touched.add(k); const p=work[k]; p.dates=p.dates||[]; let day=p.dates.find(d=>d.d===iso); if(!day){ day=dayObj(iso); p.dates.push(day); p.dates.sort((a,b)=>a.d<b.d?-1:1); } const o={id:row.id,c:row.c,s:row.s,l:row.l||'',t:row.t||''}; day.rows.push(o); day.rows.sort((a,b)=>cIdx(a.c)-cIdx(b.c)||a.s.localeCompare(b.s)); };
+  list.forEach(x=>{ const row=take(x.id); if(row) put(row,x.date); });
+  (extraRows||[]).forEach(x=>put(x,x.date));
+  try{ for(const k of touched) await db.doc('plan/'+k).set(work[k]); showMsg(''); return true; }
+  catch(e){ showMsg('Could not save the date ('+((e&&e.message)||'error')+'). Only editors of this page can set dates.'); return false; }
+}
+function noteMeta(r,k){ const m=metaOf(r,k); return m?el('div',{class:'meta'},[m.role?el('span',{class:'rtag '+m.role.toLowerCase(),text:m.role}):null,document.createTextNode(' '+m.by+' · '+fmtTime(m.at))]):null; }
+function readyOf(r){ let d=0,a=0; ELEMS.forEach(([k])=>{const s=st(r,k); if(s!=='N'){a++; if(s==='D')d++;}}); return {d,a}; }
+function noteInput(r,k,ph){
+  const s=status[r.id]||{};
+  const inp=el('input',{class:'note',id:k+'-'+r.id,'aria-label':ENAME[k]+' for class '+r.c+' '+r.s+' '+r.l,placeholder:ph,value:s[k]||''});
+  if(!canWrite) inp.disabled=true;
+  inp.addEventListener('change',()=>saveFields(r,k,inp.value.slice(0,200)));
+  return inp;
+}
+function showMsg(t){const m=$('msg'); if(t){m.textContent=t;m.hidden=false}else m.hidden=true;}
+async function saveFields(r,k,v){
+  if(!db) return;
+  const name=myName();
+  if(!name){ window.PREP_LOGOUT(); return; }
+  const now=Date.now(), R=ROLES[role].name;
+  const data={[k]:v,[k+'_by']:name,[k+'_role']:R,[k+'_at']:now,t:now,by:name,role:R};
+  if(myId) data.u=myId;
+  status[r.id]=Object.assign({},status[r.id]||{},data); render();
+  const ref=db.doc('status/'+r.id);
+  try{ await ref.update(data); showMsg(''); }
+  catch(e){
+    if(e&&e.code==='invalid_argument'){ try{ await ref.set(Object.assign({},status[r.id])); showMsg(''); return; }catch(e2){ e=e2; } }
+    showMsg('That change was not saved ('+((e&&e.message)||'connection problem')+'). Check your connection and edit access, then try again.');
+  }
+}
+function setCell(r,k,v){ saveFields(r,k,v); }
+
+// ---------- Planner upload (editors only) ----------
+let sampleFn=null, upCtl=null, upItems=[], pendingJump=null;
+const pad=n=>String(n).padStart(2,'0');
+function normSubj(s){ let x=String(s||'').toLowerCase().replace(/[^a-z0-9ऀ-ॿ]+/g,'');
+  x=x.replace(/^englishgrammar/,'english2').replace(/^sci(?:ence)?/,'science').replace(/^eng(?:lish)?/,'english');
+  x=x.replace(/^hindiii/,'hindi2').replace(/^hindii(?!i)/,'hindi1');
+  return x; }
+function normLes(l){ return String(l||'').toLowerCase().replace(/\s+/g,'').replace(/^l-?/,'l').replace(/^lesson-?/,'l'); }
+function normCls(c){ return String(c||'').toUpperCase().replace(/^CLASS\s*/,'').replace(/\s+/g,''); }
+const keyOf=(c,s,l)=>normCls(c)+'|'+normSubj(s)+'|'+normLes(l);
+function existingStarts(){ const m={}; if(plan) plan.dates.forEach(d=>d.rows.forEach(r=>{ const k=keyOf(r.c,r.s,r.l); if(!m[k]) m[k]=d.d; })); return m; }
+function undatedMap(){ const m={}; if(plan) (plan.undated||[]).forEach(r=>{ m[keyOf(r.c,r.s,r.l)]=r.id; }); return m; }
+function renderUploadGate(){ const u=$('upload'); if(u) u.hidden=!(canEdit&&db); }
+async function fileToText(f){
+  if(/\.csv$/i.test(f.name)) return '### File: '+f.name+'\n'+(await f.text());
+  if(!window.XLSX){ await new Promise((ok,bad)=>{ const s=document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'; s.onload=ok; s.onerror=()=>bad(new Error('Could not load the Excel reader.')); document.head.appendChild(s); }); }
+  const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});
+  return wb.SheetNames.map(n=>'### Sheet: '+n+'\n'+XLSX.utils.sheet_to_csv(wb.Sheets[n],{blankrows:false}).slice(0,40000)).join('\n\n');
+}
+function promptFor(from,to,kind,text){
+  return `You are reading a school academic planner from Flourish International School (Classes 1–11). ${kind==='image'?'The planner is in the attached image(s).':'The planner sheets follow as CSV text.'}
+
+Task: list every LESSON START between ${from} and ${to} (inclusive). A lesson start is the first date a class begins a lesson (or poem, chapter, or a named grammar/Hindi topic) of a subject in this planner. If the same class+subject+lesson already appears on an earlier date anywhere in the planner, it is NOT a start, so leave it out. Include only teaching lessons: skip tests, exams, revision, holidays, Sundays, events, sports/dance/music/art/library/lab/skill course/foreign language/fitness sessions, talk hour, collection, distribution, lunch, diary homework.
+
+Use the year and month of the date range when the planner shows only day numbers. Class labels exactly as the planner names them: "1","2","3","4","5" for Classes 1–5, and the column headings for senior classes such as "6ABC","7ABC","8ABC","9A","9B","10A","10B","11A". When one cell has two subjects (e.g. "Hindi-2 L-11, Sanskrit L 11") make two entries. Subject as written in short form (e.g. "Maths","Hindi I","Hindi II","Hindi-1","Hindi-2","English","English Grammar","English-1","English-2","EVS","S.St.","Science","Computer","GK","Sanskrit","S.St History"). Lesson as "L-7", "Poem-4", "Pg 35–36" for GK pages, or the topic name when there is no number. "detail" is a short phrase from the planner (max 60 characters).
+
+Also list days with no teaching in that range (OHM, holiday) under "off", Sundays excluded.
+
+Reply with only JSON in this shape:
+{"rows":[{"date":"2026-11-03","class":"6ABC","subject":"Science","lesson":"L-10","detail":"Reading & explanation"}],"off":[{"date":"2026-11-14","note":"Children's Day"}]}
+${text?'\n\nPLANNER:\n'+text:''}`;
+}
+function upStatus(t){ $('upStatus').textContent=t; }
+async function readPlanner(){
+  const files=[...$('upFiles').files];
+  const from=$('upFrom').value, to=$('upTo').value;
+  if(!from||!to||from>to){ upStatus('Choose a From date and a To date first.'); return; }
+  if(!files.length){ upStatus('Add at least one planner file (photo, screenshot or Excel).'); return; }
+  if(!sampleFn){ upStatus('Reading planners needs Claude, which is not available in this view. Open the tracker on claude.ai.'); return; }
+  const lim=await sampleFn.limits().catch(()=>null);
+  const imgs=files.filter(f=>/^image\//.test(f.type)), sheets=files.filter(f=>!/^image\//.test(f.type));
+  if(imgs.length&&!lim?.images){ upStatus('This view cannot send images. Upload the Excel planner instead.'); return; }
+  $('upRead').disabled=true; $('upStop').hidden=false; $('upPreview').hidden=true;
+  upCtl=new AbortController();
+  const rows=[], off=[];
+  try{
+    const jobs=[];
+    if(sheets.length){ upStatus('Opening the Excel files…'); let txt=''; for(const f of sheets) txt+=(await fileToText(f))+'\n\n'; jobs.push({kind:'sheet',text:txt.slice(0,220000)}); }
+    const per=Math.max(1,(lim?.images?.maxCount)||1);
+    for(let i=0;i<imgs.length;i+=Math.min(per,3)) jobs.push({kind:'image',images:imgs.slice(i,i+Math.min(per,3))});
+    for(let j=0;j<jobs.length;j++){
+      upStatus('Reading planner '+(j+1)+' of '+jobs.length+'… this can take a minute.');
+      const jb=jobs[j];
+      const res=await sampleFn.json(promptFor(from,to,jb.kind,jb.text),{signal:upCtl.signal,images:jb.images,modelTier:'default'});
+      (res&&Array.isArray(res.rows)?res.rows:[]).forEach(r=>{ if(r&&r.date&&r.class&&r.subject&&r.date>=from&&r.date<=to) rows.push({date:String(r.date).slice(0,10),c:normCls(r.class),s:String(r.subject).trim(),l:String(r.lesson||'').trim(),t:String(r.detail||'').slice(0,80)}); });
+      (res&&Array.isArray(res.off)?res.off:[]).forEach(o=>{ if(o&&o.date&&o.date>=from&&o.date<=to) off.push({d:String(o.date).slice(0,10),note:String(o.note||'No teaching').slice(0,30)}); });
+    }
+  }catch(e){
+    $('upRead').disabled=false; $('upStop').hidden=true;
+    const msg={cancelled:'Stopped.',not_granted:'Claude was not allowed for this page, so the planner could not be read.',rate_limited:'Too many requests just now. Try again in a few minutes.',image_rejected:'One of the images could not be read. Try a clearer photo or a PNG/JPG screenshot.',invalid_json:'The planner reply could not be read. Tap Read planner to try again, or upload fewer files at once.',prompt_too_large:'The Excel file is too large. Upload one planner at a time.'}[e&&e.code]||('Could not read the planner ('+((e&&e.message)||'error')+').');
+    upStatus(msg); return;
+  }
+  $('upRead').disabled=false; $('upStop').hidden=true;
+  // first occurrence in upload, then compare with tracker
+  rows.sort((a,b)=>a.date<b.date?-1:1);
+  const seen={}, have=existingStarts(), und=undatedMap();
+  upItems=[];
+  rows.forEach(r=>{ const k=keyOf(r.c,r.s,r.l); if(seen[k]) return; seen[k]=1; upItems.push(Object.assign(r,{inTracker:have[k]||null,undatedId:have[k]?null:(und[k]||null),add:!have[k]})); });
+  upItems.offDays=off;
+  renderUpPreview();
+  upStatus(upItems.length?('Found '+upItems.length+' lesson start'+(upItems.length===1?'':'s')+'. Check them, fix anything wrong, then tap Add to tracker.'):'No lesson starts found in those dates. Check the dates and the file.');
+}
+function renderUpPreview(){
+  const tb=$('upRows'); tb.textContent='';
+  upItems.forEach((r,i)=>{
+    const cb=el('input',{type:'checkbox',id:'upc-'+i,'aria-label':'Add this lesson'}); cb.checked=r.add; cb.addEventListener('change',()=>{r.add=cb.checked;countAdd();});
+    const inp=(f,cls)=>{ const x=el('input',{type:f==='date'?'date':'text',class:cls||'',id:'up'+f+'-'+i,value:r[f]||'','aria-label':f}); x.addEventListener('change',()=>{ r[f]=x.value.trim(); }); return x; };
+    tb.appendChild(el('tr',null,[el('td',null,[cb]),el('td',{class:'w-date'},[inp('date')]),el('td',{class:'w-cls'},[inp('c')]),el('td',null,[inp('s')]),el('td',{class:'w-les'},[inp('l')]),el('td',null,[inp('t')]),
+      el('td',null,[r.inTracker?el('span',{class:'tag-old',text:'Already in tracker ('+r.inTracker.slice(8)+'/'+r.inTracker.slice(5,7)+')'}):(r.undatedId?el('span',{class:'tag-new',text:'Syllabus lesson · gets this date'}):el('span',{class:'tag-new',text:'New start'}))])]));
+  });
+  $('upPreview').hidden=!upItems.length; countAdd();
+}
+function countAdd(){ const n=upItems.filter(r=>r.add).length; $('upSave').textContent=n?('Add '+n+' lesson'+(n===1?'':'s')+' to tracker'):'Add to tracker'; $('upSave').disabled=!n; }
+async function saveUpload(){
+  const pick=upItems.filter(r=>r.add&&r.date&&r.c&&r.s);
+  if(!pick.length) return;
+  $('upSave').disabled=true; $('upSaveStatus').textContent='Saving…';
+  const ids=new Set(rowsAll().map(r=>r.id));
+  const moves=[], extra=[];
+  pick.forEach(r=>{
+    if(r.undatedId){ moves.push({id:r.undatedId,date:r.date}); return; }
+    let base=(r.date.slice(5,7)+r.date.slice(8,10)+'-'+r.c+'-'+r.s+'-'+r.l).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+    let id=base, n=2; while(ids.has(id)) id=base+'-'+(n++); ids.add(id);
+    extra.push({id,c:r.c,s:r.s,l:r.l||'',t:r.t||'',date:r.date});
+  });
+  const ok=await moveToDate(moves,extra);
+  // holidays from the planner
+  if(ok&&(upItems.offDays||[]).length){ try{ const work=JSON.parse(JSON.stringify(planDocs)), touched=new Set();
+    upItems.offDays.forEach(o=>{ const k=docForMonth(work,monthOf(o.d)); const p=work[k]; p.off=p.off||[]; if(!p.off.some(x=>x.d===o.d)&&!(p.dates||[]).some(d=>d.d===o.d)){ const dt=new Date(o.d+'T00:00:00'); p.off.push({d:o.d,label:dt.toLocaleDateString('en-GB',{weekday:'short'})+' '+dt.getDate(),note:o.note}); touched.add(k); } });
+    for(const k of touched) await db.doc('plan/'+k).set(work[k]); }catch(e){} }
+  if(!ok){ $('upSave').disabled=false; $('upSaveStatus').textContent='Not saved. Only editors of this page can add lessons.'; return; }
+  $('upSaveStatus').textContent='Added '+pick.length+' lesson'+(pick.length===1?'':'s')+'. They now show in both Dean and PL.';
+  upItems=[]; $('upPreview').hidden=true; $('upFiles').value='';
+  pendingJump=pick[0].date;
+}
+async function initUpload(){
+  sampleFn=await window.claude?.use?.('sample');
+  if(sampleFn){ $('upRow1').hidden=false; $('upRow2').hidden=false; }
+  $('impGo').addEventListener('click',async()=>{ const f=$('impFile').files[0]; if(!f){ $('impStatus').textContent='Choose the lesson file first.'; return; }
+    let data; try{ data=JSON.parse(await f.text()); }catch(e){ $('impStatus').textContent='This is not a lesson file. Use the .json file Claude sent.'; return; }
+    $('impGo').disabled=true; $('impStatus').textContent='Loading…';
+    try{ const r=await window.PREP_CALL('importFile',[data]); $('impStatus').textContent='Loaded '+r.n+' records. Everyone sees them within a few seconds.'; $('impFile').value=''; window.PREP_REFRESH&&window.PREP_REFRESH(true); }
+    catch(e){ $('impStatus').textContent=e.net?'No network. Try again.':e.message; }
+    $('impGo').disabled=false; });
+  const t=new Date(); const m1=t.getFullYear()+'-'+pad(t.getMonth()+1);
+  $('upFrom').value=todayISO(); const last=new Date(t.getFullYear(),t.getMonth()+1,0); $('upTo').value=m1+'-'+pad(last.getDate());
+  $('upRead').addEventListener('click',readPlanner);
+  $('upStop').addEventListener('click',()=>upCtl&&upCtl.abort());
+  $('upSave').addEventListener('click',saveUpload);
+  $('upCancel').addEventListener('click',()=>{ upItems=[]; $('upPreview').hidden=true; upStatus('Discarded. Nothing was added.'); });
+  renderUploadGate();
+}
+
+
+document.querySelectorAll('.vseg button').forEach(b=>b.addEventListener('click',()=>{ view=b.dataset.view; try{localStorage.setItem('apt-view',view)}catch(e){}; render(); }));
+document.querySelectorAll('.seg button').forEach(b=>b.addEventListener('click',()=>{ role=b.dataset.role; try{localStorage.setItem('apt-role',role)}catch(e){}; wing='all'; showMsg(''); render(); }));
+$('signOut').addEventListener('click',()=>window.PREP_LOGOUT());
+renderRole();
+
+(async function start(){
+  db=await window.claude?.use?.('db');
+  user=await window.claude?.use?.('user');
+  if(!db){ $('liveTxt').textContent='OFFLINE'; $('dayTitle').textContent='Tracker unavailable'; showMsg('Log in to see and update preparation status.'); return; }
+  if(user){ try{ const me=await user.me(); myId=me.id; canEdit=!!me.canEdit; const c=user.can?await user.can('data.write'):null; if(c===false){canWrite=false; $('hint').textContent='View only: ask the coordinator for edit access to update statuses.';} }catch(e){} }
+  initUpload();
+  db.collection('plan').onSnapshot(q=>{
+    planDocs={}; q.docs.forEach(d=>planDocs[d.id]=d.data());
+    const dates=[], off=[], undated=[];
+    Object.values(planDocs).forEach(p=>{ (p.dates||[]).forEach(x=>dates.push(x)); (p.off||[]).forEach(x=>off.push(x)); (p.undated||[]).forEach(x=>undated.push(x)); });
+    dates.sort((a,b)=>a.d<b.d?-1:1);
+    if(!dates.length&&!undated.length){ plan=null; $('dayTitle').textContent='No planner loaded yet'; $('daySub').textContent='Use "Add lessons from planner" to load one.'; renderUploadGate(); return; }
+    plan={dates,off,undated};
+    if(pendingJump&&dates.some(d=>d.d===pendingJump)){ month=monthOf(pendingJump); sel=pendingJump; pendingJump=null; }
+    const ms=allMonths();
+    if(!month||!ms.includes(month)){ const tm=monthOf(todayISO()); month=ms.includes(tm)?tm:ms[ms.length-1]; }
+    if(!sel||(sel!=='all'&&!dates.some(d=>d.d===sel))){ const iso=todayISO(); const d=dates.find(x=>x.d>=iso&&monthOf(x.d)===month); sel=d?d.d:'all'; }
+    render();
+  },e=>showMsg('Lost connection to the planner. Reload the page.'));
+  db.collection('status').onSnapshot(q=>{
+    const m={}; q.docs.forEach(d=>m[d.id]=d.data()); status=m;
+    $('liveDot').classList.remove('off'); $('liveTxt').textContent='LIVE';
+    render();
+  },e=>{ $('liveDot').classList.add('off'); $('liveTxt').textContent='OFFLINE'; showMsg('Live updates stopped. Reload the page to reconnect.'); });
+})();
+</script>
+
+</body>
+</html>
