@@ -4,7 +4,7 @@
  *   Log  – who saved what, and when
  * Every request needs a staff login. Password = staff first name + the common FIS staff code,
  * kept only in Script Properties (STAFF_SUFFIX), never in the code.
- * PREP_ADMINS (Script Property, comma-separated first names) = who may load planners and set lesson dates.
+ * PREP_ADMINS (Script Property, comma-separated first names; default shubhangi) = who may load planners and set lesson dates.
  * Mark times and names are stamped here by the server, not by the phone.
  */
 const TZ = 'Asia/Kolkata';
@@ -36,7 +36,7 @@ const H_ = {
 };
 function secret_(){ const p = props_(); let s = p.getProperty('TOKEN_SECRET'); if(!s){ s = Utilities.getUuid()+Utilities.getUuid(); p.setProperty('TOKEN_SECRET', s); } return s; }
 function first_(name){ return String(name||'').trim().split(/\s+/)[0].toLowerCase().replace(/[^a-z]/g,''); }
-function isAdmin_(name){ const a = String(props_().getProperty('PREP_ADMINS') || '').toLowerCase().split(/[,\s]+/).filter(Boolean); return a.indexOf(first_(name)) >= 0; }
+function isAdmin_(name){ const a = String(props_().getProperty('PREP_ADMINS') || 'shubhangi').toLowerCase().split(/[,\s]+/).filter(Boolean); return a.indexOf(first_(name)) >= 0; }
 function me_(token){
   const t = String(token||'').split('.'); if(t.length !== 2) fail('LOGIN');
   let body; try{ body = H_.unb64(t[0]); }catch(e){ fail('LOGIN'); }
