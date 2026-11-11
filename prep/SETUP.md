@@ -9,8 +9,8 @@ No staff or student names are stored in this GitHub repository (it is public). T
 1. Create a new Google Sheet named **Academic Preparation Data**.
 2. **Extensions → Apps Script.** Delete everything in `Code.gs` and paste the whole of `prep/Code.gs` from this repo. Save.
 3. **⚙️ Project Settings → Script Properties → Add script property**
-   - `STAFF_SUFFIX` = the common FIS staff code (the part after the first name). Staff log in with *full name*, password *first name + this code*.
-   - `PREP_ADMINS` = first names of the people who may load new months and set lesson dates, comma-separated (for example `shubhangi, <director's first name>`).
+   - `STAFF_SUFFIX` (optional) = the common FIS staff code. Without it, passwords are checked by the Student Entry Exit app, which already holds the code. Staff log in with *full name*, password *first name + the code*.
+   - `PREP_ADMINS` (optional, default `shubhangi`) = first names of the people who may load new months and set lesson dates, comma-separated (for example `shubhangi, <director's first name>`).
 4. Choose **setupSheets** in the function list and press **Run**. Allow the permissions. This creates the **Docs** and **Log** tabs and loads the November and December lessons.
 5. **Deploy → New deployment → Web app** · Execute as: **Me** · Who has access: **Anyone** · **Deploy**. Copy the **Web app URL** (ends in `/exec`).
 6. Send the URL to Claude to build it into the page and switch the FIS tile to live. To try it first, open `prep/?api=<that URL>`.

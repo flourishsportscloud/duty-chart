@@ -45,13 +45,24 @@ function me_(token){
   if(Number(b[1]) < Date.now() || b[2] !== String(props_().getProperty('TOKEN_VER') || '1')) fail('LOGIN');
   return b[0];
 }
+/* The FIS staff password (first name + common staff code) is checked by the Student Entry Exit app,
+   which already holds the code, unless this project has its own STAFF_SUFFIX property. */
+const STAFF_CHECK_URL = 'https://script.google.com/macros/s/AKfycbwyAbalpK0Gb71uOqB-CMqvk5BVJGGLuxepr7UlOB-yRf4oLCjNCV0H51got53iEh1JYw/exec';
+function pwOk_(name, pw){
+  const suf = String(props_().getProperty('STAFF_SUFFIX') || '').toLowerCase();
+  if(suf) return String(pw||'').trim().toLowerCase().replace(/\s+/g,'') === first_(name) + suf;
+  let j = null;
+  try{ const r = UrlFetchApp.fetch(STAFF_CHECK_URL, {method: 'post', contentType: 'text/plain;charset=utf-8', payload: JSON.stringify({fn: 'login', args: [name, String(pw||'')]}), muteHttpExceptions: true, followRedirects: true});
+    j = JSON.parse(r.getContentText()); }catch(e){ fail('Could not check the password just now. Try again.'); }
+  if(j && j.ok) return true;
+  if(j && /wrong password/i.test(String(j.err))) return false;
+  fail(String((j && j.err) || 'Could not check the password just now. Try again.'));
+}
 function login_(name, pw){
   name = String(name||'').trim().replace(/\s+/g,' ');
   if(name.length < 3) fail('Type your full name.');
-  const suf = String(props_().getProperty('STAFF_SUFFIX') || '').toLowerCase();
-  if(!suf) fail('The staff password is not set up yet. Ask the Director.');
   Utilities.sleep(400);
-  if(String(pw||'').trim().toLowerCase().replace(/\s+/g,'') !== first_(name) + suf) fail('Wrong password.');
+  if(!pwOk_(name, pw)) fail('Wrong password.');
   const body = name + '|' + (Date.now() + TOKEN_DAYS*864e5) + '|' + (props_().getProperty('TOKEN_VER') || '1');
   log_(name, '', 'login');
   return {token: H_.b64(body) + '.' + H_.hmac(body, secret_()), name: name, admin: isAdmin_(name)};
