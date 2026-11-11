@@ -235,7 +235,7 @@ td:not(.c) .meta{margin-inline:0;max-width:none}
         <button type="button" data-role="dean" aria-pressed="false"><b>Dean</b><small>Classes 1–11</small></button>
         <button type="button" data-role="pl" aria-pressed="true"><b>PL</b><small>Classes 1–11</small></button>
       </div>
-      <div class="whoin"><span>Updating as <b id="roleName">PL</b> · <b id="meName" style="color:#fff"></b></span><button type="button" class="btn ghost" id="signOut" style="min-height:40px">Sign out</button></div>
+      <div class="whoin"><span>Updating as <b id="roleName">PL</b> · <b id="meName" style="color:#fff"></b></span><button type="button" class="btn ghost" id="signOut" style="min-height:40px">Change name</button></div>
     </div>
     <div class="vseg" role="group" aria-label="Choose view">
       <button type="button" data-view="date" aria-pressed="true">Datewise</button>
@@ -338,11 +338,11 @@ td:not(.c) .meta{margin-inline:0;max-width:none}
 
 <div id="fisLogin" hidden style="position:fixed;inset:0;z-index:80;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:18px">
   <form id="fisLoginF" class="box" style="width:100%;max-width:380px;display:flex;flex-direction:column;gap:8px" novalidate>
-    <div style="display:flex;gap:12px;align-items:center"><div class="logo" aria-hidden="true">FIS</div><div><b style="font-family:var(--f-display);font-size:20px;color:var(--brand)">Academic Preparation Tracker</b><div class="sub">Staff login · Flourish International School</div></div></div>
+    <div style="display:flex;gap:12px;align-items:center"><div class="logo" aria-hidden="true">FIS</div><div><b style="font-family:var(--f-display);font-size:20px;color:var(--brand)">Academic Preparation Tracker</b><div class="sub">Flourish International School</div></div></div>
     <label for="fisLN" class="eyebrow" style="margin-top:8px">Your full name</label><input class="note" style="width:100%;min-height:44px" type="text" id="fisLN" autocomplete="name" placeholder="e.g. Shubhangi Sharma">
-    <label for="fisLP" class="eyebrow">FIS staff password</label><input class="note" style="width:100%;min-height:44px" type="password" id="fisLP" autocomplete="current-password" placeholder="Your first name + the FIS staff code">
+    <p class="sub" style="margin:0">Every update you make shows this name and the time. You type it once on this phone.</p>
     <p id="fisLE" style="color:var(--pend-ink);min-height:18px;margin:4px 0"></p>
-    <button class="btn" type="submit">Log in</button>
+    <button class="btn" type="submit">Start</button>
   </form>
 </div>
 <script>
@@ -355,9 +355,9 @@ td:not(.c) .meta{margin-inline:0;max-width:none}
   async function CALL(fn,args){
     if(!API_URL){const x=new Error('This app is being set up. Please try again later.');x.net=0;throw x}
     let j;
-    try{const r=await fetch(API_URL,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn,args:args||[],token:get('token')})});j=await r.json()}
+    try{const r=await fetch(API_URL,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn,args:args||[],who:(window.PREP_ME||{}).name||''})});j=await r.json()}
     catch(e){const x=new Error('No network. Check the internet and try again.');x.net=1;throw x}
-    if(!j.ok){if(j.login&&fn!=='login'){window.PREP_LOGOUT();}throw new Error(j.err==='LOGIN'?'Please log in again.':j.err)}
+    if(!j.ok){if(j.name){window.PREP_LOGOUT();}throw new Error(j.err)}
     return j.v;
   }
   window.PREP_CALL=CALL;
@@ -382,13 +382,13 @@ td:not(.c) .meta{margin-inline:0;max-width:none}
   window.claude={use:async n=>n==='db'?db:(n==='user'?user:null)};
   function startSync(){ refresh(true); setInterval(()=>{ if(!document.hidden) refresh(false); },15000); document.addEventListener('visibilitychange',()=>{ if(!document.hidden) refresh(false); }); }
   const $=id=>document.getElementById(id);
-  if(!get('token')||!window.PREP_ME){ window.claude={use:async()=>null}; $('fisLogin').hidden=false; if(!API_URL) $('fisLE').textContent='This app is being set up. Please try again later.'; }
+  if(!window.PREP_ME||!window.PREP_ME.name){ window.claude={use:async()=>null}; $('fisLogin').hidden=false; if(!API_URL) $('fisLE').textContent='This app is being set up. Please try again later.'; }
   else { startSync(); CALL('me',[]).then(m=>{ const was=!!window.PREP_ME.admin; window.PREP_ME=Object.assign({},window.PREP_ME,{name:m.name,admin:!!m.admin}); put('me',window.PREP_ME); if(was!==!!m.admin) location.reload(); }).catch(()=>{}); }
-  $('fisLoginF').addEventListener('submit',async e=>{ e.preventDefault(); const n=$('fisLN').value.trim(), p=$('fisLP').value;
-    if(n.length<3||!p){ $('fisLE').textContent='Type your full name and the password.'; return; }
-    $('fisLE').textContent='Checking…';
-    try{ const v=await CALL('login',[n,p]); put('token',v.token); put('me',{name:v.name,admin:!!v.admin}); location.reload(); }
-    catch(x){ $('fisLE').textContent=x.message; } });
+  $('fisLoginF').addEventListener('submit',async e=>{ e.preventDefault(); const n=$('fisLN').value.trim().replace(/\s+/g,' ');
+    if(n.length<3||!/[A-Za-z\u0900-\u097F]/.test(n)){ $('fisLE').textContent='Type your full name.'; return; }
+    window.PREP_ME={name:n.slice(0,60),admin:false}; $('fisLE').textContent='Opening…';
+    try{ const m=await CALL('me',[]); put('me',{name:m.name,admin:!!m.admin}); location.reload(); }
+    catch(x){ window.PREP_ME=null; $('fisLE').textContent=x.message; } });
 })();
 </script>
 <script>
