@@ -293,7 +293,7 @@ table.svc{min-width:760px} .svc td{padding:6px 8px}
 /* FIS data store: same calls the report used before (doc / collection / onSnapshot), backed by the
    Student Entry Exit API web app and the "Transport Daily Data" Google Sheet. Polls every 15 s. */
 const FISDB=(function(){
-  const API_URL=new URLSearchParams(location.search).get('api')||'TD_API_URL';
+  const API_URL=new URLSearchParams(location.search).get('api')||'https://script.google.com/macros/s/AKfycbzIeMjvNueZiTlS6m-j8VNKJxLAbWVITVYkvdj7COAUJMhAsxe2BvPmPD7K3czI6oqWfw/exec';
   const LS={get(k){try{return JSON.parse(localStorage.getItem('td_'+k))}catch(e){return null}},set(k,v){try{localStorage.setItem('td_'+k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem('td_'+k)}catch(e){}}};
   let token=LS.get('token'),who=LS.get('name')||'',docs={},rev=0,admin=false,subs=new Set(),started=null,timer=null;
   const clone=o=>o==null?o:JSON.parse(JSON.stringify(o));
