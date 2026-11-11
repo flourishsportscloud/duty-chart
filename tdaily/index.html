@@ -196,6 +196,11 @@ table.svc{min-width:760px} .svc td{padding:6px 8px}
 .mini span{font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mini i{height:7px;border-radius:4px;background:var(--na-soft);overflow:hidden;display:flex}.mini i u{display:block;height:100%;background:var(--done)}.mini i u.m{background:var(--miss)}
 .mini em{font-style:normal;font-family:var(--mono);text-align:right}.mini div.now span{color:var(--accent-ink);font-weight:700}
 .dc.wide{grid-column:1/-1}
+.sslot{border-top:1px solid var(--line);padding:4px 0}.sslot:first-child{border-top:0}
+.sst{display:flex;align-items:center;gap:8px;padding:8px 14px 2px}
+.sslot.ss-now{background:var(--accent-soft)}
+.latetag{font-size:10px;font-weight:700;letter-spacing:.1em;color:#fff;background:var(--miss);padding:2px 6px;border-radius:3px}
+.row.late .task span{color:var(--miss)}.latetxt{font-size:11px;font-weight:600}
 .btn.sm{padding:5px 10px;font-size:12px}
 @media (max-width:520px){.meta{grid-template-columns:1fr}h1{font-size:19px}.veh{grid-template-columns:1fr}.res{grid-template-columns:minmax(0,1fr) 40px}.res select{grid-column:1/-1}}
 @media (prefers-reduced-motion:reduce){.chev{transition:none}}
@@ -276,6 +281,9 @@ table.svc{min-width:760px} .svc td{padding:6px 8px}
     <div class="win-h" data-w="eodSec"><span class="time">Day End</span><h2>Day-End Summary</h2><span class="cnt" id="eodSum"></span><span class="chev">▾</span></div>
     <div class="rows" id="eodBody"></div>
   </section>
+  </div>
+  <div class="pane" data-pane="sup" hidden>
+  <div id="supBody"></div>
   </div>
   <div class="pane" data-pane="complaints" hidden>
   <section class="win" id="crSec">
@@ -389,7 +397,7 @@ try{JSON.parse(localStorage.getItem("closed")||"[]").forEach(x=>closed.add(x))}c
 
 function todayIST(){const d=new Date(Date.now()+(330+new Date().getTimezoneOffset())*60000);return d.toISOString().slice(0,10)}
 function nowMinIST(){const d=new Date(Date.now()+(330+new Date().getTimezoneOffset())*60000);return d.getUTCHours()*60+d.getUTCMinutes()}
-function blank(){return{s:{},n:{},by:"",fleet:"",dayNote:"",att:{},cover:{},uni:{},eod:{}}}
+function blank(){return{s:{},n:{},by:"",fleet:"",dayNote:"",att:{},cover:{},uni:{},eod:{},sup:{}}}
 
 /* ---- fleet & staff ---- */
 const ROUTES=[[1,1],[2,1],[3,1],[4,1],[5,1],[6,0],[7,0],[8,1],[9,1],[10,1],[11,0],[12,0],[13,0],[14,1],[15,1],[16,0],[34,0]];
@@ -449,7 +457,7 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",
 const fmt=d=>{const[y,m,dd]=d.split("-");return dd+"/"+m+"/"+y};
 
 function render(){
-  const fa=document.activeElement, fid=fa&&fa.id&&/^(note-|ro-|cover-|se-|ve-|sv-|eod-|tc-)/.test(fa.id)?fa.id:null, sel=fid&&(fa.tagName==="INPUT"||fa.tagName==="TEXTAREA")?[fa.selectionStart,fa.selectionEnd]:null;
+  const fa=document.activeElement, fid=fa&&fa.id&&/^(note-|ro-|cover-|se-|ve-|sv-|eod-|tc-|sup-)/.test(fa.id)?fa.id:null, sel=fid&&(fa.tagName==="INPUT"||fa.tagName==="TEXTAREA")?[fa.selectionStart,fa.selectionEnd]:null;
   renderInner(); renderStaff(); ensureMonth(); renderChart(); renderSal(); renderVeh(); renderSvc(); renderEod(); renderNpl();
   if(fid){const el=$(fid);if(el){el.focus();if(sel)try{el.setSelectionRange(sel[0],sel[1])}catch(e){}}}
 }
@@ -575,7 +583,7 @@ function subscribe(){
   setStatus("Loading "+fmt(date)+"…");
   unsub=db.doc("reports/"+date).onSnapshot(snap=>{
     const d=snap.exists?snap.data():null; const keep=pendingBy[date]||{};
-    state=d?{s:{...(d.s||{})},n:{...(d.n||{})},by:d.by||"",fleet:d.fleet||"",dayNote:d.dayNote||"",att:{...(d.att||{})},cover:{...(d.cover||{})},uni:{...(d.uni||{})},eod:{...(d.eod||{})}}:blank();
+    state=d?{s:{...(d.s||{})},n:{...(d.n||{})},by:d.by||"",fleet:d.fleet||"",dayNote:d.dayNote||"",att:{...(d.att||{})},cover:{...(d.cover||{})},uni:{...(d.uni||{})},eod:{...(d.eod||{})},sup:JSON.parse(JSON.stringify(d.sup||{}))}:blank();
     deepMerge(state,JSON.parse(JSON.stringify(keep)));
     render(); if(!writing&&!hasPending(date))setStatus(d?("Saved report · last update "+(d.updatedAt?new Date(d.updatedAt).toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"}):"")):"No entries yet for "+fmt(date)+" — tap a box to start.");
   },err=>setStatus("Could not load this report ("+(err&&err.code||"error")+")."));
@@ -842,13 +850,14 @@ document.addEventListener("change",e=>{const id=e.target.dataset.tc;if(!id)retur
   queue(p,nextDay(date));render()});
 
 /* ---- tabs & dashboard ---- */
-const TABS=[["dash","Dashboard"],["tasks","Daily Checklist"],["staff","Staff Attendance"],["uniform","Uniform & Absentee"],["plan","Next-Day Plan"],["dayend","Day-End"],["complaints","Complaints"],["docs","Documents"],["service","Service"],["salary","Salary"],["history","History"]];
+const TABS=[["dash","Dashboard"],["tasks","Daily Checklist"],["sup","Supervisor Tasks"],["staff","Staff Attendance"],["uniform","Uniform & Absentee"],["plan","Next-Day Plan"],["dayend","Day-End"],["complaints","Complaints"],["docs","Documents"],["service","Service"],["salary","Salary"],["history","History"]];
 const PANE_SEC={staff:"staff",uniform:"chartSec",plan:"nplSec",dayend:"eodSec",complaints:"crSec",docs:"vehSec",service:"svcSec",salary:"salSec"};
 let tab=(()=>{const h=location.hash.slice(1);if(TABS.some(t=>t[0]===h))return h;try{return localStorage.getItem("td_tab")||"dash"}catch(e){return"dash"}})();
 function tabBadges(){const b={};try{
   b.tasks=ALL.filter(t=>state.s[t.id]==="miss").length;
   const cov=coverMap();b.staff=SLOTS.filter(x=>state.att[x.id]==="A"&&!cov[x.id]).length;
   if(vehState==="ok")b.docs=Object.keys(veh).reduce((n,id)=>n+DOCS.filter(([k])=>{const st=docState(veh[id][k])[0];return st==="exp"||st==="none"||st==="due"}).length,0);
+  b.sup=SUPS.reduce((n,[w])=>n+supStats(w).late,0);
   if(svcState==="ok")b.service=Object.keys(SV).filter(id=>svcCalc(SV[id]).st!=="ok").length;
  }catch(e){}return b}
 function renderTabs(){const b=tabBadges();
@@ -884,6 +893,7 @@ function renderDash(){const el=$("dashBody");if(!el||tab!=="dash")return;
   const card=(go,title,sub,body,wide)=>`<button class="dc ${wide?"wide":""}" data-go="${go}"><h4>${title}<small>${sub||""}</small></h4>${body}</button>`;
   el.innerHTML=
    card("tasks","Daily Checklist",fmt(date),`<div class="big ${pct===100?"bok":c.miss?"bbad":""}">${pct}%<small>${fin}/${T} done · ${c.miss} missed</small></div><div class="mini">${wins}</div>${missed.length?`<div class="dl"><b>Not done:</b> ${missed.slice(0,6).map(esc).join(", ")}${missed.length>6?" …":""}</div>`:""}`)+
+   card("sup","Supervisor Tasks",fmt(date),SUPS.map(([w,l])=>{const S=supStats(w);return `<div class="dl"><b>${l}:</b> ${S.done}/${S.tot} done${S.late?` · <span class="r">${S.late} late</span>`:""}${S.now.length?`<br>Now: ${S.now.map(esc).join(", ")}`:""}</div>`}).join(""))+
    card("staff","Staff Attendance",fmt(date),`<div class="big ${unc.length?"bbad":"bok"}">${total-abs.length}/${total}<small>present</small></div><div class="dl">${abs.length?`<b>Absent:</b> ${abs.map(nm).join(", ")}`:"All drivers & conductors present"}${unc.length?`<br><span class="r">Not covered: ${unc.map(x=>esc(slotText(x))).join(", ")}</span>`:abs.length?"<br>All absences covered":""}${nu.length?`<br><b>Without uniform:</b> ${nu.map(nm).join(", ")}`:""}</div>`)+
    card("uniform","Uniform & Absentee",new Date(date+"T00:00:00Z").toLocaleString("en-IN",{month:"long",year:"numeric",timeZone:"UTC"}),`<div class="big">${Object.values(mA).reduce((a,b)=>a+b,0)}<small>A</small> ${Object.values(mU).reduce((a,b)=>a+b,0)}<small>U</small></div><div class="dl">${topA.length?`<b>Most absent:</b> ${topA.map(id=>nm(id)+" "+mA[id]).join(", ")}`:"No absences this month"}${topU.length?`<br><b>Most without uniform:</b> ${topU.map(id=>nm(id)+" "+mU[id]).join(", ")}`:""}</div>`)+
    card("plan","Next-Day Plan",fmt(nextDay(date)),`<div class="big">${tab_.length}<small>absent tomorrow</small></div><div class="dl">${tab_.length?tab_.map(nm).join(", "):"No absentees marked for tomorrow yet"}<br>Open to mark absentees and copy the Hindi plan</div>`)+
@@ -894,14 +904,77 @@ function renderDash(){const el=$("dashBody");if(!el||tab!=="dash")return;
    (salState==="ok"?card("salary","Salary",salN+" staff",`<div class="big">${inr(salTot)}<small>per month</small></div>`):"")+
    card("history","History","last 14 days",`<div class="dl">Completion and staff absence for each saved day</div>`);
 }
-const _renderTD=render;render=function(){_renderTD();renderTabs();renderDash()};
+const _renderTD=render;render=function(){_renderTD();renderSup();renderTabs();renderDash()};
 setInterval(()=>{if(tab==="dash")renderDash();renderTabs()},2000);
 renderTabs();
+
+/* ---- supervisor tasks (Kamal, Vishvbandu) ---- */
+const SUPS=[["kamal","Kamal"],["vishvbandu","Vishvbandu"]];
+const SL=(t,s,e,names)=>({t,s,e,items:names.map(n=>({id:"",name:n}))});
+const SUP_DEFAULT={
+ kamal:[SL("5:30-6:30","05:30","06:30",["Bus task","Extra Driver"]),SL("6:30-7:30","06:30","07:30",["Guard Room","Ma'am Pickup"]),SL("7:00-7:45","07:00","07:45",["On Road duty"]),
+  SL("7:45-8:15","07:45","08:15",["Diesel Round"]),SL("8:15-8:45","08:15","08:45",["Driver Reporting"]),SL("8:45-9:30","08:45","09:30",["Diesel Refill","Market","House task"]),
+  SL("9:30-12:00","09:30","12:00",["House task","Breakfast","Bus Round"]),SL("12:00-1:00","12:00","13:00",["Lunch"]),SL("1:00-2:15","13:00","14:15",["Pre departure","Guard Room","Extra Driver"]),
+  SL("2:15-5:00","14:15","17:00",["On road duty","Extra driver","Bus Check","Ma'am drop","Key photo"])],
+ vishvbandu:[SL("5:30-6:30","05:30","06:30",["Bus task"]),SL("6:30-7:30","06:30","07:30",["Guard Room"]),SL("7:00-7:45","07:00","07:45",["Extra Driver","On Road Duty"]),
+  SL("7:45-8:15","07:45","08:15",["Bus Round"]),SL("8:15-8:45","08:15","08:45",["Driver Reporting","Diesel Check"]),SL("8:45-9:30","08:45","09:30",["Diesel refill","Bus Round"]),
+  SL("9:30-12:00","09:30","12:00",["Bus Repair"]),SL("12:00-1:00","12:00","13:00",["Lunch"]),SL("1:00-2:15","13:00","14:15",["Bus Parking","Pre Departure","Guard room","Bus Repair"]),
+  SL("2:15-5:00","14:15","17:00",["Extra Driver","On road duty","Bus Repair"])]};
+Object.values(SUP_DEFAULT).forEach(L=>L.forEach((sl,i)=>sl.items.forEach((it,j)=>it.id="d"+i+"_"+j)));
+let supTpl=null, supEdit={}, supDraft={};
+const uid=()=>Math.random().toString(36).slice(2,8);
+function supTemplate(w){const t=supTpl&&supTpl[w];return t&&t.length?t:SUP_DEFAULT[w]}
+function supDay(w){const x=(state.sup||{})[w]||{};let L=null;if(x.list)try{L=JSON.parse(x.list)}catch(e){}return{list:L||JSON.parse(JSON.stringify(supTemplate(w))),custom:!!L,st:x.st||{},n:x.n||{}}}
+function supSave(w,patch){state.sup=state.sup||{};state.sup[w]=deepMerge(state.sup[w]||{},JSON.parse(JSON.stringify(patch)));queue({sup:{[w]:patch}});render()}
+function supSaveList(w,L){supSave(w,{list:JSON.stringify(L)})}
+function slotState(sl,d){const now=date===todayIST()?nowMinIST():-1,ids=sl.items.map(i=>i.id),open=ids.filter(id=>!d.st[id]).length;
+  if(date<todayIST())return open?"late":"done";if(now<0)return"future";
+  if(now>=mins(sl.e))return open?"late":"done";if(now>=mins(sl.s))return"now";return"future"}
+function supStats(w){const d=supDay(w);let tot=0,done=0,miss=0,late=0,now=[];d.list.forEach(sl=>{const ss=slotState(sl,d);sl.items.forEach(it=>{tot++;const s=d.st[it.id];if(s==="done"||s==="na")done++;if(s==="miss")miss++;if(!s&&ss==="late")late++;if(ss==="now"&&!s)now.push(it.name)})});return{tot,done,miss,late,now,d}}
+function supMsg(w,label){const d=supDay(w);let m=`*${dm(date)} - ${label} Task*\n`;
+  d.list.forEach(sl=>{m+=`\n${sl.t}\n`;sl.items.forEach(it=>{const s=d.st[it.id];m+=`${it.name} - ${s==="done"?"✅":s==="miss"?"❌":s==="na"?"NA":""}${d.n[it.id]?" ("+d.n[it.id]+")":""}\n`})});return m.trim()}
+function renderSup(){const b=$("supBody");if(!b)return;
+  b.innerHTML=SUPS.map(([w,label])=>{const S=supStats(w),d=S.d,ed=!!supEdit[w];
+   const rows=d.list.map((sl,si)=>{const ss=slotState(sl,d);
+     return `<div class="sslot ss-${ss}"><div class="sst"><span class="time">${esc(sl.t)}</span>${ss==="now"?'<span class="nowtag">NOW</span>':ss==="late"?'<span class="latetag">LATE</span>':""}
+       ${ed?`<button class="btn xs" data-suprs="${w}|${si}" aria-label="Remove slot ${esc(sl.t)}">Remove slot</button>`:""}</div>
+       ${sl.items.map(it=>{const s=d.st[it.id]||"",nt=d.n[it.id]||"",late=!s&&ss==="late";
+         return `<div class="row ${s} ${late?"late":""}"><button class="tick ${s}" data-supt="${w}|${it.id}" aria-label="${esc(it.name)}: ${s||"pending"}">${SYM[s]}</button>
+          <div class="task"><span>${esc(it.name)}${late?' <small class="latetxt">not marked</small>':""}</span>${ed?`<button class="addnote" data-suprm="${w}|${si}|${it.id}" aria-label="Remove ${esc(it.name)}">✕ Remove</button>`:`<button class="addnote ${nt?"has":""}" data-supn="${w}|${it.id}">${nt?"Note ✎":"+ Note"}</button>`}</div>
+          ${(nt||supDraft[w+"|n|"+it.id])&&!ed?`<input class="note" id="sup-n-${w}-${it.id}" data-supni="${w}|${it.id}" value="${esc(nt)}" placeholder="Remark">`:""}</div>`}).join("")}
+       ${ed?`<div class="row"><span></span><div class="task"><input class="note" id="sup-a-${w}-${si}" value="${esc(supDraft["sup-a-"+w+"-"+si]||"")}" placeholder="New task in ${esc(sl.t)}"><button class="btn xs primary" data-supadd="${w}|${si}">Add</button></div></div>`:""}</div>`}).join("");
+   const pct=S.tot?Math.round(S.done/S.tot*100):0;
+   return `<section class="win"><div class="win-h" style="cursor:default"><span class="time">${esc(label)}</span><h2>${esc(label)} · ${fmt(date)}</h2><span class="cnt ${pct===100?"full":""}">${S.done}/${S.tot}${S.late?` · <span style="color:var(--miss)">${S.late} late</span>`:""}</span></div>
+    ${S.now.length&&!ed?`<div class="ok" style="background:var(--accent-soft);color:var(--ink)">Now: ${S.now.map(esc).join(", ")}</div>`:""}
+    <div class="rows">${rows}
+    ${ed?`<div class="sslot"><div class="sst" style="flex-wrap:wrap;gap:6px"><input class="note" id="sup-sf-${w}" value="${esc(supDraft["sup-sf-"+w]||"")}" aria-label="Slot start" style="width:130px" type="time"><input class="note" id="sup-se-${w}" value="${esc(supDraft["sup-se-"+w]||"")}" aria-label="Slot end" type="time" style="width:130px"><button class="btn xs primary" data-supslot="${w}">Add time slot</button></div></div>`:""}
+    <div class="actions" style="margin:10px 14px">${ed?`<button class="btn sm primary" data-supdone="${w}">Done editing</button><button class="btn sm" data-supdef="${w}">Save as daily default</button><button class="btn sm" data-supreset="${w}">Reset today to default</button>`
+      :`<button class="btn sm primary" data-supcopy="${w}">Copy for WhatsApp</button><button class="btn sm" data-supedit="${w}">Add / remove tasks</button>`}</div>
+    ${d.custom&&!ed?`<div class="legend" style="padding:0 14px 10px;margin:0">Today's list was changed for ${fmt(date)} only.</div>`:""}</div></section>`}).join("");
+}
+document.addEventListener("click",async e=>{const t=e.target.closest("[data-supt],[data-supn],[data-suprm],[data-suprs],[data-supadd],[data-supslot],[data-supedit],[data-supdone],[data-supdef],[data-supreset],[data-supcopy]");if(!t)return;e.stopPropagation();const D=t.dataset;
+  if(D.supt){const[w,id]=D.supt.split("|"),cur=supDay(w).st[id]||"",nx=CYCLE[(CYCLE.indexOf(cur)+1)%4];supSave(w,{st:{[id]:nx}});return}
+  if(D.supn){supDraft[D.supn.replace("|","|n|")]=1;render();const el=$("sup-n-"+D.supn.replace("|","-"));el&&el.focus();return}
+  if(D.supedit){supEdit[D.supedit]=1;render();return}
+  if(D.supdone){delete supEdit[D.supdone];render();return}
+  const w=(D.suprm||D.suprs||D.supadd||D.supslot||D.supdef||D.supreset||D.supcopy||"").split("|")[0],d=supDay(w),L=d.list;
+  if(D.suprm){const[,si,id]=D.suprm.split("|");L[+si].items=L[+si].items.filter(i=>i.id!==id);supSaveList(w,L);return}
+  if(D.suprs){const si=+D.suprs.split("|")[1];L.splice(si,1);supSaveList(w,L);return}
+  if(D.supadd){const si=+D.supadd.split("|")[1],inp=$("sup-a-"+w+"-"+si),v=(inp&&inp.value||"").trim();if(!v){setStatus("Type the task name first.");return}L[si].items.push({id:uid(),name:v});delete supDraft["sup-a-"+w+"-"+si];supSaveList(w,L);return}
+  if(D.supslot){const s=$("sup-sf-"+w).value,en=$("sup-se-"+w).value;if(!s||!en||en<=s){setStatus("Enter a start and end time for the slot.");return}
+    const h=x=>{let[a,b]=x.split(":").map(Number);const a12=a>12?a-12:a;return a12+":"+String(b).padStart(2,"0")};
+    delete supDraft["sup-sf-"+w];delete supDraft["sup-se-"+w];L.push({t:h(s)+"-"+h(en),s,e:en,items:[]});L.sort((a,b)=>a.s<b.s?-1:a.s>b.s?1:0);supSaveList(w,L);return}
+  if(D.supdef){const T=Object.assign({},supTpl||{});T[w]=L;supTpl=T;try{await db.doc("roster/sup").set(T);setStatus("Saved as the daily default for "+SUPS.find(x=>x[0]===w)[1])}catch(err){setStatus("Could not save the default — try again.")}render();return}
+  if(D.supreset){supSave(w,{list:""});return}
+  if(D.supcopy){const m=supMsg(w,SUPS.find(x=>x[0]===w)[1]);try{await navigator.clipboard.writeText(m);setStatus("Copied — paste it in WhatsApp.")}catch(err){const box=$("copybox");box.value=m;box.hidden=false;showTab("tasks");box.select();setStatus("Select the text and copy it.")}}
+},true);
+document.addEventListener("input",e=>{if(/^sup-(a|sf|se)-/.test(e.target.id||"")){supDraft[e.target.id]=e.target.value;return}const k=e.target.dataset.supni;if(!k)return;const[w,id]=k.split("|");state.sup=state.sup||{};state.sup[w]=state.sup[w]||{};state.sup[w].n=state.sup[w].n||{};state.sup[w].n[id]=e.target.value;queue({sup:{[w]:{n:{[id]:e.target.value}}}})});
 
 $("date").value=date; render(); loadHistory();
 setInterval(()=>{if(date===todayIST()&&!document.activeElement?.matches("input,textarea"))render()},60000);
 (async()=>{try{db=await FISDB.ready()}catch(e){db=null}
   subscribe(); loadHistory(); loadSal(); loadVeh(); loadSvc();
+  if(db)db.doc("roster/sup").onSnapshot(s=>{supTpl=s.exists?s.data():null;render()},()=>{});
   if(db)db.doc("roster/main").onSnapshot(s=>{if(document.activeElement?.dataset?.r)return;const d=s.exists?s.data():{};roster={veh:{...(d.veh||{})},area:{...(d.area||{})},name:{...(d.name||{})},phone:{...(d.phone||{})},pre:Array.isArray(d.pre)?d.pre:[]};render()},()=>{});
 })();
 </script>
