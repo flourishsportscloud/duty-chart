@@ -1,15 +1,15 @@
-/* FIS Transport Complaints & Requests · Google Apps Script backend
- * Reads live from the Daily FO sheet ("Feedback 2026"): Transport rows of "Feedback Updated Final",
- * Transport rows of "Changes" and Transport calls of "In House- Calls ".
- * Each child is matched to a vehicle from the "Student Entry Exit Data" Roster (and any bus/van number written in the entry).
- * The script's own sheet "Transport Complaints Data" keeps only follow-up marks (status, vehicle/driver correction, note)
- * and the vehicle → driver list. Nothing is written back to the Daily FO.
- * Every request needs a staff login: password = staff first name + the common FIS staff suffix (Script Property STAFF_SUFFIX).
+/* FIS Transport Complaints & Requests — added as its own file to the "Student Entry Exit API" project,
+ * so it uses that project's staff login (STAFF_SUFFIX) and Google permissions. It does not change any
+ * Student Entry Exit code: it only adds the requests cr_data and cr_set to that project's API.
+ * Reads live from the Daily FO ("Feedback 2026"); keeps follow-up marks and the drivers list in its own
+ * sheet "Transport Complaints Data" (id in Script Property CR_SHEET_ID). Nothing is written to the Daily FO.
+ * Run crSetup once after adding this file.
  */
+var CR_ = (function(){
 const TZ = 'Asia/Kolkata';
 const FO_ID = '1DAx096q0BtPAEsBI2AAtxYtGyEmHEXqFaLpghy_rhSA';      // Daily FO – "Feedback 2026"
 const ROSTER_ID = '1wxkOdzcg3-jRo9y0L6ueaNFQwEonIeyPgfjwzTKtmqM';  // "Student Entry Exit Data" (Roster tab)
-const TOKEN_DAYS = 120, CACHE_SEC = 300;
+const CACHE_SEC = 300;
 const SEED_DRIVERS = {"Bus 1":"Samsudin","Bus 2":"Suresh Nayak","Bus 3":"Mahender","Bus 4":"Deepak","Bus 5":"Bharat","Bus 6":"Ajay Gujrati",
   "Bus 7":"Vikash Saraswat","Bus 8":"Aman Siyota","Bus 9":"Kushal Singh","Bus 10":"Ajij","Bus 11":"Manish","Bus 12":"Suresh Gujrati",
   "Bus 13":"Jairaj","Bus 14":"Shivratan","Bus 15":"Dilip Chanwariya","Bus 16":"Hanuman Singh","Bus 34":"Gopal Jawa",
@@ -18,9 +18,9 @@ const SEED_DRIVERS = {"Bus 1":"Samsudin","Bus 2":"Suresh Nayak","Bus 3":"Mahende
 function fail(m){ throw new Error(m); }
 function props_(){ return PropertiesService.getScriptProperties(); }
 function own_(){
-  const p = props_(); let id = p.getProperty('SHEET_ID'), ss = null;
+  const p = props_(); let id = p.getProperty('CR_SHEET_ID'), ss = null;
   if(id) try{ ss = SpreadsheetApp.openById(id); }catch(e){ ss = null; }
-  if(!ss){ ss = SpreadsheetApp.create('Transport Complaints Data'); p.setProperty('SHEET_ID', ss.getId()); }
+  if(!ss){ ss = SpreadsheetApp.create('Transport Complaints Data'); p.setProperty('CR_SHEET_ID', ss.getId()); }
   return ss;
 }
 function tab_(name, head){
@@ -31,35 +31,6 @@ function tab_(name, head){
 const DOCS = () => tab_('Docs', ['key','json','updated','who']);
 const LOG = () => tab_('Log', ['time','who','key','what']);
 function log_(who, key, what){ try{ LOG().appendRow([Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd HH:mm:ss'), who, key, what]); }catch(e){} }
-
-/* ---------- login (same as the other FIS apps) ---------- */
-const H_ = {
-  hmac: (s,k) => Utilities.base64EncodeWebSafe(Utilities.computeHmacSha256Signature(s,k,Utilities.Charset.UTF_8)).replace(/=+$/,''),
-  b64: s => Utilities.base64EncodeWebSafe(s,Utilities.Charset.UTF_8).replace(/=+$/,''),
-  unb64: s => Utilities.newBlob(Utilities.base64DecodeWebSafe(s + '==='.slice((s.length+3)%4))).getDataAsString('UTF-8')
-};
-function secret_(){ const p = props_(); let s = p.getProperty('TOKEN_SECRET'); if(!s){ s = Utilities.getUuid()+Utilities.getUuid(); p.setProperty('TOKEN_SECRET', s); } return s; }
-function first_(n){ return String(n||'').trim().split(/\s+/)[0].toLowerCase().replace(/[^a-z]/g,''); }
-function me_(token){
-  const t = String(token||'').split('.'); if(t.length !== 2) fail('LOGIN');
-  let body; try{ body = H_.unb64(t[0]); }catch(e){ fail('LOGIN'); }
-  if(H_.hmac(body, secret_()) !== t[1]) fail('LOGIN');
-  const b = body.split('|');
-  if(Number(b[1]) < Date.now() || b[2] !== String(props_().getProperty('TOKEN_VER') || '1')) fail('LOGIN');
-  return b[0];
-}
-function login_(name, pw){
-  name = String(name||'').trim().replace(/\s+/g,' ');
-  if(name.length < 3) fail('Type your full name.');
-  const suf = String(props_().getProperty('STAFF_SUFFIX') || '').toLowerCase();
-  if(!suf) fail('The staff password is not set up yet. Ask the Director.');
-  Utilities.sleep(400);
-  if(String(pw||'').trim().toLowerCase().replace(/\s+/g,'') !== first_(name) + suf) fail('Wrong password.');
-  const body = name + '|' + (Date.now() + TOKEN_DAYS*864e5) + '|' + (props_().getProperty('TOKEN_VER') || '1');
-  log_(name, '', 'login');
-  return {token: H_.b64(body) + '.' + H_.hmac(body, secret_()), name: name};
-}
-
 /* ---------- reading the Daily FO ---------- */
 function day_(v){
   if(v instanceof Date && !isNaN(v)) return Utilities.formatDate(v, TZ, 'yyyy-MM-dd');
@@ -134,9 +105,9 @@ function read_(){
 }
 function entries_(fresh){
   const c = CacheService.getScriptCache();
-  if(!fresh){ const parts = c.get('n'); if(parts){ let j = ''; for(let i = 0; i < Number(parts); i++){ const p = c.get('e' + i); if(p == null){ j = ''; break; } j += p; } if(j) return JSON.parse(j); } }
-  const e = read_(), j = JSON.stringify(e), n = Math.ceil(j.length / 90000), o = {n: String(n)};
-  for(let i = 0; i < n; i++) o['e' + i] = j.slice(i*90000, (i+1)*90000);
+  if(!fresh){ const parts = c.get('cr_n'); if(parts){ let j = ''; for(let i = 0; i < Number(parts); i++){ const p = c.get('cr_e' + i); if(p == null){ j = ''; break; } j += p; } if(j) return JSON.parse(j); } }
+  const e = read_(), j = JSON.stringify(e), n = Math.ceil(j.length / 90000), o = {cr_n: String(n)};
+  for(let i = 0; i < n; i++) o['cr_e' + i] = j.slice(i*90000, (i+1)*90000);
   try{ c.putAll(o, CACHE_SEC); }catch(x){}
   return e;
 }
@@ -145,38 +116,28 @@ function docs_(){
   sh.getRange(2,1,sh.getLastRow()-1,4).getValues().forEach(r => { if(r[0]) try{ o[r[0]] = JSON.parse(r[1]); }catch(e){} });
   return o;
 }
-const API = {
-  login: login_,
-  data(fresh){ return {entries: entries_(!!fresh), docs: docs_(), at: Utilities.formatDate(new Date(), TZ, 'dd MMM yyyy, HH:mm')}; },
-  set(key, obj, who){
-    key = String(key||''); if(!/^(ov\/[a-z0-9]+|config\/drivers)$/i.test(key)) fail('Bad key.');
+function set_(key, obj, who){
+  key = String(key||''); if(!/^(ov\/[a-z0-9]+|config\/drivers)$/i.test(key)) fail('Bad key.');
+  const lock = LockService.getScriptLock(); if(!lock.tryLock(20000)) fail('Server busy, try again.');
+  try{
     const sh = DOCS(), last = sh.getLastRow(), json = JSON.stringify(Object.assign({}, obj, {by: who, at: new Date().toISOString()}));
     if(json.length > 45000) fail('Too long.');
     let row = 0; if(last > 1){ const k = sh.getRange(2,1,last-1,1).getValues(); for(let i = 0; i < k.length; i++) if(k[i][0] === key){ row = i+2; break; } }
     const v = [key, json, new Date().toISOString(), who];
     if(row) sh.getRange(row,1,1,4).setValues([v]); else sh.appendRow(v);
     log_(who, key, 'saved'); return {ok: 1};
-  }
+  }finally{ lock.releaseLock(); }
+}
+return {
+  data: fresh => ({entries: entries_(!!fresh), docs: docs_(), at: Utilities.formatDate(new Date(), TZ, 'dd MMM yyyy, HH:mm')}),
+  set: set_,
+  setup(){ DOCS(); LOG(); if(!docs_()['config/drivers']) set_('config/drivers', {map: SEED_DRIVERS}, 'setup');
+    const e = entries_(true); return 'Daily FO read OK: ' + e.length + ' transport entries. Data sheet: ' + own_().getUrl(); }
 };
-function doPost(e){
-  let req = {}; try{ req = JSON.parse(e.postData.contents); }catch(x){}
-  const out = o => ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
-  const fn = API[req.fn]; if(!fn) return out({ok: false, err: 'Unknown request.'});
-  const lock = LockService.getScriptLock(), write = req.fn === 'set';
-  try{
-    let args = req.args || [];
-    if(req.fn !== 'login'){ const who = me_(req.token); if(write) args = args.slice(0, 2).concat([who]); }
-    if(write && !lock.tryLock(20000)) return out({ok: false, err: 'Server busy, try again.'});
-    return out({ok: true, v: fn.apply(null, args)});
-  }catch(x){ const m = String(x && x.message || x); return out({ok: false, err: m, login: m === 'LOGIN' ? 1 : 0});
-  }finally{ if(write) try{ lock.releaseLock(); }catch(x){} }
-}
-function doGet(){ return ContentService.createTextOutput('FIS Transport Complaints & Requests API is running.'); }
-/* Run once after pasting: creates "Transport Complaints Data", loads the vehicle → driver list, and test-reads the Daily FO. */
-function setupSheets(){
-  secret_(); DOCS(); LOG();
-  const d = docs_(); if(!d['config/drivers']) API.set('config/drivers', {map: SEED_DRIVERS}, 'setup');
-  const e = entries_(true);
-  Logger.log('Daily FO read OK: ' + e.length + ' transport entries. Data sheet: ' + own_().getUrl());
-}
-function signOutEveryone(){ const p = props_(); p.setProperty('TOKEN_VER', String(Number(p.getProperty('TOKEN_VER') || '1') + 1)); }
+})();
+// The Student Entry Exit doPost checks the staff login (me_) before calling these.
+Object.assign(API, {
+  cr_data: function(fresh){ return CR_.data(fresh); },
+  cr_set: function(token, key, obj){ return CR_.set(key, obj, me_(token)); }
+});
+function crSetup(){ Logger.log(CR_.setup()); }

@@ -115,7 +115,7 @@ async function call(fn,args){
 }
 async function load(fresh){
   if(S.busy)return;S.busy=true;$('sync').textContent='Reading Daily FO…';
-  try{const v=await call('data',[!!fresh]);S.entries=v.entries;S.docs=v.docs;S.at=v.at;LS.set('cache',{entries:v.entries,docs:v.docs,at:v.at});$('sync').textContent='Updated '+v.at.split(', ')[1]+' · Refresh'}
+  try{const v=await call('cr_data',[!!fresh]);S.entries=v.entries;S.docs=v.docs;S.at=v.at;LS.set('cache',{entries:v.entries,docs:v.docs,at:v.at});$('sync').textContent='Updated '+v.at.split(', ')[1]+' · Refresh'}
   catch(e){$('sync').textContent=e.message==='SETUP'?'Not connected':'Offline · Retry';if(e.message!=='SETUP'&&e.message!=='LOGIN')toast(e.message)}
   S.busy=false;render();
 }
@@ -250,7 +250,7 @@ function render(){
   if(fid&&$(fid)){$(fid).focus();try{if(pos!=null)$(fid).setSelectionRange(pos,pos)}catch(e){}}
 }
 async function saveOv(id,patch){const cur=Object.assign({},ov(id),patch);S.docs['ov/'+id]=cur;render();
-  try{await call('set',['ov/'+id,cur]);toast('Saved')}catch(e){toast(e.message==='LOGIN'?'Log in again':'Not saved: '+e.message)}}
+  try{await call('cr_set',[S.token,'ov/'+id,cur]);toast('Saved')}catch(e){toast(e.message==='LOGIN'?'Log in again':'Not saved: '+e.message)}}
 document.addEventListener('click',async ev=>{const t=ev.target.closest('button,tr.click');if(!t)return;const d=t.dataset;
   if(t.id==='sync'){if(S.token)load(true);return}
   if(t.id==='lgo'){const n=$('ln').value,p=$('lp').value;$('lerr').textContent='Checking…';
@@ -263,7 +263,7 @@ document.addEventListener('click',async ev=>{const t=ev.target.closest('button,t
   if(d.ed){S.edit=S.edit===d.ed?null:d.ed;render();return}
   if(d.save){const id=d.save;saveOv(id,{veh:$('ed-veh').value.trim(),driver:$('ed-drv').value.trim(),note:$('ed-note').value.trim()});S.edit=null;return}
   if(t.id==='dmap-save'){const m={};document.querySelectorAll('[data-dmap]').forEach(i=>{if(i.value.trim())m[i.dataset.dmap]=i.value.trim()});
-    S.docs['config/drivers']={map:m};try{await call('set',['config/drivers',{map:m}]);toast('Drivers list saved')}catch(e){toast('Not saved: '+e.message)}render();return}
+    S.docs['config/drivers']={map:m};try{await call('cr_set',[S.token,'config/drivers',{map:m}]);toast('Drivers list saved')}catch(e){toast('Not saved: '+e.message)}render();return}
 });
 document.addEventListener('input',ev=>{const t=ev.target;
   if(t.id==='f-q'){S.q=t.value;render()}
