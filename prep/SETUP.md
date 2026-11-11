@@ -4,7 +4,13 @@ The page (`prep/index.html`) is hosted on GitHub Pages and opens from the FIS ap
 
 No staff or student names are stored in this GitHub repository (it is public). The November–December 2026 lesson starts are built into `Code.gs`; the marks already made in the old tracker are in a separate lesson file sent by Claude.
 
-## 1. Create the Google Sheet and script (about 10 minutes)
+## Current setup (done 11 Nov 2026)
+
+- Script: standalone Apps Script project **Academic Preparation Tracker API** (flourishsportscloud@gmail.com). It created the Google Sheet **Academic Preparation Data** in the same Drive (its id is in Script Properties → `SHEET_ID`).
+- Deployed as a web app (Execute as: Me, Who has access: Anyone); the `/exec` URL is built into `prep/index.html`.
+- November–December 2026 lessons loaded, and the 31 lessons already marked in the old tracker imported.
+
+## Setting it up again from scratch
 
 1. Create a new Google Sheet named **Academic Preparation Data**.
 2. **Extensions → Apps Script.** Delete everything in `Code.gs` and paste the whole of `prep/Code.gs` from this repo. Save.

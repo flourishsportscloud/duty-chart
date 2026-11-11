@@ -348,7 +348,7 @@ td:not(.c) .meta{margin-inline:0;max-width:none}
 <script>
 /* FIS backend shim: the tracker talks to the Google Sheet through the Apps Script web app (prep/Code.gs). */
 (function(){
-  const API_URL=new URLSearchParams(location.search).get('api')||'';
+  const API_URL=new URLSearchParams(location.search).get('api')||'https://script.google.com/macros/s/AKfycbxQrXl7D_nzkJcC1FOG2AgKX27efM-wg_7mS5LVt2Mu6zU07kiz4Pn3oAZQospDg1o-/exec';
   const K=k=>'fisPrep:'+k;
   const get=k=>{try{return JSON.parse(localStorage.getItem(K(k)))}catch(e){return null}};
   const put=(k,v)=>{try{localStorage.setItem(K(k),JSON.stringify(v))}catch(e){}};
