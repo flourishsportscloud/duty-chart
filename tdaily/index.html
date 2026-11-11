@@ -177,6 +177,25 @@ table.svc{min-width:760px} .svc td{padding:6px 8px}
 .pchip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .covrow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:8px;align-items:center;padding:6px 14px;font-size:13px}
 .covrow select{font:inherit;font-size:13px;padding:6px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);width:100%}
+.tabs{display:flex;gap:2px;overflow-x:auto;margin:8px calc(-1*max(16px,env(safe-area-inset-left,0px))) -10px;padding:0 max(16px,env(safe-area-inset-left,0px));scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}
+.tabs button{font:inherit;font-size:13px;font-weight:600;background:none;border:0;border-bottom:3px solid transparent;color:color-mix(in srgb,var(--bg) 70%,transparent);padding:10px 10px;white-space:nowrap;cursor:pointer}
+.tabs button.on{color:var(--bg);border-color:var(--accent)}
+.tabs button b{display:inline-block;min-width:17px;height:17px;line-height:17px;border-radius:9px;background:var(--miss);color:#fff;font-size:10.5px;margin-left:5px;padding:0 4px;text-align:center}
+.tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.pane{margin-top:4px}
+.dash{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin:10px 0}
+.dc{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;text-align:left;font:inherit;color:var(--ink);cursor:pointer;display:flex;flex-direction:column;gap:8px;min-width:0}
+.dc:hover{border-color:var(--accent)}.dc:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.dc h4{margin:0;font-family:var(--display);text-transform:uppercase;letter-spacing:.04em;font-size:15px;display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.dc h4 small{font-family:var(--body);text-transform:none;letter-spacing:0;font-size:11px;color:var(--muted);font-weight:500}
+.big{font-family:var(--display);font-size:30px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.big small{font-size:14px;color:var(--muted);font-weight:600;margin-left:4px}
+.big.bok{color:var(--done)}.big.bbad{color:var(--miss)}
+.dl{font-size:12.5px;color:var(--muted);line-height:1.45}.dl b{color:var(--ink);font-weight:600}.dl .r{color:var(--miss);font-weight:600}
+.mini{display:flex;flex-direction:column;gap:4px}.mini div{display:grid;grid-template-columns:88px 1fr 38px;gap:6px;align-items:center;font-size:11.5px}
+.mini span{font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mini i{height:7px;border-radius:4px;background:var(--na-soft);overflow:hidden;display:flex}.mini i u{display:block;height:100%;background:var(--done)}.mini i u.m{background:var(--miss)}
+.mini em{font-style:normal;font-family:var(--mono);text-align:right}.mini div.now span{color:var(--accent-ink);font-weight:700}
+.dc.wide{grid-column:1/-1}
 .btn.sm{padding:5px 10px;font-size:12px}
 @media (max-width:520px){.meta{grid-template-columns:1fr}h1{font-size:19px}.veh{grid-template-columns:1fr}.res{grid-template-columns:minmax(0,1fr) 40px}.res select{grid-column:1/-1}}
 @media (prefers-reduced-motion:reduce){.chev{transition:none}}
@@ -196,24 +215,45 @@ table.svc{min-width:760px} .svc td{padding:6px 8px}
       </div>
     </div>
     <div class="prog"><div class="track" id="track"></div><span id="progtxt">0/0</span></div>
+    <nav class="tabs" id="tabs" aria-label="Report sections"></nav>
   </header>
 
+  <div class="status" id="status">Loading saved report…</div>
+  <div class="pane" data-pane="dash" hidden>
   <div id="docAlert"></div>
   <div id="svcAlert"></div>
-  <div class="status" id="status">Loading saved report…</div>
-
+  <div id="dashBody" class="dash"></div>
+  </div>
+  <div class="pane" data-pane="tasks" hidden>
   <div class="meta">
     <label>Reported by<input id="by" placeholder="Name of transport in-charge"></label>
     <label>Buses / vans out today<input id="fleet" placeholder="e.g. 18 buses, 21 vans"></label>
     <label class="full">Day remarks (breakdowns, absentees, complaints)<textarea id="dayNote" placeholder="Anything the Principal / Admin should know about today"></textarea></label>
   </div>
+  <div class="legend">
+    Tap the box to change status:
+    <span><b style="border:1.5px solid var(--line)"></b>Pending</span>
+    <span><b style="background:var(--done-soft);color:var(--done)">✓</b>Done</span>
+    <span><b style="background:var(--miss-soft);color:var(--miss)">✗</b>Not done</span>
+    <span><b style="background:var(--na-soft);color:var(--na);font-size:9px">NA</b>Not applicable</span>
+  </div>
+  <div id="windows"></div>
+  <div class="actions">
+    <button class="btn primary" id="copy">Copy WhatsApp report</button>
+    <button class="btn" id="expand">Expand all</button>
+    <button class="btn" id="collapse">Collapse done windows</button>
+  </div>
+  <textarea id="copybox" hidden readonly></textarea>
 
+  </div>
+  <div class="pane" data-pane="staff" hidden>
   <section class="win" id="staff">
     <div class="win-h" data-w="staff"><span class="time">Staff</span><h2>Driver &amp; Conductor Attendance</h2>
       <button class="btn sm" id="editRoster">Edit names</button><span class="cnt" id="staffSum"></span><span class="chev">▾</span></div>
     <div class="rows" id="staffBody"></div>
   </section>
-
+  </div>
+  <div class="pane" data-pane="uniform" hidden>
   <section class="win" id="chartSec">
     <div class="win-h" data-w="chartSec"><span class="time">Register</span><h2>Uniform &amp; Absentee Chart · <span id="chartTitle"></span></h2><span class="chev">▾</span></div>
     <div class="rows">
@@ -224,56 +264,47 @@ table.svc{min-width:760px} .svc td{padding:6px 8px}
       <div class="chart-wrap"><table id="chart" class="chart"></table></div>
     </div>
   </section>
-
-  <section class="win" id="vehSec">
-    <div class="win-h" data-w="vehSec"><span class="time">Docs</span><h2>Vehicle Documents &amp; Renewal Plan</h2><span class="cnt" id="vehSum"></span><span class="chev">▾</span></div>
-    <div class="rows" id="vehBody"><div class="lock">Loading vehicle documents…</div></div>
-  </section>
-
-  <section class="win" id="svcSec">
-    <div class="win-h" data-w="svcSec"><span class="time">Service</span><h2>Bus &amp; Van Service Schedule</h2><span class="cnt" id="svcSum"></span><span class="chev">▾</span></div>
-    <div class="rows" id="svcBody"><div class="lock">Loading service records…</div></div>
-  </section>
-
-  <section class="win" id="salSec">
-    <div class="win-h" data-w="salSec"><span class="time">Salary</span><h2>Salary &amp; Increments</h2><span class="cnt" id="salSum"></span><span class="chev">▾</span></div>
-    <div class="rows" id="salBody"><div class="group">Loading…</div></div>
-  </section>
-
-  <div class="legend">
-    Tap the box to change status:
-    <span><b style="border:1.5px solid var(--line)"></b>Pending</span>
-    <span><b style="background:var(--done-soft);color:var(--done)">✓</b>Done</span>
-    <span><b style="background:var(--miss-soft);color:var(--miss)">✗</b>Not done</span>
-    <span><b style="background:var(--na-soft);color:var(--na);font-size:9px">NA</b>Not applicable</span>
   </div>
-
-  <div id="windows"></div>
-
-  <section class="win" id="crSec">
-    <div class="win-h" data-w="crSec"><span class="time">FO</span><h2>Complaints &amp; Requests</h2><span class="chev">▾</span></div>
-    <div class="rows"><div class="lock" style="color:var(--ink)">Complaints, requests and transport changes are read live from the Daily FO, with Student-wise, Bus-wise and Driver-wise views and follow-up status.<div class="actions" style="margin:10px 0 0"><a class="btn primary" style="text-decoration:none" href="../complaints/">Open Complaints &amp; Requests dashboard</a></div><div style="font-size:12px;color:var(--muted);margin-top:8px">Also in the FIS Application.</div></div></div>
-  </section>
-
+  <div class="pane" data-pane="plan" hidden>
   <section class="win" id="nplSec">
     <div class="win-h" data-w="nplSec"><span class="time">Kal</span><h2>Next-Day Plan (Hindi)</h2><span class="cnt" id="nplSum"></span><span class="chev">▾</span></div>
     <div class="rows" id="nplBody"></div>
   </section>
-
+  </div>
+  <div class="pane" data-pane="dayend" hidden>
   <section class="win" id="eodSec">
     <div class="win-h" data-w="eodSec"><span class="time">Day End</span><h2>Day-End Summary</h2><span class="cnt" id="eodSum"></span><span class="chev">▾</span></div>
     <div class="rows" id="eodBody"></div>
   </section>
-
-  <div class="actions">
-    <button class="btn primary" id="copy">Copy WhatsApp report</button>
-    <button class="btn" id="expand">Expand all</button>
-    <button class="btn" id="collapse">Collapse done windows</button>
   </div>
-  <textarea id="copybox" hidden readonly></textarea>
-
+  <div class="pane" data-pane="complaints" hidden>
+  <section class="win" id="crSec">
+    <div class="win-h" data-w="crSec"><span class="time">FO</span><h2>Complaints &amp; Requests</h2><span class="chev">▾</span></div>
+    <div class="rows"><div class="lock" style="color:var(--ink)">Complaints, requests and transport changes are read live from the Daily FO, with Student-wise, Bus-wise and Driver-wise views and follow-up status.<div class="actions" style="margin:10px 0 0"><a class="btn primary" style="text-decoration:none" href="../complaints/">Open Complaints &amp; Requests dashboard</a></div><div style="font-size:12px;color:var(--muted);margin-top:8px">Also in the FIS Application.</div></div></div>
+  </section>
+  </div>
+  <div class="pane" data-pane="docs" hidden>
+  <section class="win" id="vehSec">
+    <div class="win-h" data-w="vehSec"><span class="time">Docs</span><h2>Vehicle Documents &amp; Renewal Plan</h2><span class="cnt" id="vehSum"></span><span class="chev">▾</span></div>
+    <div class="rows" id="vehBody"><div class="lock">Loading vehicle documents…</div></div>
+  </section>
+  </div>
+  <div class="pane" data-pane="service" hidden>
+  <section class="win" id="svcSec">
+    <div class="win-h" data-w="svcSec"><span class="time">Service</span><h2>Bus &amp; Van Service Schedule</h2><span class="cnt" id="svcSum"></span><span class="chev">▾</span></div>
+    <div class="rows" id="svcBody"><div class="lock">Loading service records…</div></div>
+  </section>
+  </div>
+  <div class="pane" data-pane="salary" hidden>
+  <section class="win" id="salSec">
+    <div class="win-h" data-w="salSec"><span class="time">Salary</span><h2>Salary &amp; Increments</h2><span class="cnt" id="salSum"></span><span class="chev">▾</span></div>
+    <div class="rows" id="salBody"><div class="group">Loading…</div></div>
+  </section>
+  </div>
+  <div class="pane" data-pane="history" hidden>
   <h3>Last 14 days</h3>
   <div class="hist-wrap"><table id="hist"><thead></thead><tbody><tr><td>Loading…</td></tr></tbody></table></div>
+  </div>
 </div>
 
 <div style="text-align:center;margin:24px 0 8px;font-size:12px;color:var(--muted)">FIS Application · <a href="../fis/" style="color:inherit">All apps</a> · <button id="fl-out" style="font:inherit;font-size:12px;background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer">Sign out</button></div>
@@ -468,8 +499,8 @@ let month="", monthData={}, monthUnsub=null;
 const START="2026-10-01";
 function rangeEnd(){const m=[date.slice(0,7),todayIST().slice(0,7),START.slice(0,7)].sort().pop();const[y,mm]=m.split("-").map(Number);return m+"-"+String(new Date(Date.UTC(y,mm,0)).getUTCDate()).padStart(2,"0")}
 function ensureMonth(){
-  const end=rangeEnd(); if(end===month)return; month=end; monthData={};
-  if(monthUnsub){monthUnsub();monthUnsub=null} if(!db)return;
+  const end=rangeEnd(); if(end===month&&window.__monthDb===db)return; month=end; monthData={};
+  if(monthUnsub){monthUnsub();monthUnsub=null} window.__monthDb=db; if(!db)return;
   const take=q=>{monthData={};q.docs.forEach(doc=>{const x=doc.data()||{},k=x.date||doc.id;if(k>=START&&k<=end)monthData[k]={att:x.att||{},uni:x.uni||{}}});renderChart()};
   const fallback=()=>db.collection("reports").orderBy("date","desc").limit(400).get().then(take).catch(()=>{});
   try{monthUnsub=db.collection("reports").where("date",">=",START).where("date","<=",end).onSnapshot(take,fallback)}catch(e){fallback()}
@@ -809,6 +840,63 @@ document.addEventListener("click",async e=>{
 document.addEventListener("change",e=>{const id=e.target.dataset.tc;if(!id)return;const t=tmrData();if(!t)return;const rid=e.target.value,p={cover:{}};
   RES.forEach(r=>{if(t.cover[r.id]===id&&r.id!==rid){t.cover[r.id]="";p.cover[r.id]=""}});if(rid){t.cover[rid]=id;p.cover[rid]=id}
   queue(p,nextDay(date));render()});
+
+/* ---- tabs & dashboard ---- */
+const TABS=[["dash","Dashboard"],["tasks","Daily Checklist"],["staff","Staff Attendance"],["uniform","Uniform & Absentee"],["plan","Next-Day Plan"],["dayend","Day-End"],["complaints","Complaints"],["docs","Documents"],["service","Service"],["salary","Salary"],["history","History"]];
+const PANE_SEC={staff:"staff",uniform:"chartSec",plan:"nplSec",dayend:"eodSec",complaints:"crSec",docs:"vehSec",service:"svcSec",salary:"salSec"};
+let tab=(()=>{const h=location.hash.slice(1);if(TABS.some(t=>t[0]===h))return h;try{return localStorage.getItem("td_tab")||"dash"}catch(e){return"dash"}})();
+function tabBadges(){const b={};try{
+  b.tasks=ALL.filter(t=>state.s[t.id]==="miss").length;
+  const cov=coverMap();b.staff=SLOTS.filter(x=>state.att[x.id]==="A"&&!cov[x.id]).length;
+  if(vehState==="ok")b.docs=Object.keys(veh).reduce((n,id)=>n+DOCS.filter(([k])=>{const st=docState(veh[id][k])[0];return st==="exp"||st==="none"||st==="due"}).length,0);
+  if(svcState==="ok")b.service=Object.keys(SV).filter(id=>svcCalc(SV[id]).st!=="ok").length;
+ }catch(e){}return b}
+function renderTabs(){const b=tabBadges();
+  $("tabs").innerHTML=TABS.map(([k,l])=>`<button class="${tab===k?"on":""}" data-tab="${k}">${l}${b[k]?`<b>${b[k]}</b>`:""}</button>`).join("");
+  document.querySelectorAll(".pane").forEach(p=>p.hidden=p.dataset.pane!==tab)}
+function showTab(k){tab=k;try{localStorage.setItem("td_tab",k)}catch(e){}if(PANE_SEC[k])closed.delete(PANE_SEC[k]);
+  try{history.replaceState(null,"","#"+k)}catch(e){}renderTabs();render();scrollTo({top:0});const on=$("tabs").querySelector(".on");on&&on.scrollIntoView({inline:"center",block:"nearest"})}
+document.addEventListener("click",e=>{const t=e.target.closest("[data-tab]");if(t){e.stopPropagation();showTab(t.dataset.tab);return}
+  const d=e.target.closest("[data-go]");if(d){e.stopPropagation();showTab(d.dataset.go);return}
+  if(e.target.closest("[data-goveh]")){e.stopPropagation();showTab("docs");return}
+  if(e.target.closest("[data-gosvc]")){e.stopPropagation();showTab("service");return}},true);
+function renderDash(){const el=$("dashBody");if(!el||tab!=="dash")return;
+  const c={done:0,miss:0,na:0};ALL.forEach(t=>{const s=state.s[t.id];if(c[s]!=null)c[s]++});const T=ALL.length,fin=c.done+c.na,pct=T?Math.round(fin/T*100):0;
+  const now=date===todayIST()?nowMinIST():-1;
+  const wins=W.map(w=>{const ts=w.g.flatMap(g=>g[1]),d=ts.filter(t=>state.s[t[0]]==="done"||state.s[t[0]]==="na").length,m=ts.filter(t=>state.s[t[0]]==="miss").length;
+    return `<div class="${now>=mins(w.s)&&now<mins(w.e)?"now":""}"><span>${w.t}</span><i><u style="width:${d/ts.length*100}%"></u><u class="m" style="width:${m/ts.length*100}%"></u></i><em>${d}/${ts.length}</em></div>`}).join("");
+  const missed=ALL.filter(t=>state.s[t.id]==="miss").map(t=>t.name);
+  const cov=coverMap(),abs=[...SLOTS.map(x=>x.id),...RES.map(r=>r.id)].filter(id=>state.att[id]==="A"),unc=SLOTS.filter(x=>state.att[x.id]==="A"&&!cov[x.id]);
+  const total=SLOTS.length+RES.length,nu=CHART.filter(id=>state.uni[id]&&state.att[id]!=="A");
+  // month register
+  let mA={},mU={};CHART.forEach(id=>{mA[id]=0;mU[id]=0});
+  try{const[y,mm]=date.slice(0,7).split("-").map(Number),last=new Date(Date.UTC(y,mm,0)).getUTCDate();
+    for(let i=1;i<=last;i++){const d=date.slice(0,8)+String(i).padStart(2,"0");if(d>todayIST())break;CHART.forEach(id=>{const v=cellVal(d,id);if(v==="A")mA[id]++;if(v==="U")mU[id]++})}}catch(e){}
+  const topA=CHART.filter(id=>mA[id]).sort((a,b)=>mA[b]-mA[a]).slice(0,4),topU=CHART.filter(id=>mU[id]).sort((a,b)=>mU[b]-mU[a]).slice(0,4);
+  const nm=id=>esc(personName(id,id));
+  // tomorrow
+  const t=tmrData(),tab_=t?[...SLOTS.map(x=>x.id),...RES.map(r=>r.id)].filter(id=>t.att[id]==="A"):[];
+  // docs / service / salary
+  let dU=[],dS=0;if(vehState==="ok")Object.keys(veh).forEach(id=>DOCS.forEach(([k,lab])=>{const d=veh[id][k],[st,txt]=docState(d);if(st==="exp"||st==="none"||st==="due")dU.push(`${esc(veh[id].no)} ${lab} <span class="r">${esc(txt)}</span>`);else if(st==="soon")dS++}));
+  let sU=[];if(svcState==="ok")Object.keys(SV).sort((a,b)=>(SV[a].order||99)-(SV[b].order||99)).forEach(id=>{const k=svcCalc(SV[id]);if(k.st!=="ok")sU.push(`${esc(SV[id].no)} <span class="r">${k.st==="exp"?"Overdue":"Due soon"} · ${esc(k.why)}</span>`)});
+  let salTot=0,salN=0;if(salState==="ok")Object.values(sal).forEach(x=>{const v=curSal(x);if(v){salTot+=v;salN++}});
+  let eodF=0;try{const a=eodAuto();eodF=EODF.filter(([k])=>eodVal(k,a).trim()).length}catch(e){}
+  const card=(go,title,sub,body,wide)=>`<button class="dc ${wide?"wide":""}" data-go="${go}"><h4>${title}<small>${sub||""}</small></h4>${body}</button>`;
+  el.innerHTML=
+   card("tasks","Daily Checklist",fmt(date),`<div class="big ${pct===100?"bok":c.miss?"bbad":""}">${pct}%<small>${fin}/${T} done · ${c.miss} missed</small></div><div class="mini">${wins}</div>${missed.length?`<div class="dl"><b>Not done:</b> ${missed.slice(0,6).map(esc).join(", ")}${missed.length>6?" …":""}</div>`:""}`)+
+   card("staff","Staff Attendance",fmt(date),`<div class="big ${unc.length?"bbad":"bok"}">${total-abs.length}/${total}<small>present</small></div><div class="dl">${abs.length?`<b>Absent:</b> ${abs.map(nm).join(", ")}`:"All drivers & conductors present"}${unc.length?`<br><span class="r">Not covered: ${unc.map(x=>esc(slotText(x))).join(", ")}</span>`:abs.length?"<br>All absences covered":""}${nu.length?`<br><b>Without uniform:</b> ${nu.map(nm).join(", ")}`:""}</div>`)+
+   card("uniform","Uniform & Absentee",new Date(date+"T00:00:00Z").toLocaleString("en-IN",{month:"long",year:"numeric",timeZone:"UTC"}),`<div class="big">${Object.values(mA).reduce((a,b)=>a+b,0)}<small>A</small> ${Object.values(mU).reduce((a,b)=>a+b,0)}<small>U</small></div><div class="dl">${topA.length?`<b>Most absent:</b> ${topA.map(id=>nm(id)+" "+mA[id]).join(", ")}`:"No absences this month"}${topU.length?`<br><b>Most without uniform:</b> ${topU.map(id=>nm(id)+" "+mU[id]).join(", ")}`:""}</div>`)+
+   card("plan","Next-Day Plan",fmt(nextDay(date)),`<div class="big">${tab_.length}<small>absent tomorrow</small></div><div class="dl">${tab_.length?tab_.map(nm).join(", "):"No absentees marked for tomorrow yet"}<br>Open to mark absentees and copy the Hindi plan</div>`)+
+   card("dayend","Day-End Summary",fmt(date),`<div class="big ${eodF>=EODF.length?"bok":""}">${eodF}/${EODF.length}<small>lines filled</small></div><div class="dl">Copy the WhatsApp day-end message</div>`)+
+   card("docs","Vehicle Documents",vehState==="ok"?Object.keys(veh).length+" vehicles":"",vehState!=="ok"?'<div class="dl">Loading…</div>':`<div class="big ${dU.length?"bbad":"bok"}">${dU.length}<small>need action · ${dS} in 31–60 days</small></div><div class="dl">${dU.length?dU.slice(0,5).join("<br>"):"Nothing due in the next 30 days"}</div>`)+
+   card("service","Service Schedule",svcState==="ok"?Object.keys(SV).length+" vehicles":"",svcState!=="ok"?'<div class="dl">Loading…</div>':`<div class="big ${sU.length?"bbad":"bok"}">${sU.length}<small>overdue / due soon</small></div><div class="dl">${sU.length?sU.slice(0,5).join("<br>"):"No service due"}</div>`)+
+   card("complaints","Complaints & Requests","from Daily FO",`<div class="dl">Open the live dashboard: student-wise, bus-wise and driver-wise complaints and requests</div>`)+
+   (salState==="ok"?card("salary","Salary",salN+" staff",`<div class="big">${inr(salTot)}<small>per month</small></div>`):"")+
+   card("history","History","last 14 days",`<div class="dl">Completion and staff absence for each saved day</div>`);
+}
+const _renderTD=render;render=function(){_renderTD();renderTabs();renderDash()};
+setInterval(()=>{if(tab==="dash")renderDash();renderTabs()},2000);
+renderTabs();
 
 $("date").value=date; render(); loadHistory();
 setInterval(()=>{if(date===todayIST()&&!document.activeElement?.matches("input,textarea"))render()},60000);
