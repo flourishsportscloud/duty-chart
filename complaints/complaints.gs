@@ -13,7 +13,8 @@ const CACHE_SEC = 300;
 const SEED_DRIVERS = {"Bus 1":"Samsudin","Bus 2":"Suresh Nayak","Bus 3":"Mahender","Bus 4":"Deepak","Bus 5":"Bharat","Bus 6":"Ajay Gujrati",
   "Bus 7":"Vikash Saraswat","Bus 8":"Aman Siyota","Bus 9":"Kushal Singh","Bus 10":"Ajij","Bus 11":"Manish","Bus 12":"Suresh Gujrati",
   "Bus 13":"Jairaj","Bus 14":"Shivratan","Bus 15":"Dilip Chanwariya","Bus 16":"Hanuman Singh","Bus 34":"Gopal Jawa",
-  "Bus A":"Kushal Singh","Bus B":"Mahender","Bus C":"Bharat","Bus D":"Jairaj","Bus E":"Deepak","Bus F":"Suresh Nayak","Bus G":"Nitin Chawariya","Bus H":"Shivratan"};
+  "Bus A":"Kushal Singh","Bus B":"Mahender","Bus C":"Bharat","Bus D":"Jairaj","Bus E":"Deepak","Bus F":"Suresh Nayak","Bus G":"Nitin Chawariya","Bus H":"Shivratan",
+  "Van 17":"Raj Inda","Van 18":"Mumtaj","Van 19":"Yogesh","Van 20":"Jaswant","Van 21":"Surya","Van 22":"Ram Lal","Van 23":"Dulhi Chand","Van 24":"Anwar Khan","Van 25":"Chennaram","Van 26":"Jeet","Van 27":"Mohsin","Van 28":"Mangtu Ram","Van 29":"Prabhu","Van 30":"Jagdish","Van 31":"Ravi","Van 32":"Mussa","Van 33":"Kishan Singh","Van 35":"Yashwardhan","Van 36":"Badal","Van 37":"Sonu","Van 38":"Ajij"};
 
 function fail(m){ throw new Error(m); }
 function props_(){ return PropertiesService.getScriptProperties(); }
@@ -131,6 +132,7 @@ function set_(key, obj, who){
 return {
   data: fresh => ({entries: entries_(!!fresh), docs: docs_(), at: Utilities.formatDate(new Date(), TZ, 'dd MMM yyyy, HH:mm')}),
   set: set_,
+  saveDrivers(){ return set_('config/drivers', {map: SEED_DRIVERS}, 'Director'); },
   setup(){ DOCS(); LOG(); if(!docs_()['config/drivers']) set_('config/drivers', {map: SEED_DRIVERS}, 'setup');
     const e = entries_(true); return 'Daily FO read OK: ' + e.length + ' transport entries. Data sheet: ' + own_().getUrl(); }
 };
@@ -141,3 +143,5 @@ Object.assign(API, {
   cr_set: function(token, key, obj){ return CR_.set(key, obj, me_(token)); }
 });
 function crSetup(){ Logger.log(CR_.setup()); }
+/* Run to replace the saved drivers list with SEED_DRIVERS above (overwrites edits made in the app's Drivers list). */
+function crSaveDrivers(){ CR_.saveDrivers(); Logger.log('Drivers list saved: ' + Object.keys(SEED_DRIVERS).length + ' vehicles'); }
