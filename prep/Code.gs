@@ -17,7 +17,10 @@ const SEED = {"plan/2026-11":{"dates":[{"d":"2026-11-02","full":"Monday, 2 Novem
 
 function fail(m){ throw new Error(m); }
 function props_(){ return PropertiesService.getScriptProperties(); }
-function ss_(){ const id = props_().getProperty('SHEET_ID'); return SpreadsheetApp.getActive() || SpreadsheetApp.openById(id); }
+function ss_(){ const a = SpreadsheetApp.getActive(); if(a) return a;   // standalone project: makes its own sheet the first time
+  const p = props_(); let id = p.getProperty('SHEET_ID');
+  if(!id){ id = SpreadsheetApp.create('Academic Preparation Data').getId(); p.setProperty('SHEET_ID', id); }
+  return SpreadsheetApp.openById(id); }
 function sheet_(name){
   const ss = ss_(); let sh = ss.getSheetByName(name);
   if(!sh){ sh = ss.insertSheet(name);
