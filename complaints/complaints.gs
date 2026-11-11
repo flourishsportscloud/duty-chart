@@ -132,7 +132,7 @@ function set_(key, obj, who){
 return {
   data: fresh => ({entries: entries_(!!fresh), docs: docs_(), at: Utilities.formatDate(new Date(), TZ, 'dd MMM yyyy, HH:mm')}),
   set: set_,
-  saveDrivers(){ return set_('config/drivers', {map: SEED_DRIVERS}, 'Director'); },
+  saveDrivers(){ set_('config/drivers', {map: SEED_DRIVERS}, 'Director'); return Object.keys(SEED_DRIVERS).length; },
   setup(){ DOCS(); LOG(); if(!docs_()['config/drivers']) set_('config/drivers', {map: SEED_DRIVERS}, 'setup');
     const e = entries_(true); return 'Daily FO read OK: ' + e.length + ' transport entries. Data sheet: ' + own_().getUrl(); }
 };
@@ -144,4 +144,4 @@ Object.assign(API, {
 });
 function crSetup(){ Logger.log(CR_.setup()); }
 /* Run to replace the saved drivers list with SEED_DRIVERS above (overwrites edits made in the app's Drivers list). */
-function crSaveDrivers(){ CR_.saveDrivers(); Logger.log('Drivers list saved: ' + Object.keys(SEED_DRIVERS).length + ' vehicles'); }
+function crSaveDrivers(){ Logger.log('Drivers list saved: ' + CR_.saveDrivers() + ' vehicles'); }
