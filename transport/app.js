@@ -156,6 +156,9 @@ function fillStaffSelects(){
 
 /* ---------- per-kid computation ---------- */
 function sbOf(id){const fo=((S.gate[id]||{}).out||{}).type;if(fo==='SB')return true;if(fo==='VEH'||fo==='EARLY'||fo==='GOWALK'||fo==='HOME')return false;const c=KID[id].cls;const day=S.sb[seg(c)];const ov=day&&day.kids?day.kids[id]:undefined;return ov===undefined?!!S.sbReg[id]:!!ov}
+// Doubt case: kept back from the vehicle until Front Office confirms with the parent
+function sbDoubt(id){if(((S.gate[id]||{}).out||{}).type)return false;const day=S.sb[seg(KID[id].cls)];return !!(day&&day.kids&&day.kids[id]==='D')}
+function sbState(id){return sbDoubt(id)?'D':sbOf(id)}
 function kidStatus(id){
   const k=KID[id];const g=S.gate[id]||{};const it=g.in&&g.in.type;const ot=g.out&&g.out.type;
   if(k.walk){
@@ -268,6 +271,7 @@ function outPlan(k,g){const o=g.out&&g.out.type;
   if(o==='SB')return {t:'Stayback',c:'SB'};
   if(o==='VEH')return {t:'Going by '+VBY[k.v].l+' (regular)',c:'VEH'};
   if(o==='HOME')return {t:'Going home – '+modeOf(k),c:'HOME'};
+  if(sbDoubt(k.id))return {t:'Stayback doubt – Front Office to confirm',c:'LATE'};
   return {t:k.walk?'Going home – '+modeOf(k):'Going by '+VBY[k.v].l+' (regular)',c:k.walk?'HOME':'VEH'};}
 function foLine(id){const k=KID[id];const g=S.gate[id];if(!g||!(g.in||g.out))return '';
   const p=[];if(g.in)p.push('<span class="tag t-'+g.in.type+'">'+esc(LBL[g.in.type]||g.in.type)+(g.in.type!=='ABS'&&g.in.time?' '+esc(g.in.time):'')+'</span>');
@@ -305,7 +309,12 @@ function renderChips(){
 }
 function setClasses(arr){S.sbClasses=arr;LS.set('sbClasses',arr);render()}
 function setGrade(g){S.sbGrade=g;LS.set('sbGrade',g);setClasses(g?CLASSES.filter(c=>c.split(' - ')[0]===g):[])}
-function stayRow(k,mode){const on=mode==='reg'?!!S.sbReg[k.id]:sbOf(k.id);const st=k.walk?null:kidStatus(k.id);const g=S.gate[k.id]||{};
+const SBL={true:'Staying',false:'Not Staying',D:'Doubt'};
+function sbDraftOf(id){const d=(S.sbDraft||{})[seg(KID[id].cls)]||{};return id in d?d[id]:undefined}
+function stayRow(k,mode){if(mode!=='reg'){const dv=sbDraftOf(k.id),v=dv===undefined?sbState(k.id):dv;const st=k.walk?null:kidStatus(k.id);const g=S.gate[k.id]||{};
+    const fo=g.out&&g.out.type==='SB'?' <span class="tag t-LATE">Front Office</span>':'';
+    return '<div class="kid'+(dv!==undefined?' drf':'')+'"><div class="nm"><div>'+esc(k.name)+(!S.sbReg[k.id]?' <span class="tag t-LATE">Today only</span>':'')+fo+'</div><span>'+sbTag(k)+(st?' · <span class="tag t-'+st.IN+'">'+LBL[st.IN]+'</span>':'')+(dv!==undefined?' · <b style="color:var(--late)">not saved</b>':'')+'</span></div><button class="tg '+(v==='D'?'SBD':v?'SB':'noSB')+'" data-sb="'+k.id+'">'+SBL[v]+'</button></div>'}
+  const on=!!S.sbReg[k.id];const st=k.walk?null:kidStatus(k.id);const g=S.gate[k.id]||{};
   const fo=g.out&&g.out.type==='SB'?' <span class="tag t-LATE">Front Office</span>':'';
   return '<div class="kid"><div class="nm"><div>'+esc(k.name)+(mode!=='reg'&&!S.sbReg[k.id]?' <span class="tag t-LATE">Today only</span>':'')+fo+'</div><span>'+sbTag(k)+(st?' · <span class="tag t-'+st.IN+'">'+LBL[st.IN]+'</span>':'')+'</span></div><button class="tg '+(on?'SB':'noSB')+'" '+(mode==='reg'?'data-sbreg':'data-sb')+'="'+k.id+'">'+(mode==='reg'?(on?'Regular SB':'—'):(on?'Staying':'Not Staying'))+'</button></div>'}
 function renderSB(){
@@ -316,13 +325,18 @@ function renderSB(){
   const inC=k=>cls.includes(k.cls);
   // 1. Stayback
   const day=k=>((S.sb[seg(k.cls)]||{}).kids||{})[k.id];
-  const sbList=Object.values(KID).filter(k=>inC(k)&&(mode==='reg'?true:(S.sbReg[k.id]||day(k)!==undefined||((S.gate[k.id]||{}).out||{}).type==='SB')));
-  const staying=sbList.filter(k=>mode==='reg'?S.sbReg[k.id]:sbOf(k.id));
-  let h1='<div class="secthead"><i></i><span>1. Stayback Details</span><small>'+staying.length+(mode==='reg'?' on regular list':' staying · '+staying.filter(k=>!k.walk).length+' transport, '+staying.filter(k=>k.walk).length+' walkers')+'</small></div>';
+  const sbList=Object.values(KID).filter(k=>inC(k)&&(mode==='reg'?true:(S.sbReg[k.id]||day(k)!==undefined||sbDraftOf(k.id)!==undefined||((S.gate[k.id]||{}).out||{}).type==='SB')));
+  const eff=k=>{const dv=sbDraftOf(k.id);return dv===undefined?sbState(k.id):dv};
+  const staying=sbList.filter(k=>mode==='reg'?S.sbReg[k.id]:eff(k)===true);const doubts=mode==='reg'?[]:sbList.filter(k=>eff(k)==='D');
+  let h1='<div class="secthead"><i></i><span>1. Stayback Details</span><small>'+staying.length+(mode==='reg'?' on regular list':' staying · '+staying.filter(k=>!k.walk).length+' transport, '+staying.filter(k=>k.walk).length+' walkers'+(doubts.length?' · '+doubts.length+' doubt':''))+'</small></div>'+(mode==='reg'?'':'<p class="muted" style="margin:0 0 6px">Tap a student to change: Staying → Not Staying → Doubt. Then press <b>Save</b> once for the class. Doubt cases are kept off the vehicle until Front Office confirms with the parent.</p>');
   cls.forEach(c=>{const ks=sbList.filter(k=>k.cls===c).sort((a,b)=>a.name.localeCompare(b.name));if(!ks.length&&mode!=='reg')return;
-    h1+='<h3 style="color:var(--brand)">'+esc(c)+' · '+ks.filter(k=>mode==='reg'?S.sbReg[k.id]:sbOf(k.id)).length+'</h3>'+ks.map(k=>stayRow(k,mode)).join('')});
+    const dn=Object.keys((S.sbDraft||{})[seg(c)]||{}).length;
+    h1+='<h3 style="color:var(--brand)">'+esc(c)+' · '+ks.filter(k=>mode==='reg'?S.sbReg[k.id]:eff(k)===true).length+'</h3>'+ks.map(k=>stayRow(k,mode)).join('')+
+      (mode!=='reg'&&dn?'<div class="row" style="margin:8px 0 14px;gap:8px"><button class="btn" data-sbsave="'+esc(seg(c))+'" style="flex:1">Save '+esc(c)+' ('+dn+' change'+(dn>1?'s':'')+')</button><button class="btn ghost" data-sbcancel="'+esc(seg(c))+'">Cancel</button></div>':'')});
   if(mode!=='reg'){const others=Object.values(KID).filter(k=>inC(k)&&!sbList.includes(k)).sort((a,b)=>CLASSES.indexOf(a.cls)-CLASSES.indexOf(b.cls)||a.name.localeCompare(b.name));
-    h1+='<div class="row" style="margin-top:10px"><select id="sbAdd" style="flex:1"><option value="">Add a student staying today only…</option>'+others.map(k=>'<option value="'+k.id+'">'+esc(k.cls)+' – '+esc(k.name)+' ('+esc(modeLabel(k))+')</option>').join('')+'</select></div>';}
+    const opts=arr=>arr.map(k=>'<option value="'+k.id+'">'+esc(k.cls)+' – '+esc(k.name)+' ('+esc(modeLabel(k))+')</option>').join('');
+    h1+='<div class="row" style="margin-top:10px"><select id="sbAdd" style="flex:1"><option value="">Add a student staying today only…</option>'+opts(others)+'</select></div>'+
+      '<div class="row" style="margin-top:8px"><select id="sbAddReg" style="flex:1"><option value="">Add a student joining stayback (regular list)…</option>'+opts(Object.values(KID).filter(k=>inC(k)&&!S.sbReg[k.id]).sort((a,b)=>CLASSES.indexOf(a.cls)-CLASSES.indexOf(b.cls)||a.name.localeCompare(b.name)))+'</select></div>';}
   if(!sbList.length&&mode!=='reg')h1+='<p class="muted">No stayback students in the selected classes.</p>';
   // 2 & 3
   const lst=(type)=>{const rows=Object.values(KID).filter(k=>inC(k)).map(k=>({k,g:S.gate[k.id]||{}})).filter(r=>type==='EARLY'?(r.g.out&&r.g.out.type==='EARLY'):(r.g.in&&r.g.in.type==='LATE')).sort((a,b)=>CLASSES.indexOf(a.k.cls)-CLASSES.indexOf(b.k.cls)||a.k.name.localeCompare(b.k.name));
@@ -354,9 +368,12 @@ function morningNames(list){
   return '<div class="secthead"><i></i><span>Student-wise – '+fmtD(S.date)+'</span><small>Names and numbers, class-wise</small></div>'+blk('ABS','Absent','A')+blk('LATE','Late Arrival','LATE')+blk('EARLY','Leaving Early','EARLY')+blk('SB','Stayback','SB');
 }
 
-async function setDaySB(id,val){const c=KID[id].cls;const p='att/'+S.date+'/sb/'+seg(c);const cur=S.sb[seg(c)]||{};const kids=Object.assign({},cur.kids||{});
+async function saveSBClass(sg,by){const dr=(S.sbDraft||{})[sg];if(!dr)return;const ids=Object.keys(dr);if(!ids.length)return;const c=KID[ids[0]].cls;const cur=S.sb[sg]||{};const kids=Object.assign({},cur.kids||{});
+  ids.forEach(id=>{const val=dr[id];if(val===!!S.sbReg[id])delete kids[id];else kids[id]=val});
+  await store.set('att/'+S.date+'/sb/'+sg,{cls:c,kids,by:by||$('sbBy').value||'PL',time:nowT(),ts:Date.now()});delete S.sbDraft[sg];toast(c+' stayback saved')}
+async function setDaySB(id,val,by){const c=KID[id].cls;const p='att/'+S.date+'/sb/'+seg(c);const cur=S.sb[seg(c)]||{};const kids=Object.assign({},cur.kids||{});
   if(val===!!S.sbReg[id])delete kids[id];else kids[id]=val;
-  await store.set(p,{cls:c,kids,by:$('sbBy').value||'PL',time:nowT(),ts:Date.now()});}
+  await store.set(p,{cls:c,kids,by:by||$('sbBy').value||'PL',time:nowT(),ts:Date.now()});}
 
 /* DASHBOARD */
 function renderDash(){
@@ -575,7 +592,7 @@ let depDraft=null;
 function depInfo(id){const st=kidStatus(id);const g=st.g||{};
   if(!st.present){return {go:false,tag:st.IN==='U'?'U':'A',txt:st.IN==='U'?'Pending (morning)':(g.in&&g.in.type==='ABS'?'Absent (Front Office)':'Absent'),rem:g.rem||''}}
   if(st.OUT==='VEH')return {go:true,tag:'VEH',txt:(st.IN==='LATE'?'Late Arrival · ':st.IN==='WALKIN'?'Came by walk · ':'')+'Going in vehicle',rem:g.rem||''};
-  const t={EARLY:'Leaving Early'+(g.out&&g.out.time?' '+g.out.time:''),SB:'Stayback',GOWALK:'Parent Pick-up'}[st.OUT];
+  const t={EARLY:'Leaving Early'+(g.out&&g.out.time?' '+g.out.time:''),SB:sbDoubt(k.id)?'Stayback doubt – Front Office to confirm':'Stayback',GOWALK:'Parent Pick-up'}[st.OUT];
   return {go:false,tag:st.OUT,txt:t,rem:g.rem||''};
 }
 function renderDep(){
@@ -613,6 +630,10 @@ function schMatch(r,f){if(!f)return true;const s=r.st;
 function schoolRows(){const c=$('schCls').value,m=$('schMode').value,f=$('schSt').value,q=$('schQ').value.trim().toLowerCase();
   return Object.keys(KID).filter(id=>{const k=KID[id];return (!c||k.cls===c||k.cls.split(' - ')[0]===c)&&(!m||modeOf(k)===m)&&(!q||k.name.toLowerCase().includes(q))}).map(schRow).filter(r=>schMatch(r,f))}
 function renderSchool(){
+  const dk=Object.values(KID).filter(k=>sbDoubt(k.id)).sort((a,b)=>CLASSES.indexOf(a.cls)-CLASSES.indexOf(b.cls)||a.name.localeCompare(b.name));
+  $('schDoubt').classList.toggle('hide',!dk.length);
+  $('schDoubt').innerHTML=dk.length?'<div class="secthead"><i></i><span>Stayback doubt cases – confirm with parent</span><small>'+dk.length+'</small></div>'+dk.map(k=>{const d=S.sb[seg(k.cls)]||{};
+    return '<div class="kid"><div class="nm"><div>'+esc(k.name)+'</div><span>'+esc(k.cls)+' · '+esc(modeLabel(k))+(d.by?' · marked by '+esc(d.by)+' '+esc(d.time||''):'')+'</span></div><div style="display:flex;gap:6px"><button class="tg SB" data-dclr="'+k.id+'|1">Staying</button><button class="tg noSB" data-dclr="'+k.id+'|0">Not Staying</button></div></div>'}).join(''):'';
   const rows=schoolRows();const by={};rows.forEach(r=>(by[r.k.cls]=by[r.k.cls]||[]).push(r));
   const cls=CLASSES.filter(c=>by[c]);
   $('schList').innerHTML=cls.length?cls.map(c=>'<h3 style="color:var(--brand)">'+esc(c)+' · '+by[c].length+(by[c].length===1?' student':' students')+'</h3>'+
@@ -684,7 +705,11 @@ document.addEventListener('click',async e=>{
       if(d.out)body.out={type:d.out,time:hm12($('gOutT').value||nowHM())};
       await store.set(path,body)}
     toast(KID[gatePick].name+' saved');gatePick=null;gDraft=null;foBy=null;$('modalRoot').innerHTML='';render();return}
-  if(t.dataset.sb){const id=t.dataset.sb;await setDaySB(id,!sbOf(id));return}
+  if(t.dataset.sb){const id=t.dataset.sb,sg=seg(KID[id].cls);S.sbDraft=S.sbDraft||{};const d=S.sbDraft[sg]=S.sbDraft[sg]||{};const cur=sbState(id);const v=id in d?d[id]:cur;const nx=v===true?false:v===false?'D':true;
+    if(nx===cur)delete d[id];else d[id]=nx;if(!Object.keys(d).length)delete S.sbDraft[sg];render();return}
+  if(t.dataset.sbsave){await saveSBClass(t.dataset.sbsave);render();return}
+  if(t.dataset.sbcancel){delete (S.sbDraft||{})[t.dataset.sbcancel];render();return}
+  if(t.dataset.dclr){const [id,v]=t.dataset.dclr.split('|');await setDaySB(id,v==='1',$('gateBy').value);toast(KID[id].name+(v==='1'?' – staying (confirmed)':' – not staying (confirmed)'));return}
   if(t.dataset.sbreg){const id=t.dataset.sbreg;const kids=Object.assign({},S.sbReg);if(kids[id])delete kids[id];else kids[id]=true;await store.set('config/sbRegular',{kids,by:$('sbBy').value,ts:Date.now()});return}
   if(t.dataset.wreg){const id=t.dataset.wreg;const kids=Object.assign({},S.walkReg);if(kids[id])delete kids[id];else kids[id]=true;await store.set('config/walkRegular',{kids,ts:Date.now()});toast(KID[id].name+(kids[id]?' added to':' removed from')+' special list');renderFO();return}
   if(t.dataset.veh){modalVeh=t.dataset.veh;renderModal();return}
@@ -702,9 +727,10 @@ document.addEventListener('change',async e=>{
   if(t.id==='depStaff'){LS.set('depStaff',t.value);S.depVeh=null;render()}
   if(['schCls','schMode','schSt'].includes(t.id))render();
   if(t.id==='dutyStaff'){LS.set('staff',t.value);S.openVeh=null;draft=null;render()}
-  if(t.id==='date'){mDraft=null;WK.key='';RG.key='';S.date=t.value||todayStr();S.openVeh=null;draft=null;subscribeDate()}
+  if(t.id==='date'){mDraft=null;WK.key='';RG.key='';S.date=t.value||todayStr();S.openVeh=null;draft=null;S.sbDraft={};subscribeDate()}
   if(t.id==='sbMode'){render()}
-  if(t.id==='sbAdd'&&t.value){await setDaySB(t.value,true);toast(KID[t.value].name+' marked staying today')}
+  if(t.id==='sbAdd'&&t.value){const id=t.value,sg=seg(KID[id].cls);S.sbDraft=S.sbDraft||{};(S.sbDraft[sg]=S.sbDraft[sg]||{})[id]=true;toast(KID[id].name+' added – press Save for the class');render()}
+  if(t.id==='sbAddReg'&&t.value){const id=t.value;const kids=Object.assign({},S.sbReg);kids[id]=true;await store.set('config/sbRegular',{kids,by:$('sbBy').value,ts:Date.now()});toast(KID[id].name+' added to the regular stayback list')}
   if(t.id==='sbBy'){LS.set('sbBy',t.value)}
   if(t.dataset.addfo&&t.value){const g=S.gate[t.value]||{};gatePick=t.value;foBy=$('sbBy').value;gDraft={in:g.in&&g.in.type||null,out:g.out&&g.out.type||null};if(t.dataset.addfo==='LATE')gDraft.in='LATE';else gDraft.out='EARLY';t.value='';renderFO();return}
   if(t.id==='sbGrade'){setGrade(t.value);return}
