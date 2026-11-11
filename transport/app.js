@@ -592,7 +592,7 @@ let depDraft=null;
 function depInfo(id){const st=kidStatus(id);const g=st.g||{};
   if(!st.present){return {go:false,tag:st.IN==='U'?'U':'A',txt:st.IN==='U'?'Pending (morning)':(g.in&&g.in.type==='ABS'?'Absent (Front Office)':'Absent'),rem:g.rem||''}}
   if(st.OUT==='VEH')return {go:true,tag:'VEH',txt:(st.IN==='LATE'?'Late Arrival · ':st.IN==='WALKIN'?'Came by walk · ':'')+'Going in vehicle',rem:g.rem||''};
-  const t={EARLY:'Leaving Early'+(g.out&&g.out.time?' '+g.out.time:''),SB:sbDoubt(k.id)?'Stayback doubt – Front Office to confirm':'Stayback',GOWALK:'Parent Pick-up'}[st.OUT];
+  const t={EARLY:'Leaving Early'+(g.out&&g.out.time?' '+g.out.time:''),SB:sbDoubt(id)?'Stayback doubt – Front Office to confirm':'Stayback',GOWALK:'Parent Pick-up'}[st.OUT];
   return {go:false,tag:st.OUT,txt:t,rem:g.rem||''};
 }
 function renderDep(){
