@@ -1107,6 +1107,7 @@ function renderStaff(){
   const box = $("viewStaff"); const a0 = document.activeElement; if (a0 && a0.tagName === "SELECT" && box.contains(a0)) return; box.textContent = "";
   const h = el("h2","sec","Staff logins"); h.style.marginTop = "12px"; box.appendChild(h);
   box.insertBefore(rosterCard(), h);
+  if (rosterReady()) box.insertBefore(moveCard(), h);
   const pend = users.filter(u => u.status === "pending"), act = users.filter(u => u.status !== "pending");
   const roleSel = cur => { const sel = el("select"); ["cm","pl","admin"].forEach(r => { const o = el("option", null, ROLE_LABEL[r]); o.value = r; if (r === cur) o.selected = true; sel.appendChild(o); }); return sel; };
   const card = u => {
@@ -1164,6 +1165,35 @@ function rosterCard(){
   c.appendChild(inp); c.appendChild(msg); c.appendChild(go);
   return c;
 }
+function moveCard(){
+  const c = el("div","ucard"); c.style.marginTop = "12px"; c.style.display = "grid"; c.style.gap = "8px";
+  const t = el("div","un","Move a student to another section"); t.appendChild(el("small", null, "Their past marks, actions and SMS records move with them. Roll numbers in both sections are renumbered in name order."));
+  c.appendChild(t);
+  const row = el("div"); row.style.display = "flex"; row.style.gap = "6px"; row.style.flexWrap = "wrap";
+  const sCls = el("select"), sFrom = el("select"), sName = el("select"), sTo = el("select");
+  sCls.setAttribute("aria-label","Class"); sFrom.setAttribute("aria-label","From section"); sName.setAttribute("aria-label","Student"); sTo.setAttribute("aria-label","To section");
+  for (let k = 1; k <= 11; k++) { const o = el("option", null, "Class " + k); o.value = k; sCls.appendChild(o); }
+  const fill = (sel, items) => { sel.textContent = ""; items.forEach(([v, l]) => { const o = el("option", null, l); o.value = v; sel.appendChild(o); }); };
+  const upd = (lvl) => {
+    const k = Number(sCls.value), secs = sections(k);
+    if (lvl < 1) fill(sFrom, secs.map(x => [x, "From " + k + x]));
+    if (lvl < 2) fill(sName, (ROSTER[k][sFrom.value] || []).map((n, i) => [n, (i + 1) + ". " + n]));
+    fill(sTo, secs.filter(x => x !== sFrom.value).map(x => [x, "To " + k + x]));
+  };
+  sCls.onchange = () => upd(0); sFrom.onchange = () => upd(1);
+  upd(0);
+  [sCls, sFrom, sName, sTo].forEach(x => row.appendChild(x)); c.appendChild(row);
+  const go = el("button","gobtn","Move student"); go.type = "button";
+  go.onclick = async () => {
+    if (!sName.value || !sTo.value) return;
+    go.disabled = true;
+    try { const st = await api("moveStudent", [token, Number(sCls.value), sFrom.value, sName.value, sTo.value]); docs = {}; applyState(st); toast(st.msg || "Moved"); }
+    catch(e){ toast(e.message); }
+    finally { go.disabled = false; }
+  };
+  c.appendChild(go);
+  return c;
+}
 function setView(v){
   view = v;
   [["Mark","mark"],["Cls","cls"],["Cen","cen"],["Staff","staff"]].forEach(([n,m]) => { $("view" + n).hidden = v !== m; });
@@ -1196,7 +1226,7 @@ setInterval(() => {
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && me) { retryDirty(); refresh(); } });
 
 /* ---------- auto-update: if a newer page is published, reload into it ---------- */
-const BUILD = "202611051216";
+const BUILD = "202611120543";
 (function(){
   const run = () => fetch(location.pathname + "?v=" + Date.now(), {cache:"no-store"}).then(r => r.text()).then(t => {
     const m = t.match(/const BUILD = "(\d+)"/);

@@ -200,6 +200,13 @@ const API={
     return publicState(ctx,me,ctx.today,"");
   },
 
+  // admin: move a child to another section (keeps all their marks and actions)
+  moveStudent(ctx,token,cls,fromSec,name,toSec){
+    const me=needAdmin(ctx,token);
+    const msg=moveStudentCore_(cls,fromSec,name,toSec,me.name);
+    const st=publicState(ctx,me,ctx.today,"");st.msg=msg;return st;
+  },
+
   approve(ctx,token,name,role){
     const me=needAdmin(ctx,token);const u=ctx.DB.Users.find(x=>x.name===name);if(!u)fail("Request not found.");
     if(u.name===me.name&&role!=="admin")fail("You can't change your own role.");
@@ -228,6 +235,50 @@ function runApi(ctx,fn,args){
 
 
 /* ===== Google Sheet storage + web app entry point ===== */
+// Move one child to another section of the same class. Class lists are kept in name order, so the roll
+// numbers in both sections change; every saved mark, action and SMS record of that class is renumbered to match.
+function moveStudentCore_(cls,fromSec,name,toSec,who){
+  cls=Number(cls);fromSec=String(fromSec||"").toUpperCase();toSec=String(toSec||"").toUpperCase();name=String(name||"").trim();
+  if(!(cls>=1&&cls<=11))fail("Unknown class.");
+  if(!/^[A-Z]$/.test(fromSec)||!/^[A-Z]$/.test(toSec)||fromSec===toSec)fail("Pick two different sections.");
+  const row=findRow_("Roster",String(cls));if(!row)fail("Class "+cls+" list is not loaded.");
+  const R=JSON.parse(row.json);const from=R[fromSec]||[],to=R[toSec];
+  if(!to)fail("Class "+cls+toSec+" does not exist.");
+  const oi=from.findIndex(n=>n.trim().toLowerCase()===name.toLowerCase());if(oi<0)fail(name+" is not in Class "+cls+fromSec+".");
+  const nm=from[oi],nf=from.slice(0,oi).concat(from.slice(oi+1));
+  const nt=to.concat([nm]).sort((a,b)=>a.localeCompare(b,"en",{sensitivity:"base"}));
+  const ni=nt.indexOf(nm);
+  // old roll (1-based) -> new {sec,roll}
+  const map=(sec,r)=>{
+    if(sec===fromSec){if(r===oi+1)return {sec:toSec,roll:ni+1};return {sec,roll:r>oi+1?r-1:r}}
+    if(sec===toSec)return {sec,roll:r>ni?r+1:r};
+    return {sec,roll:r};
+  };
+  let marks=0,acts=0,sms=0;
+  readAll_("Marks").forEach(r=>{
+    if(Number(r.cls)!==cls)return;
+    let m={};try{m=JSON.parse(r.json)}catch(e){return}
+    const out={};let ch=false;
+    Object.keys(m).forEach(k=>{const x=/^([A-Z])-(\d+)$/.exec(k);if(!x){out[k]=m[k];return}
+      const t=map(x[1],Number(x[2])),nk=t.sec+"-"+t.roll;if(nk!==k)ch=true;out[nk]=m[k]});
+    if(ch){upsert_("Marks",Object.assign({},r,{json:JSON.stringify(out),updated:new Date().toISOString()}));marks++}
+  });
+  const ar=readAll_("Actions").filter(r=>Number(r.cls)===cls);
+  const moves=[];
+  ar.forEach(r=>{const x=new RegExp("^(\\d{4}-\\d\\d-\\d\\d)_"+cls+"([A-Z])(\\d+)$").exec(r.id);if(!x)return;
+    const t=map(x[2],Number(x[3])),nid=x[1]+"_"+cls+t.sec+t.roll;if(nid!==r.id)moves.push([r.id,Object.assign({},r,{id:nid,sec:t.sec})])});
+  moves.forEach(mv=>deleteRow_("Actions",mv[0]));moves.forEach(mv=>{upsert_("Actions",mv[1]);acts++});
+  const sm=[];
+  readAll_("Sms").forEach(r=>{const x=new RegExp("^"+cls+"([A-Z])(\\d+)_(\\w+)$").exec(r.id);if(!x)return;
+    const t=map(x[1],Number(x[2])),nid=cls+t.sec+t.roll+"_"+x[3];if(nid===r.id)return;
+    let v={};try{v=JSON.parse(r.json)}catch(e){};v.sec=t.sec;sm.push([r.id,{id:nid,json:JSON.stringify(v),updated:r.updated}])});
+  sm.forEach(mv=>deleteRow_("Sms",mv[0]));sm.forEach(mv=>{upsert_("Sms",mv[1]);sms++});
+  R[fromSec]=nf;R[toSec]=nt;if(!nf.length)delete R[fromSec];
+  upsert_("Roster",{id:String(cls),json:JSON.stringify(R),updated:new Date().toISOString()});
+  const msg=nm+": Class "+cls+fromSec+" → "+cls+toSec+" (roll "+(ni+1)+") · renumbered "+marks+" mark days, "+acts+" actions, "+sms+" SMS";
+  const sh=sheet_("Log");sh.getRange(sh.getLastRow()+1,1,1,5).setValues([[Utilities.formatDate(new Date(),TZ,"yyyy-MM-dd HH:mm"),who||"editor","move student",cls+fromSec+"→"+cls+toSec,msg]]);
+  return msg;
+}
 const COLS={
   Users:["name","role","status","salt","hash","ver","requestedAt","approvedAt","approvedBy"],
   Marks:["id","date","cls","json","updated"],
