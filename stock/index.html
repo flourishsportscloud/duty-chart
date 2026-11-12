@@ -1198,7 +1198,7 @@ img[data-pid]:not([src]) { visibility: hidden; }
       '<div class="field"><span class="lbl">Items in this order</span><div id="item-rows" class="irows">' + itemRow() + '</div>' +
       '<div><button class="btn small" type="button" data-add-row>Add another item</button></div></div>' +
       field('Deadline', '<input id="f-date" type="date" required min="' + todayStr() + '">') +
-      photoField('f-ref', 'Reference photo', true) +
+      photoField('f-ref', 'Reference photo', false) +
       field('Approved by', '<input id="f-appr" type="text" list="dl-staff" placeholder="Optional">') +
       '<p class="hint">The date and time of logging are recorded automatically.</p>' +
       '<div class="row"><button class="btn primary" type="submit">Log request</button><button class="btn" type="button" data-close>Cancel</button></div></form>';
@@ -1315,7 +1315,6 @@ img[data-pid]:not([src]) { visibility: hidden; }
         lines.push({ item: nm, qty: Number(q), unit: un, est: kind === 'purchase' && es !== '' && Number(es) >= 0 ? Number(es) : null });
       });
       var refEl = f.querySelector('#f-ref');
-      if (assets && refEl && !(refEl.files && refEl.files[0])) { toast('Add a reference photo of the item.'); return; }
       if (!staff || !dept || !date || badRow || !lines.length) { toast(badRow ? 'Every item needs a name and a quantity.' : 'Fill in department, person, at least one item and the deadline.'); return; }
       var title = lines.length === 1 ? lines[0].item : lines[0].item + ' and ' + (lines.length - 1) + ' more';
       run(f, async function () {
