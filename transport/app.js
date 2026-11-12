@@ -143,7 +143,10 @@ function subscribeConfig(){
   store.subDoc('config/managers',o=>{S.managers=(o&&o.names)||[];fillStaffSelects();fillSbBy();render()});
 }
 const staffOf=k=>S.alloc[k]||defaultStaff(VBY[k]);
-const isMgr=w=>S.managers.includes(w);
+const ALL_V='All Vehicles';
+const isMgr=w=>w===ALL_V||S.managers.includes(w);
+// who is recorded as marker: the selected staff, or for 'All Vehicles' the vehicle's in-charge (or logged-in user)
+const markBy=(sel,vk)=>{const w=$(sel).value;return w===ALL_V?((window.FIS_ME||'')+(window.FIS_ME?' (All Vehicles)':'')||staffOf(vk)):w};
 const vehOf=w=>isMgr(w)?VEH:VEH.filter(v=>staffOf(v.k)===w);
 const LATE_NAMES=["Chandan Soni Sir (Gate)","Narendra Dara Sir (Gate)"];
 const FO_NAMES=["Megha Ma'am (Front Office)","Harshvardhan Soni Sir (Front Office)","Vaishali Ma'am (Front Office)","Preeti Choudhary Ma'am (Front Office)"];
@@ -154,7 +157,7 @@ const PM_NAMES=["Sanjana Ma'am (PM)","Neetu Ma'am (PM)","Divyanshi Ma'am (PM)","
 function fillSbBy(){const cur=LS.get('sbBy',PL_NAMES[0]);const grp=(l,arr)=>arr.length?'<optgroup label="'+l+'">'+arr.map(s=>'<option'+(s===cur?' selected':'')+'>'+esc(s)+'</option>').join('')+'</optgroup>':'';
   $('sbBy').innerHTML=grp('PL – Classes 6 to 11',PL_NAMES)+grp('PM – Classes 1 to 5',PM_NAMES)+grp('Front Office',FO_NAMES)+grp('Managers',S.managers.map(m=>m+' (Manager)'));}
 function fillStaffSelects(){
-  const opts=(cur)=>'<optgroup label="Vehicle duty staff">'+STAFF.map(s=>'<option'+(s===cur?' selected':'')+'>'+esc(s)+'</option>').join('')+'</optgroup>'+
+  const opts=(cur)=>'<option'+(cur===ALL_V?' selected':'')+'>'+ALL_V+'</option><optgroup label="Vehicle duty staff">'+STAFF.map(s=>'<option'+(s===cur?' selected':'')+'>'+esc(s)+'</option>').join('')+'</optgroup>'+
     (S.managers.length?'<optgroup label="Managers – all vehicles">'+S.managers.map(s=>'<option'+(s===cur?' selected':'')+'>'+esc(s)+'</option>').join('')+'</optgroup>':'');
   $('dutyStaff').innerHTML=opts(LS.get('staff',STAFF[0]));
   $('depStaff').innerHTML=opts(LS.get('depStaff',LS.get('staff',STAFF[0])));
@@ -228,7 +231,7 @@ function render(){
 function renderDuty(){
   const who=$('dutyStaff').value;
   const mine=vehOf(who);
-  $('dutyHint').textContent=isMgr(who)?'Manager – all '+mine.length+' vehicles':mine.length?mine.map(v=>v.l).join(', '):'No vehicles allocated';
+  $('dutyHint').textContent=isMgr(who)?(who===ALL_V?'All ':'Manager – all ')+mine.length+' vehicles':mine.length?mine.map(v=>v.l).join(', '):'No vehicles allocated';
   if(S.openVeh&&!isMgr(who)&&staffOf(S.openVeh)!==who)S.openVeh=null;
   if(S.openVeh){$('dutyList').classList.add('hide');$('dutyVeh').classList.remove('hide');renderDutyVeh();return}
   $('dutyList').classList.remove('hide');$('dutyVeh').classList.add('hide');
@@ -718,8 +721,8 @@ document.addEventListener('click',async e=>{
   if(t.id==='mgrAdd'){const n=$('mgrName').value.trim();if(!n)return;if(S.managers.includes(n)||STAFF.includes(n)){toast('Already in the list');return}
     await store.set('config/managers',{names:S.managers.concat([n]),ts:Date.now()});$('mgrName').value='';toast(n+' added as manager');return}
   if(t.dataset.mgrdel!==undefined){const i=+t.dataset.mgrdel;const n=S.managers[i];const names=S.managers.filter((_,j)=>j!==i);await store.set('config/managers',{names,ts:Date.now()});toast(n+' removed');return}
-  if(t.dataset.chk){const [key,val]=t.dataset.chk.split(':');const cur=S.derr[S.depVeh]||{};const checks=Object.assign({},cur.checks||{});checks[key]=checks[key]===val?null:val;checks[key+'By']=$('depStaff').value;await saveDerr(S.depVeh,{checks});return}
-  if(t.id==='derrAdd'){const cur=S.derr[S.depVeh]||{};const it={type:$('derrType').value,kid:$('derrKid').value,rem:$('derrRem').value.trim(),by:$('depStaff').value,time:nowT(),ts:Date.now()};
+  if(t.dataset.chk){const [key,val]=t.dataset.chk.split(':');const cur=S.derr[S.depVeh]||{};const checks=Object.assign({},cur.checks||{});checks[key]=checks[key]===val?null:val;checks[key+'By']=markBy('depStaff',S.depVeh);await saveDerr(S.depVeh,{checks});return}
+  if(t.id==='derrAdd'){const cur=S.derr[S.depVeh]||{};const it={type:$('derrType').value,kid:$('derrKid').value,rem:$('derrRem').value.trim(),by:markBy('depStaff',S.depVeh),time:nowT(),ts:Date.now()};
     await saveDerr(S.depVeh,{items:(cur.items||[]).concat([it])});toast('Error added');return}
   if(t.dataset.derrdel!==undefined){const cur=S.derr[S.depVeh]||{};const items=(cur.items||[]).filter((_,i)=>i!==+t.dataset.derrdel);await saveDerr(S.depVeh,{items});return}
   if(t.id==='wkRefresh'){S.weekTick=(S.weekTick||0)+1;WK.key='';renderDash();return}
@@ -739,7 +742,7 @@ document.addEventListener('click',async e=>{
   if(t.id==='depAll'){depRows(VBY[S.depVeh]).forEach(r=>{if(r.i.go)depDraft[r.k[0]]=true});renderDep();return}
   if(t.id==='depClr'){depDraft={};renderDep();return}
   if(t.id==='depSave'){const v=VBY[S.depVeh];const go=v.kids.filter(k=>depInfo(v.k+'-'+k[0]).go).length;
-    await store.set('att/'+S.date+'/out/'+v.k,{marks:sortObj(depDraft),going:go,by:$('depStaff').value,time:nowT(),submitted:true,ts:Date.now()});toast(v.l+' departure saved');S.depVeh=null;depDraft=null;render();return}
+    await store.set('att/'+S.date+'/out/'+v.k,{marks:sortObj(depDraft),going:go,by:markBy('depStaff',v.k),time:nowT(),submitted:true,ts:Date.now()});toast(v.l+' departure saved');S.depVeh=null;depDraft=null;render();return}
   if(t.dataset.open){S.openVeh=t.dataset.open;draft=null;mDraft=null;render();window.scrollTo(0,0);return}
   if(t.id==='backV'){S.openVeh=null;draft=null;mDraft=null;render();return}
   if(t.dataset.leftdel){const nl=Object.assign({},LEFT);delete nl[t.dataset.leftdel];await store.set('config/settings',Object.assign({},S.settings||{},{lateAfter:S.lateAfter,left:nl,ts:Date.now()}));return}
@@ -751,7 +754,7 @@ document.addEventListener('click',async e=>{
   if(t.id==='clrV'){draft={};if(mDraft)mDraft.depBy={};renderDutyVeh();return}
   if(t.id==='saveV'){const v=VBY[S.openVeh];const un=v.kids.filter(k=>!draft[k[0]]).length;
     if(un&&!t.dataset.confirm){t.dataset.confirm=1;t.textContent=un+' not marked – tap again to save';return}
-    await store.set('att/'+S.date+'/veh/'+v.k,{marks:sortObj(draft),by:$('dutyStaff').value,time:nowT(),arr:$('arrT').value||'',driverU:(mDraft||{}).driverU||null,condU:(mDraft||{}).condU||null,depBy:(mDraft||{}).depBy||{},extra:(mDraft||{}).extra||{},submitted:true,ts:Date.now()});
+    await store.set('att/'+S.date+'/veh/'+v.k,{marks:sortObj(draft),by:markBy('dutyStaff',v.k),time:nowT(),arr:$('arrT').value||'',driverU:(mDraft||{}).driverU||null,condU:(mDraft||{}).condU||null,depBy:(mDraft||{}).depBy||{},extra:(mDraft||{}).extra||{},submitted:true,ts:Date.now()});
     toast(v.l+' saved');S.openVeh=null;draft=null;mDraft=null;render();return}
   if(t.dataset.pick){gatePick=t.dataset.pick;gDraft=null;foBy=t.dataset.foby==='sb'?$('sbBy').value:t.dataset.foby==='late'?$('lateBy').value:null;
     if(t.dataset.foby==='late'){const g=S.gate[gatePick]||{};gDraft={in:g.in&&g.in.type?g.in.type:(nowHM()>S.lateAfter?'LATE':'PRES'),out:g.out&&g.out.type||null}}
