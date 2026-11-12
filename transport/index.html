@@ -66,7 +66,7 @@ select{min-width:200px}
 .tg.SB{background:var(--sb);color:#fff}.tg.SBD{background:var(--late);color:#fff}.kid.drf{background:#fff8e6}.tg.noSB{background:var(--unbg);color:var(--un)}
 .tag{font-size:11px;font-weight:700;padding:2px 7px;border-radius:6px;white-space:nowrap}
 .t-P{background:var(--pbg);color:var(--p)}.t-A{background:var(--abg);color:var(--a)}.t-U{background:var(--unbg);color:var(--un)}.t-PRES{background:var(--pbg);color:var(--p)}
-.t-LATE{background:var(--latebg);color:var(--late)}.t-WALKIN{background:var(--walkbg);color:var(--walk)}
+.t-LATE{background:var(--latebg);color:var(--late)}.t-PD{background:var(--walkbg);color:var(--walk)}.tg.PD{background:var(--walk);color:#fff}.tg.XS{padding:6px 9px;font-size:12px}.t-WALKIN{background:var(--walkbg);color:var(--walk)}
 .t-EARLY{background:var(--earlybg);color:var(--early)}.t-GOWALK{background:var(--walkbg);color:var(--walk)}
 .t-SB{background:var(--sbbg);color:var(--sb)}.t-ABS{background:var(--abg);color:var(--a)}.t-U{background:var(--unbg);color:var(--un)}.t-W,.t-HOME{background:var(--walkbg);color:var(--walk)}.t-VEH{background:var(--brand2);color:var(--brand)}
 .counts{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
@@ -203,6 +203,12 @@ textarea{width:100%;font:13px/1.4 ui-monospace,monospace;border:1px solid var(--
       <div class="row" style="margin-bottom:6px"><label class="f" style="margin:0">Late Arrival after</label><input type="time" id="lateAfter"><span class="muted">Front Office IN time after this is marked Late Arrival automatically.</span></div>
     </div>
     <div class="card">
+      <h2>Students who have left (TC)</h2>
+      <p class="muted" style="margin-top:0">Removed students no longer appear in any list. Restore with ↺ if removed by mistake.</p>
+      <div id="leftList"></div>
+      <div class="row" style="margin-top:8px"><select id="leftAdd" style="flex:1"></select></div>
+    </div>
+    <div class="card">
       <h2>Managers – Full Access</h2>
       <p class="muted">Managers appear in every "Who is marking" list. They see all vehicles in Vehicle Duty and Departure, can mark as Front Office in the School Chart, and can mark Stayback for any class.</p>
       <div id="mgrList" class="row" style="margin:8px 0"></div>
@@ -245,7 +251,7 @@ textarea{width:100%;font:13px/1.4 ui-monospace,monospace;border:1px solid var(--
   };
   window.FIS_LOGOUT=function(){['token','me','roster','gcache','grev','goutbox'].forEach(k=>localStorage.removeItem(K(k)));location.reload()};
   const $=id=>document.getElementById(id);
-  function startApp(r){window.FIS_R=r;window.FIS_ME=get('me')||'';const s=document.createElement('script');s.src='app.js?v=202611110727';s.onload=()=>$('fisBoot').remove();document.body.appendChild(s)}
+  function startApp(r){window.FIS_R=r;window.FIS_ME=get('me')||'';const s=document.createElement('script');s.src='app.js?v=202611120357';s.onload=()=>$('fisBoot').remove();document.body.appendChild(s)}
   function showLogin(msg){$('fisBoot').classList.add('hide');$('fisLogin').classList.remove('hide');$('fisLE').textContent=msg||'';if(!API_URL)$('fisLE').textContent='This app is being set up. Please try again later.'}
   $('fisLoginF').addEventListener('submit',async e=>{e.preventDefault();const n=$('fisLN').value.trim(),p=$('fisLP').value;
     if(n.length<3||!p){$('fisLE').textContent='Type your full name and the password.';return}
