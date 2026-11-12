@@ -408,6 +408,7 @@ function renderDash(){
   const dv=$('dashV').value;$('copyRep').classList.toggle('hide',!!dv);$('dashExtra').classList.toggle('hide',!dv);$('dashT').parentElement.classList.remove('hide');$('dashNote').classList.remove('hide');$('dashF').classList.remove('hide');$('dashS').classList.remove('hide');
   if(dv==='rec'){renderDashRecords();return}
   if(dv==='latem'){renderLateMonthly();return}
+  if(dv==='vehw'){renderVehWise(list);return}
   if(dv==='arr'){renderDashArr(list);return}
   if(dv==='dep'){renderDashDep(list);return}
   if(dv==='week'){renderDashWeek(list);return}
@@ -493,6 +494,34 @@ function renderDashWeek(list){
     (obs.length?'<div class="tw" style="max-height:none"><table><tr><th>Date</th><th>Vehicle</th><th>Observation</th><th>Child</th><th>Remark</th></tr>'+obs.map(o=>'<tr><td>'+fmtD(o[0])+'</td><td><b>'+esc(o[1].l)+'</b></td><td><span class="tag t-A">'+esc(o[2])+'</span></td><td class="l">'+esc(o[3])+'</td><td class="l">'+esc(o[4])+'</td></tr>').join('')+'</table></div>':'<p class="muted">No observations this week.</p>')+
     '<button class="btn ghost sm" id="wkRefresh" style="margin-top:10px">Refresh Week</button>';
 }
+
+/* VEHICLE-WISE REPORT */
+function vehWiseData(v){const vd=S.veh[v.k]||{},od=S.out[v.k]||{};const g={ABS:[],PEND:[],LATE:[],EARLY:[],SB:[],SBD:[],PARENT:[],PD:[],TODAY:[]};let present=0,going=0,boarded=0;
+  v.kids.forEach(k=>{const id=v.k+'-'+k[0];if(!KID[id])return;const st=kidStatus(id);const gt=st.g||{};const nm={n:k[0],name:k[1],cls:k[2]};
+    if(!st.present){(st.IN==='U'?g.PEND:g.ABS).push(nm);return}
+    present++;if(st.IN==='LATE')g.LATE.push(Object.assign({t:gt.in&&gt.in.time},nm));if(st.IN==='PD')g.PD.push(nm);
+    if(st.OUT==='VEH'){going++;if((od.marks||{})[k[0]])boarded++}
+    else if(st.OUT==='EARLY')g.EARLY.push(Object.assign({t:gt.out&&gt.out.time},nm));
+    else if(st.OUT==='SB')(sbDoubt(id)?g.SBD:g.SB).push(nm);
+    else if(st.OUT==='GOWALK')g.PARENT.push(nm)});
+  Object.entries(vd.extra||{}).forEach(([x,e])=>{const m=(vd.marks||{})[x];g.TODAY.push({n:'+',name:e.name,cls:e.cls||'',t:m==='P'?'Present':m==='A'?'Absent':''});if(m==='P'){going++;if((od.marks||{})[x])boarded++}});
+  return {vd,od,g,present,going,boarded,roll:v.kids.filter(k=>KID[v.k+'-'+k[0]]).length}}
+const VW_SEG=[['ABS','Absent','A'],['PEND','Not marked','U'],['LATE','Late Arrival','LATE'],['PD','Dropped by Parent','PD'],['EARLY','Leaving Early','EARLY'],['SB','Stayback','SB'],['SBD','Stayback doubt','LATE'],['PARENT','Parent Pick-up','GOWALK'],['TODAY','Today only','VEH']];
+function renderVehWise(list){
+  $('dashT').parentElement.classList.add('hide');$('dashNote').classList.add('hide');
+  let T={roll:0,present:0,abs:0,going:0,boarded:0};
+  const cards=list.map(v=>{const d=vehWiseData(v);T.roll+=d.roll;T.present+=d.present;T.abs+=d.g.ABS.length;T.going+=d.going;T.boarded+=d.boarded;
+    const nm=a=>a.map(x=>esc(x.name)+' <span class="muted">('+esc(shortCls(x.cls))+(x.t?' · '+esc(x.t):'')+')</span>').join(', ');
+    return '<div class="card" style="margin-bottom:10px;padding:12px"><div class="row" style="justify-content:space-between;align-items:flex-start"><div><b style="font-size:16px;color:var(--brand)">'+esc(v.l)+'</b> <span class="muted">· '+esc(staffOf(v.k))+'</span></div><span class="muted">'+(d.vd.arr?'Arrived '+esc(hm12(d.vd.arr)):'Arrival –')+'</span></div>'+
+      '<div class="row" style="gap:6px;margin:6px 0"><span class="tag t-PRES">Present '+d.present+'/'+d.roll+'</span><span class="tag t-A">Absent '+d.g.ABS.length+'</span><span class="tag t-VEH">Going home '+d.going+'</span><span class="tag '+(d.od.submitted?'t-PRES':'t-U')+'">Boarded '+(d.od.submitted?d.boarded+'/'+d.going:'not submitted')+'</span>'+(d.vd.submitted?'':'<span class="tag t-U">Morning not submitted</span>')+'</div>'+
+      VW_SEG.filter(s=>d.g[s[0]].length).map(s=>'<div style="margin:4px 0;font-size:14px"><span class="tag t-'+s[2]+'">'+s[1]+' '+d.g[s[0]].length+'</span> '+nm(d.g[s[0]])+'</div>').join('')+'</div>'}).join('');
+  $('kpis').innerHTML=[['Students',T.roll,'var(--brand)'],['Present',T.present,'var(--p)'],['Absent',T.abs,'var(--a)'],['Going home in vehicles',T.going,'var(--brand)'],['Boarded',T.boarded,'var(--p)']].map(k=>'<div class="kpi"><span>'+k[0]+'</span><b style="color:'+k[2]+'">'+k[1]+'</b></div>').join('');
+  $('dashExtra').innerHTML='<div class="row" style="margin-bottom:10px"><b>Vehicle-wise Report – '+esc(fmtD(S.date))+'</b><button class="btn ghost sm" id="vwCopy">Copy List (WhatsApp)</button><span class="muted">Use the vehicle-type and staff filters above.</span></div>'+(cards||'<p class="muted">No vehicles.</p>');
+}
+function vehWiseText(){const f=$('dashF').value,sf=$('dashS').value;const list=VEH.filter(v=>(!f||v.t===f)&&(!sf||staffOf(v.k)===sf));
+  return '*Vehicle-wise Report – '+fmtD(S.date)+'*\n'+list.map(v=>{const d=vehWiseData(v);
+    return '\n*'+v.l+'* ('+staffOf(v.k)+')'+(d.vd.arr?' · arrived '+hm12(d.vd.arr):'')+'\nPresent '+d.present+'/'+d.roll+' · Absent '+d.g.ABS.length+' · Going home '+d.going+(d.od.submitted?' · Boarded '+d.boarded:'')+
+      VW_SEG.filter(s=>d.g[s[0]].length).map(s=>'\n'+s[1]+': '+d.g[s[0]].map(x=>x.name+' '+shortCls(x.cls)+(x.t?' ('+x.t+')':'')).join(', ')).join('')}).join('\n')}
 
 /* LATE DEFAULTERS – MONTHLY */
 const ORD={'P.G.':'PG','Nursery':'Nur','L.KG.':'LKG','U.KG.':'UKG',First:'1',Second:'2',Third:'3',Fourth:'4',Fifth:'5',Sixth:'6',Seventh:'7',Eighth:'8',Ninth:'9',Tenth:'10',Eleventh:'11',Twelfth:'12'};
@@ -729,6 +758,7 @@ document.addEventListener('click',async e=>{
   if(t.dataset.recper){S.recPer=t.dataset.recper;renderDash();return}
   if(t.dataset.recseg){S.recSeg=t.dataset.recseg;renderDash();return}
   if(t.id==='recRefresh'){S.recTick=(S.recTick||0)+1;RG.key='';renderDash();return}
+  if(t.id==='vwCopy'){const txt=vehWiseText();try{await navigator.clipboard.writeText(txt);toast('Copied')}catch(err){showText(txt)}return}
   if(t.id==='lateCopy'){const txt=lateMonthlyText();try{await navigator.clipboard.writeText(txt);toast('Copied')}catch(err){showText(txt)}return}
   if(t.id==='recCopy'){const txt=recText();try{await navigator.clipboard.writeText(txt);toast('Copied')}catch(err){showText(txt)}return}
   if(t.dataset.mchk){const [k,v]=t.dataset.mchk.split(':');mDraft[k]=mDraft[k]===v?null:v;renderDutyVeh();return}
