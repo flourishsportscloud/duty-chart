@@ -535,10 +535,10 @@ function renderVehWise(list){
       '<div class="row" style="gap:6px;margin:6px 0"><span class="tag t-PRES">Present '+d.present+'/'+d.roll+'</span><span class="tag t-A">Absent '+d.g.ABS.length+'</span><span class="tag t-VEH">Going home '+d.going+'</span><span class="tag '+(d.od.submitted?'t-PRES':'t-U')+'">Boarded '+(d.od.submitted?d.boarded+'/'+d.going:'not submitted')+'</span>'+(d.vd.submitted?'':'<span class="tag t-U">Morning not submitted</span>')+'</div>'+
       VW_SEG.filter(s=>d.g[s[0]].length).map(s=>'<div style="margin:4px 0;font-size:14px"><span class="tag t-'+s[2]+'">'+s[1]+' '+d.g[s[0]].length+'</span> '+nm(d.g[s[0]])+'</div>').join('')+'</div>'}).join('');
   $('kpis').innerHTML=[['Students',T.roll,'var(--brand)'],['Present',T.present,'var(--p)'],['Absent',T.abs,'var(--a)'],['Going home in vehicles',T.going,'var(--brand)'],['Boarded',T.boarded,'var(--p)']].map(k=>'<div class="kpi"><span>'+k[0]+'</span><b style="color:'+k[2]+'">'+k[1]+'</b></div>').join('');
-  $('dashExtra').innerHTML='<div class="row" style="margin-bottom:10px"><b>Vehicle-wise Report – '+esc(fmtD(S.date))+'</b><button class="btn ghost sm" id="vwCopy">Copy List (WhatsApp)</button><span class="muted">Use the vehicle-type and staff filters above.</span></div>'+(cards||'<p class="muted">No vehicles.</p>');
+  $('dashExtra').innerHTML='<div class="row" style="margin-bottom:10px"><b>Departure Audit – '+esc(fmtD(S.date))+'</b><button class="btn ghost sm" id="vwCopy">Copy List (WhatsApp)</button><span class="muted">Use the vehicle-type and staff filters above.</span></div>'+(cards||'<p class="muted">No vehicles.</p>');
 }
 function vehWiseText(){const f=$('dashF').value,sf=$('dashS').value;const list=VEH.filter(v=>(!f||v.t===f)&&(!sf||staffOf(v.k)===sf));
-  return '*Vehicle-wise Report – '+fmtD(S.date)+'*\n'+list.map(v=>{const d=vehWiseData(v);
+  return '*Departure Audit – '+fmtD(S.date)+'*\n'+list.map(v=>{const d=vehWiseData(v);
     return '\n*'+v.l+'* ('+staffOf(v.k)+')'+(d.vd.arr?' · arrived '+hm12(d.vd.arr):'')+'\nPresent '+d.present+'/'+d.roll+' · Absent '+d.g.ABS.length+' · Going home '+d.going+(d.od.submitted?' · Boarded '+d.boarded:'')+
       VW_SEG.filter(s=>d.g[s[0]].length).map(s=>'\n'+s[1]+': '+d.g[s[0]].map(x=>x.name+' '+shortCls(x.cls)+(x.t?' ('+x.t+')':'')).join(', ')).join('')}).join('\n')}
 

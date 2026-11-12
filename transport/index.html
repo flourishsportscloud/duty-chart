@@ -171,7 +171,7 @@ textarea{width:100%;font:13px/1.4 ui-monospace,monospace;border:1px solid var(--
     <div class="kpis" id="kpis"></div>
     <div class="card">
       <div class="row" style="justify-content:space-between;margin-bottom:10px">
-        <div class="row"><select id="dashV" style="min-width:170px"><option value="">Morning Attendance</option><option value="dep">Departure</option><option value="derr">Departure Errors – copy for WhatsApp</option><option value="vehw">Vehicle-wise Report – names</option><option value="week">Weekly – datewise P/A</option><option value="arr">Arrival Time &amp; Uniform – charts</option><option value="rec">Student Records – Late / Early / SB / Missed SB / Missed bus</option><option value="latem">Late Defaulters – Monthly</option></select><select id="dashF" style="min-width:150px"><option value="">All vehicles</option><option>Bus</option><option>Van</option><option>Pre-Primary</option><option>Auto</option></select>
+        <div class="row"><select id="dashV" style="min-width:170px"><option value="">Morning Attendance</option><option value="dep">Departure</option><option value="derr">Departure Errors – copy for WhatsApp</option><option value="vehw">Departure Audit</option><option value="week">Weekly – datewise P/A</option><option value="arr">Arrival Time &amp; Uniform – charts</option><option value="rec">Student Records – Late / Early / SB / Missed SB / Missed bus</option><option value="latem">Late Defaulters – Monthly</option></select><select id="dashF" style="min-width:150px"><option value="">All vehicles</option><option>Bus</option><option>Van</option><option>Pre-Primary</option><option>Auto</option></select>
         <select id="dashS" style="min-width:150px"><option value="">All staff</option></select></div>
         <button class="btn ghost sm" id="copyRep">Copy Report (WhatsApp)</button>
       </div>
@@ -262,7 +262,7 @@ textarea{width:100%;font:13px/1.4 ui-monospace,monospace;border:1px solid var(--
   };
   window.FIS_LOGOUT=function(){['token','me','roster','gcache','grev','goutbox'].forEach(k=>localStorage.removeItem(K(k)));location.reload()};
   const $=id=>document.getElementById(id);
-  function startApp(r){window.FIS_R=r;window.FIS_ME=get('me')||'';const s=document.createElement('script');s.src='app.js?v=202611121640';s.onload=()=>$('fisBoot').remove();document.body.appendChild(s)}
+  function startApp(r){window.FIS_R=r;window.FIS_ME=get('me')||'';const s=document.createElement('script');s.src='app.js?v=202611121700';s.onload=()=>$('fisBoot').remove();document.body.appendChild(s)}
   function showLogin(msg){$('fisBoot').classList.add('hide');$('fisLogin').classList.remove('hide');$('fisLE').textContent=msg||'';if(!API_URL)$('fisLE').textContent='This app is being set up. Please try again later.'}
   $('fisLoginF').addEventListener('submit',async e=>{e.preventDefault();const n=$('fisLN').value.trim(),p=$('fisLP').value;
     if(n.length<3||!p){$('fisLE').textContent='Type your full name and the password.';return}
