@@ -136,7 +136,7 @@ function subscribeConfig(){
   store.subDoc('config/alloc',o=>{S.alloc=(o&&o.map)||{};render()});
   store.subDoc('config/sbRegular',o=>{S.sbReg=(o&&o.kids)||{};render()});
   store.subDoc('config/walkRegular',o=>{S.walkReg=(o&&o.kids)||{};render()});
-  store.subDoc('config/settings',o=>{S.settings=o||{};S.lateAfter=(o&&o.lateAfter)||'07:45';
+  store.subDoc('config/settings',o=>{S.settings=o||{};S.lateAfter=(o&&o.lateAfter)||'08:00';
     const nl=(o&&o.left)?o.left:LEFT_DEFAULT;const back=Object.keys(LEFT).some(id=>!nl[id]);LEFT=Object.assign({},nl);applyLeft(LEFT);
     if(back)toast('A student was restored – close and reopen the app to see them');render()});
   store.subDoc('config/privateVan',o=>{S.privVan=(o&&o.kids)||{};render()});
@@ -145,6 +145,7 @@ function subscribeConfig(){
 const staffOf=k=>S.alloc[k]||defaultStaff(VBY[k]);
 const isMgr=w=>S.managers.includes(w);
 const vehOf=w=>isMgr(w)?VEH:VEH.filter(v=>staffOf(v.k)===w);
+const LATE_NAMES=["Chandan Soni Sir (Gate)","Narendra Dara Sir (Gate)"];
 const FO_NAMES=["Megha Ma'am (Front Office)","Harshvardhan Soni Sir (Front Office)","Vaishali Ma'am (Front Office)","Preeti Choudhary Ma'am (Front Office)"];
 function modeOf(k){if(k.walk)return S.privVan[k.id]?'Private Van':'By Walk';const t=VBY[k.v].t;return t==='Auto'?'Auto':t==='Bus'?'Bus':t==='Van'?'School Van':(k.v==='VI'?'School Van':'Bus')}
 function modeLabel(k){return k.walk?modeOf(k):VBY[k.v].l}
@@ -208,12 +209,13 @@ function vehStats(v){
 
 /* ---------- views ---------- */
 function setView(v){S.view=v;LS.set('view',v);document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
-  ['duty','sb','dep','dash','school','alloc'].forEach(x=>$('v-'+x).classList.toggle('hide',x!==v));
+  ['duty','late','sb','dep','dash','school','alloc'].forEach(x=>$('v-'+x).classList.toggle('hide',x!==v));
 render()}
 
 function render(){
   if(S.view==='duty')renderDuty();
   if(S.view==='sb')renderSB();
+  if(S.view==='late')renderLate();
   if(S.view==='dash')renderDash();
   if(S.view==='school')renderSchool();
   if(S.view==='dep')renderDep();
@@ -402,6 +404,7 @@ function renderDash(){
   const list=VEH.filter(v=>(!f||v.t===f)&&(!sf||staffOf(v.k)===sf));
   const dv=$('dashV').value;$('copyRep').classList.toggle('hide',!!dv);$('dashExtra').classList.toggle('hide',!dv);$('dashT').parentElement.classList.remove('hide');$('dashNote').classList.remove('hide');$('dashF').classList.remove('hide');$('dashS').classList.remove('hide');
   if(dv==='rec'){renderDashRecords();return}
+  if(dv==='latem'){renderLateMonthly();return}
   if(dv==='arr'){renderDashArr(list);return}
   if(dv==='dep'){renderDashDep(list);return}
   if(dv==='week'){renderDashWeek(list);return}
@@ -487,6 +490,25 @@ function renderDashWeek(list){
     (obs.length?'<div class="tw" style="max-height:none"><table><tr><th>Date</th><th>Vehicle</th><th>Observation</th><th>Child</th><th>Remark</th></tr>'+obs.map(o=>'<tr><td>'+fmtD(o[0])+'</td><td><b>'+esc(o[1].l)+'</b></td><td><span class="tag t-A">'+esc(o[2])+'</span></td><td class="l">'+esc(o[3])+'</td><td class="l">'+esc(o[4])+'</td></tr>').join('')+'</table></div>':'<p class="muted">No observations this week.</p>')+
     '<button class="btn ghost sm" id="wkRefresh" style="margin-top:10px">Refresh Week</button>';
 }
+
+/* LATE DEFAULTERS – MONTHLY */
+const ORD={'P.G.':'PG','Nursery':'Nur','L.KG.':'LKG','U.KG.':'UKG',First:'1',Second:'2',Third:'3',Fourth:'4',Fifth:'5',Sixth:'6',Seventh:'7',Eighth:'8',Ninth:'9',Tenth:'10',Eleventh:'11',Twelfth:'12'};
+function shortCls(c){const [g,s]=String(c||'').split(' - ');return (ORD[g]||g)+(s||'')}
+function vehShort(k){const v=VBY[k.v];return v.t==='Walk'?(S.privVan[k.id]?'Private Van':'By Walk'):v.l.replace(' ','-')}
+function lateMonthlyRows(){const dates=periodDates('month');const by={};collectEvents(dates).filter(e=>e.seg==='LATE').forEach(e=>{(by[e.id]=by[e.id]||[]).push(e)});
+  const min=S.lateMin||1;return Object.entries(by).filter(([id,a])=>a.length>=min&&KID[id]).map(([id,a])=>({k:KID[id],a:a.sort((x,y)=>x.date.localeCompare(y.date))})).sort((x,y)=>y.a.length-x.a.length||CLASSES.indexOf(x.k.cls)-CLASSES.indexOf(y.k.cls)||x.k.name.localeCompare(y.k.name))}
+function renderLateMonthly(){
+  $('dashT').parentElement.classList.add('hide');$('dashNote').classList.add('hide');$('dashF').classList.add('hide');$('dashS').classList.add('hide');$('kpis').innerHTML='';
+  const dates=periodDates('month');const mon=new Date(S.date+'T00:00').toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+  const ctl='<div class="row" style="margin-bottom:10px"><b>'+esc(mon)+'</b><select id="lateMin">'+[1,2,3,4,5].map(n=>'<option value="'+n+'"'+((S.lateMin||1)===n?' selected':'')+'>'+(n===1?'All late comers':n+'+ times late')+'</option>').join('')+'</select><button class="btn ghost sm" id="lateCopy">Copy List (WhatsApp)</button><span class="muted">Late = Late Arrival marked by Gate / Front Office (after '+hm12(S.lateAfter)+'). Date in the top bar sets the month.</span></div>';
+  loadRange(dates);if(RG.loading||!dates.every(d=>RG.data[d])){$('dashExtra').innerHTML=ctl+'<p class="muted">Loading '+dates.length+' days…</p>';return}
+  const rows=lateMonthlyRows();const tot=rows.reduce((s,r)=>s+r.a.length,0);
+  $('kpis').innerHTML=[['Late defaulters',rows.length,'var(--late)'],['Late arrivals (month)',tot,'var(--late)'],['3+ times late',rows.filter(r=>r.a.length>=3).length,'var(--a)']].map(k=>'<div class="kpi"><span>'+k[0]+'</span><b style="color:'+k[2]+'">'+k[1]+'</b></div>').join('');
+  $('dashExtra').innerHTML=ctl+(rows.length?'<div class="tw"><table class="grid"><tr><th>#</th><th class="l">Student</th><th>Class</th><th>Vehicle / Mode</th><th>Times late</th><th class="l">Dates (time)</th></tr>'+
+    rows.map((r,i)=>'<tr><td>'+(i+1)+'</td><td class="l"><b>'+esc(r.k.name)+'</b></td><td>'+esc(shortCls(r.k.cls))+'</td><td>'+esc(vehShort(r.k))+'</td><td><b style="color:'+(r.a.length>=3?'var(--a)':'var(--late)')+'">'+r.a.length+'</b></td><td class="l">'+r.a.map(e=>esc(fmtD(e.date))+(e.time?' '+esc(e.time):'')).join(', ')+'</td></tr>').join('')+'</table></div>':'<p class="muted">No late arrivals recorded this month'+((S.lateMin||1)>1?' at this count':'')+'.</p>');
+}
+function lateMonthlyText(){const mon=new Date(S.date+'T00:00').toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+  return '*Late Defaulters – '+mon+'*\n'+lateMonthlyRows().map((r,i)=>(i+1)+'. '+r.k.name+' '+shortCls(r.k.cls)+' - '+vehShort(r.k)+' - '+r.a.length+' time'+(r.a.length>1?'s':'')+' late').join('\n')}
 
 /* STUDENT RECORDS (Dashboard) */
 const REC_SEGS=[['LATE','Late Comers'],['EARLY','Early Leavers'],['SB','Stayback'],['MISSSB','Missed Stayback / Academy'],['MISS','Missed Bus'],['PARENT','Going with Parent']];
@@ -650,6 +672,16 @@ function schMatch(r,f){if(!f)return true;const s=r.st;
   return f==='ABS'?!s.present&&s.IN!=='U':f==='U'?s.IN==='U':f==='LATE'?(s.IN==='LATE'||s.IN==='WALKIN'):f==='EARLY'?s.OUT==='EARLY':f==='SB'?s.OUT==='SB':f==='GOWALK'?s.OUT==='GOWALK':f==='VEH'?s.OUT==='VEH':f==='FO'?s.fo:f==='SPW'?!!S.walkReg[r.k.id]:true}
 function schoolRows(){const c=$('schCls').value,m=$('schMode').value,f=$('schSt').value,q=$('schQ').value.trim().toLowerCase();
   return Object.keys(KID).filter(id=>{const k=KID[id];return (!c||k.cls===c||k.cls.split(' - ')[0]===c)&&(!m||modeOf(k)===m)&&(!q||k.name.toLowerCase().includes(q))}).map(schRow).filter(r=>schMatch(r,f))}
+function renderLate(){
+  const cur=LS.get('lateBy',LATE_NAMES[0]);const grp=(l,a)=>a.length?'<optgroup label="'+l+'">'+a.map(s=>'<option'+(s===cur?' selected':'')+'>'+esc(s)+'</option>').join('')+'</optgroup>':'';
+  if(document.activeElement!==$('lateBy'))$('lateBy').innerHTML=grp('Late Comers – Gate',LATE_NAMES)+grp('Front Office',FO_NAMES)+grp('Managers',S.managers.map(m=>m+' (Manager)'));
+  $('lateCut').textContent=hm12(S.lateAfter);
+  const q=($('lateQ').value||'').trim().toLowerCase();
+  $('lateRes').innerHTML=q.length<2?'':(()=>{const r=Object.values(KID).filter(k=>k.name.toLowerCase().includes(q)).sort((a,b)=>a.name.localeCompare(b.name)).slice(0,25);
+    return r.length?r.map(k=>{const st=kidStatus(k.id);return '<div class="kid" data-pick="'+k.id+'" data-foby="late" style="cursor:pointer"><div class="nm"><div>'+esc(k.name)+'</div><span>'+esc(k.cls)+' · '+esc(modeLabel(k))+'</span></div><span class="tag t-'+st.IN+'">'+esc(LBL[st.IN]||st.IN)+'</span></div>'}).join(''):'<p class="muted">No student found.</p>'})();
+  const late=Object.values(KID).filter(k=>{const g=S.gate[k.id];return g&&g.in&&g.in.type==='LATE'}).map(k=>({k,g:S.gate[k.id]})).sort((a,b)=>(hmMin(to24(b.g.in.time))||0)-(hmMin(to24(a.g.in.time))||0));
+  $('lateToday').innerHTML='<div class="secthead"><i></i><span>Late Comers – '+fmtD(S.date)+'</span><small>'+late.length+'</small></div>'+(late.length?late.map(({k,g})=>'<div class="kid" data-pick="'+k.id+'" data-foby="late" style="cursor:pointer"><div class="nm"><div>'+esc(k.name)+'</div><span>'+esc(k.cls)+' · '+esc(modeLabel(k))+(g.rem?' · '+esc(g.rem):'')+' · '+esc((g.by||'').replace(/ \((Front Office|Gate)\)/,''))+'</span></div><span class="tag t-LATE">'+esc(g.in.time)+'</span></div>').join(''):'<p class="muted">No late comers yet.</p>');
+}
 function renderSchool(){
   const dk=Object.values(KID).filter(k=>sbDoubt(k.id)).sort((a,b)=>CLASSES.indexOf(a.cls)-CLASSES.indexOf(b.cls)||a.name.localeCompare(b.name));
   $('schDoubt').classList.toggle('hide',!dk.length);
@@ -694,6 +726,7 @@ document.addEventListener('click',async e=>{
   if(t.dataset.recper){S.recPer=t.dataset.recper;renderDash();return}
   if(t.dataset.recseg){S.recSeg=t.dataset.recseg;renderDash();return}
   if(t.id==='recRefresh'){S.recTick=(S.recTick||0)+1;RG.key='';renderDash();return}
+  if(t.id==='lateCopy'){const txt=lateMonthlyText();try{await navigator.clipboard.writeText(txt);toast('Copied')}catch(err){showText(txt)}return}
   if(t.id==='recCopy'){const txt=recText();try{await navigator.clipboard.writeText(txt);toast('Copied')}catch(err){showText(txt)}return}
   if(t.dataset.mchk){const [k,v]=t.dataset.mchk.split(':');mDraft[k]=mDraft[k]===v?null:v;renderDutyVeh();return}
   if(t.dataset.chip){const c=t.dataset.chip;const s=new Set(selClasses());s.has(c)?s.delete(c):s.add(c);setClasses(CLASSES.filter(x=>s.has(x)));return}
@@ -720,7 +753,9 @@ document.addEventListener('click',async e=>{
     if(un&&!t.dataset.confirm){t.dataset.confirm=1;t.textContent=un+' not marked – tap again to save';return}
     await store.set('att/'+S.date+'/veh/'+v.k,{marks:sortObj(draft),by:$('dutyStaff').value,time:nowT(),arr:$('arrT').value||'',driverU:(mDraft||{}).driverU||null,condU:(mDraft||{}).condU||null,depBy:(mDraft||{}).depBy||{},extra:(mDraft||{}).extra||{},submitted:true,ts:Date.now()});
     toast(v.l+' saved');S.openVeh=null;draft=null;mDraft=null;render();return}
-  if(t.dataset.pick){gatePick=t.dataset.pick;gDraft=null;foBy=t.dataset.foby==='sb'?$('sbBy').value:null;renderFO();return}
+  if(t.dataset.pick){gatePick=t.dataset.pick;gDraft=null;foBy=t.dataset.foby==='sb'?$('sbBy').value:t.dataset.foby==='late'?$('lateBy').value:null;
+    if(t.dataset.foby==='late'){const g=S.gate[gatePick]||{};gDraft={in:g.in&&g.in.type?g.in.type:(nowHM()>S.lateAfter?'LATE':'PRES'),out:g.out&&g.out.type||null}}
+    renderFO();return}
   if(t.id==='gx'||(t.id==='fobg'&&e.target.id==='fobg')){gatePick=null;gDraft=null;$('modalRoot').innerHTML='';return}
   if(t.dataset.gopt){const [side,type]=t.dataset.gopt.split(':');const g=S.gate[gatePick]||{};
     if(!gDraft)gDraft={in:g.in&&g.in.type||null,out:g.out&&g.out.type||null};
@@ -763,6 +798,8 @@ document.addEventListener('change',async e=>{
   if(t.id==='sbAdd'&&t.value){const id=t.value,sg=seg(KID[id].cls);S.sbDraft=S.sbDraft||{};(S.sbDraft[sg]=S.sbDraft[sg]||{})[id]=true;toast(KID[id].name+' added – press Save for the class');render()}
   if(t.id==='sbAddReg'&&t.value){const id=t.value;const kids=Object.assign({},S.sbReg);kids[id]=true;await store.set('config/sbRegular',{kids,by:$('sbBy').value,ts:Date.now()});toast(KID[id].name+' added to the regular stayback list')}
   if(t.id==='sbBy'){LS.set('sbBy',t.value)}
+  if(t.id==='lateBy'){LS.set('lateBy',t.value)}
+  if(t.id==='lateMin'){S.lateMin=+t.value;renderDash();return}
   if(t.dataset.addfo&&t.value){const g=S.gate[t.value]||{};gatePick=t.value;foBy=$('sbBy').value;gDraft={in:g.in&&g.in.type||null,out:g.out&&g.out.type||null};if(t.dataset.addfo==='LATE')gDraft.in='LATE';else gDraft.out='EARLY';t.value='';renderFO();return}
   if(t.id==='sbGrade'){setGrade(t.value);return}
   if(t.dataset.sec){const s=new Set(selClasses());t.checked?s.add(t.dataset.sec):s.delete(t.dataset.sec);setClasses(CLASSES.filter(x=>s.has(x)));return}
@@ -772,6 +809,7 @@ document.addEventListener('change',async e=>{
   if(t.id==='recRep'){S.recRep=t.checked;renderDash();return}
   if(t.dataset.alloc){const map=Object.assign({},S.alloc);const v=VBY[t.dataset.alloc];if(t.value===defaultStaff(v))delete map[v.k];else map[v.k]=t.value;await store.set('config/alloc',{map,ts:Date.now()});toast(v.l+' → '+t.value)}
 });
+$('lateQ').addEventListener('input',()=>{clearTimeout(window._lq);window._lq=setTimeout(renderLate,200)});
 $('schQ').addEventListener('input',()=>{clearTimeout(window._sq);window._sq=setTimeout(renderSchool,250)});
 
 /* ---------- init ---------- */
