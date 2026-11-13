@@ -150,6 +150,7 @@ tr.cov td{background:color-mix(in srgb,var(--sports) 10%,transparent)}
 .x{border:0;background:none;color:var(--gate);font-size:22px;width:34px;height:34px;cursor:pointer}
 .hint{font-size:.78rem;color:var(--muted);margin:4px 0 8px}
 .sheet .foot{display:flex;gap:8px;margin-top:12px;position:sticky;bottom:-18px;background:var(--bg);padding:10px 0}
+.by2{margin-top:6px;padding-top:6px;border-top:1px dashed var(--line,#DCE2EE)}
 .syncb{position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:60;background:#FFF1C2;color:#7A5A00;border:1px solid #E8C860;border-radius:999px;padding:6px 12px;font-size:.8rem;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.12)}
 .syncb[hidden]{display:none}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:700;z-index:60;max-width:calc(100% - 32px);text-align:center}
@@ -343,6 +344,10 @@ Saturday Adjustment - 26/09
       <div class="sugh">Suggestions – tap to pick</div>
       <div class="sug" id="qSug"></div>
       <label class="fl m-cls">Time / period<input id="qT" placeholder="e.g. 7:00–7:30, Period 2, Lunch" autocomplete="off"></label>
+      <div class="frow m-cls">
+        <label class="fl">2nd teacher (optional)<input id="qB2" list="staffnames" placeholder="Second replacement" autocomplete="off"></label>
+        <label class="fl">2nd time / period<input id="qT2" placeholder="e.g. Period 5" autocomplete="off"></label>
+      </div>
     </section>
     <div class="foot"><button class="btn warn" id="qDel" hidden="">Remove</button><button class="btn" id="qSave">Save</button></div>
   </div>
@@ -437,6 +442,10 @@ Saturday Adjustment - 26/09
       <div class="sugh">Suggestions – tap to pick</div>
       <div class="sug" id="qSug"></div>
       <label class="fl m-cls">Time / period<input id="qT" placeholder="e.g. 7:00–7:30, Period 2, Lunch" autocomplete="off"></label>
+      <div class="frow m-cls">
+        <label class="fl">2nd teacher (optional)<input id="qB2" list="staffnames" placeholder="Second replacement" autocomplete="off"></label>
+        <label class="fl">2nd time / period<input id="qT2" placeholder="e.g. Period 5" autocomplete="off"></label>
+      </div>
     </section>
     <div class="foot"><button class="btn warn" id="qDel" hidden="">Remove</button><button class="btn" id="qSave">Save</button></div>
   </div>
@@ -546,10 +555,10 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbyxWYwmvDDlIR6VjS2W4209
 <script type="text/plain" id="appsrc">
 const Z = {gate:'Gate & entry',transport:'Transport',disc:'Discipline & rooms',floor:'Corridors',time:'Late comers & free staff',stay:'Stayback',sports:'Sports'};
 const COL = {gate:'var(--gate)',transport:'var(--transport)',disc:'var(--disc)',floor:'var(--floor)',time:'var(--time)',stay:'var(--stay)',sports:'var(--sports)'};
-const CATS = ['Teacher','Admin & PL','CM','Floor Manager','Activity','Support Staff'];
-const CAT_LABEL = {'Teacher':'Teachers','Admin & PL':'Admin & PL','CM':'Class Managers','Floor Manager':'Floor Managers','Activity':'Coaches & Instructors','Support Staff':'Support Staff'};
+const CATS = ['Teacher','Hindi Teacher','Computer Teacher','Admin & PL','CM','Floor Manager','Activity','Support Staff'];
+const CAT_LABEL = {'Teacher':'Teachers','Hindi Teacher':'Hindi Teachers','Computer Teacher':'Computer Teachers','Admin & PL':'Admin & PL','CM':'Class Managers','Floor Manager':'Floor Managers','Activity':'Coaches & Instructors','Support Staff':'Support Staff'};
 /* [full name, designation, category] – from the Members list, 25 Sep 2026 */
-const STAFF_LIST = [["Ajita Upadhyay", "Hindi Teacher", "Teacher"], ["Akash Gurjar", "Wushu Coach", "Activity"], ["Amit Sanwal", "Mathematics Teacher", "Teacher"], ["Anamika Shrimali", "Teacher", "Teacher"], ["Anita Sharma", "Hindi Teacher", "Teacher"], ["Anoop Gahlot", "Operational Manager", "Admin & PL"], ["Anuradha Chaudhary", "Teacher", "Teacher"], ["Archana Choudhary", "German Teacher", "Teacher"], ["Asha Rao", "Floor Manager", "Floor Manager"], ["Ashok Suthar", "Content Designer", "Admin & PL"], ["Bhagyashree Rathore", "Assistant Teacher", "Teacher"], ["Bharti Ratawa", "Hindi Teacher", "Teacher"], ["Bhavyadeep Soni", "Keyboard Instructor", "Activity"], ["Bhawishya Joshi", "Lawn Tennis Coach", "Activity"], ["Bhupendra Yogi", "Acting Instructor", "Activity"], ["Bhuwan Bhatt", "Ukulele & Guitar Instructor", "Activity"], ["Chandan Soni", "Store Incharge", "Admin & PL"], ["Chandani Chayal", "Class Manager", "CM"], ["Chhavi Vinaik", "Teacher", "Teacher"], ["Chotulal", "Guard", "Support Staff"], ["Deepali Tiwari", "Teacher", "Teacher"], ["Deepmala Rathore", "Teacher", "Teacher"], ["Devanshi Saini", "Teacher", "Teacher"], ["Diksha Singh Raghuwanshi", "Floor Manager", "Floor Manager"], ["Dilshad", "Teacher", "Teacher"], ["Divyanshi Jain", "Floor Manager", "Floor Manager"], ["Dr. Garima Khatri", "Program Leader", "Admin & PL"], ["Gauri Adhana", "Teacher", "Teacher"], ["Geeta Panwar", "Hindi Teacher", "Teacher"], ["Harsh Yadav", "Transport Manager", "Admin & PL"], ["Harshvardhan Soni", "Parents Relation Officer", "Admin & PL"], ["Himanshi Negi", "Computer Teacher", "Teacher"], ["Himanshu Singh Bhadoria", "Faculty – Informatics Practices", "Teacher"], ["Ishita", "Social Science Teacher", "Teacher"], ["Jai Pandla", "Operational Manager", "Admin & PL"], ["Jatan Solanki", "Guard", "Support Staff"], ["Jatin Sankhla", "Social Science Teacher", "Teacher"], ["Jitendra Karwa", "Karate Coach", "Activity"], ["Jitesh Mehendiratta", "Faculty – Accountancy", "Teacher"], ["Juhi Ahuja", "Teacher", "Teacher"], ["Jyotshna Jayan", "English Teacher", "Teacher"], ["Kamal", "Extra Driver", "Support Staff"], ["Kanhaiya Lal Swami", "Cricket Coach", "Activity"], ["Kanika Gahlot", "Teacher", "Teacher"], ["Karishma Suthar", "Class Manager", "CM"], ["Kavita Gupta", "Abacus Instructor", "Activity"], ["Khanaiya Lal Gujrati", "Guard", "Support Staff"], ["Khushi Bhadani", "Assistant Teacher", "Teacher"], ["Komal Damani", "Teacher", "Teacher"], ["Komal Suthar", "Class Manager", "CM"], ["Kritika Pareek", "Wushu Coach", "Activity"], ["Lohit Tailong", "Taekwondo Coach", "Activity"], ["Madhu Mathur", "Mathematics Teacher", "Teacher"], ["Mahak Chaudhary", "Teacher", "Teacher"], ["Manisha Chauhan", "Class Manager", "CM"], ["Manisha Sharma", "Faculty – Economics", "Teacher"], ["Manmohan Singh", "Skating Coach", "Activity"], ["Mansi Singh Panwar", "Classical Dance Instructor", "Activity"], ["Mansi Soni", "Class Manager", "CM"], ["Mansi Yadav", "Teacher", "Teacher"], ["Megha Shekhawat", "Parents Relation Officer", "Admin & PL"], ["Monika Navani", "Program Leader", "Admin & PL"], ["Monika Rajpurohit", "Social Science Teacher", "Teacher"], ["Mukul Jangid", "Accountant", "Admin & PL"], ["Mukul Parihar", "Photography Instructor & Cinematographer", "Activity"], ["Nahida", "Head of Co-Curricular Activities", "Admin & PL"], ["Nandini Shekhawat", "Teacher", "Teacher"], ["Narendra Dara", "Office Exceutive", "Admin & PL"], ["Navratan", "Guard", "Support Staff"], ["Neelam Rajwani", "Culinary Skills Instructor", "Activity"], ["Neetu Dara", "Floor Manager", "Floor Manager"], ["Neha Jain", "Teacher", "Teacher"], ["Neha Kumari", "Mathematics Teacher", "Teacher"], ["Neha Sethia", "Program Leader", "Admin & PL"], ["Nisha", "Science Teacher", "Teacher"], ["Nishant Harsh", "Manager", "Admin & PL"], ["Niviya Singh Bhati", "Table Tennis Coach", "Activity"], ["Pallavi Joshi", "Science Teacher", "Teacher"], ["Pooja Chauhan", "Class Manager", "CM"], ["Pooja Sharma", "Teacher", "Teacher"], ["Poojal Shekhawat", "Teacher", "Teacher"], ["Poonam Gaur", "Hindi Teacher", "Teacher"], ["Poonam Rathore", "Teacher", "Teacher"], ["Poonam Sharda", "Program Leader", "Admin & PL"], ["Prashant Devra", "Graphic Designer", "Admin & PL"], ["Prashant Verma", "Basketball Coach", "Activity"], ["Preeti Choudhary", "Hindi Teacher", "Teacher"], ["Preeti Jain", "Parents Relation Officer", "Admin & PL"], ["Priya Bagri", "Teacher", "Teacher"], ["Priya Shekhawat", "Teacher", "Teacher"], ["Priyanka Bhargava", "Medical Officer", "Admin & PL"], ["Priyanka Sand", "Teacher", "Teacher"], ["Priyanshi Bhojak", "English Teacher", "Teacher"], ["Radha Soni", "Social Science Teacher", "Teacher"], ["Radheyshyam", "Guard", "Support Staff"], ["Rahul Yadav", "Staff", "Admin & PL"], ["Raj Vyas", "Archery Coach", "Activity"], ["Rajeev Nagal", "Content Designer", "Admin & PL"], ["Ram Singh Rathore", "French Teacher", "Teacher"], ["Rashmi Rathore", "Program Leader", "Admin & PL"], ["Rashmi Singh", "Class Manager", "CM"], ["Reema Tiwari", "Teacher", "Teacher"], ["Rekha", "Teacher", "Teacher"], ["Renu Harsh", "Program Leader", "Admin & PL"], ["Renuka Tak", "Art Teacher", "Activity"], ["Richa Sharma", "Computer Teacher", "Teacher"], ["Ritanshu Sharma", "Cricket Coach", "Activity"], ["Ritika Purohit", "Science Teacher", "Teacher"], ["Saba Panwar", "Class Manager", "CM"], ["Sahil Kumar", "Shooting Coach", "Activity"], ["Sakil Gouri", "Western Dance Instructor", "Activity"], ["Sanjana Sarswat", "Floor Manager", "Floor Manager"], ["Santosh Yadav", "Staff", "Admin & PL"], ["Sarita Saini", "Program Leader", "Admin & PL"], ["Saroj", "Teacher", "Teacher"], ["Shaan Siddiqui", "English Teacher", "Teacher"], ["Shailesh Joshi", "Social Science Teacher", "Teacher"], ["Shally Taneja", "Teacher", "Teacher"], ["Sharda Yadav", "Staff", "Admin & PL"], ["Shikha Sharma", "Art Teacher", "Activity"], ["Shivangi Gupta", "Teacher", "Teacher"], ["Shivika Ranjan", "Arts & Textile Desigining Instructor", "Activity"], ["Shobha Sharma", "Hindi Teacher", "Teacher"], ["Shreya", "Science Teacher", "Teacher"], ["Shubhangi", "Dean - Academics", "Admin & PL"], ["Sonika Lalwani", "Teacher", "Teacher"], ["Sourabh Tripathi", "Floor Manager", "Floor Manager"], ["Suman Bishnoi", "Floor Manager", "Floor Manager"], ["Sunita Nirban", "Teacher", "Teacher"], ["Surender Yadav", "Chairperson", "Admin & PL"], ["Swati Sehgal", "English Teacher", "Teacher"], ["Tanushree Purohit", "Class Manager", "CM"], ["Tina Sangtani", "Teacher", "Teacher"], ["Tripti", "Hindi Teacher", "Teacher"], ["Upender Singh Shekhawat", "Class Manager", "CM"], ["Vahnisvari Bika", "Teacher", "Teacher"], ["Vaibhav Pandey", "Tabla Instructor", "Activity"], ["Vaishali Rathore", "Parents Relation Officer", "Admin & PL"], ["Vijay Raj Soni", "Class Manager", "CM"], ["Vipul Vijay", "Mathematics Teacher", "Teacher"], ["Vishwabandhu", "Extra Driver", "Support Staff"], ["Yashika Gupta", "Class Manager", "CM"], ["Yavnika Dembla", "English Teacher", "Teacher"], ["Yogesh Purohit", "Harmonium Instructor", "Activity"]];
+const STAFF_LIST = [["Ajita Upadhyay", "Hindi Teacher", "Hindi Teacher"], ["Akash Gurjar", "Wushu Coach", "Activity"], ["Amit Sanwal", "Mathematics Teacher", "Teacher"], ["Anamika Shrimali", "Teacher", "Teacher"], ["Anita Sharma", "Hindi Teacher", "Hindi Teacher"], ["Anoop Gahlot", "Operational Manager", "Admin & PL"], ["Anuradha Chaudhary", "Teacher", "Teacher"], ["Archana Choudhary", "German Teacher", "Teacher"], ["Asha Rao", "Floor Manager", "Floor Manager"], ["Ashok Suthar", "Content Designer", "Admin & PL"], ["Bhagyashree Rathore", "Assistant Teacher", "Teacher"], ["Bharti Ratawa", "Hindi Teacher", "Hindi Teacher"], ["Bhavyadeep Soni", "Keyboard Instructor", "Activity"], ["Bhawishya Joshi", "Lawn Tennis Coach", "Activity"], ["Bhupendra Yogi", "Acting Instructor", "Activity"], ["Bhuwan Bhatt", "Ukulele & Guitar Instructor", "Activity"], ["Chandan Soni", "Store Incharge", "Admin & PL"], ["Chandani Chayal", "Class Manager", "CM"], ["Chhavi Vinaik", "Teacher", "Teacher"], ["Chotulal", "Guard", "Support Staff"], ["Deepali Tiwari", "Teacher", "Teacher"], ["Deepmala Rathore", "Teacher", "Teacher"], ["Devanshi Saini", "Teacher", "Teacher"], ["Diksha Singh Raghuwanshi", "Floor Manager", "Floor Manager"], ["Dilshad", "Teacher", "Teacher"], ["Divyanshi Jain", "Floor Manager", "Floor Manager"], ["Dr. Garima Khatri", "Program Leader", "Admin & PL"], ["Gauri Adhana", "Teacher", "Teacher"], ["Geeta Panwar", "Hindi Teacher", "Hindi Teacher"], ["Harsh Yadav", "Transport Manager", "Admin & PL"], ["Harshvardhan Soni", "Parents Relation Officer", "Admin & PL"], ["Himanshi Negi", "Computer Teacher", "Computer Teacher"], ["Himanshu Singh Bhadoria", "Faculty – Informatics Practices", "Teacher"], ["Ishita", "Social Science Teacher", "Teacher"], ["Jai Pandla", "Operational Manager", "Admin & PL"], ["Jatan Solanki", "Guard", "Support Staff"], ["Jatin Sankhla", "Social Science Teacher", "Teacher"], ["Jitendra Karwa", "Karate Coach", "Activity"], ["Jitesh Mehendiratta", "Faculty – Accountancy", "Teacher"], ["Juhi Ahuja", "Teacher", "Teacher"], ["Jyotshna Jayan", "English Teacher", "Teacher"], ["Kamal", "Extra Driver", "Support Staff"], ["Kanhaiya Lal Swami", "Cricket Coach", "Activity"], ["Kanika Gahlot", "Teacher", "Teacher"], ["Karishma Suthar", "Class Manager", "CM"], ["Kavita Gupta", "Abacus Instructor", "Activity"], ["Khanaiya Lal Gujrati", "Guard", "Support Staff"], ["Khushi Bhadani", "Assistant Teacher", "Teacher"], ["Komal Damani", "Teacher", "Teacher"], ["Komal Suthar", "Class Manager", "CM"], ["Kritika Pareek", "Wushu Coach", "Activity"], ["Lohit Tailong", "Taekwondo Coach", "Activity"], ["Madhu Mathur", "Mathematics Teacher", "Teacher"], ["Mahak Chaudhary", "Teacher", "Teacher"], ["Manisha Chauhan", "Class Manager", "CM"], ["Manisha Sharma", "Faculty – Economics", "Teacher"], ["Manmohan Singh", "Skating Coach", "Activity"], ["Mansi Singh Panwar", "Classical Dance Instructor", "Activity"], ["Mansi Soni", "Class Manager", "CM"], ["Mansi Yadav", "Teacher", "Teacher"], ["Megha Shekhawat", "Parents Relation Officer", "Admin & PL"], ["Monika Navani", "Program Leader", "Admin & PL"], ["Monika Rajpurohit", "Social Science Teacher", "Teacher"], ["Mukul Jangid", "Accountant", "Admin & PL"], ["Mukul Parihar", "Photography Instructor & Cinematographer", "Activity"], ["Nahida", "Head of Co-Curricular Activities", "Admin & PL"], ["Nandini Shekhawat", "Teacher", "Teacher"], ["Narendra Dara", "Office Exceutive", "Admin & PL"], ["Navratan", "Guard", "Support Staff"], ["Neelam Rajwani", "Culinary Skills Instructor", "Activity"], ["Neetu Dara", "Floor Manager", "Floor Manager"], ["Neha Jain", "Teacher", "Teacher"], ["Neha Kumari", "Mathematics Teacher", "Teacher"], ["Neha Sethia", "Program Leader", "Admin & PL"], ["Nisha", "Science Teacher", "Teacher"], ["Nishant Harsh", "Manager", "Activity"], ["Niviya Singh Bhati", "Table Tennis Coach", "Activity"], ["Pallavi Joshi", "Science Teacher", "Teacher"], ["Pooja Chauhan", "Class Manager", "CM"], ["Pooja Sharma", "Teacher", "Teacher"], ["Poojal Shekhawat", "Teacher", "Teacher"], ["Poonam Gaur", "Hindi Teacher", "Hindi Teacher"], ["Poonam Rathore", "Teacher", "Teacher"], ["Poonam Sharda", "Program Leader", "Admin & PL"], ["Prashant Devra", "Graphic Designer", "Admin & PL"], ["Prashant Verma", "Basketball Coach", "Activity"], ["Preeti Choudhary", "Hindi Teacher", "Hindi Teacher"], ["Preeti Jain", "Parents Relation Officer", "Admin & PL"], ["Priya Bagri", "Teacher", "Teacher"], ["Priya Shekhawat", "Teacher", "Teacher"], ["Priyanka Bhargava", "Medical Officer", "Admin & PL"], ["Priyanka Sand", "Teacher", "Teacher"], ["Priyanshi Bhojak", "English Teacher", "Teacher"], ["Radha Soni", "Social Science Teacher", "Teacher"], ["Radheyshyam", "Guard", "Support Staff"], ["Rahul Yadav", "Staff", "Admin & PL"], ["Raj Vyas", "Archery Coach", "Activity"], ["Rajeev Nagal", "Content Designer", "Admin & PL"], ["Ram Singh Rathore", "French Teacher", "Teacher"], ["Rashmi Rathore", "Program Leader", "Admin & PL"], ["Rashmi Singh", "Class Manager", "CM"], ["Reema Tiwari", "Teacher", "Teacher"], ["Rekha", "Teacher", "Teacher"], ["Renu Harsh", "Program Leader", "Admin & PL"], ["Renuka Tak", "Art Teacher", "Activity"], ["Richa Sharma", "Computer Teacher", "Computer Teacher"], ["Ritanshu Sharma", "Cricket Coach", "Activity"], ["Ritika Purohit", "Science Teacher", "Teacher"], ["Saba Panwar", "Class Manager", "CM"], ["Sahil Kumar", "Shooting Coach", "Activity"], ["Sakil Gouri", "Western Dance Instructor", "Activity"], ["Sanjana Sarswat", "Floor Manager", "Floor Manager"], ["Santosh Yadav", "Staff", "Admin & PL"], ["Sarita Saini", "Program Leader", "Admin & PL"], ["Saroj", "Teacher", "Teacher"], ["Shaan Siddiqui", "English Teacher", "Teacher"], ["Shailesh Joshi", "Social Science Teacher", "Teacher"], ["Shally Taneja", "Teacher", "Teacher"], ["Sharda Yadav", "Staff", "Admin & PL"], ["Shikha Sharma", "Art Teacher", "Activity"], ["Shivangi Gupta", "Teacher", "Teacher"], ["Shivika Ranjan", "Arts & Textile Desigining Instructor", "Activity"], ["Shobha Sharma", "Hindi Teacher", "Hindi Teacher"], ["Shreya", "Science Teacher", "Teacher"], ["Shubhangi", "Dean - Academics", "Admin & PL"], ["Sonika Lalwani", "Teacher", "Teacher"], ["Sourabh Tripathi", "Floor Manager", "Floor Manager"], ["Suman Bishnoi", "Floor Manager", "Floor Manager"], ["Sunita Nirban", "Teacher", "Teacher"], ["Surender Yadav", "Chairperson", "Admin & PL"], ["Swati Sehgal", "English Teacher", "Teacher"], ["Tanushree Purohit", "Class Manager", "CM"], ["Tina Sangtani", "Teacher", "Teacher"], ["Tripti", "Hindi Teacher", "Hindi Teacher"], ["Upender Singh Shekhawat", "Class Manager", "CM"], ["Vahnisvari Bika", "Teacher", "Teacher"], ["Vaibhav Pandey", "Tabla Instructor", "Activity"], ["Vaishali Rathore", "Parents Relation Officer", "Admin & PL"], ["Vijay Raj Soni", "Class Manager", "CM"], ["Vipul Vijay", "Mathematics Teacher", "Teacher"], ["Vishwabandhu", "Extra Driver", "Support Staff"], ["Yashika Gupta", "Class Manager", "CM"], ["Yavnika Dembla", "English Teacher", "Teacher"], ["Yogesh Purohit", "Harmonium Instructor", "Activity"]];
 /* Co-curricular segments: [segment, [[activity, [staff…]], …]] */
 const SEGS = [
  ['Sports', [['Skating',['Manmohan Singh']],['Cricket',['Kanhaiya Lal Swami','Ritanshu Sharma']],['Table Tennis',['Niviya Singh Bhati']],['Archery',['Raj Vyas']],['Shooting',['Sahil Kumar']],['Lawn Tennis',['Bhawishya Joshi']],['Basketball',[]]]],
@@ -705,21 +714,22 @@ function renderNotice(){
   if (!lv.length && !cv.length && !adj.length){
     body = `<p class="none">No leave or adjustments entered for this day.</p>`;
   } else {
-    const byCat = CATS.concat([...new Set(lv.map(l=>l.k).filter(k=>!CATS.includes(k)))]);
+    const byCat = CATS.concat([...new Set(lv.map(lcat).filter(k=>!CATS.includes(k)))]);
     body += `<h3>Staff on leave <span class="cnt">${lv.length}</span></h3><table><thead><tr><th>Category</th><th>Staff</th></tr></thead><tbody>` +
-      byCat.map(k => { const ps = lv.filter(l => (l.k||'Teacher') === k);
+      byCat.map(k => { const ps = lv.filter(l => lcat(l) === k);
         return `<tr><td>${esc(CAT_LABEL[k]||k)}</td><td>${ps.length ? ps.map(l => esc(l.n) + (clsOf(l.n)?` <span class="ctg">CT ${esc(clsOf(l.n))}</span>`:'') + (stKey(l)?' <em>('+esc(stLabel(l))+')</em>':'')).join(', ') : '—'}</td></tr>`; }).join('') + `</tbody></table>`;
     const ed = (m,i) => CAN_UI() ? ` data-qa="${m}:${i}"` : '';
     const cls = adj.map((a,i) => [a,i]).filter(([a]) => !a.a), act = adj.map((a,i) => [a,i]).filter(([a]) => a.a);
     const by = (n, t) => `<b class="by">${esc(n)}</b>${t?`<small class="tm">${esc(t)}</small>`:''}`;
+    const by2 = a => by(a.b, a.t) + (a.b2 ? `<div class="by2">${by(a.b2, a.t2)}</div>` : '');
     const ab = n => n ? esc(n) : '<span class="dim">—</span>';
     const done = new Set(cls.map(([a]) => normCls(a.c)));
     const pending = lv.filter(l => !l.late && clsOf(l.n) && !done.has(clsOf(l.n))).map(l => [clsOf(l.n), l]);
     if (pending.length) body += `<div class="pend"><b>Class not adjusted yet</b>` + pending.map(([c,l]) => `<button type="button" class="pendb" data-pend="${esc(c)}">${esc(c)} <span>${esc(l.n)}${l.half?' · half day':''}</span>${CAN_UI()?' <i>+ Adjust</i>':''}</button>`).join('') + `</div>`;
     if (cls.length) body += `<h3>Class adjustment <span class="cnt k2">${cls.length}</span></h3><table class="adjt"><thead><tr><th>Class</th><th>Absent</th><th>Adjusted by</th></tr></thead><tbody>` +
-      cls.map(([a,i]) => `<tr${ed('adj',i)}><td>${esc(a.c)}</td><td>${a.f ? ab(a.f) : ctOf(a.c) ? `${esc(ctOf(a.c))}<small class="tm">Class teacher</small>` : ab('')}</td><td>${by(a.b, a.t)}</td></tr>`).join('') + `</tbody></table>`;
+      cls.map(([a,i]) => `<tr${ed('adj',i)}><td>${esc(a.c)}</td><td>${a.f ? ab(a.f) : ctOf(a.c) ? `${esc(ctOf(a.c))}<small class="tm">Class teacher</small>` : ab('')}</td><td>${by2(a)}</td></tr>`).join('') + `</tbody></table>`;
     if (act.length) body += `<h3>Activity adjustment <span class="cnt k3">${act.length}</span></h3><table class="adjt"><thead><tr><th>Activity</th><th>Absent</th><th>Adjusted by</th></tr></thead><tbody>` +
-      act.map(([a,i]) => `<tr${ed('adj',i)}><td>${esc(a.a)}${a.c?`<small class="tm">${esc(a.c)}</small>`:''}</td><td>${ab(a.f)}</td><td>${by(a.b, a.t)}</td></tr>`).join('') + `</tbody></table>`;
+      act.map(([a,i]) => `<tr${ed('adj',i)}><td>${esc(a.a)}${a.c?`<small class="tm">${esc(a.c)}</small>`:''}</td><td>${ab(a.f)}</td><td>${by2(a)}</td></tr>`).join('') + `</tbody></table>`;
     if (cv.length) body += `<h3>Duty cover <span class="cnt k4">${cv.length}</span></h3><table class="adjt"><thead><tr><th>Duty</th><th>Absent</th><th>Covered by</th></tr></thead><tbody>` +
       cv.map((c,i) => `<tr${ed('cover',i)}><td class="duty">${esc(c.d||'All duties')}</td><td>${ab(c.f)}</td><td>${by(c.n)}</td></tr>`).join('') + `</tbody></table>`;
   }
@@ -754,13 +764,13 @@ function setDay(d){ DAY = d; LV = leaveMap(); renderNotice(); render(TAB); doSea
 function waText(){
   const d = dayData(), lv = d.leave||[];
   let t = `*Staff ON Leave* – ${nice(DAY)} (${dm(DAY)})\n`;
-  CATS.concat([...new Set(lv.map(l=>l.k).filter(k=>!CATS.includes(k)))]).forEach(k => {
-    const ps = lv.filter(l => (l.k||'Teacher') === k);
+  CATS.concat([...new Set(lv.map(lcat).filter(k=>!CATS.includes(k)))]).forEach(k => {
+    const ps = lv.filter(l => lcat(l) === k);
     t += `\n${k} -\n` + (ps.length ? ps.map(l => `* ${l.n}${stKey(l)?' ( '+stLabel(l)+' )':''}`).join('\n') : '* ') + '\n';
   });
   const cls = (d.adj||[]).filter(a => !a.a), act = (d.adj||[]).filter(a => a.a);
-  if (cls.length) t += `\n*Class Adjustment*\n` + cls.map(a => `${a.c} - ${a.f ? a.f+' - ' : ctOf(a.c) ? ctOf(a.c)+' (CT) - ' : ''}${a.b}${a.t?' ('+a.t+')':''}`).join('\n') + '\n';
-  if (act.length) t += `\n*Activity Adjustment*\n` + act.map(a => `${a.a}${a.c?' ('+a.c+')':''} - ${a.f?a.f+' - ':''}${a.b}${a.t?' ('+a.t+')':''}`).join('\n') + '\n';
+  if (cls.length) t += `\n*Class Adjustment*\n` + cls.map(a => `${a.c} - ${a.f ? a.f+' - ' : ctOf(a.c) ? ctOf(a.c)+' (CT) - ' : ''}${a.b}${a.t?' ('+a.t+')':''}${a.b2?' + '+a.b2+(a.t2?' ('+a.t2+')':''):''}`).join('\n') + '\n';
+  if (act.length) t += `\n*Activity Adjustment*\n` + act.map(a => `${a.a}${a.c?' ('+a.c+')':''} - ${a.f?a.f+' - ':''}${a.b}${a.t?' ('+a.t+')':''}${a.b2?' + '+a.b2+(a.t2?' ('+a.t2+')':''):''}`).join('\n') + '\n';
   if ((d.cover||[]).length) t += `\n*Duty Cover*\n` + d.cover.map(c => `* ${c.n} for ${c.f}${c.d?' – '+c.d:''}`).join('\n') + '\n';
   return t;
 }
@@ -849,7 +859,7 @@ function freeStaff(shift){
     if (t.extra) t.cols.forEach(c => { if (!sh || c.h === sh) c.groups.forEach(g => pools.push(...g.p)); });
     else if (!sh || t.label === sh) t.cards.filter(c => /free staff/i.test(c.t)).forEach(c => pools.push(...c.p));
   });
-  const busy = new Set([...(dayData().cover||[]).map(c => key(c.n)), ...(dayData().adj||[]).map(a => key(a.b))]);
+  const busy = new Set([...(dayData().cover||[]).map(c => key(c.n)), ...(dayData().adj||[]).flatMap(a => [key(a.b), ...(a.b2?[key(a.b2)]:[])])]);
   const out = new Map();
   pools.forEach(x => typeof x === 'string' && x.split('|')[0].split(SEP).forEach(t => {
     t = t.trim(); if (!/[a-z]{3}/i.test(t) || /^(pre|staff|teachers)/i.test(t) || /\d/.test(t)) return;
@@ -862,7 +872,7 @@ function freeStaff(shift){
 /* suggestions in order of relevance: same activity segment → same subject → same role → free staff */
 function relevant(F, shift, act){
   const d = dayData(), seen = new Set();
-  const busy = new Set([...(d.cover||[]).map(c => key(c.n)), ...(d.adj||[]).map(a => key(a.b))]);
+  const busy = new Set([...(d.cover||[]).map(c => key(c.n)), ...(d.adj||[]).flatMap(a => [key(a.b), ...(a.b2?[key(a.b2)]:[])])]);
   const Fst = F ? resolve(F) : null, Fk = Fst ? key(Fst[0]) : key(F);
   const ok = n => { const k = key(n); if (!k || k === Fk || seen.has(k) || busy.has(k) || LV.get(n)) return false; seen.add(k); return true; };
   const item = n => { const st = STAFF_BY.get(key(n)); const a = segsOf(n).map(x => x.a).join(', '); return {n, d: a ? a + (st ? ' · ' + st[1] : '') : st ? st[1] : ''}; };
@@ -901,6 +911,7 @@ function openQA(o){
   $('#qD').value = QA.mode === 'cover' ? (cur ? cur.d || '' : o.d || '') : '';
   $('#qF').value = f;
   $('#qB').value = cur ? (QA.mode === 'adj' ? cur.b : cur.n) || '' : '';
+  $('#qB2').value = cur && QA.mode === 'adj' ? cur.b2 || '' : ''; $('#qT2').value = cur && QA.mode === 'adj' ? cur.t2 || '' : ''; QA.sgt = 'qB';
   const l = f ? LV.get(f) : null;
   $('#qSt').value = l ? (stKey(l) || 'leave') : (o.f ? 'leave' : '');
   $('#qLt').value = l && typeof l.late === 'string' ? l.late : '';
@@ -917,6 +928,7 @@ function openQA(o){
   setTimeout(() => (QA.mode === 'adj' && !$('#qC').value ? $('#qC') : !$('#qF').value ? $('#qF') : $('#qB')).focus(), 50);
 }
 function drawQA(){
+  if (!QA) return;
   $('#qaSheet').dataset.m = QA.mode;
   document.querySelectorAll('[data-qmode]').forEach(b => b.setAttribute('aria-selected', b.dataset.qmode === QA.mode));
   $('#qLtWrap').hidden = $('#qSt').value !== 'late';
@@ -927,10 +939,12 @@ function drawQA(){
 function closeQA(){ $('#qa').hidden = true; if ($('#ed').hidden) document.body.style.overflow = ''; QA = null; }
 $('#qa').addEventListener('click', e => {
   const m = e.target.closest('[data-qmode]'); if (m){ QA.mode = m.dataset.qmode; QA.idx = -1; QA.actSet = null; $('#qDel').hidden = true; drawQA(); return; }
-  const sg = e.target.closest('[data-sg]'); if (sg){ $('#qB').value = sg.dataset.sg; return; }
+  const sg = e.target.closest('[data-sg]'); if (sg){ $('#' + (QA.sgt || 'qB')).value = sg.dataset.sg; return; }
   if (e.target === $('#qa')) closeQA();
 });
 $('#qSt').addEventListener('change', drawQA);
+$('#qB').addEventListener('focus', () => { if (QA) QA.sgt = 'qB'; });
+$('#qB2').addEventListener('focus', () => { if (QA) QA.sgt = 'qB2'; });
 $('#qD').addEventListener('change', drawQA);
 $('#qA').addEventListener('change', drawQA);
 $('#qC').addEventListener('input', () => { if (QA && QA.mode === 'adj' && !$('#qF').dataset.touched){ const t = ctOf($('#qC').value); $('#qF').value = t; if (t && LV.get(t)) $('#qSt').value = stKey(LV.get(t)) || 'leave'; clearTimeout(qfT); qfT = setTimeout(drawQA, 250); } });
@@ -949,7 +963,8 @@ function qaApply(del){
       const C = $('#qC').value.trim(), T = $('#qT').value.trim(), A = QA.mode === 'act' ? ACTS[+$('#qA').value] : null;
       if (QA.mode === 'act' && !A){ toast('Pick the activity'); return null; }
       if ((!C && !A) || !B){ toast(A ? 'Pick who is replacing' : 'Enter the class and who is replacing'); return null; }
-      const it = {c: C ? C.toUpperCase().replace(/\s+/g,'') : '', ...(A?{a:A.a}:{}), b: canon(B), ...(T?{t:T}:{}), ...(F?{f:canon(F)}:{})};
+      const B2 = $('#qB2').value.trim(), T2 = $('#qT2').value.trim();
+      const it = {c: C ? C.toUpperCase().replace(/\s+/g,'') : '', ...(A?{a:A.a}:{}), b: canon(B), ...(T?{t:T}:{}), ...(B2?{b2:canon(B2)}:{}), ...(B2&&T2?{t2:T2}:{}), ...(F?{f:canon(F)}:{})};
       if (QA.idx >= 0) arr[QA.idx] = it; else arr.push(it);
     } else {
       const D = $('#qD').value.trim();
@@ -1145,6 +1160,7 @@ function canon(n, cat){
   n = n.replace(/\(.*?\)/g,'').replace(/\b(ma['’]?am|mam|madam|sir)\b\.?/ig,'').replace(/[*_~]/g,'').replace(/\s+/g,' ').trim();
   const s = resolve(n, cat); return s ? s[0] : n;
 }
+const lcat = l => (resolve(l.n, l.k) || [])[2] || l.k || 'Teacher';
 const catOfName = (n, fallback) => { const s = resolve(n, fallback); return s ? s[2] : (fallback || 'Teacher'); };
 /* check-in reports pasted from WhatsApp – the chart's own "✅ Check-in" messages or the usual floor posts */
 function areaOfHeader(line){
@@ -1189,7 +1205,7 @@ function parseCheckins(txt){
 function parseNote(txt){
   const out = {date:null, leave:[], cover:[], adj:[]};
   let sec = null, cat = 'Teacher', LATE_SEC = false;
-  const catOf = s => /teach/i.test(s) ? 'Teacher' : /admin|\bpl\b/i.test(s) ? 'Admin & PL' : /^\W*cm\b|class\s*manager/i.test(s) ? 'CM' : /floor/i.test(s) ? 'Floor Manager' : /coach|instructor|sport|music|dance/i.test(s) ? 'Activity' : /activit/i.test(s) ? 'Activity' : null;
+  const catOf = s => /hindi/i.test(s) ? 'Hindi Teacher' : /computer/i.test(s) ? 'Computer Teacher' : /teach/i.test(s) ? 'Teacher' : /admin|\bpl\b/i.test(s) ? 'Admin & PL' : /^\W*cm\b|class\s*manager/i.test(s) ? 'CM' : /floor/i.test(s) ? 'Floor Manager' : /coach|instructor|sport|music|dance/i.test(s) ? 'Activity' : /activit/i.test(s) ? 'Activity' : null;
   const addLeave = raw => raw.split(/,|\band\b/i).forEach(p => {
     const half = /half/i.test(p), lm = p.match(/\blate\b(?:[^0-9)]*(\d{1,2}[:.]\d{2}|\d{1,2}\s*(?:am|pm)))?/i), n = canon(p.replace(/^[\s*•\-–·]+/,'').replace(/\b(late|till|upto|up to|by|arriv\w*|coming)\b.*$/i,'').replace(/\d.*$/,'').replace(/[\-–:]+\s*$/,''), cat);
     const tm2 = p.match(/(\d{1,2}[:.]\d{2}|\d{1,2}\s*(?:am|pm))/i);
@@ -1275,9 +1291,9 @@ function drawEditor(){
   $('#edCover').innerHTML = ED.cover.map((c,i) => row('cover', i,
     inp('n', c.n, 'Covering (name)', 'staffnames') + inp('f', c.f, 'For (on leave)', 'staffnames') + inp('d', c.d, 'Duty (optional)', 'duties'))).join('') || '<p class="none">No covers yet.</p>';
   const actSel = a => `<select data-f="a">${SEGS.map(([seg, list]) => `<optgroup label="${esc(seg)}">` + list.map(([x]) => `<option${x===a.a?' selected':''}>${esc(x)}</option>`).join('') + '</optgroup>').join('')}</select>`;
-  $('#edAct').innerHTML = ED.adj.map((a,i) => a.a ? row('adj', i, actSel(a) + inp('b', a.b, 'Adjusted by', 'staffnames') + inp('c', a.c, 'Class / group') + inp('t', a.t, 'Time') + inp('f', a.f, 'For (optional)', 'staffnames')) : '').join('') || '<p class="none">No activity adjustments yet.</p>';
+  $('#edAct').innerHTML = ED.adj.map((a,i) => a.a ? row('adj', i, actSel(a) + inp('b', a.b, 'Adjusted by', 'staffnames') + inp('c', a.c, 'Class / group') + inp('t', a.t, 'Time') + inp('b2', a.b2, '2nd teacher (optional)', 'staffnames') + inp('t2', a.t2, '2nd time') + inp('f', a.f, 'For (optional)', 'staffnames')) : '').join('') || '<p class="none">No activity adjustments yet.</p>';
   $('#edAdj').innerHTML = ED.adj.map((a,i) => a.a ? '' : row('adj', i,
-    inp('c', a.c, 'Class') + inp('b', a.b, 'Adjusted by', 'staffnames') + inp('t', a.t, 'Time') + inp('f', a.f, 'For (optional)', 'staffnames'))).join('') || '<p class="none">No class adjustments yet.</p>';
+    inp('c', a.c, 'Class') + inp('b', a.b, 'Adjusted by', 'staffnames') + inp('t', a.t, 'Time') + inp('b2', a.b2, '2nd teacher (optional)', 'staffnames') + inp('t2', a.t2, '2nd time') + inp('f', a.f, 'For (optional)', 'staffnames'))).join('') || '<p class="none">No class adjustments yet.</p>';
 }
 function readEditor(){
   ED.date = $('#edDate').value || ED.date;
@@ -1336,7 +1352,7 @@ $('#edSave').onclick = async () => {
   const clean = {
     leave: ED.leave.filter(l => l.n).map(l => { const n = canon(l.n, l.k); return {n, k: resolve(n) ? resolve(n)[2] : (l.k||'Teacher'), ...(l.half?{half:true}:{}), ...(l.late?{late:l.late}:{})}; }),
     cover: ED.cover.filter(c => c.n && c.f).map(c => ({n:canon(c.n), f:canon(c.f, (ED.leave.find(l => sameName(c.f, l.n))||{}).k), ...(c.d?{d:c.d}:{})})),
-    adj: ED.adj.filter(a => a.c || a.b || a.a).map(a => ({c:a.c||'', ...(a.a?{a:a.a}:{}), b:a.b||'', ...(a.t?{t:a.t}:{}), ...(a.f?{f:canon(a.f)}:{})}))
+    adj: ED.adj.filter(a => a.c || a.b || a.a).map(a => ({c:a.c||'', ...(a.a?{a:a.a}:{}), b:a.b||'', ...(a.t?{t:a.t}:{}), ...(a.b2?{b2:canon(a.b2)}:{}), ...(a.b2&&a.t2?{t2:a.t2}:{}), ...(a.f?{f:canon(a.f)}:{})}))
   };
   const next = {...DAILY};
   const att = ED.att || (DAILY[ED.date] || {}).att; if (att) clean.att = att;
