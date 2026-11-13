@@ -664,6 +664,9 @@ const QUICK = {
   play:["Student guided","Called parent"]
 };
 const ADMIN_QUICK = ["Noted","Counselled","Warned"];
+// days in a row before a parent SMS is due: Diary not brought after 2 days, everything else after 3
+const SMS_AFTER = {nb:2};
+const smsAfter = cat => SMS_AFTER[cat] || 3;
 const STREAK_CATS = ["def","nb","eng","sig","beh","tv","study","play"];
 const DEF_SEG = ["def","nb","eng","sig","beh","tv","study","play"];
 
@@ -780,7 +783,7 @@ function itemCard(it, role){
       row.appendChild(el("span", "dot2 " + (x.cat === "def" ? "w" : "b")));
       row.appendChild(el("span", "flag-l", LABEL[x.cat]));
       const st = STREAK_CATS.includes(x.cat) && role === "pl" ? streak(it.c, it.s, it.i, x.cat) : null;
-      if (st && st.n >= 2) row.appendChild(el("span", "flag-s" + (st.n >= 3 ? " hot" : ""), st.n + " consecutive days" + (st.n >= 3 ? " · SMS by admin" : "")));
+      if (st && st.n >= 2) row.appendChild(el("span", "flag-s" + (st.n >= smsAfter(x.cat) ? " hot" : ""), st.n + " consecutive days" + (st.n >= smsAfter(x.cat) ? " · SMS by admin" : "")));
       row.appendChild(el("span", "meta", "Marked " + fmtT(x.at)));
       body.appendChild(row);
     }
@@ -873,7 +876,7 @@ function smsDue(){
   const out = [];
   for (let c = 1; c <= 11; c++) sections(c).forEach(s => ROSTER[c][s].forEach((nm,i) => {
     STREAK_CATS.forEach(cat => {
-      const st = streak(c,s,i,cat); if (st.n < 3) return;
+      const st = streak(c,s,i,cat); if (st.n < smsAfter(cat)) return;
       const rec = smsRec[c + s + (i+1) + "_" + cat];
       out.push({c, s, i, nm, cat, n:st.n, start:st.start, sent: !!(rec && rec.sentOn >= st.start), rec});
     });
@@ -1007,7 +1010,7 @@ function renderSmsDash(box){
     try { await navigator.clipboard.writeText(lines.join("\n")); toast(list.length + " rows copied. Paste into Excel."); } catch(e){ toast("Copy not allowed here"); }
   };
   hd.appendChild(cpl); box.appendChild(hd);
-  if (!list.length) { box.appendChild(el("div","empty","No child has been flagged three days in a row here.")); return; }
+  if (!list.length) { box.appendChild(el("div","empty","No child is due for an SMS here (Diary not brought: 2 days in a row; other cases: 3 days in a row).")); return; }
   const wrap = el("div","list"); let last = "";
   list.forEach(it => {
     const g = "Class " + it.c + " · Section " + it.s;
@@ -1231,7 +1234,7 @@ setInterval(() => {
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && me) { retryDirty(); refresh(); } });
 
 /* ---------- auto-update: if a newer page is published, reload into it ---------- */
-const BUILD = "202611130458";
+const BUILD = "202611130800";
 (function(){
   const run = () => fetch(location.pathname + "?v=" + Date.now(), {cache:"no-store"}).then(r => r.text()).then(t => {
     const m = t.match(/const BUILD = "(\d+)"/);
