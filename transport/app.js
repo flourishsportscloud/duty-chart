@@ -144,20 +144,18 @@ function subscribeConfig(){
 }
 const staffOf=k=>S.alloc[k]||defaultStaff(VBY[k]);
 const ALL_V='All Vehicles';
-const ALL_B='All';
-const selBy=v=>v===ALL_B?((window.FIS_ME||'')?window.FIS_ME+' (All)':'All'):v;
 const isMgr=w=>w===ALL_V||S.managers.includes(w);
 // who is recorded as marker: the selected staff, or for 'All Vehicles' the vehicle's in-charge (or logged-in user)
 const markBy=(sel,vk)=>{const w=$(sel).value;return w===ALL_V?((window.FIS_ME||'')+(window.FIS_ME?' (All Vehicles)':'')||staffOf(vk)):w};
 const vehOf=w=>isMgr(w)?VEH:VEH.filter(v=>staffOf(v.k)===w);
 const LATE_NAMES=["Chandan Soni Sir (Gate)","Narendra Dara Sir (Gate)"];
-const FO_NAMES=["Megha Ma'am (Front Office)","Harshvardhan Soni Sir (Front Office)","Vaishali Ma'am (Front Office)","Preeti Jain Ma'am (Front Office)"];
+const FO_NAMES=["Megha Ma'am (Front Office)","Harshvardhan Soni Sir (Front Office)","Vaishali Ma'am (Front Office)","Preeti Choudhary Ma'am (Front Office)"];
 function modeOf(k){if(k.walk)return S.privVan[k.id]?'Private Van':'By Walk';const t=VBY[k.v].t;return t==='Auto'?'Auto':t==='Bus'?'Bus':t==='Van'?'School Van':(k.v==='VI'?'School Van':'Bus')}
 function modeLabel(k){return k.walk?modeOf(k):VBY[k.v].l}
 const PL_NAMES=["Poonam Ma'am (PL)","Garima Ma'am (PL)","Renu Harsh Ma'am (PL)"];
 const PM_NAMES=["Sanjana Ma'am (PM)","Neetu Ma'am (PM)","Divyanshi Ma'am (PM)","Diksha Ma'am (PM)"];
 function fillSbBy(){const cur=LS.get('sbBy',PL_NAMES[0]);const grp=(l,arr)=>arr.length?'<optgroup label="'+l+'">'+arr.map(s=>'<option'+(s===cur?' selected':'')+'>'+esc(s)+'</option>').join('')+'</optgroup>':'';
-  $('sbBy').innerHTML='<option value="'+ALL_B+'"'+(cur===ALL_B?' selected':'')+'>All</option>'+grp('PL – Classes 6 to 11',PL_NAMES)+grp('PM – Classes 1 to 5',PM_NAMES)+grp('Front Office',FO_NAMES)+grp('Managers',S.managers.map(m=>m+' (Manager)'));}
+  $('sbBy').innerHTML=grp('PL – Classes 6 to 11',PL_NAMES)+grp('PM – Classes 1 to 5',PM_NAMES)+grp('Front Office',FO_NAMES)+grp('Managers',S.managers.map(m=>m+' (Manager)'));}
 function fillStaffSelects(){
   const opts=(cur)=>'<option'+(cur===ALL_V?' selected':'')+'>'+ALL_V+'</option><optgroup label="Vehicle duty staff">'+STAFF.map(s=>'<option'+(s===cur?' selected':'')+'>'+esc(s)+'</option>').join('')+'</optgroup>'+
     (S.managers.length?'<optgroup label="Managers – all vehicles">'+S.managers.map(s=>'<option'+(s===cur?' selected':'')+'>'+esc(s)+'</option>').join('')+'</optgroup>':'');
@@ -214,13 +212,14 @@ function vehStats(v){
 
 /* ---------- views ---------- */
 function setView(v){S.view=v;LS.set('view',v);document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
-  ['duty','late','sb','dep','dash','school','alloc'].forEach(x=>$('v-'+x).classList.toggle('hide',x!==v));
+  ['duty','late','unif','sb','dep','dash','school','alloc'].forEach(x=>$('v-'+x).classList.toggle('hide',x!==v));
 render()}
 
 function render(){
   if(S.view==='duty')renderDuty();
   if(S.view==='sb')renderSB();
   if(S.view==='late')renderLate();
+  if(S.view==='unif')renderUnif();
   if(S.view==='dash')renderDash();
   if(S.view==='school')renderSchool();
   if(S.view==='dep')renderDep();
@@ -270,7 +269,7 @@ function sortObj(o){const r={};Object.keys(o).sort().forEach(k=>r[k]=o[k]);retur
 
 /* GATE */
 let gatePick=null;
-function renderFO(){
+function renderFO(){const _lh=gatePick?lateHist(gatePick):[];window._lateRec=_lh.length?'<p style="margin:8px 0 0;color:var(--late);font-size:13px"><b>'+_lh.length+'× late this month:</b> '+_lh.map(x=>esc(fmtD(x.d))+(x.t?' '+esc(x.t):'')).join(', ')+'</p>':'';
   if(!gatePick){return}
   const k=KID[gatePick];const st=kidStatus(k.id);const g=S.gate[k.id]||{};
   $('modalRoot').innerHTML='<div class="modal" id="fobg"><div class="card"><button class="x" id="gx">×</button><h2>'+esc(k.name)+'</h2><div class="muted">'+esc(k.cls)+' · '+esc(modeLabel(k))+'</div>'+
@@ -284,7 +283,7 @@ function renderFO(){
     (k.walk?'<div class="row" style="margin-top:10px"><span class="muted">Entry-Exit Mode: <b>'+modeOf(k)+'</b></span><button class="btn ghost sm" data-pvan="'+k.id+'">'+(S.privVan[k.id]?'Change to By Walk':'Change to Private Van')+'</button></div>':'')+
     (k.walk?'':'<div class="row" style="margin-top:10px"><span class="muted">'+(S.walkReg[k.id]?'Special list – arrives by vehicle, parent pick-up daily':'Not on the special list')+'</span><button class="btn ghost sm" data-wreg="'+k.id+'">'+(S.walkReg[k.id]?'Remove from Special List':'Add to Special List')+'</button></div>')+
     '<div class="row" style="margin-top:10px"><input type="text" id="gRem" placeholder="Remark (optional)" value="'+esc(gDraft&&gDraft.rem!==undefined?gDraft.rem:(g.rem||''))+'" style="flex:1"><button class="btn" id="gSave">Save</button></div>'+
-    '<p class="muted" style="margin:8px 0 0">Saving as: <b>'+esc(foBy||$('gateBy').value)+'</b>'+(g.by?' · last marked by '+esc(g.by):'')+'</p></div></div>';
+    (window._lateRec||'')+'<p class="muted" style="margin:8px 0 0">Saving as: <b>'+esc(foBy||$('gateBy').value)+'</b>'+(g.by?' · last marked by '+esc(g.by):'')+'</p></div></div>';
 }
 let gDraft=null;let foBy=null;
 const fv=(k,d)=>gDraft&&gDraft[k]!==undefined?gDraft[k]:d;
@@ -396,10 +395,10 @@ function morningNames(list){
 
 async function saveSBClass(sg,by){const dr=(S.sbDraft||{})[sg];if(!dr)return;const ids=Object.keys(dr);if(!ids.length)return;const c=KID[ids[0]].cls;const cur=S.sb[sg]||{};const kids=Object.assign({},cur.kids||{});
   ids.forEach(id=>{const val=dr[id];if(val===!!S.sbReg[id])delete kids[id];else kids[id]=val});
-  await store.set('att/'+S.date+'/sb/'+sg,{cls:c,kids,by:by||selBy($('sbBy').value)||'PL',time:nowT(),ts:Date.now()});delete S.sbDraft[sg];toast(c+' stayback saved')}
+  await store.set('att/'+S.date+'/sb/'+sg,{cls:c,kids,by:by||$('sbBy').value||'PL',time:nowT(),ts:Date.now()});delete S.sbDraft[sg];toast(c+' stayback saved')}
 async function setDaySB(id,val,by){const c=KID[id].cls;const p='att/'+S.date+'/sb/'+seg(c);const cur=S.sb[seg(c)]||{};const kids=Object.assign({},cur.kids||{});
   if(val===!!S.sbReg[id])delete kids[id];else kids[id]=val;
-  await store.set(p,{cls:c,kids,by:by||selBy($('sbBy').value)||'PL',time:nowT(),ts:Date.now()});}
+  await store.set(p,{cls:c,kids,by:by||$('sbBy').value||'PL',time:nowT(),ts:Date.now()});}
 
 /* DASHBOARD */
 function renderDash(){
@@ -410,10 +409,10 @@ function renderDash(){
   const dv=$('dashV').value;$('copyRep').classList.toggle('hide',!!dv);$('dashExtra').classList.toggle('hide',!dv);$('dashT').parentElement.classList.remove('hide');$('dashNote').classList.remove('hide');$('dashF').classList.remove('hide');$('dashS').classList.remove('hide');
   if(dv==='rec'){renderDashRecords();return}
   if(dv==='latem'){renderLateMonthly();return}
+  if(dv==='unifm'){renderUnifMonthly();return}
   if(dv==='vehw'){renderVehWise(list);return}
   if(dv==='arr'){renderDashArr(list);return}
   if(dv==='dep'){renderDashDep(list);return}
-  if(dv==='derr'){renderDashDerr(list);S.lastDerr=list;return}
   if(dv==='week'){renderDashWeek(list);return}
   const T={roll:0,bus:0,abs:0,un:0,late:0,walkin:0,early:0,gowalk:0,sb:0,dep:0,present:0,sub:0};
   const rows=list.map(v=>{const s=vehStats(v);Object.keys(T).forEach(k=>{if(k!=='sub')T[k]+=s[k]});if(s.submitted)T.sub++;
@@ -477,23 +476,7 @@ function renderDashDep(list){
     '<tr class="tot"><td>Total</td><td class="l">'+T.dep+'/'+list.length+' departed</td><td>'+T.go+'</td><td>'+T.b+'</td><td>'+T.early+'</td><td>'+T.walk+'</td><td>'+T.sb+'</td><td>'+(T.du?T.du+' ✗':'')+'</td><td>'+(T.cu?T.cu+' ✗':'')+'</td><td>'+T.err+'</td><td></td></tr></tbody>';
   $('kpis').innerHTML=[['Going in vehicles',T.go,'var(--brand)'],['Boarded',T.b,'var(--p)'],['Vehicles departed',T.dep+'/'+list.length],['Departure errors',T.err,'var(--a)'],['Driver not in uniform',T.du,'var(--a)'],['Conductor not in uniform',T.cu,'var(--a)']].map(k=>'<div class="kpi"><span>'+k[0]+'</span><b style="color:'+(k[2]||'var(--ink)')+'">'+k[1]+'</b></div>').join('');
   const errs=[];list.forEach(v=>((S.derr[v.k]||{}).items||[]).forEach(it=>errs.push([v,it])));
-  $('dashExtra').innerHTML=derrBlock(list);
-}
-function derrList(list){const errs=[];list.forEach(v=>((S.derr[v.k]||{}).items||[]).forEach(it=>errs.push([v,it])));return errs}
-function derrBlock(list){const errs=derrList(list);
-  return '<div class="row" style="justify-content:space-between;margin-bottom:8px"><h2 style="margin:0">Departure errors – '+fmtD(S.date)+'</h2>'+(errs.length?'<button class="btn ghost sm" id="derrCopy">Copy Errors (WhatsApp)</button>':'')+'</div>'+(errs.length?'<div class="tw" style="max-height:none"><table><tr><th>Vehicle</th><th>Error</th><th>Child</th><th>Remark</th><th>By / time</th></tr>'+errs.map(([v,it])=>'<tr><td><b>'+esc(v.l)+'</b></td><td><span class="tag t-A">'+esc(it.type)+'</span></td><td class="l">'+(it.kid&&KID[it.kid]?esc(KID[it.kid].name)+' <span class="muted">'+esc(KID[it.kid].cls)+'</span>':'')+'</td><td class="l">'+esc(it.rem||'')+'</td><td>'+esc(it.by||'')+' '+esc(it.time||'')+'</td></tr>').join('')+'</table></div>':'<p class="muted">No departure errors.</p>');}
-function derrText(list){const errs=derrList(list);const d=new Date(S.date+'T00:00');
-  let t='*FIS Departure Errors – '+d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})+'*\n';
-  if(!errs.length)return t+'\nNo departure errors reported.';
-  let cur='';errs.forEach(([v,it])=>{if(v.k!==cur){cur=v.k;t+='\n*'+v.l+'* ('+staffOf(v.k)+')\n'}
-    const kid=it.kid&&KID[it.kid]?KID[it.kid].name+' ('+KID[it.kid].cls+') – ':'';
-    t+='• '+it.type+' – '+kid+(it.rem?it.rem+' – ':'')+(it.by||'').replace(/ \((Front Office|Gate|Manager|All Vehicles)\)/,'')+' '+(it.time||'')+'\n'});
-  return t+'\nTotal errors: '+errs.length}
-function renderDashDerr(list){
-  const errs=derrList(list);$('dashT').parentElement.classList.add('hide');
-  $('kpis').innerHTML=[['Departure errors',errs.length,'var(--a)'],['Vehicles with errors',new Set(errs.map(e=>e[0].k)).size]].map(k=>'<div class="kpi"><span>'+k[0]+'</span><b style="color:'+(k[2]||'var(--ink)')+'">'+k[1]+'</b></div>').join('');
-  $('dashExtra').innerHTML=derrBlock(list);
-
+  $('dashExtra').innerHTML='<h2>Departure errors – '+fmtD(S.date)+'</h2>'+(errs.length?'<div class="tw" style="max-height:none"><table><tr><th>Vehicle</th><th>Error</th><th>Child</th><th>Remark</th><th>By / time</th></tr>'+errs.map(([v,it])=>'<tr><td><b>'+esc(v.l)+'</b></td><td><span class="tag t-A">'+esc(it.type)+'</span></td><td class="l">'+(it.kid&&KID[it.kid]?esc(KID[it.kid].name)+' <span class="muted">'+esc(KID[it.kid].cls)+'</span>':'')+'</td><td class="l">'+esc(it.rem||'')+'</td><td>'+esc(it.by||'')+' '+esc(it.time||'')+'</td></tr>').join('')+'</table></div>':'<p class="muted">No departure errors.</p>');
 }
 function renderDashWeek(list){
   loadWeek();const dates=weekDates(S.date);
@@ -535,12 +518,31 @@ function renderVehWise(list){
       '<div class="row" style="gap:6px;margin:6px 0"><span class="tag t-PRES">Present '+d.present+'/'+d.roll+'</span><span class="tag t-A">Absent '+d.g.ABS.length+'</span><span class="tag t-VEH">Going home '+d.going+'</span><span class="tag '+(d.od.submitted?'t-PRES':'t-U')+'">Boarded '+(d.od.submitted?d.boarded+'/'+d.going:'not submitted')+'</span>'+(d.vd.submitted?'':'<span class="tag t-U">Morning not submitted</span>')+'</div>'+
       VW_SEG.filter(s=>d.g[s[0]].length).map(s=>'<div style="margin:4px 0;font-size:14px"><span class="tag t-'+s[2]+'">'+s[1]+' '+d.g[s[0]].length+'</span> '+nm(d.g[s[0]])+'</div>').join('')+'</div>'}).join('');
   $('kpis').innerHTML=[['Students',T.roll,'var(--brand)'],['Present',T.present,'var(--p)'],['Absent',T.abs,'var(--a)'],['Going home in vehicles',T.going,'var(--brand)'],['Boarded',T.boarded,'var(--p)']].map(k=>'<div class="kpi"><span>'+k[0]+'</span><b style="color:'+k[2]+'">'+k[1]+'</b></div>').join('');
-  $('dashExtra').innerHTML='<div class="row" style="margin-bottom:10px"><b>Departure Audit – '+esc(fmtD(S.date))+'</b><button class="btn ghost sm" id="vwCopy">Copy List (WhatsApp)</button><span class="muted">Use the vehicle-type and staff filters above.</span></div>'+(cards||'<p class="muted">No vehicles.</p>');
+  $('dashExtra').innerHTML='<div class="row" style="margin-bottom:10px"><b>Vehicle-wise Report – '+esc(fmtD(S.date))+'</b><button class="btn ghost sm" id="vwCopy">Copy List (WhatsApp)</button><span class="muted">Use the vehicle-type and staff filters above.</span></div>'+(cards||'<p class="muted">No vehicles.</p>');
 }
 function vehWiseText(){const f=$('dashF').value,sf=$('dashS').value;const list=VEH.filter(v=>(!f||v.t===f)&&(!sf||staffOf(v.k)===sf));
-  return '*Departure Audit – '+fmtD(S.date)+'*\n'+list.map(v=>{const d=vehWiseData(v);
+  return '*Vehicle-wise Report – '+fmtD(S.date)+'*\n'+list.map(v=>{const d=vehWiseData(v);
     return '\n*'+v.l+'* ('+staffOf(v.k)+')'+(d.vd.arr?' · arrived '+hm12(d.vd.arr):'')+'\nPresent '+d.present+'/'+d.roll+' · Absent '+d.g.ABS.length+' · Going home '+d.going+(d.od.submitted?' · Boarded '+d.boarded:'')+
       VW_SEG.filter(s=>d.g[s[0]].length).map(s=>'\n'+s[1]+': '+d.g[s[0]].map(x=>x.name+' '+shortCls(x.cls)+(x.t?' ('+x.t+')':'')).join(', ')).join('')}).join('\n')}
+
+/* UNIFORM DEFAULTERS – MONTHLY */
+function unifMonthlyRows(){const dates=periodDates('month');const by={};dates.forEach(d=>{const gc=d===S.date?S.gate:((RG.data[d]||{}).gate||{});Object.entries(gc).forEach(([id,g])=>{if(g.unif&&(g.unif.items||[]).length&&KID[id])(by[id]=by[id]||[]).push({d,u:g.unif})})});
+  const it=S.unifItem||'';const min=S.unifMin||1;
+  return Object.entries(by).map(([id,a])=>{const c={};a.forEach(x=>x.u.items.forEach(i=>c[i]=(c[i]||0)+1));return {k:KID[id],a,c}}).filter(r=>(!it||r.c[it])&&r.a.length>=min)
+    .sort((x,y)=>y.a.length-x.a.length||CLASSES.indexOf(x.k.cls)-CLASSES.indexOf(y.k.cls)||x.k.name.localeCompare(y.k.name))}
+function renderUnifMonthly(){
+  $('dashT').parentElement.classList.add('hide');$('dashNote').classList.add('hide');$('dashF').classList.add('hide');$('dashS').classList.add('hide');$('kpis').innerHTML='';
+  const dates=periodDates('month');const mon=new Date(S.date+'T00:00').toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+  const ctl='<div class="row" style="margin-bottom:10px"><b>'+esc(mon)+'</b><select id="unifItem"><option value="">All defects</option>'+UNIF.map(u=>'<option value="'+u[0]+'"'+(S.unifItem===u[0]?' selected':'')+'>'+u[1]+'</option>').join('')+'</select><select id="unifMin">'+[1,2,3,4,5].map(n=>'<option value="'+n+'"'+((S.unifMin||1)===n?' selected':'')+'>'+(n===1?'All defaulters':n+'+ days')+'</option>').join('')+'</select><button class="btn ghost sm" id="unifCopy">Copy List (WhatsApp)</button></div>';
+  loadRange(dates);if(RG.loading||!dates.every(d=>d===S.date||RG.data[d])){$('dashExtra').innerHTML=ctl+'<p class="muted">Loading '+dates.length+' days…</p>';return}
+  const rows=unifMonthlyRows();const tc={};rows.forEach(r=>Object.entries(r.c).forEach(([i,n])=>tc[i]=(tc[i]||0)+n));
+  $('kpis').innerHTML=[['Uniform defaulters',rows.length,'var(--late)'],['Defaulter days',rows.reduce((s,r)=>s+r.a.length,0),'var(--late)'],['3+ days',rows.filter(r=>r.a.length>=3).length,'var(--a)']].map(k=>'<div class="kpi"><span>'+k[0]+'</span><b style="color:'+k[2]+'">'+k[1]+'</b></div>').join('');
+  $('dashExtra').innerHTML=ctl+'<div class="row" style="gap:6px;margin-bottom:10px">'+UNIF.map(u=>'<span class="tag '+(tc[u[0]]?'t-LATE':'t-U')+'">'+u[1]+' '+(tc[u[0]]||0)+'</span>').join('')+'</div>'+
+    (rows.length?'<div class="tw"><table class="grid"><tr><th>#</th><th class="l">Student</th><th>Class</th><th>Vehicle / Mode</th><th>Days</th>'+UNIF.map(u=>'<th>'+u[1].replace(' Forget','').replace('Wrong ','')+'</th>').join('')+'<th class="l">Dates</th></tr>'+
+    rows.map((r,i)=>'<tr><td>'+(i+1)+'</td><td class="l"><b>'+esc(r.k.name)+'</b></td><td>'+esc(shortCls(r.k.cls))+'</td><td>'+esc(vehShort(r.k))+'</td><td><b style="color:'+(r.a.length>=3?'var(--a)':'var(--late)')+'">'+r.a.length+'</b></td>'+UNIF.map(u=>'<td>'+(r.c[u[0]]||'')+'</td>').join('')+'<td class="l">'+r.a.map(x=>esc(fmtD(x.d).replace(/^\w+, /,''))+' ('+esc(unifTxt(x.u))+')').join('; ')+'</td></tr>').join('')+'</table></div>':'<p class="muted">No uniform defaulters recorded this month.</p>');
+}
+function unifMonthlyText(){const mon=new Date(S.date+'T00:00').toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+  return '*Uniform Defaulters – '+mon+(S.unifItem?' ('+UNIFL[S.unifItem]+')':'')+'*\n'+unifMonthlyRows().map((r,i)=>(i+1)+'. '+r.k.name+' '+shortCls(r.k.cls)+' - '+vehShort(r.k)+' - '+r.a.length+' time'+(r.a.length>1?'s':'')+' ('+UNIF.filter(u=>r.c[u[0]]).map(u=>u[1]+(r.c[u[0]]>1?' ×'+r.c[u[0]]:'')).join(', ')+')').join('\n')}
 
 /* LATE DEFAULTERS – MONTHLY */
 const ORD={'P.G.':'PG','Nursery':'Nur','L.KG.':'LKG','U.KG.':'UKG',First:'1',Second:'2',Third:'3',Fourth:'4',Fifth:'5',Sixth:'6',Seventh:'7',Eighth:'8',Ninth:'9',Tenth:'10',Eleventh:'11',Twelfth:'12'};
@@ -723,16 +725,49 @@ function schMatch(r,f){if(!f)return true;const s=r.st;
   return f==='ABS'?!s.present&&s.IN!=='U':f==='U'?s.IN==='U':f==='LATE'?(s.IN==='LATE'||s.IN==='WALKIN'):f==='EARLY'?s.OUT==='EARLY':f==='SB'?s.OUT==='SB':f==='GOWALK'?s.OUT==='GOWALK':f==='VEH'?s.OUT==='VEH':f==='FO'?s.fo:f==='SPW'?!!S.walkReg[r.k.id]:true}
 function schoolRows(){const c=$('schCls').value,m=$('schMode').value,f=$('schSt').value,q=$('schQ').value.trim().toLowerCase();
   return Object.keys(KID).filter(id=>{const k=KID[id];return (!c||k.cls===c||k.cls.split(' - ')[0]===c)&&(!m||modeOf(k)===m)&&(!q||k.name.toLowerCase().includes(q))}).map(schRow).filter(r=>schMatch(r,f))}
+/* month gate history (for late / uniform past record) */
+const MG={key:'',data:{},loading:false};
+async function loadMonthGate(){const dates=periodDates('month').filter(d=>d!==S.date);const key=dates.join(',')+'#'+(S.recTick||0);if(MG.key===key||MG.loading)return;
+  MG.loading=true;MG.key=key;const data={};await store.prefetch(dates);await Promise.all(dates.map(async d=>{data[d]=await store.getCol('att/'+d+'/gate')}));
+  MG.data=data;MG.loading=false;if(S.view==='late'||S.view==='unif')render()}
+function monthGate(){loadMonthGate();const out=Object.assign({},MG.data);out[S.date]=S.gate;return out}
+function lateHist(id){const m=monthGate();return Object.keys(m).sort().filter(d=>{const g=(m[d]||{})[id];return g&&g.in&&g.in.type==='LATE'}).map(d=>({d,t:m[d][id].in.time}))}
+function unifHist(id){const m=monthGate();return Object.keys(m).sort().filter(d=>{const g=(m[d]||{})[id];return g&&g.unif&&g.unif.items&&g.unif.items.length}).map(d=>({d,u:m[d][id].unif}))}
+const UNIF=[['ID','ID Forget'],['UNIFORM','Wrong Uniform'],['SHOES','Wrong Shoes'],['SOCKS','Wrong Socks'],['BELT','Belt Forget'],['TIE','Tie Forget']];const UNIFL=Object.fromEntries(UNIF);
+function histTag(n,word){return n?'<span class="tag '+(n>=3?'t-A':'t-LATE')+'">'+n+'× '+word+' this month</span>':''}
 function renderLate(){
   const cur=LS.get('lateBy',LATE_NAMES[0]);const grp=(l,a)=>a.length?'<optgroup label="'+l+'">'+a.map(s=>'<option'+(s===cur?' selected':'')+'>'+esc(s)+'</option>').join('')+'</optgroup>':'';
-  if(document.activeElement!==$('lateBy'))$('lateBy').innerHTML='<option value="'+ALL_B+'"'+(cur===ALL_B?' selected':'')+'>All</option>'+grp('Late Comers – Gate',LATE_NAMES)+grp('Front Office',FO_NAMES)+grp('Managers',S.managers.map(m=>m+' (Manager)'));
+  if(document.activeElement!==$('lateBy'))$('lateBy').innerHTML=grp('Late Comers – Gate',LATE_NAMES)+grp('Front Office',FO_NAMES)+grp('Managers',S.managers.map(m=>m+' (Manager)'));
   $('lateCut').textContent=hm12(S.lateAfter);
   const q=($('lateQ').value||'').trim().toLowerCase();
   $('lateRes').innerHTML=q.length<2?'':(()=>{const r=Object.values(KID).filter(k=>k.name.toLowerCase().includes(q)).sort((a,b)=>a.name.localeCompare(b.name)).slice(0,25);
-    return r.length?r.map(k=>{const st=kidStatus(k.id);return '<div class="kid" data-pick="'+k.id+'" data-foby="late" style="cursor:pointer"><div class="nm"><div>'+esc(k.name)+'</div><span>'+esc(k.cls)+' · '+esc(modeLabel(k))+'</span></div><span class="tag t-'+st.IN+'">'+esc(LBL[st.IN]||st.IN)+'</span></div>'}).join(''):'<p class="muted">No student found.</p>'})();
+    return r.length?r.map(k=>{const st=kidStatus(k.id);const h=lateHist(k.id);return '<div class="kid" data-pick="'+k.id+'" data-foby="late" style="cursor:pointer"><div class="nm"><div>'+esc(k.name)+'</div><span>'+esc(k.cls)+' · '+esc(modeLabel(k))+'</span>'+(h.length?'<span style="font-size:12px;color:var(--late)">Late: '+h.map(x=>esc(fmtD(x.d).replace(/^\w+, /,''))+(x.t?' '+esc(x.t):'')).join(' · ')+'</span>':'')+'</div><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end"><span class="tag t-'+st.IN+'">'+esc(LBL[st.IN]||st.IN)+'</span>'+histTag(h.length,'late')+'</div></div>'}).join(''):'<p class="muted">No student found.</p>'})();
   const late=Object.values(KID).filter(k=>{const g=S.gate[k.id];return g&&g.in&&g.in.type==='LATE'}).map(k=>({k,g:S.gate[k.id]})).sort((a,b)=>(hmMin(to24(b.g.in.time))||0)-(hmMin(to24(a.g.in.time))||0));
-  $('lateToday').innerHTML='<div class="secthead"><i></i><span>Late Comers – '+fmtD(S.date)+'</span><small>'+late.length+'</small></div>'+(late.length?late.map(({k,g})=>'<div class="kid" data-pick="'+k.id+'" data-foby="late" style="cursor:pointer"><div class="nm"><div>'+esc(k.name)+'</div><span>'+esc(k.cls)+' · '+esc(modeLabel(k))+(g.rem?' · '+esc(g.rem):'')+' · '+esc((g.by||'').replace(/ \((Front Office|Gate)\)/,''))+'</span></div><span class="tag t-LATE">'+esc(g.in.time)+'</span></div>').join(''):'<p class="muted">No late comers yet.</p>');
+  $('lateToday').innerHTML='<div class="secthead"><i></i><span>Late Comers – '+fmtD(S.date)+'</span><small>'+late.length+'</small></div>'+(late.length?late.map(({k,g})=>'<div class="kid" data-pick="'+k.id+'" data-foby="late" style="cursor:pointer"><div class="nm"><div>'+esc(k.name)+'</div><span>'+esc(k.cls)+' · '+esc(modeLabel(k))+(g.rem?' · '+esc(g.rem):'')+' · '+esc((g.by||'').replace(/ \((Front Office|Gate)\)/,''))+'</span></div><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end"><span class="tag t-LATE">'+esc(g.in.time)+'</span>'+histTag(lateHist(k.id).length,'late')+'</div></div>').join(''):'<p class="muted">No late comers yet.</p>');
 }
+function unifTxt(u){return (u.items||[]).map(i=>UNIFL[i]||i).join(', ')}
+function renderUnif(){
+  const cur=LS.get('unifBy',LATE_NAMES[0]);const grp=(l,a)=>a.length?'<optgroup label="'+l+'">'+a.map(s=>'<option'+(s===cur?' selected':'')+'>'+esc(s)+'</option>').join('')+'</optgroup>':'';
+  if(document.activeElement!==$('unifBy'))$('unifBy').innerHTML=grp('Gate',LATE_NAMES)+grp('PL – Classes 6 to 11',PL_NAMES)+grp('PM – Classes 1 to 5',PM_NAMES)+grp('Front Office',FO_NAMES)+grp('Managers',S.managers.map(m=>m+' (Manager)'));
+  const q=($('unifQ').value||'').trim().toLowerCase();
+  const row=(k,right)=>{const h=unifHist(k.id);return '<div class="kid" data-unif="'+k.id+'" style="cursor:pointer"><div class="nm"><div>'+esc(k.name)+'</div><span>'+esc(k.cls)+' · '+esc(modeLabel(k))+'</span>'+(h.length?'<span style="font-size:12px;color:var(--late)">'+h.map(x=>esc(fmtD(x.d).replace(/^\w+, /,''))+': '+esc(unifTxt(x.u))).join(' · ')+'</span>':'')+'</div><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">'+(right||'')+histTag(h.length,'defaulter')+'</div></div>'};
+  $('unifRes').innerHTML=q.length<2?'':(()=>{const r=Object.values(KID).filter(k=>k.name.toLowerCase().includes(q)).sort((a,b)=>a.name.localeCompare(b.name)).slice(0,25);return r.length?r.map(k=>row(k)).join(''):'<p class="muted">No student found.</p>'})();
+  const td=Object.values(KID).filter(k=>{const g=S.gate[k.id];return g&&g.unif&&(g.unif.items||[]).length}).sort((a,b)=>CLASSES.indexOf(a.cls)-CLASSES.indexOf(b.cls)||a.name.localeCompare(b.name));
+  const cnt={};td.forEach(k=>S.gate[k.id].unif.items.forEach(i=>cnt[i]=(cnt[i]||0)+1));
+  $('unifToday').innerHTML='<div class="secthead"><i></i><span>Uniform Defaulters – '+fmtD(S.date)+'</span><small>'+td.length+'</small></div>'+(td.length?'<div class="row" style="gap:6px;margin-bottom:6px">'+UNIF.filter(u=>cnt[u[0]]).map(u=>'<span class="tag t-LATE">'+u[1]+' '+cnt[u[0]]+'</span>').join('')+'</div>'+td.map(k=>row(k,'<span class="tag t-A">'+esc(unifTxt(S.gate[k.id].unif))+'</span>')).join(''):'<p class="muted">No uniform defaulters marked yet.</p>');
+}
+let unifPick=null,unifDraft=null;
+function renderUnifPop(){const k=KID[unifPick];const g=S.gate[unifPick]||{};const u=g.unif||{};if(!unifDraft)unifDraft=new Set(u.items||[]);const h=unifHist(unifPick).filter(x=>x.d!==S.date);
+  $('modalRoot').innerHTML='<div class="modal"><div class="card" style="max-width:520px;width:100%"><div class="row" style="justify-content:space-between"><h2 style="margin:0">'+esc(k.name)+'</h2><button class="btn ghost sm" id="unifClose">Close</button></div><p class="muted" style="margin:4px 0 10px">'+esc(k.cls)+' · '+esc(modeLabel(k))+' · '+esc(fmtD(S.date))+'</p>'+
+    '<label class="f">Uniform defects (tick all that apply)</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px">'+UNIF.map(x=>'<button class="tg '+(unifDraft.has(x[0])?'A':'U')+'" data-uitem="'+x[0]+'" style="width:100%">'+(unifDraft.has(x[0])?'✓ ':'')+x[1]+'</button>').join('')+'</div>'+
+    '<label class="f" style="margin-top:10px">Remark</label><input type="text" id="unifRem" value="'+esc(u.rem||'')+'" style="width:100%" placeholder="Optional">'+
+    (h.length?'<p style="margin:10px 0 0;color:var(--late);font-size:13px"><b>Earlier this month ('+h.length+'×):</b> '+h.map(x=>esc(fmtD(x.d))+' – '+esc(unifTxt(x.u))).join('; ')+'</p>':'<p class="muted" style="margin:10px 0 0">No uniform record earlier this month.</p>')+
+    '<div class="row" style="margin-top:12px"><button class="btn" id="unifSave" style="flex:1">Save</button>'+(u.items&&u.items.length?'<button class="btn ghost" id="unifClear">Remove record</button>':'')+'</div>'+
+    '<p class="muted" style="margin:8px 0 0">Saving as: <b>'+esc($('unifBy').value)+'</b>'+(u.by?' · last marked by '+esc(u.by)+' '+esc(u.time||''):'')+'</p></div></div>';}
+async function saveUnif(items){const path='att/'+S.date+'/gate/'+unifPick;const g=Object.assign({},S.gate[unifPick]||{});
+  if(items.length)g.unif={items,by:$('unifBy').value,time:nowT(),rem:($('unifRem')||{}).value||''};else delete g.unif;g.ts=Date.now();
+  if(!g.in&&!g.out&&!g.unif)await store.del(path);else await store.set(path,g);
+  toast(KID[unifPick].name+(items.length?' – uniform defaulter saved':' – record removed'));unifPick=null;unifDraft=null;$('modalRoot').innerHTML='';render()}
 function renderSchool(){
   const dk=Object.values(KID).filter(k=>sbDoubt(k.id)).sort((a,b)=>CLASSES.indexOf(a.cls)-CLASSES.indexOf(b.cls)||a.name.localeCompare(b.name));
   $('schDoubt').classList.toggle('hide',!dk.length);
@@ -763,7 +798,7 @@ function renderAlloc(){
 
 /* ---------- events ---------- */
 document.addEventListener('click',async e=>{
-  const t=e.target.closest('button,[data-pick],[data-veh],#mbg,#fobg');if(!t)return;
+  const t=e.target.closest('button,[data-pick],[data-unif],[data-veh],#mbg,#fobg');if(!t)return;
   if(t.dataset.v){setView(t.dataset.v);return}
   if(t.dataset.pvan){const id=t.dataset.pvan;const kids=Object.assign({},S.privVan);if(kids[id])delete kids[id];else kids[id]=true;await store.set('config/privateVan',{kids,ts:Date.now()});toast(KID[id].name+' → '+(kids[id]?'Private Van':'By Walk'));renderFO();return}
   if(t.id==='mgrAdd'){const n=$('mgrName').value.trim();if(!n)return;if(S.managers.includes(n)||STAFF.includes(n)){toast('Already in the list');return}
@@ -777,6 +812,7 @@ document.addEventListener('click',async e=>{
   if(t.dataset.recper){S.recPer=t.dataset.recper;renderDash();return}
   if(t.dataset.recseg){S.recSeg=t.dataset.recseg;renderDash();return}
   if(t.id==='recRefresh'){S.recTick=(S.recTick||0)+1;RG.key='';renderDash();return}
+  if(t.id==='unifCopy'){const txt=unifMonthlyText();try{await navigator.clipboard.writeText(txt);toast('Copied')}catch(err){showText(txt)}return}
   if(t.id==='vwCopy'){const txt=vehWiseText();try{await navigator.clipboard.writeText(txt);toast('Copied')}catch(err){showText(txt)}return}
   if(t.id==='lateCopy'){const txt=lateMonthlyText();try{await navigator.clipboard.writeText(txt);toast('Copied')}catch(err){showText(txt)}return}
   if(t.id==='recCopy'){const txt=recText();try{await navigator.clipboard.writeText(txt);toast('Copied')}catch(err){showText(txt)}return}
@@ -794,6 +830,11 @@ document.addEventListener('click',async e=>{
     await store.set('att/'+S.date+'/out/'+v.k,{marks:sortObj(depDraft),going:go,by:markBy('depStaff',v.k),time:nowT(),submitted:true,ts:Date.now()});toast(v.l+' departure saved');S.depVeh=null;depDraft=null;render();return}
   if(t.dataset.open){S.openVeh=t.dataset.open;draft=null;mDraft=null;render();window.scrollTo(0,0);return}
   if(t.id==='backV'){S.openVeh=null;draft=null;mDraft=null;render();return}
+  if(t.dataset.unif){unifPick=t.dataset.unif;unifDraft=null;renderUnifPop();return}
+  if(t.dataset.uitem){unifDraft.has(t.dataset.uitem)?unifDraft.delete(t.dataset.uitem):unifDraft.add(t.dataset.uitem);const r=$('unifRem').value;renderUnifPop();$('unifRem').value=r;return}
+  if(t.id==='unifClose'){unifPick=null;unifDraft=null;$('modalRoot').innerHTML='';return}
+  if(t.id==='unifSave'){if(!unifDraft.size){toast('Tick at least one defect');return}await saveUnif(UNIF.map(x=>x[0]).filter(i=>unifDraft.has(i)));return}
+  if(t.id==='unifClear'){await saveUnif([]);return}
   if(t.dataset.leftdel){const nl=Object.assign({},LEFT);delete nl[t.dataset.leftdel];await store.set('config/settings',Object.assign({},S.settings||{},{lateAfter:S.lateAfter,left:nl,ts:Date.now()}));return}
   if(t.dataset.tg){const n=t.dataset.tg;const auto=VBY[S.openVeh].t==='Auto'&&!/^x/.test(n);draft[n]=draft[n]==='P'?'A':(draft[n]==='A'&&auto)?'PD':'P';if(draft[n]!=='PD'&&mDraft.depBy)delete mDraft.depBy[n];renderDutyVeh();return}
   if(t.dataset.depby){const [n,w]=t.dataset.depby.split(':');mDraft.depBy=mDraft.depBy||{};if(w==='PARENT')mDraft.depBy[n]='PARENT';else delete mDraft.depBy[n];renderDutyVeh();return}
@@ -805,7 +846,7 @@ document.addEventListener('click',async e=>{
     if(un&&!t.dataset.confirm){t.dataset.confirm=1;t.textContent=un+' not marked – tap again to save';return}
     await store.set('att/'+S.date+'/veh/'+v.k,{marks:sortObj(draft),by:markBy('dutyStaff',v.k),time:nowT(),arr:$('arrT').value||'',driverU:(mDraft||{}).driverU||null,condU:(mDraft||{}).condU||null,depBy:(mDraft||{}).depBy||{},extra:(mDraft||{}).extra||{},submitted:true,ts:Date.now()});
     toast(v.l+' saved');S.openVeh=null;draft=null;mDraft=null;render();return}
-  if(t.dataset.pick){gatePick=t.dataset.pick;gDraft=null;foBy=t.dataset.foby==='sb'?selBy($('sbBy').value):t.dataset.foby==='late'?selBy($('lateBy').value):null;
+  if(t.dataset.pick){gatePick=t.dataset.pick;gDraft=null;foBy=t.dataset.foby==='sb'?$('sbBy').value:t.dataset.foby==='late'?$('lateBy').value:null;
     if(t.dataset.foby==='late'){const g=S.gate[gatePick]||{};gDraft={in:g.in&&g.in.type?g.in.type:(nowHM()>S.lateAfter?'LATE':'PRES'),out:g.out&&g.out.type||null}}
     renderFO();return}
   if(t.id==='gx'||(t.id==='fobg'&&e.target.id==='fobg')){gatePick=null;gDraft=null;$('modalRoot').innerHTML='';return}
@@ -814,8 +855,8 @@ document.addEventListener('click',async e=>{
     gDraft.rem=$('gRem').value;gDraft.inT=$('gInT').value;gDraft.outT=$('gOutT').value;gDraft[side]=gDraft[side]===type?null:type;renderFO();return}
   if(t.id==='gSave'){const g=S.gate[gatePick]||{};const d=gDraft||{in:g.in&&g.in.type||null,out:g.out&&g.out.type||null};
     const path='att/'+S.date+'/gate/'+gatePick;
-    if(!d.in&&!d.out){await store.del(path)}
-    else{const body={by:foBy||$('gateBy').value,rem:$('gRem').value.trim(),ts:Date.now()};
+    if(!d.in&&!d.out){if(g.unif)await store.set(path,{unif:g.unif,ts:Date.now()});else await store.del(path)}
+    else{const body={by:foBy||$('gateBy').value,rem:$('gRem').value.trim(),ts:Date.now()};if(g.unif)body.unif=g.unif;
       if(d.in)body.in={type:d.in,time:hm12($('gInT').value||nowHM())};
       if(d.out)body.out={type:d.out,time:hm12($('gOutT').value||nowHM())};
       await store.set(path,body)}
@@ -825,12 +866,11 @@ document.addEventListener('click',async e=>{
   if(t.dataset.sbsave){await saveSBClass(t.dataset.sbsave);render();return}
   if(t.dataset.sbcancel){delete (S.sbDraft||{})[t.dataset.sbcancel];render();return}
   if(t.dataset.dclr){const [id,v]=t.dataset.dclr.split('|');await setDaySB(id,v==='1',$('gateBy').value);toast(KID[id].name+(v==='1'?' – staying (confirmed)':' – not staying (confirmed)'));return}
-  if(t.dataset.sbreg){const id=t.dataset.sbreg;const kids=Object.assign({},S.sbReg);if(kids[id])delete kids[id];else kids[id]=true;await store.set('config/sbRegular',{kids,by:selBy($('sbBy').value),ts:Date.now()});return}
+  if(t.dataset.sbreg){const id=t.dataset.sbreg;const kids=Object.assign({},S.sbReg);if(kids[id])delete kids[id];else kids[id]=true;await store.set('config/sbRegular',{kids,by:$('sbBy').value,ts:Date.now()});return}
   if(t.dataset.wreg){const id=t.dataset.wreg;const kids=Object.assign({},S.walkReg);if(kids[id])delete kids[id];else kids[id]=true;await store.set('config/walkRegular',{kids,ts:Date.now()});toast(KID[id].name+(kids[id]?' added to':' removed from')+' special list');renderFO();return}
   if(t.dataset.veh){modalVeh=t.dataset.veh;renderModal();return}
   if(t.id==='mx'||t.id==='mbg'&&e.target.id==='mbg'){modalVeh=null;$('modalRoot').innerHTML='';return}
   if(t.id==='copySch'){const txt=schoolText();try{await navigator.clipboard.writeText(txt);toast('Summary copied')}catch(err){showText(txt)}return}
-  if(t.id==='derrCopy'){const f=$('dashF').value,sf=$('dashS').value;const txt=derrText(VEH.filter(v=>(!f||v.t===f)&&(!sf||staffOf(v.k)===sf)));try{await navigator.clipboard.writeText(txt);toast('Errors copied – paste in WhatsApp')}catch(err){showText(txt)}return}
   if(t.id==='copyRep'){const txt=reportText();try{await navigator.clipboard.writeText(txt);toast('Report copied')}catch(err){showText(txt)}return}
 });
 function showText(txt){$('modalRoot').innerHTML='<div class="modal" id="mbg"><div class="card"><button class="x" id="mx">×</button><h2>Report – select &amp; copy</h2><textarea readonly>'+esc(txt)+'</textarea></div></div>'}
@@ -849,11 +889,14 @@ document.addEventListener('change',async e=>{
   if(t.id==='sbMode'){render()}
   if(t.id==='exPick'&&t.value){const k=KID[t.value];const x='x'+Date.now().toString(36);mDraft.extra[x]={name:k.name,cls:k.cls,from:VBY[k.v].l,id:k.id};draft[x]='P';renderDutyVeh();return}
   if(t.id==='sbAdd'&&t.value){const id=t.value,sg=seg(KID[id].cls);S.sbDraft=S.sbDraft||{};(S.sbDraft[sg]=S.sbDraft[sg]||{})[id]=true;toast(KID[id].name+' added – press Save for the class');render()}
-  if(t.id==='sbAddReg'&&t.value){const id=t.value;const kids=Object.assign({},S.sbReg);kids[id]=true;await store.set('config/sbRegular',{kids,by:selBy($('sbBy').value),ts:Date.now()});toast(KID[id].name+' added to the regular stayback list')}
+  if(t.id==='sbAddReg'&&t.value){const id=t.value;const kids=Object.assign({},S.sbReg);kids[id]=true;await store.set('config/sbRegular',{kids,by:$('sbBy').value,ts:Date.now()});toast(KID[id].name+' added to the regular stayback list')}
   if(t.id==='sbBy'){LS.set('sbBy',t.value)}
   if(t.id==='lateBy'){LS.set('lateBy',t.value)}
+  if(t.id==='unifBy'){LS.set('unifBy',t.value)}
+  if(t.id==='unifItem'){S.unifItem=t.value;renderDash();return}
+  if(t.id==='unifMin'){S.unifMin=+t.value;renderDash();return}
   if(t.id==='lateMin'){S.lateMin=+t.value;renderDash();return}
-  if(t.dataset.addfo&&t.value){const g=S.gate[t.value]||{};gatePick=t.value;foBy=selBy($('sbBy').value);gDraft={in:g.in&&g.in.type||null,out:g.out&&g.out.type||null};if(t.dataset.addfo==='LATE')gDraft.in='LATE';else gDraft.out='EARLY';t.value='';renderFO();return}
+  if(t.dataset.addfo&&t.value){const g=S.gate[t.value]||{};gatePick=t.value;foBy=$('sbBy').value;gDraft={in:g.in&&g.in.type||null,out:g.out&&g.out.type||null};if(t.dataset.addfo==='LATE')gDraft.in='LATE';else gDraft.out='EARLY';t.value='';renderFO();return}
   if(t.id==='sbGrade'){setGrade(t.value);return}
   if(t.dataset.sec){const s=new Set(selClasses());t.checked?s.add(t.dataset.sec):s.delete(t.dataset.sec);setClasses(CLASSES.filter(x=>s.has(x)));return}
   if(t.id==='gateBy'){LS.set('gateBy',t.value)}
@@ -862,6 +905,7 @@ document.addEventListener('change',async e=>{
   if(t.id==='recRep'){S.recRep=t.checked;renderDash();return}
   if(t.dataset.alloc){const map=Object.assign({},S.alloc);const v=VBY[t.dataset.alloc];if(t.value===defaultStaff(v))delete map[v.k];else map[v.k]=t.value;await store.set('config/alloc',{map,ts:Date.now()});toast(v.l+' → '+t.value)}
 });
+$('unifQ').addEventListener('input',()=>{clearTimeout(window._uq);window._uq=setTimeout(renderUnif,200)});
 $('lateQ').addEventListener('input',()=>{clearTimeout(window._lq);window._lq=setTimeout(renderLate,200)});
 $('schQ').addEventListener('input',()=>{clearTimeout(window._sq);window._sq=setTimeout(renderSchool,250)});
 
