@@ -6,7 +6,7 @@
    - action and SMS times are stamped by the server, so nobody can back-date them
 */
 const ROLES=["cm","pl","admin"];
-const CATS=["rem","def","eng","sig","beh","tv","study","play"];
+const CATS=["rem","def","nb","eng","sig","beh","tv","study","play"];
 const TOKEN_DAYS=120;
 const WINDOW_DAYS=35;       // state() sends this many days back from the date being viewed
 const BACKDATE_DAYS=30;     // marks can be entered or corrected up to 30 days back
@@ -168,7 +168,7 @@ const API={
   // admin: SMS sent / undone for a child and category
   markSms(ctx,token,id,sent,info){
     const me=needAdmin(ctx,token);
-    id=str(id,20);if(!/^\d{1,2}[A-Z]\d{1,3}_(def|eng|sig|beh|tv|study|play)$/.test(id))fail("Unknown SMS item.");
+    id=str(id,20);if(!/^\d{1,2}[A-Z]\d{1,3}_(def|nb|eng|sig|beh|tv|study|play)$/.test(id))fail("Unknown SMS item.");
     if(!sent){deleteRow_("Sms",id);ctx.log(me.name,"sms undone",id,"");return {}}
     info=info||{};
     const sentOn=isoDate(info.sentOn)&&info.sentOn<=ctx.today?info.sentOn:ctx.today;

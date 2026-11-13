@@ -650,11 +650,12 @@ let acts = {};            // "2026-10-27_1A9" -> {log:[{a,cats,at,by}]}
 let smsRec = {};          // "1A9_def" -> {sentOn, sentAt, remark}
 const aPending = {}, aWriting = {};
 let pMsg = ""; const aBusy = {};
-const FIELD = {def:"d", eng:"e", sig:"s", beh:"b", tv:"v", study:"y", play:"p", rem:"r"};
-const LABEL = {rem:"Parent remark", def:"Diary not completed", eng:"Spoken English", sig:"Parent signature", beh:"Conduct", tv:"TV hour", study:"Study hour", play:"Play hour"};
+const FIELD = {def:"d", nb:"a", eng:"e", sig:"s", beh:"b", tv:"v", study:"y", play:"p", rem:"r"};
+const LABEL = {rem:"Parent remark", def:"Diary not completed", nb:"Diary not brought", eng:"Spoken English", sig:"Parent signature", beh:"Conduct", tv:"TV hour", study:"Study hour", play:"Play hour"};
 const QUICK = {
   rem:["Noted","Counselled","Warned"],
   def:["Student cautioned","Called parent"],
+  nb:["Student cautioned","Called parent"],
   eng:["Student guided","Called parent"],
   sig:["Parent reminded","Called parent"],
   beh:["Student counselled","Called parent"],
@@ -663,8 +664,8 @@ const QUICK = {
   play:["Student guided","Called parent"]
 };
 const ADMIN_QUICK = ["Noted","Counselled","Warned"];
-const STREAK_CATS = ["def","eng","sig","beh","tv","study","play"];
-const DEF_SEG = ["def","eng","sig","beh","tv","study","play"];
+const STREAK_CATS = ["def","nb","eng","sig","beh","tv","study","play"];
+const DEF_SEG = ["def","nb","eng","sig","beh","tv","study","play"];
 
 function shiftDate(s, n){
   const [y,m,d] = s.split("-").map(Number); const t = new Date(Date.UTC(y, m-1, d + n));
@@ -684,28 +685,31 @@ function gap(from, to){
 }
 function flagged(m, cat){
   if (!m || m.a === 1) return false;
-  return cat === "def" ? (m.d === 1 || m.a === 3) : cat === "eng" ? m.e === 2 : cat === "sig" ? m.s === 2 : cat === "beh" ? m.b === 2 : cat === "tv" ? m.v === 2 : cat === "study" ? m.y === 2 : m.p === 2;
+  return cat === "def" ? m.d === 1 : cat === "nb" ? m.a === 3 : cat === "eng" ? m.e === 2 : cat === "sig" ? m.s === 2 : cat === "beh" ? m.b === 2 : cat === "tv" ? m.v === 2 : cat === "study" ? m.y === 2 : m.p === 2;
 }
-function goodMark(m, cat){
-  return cat === "def" ? m.d === 2 : cat === "eng" ? m.e === 1 : cat === "sig" ? m.s === 1 : cat === "beh" ? m.b === 1 : cat === "tv" ? m.v === 1 : cat === "study" ? m.y === 1 : m.p === 1;
-}
+/* Consecutive-day count for the SMS list. Only days on which the child's section was marked count as
+   school days. The run must end on the section's latest marked day, and it breaks on any day the child
+   was not flagged (absent, marked fine, or left blank) and on any gap of more than 4 calendar days
+   between marked days (holidays, or days nobody marked), so old cases never join up with new ones. */
 function streak(c, s, i, cat){
-  const k = key(s,i); let n = 0, start = null;
-  for (let b = 0; b < 14; b++){
+  const k = key(s,i); let n = 0, start = null, prev = null;
+  for (let b = 0; b < 21; b++){
     const dt = shiftDate(date, -b), d = docs[dt + "_" + c];
     if (!d || !secDone(c, s, dt)) continue;
-    const mm = d.m[k] || {};
-    if (flagged(mm, cat)) { n++; start = dt; }
-    else if (goodMark(mm, cat)) break;
+    if (prev && dayGap(dt, prev) > 4) break;
+    if (!flagged(d.m[k] || {}, cat)) break;
+    n++; start = dt; prev = dt;
   }
   return {n, start};
 }
+function dayGap(a, b){ return Math.round((new Date(b + "T00:00:00Z") - new Date(a + "T00:00:00Z")) / 864e5); }
 function issuesFor(c, s, i, seg, dt){
   const m = mark(c, s, i, dt), t = m.t || {}, out = [];
   if (seg === "rem") {
     if (m.r && m.r.trim()) out.push({cat:"rem", text:m.r.trim(), at:t.r});
   } else if (m.a !== 1) {
-    if (m.d === 1 || m.a === 3) out.push({cat:"def", at:m.d === 1 ? t.d : t.a});
+    if (m.a === 3) out.push({cat:"nb", at:t.a});
+    if (m.d === 1) out.push({cat:"def", at:t.d});
     if (m.e === 2) out.push({cat:"eng", at:t.e});
     if (m.s === 2) out.push({cat:"sig", at:t.s});
     if (m.b === 2) out.push({cat:"beh", at:t.b});
@@ -852,17 +856,18 @@ function renderPL(){
 
 /* ---------- SMS (admin) ---------- */
 function smsText(first, cat, n){
-  const f = first.charAt(0) + first.slice(1).toLowerCase();
+  const f = first.charAt(0) + first.slice(1).toLowerCase(), p = n + " days";
   const t = {
-    def:"has not completed diary work for " + n + " days in a row. Please check the diary daily.",
-    eng:"has not spoken in English at school for " + n + " days in a row. Please encourage English at home.",
-    sig:"diary has not been signed by a parent for " + n + " days in a row. Please sign the diary daily.",
-    beh:"has shown conduct concerns at school for " + n + " days in a row. Please talk to your child.",
-    tv:"has not followed the TV hour routine at home for " + n + " days in a row. Please follow the school's TV hour schedule.",
-    study:"has not followed the study hour routine at home for " + n + " days in a row. Please ensure daily study time.",
-    play:"has not followed the play hour routine at home for " + n + " days in a row. Please ensure daily play time."
+    sig:"your ward " + f + "'s diary has not been signed by you for the past " + p + ". You are requested to ensure that you sign your ward's diary every day.",
+    nb:"your ward " + f + " has not brought the diary to school for the past " + p + ". You are requested to ensure that your ward brings the diary to school every day.",
+    def:"your ward " + f + "'s diary work has not been completed for the past " + p + ". You are requested to ensure that your ward completes the diary work every day.",
+    eng:"your ward " + f + " has not been speaking in English at school for the past " + p + ". You are requested to encourage your ward to speak in English at home as well.",
+    beh:"your ward " + f + "'s behaviour at school has not been appropriate for the past " + p + ". You are requested to talk to your ward about it.",
+    tv:"your ward " + f + " has not followed the TV hour routine at home for the past " + p + ". You are requested to ensure that your ward follows the TV hour routine every day.",
+    study:"your ward " + f + " has not followed the study hour routine at home for the past " + p + ". You are requested to ensure that your ward follows the study hour routine every day.",
+    play:"your ward " + f + " has not followed the play hour routine at home for the past " + p + ". You are requested to ensure that your ward follows the play hour routine every day."
   };
-  return "Dear Parent, " + f + " " + t[cat];
+  return "Dear Parent,\nGreetings!\nThis is to inform you that " + t[cat] + "\nRegards";
 }
 function smsDue(){
   const out = [];
@@ -959,7 +964,7 @@ function smsCard(it){
   head.appendChild(it.sent ? statusChip("SMS sent", "ok") : statusChip("SMS to send", "acc"));
   card.appendChild(head);
   const msg = smsText(firstName(it.nm), it.cat, it.n);
-  card.appendChild(el("blockquote","quote", msg));
+  const q = el("blockquote","quote", msg); q.style.whiteSpace = "pre-line"; card.appendChild(q);
   if (it.sent) {
     const tl = el("div","tl"), r = el("div","tl-row");
     r.appendChild(el("span","tl-role ad","Admin")); r.appendChild(el("span","tl-text", "SMS sent" + (it.rec.remark ? " · " + it.rec.remark : "")));
@@ -998,7 +1003,7 @@ function renderSmsDash(box){
   const cpl = el("button","tab sbtn-go","Copy list for Excel"); cpl.type = "button";
   cpl.onclick = async () => {
     const lines = [["Class","Section","Roll","Name","Category","Consecutive days","SMS","Status","Sent time"].join("\t")];
-    list.forEach(it => lines.push([it.c, it.s, it.i + 1, it.nm, LABEL[it.cat], it.n, smsText(firstName(it.nm), it.cat, it.n), it.sent ? "Sent" : "To send", it.sent && it.rec.sentAt ? fmtT(it.rec.sentAt) : ""].join("\t")));
+    list.forEach(it => lines.push([it.c, it.s, it.i + 1, it.nm, LABEL[it.cat], it.n, smsText(firstName(it.nm), it.cat, it.n).replace(/\n/g, " "), it.sent ? "Sent" : "To send", it.sent && it.rec.sentAt ? fmtT(it.rec.sentAt) : ""].join("\t")));
     try { await navigator.clipboard.writeText(lines.join("\n")); toast(list.length + " rows copied. Paste into Excel."); } catch(e){ toast("Copy not allowed here"); }
   };
   hd.appendChild(cpl); box.appendChild(hd);
@@ -1226,7 +1231,7 @@ setInterval(() => {
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && me) { retryDirty(); refresh(); } });
 
 /* ---------- auto-update: if a newer page is published, reload into it ---------- */
-const BUILD = "202611120543";
+const BUILD = "202611130458";
 (function(){
   const run = () => fetch(location.pathname + "?v=" + Date.now(), {cache:"no-store"}).then(r => r.text()).then(t => {
     const m = t.match(/const BUILD = "(\d+)"/);
