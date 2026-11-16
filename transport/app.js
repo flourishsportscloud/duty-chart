@@ -411,6 +411,7 @@ function renderDash(){
   if(dv==='latem'){renderLateMonthly();return}
   if(dv==='unifm'){renderUnifMonthly();return}
   if(dv==='vehw'){renderVehWise(list);return}
+  if(dv==='berr'){renderBusErr(list);return}
   if(dv==='arr'){renderDashArr(list);return}
   if(dv==='dep'){renderDashDep(list);return}
   if(dv==='week'){renderDashWeek(list);return}
@@ -518,10 +519,10 @@ function renderVehWise(list){
       '<div class="row" style="gap:6px;margin:6px 0"><span class="tag t-PRES">Present '+d.present+'/'+d.roll+'</span><span class="tag t-A">Absent '+d.g.ABS.length+'</span><span class="tag t-VEH">Going home '+d.going+'</span><span class="tag '+(d.od.submitted?'t-PRES':'t-U')+'">Boarded '+(d.od.submitted?d.boarded+'/'+d.going:'not submitted')+'</span>'+(d.vd.submitted?'':'<span class="tag t-U">Morning not submitted</span>')+'</div>'+
       VW_SEG.filter(s=>d.g[s[0]].length).map(s=>'<div style="margin:4px 0;font-size:14px"><span class="tag t-'+s[2]+'">'+s[1]+' '+d.g[s[0]].length+'</span> '+nm(d.g[s[0]])+'</div>').join('')+'</div>'}).join('');
   $('kpis').innerHTML=[['Students',T.roll,'var(--brand)'],['Present',T.present,'var(--p)'],['Absent',T.abs,'var(--a)'],['Going home in vehicles',T.going,'var(--brand)'],['Boarded',T.boarded,'var(--p)']].map(k=>'<div class="kpi"><span>'+k[0]+'</span><b style="color:'+k[2]+'">'+k[1]+'</b></div>').join('');
-  $('dashExtra').innerHTML='<div class="row" style="margin-bottom:10px"><b>Vehicle-wise Report – '+esc(fmtD(S.date))+'</b><button class="btn ghost sm" id="vwCopy">Copy List (WhatsApp)</button><span class="muted">Use the vehicle-type and staff filters above.</span></div>'+(cards||'<p class="muted">No vehicles.</p>');
+  $('dashExtra').innerHTML='<div class="row" style="margin-bottom:10px"><b>Departure Audit – '+esc(fmtD(S.date))+'</b><button class="btn ghost sm" id="vwCopy">Copy List (WhatsApp)</button><span class="muted">Use the vehicle-type and staff filters above.</span></div>'+(cards||'<p class="muted">No vehicles.</p>');
 }
 function vehWiseText(){const f=$('dashF').value,sf=$('dashS').value;const list=VEH.filter(v=>(!f||v.t===f)&&(!sf||staffOf(v.k)===sf));
-  return '*Vehicle-wise Report – '+fmtD(S.date)+'*\n'+list.map(v=>{const d=vehWiseData(v);
+  return '*Departure Audit – '+fmtD(S.date)+'*\n'+list.map(v=>{const d=vehWiseData(v);
     return '\n*'+v.l+'* ('+staffOf(v.k)+')'+(d.vd.arr?' · arrived '+hm12(d.vd.arr):'')+'\nPresent '+d.present+'/'+d.roll+' · Absent '+d.g.ABS.length+' · Going home '+d.going+(d.od.submitted?' · Boarded '+d.boarded:'')+
       VW_SEG.filter(s=>d.g[s[0]].length).map(s=>'\n'+s[1]+': '+d.g[s[0]].map(x=>x.name+' '+shortCls(x.cls)+(x.t?' ('+x.t+')':'')).join(', ')).join('')}).join('\n')}
 
@@ -543,6 +544,40 @@ function renderUnifMonthly(){
 }
 function unifMonthlyText(){const mon=new Date(S.date+'T00:00').toLocaleDateString('en-IN',{month:'long',year:'numeric'});
   return '*Uniform Defaulters – '+mon+(S.unifItem?' ('+UNIFL[S.unifItem]+')':'')+'*\n'+unifMonthlyRows().map((r,i)=>(i+1)+'. '+r.k.name+' '+shortCls(r.k.cls)+' - '+vehShort(r.k)+' - '+r.a.length+' time'+(r.a.length>1?'s':'')+' ('+UNIF.filter(u=>r.c[u[0]]).map(u=>u[1]+(r.c[u[0]]>1?' ×'+r.c[u[0]]:'')).join(', ')+')').join('\n')}
+
+
+/* BUS ERROR REPORT – MONTHLY (departure errors + driver/conductor uniform, morning & departure) */
+function busErrRows(list){const dates=periodDates('month');const rows=[];const per={};
+  dates.forEach(d=>{const dd=d===S.date?{veh:S.veh,derr:S.derr}:(RG.data[d]||{});
+    list.forEach(v=>{const p=(per[v.k]=per[v.k]||{v,n:0,t:{},du:0,cu:0});const vd=(dd.veh||{})[v.k]||{};const de=(dd.derr||{})[v.k]||{};const ch=de.checks||{};
+      (de.items||[]).filter(it=>it.type!=='Driver uniform'&&it.type!=='Conductor uniform').forEach(it=>{p.n++;p.t[it.type]=(p.t[it.type]||0)+1;rows.push({d,v,type:it.type,kid:it.kid,rem:it.rem||'',by:(it.by||'')+(it.time?' · '+it.time:'')})});
+      const dr=[];if(vd.driverU==='NOT')dr.push('morning');if(ch.driver==='NOT')dr.push('departure');((de.items||[]).filter(it=>it.type==='Driver uniform')).forEach(it=>{if(!dr.includes('departure'))dr.push('departure')});
+      const cr=[];if(vd.condU==='NOT')cr.push('morning');if(ch.conductor==='NOT')cr.push('departure');((de.items||[]).filter(it=>it.type==='Conductor uniform')).forEach(it=>{if(!cr.includes('departure'))cr.push('departure')});
+      if(dr.length){p.du++;p.n++;rows.push({d,v,type:'Driver not in uniform',kid:'',rem:dr.join(' & '),by:''})}
+      if(cr.length){p.cu++;p.n++;rows.push({d,v,type:'Conductor not in uniform',kid:'',rem:cr.join(' & '),by:''})}})});
+  if(S.berrType)return {rows:rows.filter(r=>r.type===S.berrType),per};return {rows,per}}
+const BERR_T=['Wrong marking','Child stayed back (marked going)','Child not staying back (marked SB)','Child missing at departure','Other'];
+function renderBusErr(list){
+  $('dashT').parentElement.classList.add('hide');$('dashNote').classList.add('hide');$('dashS').classList.add('hide');$('kpis').innerHTML='';
+  const dates=periodDates('month');const mon=new Date(S.date+'T00:00').toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+  const types=BERR_T.concat(['Driver not in uniform','Conductor not in uniform']);
+  const ctl='<div class="row" style="margin-bottom:10px"><b>Bus Error Report – '+esc(mon)+'</b><select id="berrType"><option value="">All errors</option>'+types.map(t=>'<option'+(S.berrType===t?' selected':'')+'>'+esc(t)+'</option>').join('')+'</select><button class="btn ghost sm" id="berrCopy">Copy List (WhatsApp)</button></div>';
+  loadRange(dates);if(RG.loading||!dates.every(d=>d===S.date||RG.data[d])){$('dashExtra').innerHTML=ctl+'<p class="muted">Loading '+dates.length+' days…</p>';return}
+  const {rows,per}=busErrRows(list);const pv=Object.values(per).filter(p=>p.n).sort((a,b)=>b.n-a.n);
+  const tot={n:0,du:0,cu:0,t:{}};pv.forEach(p=>{tot.n+=p.n;tot.du+=p.du;tot.cu+=p.cu;Object.entries(p.t).forEach(([k,n])=>tot.t[k]=(tot.t[k]||0)+n)});
+  $('kpis').innerHTML=[['Total errors',tot.n,'var(--a)'],['Vehicles with errors',pv.length+'/'+list.length,'var(--late)'],['Driver not in uniform (days)',tot.du,'var(--a)'],['Conductor not in uniform (days)',tot.cu,'var(--a)']].map(k=>'<div class="kpi"><span>'+k[0]+'</span><b style="color:'+k[2]+'">'+k[1]+'</b></div>').join('');
+  const sh=t=>({'Wrong marking':'Wrong marking','Child stayed back (marked going)':'Stayed back (marked going)','Child not staying back (marked SB)':'Not staying (marked SB)','Child missing at departure':'Missing at departure','Other':'Other'})[t]||t;
+  let h=ctl+'<div class="secthead"><i></i><span>Vehicle-wise summary</span></div>'+(pv.length?'<div class="tw"><table class="grid"><tr><th>#</th><th class="l">Vehicle</th><th class="l">Duty</th><th>Total</th>'+BERR_T.map(t=>'<th>'+esc(sh(t))+'</th>').join('')+'<th>Driver uniform ✗</th><th>Conductor uniform ✗</th></tr>'+
+    pv.map((p,i)=>'<tr class="click" data-veh="'+p.v.k+'"><td>'+(i+1)+'</td><td class="l"><b>'+esc(p.v.l)+'</b></td><td class="l">'+esc(staffOf(p.v.k))+'</td><td><b style="color:var(--a)">'+p.n+'</b></td>'+BERR_T.map(t=>'<td>'+(p.t[t]||'')+'</td>').join('')+'<td>'+(p.du||'')+'</td><td>'+(p.cu||'')+'</td></tr>').join('')+
+    '<tr class="tot"><td></td><td class="l">Total</td><td></td><td>'+tot.n+'</td>'+BERR_T.map(t=>'<td>'+(tot.t[t]||'')+'</td>').join('')+'<td>'+(tot.du||'')+'</td><td>'+(tot.cu||'')+'</td></tr></table></div>':'<p class="muted">No bus errors recorded this month.</p>');
+  if(rows.length){rows.sort((a,b)=>a.d<b.d?1:a.d>b.d?-1:a.v.l.localeCompare(b.v.l));
+    h+='<div class="secthead" style="margin-top:16px"><i></i><span>Error details</span><small>'+rows.length+' entries</small></div><div class="tw" style="max-height:none"><table><tr><th>Date</th><th class="l">Vehicle</th><th>Error</th><th class="l">Child</th><th class="l">Remark</th><th class="l">By / time</th></tr>'+
+    rows.map(r=>'<tr><td>'+esc(fmtD(r.d))+'</td><td class="l"><b>'+esc(r.v.l)+'</b></td><td><span class="tag t-A">'+esc(r.type)+'</span></td><td class="l">'+(r.kid&&KID[r.kid]?esc(KID[r.kid].name)+' <span class="muted">'+esc(shortCls(KID[r.kid].cls))+'</span>':'')+'</td><td class="l">'+esc(r.rem)+'</td><td class="l muted">'+esc(r.by)+'</td></tr>').join('')+'</table></div>'}
+  $('dashExtra').innerHTML=h;
+}
+function busErrText(list){const mon=new Date(S.date+'T00:00').toLocaleDateString('en-IN',{month:'long',year:'numeric'});const {rows,per}=busErrRows(list);
+  const pv=Object.values(per).filter(p=>p.n).sort((a,b)=>b.n-a.n);
+  return '*Bus Error Report – '+mon+(S.berrType?' ('+S.berrType+')':'')+'*\n'+(pv.length?pv.map((p,i)=>(i+1)+'. '+p.v.l+' ('+staffOf(p.v.k)+') - '+p.n+' error'+(p.n>1?'s':'')+': '+Object.entries(p.t).map(([k,n])=>k+(n>1?' ×'+n:'')).concat(p.du?['Driver uniform ×'+p.du]:[]).concat(p.cu?['Conductor uniform ×'+p.cu]:[]).join(', ')).join('\n'):'No errors this month.')}
 
 /* LATE DEFAULTERS – MONTHLY */
 const ORD={'P.G.':'PG','Nursery':'Nur','L.KG.':'LKG','U.KG.':'UKG',First:'1',Second:'2',Third:'3',Fourth:'4',Fifth:'5',Sixth:'6',Seventh:'7',Eighth:'8',Ninth:'9',Tenth:'10',Eleventh:'11',Twelfth:'12'};
@@ -812,6 +847,7 @@ document.addEventListener('click',async e=>{
   if(t.dataset.recper){S.recPer=t.dataset.recper;renderDash();return}
   if(t.dataset.recseg){S.recSeg=t.dataset.recseg;renderDash();return}
   if(t.id==='recRefresh'){S.recTick=(S.recTick||0)+1;RG.key='';renderDash();return}
+  if(t.id==='berrCopy'){const f=$('dashF').value;const txt=busErrText(VEH.filter(v=>!f||v.t===f));try{await navigator.clipboard.writeText(txt);toast('Copied')}catch(err){showText(txt)}return}
   if(t.id==='unifCopy'){const txt=unifMonthlyText();try{await navigator.clipboard.writeText(txt);toast('Copied')}catch(err){showText(txt)}return}
   if(t.id==='vwCopy'){const txt=vehWiseText();try{await navigator.clipboard.writeText(txt);toast('Copied')}catch(err){showText(txt)}return}
   if(t.id==='lateCopy'){const txt=lateMonthlyText();try{await navigator.clipboard.writeText(txt);toast('Copied')}catch(err){showText(txt)}return}
@@ -894,6 +930,7 @@ document.addEventListener('change',async e=>{
   if(t.id==='lateBy'){LS.set('lateBy',t.value)}
   if(t.id==='unifBy'){LS.set('unifBy',t.value)}
   if(t.id==='unifItem'){S.unifItem=t.value;renderDash();return}
+  if(t.id==='berrType'){S.berrType=t.value;renderDash();return}
   if(t.id==='unifMin'){S.unifMin=+t.value;renderDash();return}
   if(t.id==='lateMin'){S.lateMin=+t.value;renderDash();return}
   if(t.dataset.addfo&&t.value){const g=S.gate[t.value]||{};gatePick=t.value;foBy=$('sbBy').value;gDraft={in:g.in&&g.in.type||null,out:g.out&&g.out.type||null};if(t.dataset.addfo==='LATE')gDraft.in='LATE';else gDraft.out='EARLY';t.value='';renderFO();return}
