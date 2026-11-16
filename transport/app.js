@@ -477,7 +477,7 @@ function renderDashDep(list){
     '<tr class="tot"><td>Total</td><td class="l">'+T.dep+'/'+list.length+' departed</td><td>'+T.go+'</td><td>'+T.b+'</td><td>'+T.early+'</td><td>'+T.walk+'</td><td>'+T.sb+'</td><td>'+(T.du?T.du+' ✗':'')+'</td><td>'+(T.cu?T.cu+' ✗':'')+'</td><td>'+T.err+'</td><td></td></tr></tbody>';
   $('kpis').innerHTML=[['Going in vehicles',T.go,'var(--brand)'],['Boarded',T.b,'var(--p)'],['Vehicles departed',T.dep+'/'+list.length],['Departure errors',T.err,'var(--a)'],['Driver not in uniform',T.du,'var(--a)'],['Conductor not in uniform',T.cu,'var(--a)']].map(k=>'<div class="kpi"><span>'+k[0]+'</span><b style="color:'+(k[2]||'var(--ink)')+'">'+k[1]+'</b></div>').join('');
   const errs=[];list.forEach(v=>((S.derr[v.k]||{}).items||[]).forEach(it=>errs.push([v,it])));
-  $('dashExtra').innerHTML='<h2>Departure errors – '+fmtD(S.date)+'</h2>'+(errs.length?'<div class="tw" style="max-height:none"><table><tr><th>Vehicle</th><th>Error</th><th>Child</th><th>Remark</th><th>By / time</th></tr>'+errs.map(([v,it])=>'<tr><td><b>'+esc(v.l)+'</b></td><td><span class="tag t-A">'+esc(it.type)+'</span></td><td class="l">'+(it.kid&&KID[it.kid]?esc(KID[it.kid].name)+' <span class="muted">'+esc(KID[it.kid].cls)+'</span>':'')+'</td><td class="l">'+esc(it.rem||'')+'</td><td>'+esc(it.by||'')+' '+esc(it.time||'')+'</td></tr>').join('')+'</table></div>':'<p class="muted">No departure errors.</p>');
+  $('dashExtra').innerHTML='<div class="row"><h2 style="margin:0">Departure errors – '+fmtD(S.date)+'</h2><button class="btn ghost sm" id="berrDayCp">Copy day-wise message</button><button class="btn sm" id="berrDayWa">Send to WhatsApp</button></div>'+(errs.length?'<div class="tw" style="max-height:none"><table><tr><th>Vehicle</th><th>Error</th><th>Child</th><th>Remark</th><th>By / time</th></tr>'+errs.map(([v,it])=>'<tr><td><b>'+esc(v.l)+'</b></td><td><span class="tag t-A">'+esc(it.type)+'</span></td><td class="l">'+(it.kid&&KID[it.kid]?esc(KID[it.kid].name)+' <span class="muted">'+esc(KID[it.kid].cls)+'</span>':'')+'</td><td class="l">'+esc(it.rem||'')+'</td><td>'+esc(it.by||'')+' '+esc(it.time||'')+'</td></tr>').join('')+'</table></div>':'<p class="muted">No departure errors.</p>');
 }
 function renderDashWeek(list){
   loadWeek();const dates=weekDates(S.date);
@@ -566,7 +566,7 @@ function renderBusErr(list){
   $('dashT').parentElement.classList.add('hide');$('dashNote').classList.add('hide');$('dashS').classList.add('hide');$('kpis').innerHTML='';
   const dates=periodDates('month');const mon=new Date(S.date+'T00:00').toLocaleDateString('en-IN',{month:'long',year:'numeric'});
   const types=BERR_T.concat(['Driver not in uniform','Conductor not in uniform']);
-  const ctl='<div class="row" style="margin-bottom:10px"><b>Bus Error Report – '+esc(mon)+'</b><select id="berrType"><option value="">All errors</option>'+types.map(t=>'<option'+(S.berrType===t?' selected':'')+'>'+esc(t)+'</option>').join('')+'</select><button class="btn ghost sm" id="berrCopy">Copy List (WhatsApp)</button></div>';
+  const ctl='<div class="row" style="margin-bottom:10px"><b>Bus Error Report – '+esc(mon)+'</b><select id="berrType"><option value="">All errors</option>'+types.map(t=>'<option'+(S.berrType===t?' selected':'')+'>'+esc(t)+'</option>').join('')+'</select><button class="btn ghost sm" id="berrCopy">Copy List (WhatsApp)</button><button class="btn sm" id="berrDayWa">Day-wise Message ('+esc(fmtD(S.date))+')</button></div>';
   loadRange(dates);if(RG.loading||!dates.every(d=>d===S.date||RG.data[d])){$('dashExtra').innerHTML=ctl+'<p class="muted">Loading '+dates.length+' days…</p>';return}
   const {rows,per}=busErrRows(list);const pv=Object.values(per).filter(p=>p.n).sort((a,b)=>b.n-a.n);
   const tot={n:0,du:0,cu:0,t:{}};pv.forEach(p=>{tot.n+=p.n;tot.du+=p.du;tot.cu+=p.cu;Object.entries(p.t).forEach(([k,n])=>tot.t[k]=(tot.t[k]||0)+n)});
@@ -581,6 +581,13 @@ function renderBusErr(list){
   $('dashExtra').innerHTML=h;
 }
 function busErrDetText(){const mon=new Date(S.date+'T00:00').toLocaleDateString('en-IN',{month:'long',year:'numeric'});return '*Bus Error Details – '+mon+(S.berrType?' ('+S.berrType+')':'')+'*\n'+BERR_ROWS.map((r,i)=>{const k=r.kid&&KID[r.kid];return (i+1)+'. '+fmtD(r.d)+' – '+r.v.l+' – '+r.type+(k?' – '+k.name+' ('+shortCls(k.cls)+')':'')+(r.rem?' – '+r.rem:'')+(r.by?' [by '+r.by+']':'')}).join('\n')}
+function busErrDayText(list,d){d=d||S.date;const dd=new Date(d+'T00:00').toLocaleDateString('en-IN',{day:'numeric',month:'long'});const rows=[];
+  list.forEach(v=>{const vd=(d===S.date?S.veh:(RG.data[d]||{}).veh||{})[v.k]||{};const de=(d===S.date?S.derr:(RG.data[d]||{}).derr||{})[v.k]||{};const ch=de.checks||{};
+    (de.items||[]).filter(it=>it.type!=='Driver uniform'&&it.type!=='Conductor uniform').forEach(it=>{const k=it.kid&&KID[it.kid];rows.push(v.l+' – '+it.type+(k?' – '+k.name+' ('+shortCls(k.cls)+')':'')+(it.rem?' – '+it.rem:''))});
+    const dr=[];if(vd.driverU==='NOT')dr.push('morning');if(ch.driver==='NOT'||(de.items||[]).some(it=>it.type==='Driver uniform'))dr.push('departure');
+    const cr=[];if(vd.condU==='NOT')cr.push('morning');if(ch.conductor==='NOT'||(de.items||[]).some(it=>it.type==='Conductor uniform'))cr.push('departure');
+    if(dr.length)rows.push(v.l+' – Driver not in uniform – '+dr.join(' & '));if(cr.length)rows.push(v.l+' – Conductor not in uniform – '+cr.join(' & '))});
+  return '*Bus Error Details – '+dd+'*\n'+(rows.length?rows.map((r,i)=>(i+1)+'. '+r).join('\n'):'No bus errors today ✅')}
 function busErrText(list){const mon=new Date(S.date+'T00:00').toLocaleDateString('en-IN',{month:'long',year:'numeric'});const {rows,per}=busErrRows(list);
   const pv=Object.values(per).filter(p=>p.n).sort((a,b)=>b.n-a.n);
   return '*Bus Error Report – '+mon+(S.berrType?' ('+S.berrType+')':'')+'*\n'+(pv.length?pv.map((p,i)=>(i+1)+'. '+p.v.l+' ('+staffOf(p.v.k)+') - '+p.n+' error'+(p.n>1?'s':'')+': '+Object.entries(p.t).map(([k,n])=>k+(n>1?' ×'+n:'')).concat(p.du?['Driver uniform ×'+p.du]:[]).concat(p.cu?['Conductor uniform ×'+p.cu]:[]).join(', ')).join('\n'):'No errors this month.')}
@@ -858,6 +865,7 @@ document.addEventListener('click',async e=>{
   if(t.dataset.berrcp!==undefined||t.dataset.berrwa!==undefined){const r=BERR_ROWS[+(t.dataset.berrcp??t.dataset.berrwa)];if(!r)return;const m=errMsg(r.d,r.v,{type:r.type,kid:r.kid,rem:r.rem,by:r.by});if(t.dataset.berrwa!==undefined)await waSend(m);else await copyTxt(m);return}
   if(t.id==='berrDetCopy'){await copyTxt(busErrDetText());return}
   if(t.id==='berrDetWa'){await waSend(busErrDetText());return}
+  if(t.id==='berrDayWa'||t.id==='berrDayCp'){const f=$('dashF').value;const m=busErrDayText(VEH.filter(v=>!f||v.t===f));if(t.id==='berrDayWa')await waSend(m);else await copyTxt(m);return}
   if(t.id==='berrCopy'){const f=$('dashF').value;const txt=busErrText(VEH.filter(v=>!f||v.t===f));try{await navigator.clipboard.writeText(txt);toast('Copied')}catch(err){showText(txt)}return}
   if(t.id==='unifCopy'){const txt=unifMonthlyText();try{await navigator.clipboard.writeText(txt);toast('Copied')}catch(err){showText(txt)}return}
   if(t.id==='vwCopy'){const txt=vehWiseText();try{await navigator.clipboard.writeText(txt);toast('Copied')}catch(err){showText(txt)}return}
