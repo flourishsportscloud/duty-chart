@@ -451,7 +451,7 @@ function depChecksHtml(v){
     '<h3>Report an Error</h3><div class="row"><select id="derrType" style="min-width:200px">'+DERR_TYPES.map(t=>'<option>'+esc(t)+'</option>').join('')+'</select>'+
     '<select id="derrKid" style="min-width:180px"><option value="">Child (optional)</option>'+v.kids.map(k=>'<option value="'+v.k+'-'+k[0]+'">'+k[0]+'. '+esc(k[1])+'</option>').join('')+'</select></div>'+
     '<div class="row" style="margin-top:8px"><input type="text" id="derrRem" placeholder="What happened? (remark)" style="flex:1"><button class="btn" id="derrAdd">Add Error</button></div>'+
-    (items.length?'<div style="margin-top:10px">'+items.map((it,i)=>'<div class="kid"><div class="nm"><div><span class="tag t-A">'+esc(it.type)+'</span> '+(it.kid&&KID[it.kid]?esc(KID[it.kid].name):'')+'</div><span>'+esc(it.time||'')+' · '+esc(it.by||'')+(it.rem?' · '+esc(it.rem):'')+'</span></div><button class="btn ghost sm" data-derrdel="'+i+'">Remove</button></div>').join('')+'</div>':'<p class="muted" style="margin:8px 0 0">No errors reported.</p>')+'</div>';
+    (items.length?'<div style="margin-top:10px">'+items.map((it,i)=>'<div class="kid"><div class="nm"><div><span class="tag t-A">'+esc(it.type)+'</span> '+(it.kid&&KID[it.kid]?esc(KID[it.kid].name):'')+'</div><span>'+esc(it.time||'')+' · '+esc(it.by||'')+(it.rem?' · '+esc(it.rem):'')+'</span></div><button class="btn ghost sm" data-derrcp="'+i+'">Copy</button><button class="btn ghost sm" data-derrwa="'+i+'">WhatsApp</button><button class="btn ghost sm" data-derrdel="'+i+'">Remove</button></div>').join('')+'<div class="row" style="margin-top:8px"><button class="btn ghost sm" data-derrall="cp">Copy all errors</button><button class="btn ghost sm" data-derrall="wa">Send all to WhatsApp</button></div></div>':'<p class="muted" style="margin:8px 0 0">No errors reported.</p>')+'</div>';
 }
 async function saveDerr(vk,patch){const cur=S.derr[vk]||{};await store.set('att/'+S.date+'/derr/'+vk,Object.assign({checks:cur.checks||{},items:cur.items||[]},patch,{ts:Date.now()}))}
 
@@ -556,6 +556,11 @@ function busErrRows(list){const dates=periodDates('month');const rows=[];const p
       if(dr.length){p.du++;p.n++;rows.push({d,v,type:'Driver not in uniform',kid:'',rem:dr.join(' & '),by:''})}
       if(cr.length){p.cu++;p.n++;rows.push({d,v,type:'Conductor not in uniform',kid:'',rem:cr.join(' & '),by:''})}})});
   if(S.berrType)return {rows:rows.filter(r=>r.type===S.berrType),per};return {rows,per}}
+
+function errMsg(d,v,it){const k=it.kid&&KID[it.kid];return '*Bus Error – '+v.l+'*\nDate: '+fmtD(d)+'\nDuty: '+staffOf(v.k)+'\nError: '+it.type+(k?'\nChild: '+k.name+' ('+shortCls(k.cls)+')':'')+(it.rem?'\nRemark: '+it.rem:'')+(it.by?'\nReported by: '+it.by+(it.time?' at '+it.time:''):'')}
+async function waSend(txt){try{await navigator.clipboard.writeText(txt);toast('Copied – opening WhatsApp')}catch(e){}window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank')}
+async function copyTxt(txt){try{await navigator.clipboard.writeText(txt);toast('Copied')}catch(err){showText(txt)}}
+let BERR_ROWS=[];
 const BERR_T=['Wrong marking','Child stayed back (marked going)','Child not staying back (marked SB)','Child missing at departure','Other'];
 function renderBusErr(list){
   $('dashT').parentElement.classList.add('hide');$('dashNote').classList.add('hide');$('dashS').classList.add('hide');$('kpis').innerHTML='';
@@ -571,10 +576,11 @@ function renderBusErr(list){
     pv.map((p,i)=>'<tr class="click" data-veh="'+p.v.k+'"><td>'+(i+1)+'</td><td class="l"><b>'+esc(p.v.l)+'</b></td><td class="l">'+esc(staffOf(p.v.k))+'</td><td><b style="color:var(--a)">'+p.n+'</b></td>'+BERR_T.map(t=>'<td>'+(p.t[t]||'')+'</td>').join('')+'<td>'+(p.du||'')+'</td><td>'+(p.cu||'')+'</td></tr>').join('')+
     '<tr class="tot"><td></td><td class="l">Total</td><td></td><td>'+tot.n+'</td>'+BERR_T.map(t=>'<td>'+(tot.t[t]||'')+'</td>').join('')+'<td>'+(tot.du||'')+'</td><td>'+(tot.cu||'')+'</td></tr></table></div>':'<p class="muted">No bus errors recorded this month.</p>');
   if(rows.length){rows.sort((a,b)=>a.d<b.d?1:a.d>b.d?-1:a.v.l.localeCompare(b.v.l));
-    h+='<div class="secthead" style="margin-top:16px"><i></i><span>Error details</span><small>'+rows.length+' entries</small></div><div class="tw" style="max-height:none"><table><tr><th>Date</th><th class="l">Vehicle</th><th>Error</th><th class="l">Child</th><th class="l">Remark</th><th class="l">By / time</th></tr>'+
-    rows.map(r=>'<tr><td>'+esc(fmtD(r.d))+'</td><td class="l"><b>'+esc(r.v.l)+'</b></td><td><span class="tag t-A">'+esc(r.type)+'</span></td><td class="l">'+(r.kid&&KID[r.kid]?esc(KID[r.kid].name)+' <span class="muted">'+esc(shortCls(KID[r.kid].cls))+'</span>':'')+'</td><td class="l">'+esc(r.rem)+'</td><td class="l muted">'+esc(r.by)+'</td></tr>').join('')+'</table></div>'}
+    BERR_ROWS=rows;h+='<div class="secthead" style="margin-top:16px"><i></i><span>Error details</span><small>'+rows.length+' entries</small></div><div class="row" style="margin-bottom:8px"><button class="btn ghost sm" id="berrDetCopy">Copy details (WhatsApp)</button><button class="btn ghost sm" id="berrDetWa">Send details to WhatsApp</button></div><div class="tw" style="max-height:none"><table><tr><th>Date</th><th class="l">Vehicle</th><th>Error</th><th class="l">Child</th><th class="l">Remark</th><th class="l">By / time</th><th>Share</th></tr>'+
+    rows.map((r,ri)=>'<tr><td>'+esc(fmtD(r.d))+'</td><td class="l"><b>'+esc(r.v.l)+'</b></td><td><span class="tag t-A">'+esc(r.type)+'</span></td><td class="l">'+(r.kid&&KID[r.kid]?esc(KID[r.kid].name)+' <span class="muted">'+esc(shortCls(KID[r.kid].cls))+'</span>':'')+'</td><td class="l">'+esc(r.rem)+'</td><td class="l muted">'+esc(r.by)+'</td><td style="white-space:nowrap"><button class="btn ghost sm" data-berrcp="'+ri+'">Copy</button> <button class="btn ghost sm" data-berrwa="'+ri+'">WhatsApp</button></td></tr>').join('')+'</table></div>'}
   $('dashExtra').innerHTML=h;
 }
+function busErrDetText(){const mon=new Date(S.date+'T00:00').toLocaleDateString('en-IN',{month:'long',year:'numeric'});return '*Bus Error Details – '+mon+(S.berrType?' ('+S.berrType+')':'')+'*\n'+BERR_ROWS.map((r,i)=>{const k=r.kid&&KID[r.kid];return (i+1)+'. '+fmtD(r.d)+' – '+r.v.l+' – '+r.type+(k?' – '+k.name+' ('+shortCls(k.cls)+')':'')+(r.rem?' – '+r.rem:'')+(r.by?' [by '+r.by+']':'')}).join('\n')}
 function busErrText(list){const mon=new Date(S.date+'T00:00').toLocaleDateString('en-IN',{month:'long',year:'numeric'});const {rows,per}=busErrRows(list);
   const pv=Object.values(per).filter(p=>p.n).sort((a,b)=>b.n-a.n);
   return '*Bus Error Report – '+mon+(S.berrType?' ('+S.berrType+')':'')+'*\n'+(pv.length?pv.map((p,i)=>(i+1)+'. '+p.v.l+' ('+staffOf(p.v.k)+') - '+p.n+' error'+(p.n>1?'s':'')+': '+Object.entries(p.t).map(([k,n])=>k+(n>1?' ×'+n:'')).concat(p.du?['Driver uniform ×'+p.du]:[]).concat(p.cu?['Conductor uniform ×'+p.cu]:[]).join(', ')).join('\n'):'No errors this month.')}
@@ -847,6 +853,11 @@ document.addEventListener('click',async e=>{
   if(t.dataset.recper){S.recPer=t.dataset.recper;renderDash();return}
   if(t.dataset.recseg){S.recSeg=t.dataset.recseg;renderDash();return}
   if(t.id==='recRefresh'){S.recTick=(S.recTick||0)+1;RG.key='';renderDash();return}
+  if(t.dataset.derrcp!==undefined||t.dataset.derrwa!==undefined){const v=VEH.find(x=>x.k===S.depVeh);const it=((S.derr[S.depVeh]||{}).items||[])[+(t.dataset.derrcp??t.dataset.derrwa)];if(!it)return;const m=errMsg(S.date,v,it);if(t.dataset.derrwa!==undefined)await waSend(m);else await copyTxt(m);return}
+  if(t.dataset.derrall){const v=VEH.find(x=>x.k===S.depVeh);const its=(S.derr[S.depVeh]||{}).items||[];const m='*Bus Errors – '+v.l+' – '+fmtD(S.date)+'*\nDuty: '+staffOf(v.k)+'\n'+its.map((it,i)=>{const k=it.kid&&KID[it.kid];return (i+1)+'. '+it.type+(k?' – '+k.name+' ('+shortCls(k.cls)+')':'')+(it.rem?' – '+it.rem:'')+(it.by?' [by '+it.by+(it.time?' '+it.time:'')+']':'')}).join('\n');if(t.dataset.derrall==='wa')await waSend(m);else await copyTxt(m);return}
+  if(t.dataset.berrcp!==undefined||t.dataset.berrwa!==undefined){const r=BERR_ROWS[+(t.dataset.berrcp??t.dataset.berrwa)];if(!r)return;const m=errMsg(r.d,r.v,{type:r.type,kid:r.kid,rem:r.rem,by:r.by});if(t.dataset.berrwa!==undefined)await waSend(m);else await copyTxt(m);return}
+  if(t.id==='berrDetCopy'){await copyTxt(busErrDetText());return}
+  if(t.id==='berrDetWa'){await waSend(busErrDetText());return}
   if(t.id==='berrCopy'){const f=$('dashF').value;const txt=busErrText(VEH.filter(v=>!f||v.t===f));try{await navigator.clipboard.writeText(txt);toast('Copied')}catch(err){showText(txt)}return}
   if(t.id==='unifCopy'){const txt=unifMonthlyText();try{await navigator.clipboard.writeText(txt);toast('Copied')}catch(err){showText(txt)}return}
   if(t.id==='vwCopy'){const txt=vehWiseText();try{await navigator.clipboard.writeText(txt);toast('Copied')}catch(err){showText(txt)}return}
