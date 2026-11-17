@@ -150,6 +150,7 @@ tr.cov td{background:color-mix(in srgb,var(--sports) 10%,transparent)}
 .x{border:0;background:none;color:var(--gate);font-size:22px;width:34px;height:34px;cursor:pointer}
 .hint{font-size:.78rem;color:var(--muted);margin:4px 0 8px}
 .sheet .foot{display:flex;gap:8px;margin-top:12px;position:sticky;bottom:-18px;background:var(--bg);padding:10px 0}
+.rtag{display:inline-block;margin-top:3px;font-size:.68rem;font-weight:700;padding:1px 7px;border-radius:999px;background:rgba(47,95,196,.14);color:#3D6FD8;vertical-align:middle}
 .by2{margin-top:6px;padding-top:6px;border-top:1px dashed var(--line,#DCE2EE)}
 .syncb{position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:60;background:#FFF1C2;color:#7A5A00;border:1px solid #E8C860;border-radius:999px;padding:6px 12px;font-size:.8rem;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.12)}
 .syncb[hidden]{display:none}
@@ -340,13 +341,13 @@ Saturday Adjustment - 26/09
         <label class="fl">Mark them as<select id="qSt"><option value="">Not marked</option><option value="leave">On leave</option><option value="half">Half day</option><option value="late">Late</option></select></label>
         <label class="fl" id="qLtWrap" hidden="">Late till<input id="qLt" placeholder="e.g. 8:00" inputmode="numeric"></label>
       </div>
-      <label class="fl"><span class="m-cls">Adjusted by</span><span class="m-cover">Covering</span><input id="qB" list="staffnames" placeholder="Replacement name" autocomplete="off"></label>
+      <label class="fl"><span class="m-cls qbl1">Adjusted by</span><span class="m-cover">Covering</span><input id="qB" list="staffnames" placeholder="Replacement name" autocomplete="off"></label>
       <div class="sugh">Suggestions – tap to pick</div>
       <div class="sug" id="qSug"></div>
       <label class="fl m-cls">Time / period<input id="qT" placeholder="e.g. 7:00–7:30, Period 2, Lunch" autocomplete="off"></label>
       <div class="frow m-cls">
-        <label class="fl">2nd teacher (optional)<input id="qB2" list="staffnames" placeholder="Second replacement" autocomplete="off"></label>
-        <label class="fl">2nd time / period<input id="qT2" placeholder="e.g. Period 5" autocomplete="off"></label>
+        <label class="fl"><span class="qbl2">2nd teacher (optional)</span><input id="qB2" list="staffnames" placeholder="Second replacement" autocomplete="off"></label>
+        <label class="fl"><span class="qtl2">2nd time / period</span><input id="qT2" placeholder="e.g. Period 5" autocomplete="off"></label>
       </div>
     </section>
     <div class="foot"><button class="btn warn" id="qDel" hidden="">Remove</button><button class="btn" id="qSave">Save</button></div>
@@ -438,13 +439,13 @@ Saturday Adjustment - 26/09
         <label class="fl">Mark them as<select id="qSt"><option value="">Not marked</option><option value="leave">On leave</option><option value="half">Half day</option><option value="late">Late</option></select></label>
         <label class="fl" id="qLtWrap" hidden="">Late till<input id="qLt" placeholder="e.g. 8:00" inputmode="numeric"></label>
       </div>
-      <label class="fl"><span class="m-cls">Adjusted by</span><span class="m-cover">Covering</span><input id="qB" list="staffnames" placeholder="Replacement name" autocomplete="off"></label>
+      <label class="fl"><span class="m-cls qbl1">Adjusted by</span><span class="m-cover">Covering</span><input id="qB" list="staffnames" placeholder="Replacement name" autocomplete="off"></label>
       <div class="sugh">Suggestions – tap to pick</div>
       <div class="sug" id="qSug"></div>
       <label class="fl m-cls">Time / period<input id="qT" placeholder="e.g. 7:00–7:30, Period 2, Lunch" autocomplete="off"></label>
       <div class="frow m-cls">
-        <label class="fl">2nd teacher (optional)<input id="qB2" list="staffnames" placeholder="Second replacement" autocomplete="off"></label>
-        <label class="fl">2nd time / period<input id="qT2" placeholder="e.g. Period 5" autocomplete="off"></label>
+        <label class="fl"><span class="qbl2">2nd teacher (optional)</span><input id="qB2" list="staffnames" placeholder="Second replacement" autocomplete="off"></label>
+        <label class="fl"><span class="qtl2">2nd time / period</span><input id="qT2" placeholder="e.g. Period 5" autocomplete="off"></label>
       </div>
     </section>
     <div class="foot"><button class="btn warn" id="qDel" hidden="">Remove</button><button class="btn" id="qSave">Save</button></div>
@@ -743,12 +744,14 @@ function renderNotice(){
     const cls = adj.map((a,i) => [a,i]).filter(([a]) => !a.a), act = adj.map((a,i) => [a,i]).filter(([a]) => a.a);
     const by = (n, t) => `<b class="by">${esc(n)}</b>${t?`<small class="tm">${esc(t)}</small>`:''}`;
     const by2 = a => by(a.b, a.t) + (a.b2 ? `<div class="by2">${by(a.b2, a.t2)}</div>` : '');
+    const rt = t => `<span class="rtag">${t}</span>`;
+    const byCls = a => [a.b ? `<div>${by(a.b, a.t)}${rt('Class Teacher')}</div>` : '', a.b2 ? `<div class="${a.b ? 'by2' : ''}">${by(a.b2, a.t2)}${rt('Subject Teacher')}</div>` : ''].join('');
     const ab = n => n ? esc(n) : '<span class="dim">—</span>';
     const done = new Set(cls.map(([a]) => normCls(a.c)));
     const pending = lv.filter(l => !l.late && clsOf(l.n) && !done.has(normCls(clsOf(l.n)))).map(l => [clsOf(l.n), l]);
     if (pending.length) body += `<div class="pend"><b>Class not adjusted yet</b>` + pending.map(([c,l]) => `<button type="button" class="pendb" data-pend="${esc(c)}" data-pf="${esc(l.n)}">${esc(c)} <span>${esc(l.n)}${l.half?' · half day':''}</span>${CAN_UI()?' <i>+ Adjust</i>':''}</button>`).join('') + `</div>`;
     if (cls.length) body += `<h3>Class adjustment <span class="cnt k2">${cls.length}</span></h3><table class="adjt"><thead><tr><th>Class</th><th>Absent</th><th>Adjusted by</th></tr></thead><tbody>` +
-      cls.map(([a,i]) => `<tr${ed('adj',i)}><td>${esc(a.c)}</td><td>${a.f ? ab(a.f) : ctOf(a.c) ? `${esc(ctOf(a.c))}<small class="tm">Class teacher</small>` : ab('')}</td><td>${by2(a)}</td></tr>`).join('') + `</tbody></table>`;
+      cls.map(([a,i]) => `<tr${ed('adj',i)}><td>${esc(a.c)}</td><td>${a.f ? ab(a.f) : ctOf(a.c) ? `${esc(ctOf(a.c))}<small class="tm">Class teacher</small>` : ab('')}</td><td>${byCls(a)}</td></tr>`).join('') + `</tbody></table>`;
     if (act.length) body += `<h3>Activity adjustment <span class="cnt k3">${act.length}</span></h3><table class="adjt"><thead><tr><th>Activity</th><th>Absent</th><th>Adjusted by</th></tr></thead><tbody>` +
       act.map(([a,i]) => `<tr${ed('adj',i)}><td>${esc(a.a)}${a.c?`<small class="tm">${esc(a.c)}</small>`:''}</td><td>${ab(a.f)}</td><td>${by2(a)}</td></tr>`).join('') + `</tbody></table>`;
     if (cv.length) body += `<h3>Duty cover <span class="cnt k4">${cv.length}</span></h3><table class="adjt"><thead><tr><th>Duty</th><th>Absent</th><th>Covered by</th></tr></thead><tbody>` +
@@ -790,7 +793,7 @@ function waText(){
     t += `\n${k} -\n` + (ps.length ? ps.map(l => `* ${l.n}${stKey(l)?' ( '+stLabel(l)+' )':''}`).join('\n') : '* ') + '\n';
   });
   const cls = (d.adj||[]).filter(a => !a.a), act = (d.adj||[]).filter(a => a.a);
-  if (cls.length) t += `\n*Class Adjustment*\n` + cls.map(a => `${a.c} - ${a.f ? a.f+' - ' : ctOf(a.c) ? ctOf(a.c)+' (CT) - ' : ''}${a.b}${a.t?' ('+a.t+')':''}${a.b2?' + '+a.b2+(a.t2?' ('+a.t2+')':''):''}`).join('\n') + '\n';
+  if (cls.length) t += `\n*Class Adjustment*\n` + cls.map(a => `${a.c} - ${a.f ? a.f+' - ' : ctOf(a.c) ? ctOf(a.c)+' (CT) - ' : ''}${[a.b ? a.b+' (Class Teacher'+(a.t?', '+a.t:'')+')' : '', a.b2 ? a.b2+' (Subject Teacher'+(a.t2?', '+a.t2:'')+')' : ''].filter(Boolean).join(' + ')}`).join('\n') + '\n';
   if (act.length) t += `\n*Activity Adjustment*\n` + act.map(a => `${a.a}${a.c?' ('+a.c+')':''} - ${a.f?a.f+' - ':''}${a.b}${a.t?' ('+a.t+')':''}${a.b2?' + '+a.b2+(a.t2?' ('+a.t2+')':''):''}`).join('\n') + '\n';
   if ((d.cover||[]).length) t += `\n*Duty Cover*\n` + d.cover.map(c => `* ${c.n} for ${c.f}${c.d?' – '+c.d:''}`).join('\n') + '\n';
   return t;
@@ -952,11 +955,13 @@ function openQA(o){
   $('#qSave').textContent = CAN_EDIT ? 'Save' : 'Send on WhatsApp ➤';
   drawQA();
   $('#qa').hidden = false; document.body.style.overflow = 'hidden';
-  setTimeout(() => (QA.mode === 'adj' && !$('#qC').value ? $('#qC') : !$('#qF').value ? $('#qF') : $('#qB')).focus(), 50);
+  setTimeout(() => { if (QA) (QA.mode === 'adj' && !$('#qC').value ? $('#qC') : !$('#qF').value ? $('#qF') : $('#qB')).focus(); }, 50);
 }
 function drawQA(){
   if (!QA) return;
   $('#qaSheet').dataset.m = QA.mode;
+  { const c = QA.mode === 'adj'; const L = (sel, t) => document.querySelectorAll(sel).forEach(e => e.textContent = t);
+    L('.qbl1', c ? 'Cover as Class Teacher' : 'Adjusted by'); L('.qbl2', c ? 'Cover as Subject Teacher' : '2nd teacher (optional)'); L('.qtl2', c ? 'Subject period(s)' : '2nd time / period'); }
   document.querySelectorAll('[data-qmode]').forEach(b => b.setAttribute('aria-selected', b.dataset.qmode === QA.mode));
   $('#qLtWrap').hidden = $('#qSt').value !== 'late';
   if (QA.mode === 'act'){ const x = ACTS[+$('#qA').value]; if (x && QA.actSet !== $('#qA').value){ QA.actSet = $('#qA').value; $('#qF').value = x.ns[0] || ''; } }
@@ -989,9 +994,9 @@ function qaApply(del){
     if (QA.mode !== 'cover'){
       const C = $('#qC').value.trim(), T = $('#qT').value.trim(), A = QA.mode === 'act' ? ACTS[+$('#qA').value] : null;
       if (QA.mode === 'act' && !A){ toast('Pick the activity'); return null; }
-      if ((!C && !A) || !B){ toast(A ? 'Pick who is replacing' : 'Enter the class and who is replacing'); return null; }
       const B2 = $('#qB2').value.trim(), T2 = $('#qT2').value.trim();
-      const it = {c: C ? (preLabel(C) || C.toUpperCase().replace(/\s+/g,'')) : '', ...(A?{a:A.a}:{}), b: canon(B), ...(T?{t:T}:{}), ...(B2?{b2:canon(B2)}:{}), ...(B2&&T2?{t2:T2}:{}), ...(F?{f:canon(F)}:{})};
+      if ((!C && !A) || !(B || (!A && B2))){ toast(A ? 'Pick who is replacing' : 'Enter the class and who covers it (class teacher and/or subject teacher)'); return null; }
+      const it = {c: C ? (preLabel(C) || C.toUpperCase().replace(/\s+/g,'')) : '', ...(A?{a:A.a}:{}), b: B ? canon(B) : '', ...(T?{t:T}:{}), ...(B2?{b2:canon(B2)}:{}), ...(B2&&T2?{t2:T2}:{}), ...(F?{f:canon(F)}:{})};
       if (QA.idx >= 0) arr[QA.idx] = it; else arr.push(it);
     } else {
       const D = $('#qD').value.trim();
@@ -1321,7 +1326,7 @@ function drawEditor(){
   const actSel = a => `<select data-f="a">${SEGS.map(([seg, list]) => `<optgroup label="${esc(seg)}">` + list.map(([x]) => `<option${x===a.a?' selected':''}>${esc(x)}</option>`).join('') + '</optgroup>').join('')}</select>`;
   $('#edAct').innerHTML = ED.adj.map((a,i) => a.a ? row('adj', i, actSel(a) + inp('b', a.b, 'Adjusted by', 'staffnames') + inp('c', a.c, 'Class / group') + inp('t', a.t, 'Time') + inp('b2', a.b2, '2nd teacher (optional)', 'staffnames') + inp('t2', a.t2, '2nd time') + inp('f', a.f, 'For (optional)', 'staffnames')) : '').join('') || '<p class="none">No activity adjustments yet.</p>';
   $('#edAdj').innerHTML = ED.adj.map((a,i) => a.a ? '' : row('adj', i,
-    inp('c', a.c, 'Class') + inp('b', a.b, 'Adjusted by', 'staffnames') + inp('t', a.t, 'Time') + inp('b2', a.b2, '2nd teacher (optional)', 'staffnames') + inp('t2', a.t2, '2nd time') + inp('f', a.f, 'For (optional)', 'staffnames'))).join('') || '<p class="none">No class adjustments yet.</p>';
+    inp('c', a.c, 'Class') + inp('b', a.b, 'Cover as Class Teacher', 'staffnames') + inp('t', a.t, 'Time') + inp('b2', a.b2, 'Cover as Subject Teacher', 'staffnames') + inp('t2', a.t2, 'Subject period(s)') + inp('f', a.f, 'For (optional)', 'staffnames'))).join('') || '<p class="none">No class adjustments yet.</p>';
 }
 function readEditor(){
   ED.date = $('#edDate').value || ED.date;
