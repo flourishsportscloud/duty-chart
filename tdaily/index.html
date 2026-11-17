@@ -201,6 +201,26 @@ table.svc{min-width:760px} .svc td{padding:6px 8px}
 .sslot.ss-now{background:var(--accent-soft)}
 .latetag{font-size:10px;font-weight:700;letter-spacing:.1em;color:#fff;background:var(--miss);padding:2px 6px;border-radius:3px}
 .row.late .task span{color:var(--miss)}.latetxt{font-size:11px;font-weight:600}
+.dt{font-family:var(--mono);font-size:11px;color:var(--done);white-space:nowrap}.dt.lt{color:#b26a00}:root:not([data-theme="light"]) .dt.lt{color:var(--accent)}
+.phb{display:inline-grid;place-items:center;min-width:34px;height:30px;border:1px dashed var(--line);border-radius:6px;cursor:pointer;font-size:15px;color:var(--muted);background:transparent;padding:0 6px;font-family:inherit}
+.phb.has{border-style:solid;border-color:var(--done);background:var(--done-soft);color:var(--done);font-size:12px;font-weight:600}
+.phb input{display:none}
+#phView{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.82);display:grid;place-items:center;padding:16px}
+#phView .box{background:var(--surface);color:var(--ink);border-radius:10px;padding:10px;max-width:min(560px,100%);width:100%}
+#phView img{display:block;width:100%;max-height:70vh;object-fit:contain;border-radius:6px;background:#000}
+#phView .cap{font-size:12px;color:var(--muted);margin:8px 2px}
+.wrow{padding:10px 14px;border-top:1px solid color-mix(in srgb,var(--line) 60%,transparent)}
+.wrow:first-child{border-top:0}
+.wtop{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.wtop b{font-weight:600;flex:1;min-width:0}.wtop .bus{font-family:var(--mono);font-size:12px;background:var(--ink);color:var(--bg);padding:2px 6px;border-radius:4px}
+.wst{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 6px;border-radius:3px;background:var(--na-soft);color:var(--na)}
+.wst.r{background:var(--accent-soft);color:var(--ink)}.wst.d{background:var(--done-soft);color:var(--done)}
+.wgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:8px}
+.wf{display:flex;flex-direction:column;gap:3px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.wf .in{display:flex;gap:4px;align-items:center}.wf input[type=time]{font:inherit;font-size:14px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:5px 6px;flex:1;min-width:0;letter-spacing:0}
+.chk{font:inherit;font-size:12px;font-weight:600;border:1.5px solid var(--line);background:transparent;color:var(--ink);border-radius:6px;padding:5px 8px;cursor:pointer;text-transform:none;letter-spacing:0}
+.chk.on{border-color:var(--done);background:var(--done-soft);color:var(--done)}
+.wsum{display:flex;gap:14px;flex-wrap:wrap;padding:10px 14px;font-family:var(--mono);font-size:12px;border-bottom:1px solid var(--line)}
 .btn.sm{padding:5px 10px;font-size:12px}
 @media (max-width:520px){.meta{grid-template-columns:1fr}h1{font-size:19px}.veh{grid-template-columns:1fr}.res{grid-template-columns:minmax(0,1fr) 40px}.res select{grid-column:1/-1}}
 @media (prefers-reduced-motion:reduce){.chev{transition:none}}
@@ -285,6 +305,10 @@ table.svc{min-width:760px} .svc td{padding:6px 8px}
   <div class="pane" data-pane="sup" hidden>
   <div id="supBody"></div>
   </div>
+  <div class="pane" data-pane="wash" hidden>
+  <div id="washBody"></div>
+  </div>
+  <div id="phView" hidden></div>
   <div class="pane" data-pane="complaints" hidden>
   <section class="win" id="crSec">
     <div class="win-h" data-w="crSec"><span class="time">FO</span><h2>Complaints &amp; Requests</h2><span class="chev">▾</span></div>
@@ -356,7 +380,8 @@ const FISDB=(function(){
         const f=keys=>{if(!keys||keys.some(k=>k.startsWith(coll+'/')))cb(run())};subs.add(f);setTimeout(()=>f(null),0);return()=>subs.delete(f)}}}
   const db={doc:p=>({get:async()=>snap(p),set:o=>write(p,o,false),update:o=>write(p,o,true),
       onSnapshot(cb){const f=keys=>{if(!keys||keys.includes(p))cb(snap(p))};subs.add(f);setTimeout(()=>f(null),0);return()=>subs.delete(f)}}),
-    collection:c=>query(c,[],null,null)};
+    collection:c=>query(c,[],null,null),
+    photo:k=>call('td_photo',[token,k]),who:()=>who};
   let resolveReady;const readyP=new Promise(r=>resolveReady=r);
   function showLogin(msg){const L=document.getElementById('fisLogin');L.hidden=false;document.getElementById('fl-n').value=who||'';document.getElementById('fl-err').textContent=msg||''}
   async function start(){await poll();if(!token)return;if(!timer){timer=setInterval(()=>{if(!document.hidden)poll()},15000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll()})}
@@ -397,7 +422,7 @@ try{JSON.parse(localStorage.getItem("closed")||"[]").forEach(x=>closed.add(x))}c
 
 function todayIST(){const d=new Date(Date.now()+(330+new Date().getTimezoneOffset())*60000);return d.toISOString().slice(0,10)}
 function nowMinIST(){const d=new Date(Date.now()+(330+new Date().getTimezoneOffset())*60000);return d.getUTCHours()*60+d.getUTCMinutes()}
-function blank(){return{s:{},n:{},by:"",fleet:"",dayNote:"",att:{},cover:{},uni:{},eod:{},sup:{}}}
+function blank(){return{s:{},n:{},by:"",fleet:"",dayNote:"",att:{},cover:{},uni:{},eod:{},sup:{},wash:{}}}
 
 /* ---- fleet & staff ---- */
 const ROUTES=[[1,1],[2,1],[3,1],[4,1],[5,1],[6,0],[7,0],[8,1],[9,1],[10,1],[11,0],[12,0],[13,0],[14,1],[15,1],[16,0],[34,0]];
@@ -457,7 +482,7 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",
 const fmt=d=>{const[y,m,dd]=d.split("-");return dd+"/"+m+"/"+y};
 
 function render(){
-  const fa=document.activeElement, fid=fa&&fa.id&&/^(note-|ro-|cover-|se-|ve-|sv-|eod-|tc-|sup-)/.test(fa.id)?fa.id:null, sel=fid&&(fa.tagName==="INPUT"||fa.tagName==="TEXTAREA")?[fa.selectionStart,fa.selectionEnd]:null;
+  const fa=document.activeElement, fid=fa&&fa.id&&/^(note-|ro-|cover-|se-|ve-|sv-|eod-|tc-|sup-|wa-)/.test(fa.id)?fa.id:null, sel=fid&&(fa.tagName==="INPUT"||fa.tagName==="TEXTAREA")?[fa.selectionStart,fa.selectionEnd]:null;
   renderInner(); renderStaff(); ensureMonth(); renderChart(); renderSal(); renderVeh(); renderSvc(); renderEod(); renderNpl();
   if(fid){const el=$(fid);if(el){el.focus();if(sel)try{el.setSelectionRange(sel[0],sel[1])}catch(e){}}}
 }
@@ -583,7 +608,7 @@ function subscribe(){
   setStatus("Loading "+fmt(date)+"…");
   unsub=db.doc("reports/"+date).onSnapshot(snap=>{
     const d=snap.exists?snap.data():null; const keep=pendingBy[date]||{};
-    state=d?{s:{...(d.s||{})},n:{...(d.n||{})},by:d.by||"",fleet:d.fleet||"",dayNote:d.dayNote||"",att:{...(d.att||{})},cover:{...(d.cover||{})},uni:{...(d.uni||{})},eod:{...(d.eod||{})},sup:JSON.parse(JSON.stringify(d.sup||{}))}:blank();
+    state=d?{s:{...(d.s||{})},n:{...(d.n||{})},by:d.by||"",fleet:d.fleet||"",dayNote:d.dayNote||"",att:{...(d.att||{})},cover:{...(d.cover||{})},uni:{...(d.uni||{})},eod:{...(d.eod||{})},sup:JSON.parse(JSON.stringify(d.sup||{})),wash:JSON.parse(JSON.stringify(d.wash||{}))}:blank();
     deepMerge(state,JSON.parse(JSON.stringify(keep)));
     render(); if(!writing&&!hasPending(date))setStatus(d?("Saved report · last update "+(d.updatedAt?new Date(d.updatedAt).toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"}):"")):"No entries yet for "+fmt(date)+" — tap a box to start.");
   },err=>setStatus("Could not load this report ("+(err&&err.code||"error")+")."));
@@ -850,7 +875,7 @@ document.addEventListener("change",e=>{const id=e.target.dataset.tc;if(!id)retur
   queue(p,nextDay(date));render()});
 
 /* ---- tabs & dashboard ---- */
-const TABS=[["dash","Dashboard"],["tasks","Daily Checklist"],["sup","Supervisor Tasks"],["staff","Staff Attendance"],["uniform","Uniform & Absentee"],["plan","Next-Day Plan"],["dayend","Day-End"],["complaints","Complaints"],["docs","Documents"],["service","Service"],["salary","Salary"],["history","History"]];
+const TABS=[["dash","Dashboard"],["tasks","Daily Checklist"],["sup","Supervisor Tasks"],["wash","Sunday Washing"],["staff","Staff Attendance"],["uniform","Uniform & Absentee"],["plan","Next-Day Plan"],["dayend","Day-End"],["complaints","Complaints"],["docs","Documents"],["service","Service"],["salary","Salary"],["history","History"]];
 const PANE_SEC={staff:"staff",uniform:"chartSec",plan:"nplSec",dayend:"eodSec",complaints:"crSec",docs:"vehSec",service:"svcSec",salary:"salSec"};
 let tab=(()=>{const h=location.hash.slice(1);if(TABS.some(t=>t[0]===h))return h;try{return localStorage.getItem("td_tab")||"dash"}catch(e){return"dash"}})();
 function tabBadges(){const b={};try{
@@ -858,6 +883,7 @@ function tabBadges(){const b={};try{
   const cov=coverMap();b.staff=SLOTS.filter(x=>state.att[x.id]==="A"&&!cov[x.id]).length;
   if(vehState==="ok")b.docs=Object.keys(veh).reduce((n,id)=>n+DOCS.filter(([k])=>{const st=docState(veh[id][k])[0];return st==="exp"||st==="none"||st==="due"}).length,0);
   b.sup=SUPS.reduce((n,[w])=>n+supStats(w).late,0);
+  if(isSun(date)&&date<=todayIST())b.wash=washStats().left;
   if(svcState==="ok")b.service=Object.keys(SV).filter(id=>svcCalc(SV[id]).st!=="ok").length;
  }catch(e){}return b}
 function renderTabs(){const b=tabBadges();
@@ -894,6 +920,7 @@ function renderDash(){const el=$("dashBody");if(!el||tab!=="dash")return;
   el.innerHTML=
    card("tasks","Daily Checklist",fmt(date),`<div class="big ${pct===100?"bok":c.miss?"bbad":""}">${pct}%<small>${fin}/${T} done · ${c.miss} missed</small></div><div class="mini">${wins}</div>${missed.length?`<div class="dl"><b>Not done:</b> ${missed.slice(0,6).map(esc).join(", ")}${missed.length>6?" …":""}</div>`:""}`)+
    card("sup","Supervisor Tasks",fmt(date),SUPS.map(([w,l])=>{const S=supStats(w);return `<div class="dl"><b>${l}:</b> ${S.done}/${S.tot} done${S.late?` · <span class="r">${S.late} late</span>`:""}${S.now.length?`<br>Now: ${S.now.map(esc).join(", ")}`:""}</div>`}).join(""))+
+   card("wash","Sunday Washing",isSun(date)?fmt(date):"next "+fmt(nextSun(date)),isSun(date)?(()=>{const W2=washStats();return `<div class="big ${W2.done===W2.tot?"bok":""}">${W2.done}/${W2.tot}<small>washed · ${W2.reach} reached · ${W2.chk} checked</small></div>`})():`<div class="dl">Washing is on Sundays. Open to see the list.</div>`)+
    card("staff","Staff Attendance",fmt(date),`<div class="big ${unc.length?"bbad":"bok"}">${total-abs.length}/${total}<small>present</small></div><div class="dl">${abs.length?`<b>Absent:</b> ${abs.map(nm).join(", ")}`:"All drivers & conductors present"}${unc.length?`<br><span class="r">Not covered: ${unc.map(x=>esc(slotText(x))).join(", ")}</span>`:abs.length?"<br>All absences covered":""}${nu.length?`<br><b>Without uniform:</b> ${nu.map(nm).join(", ")}`:""}</div>`)+
    card("uniform","Uniform & Absentee",new Date(date+"T00:00:00Z").toLocaleString("en-IN",{month:"long",year:"numeric",timeZone:"UTC"}),`<div class="big">${Object.values(mA).reduce((a,b)=>a+b,0)}<small>A</small> ${Object.values(mU).reduce((a,b)=>a+b,0)}<small>U</small></div><div class="dl">${topA.length?`<b>Most absent:</b> ${topA.map(id=>nm(id)+" "+mA[id]).join(", ")}`:"No absences this month"}${topU.length?`<br><b>Most without uniform:</b> ${topU.map(id=>nm(id)+" "+mU[id]).join(", ")}`:""}</div>`)+
    card("plan","Next-Day Plan",fmt(nextDay(date)),`<div class="big">${tab_.length}<small>absent tomorrow</small></div><div class="dl">${tab_.length?tab_.map(nm).join(", "):"No absentees marked for tomorrow yet"}<br>Open to mark absentees and copy the Hindi plan</div>`)+
@@ -904,7 +931,7 @@ function renderDash(){const el=$("dashBody");if(!el||tab!=="dash")return;
    (salState==="ok"?card("salary","Salary",salN+" staff",`<div class="big">${inr(salTot)}<small>per month</small></div>`):"")+
    card("history","History","last 14 days",`<div class="dl">Completion and staff absence for each saved day</div>`);
 }
-const _renderTD=render;render=function(){_renderTD();renderSup();renderTabs();renderDash()};
+const _renderTD=render;render=function(){_renderTD();renderSup();renderWash();renderTabs();renderDash()};
 setInterval(()=>{if(tab==="dash")renderDash();renderTabs()},2000);
 renderTabs();
 
@@ -924,7 +951,9 @@ Object.values(SUP_DEFAULT).forEach(L=>L.forEach((sl,i)=>sl.items.forEach((it,j)=
 let supTpl=null, supEdit={}, supDraft={};
 const uid=()=>Math.random().toString(36).slice(2,8);
 function supTemplate(w){const t=supTpl&&supTpl[w];return t&&t.length?t:SUP_DEFAULT[w]}
-function supDay(w){const x=(state.sup||{})[w]||{};let L=null;if(x.list)try{L=JSON.parse(x.list)}catch(e){}return{list:L||JSON.parse(JSON.stringify(supTemplate(w))),custom:!!L,st:x.st||{},n:x.n||{}}}
+function supDay(w){const x=(state.sup||{})[w]||{};let L=null;if(x.list)try{L=JSON.parse(x.list)}catch(e){}return{list:L||JSON.parse(JSON.stringify(supTemplate(w))),custom:!!L,st:x.st||{},n:x.n||{},at:x.at||{},ph:x.ph||{}}}
+const nowHM=()=>{const m=nowMinIST();return String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0")};
+const h12=t=>{if(!t)return"";let[a,b]=t.split(":").map(Number);return (a%12||12)+":"+String(b).padStart(2,"0")+(a<12?" am":" pm")};
 function supSave(w,patch){state.sup=state.sup||{};state.sup[w]=deepMerge(state.sup[w]||{},JSON.parse(JSON.stringify(patch)));queue({sup:{[w]:patch}});render()}
 function supSaveList(w,L){supSave(w,{list:JSON.stringify(L)})}
 function slotState(sl,d){const now=date===todayIST()?nowMinIST():-1,ids=sl.items.map(i=>i.id),open=ids.filter(id=>!d.st[id]).length;
@@ -932,15 +961,16 @@ function slotState(sl,d){const now=date===todayIST()?nowMinIST():-1,ids=sl.items
   if(now>=mins(sl.e))return open?"late":"done";if(now>=mins(sl.s))return"now";return"future"}
 function supStats(w){const d=supDay(w);let tot=0,done=0,miss=0,late=0,now=[];d.list.forEach(sl=>{const ss=slotState(sl,d);sl.items.forEach(it=>{tot++;const s=d.st[it.id];if(s==="done"||s==="na")done++;if(s==="miss")miss++;if(!s&&ss==="late")late++;if(ss==="now"&&!s)now.push(it.name)})});return{tot,done,miss,late,now,d}}
 function supMsg(w,label){const d=supDay(w);let m=`*${dm(date)} - ${label} Task*\n`;
-  d.list.forEach(sl=>{m+=`\n${sl.t}\n`;sl.items.forEach(it=>{const s=d.st[it.id];m+=`${it.name} - ${s==="done"?"✅":s==="miss"?"❌":s==="na"?"NA":""}${d.n[it.id]?" ("+d.n[it.id]+")":""}\n`})});return m.trim()}
+  d.list.forEach(sl=>{m+=`\n${sl.t}\n`;sl.items.forEach(it=>{const s=d.st[it.id],at=s&&d.at[it.id];m+=`${it.name} - ${s==="done"?"✅":s==="miss"?"❌":s==="na"?"NA":""}${at?" "+h12(at)+(mins(at)>mins(sl.e)?" (late)":""):""}${d.ph[it.id]?" 📷":""}${d.n[it.id]?" ("+d.n[it.id]+")":""}\n`})});return m.trim()}
 function renderSup(){const b=$("supBody");if(!b)return;
   b.innerHTML=SUPS.map(([w,label])=>{const S=supStats(w),d=S.d,ed=!!supEdit[w];
    const rows=d.list.map((sl,si)=>{const ss=slotState(sl,d);
      return `<div class="sslot ss-${ss}"><div class="sst"><span class="time">${esc(sl.t)}</span>${ss==="now"?'<span class="nowtag">NOW</span>':ss==="late"?'<span class="latetag">LATE</span>':""}
        ${ed?`<button class="btn xs" data-suprs="${w}|${si}" aria-label="Remove slot ${esc(sl.t)}">Remove slot</button>`:""}</div>
        ${sl.items.map(it=>{const s=d.st[it.id]||"",nt=d.n[it.id]||"",late=!s&&ss==="late";
+         const at=s&&d.at[it.id],atL=at&&mins(at)>mins(sl.e),pk="photos/"+date+".s."+w+"."+it.id;
          return `<div class="row ${s} ${late?"late":""}"><button class="tick ${s}" data-supt="${w}|${it.id}" aria-label="${esc(it.name)}: ${s||"pending"}">${SYM[s]}</button>
-          <div class="task"><span>${esc(it.name)}${late?' <small class="latetxt">not marked</small>':""}</span>${ed?`<button class="addnote" data-suprm="${w}|${si}|${it.id}" aria-label="Remove ${esc(it.name)}">✕ Remove</button>`:`<button class="addnote ${nt?"has":""}" data-supn="${w}|${it.id}">${nt?"Note ✎":"+ Note"}</button>`}</div>
+          <div class="task"><span>${esc(it.name)}${late?' <small class="latetxt">not marked</small>':""}${at?` <small class="dt ${atL?"lt":""}">${atL?"late · ":""}${h12(at)}</small>`:""}</span>${ed?"":phBtn(pk,d.ph[it.id],"sup|"+w+"|"+it.id)}${ed?`<button class="addnote" data-suprm="${w}|${si}|${it.id}" aria-label="Remove ${esc(it.name)}">✕ Remove</button>`:`<button class="addnote ${nt?"has":""}" data-supn="${w}|${it.id}">${nt?"Note ✎":"+ Note"}</button>`}</div>
           ${(nt||supDraft[w+"|n|"+it.id])&&!ed?`<input class="note" id="sup-n-${w}-${it.id}" data-supni="${w}|${it.id}" value="${esc(nt)}" placeholder="Remark">`:""}</div>`}).join("")}
        ${ed?`<div class="row"><span></span><div class="task"><input class="note" id="sup-a-${w}-${si}" value="${esc(supDraft["sup-a-"+w+"-"+si]||"")}" placeholder="New task in ${esc(sl.t)}"><button class="btn xs primary" data-supadd="${w}|${si}">Add</button></div></div>`:""}</div>`}).join("");
    const pct=S.tot?Math.round(S.done/S.tot*100):0;
@@ -953,7 +983,7 @@ function renderSup(){const b=$("supBody");if(!b)return;
     ${d.custom&&!ed?`<div class="legend" style="padding:0 14px 10px;margin:0">Today's list was changed for ${fmt(date)} only.</div>`:""}</div></section>`}).join("");
 }
 document.addEventListener("click",async e=>{const t=e.target.closest("[data-supt],[data-supn],[data-suprm],[data-suprs],[data-supadd],[data-supslot],[data-supedit],[data-supdone],[data-supdef],[data-supreset],[data-supcopy]");if(!t)return;e.stopPropagation();const D=t.dataset;
-  if(D.supt){const[w,id]=D.supt.split("|"),cur=supDay(w).st[id]||"",nx=CYCLE[(CYCLE.indexOf(cur)+1)%4];supSave(w,{st:{[id]:nx}});return}
+  if(D.supt){const[w,id]=D.supt.split("|"),cur=supDay(w).st[id]||"",nx=CYCLE[(CYCLE.indexOf(cur)+1)%4];supSave(w,{st:{[id]:nx},at:{[id]:nx?(cur&&supDay(w).at[id])||(date===todayIST()?nowHM():""):""}});return}
   if(D.supn){supDraft[D.supn.replace("|","|n|")]=1;render();const el=$("sup-n-"+D.supn.replace("|","-"));el&&el.focus();return}
   if(D.supedit){supEdit[D.supedit]=1;render();return}
   if(D.supdone){delete supEdit[D.supdone];render();return}
@@ -970,11 +1000,93 @@ document.addEventListener("click",async e=>{const t=e.target.closest("[data-supt
 },true);
 document.addEventListener("input",e=>{if(/^sup-(a|sf|se)-/.test(e.target.id||"")){supDraft[e.target.id]=e.target.value;return}const k=e.target.dataset.supni;if(!k)return;const[w,id]=k.split("|");state.sup=state.sup||{};state.sup[w]=state.sup[w]||{};state.sup[w].n=state.sup[w].n||{};state.sup[w].n[id]=e.target.value;queue({sup:{[w]:{n:{[id]:e.target.value}}}})});
 
+/* ---- photos (optional, one per task) — kept as photos/<date>.<s|w>.<...>, fetched only when opened ---- */
+const phCache={};
+function phBtn(key,has,ref){return has?`<button class="phb has" data-phv="${key}|${ref}" aria-label="View photo">📷 View</button>`
+  :`<label class="phb" aria-label="Add photo">📷<input type="file" accept="image/*" capture="environment" data-phup="${key}|${ref}"></label>`}
+function phMark(ref,v){const p=ref.split("|");
+  if(p[0]==="sup")supSave(p[1],{ph:{[p[2]]:v}});
+  else if(p[0]==="wash")washSave(p[1],{ph:v})}
+function shrink(file){return new Promise((res,rej)=>{const u=URL.createObjectURL(file),img=new Image();
+  img.onload=()=>{URL.revokeObjectURL(u);let w=Math.min(900,Math.max(img.width,img.height)),q=.72,out="";
+    for(let i=0;i<8;i++){const k=w/Math.max(img.width,img.height),c=document.createElement("canvas");c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);
+      c.getContext("2d").drawImage(img,0,0,c.width,c.height);out=c.toDataURL("image/jpeg",q);if(out.length<=44000)break;w=Math.round(w*.8);q=Math.max(.4,q-.07)}
+    out.length<=44000?res(out):rej(new Error("Photo too large"))};
+  img.onerror=()=>{URL.revokeObjectURL(u);rej(new Error("Could not read that photo."))};img.src=u})}
+document.addEventListener("change",async e=>{const v=e.target.dataset&&e.target.dataset.phup;if(!v)return;const f=e.target.files&&e.target.files[0];if(!f)return;
+  if(!db){setStatus("Log in to add photos.");return}
+  const i=v.indexOf("|"),key=v.slice(0,i),ref=v.slice(i+1);setStatus("Uploading photo…");
+  try{const img=await shrink(f),who=db.who?db.who():"";await db.doc(key).set({img,by:who,at:Date.now()});phCache[key]={img,by:who,at:Date.now()};phMark(ref,Date.now());setStatus("Photo saved.")}
+  catch(err){setStatus("Photo not saved — "+(err.message||"try again")+".")}});
+async function phOpen(key,ref){const V=$("phView");V.hidden=false;V.innerHTML=`<div class="box"><div class="cap">Loading photo…</div></div>`;
+  try{const p=phCache[key]||(await db.photo(key));if(p&&p.img)phCache[key]=p;
+    V.innerHTML=`<div class="box">${p&&p.img?`<img src="${p.img}" alt="Task photo"><div class="cap">${esc(p.by||"")}${p.at?" · "+new Date(p.at).toLocaleString("en-IN",{timeZone:"Asia/Kolkata",day:"numeric",month:"short",hour:"numeric",minute:"2-digit"}):""}</div>`:`<div class="cap">Photo not found.</div>`}
+      <div class="actions" style="margin:6px 0 0"><button class="btn sm primary" data-phclose>Close</button><label class="btn sm">Replace<input type="file" accept="image/*" capture="environment" data-phup="${key}|${ref}" style="display:none"></label><button class="btn sm" data-phdel="${key}|${ref}">Remove photo</button></div></div>`}
+  catch(err){V.innerHTML=`<div class="box"><div class="cap">Could not load the photo.</div><button class="btn sm" data-phclose>Close</button></div>`}}
+document.addEventListener("click",async e=>{const t=e.target.closest("[data-phv],[data-phclose],[data-phdel]");if(!t){if(e.target.id==="phView")$("phView").hidden=true;return}e.stopPropagation();const D=t.dataset;
+  if(D.phclose!=null){$("phView").hidden=true;return}
+  const v=D.phv||D.phdel,i=v.indexOf("|"),key=v.slice(0,i),ref=v.slice(i+1);
+  if(D.phv){phOpen(key,ref);return}
+  if(D.phdel){try{await db.doc(key).set({gone:1});delete phCache[key];phMark(ref,"");$("phView").hidden=true;setStatus("Photo removed.")}catch(err){setStatus("Could not remove the photo — try again.")}}},true);
+document.addEventListener("change",e=>{if(e.target.closest&&e.target.closest("#phView")&&e.target.dataset.phup)$("phView").hidden=true});
+
+/* ---- Sunday washing ---- */
+const WASH_DEFAULT=[["समसुदिन","4003"],["सुरेश नायक","4006"],["महेंद्र","5154"],["दीपक","5158"],["भारत","5156"],["अजय गुजराती","5312"],["विकाश","5129"],["अमन","4005"],["कुशाल","5160"],["अजीज","5157"],["मनीष","5123"],["अरुण","5132"],["जैराज","5313"],["शिवरतन","4004"],["दिलीप","4007"],["हनुमान","5131"],["विश्वबंधु","5153"],["गोपाल","9564"],["नितिन","6068"]].map(([name,bus],i)=>({id:"w"+(i+1),name,bus}));
+let washTpl=null,washEdit=false,washDraft={};
+const isSun=d=>new Date(d+"T00:00:00Z").getUTCDay()===0;
+const addDays=(d,n)=>{const x=new Date(d+"T00:00:00Z");x.setUTCDate(x.getUTCDate()+n);return x.toISOString().slice(0,10)};
+const nextSun=d=>addDays(d,(7-new Date(d+"T00:00:00Z").getUTCDay())%7||7);
+const prevSun=d=>addDays(d,-(new Date(d+"T00:00:00Z").getUTCDay()||7));
+function washTemplate(){return washTpl&&washTpl.length?washTpl:WASH_DEFAULT}
+function washDay(){const x=state.wash||{};let L=null;if(x.list)try{L=JSON.parse(x.list)}catch(e){}return{list:L||JSON.parse(JSON.stringify(washTemplate())),custom:!!L,r:x.r||{}}}
+function washSave(id,patch){state.wash=state.wash||{};state.wash.r=state.wash.r||{};state.wash.r[id]=Object.assign({},state.wash.r[id]||{},patch);queue({wash:{r:{[id]:patch}}});render()}
+function washSaveList(L){state.wash=state.wash||{};state.wash.list=JSON.stringify(L);queue({wash:{list:JSON.stringify(L)}});render()}
+function washStats(){const d=washDay();let reach=0,chk=0,done=0;d.list.forEach(v=>{const r=d.r[v.id]||{};if(r.reach)reach++;if(r.chk)chk++;if(r.done)done++});return{tot:d.list.length,reach,chk,done,left:d.list.length-done,d}}
+function washMsg(){const S=washStats();let m=`*Sunday Washing - ${dm(date)}*\nReached ${S.reach}/${S.tot} · Washed ${S.done}/${S.tot} · Checked ${S.chk}/${S.tot}\n`;
+  S.d.list.forEach((v,i)=>{const r=S.d.r[v.id]||{};m+=`\n${i+1}. ${v.name} - ${v.bus}\n`+(r.reach?`Reach ${h12(r.reach)}`:"Not reached ❌")+(r.done?` · Done ${h12(r.done)} ✅`:r.reach?" · Washing pending":"")+(r.chk?` · Checked by ${r.chk}${r.chkAt?" "+h12(r.chkAt):""}`:"")+(r.ph?" 📷":"")+(r.n?` (${r.n})`:"")});
+  return m.trim()}
+function renderWash(){const b=$("washBody");if(!b)return;
+  if(!isSun(date)){b.innerHTML=`<section class="win"><div class="win-h" style="cursor:default"><span class="time">Sunday</span><h2>Sunday Washing</h2></div>
+    <div class="alert" style="background:var(--accent-soft);color:var(--ink)">Washing is done on Sundays. ${fmt(date)} is not a Sunday.</div>
+    <div class="actions" style="margin:10px 14px 14px"><button class="btn sm" data-wgo="${prevSun(date)}">Last Sunday · ${fmt(prevSun(date))}</button><button class="btn sm primary" data-wgo="${nextSun(date)}">Next Sunday · ${fmt(nextSun(date))}</button></div></section>`;return}
+  const S=washStats(),d=S.d,today=date===todayIST();
+  const rows=d.list.map((v,i)=>{const r=d.r[v.id]||{},st=r.done?["d","Washed"]:r.reach?["r","Reached"]:["","Not reached"],pk="photos/"+date+".w."+v.id;
+    if(washEdit)return `<div class="wrow"><div class="wtop"><b>${i+1}. ${esc(v.name)}</b><span class="bus">${esc(v.bus)}</span><button class="addnote" data-wrm="${v.id}">✕ Remove</button></div></div>`;
+    const tf=(k,lab)=>`<label class="wf">${lab}<span class="in"><input type="time" id="wa-${k}-${v.id}" data-wt="${v.id}|${k}" value="${esc(r[k]||"")}">${today?`<button class="btn xs" data-wnow="${v.id}|${k}">Now</button>`:""}</span></label>`;
+    return `<div class="wrow"><div class="wtop"><b>${i+1}. ${esc(v.name)}</b><span class="bus">${esc(v.bus)}</span><span class="wst ${st[0]}">${st[1]}</span>${phBtn(pk,r.ph,"wash|"+v.id)}</div>
+      <div class="wgrid">${tf("reach","Driver reach time")}${tf("done","Washing done time")}
+      <div class="wf">Supervisor check<span class="in">${SUPS.map(([k,l])=>`<button class="chk ${r.chk===l?"on":""}" data-wchk="${v.id}|${l}">${r.chk===l?"✓ ":""}${l}</button>`).join("")}</span>${r.chk&&r.chkAt?`<span class="dt" style="text-transform:none;letter-spacing:0">checked ${h12(r.chkAt)}</span>`:""}</div></div>
+      <input class="note" style="margin-top:8px" id="wa-n-${v.id}" data-wn="${v.id}" value="${esc(r.n||"")}" placeholder="Remark (optional)"></div>`}).join("");
+  b.innerHTML=`<section class="win"><div class="win-h" style="cursor:default"><span class="time">Sunday</span><h2>Washing · ${fmt(date)}</h2><span class="cnt ${S.done===S.tot?"full":""}">${S.done}/${S.tot}</span></div>
+    <div class="wsum"><span>Reached ${S.reach}/${S.tot}</span><span>Washed ${S.done}/${S.tot}</span><span>Checked ${S.chk}/${S.tot}</span></div>
+    <div class="rows">${rows}
+    ${washEdit?`<div class="wrow"><div class="wgrid"><input class="note" id="wa-an" placeholder="Driver name" value="${esc(washDraft.an||"")}"><input class="note" id="wa-ab" placeholder="Bus no." value="${esc(washDraft.ab||"")}"><button class="btn sm primary" data-wadd>Add vehicle</button></div></div>`:""}</div>
+    <div class="actions" style="margin:10px 14px">${washEdit?`<button class="btn sm primary" data-wdone>Done editing</button><button class="btn sm" data-wdef>Save as default list</button><button class="btn sm" data-wreset>Reset this Sunday to default</button>`
+      :`<button class="btn sm primary" data-wcopy>Copy for WhatsApp</button><button class="btn sm" data-wedit>Add / remove vehicles</button>`}</div>
+    ${d.custom&&!washEdit?`<div class="legend" style="padding:0 14px 10px;margin:0">This Sunday's list was changed for ${fmt(date)} only.</div>`:""}</section>`}
+document.addEventListener("click",async e=>{const t=e.target.closest("[data-wgo],[data-wnow],[data-wchk],[data-wrm],[data-wadd],[data-wedit],[data-wdone],[data-wdef],[data-wreset],[data-wcopy]");if(!t)return;e.stopPropagation();const D=t.dataset;
+  if(D.wgo){setDate(D.wgo);return}
+  if(D.wnow){const[id,k]=D.wnow.split("|");washSave(id,{[k]:nowHM()});return}
+  if(D.wchk){const[id,l]=D.wchk.split("|"),r=washDay().r[id]||{};washSave(id,r.chk===l?{chk:"",chkAt:""}:{chk:l,chkAt:date===todayIST()?nowHM():""});return}
+  if(D.wedit!=null){washEdit=true;render();return}
+  if(D.wdone!=null){washEdit=false;render();return}
+  const L=washDay().list;
+  if(D.wrm){washSaveList(L.filter(v=>v.id!==D.wrm));return}
+  if(D.wadd!=null){const n=($("wa-an").value||"").trim(),bn=($("wa-ab").value||"").trim();if(!n||!bn){setStatus("Type the driver name and bus number.");return}L.push({id:"x"+uid(),name:n,bus:bn});washDraft={};washSaveList(L);return}
+  if(D.wdef!=null){try{await db.doc("roster/wash").set({list:L});washTpl=L;setStatus("Saved as the default washing list.")}catch(err){setStatus("Could not save the default — try again.")}render();return}
+  if(D.wreset!=null){state.wash=state.wash||{};state.wash.list="";queue({wash:{list:""}});render();return}
+  if(D.wcopy!=null){const m=washMsg();try{await navigator.clipboard.writeText(m);setStatus("Copied — paste it in WhatsApp.")}catch(err){const box=$("copybox");box.value=m;box.hidden=false;showTab("tasks");box.select();setStatus("Select the text and copy it.")}}
+},true);
+document.addEventListener("change",e=>{const k=e.target.dataset&&e.target.dataset.wt;if(!k)return;const[id,f]=k.split("|");washSave(id,{[f]:e.target.value})});
+document.addEventListener("input",e=>{const id=e.target.dataset&&e.target.dataset.wn;if(id){state.wash=state.wash||{};state.wash.r=state.wash.r||{};state.wash.r[id]=Object.assign({},state.wash.r[id]||{},{n:e.target.value});queue({wash:{r:{[id]:{n:e.target.value}}}});return}
+  if(e.target.id==="wa-an")washDraft.an=e.target.value;if(e.target.id==="wa-ab")washDraft.ab=e.target.value});
+
 $("date").value=date; render(); loadHistory();
 setInterval(()=>{if(date===todayIST()&&!document.activeElement?.matches("input,textarea"))render()},60000);
 (async()=>{try{db=await FISDB.ready()}catch(e){db=null}
   subscribe(); loadHistory(); loadSal(); loadVeh(); loadSvc();
   if(db)db.doc("roster/sup").onSnapshot(s=>{supTpl=s.exists?s.data():null;render()},()=>{});
+  if(db)db.doc("roster/wash").onSnapshot(s=>{const d=s.exists?s.data():null;washTpl=d&&Array.isArray(d.list)?d.list:null;render()},()=>{});
   if(db)db.doc("roster/main").onSnapshot(s=>{if(document.activeElement?.dataset?.r)return;const d=s.exists?s.data():{};roster={veh:{...(d.veh||{})},area:{...(d.area||{})},name:{...(d.name||{})},phone:{...(d.phone||{})},pre:Array.isArray(d.pre)?d.pre:[]};render()},()=>{});
 })();
 </script>
