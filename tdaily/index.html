@@ -420,8 +420,8 @@ const $=id=>document.getElementById(id);
 let db=null, date=todayIST(), state=blank(), unsub=null, closed=new Set();
 try{JSON.parse(localStorage.getItem("closed")||"[]").forEach(x=>closed.add(x))}catch(e){}
 
-function todayIST(){const d=new Date(Date.now()+(330+new Date().getTimezoneOffset())*60000);return d.toISOString().slice(0,10)}
-function nowMinIST(){const d=new Date(Date.now()+(330+new Date().getTimezoneOffset())*60000);return d.getUTCHours()*60+d.getUTCMinutes()}
+function todayIST(){const d=new Date(Date.now()+330*60000);return d.toISOString().slice(0,10)}
+function nowMinIST(){const d=new Date(Date.now()+330*60000);return d.getUTCHours()*60+d.getUTCMinutes()}
 function blank(){return{s:{},n:{},by:"",fleet:"",dayNote:"",att:{},cover:{},uni:{},eod:{},sup:{},wash:{}}}
 
 /* ---- fleet & staff ---- */
@@ -875,7 +875,7 @@ document.addEventListener("change",e=>{const id=e.target.dataset.tc;if(!id)retur
   queue(p,nextDay(date));render()});
 
 /* ---- tabs & dashboard ---- */
-const TABS=[["dash","Dashboard"],["tasks","Daily Checklist"],["sup","Supervisor Tasks"],["wash","Sunday Washing"],["staff","Staff Attendance"],["uniform","Uniform & Absentee"],["plan","Next-Day Plan"],["dayend","Day-End"],["complaints","Complaints"],["docs","Documents"],["service","Service"],["salary","Salary"],["history","History"]];
+const TABS=[["dash","Dashboard"],["tasks","Daily Checklist"],["sup","सुपरवाइज़र कार्य"],["wash","Sunday Washing"],["staff","Staff Attendance"],["uniform","Uniform & Absentee"],["plan","Next-Day Plan"],["dayend","Day-End"],["complaints","Complaints"],["docs","Documents"],["service","Service"],["salary","Salary"],["history","History"]];
 const PANE_SEC={staff:"staff",uniform:"chartSec",plan:"nplSec",dayend:"eodSec",complaints:"crSec",docs:"vehSec",service:"svcSec",salary:"salSec"};
 let tab=(()=>{const h=location.hash.slice(1);if(TABS.some(t=>t[0]===h))return h;try{return localStorage.getItem("td_tab")||"dash"}catch(e){return"dash"}})();
 function tabBadges(){const b={};try{
@@ -919,7 +919,7 @@ function renderDash(){const el=$("dashBody");if(!el||tab!=="dash")return;
   const card=(go,title,sub,body,wide)=>`<button class="dc ${wide?"wide":""}" data-go="${go}"><h4>${title}<small>${sub||""}</small></h4>${body}</button>`;
   el.innerHTML=
    card("tasks","Daily Checklist",fmt(date),`<div class="big ${pct===100?"bok":c.miss?"bbad":""}">${pct}%<small>${fin}/${T} done · ${c.miss} missed</small></div><div class="mini">${wins}</div>${missed.length?`<div class="dl"><b>Not done:</b> ${missed.slice(0,6).map(esc).join(", ")}${missed.length>6?" …":""}</div>`:""}`)+
-   card("sup","Supervisor Tasks",fmt(date),SUPS.map(([w,l])=>{const S=supStats(w);return `<div class="dl"><b>${l}:</b> ${S.done}/${S.tot} done${S.late?` · <span class="r">${S.late} late</span>`:""}${S.now.length?`<br>Now: ${S.now.map(esc).join(", ")}`:""}</div>`}).join(""))+
+   card("sup","सुपरवाइज़र कार्य",fmt(date),SUPS.map(([w,l])=>{const S=supStats(w);return `<div class="dl"><b>${l}:</b> ${S.done}/${S.tot} पूरे${S.late?` · <span class="r">${S.late} देरी</span>`:""}${S.now.length?`<br>अभी: ${S.now.map(x=>esc(hiT(x))).join(", ")}`:""}</div>`}).join(""))+
    card("wash","Sunday Washing",isSun(date)?fmt(date):"next "+fmt(nextSun(date)),isSun(date)?(()=>{const W2=washStats();return `<div class="big ${W2.done===W2.tot?"bok":""}">${W2.done}/${W2.tot}<small>washed · ${W2.reach} reached · ${W2.chk} checked</small></div>`})():`<div class="dl">Washing is on Sundays. Open to see the list.</div>`)+
    card("staff","Staff Attendance",fmt(date),`<div class="big ${unc.length?"bbad":"bok"}">${total-abs.length}/${total}<small>present</small></div><div class="dl">${abs.length?`<b>Absent:</b> ${abs.map(nm).join(", ")}`:"All drivers & conductors present"}${unc.length?`<br><span class="r">Not covered: ${unc.map(x=>esc(slotText(x))).join(", ")}</span>`:abs.length?"<br>All absences covered":""}${nu.length?`<br><b>Without uniform:</b> ${nu.map(nm).join(", ")}`:""}</div>`)+
    card("uniform","Uniform & Absentee",new Date(date+"T00:00:00Z").toLocaleString("en-IN",{month:"long",year:"numeric",timeZone:"UTC"}),`<div class="big">${Object.values(mA).reduce((a,b)=>a+b,0)}<small>A</small> ${Object.values(mU).reduce((a,b)=>a+b,0)}<small>U</small></div><div class="dl">${topA.length?`<b>Most absent:</b> ${topA.map(id=>nm(id)+" "+mA[id]).join(", ")}`:"No absences this month"}${topU.length?`<br><b>Most without uniform:</b> ${topU.map(id=>nm(id)+" "+mU[id]).join(", ")}`:""}</div>`)+
@@ -936,7 +936,11 @@ setInterval(()=>{if(tab==="dash")renderDash();renderTabs()},2000);
 renderTabs();
 
 /* ---- supervisor tasks (Kamal, Vishvbandu) ---- */
-const SUPS=[["kamal","Kamal"],["vishvbandu","Vishvbandu"]];
+const SUPS=[["kamal","कमल"],["vishvbandu","विश्वबंधु"]];
+const SUP_HI={"bus task":"बस कार्य","extra driver":"एक्स्ट्रा ड्राइवर","guard room":"गार्ड रूम","ma'am pickup":"मैडम पिकअप","on road duty":"ऑन रोड ड्यूटी","diesel round":"डीज़ल राउंड",
+ "driver reporting":"ड्राइवर रिपोर्टिंग","diesel refill":"डीज़ल भरवाना","market":"मार्केट","house task":"घर का कार्य","breakfast":"नाश्ता","bus round":"बस राउंड","lunch":"लंच",
+ "pre departure":"प्री-डिपार्चर","bus check":"बस चेक","ma'am drop":"मैडम ड्रॉप","key photo":"चाबी की फोटो","diesel check":"डीज़ल चेक","bus repair":"बस रिपेयर","bus parking":"बस पार्किंग"};
+const hiT=n=>SUP_HI[String(n).trim().toLowerCase()]||n;
 const SL=(t,s,e,names)=>({t,s,e,items:names.map(n=>({id:"",name:n}))});
 const SUP_DEFAULT={
  kamal:[SL("5:30-6:30","05:30","06:30",["Bus task","Extra Driver"]),SL("6:30-7:30","06:30","07:30",["Guard Room","Ma'am Pickup"]),SL("7:00-7:45","07:00","07:45",["On Road duty"]),
@@ -960,27 +964,27 @@ function slotState(sl,d){const now=date===todayIST()?nowMinIST():-1,ids=sl.items
   if(date<todayIST())return open?"late":"done";if(now<0)return"future";
   if(now>=mins(sl.e))return open?"late":"done";if(now>=mins(sl.s))return"now";return"future"}
 function supStats(w){const d=supDay(w);let tot=0,done=0,miss=0,late=0,now=[];d.list.forEach(sl=>{const ss=slotState(sl,d);sl.items.forEach(it=>{tot++;const s=d.st[it.id];if(s==="done"||s==="na")done++;if(s==="miss")miss++;if(!s&&ss==="late")late++;if(ss==="now"&&!s)now.push(it.name)})});return{tot,done,miss,late,now,d}}
-function supMsg(w,label){const d=supDay(w);let m=`*${dm(date)} - ${label} Task*\n`;
-  d.list.forEach(sl=>{m+=`\n${sl.t}\n`;sl.items.forEach(it=>{const s=d.st[it.id],at=s&&d.at[it.id];m+=`${it.name} - ${s==="done"?"✅":s==="miss"?"❌":s==="na"?"NA":""}${at?" "+h12(at)+(mins(at)>mins(sl.e)?" (late)":""):""}${d.ph[it.id]?" 📷":""}${d.n[it.id]?" ("+d.n[it.id]+")":""}\n`})});return m.trim()}
+function supMsg(w,label){const d=supDay(w);let m=`*${dm(date)} - ${label} कार्य*\n`;
+  d.list.forEach(sl=>{m+=`\n${sl.t}\n`;sl.items.forEach(it=>{const s=d.st[it.id],at=s&&d.at[it.id];m+=`${hiT(it.name)} - ${s==="done"?"✅":s==="miss"?"❌":s==="na"?"NA":""}${at?" "+h12(at)+(mins(at)>mins(sl.e)?" (देरी)":""):""}${d.ph[it.id]?" 📷":""}${d.n[it.id]?" ("+d.n[it.id]+")":""}\n`})});return m.trim()}
 function renderSup(){const b=$("supBody");if(!b)return;
   b.innerHTML=SUPS.map(([w,label])=>{const S=supStats(w),d=S.d,ed=!!supEdit[w];
    const rows=d.list.map((sl,si)=>{const ss=slotState(sl,d);
-     return `<div class="sslot ss-${ss}"><div class="sst"><span class="time">${esc(sl.t)}</span>${ss==="now"?'<span class="nowtag">NOW</span>':ss==="late"?'<span class="latetag">LATE</span>':""}
-       ${ed?`<button class="btn xs" data-suprs="${w}|${si}" aria-label="Remove slot ${esc(sl.t)}">Remove slot</button>`:""}</div>
+     return `<div class="sslot ss-${ss}"><div class="sst"><span class="time">${esc(sl.t)}</span>${ss==="now"?'<span class="nowtag">अभी</span>':ss==="late"?'<span class="latetag">देरी</span>':""}
+       ${ed?`<button class="btn xs" data-suprs="${w}|${si}" aria-label="स्लॉट हटाएँ ${esc(sl.t)}">स्लॉट हटाएँ</button>`:""}</div>
        ${sl.items.map(it=>{const s=d.st[it.id]||"",nt=d.n[it.id]||"",late=!s&&ss==="late";
          const at=s&&d.at[it.id],atL=at&&mins(at)>mins(sl.e),pk="photos/"+date+".s."+w+"."+it.id;
          return `<div class="row ${s} ${late?"late":""}"><button class="tick ${s}" data-supt="${w}|${it.id}" aria-label="${esc(it.name)}: ${s||"pending"}">${SYM[s]}</button>
-          <div class="task"><span>${esc(it.name)}${late?' <small class="latetxt">not marked</small>':""}${at?` <small class="dt ${atL?"lt":""}">${atL?"late · ":""}${h12(at)}</small>`:""}</span>${ed?"":phBtn(pk,d.ph[it.id],"sup|"+w+"|"+it.id)}${ed?`<button class="addnote" data-suprm="${w}|${si}|${it.id}" aria-label="Remove ${esc(it.name)}">✕ Remove</button>`:`<button class="addnote ${nt?"has":""}" data-supn="${w}|${it.id}">${nt?"Note ✎":"+ Note"}</button>`}</div>
-          ${(nt||supDraft[w+"|n|"+it.id])&&!ed?`<input class="note" id="sup-n-${w}-${it.id}" data-supni="${w}|${it.id}" value="${esc(nt)}" placeholder="Remark">`:""}</div>`}).join("")}
-       ${ed?`<div class="row"><span></span><div class="task"><input class="note" id="sup-a-${w}-${si}" value="${esc(supDraft["sup-a-"+w+"-"+si]||"")}" placeholder="New task in ${esc(sl.t)}"><button class="btn xs primary" data-supadd="${w}|${si}">Add</button></div></div>`:""}</div>`}).join("");
+          <div class="task"><span>${esc(hiT(it.name))}${late?' <small class="latetxt">मार्क नहीं</small>':""}${at?` <small class="dt ${atL?"lt":""}">${atL?"देरी से · ":""}${h12(at)}</small>`:""}</span>${ed?"":phBtn(pk,d.ph[it.id],"sup|"+w+"|"+it.id)}${ed?`<button class="addnote" data-suprm="${w}|${si}|${it.id}" aria-label="हटाएँ ${esc(it.name)}">✕ हटाएँ</button>`:`<button class="addnote ${nt?"has":""}" data-supn="${w}|${it.id}">${nt?"नोट ✎":"+ नोट"}</button>`}</div>
+          ${(nt||supDraft[w+"|n|"+it.id])&&!ed?`<input class="note" id="sup-n-${w}-${it.id}" data-supni="${w}|${it.id}" value="${esc(nt)}" placeholder="टिप्पणी">`:""}</div>`}).join("")}
+       ${ed?`<div class="row"><span></span><div class="task"><input class="note" id="sup-a-${w}-${si}" value="${esc(supDraft["sup-a-"+w+"-"+si]||"")}" placeholder="${esc(sl.t)} में नया कार्य"><button class="btn xs primary" data-supadd="${w}|${si}">जोड़ें</button></div></div>`:""}</div>`}).join("");
    const pct=S.tot?Math.round(S.done/S.tot*100):0;
-   return `<section class="win"><div class="win-h" style="cursor:default"><span class="time">${esc(label)}</span><h2>${esc(label)} · ${fmt(date)}</h2><span class="cnt ${pct===100?"full":""}">${S.done}/${S.tot}${S.late?` · <span style="color:var(--miss)">${S.late} late</span>`:""}</span></div>
-    ${S.now.length&&!ed?`<div class="ok" style="background:var(--accent-soft);color:var(--ink)">Now: ${S.now.map(esc).join(", ")}</div>`:""}
+   return `<section class="win"><div class="win-h" style="cursor:default"><span class="time">${esc(label)}</span><h2>${esc(label)} · ${fmt(date)}</h2><span class="cnt ${pct===100?"full":""}">${S.done}/${S.tot}${S.late?` · <span style="color:var(--miss)">${S.late} देरी</span>`:""}</span></div>
+    ${S.now.length&&!ed?`<div class="ok" style="background:var(--accent-soft);color:var(--ink)">अभी: ${S.now.map(x=>esc(hiT(x))).join(", ")}</div>`:""}
     <div class="rows">${rows}
-    ${ed?`<div class="sslot"><div class="sst" style="flex-wrap:wrap;gap:6px"><input class="note" id="sup-sf-${w}" value="${esc(supDraft["sup-sf-"+w]||"")}" aria-label="Slot start" style="width:130px" type="time"><input class="note" id="sup-se-${w}" value="${esc(supDraft["sup-se-"+w]||"")}" aria-label="Slot end" type="time" style="width:130px"><button class="btn xs primary" data-supslot="${w}">Add time slot</button></div></div>`:""}
-    <div class="actions" style="margin:10px 14px">${ed?`<button class="btn sm primary" data-supdone="${w}">Done editing</button><button class="btn sm" data-supdef="${w}">Save as daily default</button><button class="btn sm" data-supreset="${w}">Reset today to default</button>`
-      :`<button class="btn sm primary" data-supcopy="${w}">Copy for WhatsApp</button><button class="btn sm" data-supedit="${w}">Add / remove tasks</button>`}</div>
-    ${d.custom&&!ed?`<div class="legend" style="padding:0 14px 10px;margin:0">Today's list was changed for ${fmt(date)} only.</div>`:""}</div></section>`}).join("");
+    ${ed?`<div class="sslot"><div class="sst" style="flex-wrap:wrap;gap:6px"><input class="note" id="sup-sf-${w}" value="${esc(supDraft["sup-sf-"+w]||"")}" aria-label="Slot start" style="width:130px" type="time"><input class="note" id="sup-se-${w}" value="${esc(supDraft["sup-se-"+w]||"")}" aria-label="Slot end" type="time" style="width:130px"><button class="btn xs primary" data-supslot="${w}">समय स्लॉट जोड़ें</button></div></div>`:""}
+    <div class="actions" style="margin:10px 14px">${ed?`<button class="btn sm primary" data-supdone="${w}">बदलाव पूरे</button><button class="btn sm" data-supdef="${w}">रोज़ की सूची के रूप में सेव करें</button><button class="btn sm" data-supreset="${w}">आज की सूची रीसेट करें</button>`
+      :`<button class="btn sm primary" data-supcopy="${w}">WhatsApp के लिए कॉपी</button><button class="btn sm" data-supedit="${w}">कार्य जोड़ें / हटाएँ</button>`}</div>
+    ${d.custom&&!ed?`<div class="legend" style="padding:0 14px 10px;margin:0">आज की सूची केवल ${fmt(date)} के लिए बदली गई है।</div>`:""}</div></section>`}).join("");
 }
 document.addEventListener("click",async e=>{const t=e.target.closest("[data-supt],[data-supn],[data-suprm],[data-suprs],[data-supadd],[data-supslot],[data-supedit],[data-supdone],[data-supdef],[data-supreset],[data-supcopy]");if(!t)return;e.stopPropagation();const D=t.dataset;
   if(D.supt){const[w,id]=D.supt.split("|"),cur=supDay(w).st[id]||"",nx=CYCLE[(CYCLE.indexOf(cur)+1)%4];supSave(w,{st:{[id]:nx},at:{[id]:nx?(cur&&supDay(w).at[id])||(date===todayIST()?nowHM():""):""}});return}
@@ -990,11 +994,11 @@ document.addEventListener("click",async e=>{const t=e.target.closest("[data-supt
   const w=(D.suprm||D.suprs||D.supadd||D.supslot||D.supdef||D.supreset||D.supcopy||"").split("|")[0],d=supDay(w),L=d.list;
   if(D.suprm){const[,si,id]=D.suprm.split("|");L[+si].items=L[+si].items.filter(i=>i.id!==id);supSaveList(w,L);return}
   if(D.suprs){const si=+D.suprs.split("|")[1];L.splice(si,1);supSaveList(w,L);return}
-  if(D.supadd){const si=+D.supadd.split("|")[1],inp=$("sup-a-"+w+"-"+si),v=(inp&&inp.value||"").trim();if(!v){setStatus("Type the task name first.");return}L[si].items.push({id:uid(),name:v});delete supDraft["sup-a-"+w+"-"+si];supSaveList(w,L);return}
-  if(D.supslot){const s=$("sup-sf-"+w).value,en=$("sup-se-"+w).value;if(!s||!en||en<=s){setStatus("Enter a start and end time for the slot.");return}
+  if(D.supadd){const si=+D.supadd.split("|")[1],inp=$("sup-a-"+w+"-"+si),v=(inp&&inp.value||"").trim();if(!v){setStatus("पहले कार्य का नाम लिखें।");return}L[si].items.push({id:uid(),name:v});delete supDraft["sup-a-"+w+"-"+si];supSaveList(w,L);return}
+  if(D.supslot){const s=$("sup-sf-"+w).value,en=$("sup-se-"+w).value;if(!s||!en||en<=s){setStatus("स्लॉट का शुरू और खत्म होने का समय डालें।");return}
     const h=x=>{let[a,b]=x.split(":").map(Number);const a12=a>12?a-12:a;return a12+":"+String(b).padStart(2,"0")};
     delete supDraft["sup-sf-"+w];delete supDraft["sup-se-"+w];L.push({t:h(s)+"-"+h(en),s,e:en,items:[]});L.sort((a,b)=>a.s<b.s?-1:a.s>b.s?1:0);supSaveList(w,L);return}
-  if(D.supdef){const T=Object.assign({},supTpl||{});T[w]=L;supTpl=T;try{await db.doc("roster/sup").set(T);setStatus("Saved as the daily default for "+SUPS.find(x=>x[0]===w)[1])}catch(err){setStatus("Could not save the default — try again.")}render();return}
+  if(D.supdef){const T=Object.assign({},supTpl||{});T[w]=L;supTpl=T;try{await db.doc("roster/sup").set(T);setStatus(SUPS.find(x=>x[0]===w)[1]+" की रोज़ की सूची सेव हो गई।")}catch(err){setStatus("Could not save the default — try again.")}render();return}
   if(D.supreset){supSave(w,{list:""});return}
   if(D.supcopy){const m=supMsg(w,SUPS.find(x=>x[0]===w)[1]);try{await navigator.clipboard.writeText(m);setStatus("Copied — paste it in WhatsApp.")}catch(err){const box=$("copybox");box.value=m;box.hidden=false;showTab("tasks");box.select();setStatus("Select the text and copy it.")}}
 },true);
@@ -1055,7 +1059,7 @@ function renderWash(){const b=$("washBody");if(!b)return;
     const tf=(k,lab)=>`<label class="wf">${lab}<span class="in"><input type="time" id="wa-${k}-${v.id}" data-wt="${v.id}|${k}" value="${esc(r[k]||"")}">${today?`<button class="btn xs" data-wnow="${v.id}|${k}">Now</button>`:""}</span></label>`;
     return `<div class="wrow"><div class="wtop"><b>${i+1}. ${esc(v.name)}</b><span class="bus">${esc(v.bus)}</span><span class="wst ${st[0]}">${st[1]}</span>${phBtn(pk,r.ph,"wash|"+v.id)}</div>
       <div class="wgrid">${tf("reach","Driver reach time")}${tf("done","Washing done time")}
-      <div class="wf">Supervisor check<span class="in">${SUPS.map(([k,l])=>`<button class="chk ${r.chk===l?"on":""}" data-wchk="${v.id}|${l}">${r.chk===l?"✓ ":""}${l}</button>`).join("")}</span>${r.chk&&r.chkAt?`<span class="dt" style="text-transform:none;letter-spacing:0">checked ${h12(r.chkAt)}</span>`:""}</div></div>
+      <div class="wf">Supervisor check<span class="in">${["Kamal","Vishvbandu"].map(l=>`<button class="chk ${r.chk===l?"on":""}" data-wchk="${v.id}|${l}">${r.chk===l?"✓ ":""}${l}</button>`).join("")}</span>${r.chk&&r.chkAt?`<span class="dt" style="text-transform:none;letter-spacing:0">checked ${h12(r.chkAt)}</span>`:""}</div></div>
       <input class="note" style="margin-top:8px" id="wa-n-${v.id}" data-wn="${v.id}" value="${esc(r.n||"")}" placeholder="Remark (optional)"></div>`}).join("");
   b.innerHTML=`<section class="win"><div class="win-h" style="cursor:default"><span class="time">Sunday</span><h2>Washing · ${fmt(date)}</h2><span class="cnt ${S.done===S.tot?"full":""}">${S.done}/${S.tot}</span></div>
     <div class="wsum"><span>Reached ${S.reach}/${S.tot}</span><span>Washed ${S.done}/${S.tot}</span><span>Checked ${S.chk}/${S.tot}</span></div>

@@ -100,7 +100,7 @@ const LS={get(k){try{return JSON.parse(localStorage.getItem('tcr_'+k))}catch(e){
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=d=>d?d.slice(8,10)+'/'+d.slice(5,7)+'/'+d.slice(2,4):'–';
-const today=()=>new Date(Date.now()+(330+new Date().getTimezoneOffset())*6e4).toISOString().slice(0,10);
+const today=()=>new Date(Date.now()+330*6e4).toISOString().slice(0,10);
 const addDays=(d,n)=>{const t=new Date(d+'T00:00:00Z');t.setUTCDate(t.getUTCDate()+n);return t.toISOString().slice(0,10)};
 function toast(m){const t=$('toast');t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,2600)}
 
