@@ -863,7 +863,7 @@ function smsText(first, cat, n){
   const t = {
     sig:"your ward " + f + "'s diary has not been signed by you for the past " + p + ". You are requested to ensure that you sign your ward's diary every day.",
     nb:"your ward " + f + " has not brought the diary to school for the past " + p + ". You are requested to ensure that your ward brings the diary to school every day.",
-    def:"your ward " + f + "'s diary work has not been completed for the past " + p + ". You are requested to ensure that your ward completes the diary work every day.",
+    def:"your ward " + f + "'s diary has not been signed by you for the past " + p + ". You are requested to ensure that you sign your ward's diary every day.",
     eng:"your ward " + f + " has not been speaking in English at school for the past " + p + ". You are requested to encourage your ward to speak in English at home as well.",
     beh:"your ward " + f + "'s behaviour at school has not been appropriate for the past " + p + ". You are requested to talk to your ward about it.",
     tv:"your ward " + f + " has not followed the TV hour routine at home for the past " + p + ". You are requested to ensure that your ward follows the TV hour routine every day.",
@@ -1234,7 +1234,7 @@ setInterval(() => {
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && me) { retryDirty(); refresh(); } });
 
 /* ---------- auto-update: if a newer page is published, reload into it ---------- */
-const BUILD = "202611130800";
+const BUILD = "202611171020";
 (function(){
   const run = () => fetch(location.pathname + "?v=" + Date.now(), {cache:"no-store"}).then(r => r.text()).then(t => {
     const m = t.match(/const BUILD = "(\d+)"/);
