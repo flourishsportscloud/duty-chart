@@ -185,8 +185,8 @@ const DE=[
 const DEFS={dp:DP,de:DE};
 const ROWS={dp:[],de:[]};
 Object.keys(DEFS).forEach(m=>DEFS[m].forEach(b=>b.items.forEach(it=>{
-  if(it.subs) it.subs.forEach(s=>ROWS[m].push({key:it.id+'-'+s[0],item:it,label:s[1],block:b,rem:it.rem||(m==='de'?'r':''),sub:true}));
-  else ROWS[m].push({key:it.id,item:it,label:it.name,block:b,rem:it.rem||(m==='de'?'r':''),sub:false});
+  if(it.subs) it.subs.forEach(s=>ROWS[m].push({key:it.id+'-'+s[0],item:it,label:s[1],block:b,rem:it.rem||'r',sub:true}));
+  else ROWS[m].push({key:it.id,item:it,label:it.name,block:b,rem:it.rem||'r',sub:false});
 })));
 const ROWMAP={dp:{},de:{}};Object.keys(ROWS).forEach(m=>ROWS[m].forEach(r=>ROWMAP[m][r.key]=r));
 const DAYN=['Mon','Tue','Wed','Thu','Fri','Sat'];
