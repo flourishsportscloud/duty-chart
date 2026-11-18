@@ -8,9 +8,10 @@
    - PM logins (role "pm") work only in PM Plan – Live
 */
 const TZ="Asia/Kolkata";
-const PLS=["poonam","garima","renu"];
+const PLS=["poonam","garima","santosh"];
+const PL_ALIAS={renu:"santosh"};   // Class 10–11 PL changed from Renu Harsh to Santosh Yadav (18 Nov 2026): older records show under Santosh
 const MODES=["dp","de"];
-const PEOPLE={poonam:"Poonam",garima:"Garima",renu:"Renu Harsh",sarita:"Sarita (Head of Secondary)",dean:"Dean of Academics",director:"Director–Admin"};
+const PEOPLE={poonam:"Poonam",garima:"Garima",santosh:"Santosh Yadav",sarita:"Sarita (Head of Secondary)",dean:"Dean of Academics",director:"Director–Admin"};
 const SENIORS=["Sarita (Head of Secondary)","Dean of Academics","Director–Admin"];
 const COLS={Plan:["id","pl","mode","date","wk","json","updated"],"PM Plan":["id","pl","mode","date","wk","json","updated"],Users:["id","name","role","salt","hash","ver"],Config:["key","json","by","at"],Log:["time","who","doc","what"]};
 
@@ -28,7 +29,7 @@ function getTimes_(){const r=rows_("Config").find(x=>x[0]==="times");return r?pa
 
 function wkOf_(date){const d=new Date(date+"T00:00:00Z");d.setUTCDate(d.getUTCDate()-((d.getUTCDay()+6)%7));return d.toISOString().slice(0,10)}
 /* ---------- PL logins (passwords stored only as salted hashes in the Users tab) ---------- */
-const PL_USERS=[["poonam","Poonam","pl"],["garima","Garima","pl"],["renu","Renu Harsh","pl"],
+const PL_USERS=[["poonam","Poonam","pl"],["garima","Garima","pl"],["santosh","Santosh Yadav","pl"],
   ["sarita","Sarita (Head of Secondary)","senior"],["dean","Dean of Academics","senior"],["director","Director–Admin","admin"],
   ["shally","Shally","pm"],["neetu","Neetu","pm"],["divyanshi","Divyanshi","pm"],["diksha","Diksha","pm"]];
 const TOKEN_DAYS=120;
@@ -83,7 +84,10 @@ function state_(token,wk){
   const me=notPm_(me_(token));
   if(!isoDate(wk))fail("Bad week.");
   const docs={};
-  rows_("Plan").forEach(r=>{const p=String(r[0]).split("_");if(p.length===3&&isoDate(p[2])&&wkOf_(p[2])===wk&&(me.role!=="pl"||p[0]===me.id)){const j=parse_(r[5]);docs[r[0]]={pl:p[0],mode:p[1],date:p[2],wk:wk,cells:j.cells||{},rem:j.rem||{}}}});
+  rows_("Plan").forEach(r=>{const p=String(r[0]).split("_");if(p.length!==3||!isoDate(p[2])||wkOf_(p[2])!==wk)return;
+    const pl=PL_ALIAS[p[0]]||p[0];if(me.role==="pl"&&pl!==me.id)return;
+    const id=pl+"_"+p[1]+"_"+p[2];if(PL_ALIAS[p[0]]&&docs[id])return;
+    const j=parse_(r[5]);docs[id]={pl:pl,mode:p[1],date:p[2],wk:wk,cells:j.cells||{},rem:j.rem||{}}});
   return {today:today_(),docs,times:getTimes_(),me:pub_(me)};
 }
 
@@ -97,7 +101,9 @@ function save_(token,id,patch){
   const wk=wkOf_(date);
   const sh=sheet_("Plan");const all=rows_("Plan");
   let idx=all.findIndex(r=>r[0]===id);
-  const j=idx>=0?parse_(all[idx][5]):{};j.cells=j.cells||{};j.rem=j.rem||{};
+  let seed={};
+  if(idx<0){const old=Object.keys(PL_ALIAS).find(k=>PL_ALIAS[k]===pl);const oi=old?all.findIndex(r=>r[0]===old+"_"+mode+"_"+date):-1;if(oi>=0)seed=parse_(all[oi][5])}
+  const j=idx>=0?parse_(all[idx][5]):seed;j.cells=j.cells||{};j.rem=j.rem||{};
   const now=Date.now();let n=0;
   Object.keys((patch&&patch.cells)||{}).forEach(k=>{
     const c=patch.cells[k]||{};const key=String(k).slice(0,80);
@@ -202,6 +208,16 @@ function setupPmLogins(){
 
 /* Run once from the Apps Script editor (not reachable from the web): sets EVERY login to FirstName#1111
    (e.g. Poonam#1111, Dean#1111, Director#1111) and logs everyone out. Change them afterwards from the Logins screen. */
+// Editor-only: gives FirstName#1111 to every login that has no password yet (e.g. a newly added PL). Existing passwords are untouched.
+function setNewUserPasswords(){
+  Object.keys(COLS).forEach(sheet_);
+  const out=[];
+  users_().forEach(u=>{if(u.hash)return;const pw=u.name.split(/[^A-Za-z]+/)[0]+"#1111";setPw_(u,pw);out.push(u.name+" : "+pw)});
+  sheet_("Log").appendRow([Utilities.formatDate(new Date(),TZ,"yyyy-MM-dd HH:mm"),"Editor","password","new logins: "+(out.join(", ")||"none")]);
+  Logger.log(out.join("\n")||"No new logins.");
+  return out;
+}
+
 function setNamePasswords(){
   Object.keys(COLS).forEach(sheet_);
   const out=[];
