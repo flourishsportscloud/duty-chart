@@ -229,8 +229,8 @@ Object.keys(DEFS).forEach(m=>DEFS[m].forEach(b=>{b.mode=m;b.items.forEach(it=>{
   else ROWS[m].push({key:it.id,item:it,label:it.name,block:b,mode:m,rem:it.rem||1,kind:it.kind||'',sub:false});
 })}));
 Object.keys(ROWS).forEach(m=>ROWS[m].forEach(r=>ROWMAP[r.key]=r));
-const WKROWS=WEEKLY.map(w=>({key:'wk-'+w[0],item:{},label:w[1],block:WKBLOCK,mode:'wk',rem:'',kind:'',sub:false}));
-const WEROWS=WEEKEND.map(w=>({key:'wk-'+w[0],item:{},label:w[1],block:WEBLOCK,mode:'wk',rem:'',kind:'',sub:false}));
+const WKROWS=WEEKLY.map(w=>({key:'wk-'+w[0],item:{},label:w[1],block:WKBLOCK,mode:'wk',rem:1,kind:'',sub:false}));
+const WEROWS=WEEKEND.map(w=>({key:'wk-'+w[0],item:{},label:w[1],block:WEBLOCK,mode:'wk',rem:1,kind:'',sub:false}));
 WKROWS.concat(WEROWS).forEach(r=>ROWMAP[r.key]=r);
 const wkRowsFor=mode=>mode==='de'?WEROWS:WKROWS;
 const DAYN=['Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -451,13 +451,13 @@ function flushAll(){Object.keys(pend).forEach(flush)}
 function onRemInput(el){
   const plId=el.dataset.pl,rk=el.dataset.row,sec=el.dataset.sec,f=el.dataset.f;
   if(!canAct(plId))return;
-  const mode=ROWMAP[rk].mode;const id=docId(plId,mode,S.date),doc=ensureDoc(id,plId,mode,S.date),key=rk+'__'+sec;
+  const mode=ROWMAP[rk].mode;const dd=mode==='wk'?S.wk:S.date;const id=docId(plId,mode,dd),doc=ensureDoc(id,plId,mode,dd),key=rk+'__'+sec;
   if(f==='num'){
     const v=el.value;doc.cells[key]={s:v!==''?'D':'',n:v,by:whoName(),at:Date.now(),l:0};
   }else{
     const e=doc.rem[key]||{x:''};e[f]=el.value;e.by=whoName();e.at=Date.now();doc.rem[key]=e;
     const has=(e.n!==''&&e.n!=null)||String(e.x||'').trim()!=='';
-    if(has&&!(doc.cells[key]&&doc.cells[key].s==='D'))doc.cells[key]=mkCell(rk,'D',Date.now(),false);
+    if(has&&!(doc.cells[key]&&doc.cells[key].s==='D'))doc.cells[key]=mkCell(rk,'D',Date.now(),mode==='wk');
   }
   const t=typed[id]=typed[id]||{cells:{},rem:{}};
   if(doc.rem[key])t.rem[key]=clone(doc.rem[key]);if(doc.cells[key])t.cells[key]=clone(doc.cells[key]);
@@ -609,7 +609,8 @@ function weeklyCard(pl,mode){
   const d=getWkDoc(pl,S.wk);const ed=canAct(pl.id,true);
   let h=`<div class="blk"><div class="bh"><span class="bn">${esc(blk.name)}<small>weekly – mark once</small></span><span class="bpc">${wkDone(pl,S.wk,rows)}/${rows.length}</span></div>`;
   rows.forEach(r=>{
-    h+=`<div class="item"><div class="row de"><div class="rl"><span class="lbl">${esc(r.label)}</span></div><div class="boxes">${boxHTML(pl,r,'x',d&&d.cells[r.key+'__x'],ed,true,false)}</div></div></div>`;
+    const rc=remCount(pl,r,d),op=S.openRem[pl.id+'|'+r.key];
+    h+=`<div class="item"><div class="row de"><div class="rl"><span class="lbl">${esc(r.label)}</span><span class="rb"><button class="mini ${op?'on':''}" data-act="rem" data-pl="${pl.id}" data-row="${r.key}">Remark${rc?' ('+rc+')':''}</button></span></div><div class="boxes">${boxHTML(pl,r,'x',d&&d.cells[r.key+'__x'],ed,true,false)}</div>${op?remPanel(pl,r,d,ed):''}</div></div>`;
   });
   return h+'</div>';
 }
