@@ -1050,7 +1050,7 @@ const AREAS = [
 ];
 /* Teachers segment: class-wise groups, marked by the class PL / incharge. Starts with the class teachers of each section. */
 const CLASS_GROUPS = [['c12','Class 1–2',['1','2'],'Shally / Sanjana'],['c3','Class 3',['3'],'Neetu'],['c4','Class 4',['4'],'Divyanshi'],['c5','Class 5',['5'],'Diksha'],
- ['c67','Class 6–7',['6','7'],'Poonam Sharda'],['c89','Class 8–9',['8','9'],'Garima'],['c1011','Class 10–11',['10','11'],'']];
+ ['c67','Class 6–7',['6','7'],'Poonam Sharda'],['c89','Class 8–9',['8','9'],'Garima'],['c1011','Class 10–11',['10','11'],'Santosh Yadav']];
 CLASS_GROUPS.forEach(([id, t, gr, by]) => { const secs = Object.keys(CT).filter(c => gr.includes(c.match(/^\d+/)[0]));
   AREAS.push({id, t, by, seg:'cls', secs, p: secs.map(c => CT[c])}); });
 AREAS.forEach(a => { a.seg = a.seg || 'duty'; });
