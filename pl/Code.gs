@@ -9,7 +9,8 @@
 */
 const TZ="Asia/Kolkata";
 const PLS=["poonam","garima","santosh"];
-const PL_ALIAS={renu:"santosh"};   // Class 10–11 PL changed from Renu Harsh to Santosh Yadav (18 Nov 2026): older records show under Santosh
+const PL_ALIAS={renu:"santosh"};
+const ALIAS_NAME={santosh:"Santosh Yadav"},ALIAS_OLD_NAMES=["Renu Harsh"];   // merged: Renu's Class 10–11 entries are shown under Santosh Yadav's name (the Log tab keeps the original)   // Class 10–11 PL changed from Renu Harsh to Santosh Yadav (18 Nov 2026): older records show under Santosh
 const MODES=["dp","de"];
 const PEOPLE={poonam:"Poonam",garima:"Garima",santosh:"Santosh Yadav",sarita:"Sarita (Head of Secondary)",dean:"Dean of Academics",director:"Director–Admin"};
 const SENIORS=["Sarita (Head of Secondary)","Dean of Academics","Director–Admin"];
@@ -87,7 +88,9 @@ function state_(token,wk){
   rows_("Plan").forEach(r=>{const p=String(r[0]).split("_");if(p.length!==3||!isoDate(p[2])||wkOf_(p[2])!==wk)return;
     const pl=PL_ALIAS[p[0]]||p[0];if(me.role==="pl"&&pl!==me.id)return;
     const id=pl+"_"+p[1]+"_"+p[2];if(PL_ALIAS[p[0]]&&docs[id])return;
-    const j=parse_(r[5]);docs[id]={pl:pl,mode:p[1],date:p[2],wk:wk,cells:j.cells||{},rem:j.rem||{}}});
+    const j=parse_(r[5]);const cells=j.cells||{},rem=j.rem||{};
+    if(pl in ALIAS_NAME)[cells,rem].forEach(o=>Object.keys(o).forEach(k=>{if(o[k]&&ALIAS_OLD_NAMES.indexOf(o[k].by)>=0)o[k].by=ALIAS_NAME[pl]}));
+    docs[id]={pl:pl,mode:p[1],date:p[2],wk:wk,cells:cells,rem:rem}});
   return {today:today_(),docs,times:getTimes_(),me:pub_(me)};
 }
 
