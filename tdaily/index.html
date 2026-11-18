@@ -428,7 +428,7 @@ function blank(){return{s:{},n:{},by:"",fleet:"",dayNote:"",att:{},cover:{},uni:
 const ROUTES=[[1,1],[2,1],[3,1],[4,1],[5,1],[6,0],[7,0],[8,1],[9,1],[10,1],[11,0],[12,0],[13,0],[14,1],[15,1],[16,0],[34,0]];
 const VEH=ROUTES.map(([n,b])=>({id:"p"+n,label:(b?"Bus ":"Van ")+n,bus:!!b}));
 const SLOTS=VEH.flatMap(v=>v.bus?[{id:v.id+"d",v,role:"Driver"},{id:v.id+"c",v,role:"Conductor"}]:[{id:v.id+"d",v,role:"Driver"}]);
-const RES=[1,2,3].map(i=>({id:"r"+i,label:"Reserve Driver "+i}));
+const RES=[...[1,2,3].map(i=>({id:"r"+i,label:"Reserve Driver "+i})),{id:"r4",label:"Reserve Conductor 1",cond:true}];
 let roster={veh:{},area:{},name:{},phone:{},pre:[]}, editRoster=false;
 const vSub=v=>[roster.area[v.id],roster.veh[v.id]].filter(Boolean).join(" · ");
 function absentByName(nm){if(!nm)return false;const k=nm.trim().toLowerCase();
@@ -458,15 +458,15 @@ function renderStaff(){
   const slotBtn=s=>{const a=state.att[s.id]==="A",c=cov[s.id];
     return `<button class="slot ${a?"A":""} ${a&&!c?"unc":""}" data-a="${s.id}" aria-label="${esc(slotText(s))}: ${a?"absent":"present"}"><small>${s.role}${roster.phone[s.id]?" · "+esc(roster.phone[s.id]):""}</small><span>${esc(personName(s.id,"—"))}</span><em>${a?"A":"P"}</em>${a?`<div class="cv">${c?"↳ "+esc(personName(c,RES.find(r=>r.id===c).label)):"Not covered"}</div>`:""}</button>`};
   const opts=r=>{const cur=state.cover[r.id]||"";const taken=new Set(RES.filter(x=>x.id!==r.id).map(x=>state.cover[x.id]));
-    const list=SLOTS.filter(s=>(state.att[s.id]==="A"&&!taken.has(s.id))||s.id===cur);
+    const list=SLOTS.filter(s=>((state.att[s.id]==="A"&&!taken.has(s.id))||s.id===cur)&&(!r.cond||s.role==="Conductor"));
     return `<option value="">Standby</option>`+list.map(s=>`<option value="${s.id}" ${s.id===cur?"selected":""}>${esc(slotText(s))}</option>`).join("")};
   $("staffBody").innerHTML=
-    (unc.length?`<div class="alert">Not covered: ${unc.map(s=>esc(slotText(s))).join(", ")}</div>`:absent.length?`<div class="ok">All absences covered by reserve drivers.</div>`:"")+
+    (unc.length?`<div class="alert">Not covered: ${unc.map(s=>esc(slotText(s))).join(", ")}</div>`:absent.length?`<div class="ok">All absences covered by reserve staff.</div>`:"")+
     `<div class="group">Buses · Driver + Conductor &nbsp;·&nbsp; tap a name to mark P / A</div>`+
     VEH.filter(v=>v.bus).map(v=>`<div class="veh"><div class="vlabel"><b>${v.label}</b><span>${esc(vSub(v))}</span></div><div class="slots">${SLOTS.filter(s=>s.v===v).map(slotBtn).join("")}</div></div>`).join("")+
     `<div class="group">Small Vans · Driver only</div>`+
     VEH.filter(v=>!v.bus).map(v=>`<div class="veh"><div class="vlabel"><b>${v.label}</b><span>${esc(vSub(v))}</span></div><div class="slots">${slotBtn(SLOTS.find(s=>s.v===v))}<div class="slot none">No conductor</div></div></div>`).join("")+
-    `<div class="group">Reserve drivers · can replace any driver or conductor</div>`+
+    `<div class="group">Reserve staff · drivers can replace any driver or conductor · reserve conductor replaces conductors</div>`+
     RES.map(r=>{const a=state.att[r.id]==="A";return `<div class="res"><div class="task"><span><b>${esc(personName(r.id,r.label))}</b>${roster.name[r.id]?`<br><small style="color:var(--muted)">${r.label}</small>`:""}</span></div>
       <button class="tick ${a?"miss":"done"}" data-a="${r.id}" aria-label="${esc(r.label)}: ${a?"absent":"present"}">${a?"A":"P"}</button>
       <select data-c="${r.id}" id="cover-${r.id}" aria-label="${esc(r.label)} assignment" ${a?"disabled":""}>${opts(r)}</select></div>`}).join("")+
@@ -527,7 +527,7 @@ async function flush(){
 }
 
 /* ---- uniform & absentee chart ---- */
-const CHART=["p1d","p2d","p3d","p4d","p5d","p6d","p7d","p8d","p9d","p10d","p11d","p12d","p13d","p14d","r2","p16d","r1","r3","p34d","p15d","p4c","p2c","p5c","p14c","p9c","p10c","p15c","p8c","p1c","p3c"];
+const CHART=["p1d","p2d","p3d","p4d","p5d","p6d","p7d","p8d","p9d","p10d","p11d","p12d","p13d","p14d","r2","p16d","r1","r3","p34d","p15d","p4c","p2c","p5c","p14c","p9c","p10c","p15c","p8c","p1c","p3c","r4"];
 let month="", monthData={}, monthUnsub=null;
 const START="2026-10-01";
 function rangeEnd(){const m=[date.slice(0,7),todayIST().slice(0,7),START.slice(0,7)].sort().pop();const[y,mm]=m.split("-").map(Number);return m+"-"+String(new Date(Date.UTC(y,mm,0)).getUTCDate()).padStart(2,"0")}
@@ -829,7 +829,7 @@ document.addEventListener("click",async e=>{if(!e.target.closest("#eodCopy"))ret
 const HI={p1d:"समसुदिन",p1c:"संतोष चावरिया",p2d:"सुरेश नायक",p2c:"रुक्षणा",p3d:"महेंद्र",p3c:"विमला",p4d:"दीपक",p4c:"संतोष न्यू",p5d:"भारत",p5c:"आशा",
  p6d:"अजय गुजराती",p7d:"विकाश",p8d:"अमन",p8c:"आशा न्यू",p9d:"कुशाल",p9c:"पूनम",p10d:"अजीज",p10c:"निर्मला",p11d:"मनीष",p12d:"सुरेश गुजराती",p13d:"जैराज",
  p14d:"शिवरतन",p14c:"पूजा",p15d:"दिलीप",p15c:"कोमल",p16d:"हनुमान",p34d:"गोपाल",r1:"कमल सिंग",r2:"नितिन",r3:"विश्वबंधु"};
-const hi=id=>HI[id]||personName(id,id);
+const hi=id=>HI[id]||personName(id,id==="r4"?"रिज़र्व कंडक्टर":id);
 function tmrData(){const nd=nextDay(date);if(tmr.d!==nd)return null;if(!tmr.data)tmr.data={att:{},cover:{}};tmr.data.att=tmr.data.att||{};tmr.data.cover=tmr.data.cover||{};return tmr.data}
 function idByName(nm){const k=String(nm||"").trim().toLowerCase();if(!k)return null;const all=[...SLOTS.map(x=>x.id),...RES.map(r=>r.id)];return all.find(id=>(roster.name[id]||"").trim().toLowerCase()===k)||null}
 function planMsg(){const t=tmrData()||{att:{},cover:{}},A=id=>t.att[id]==="A",cov={};
@@ -840,7 +840,7 @@ function planMsg(){const t=tmrData()||{att:{},cover:{}},A=id=>t.att[id]==="A",co
     else{const ds=A(d)?(cov[d]?`*${hi(cov[d])}* (${hi(d)} की जगह)`:`*ड्राइवर नहीं* (${hi(d)} ऐब्सेंट)`):dr;
       const cs=A(c)?(cov[c]?`*${hi(cov[c])}* (${hi(c)} की जगह)`:`*कंडक्टर नहीं* (${hi(c)} ऐब्सेंट)`):co;line=`${ds} - ${cs}`}
     m+=`${i+1}. ${line}\n`});
-  m+=`\n*एक्स्ट्रा*\n`+[RES[1],RES[2],RES[0]].map(r=>"- "+hi(r.id).split(" ")[0]).join("\n");
+  m+=`\n*एक्स्ट्रा*\n`+[RES[1],RES[2],RES[0],RES[3]].map(r=>"- "+hi(r.id).split(" ")[0]).join("\n");
   const ab=[...SLOTS.map(x=>x.id),...RES.map(r=>r.id)].filter(A);
   m+=`\n\n*ऐब्सेंट*\n`+(ab.length?ab.map(id=>"- "+hi(id)).join("\n"):"- कोई नहीं");
   const pre=(roster.pre||[]).filter(p=>p.code);
@@ -861,7 +861,7 @@ function renderNpl(){const b=$("nplBody");if(!b)return;$("nplSec").classList.tog
   b.innerHTML=`<div class="group">Step 1 · Tap tomorrow's absentees (${fmt(nd)})</div>
    <div class="chips">${st.map(x=>`<button class="pchip ${t.att[x.id]==="A"?"on":""}" data-ta="${x.id}">${esc(x.nm)}</button>`).join("")}</div>
    ${ab.filter(x=>!RES.some(r=>r.id===x.id)).length?`<div class="group">Step 2 · Who covers?</div>`+ab.filter(x=>!RES.some(r=>r.id===x.id)).map(x=>`<div class="covrow"><span>${esc(x.nm)}</span>
-     <select data-tc="${x.id}" id="tc-${x.id}"><option value="">No cover</option>${freeRes.map(r=>`<option value="${r.id}" ${covOf(x.id)===r.id?"selected":""}>${esc(personName(r.id,r.label))}</option>`).join("")}</select></div>`).join(""):""}
+     <select data-tc="${x.id}" id="tc-${x.id}"><option value="">No cover</option>${freeRes.filter(r=>!r.cond||slotOf(x.id)?.role==="Conductor").map(r=>`<option value="${r.id}" ${covOf(x.id)===r.id?"selected":""}>${esc(personName(r.id,r.label))}</option>`).join("")}</select></div>`).join(""):""}
    <div class="actions" style="margin:10px 14px"><button class="btn primary" id="nplCopy">Copy Hindi plan for WhatsApp</button></div>
    <div class="wa" id="nplPrev">${esc(planMsg())}</div>`}
 document.addEventListener("click",async e=>{
