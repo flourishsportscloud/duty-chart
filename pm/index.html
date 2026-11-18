@@ -229,6 +229,11 @@ Object.keys(DEFS).forEach(m=>DEFS[m].forEach(b=>{b.mode=m;b.items.forEach(it=>{
   else ROWS[m].push({key:it.id,item:it,label:it.name,block:b,mode:m,rem:it.rem||1,kind:it.kind||'',sub:false});
 })}));
 Object.keys(ROWS).forEach(m=>ROWS[m].forEach(r=>ROWMAP[r.key]=r));
+/* Follow-up checks: 3 extra ticks under these items (not counted in block %), so the PM records how many times the item was checked */
+const FU_IDS=['medicalr','washcase','wr_dry','wr_clean','wr_supply'];const FUROWS={};
+ROWS.dp.filter(r=>FU_IDS.indexOf(r.key)>=0).forEach(r=>{FUROWS[r.key]=[1,2,3].map(n=>{
+  const fr={key:r.key+'-fu'+n,item:{id:r.key+'-fu'+n,name:'Follow-up '+n,one:r.item.one,sec:r.item.sec},label:'Follow-up '+n,block:r.block,mode:'dp',rem:'',kind:'',sub:true};
+  ROWMAP[fr.key]=fr;return fr})});
 const WKROWS=WEEKLY.map(w=>({key:'wk-'+w[0],item:{},label:w[1],block:WKBLOCK,mode:'wk',rem:1,kind:'',sub:false}));
 const WEROWS=WEEKEND.map(w=>({key:'wk-'+w[0],item:{},label:w[1],block:WEBLOCK,mode:'wk',rem:1,kind:'',sub:false}));
 WKROWS.concat(WEROWS).forEach(r=>ROWMAP[r.key]=r);
@@ -597,7 +602,7 @@ function blocksHTML(pl,doc,editable){
       if(it.subs){
         h+=`<div class="ih"><span>${esc(it.name)}${it.sec&&S.mode==='de'?' <small class="muted" style="font-weight:400">· section-wise</small>':''}</span><button class="mini ${editable?'':'ro'}" data-act="allitem" data-pl="${pl.id}" data-item="${it.id}">All ✓</button></div>`;
         ROWS[S.mode].filter(r=>r.item===it).forEach(r=>{h+=rowHTML(pl,r,doc,editable)});
-      }else h+=rowHTML(pl,ROWMAP[it.id],doc,editable);
+      }else{h+=rowHTML(pl,ROWMAP[it.id],doc,editable);if(S.mode==='dp'&&FUROWS[it.id])FUROWS[it.id].forEach(fr=>{h+=rowHTML(pl,fr,doc,editable)})}
       h+='</div>';
     });
     h+='</div>';
