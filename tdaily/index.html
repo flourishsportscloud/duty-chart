@@ -354,7 +354,7 @@ table.svc{min-width:760px} .svc td{padding:6px 8px}
 </div>
 <script>
 /* Self-update: phones keep an old copy of this page for a while, so check for a newer build and reload */
-const APP_V="202611181140";
+const APP_V="202611181215";
 (function(){let busy=false;async function chk(){if(busy||location.protocol==="file:")return;busy=true;
   try{const t=await (await fetch(location.pathname+"?nc="+Date.now(),{cache:"no-store"})).text(),m=t.match(/const APP_V="(\d+)"/);
     if(m&&m[1]!==APP_V){const u=new URL(location.href);u.searchParams.set("v",m[1]);location.replace(u.toString())}}catch(e){}busy=false}
@@ -462,7 +462,13 @@ function renderStaff(){
     RES.map(r=>`<div class="redit"><b>${r.label}</b>
       <label>Name<input class="note" id="ro-name-${r.id}" data-r="name.${r.id}" value="${esc(roster.name[r.id]||"")}" placeholder="Name"></label>
       <label>Phone<input class="note" id="ro-phone-${r.id}" data-r="phone.${r.id}" value="${esc(roster.phone[r.id]||"")}" inputmode="tel" placeholder="Mobile"></label>
-      <label>Hindi name<input class="note" id="ro-hi-${r.id}" data-r="hi.${r.id}" value="${esc(roster.hi[r.id]||"")}" placeholder="${esc(HI[r.id]||"हिंदी नाम")}"></label></div>`).join("");
+      <label>Hindi name<input class="note" id="ro-hi-${r.id}" data-r="hi.${r.id}" value="${esc(roster.hi[r.id]||"")}" placeholder="${esc(HI[r.id]||"हिंदी नाम")}"></label></div>`).join("")+
+    `<div class="group">Pre-Primary run (second round 7:30) · pick names from the list so absences carry over</div><datalist id="staffNames">${[...SLOTS,...RES].map(x=>roster.name[x.id]).filter(Boolean).map(n=>`<option value="${esc(n)}">`).join("")}</datalist>`+
+    (roster.pre||[]).map((p,i)=>`<div class="redit"><b>${p.code?esc(p.code)+" · "+esc(p.kind||""):"Spare"}</b>
+      <label>Driver<input class="note" id="ro-pre-${i}-driver" data-pre="${i}.driver" list="staffNames" value="${esc(p.driver||"")}" placeholder="Driver"></label>
+      <label>Driver phone<input class="note" id="ro-pre-${i}-dphone" data-pre="${i}.dphone" value="${esc(p.dphone||"")}" inputmode="tel" placeholder="Mobile"></label>
+      <label>Conductor<input class="note" id="ro-pre-${i}-cond" data-pre="${i}.cond" list="staffNames" value="${esc(p.cond||"")}" placeholder="Conductor"></label>
+      <label>Conductor phone<input class="note" id="ro-pre-${i}-cphone" data-pre="${i}.cphone" value="${esc(p.cphone||"")}" inputmode="tel" placeholder="Mobile"></label></div>`).join("");
     return;
   }
   const slotBtn=s=>{const a=state.att[s.id]==="A",c=cov[s.id];
@@ -584,6 +590,9 @@ document.addEventListener("click",e=>{
 });
 document.addEventListener("input",e=>{
   const rk=e.target.dataset.r; if(rk){const[g,k]=rk.split(".");roster[g][k]=e.target.value;saveRoster();return}
+  const pk=e.target.dataset.pre; if(pk){const[i,f]=pk.split("."),P=roster.pre[+i];if(!P)return;P[f]=e.target.value;
+    if(f==="driver"||f==="cond"){const id=idByName(e.target.value);if(id&&roster.phone[id]){P[f==="driver"?"dphone":"cphone"]=roster.phone[id];const ph=$("ro-pre-"+i+"-"+(f==="driver"?"dphone":"cphone"));if(ph)ph.value=roster.phone[id]}}
+    saveRoster();return}
   const ni=e.target.dataset.ni; if(ni){state.n[ni]=e.target.value;queue({n:{[ni]:e.target.value}});return}
   if(["by","fleet","dayNote"].includes(e.target.id)){state[e.target.id]=e.target.value;queue({[e.target.id]:e.target.value})}
 });
@@ -1101,7 +1110,11 @@ setInterval(()=>{if(date===todayIST()&&!document.activeElement?.matches("input,t
   subscribe(); loadHistory(); loadSal(); loadVeh(); loadSvc();
   if(db)db.doc("roster/sup").onSnapshot(s=>{supTpl=s.exists?s.data():null;render()},()=>{});
   if(db)db.doc("roster/wash").onSnapshot(s=>{const d=s.exists?s.data():null;washTpl=d&&Array.isArray(d.list)?d.list:null;render()},()=>{});
-  if(db)db.doc("roster/main").onSnapshot(s=>{if(document.activeElement?.dataset?.r)return;const d=s.exists?s.data():{};roster={veh:{...(d.veh||{})},area:{...(d.area||{})},name:{...(d.name||{})},phone:{...(d.phone||{})},hi:{...(d.hi||{})},pre:Array.isArray(d.pre)?d.pre:[]};render()},()=>{});
+  let preFix=false;
+  if(db)db.doc("roster/main").onSnapshot(s=>{const ae=document.activeElement?.dataset;if(ae&&(ae.r||ae.pre))return;const d=s.exists?s.data():{};roster={veh:{...(d.veh||{})},area:{...(d.area||{})},name:{...(d.name||{})},phone:{...(d.phone||{})},hi:{...(d.hi||{})},pre:Array.isArray(d.pre)?d.pre:[],mig:{...(d.mig||{})}};
+    // one-time change asked on 18 Nov 2026: Bus G second round is driven by Manish; Nitin stays spare
+    if(s.exists&&!preFix&&!roster.mig.g1118){preFix=true;const G=roster.pre.find(p=>p.code==="G");if(G){G.driver=roster.name.p11d||"Manish";G.dphone=roster.phone.p11d||"";}roster.mig.g1118=1;saveRoster()}
+    render()},()=>{});
 })();
 </script>
 
