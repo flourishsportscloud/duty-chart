@@ -107,6 +107,9 @@ input:focus-visible, select:focus-visible, button:focus-visible, a:focus-visible
 .sheet .acts { justify-content: flex-start }
 .sheet .st { font-size: 13.5px; color: var(--muted) }
 .sheet .st.ok { color: var(--ok); font-weight: 600 }
+.wsheet { width: min(100%, 620px); max-height: calc(100vh - 32px); overflow: auto }
+.wsheet .chips { max-height: 9.5rem; overflow: auto }
+.wsheet .wa-pre { max-height: 40vh }
 /* reader */
 .reader { position: fixed; inset: 0; z-index: 40; background: #3a3f4c; display: flex; flex-direction: column }
 .rbar { background: var(--navy); color: var(--navy-ink); display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
@@ -366,6 +369,20 @@ main .wrap > *, .poor > * { min-width: 0 }
     </div>
   </div>
 </div>
+<div class="sheet-bg" id="wsheet" hidden>
+  <div class="sheet wsheet" role="dialog" aria-modal="true" aria-labelledby="ws-t">
+    <h3 id="ws-t">WhatsApp text</h3>
+    <div class="st">Students below 60% in the tests picked, section by section. Tap tests to change the list.</div>
+    <div class="chips" id="ws-tests"></div>
+    <label class="wa-chk"><input type="checkbox" id="ws-abng"> Also list Ab / NG</label>
+    <pre class="wa-pre" id="ws-text"></pre>
+    <div class="acts">
+      <button class="btn wa" id="ws-copy" type="button">Copy for WhatsApp</button>
+      <button class="btn" id="ws-share" type="button">Share</button>
+      <button class="btn" id="ws-close" type="button">Close</button>
+    </div>
+  </div>
+</div>
 <div class="toast" id="toast" hidden></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -467,6 +484,46 @@ function sendSheet(f) {
 $('sh-close').onclick = () => { $('sheet').hidden = true; };
 $('sheet').addEventListener('click', e => { if (e.target === $('sheet')) $('sheet').hidden = true; });
 
+// "WhatsApp text" on each Test Performance PDF: defaulters of that class (or subject) as text
+function tpScope(f) {
+  let m = /^Test Performance - Class (\d+)$/.exec(f[2]);
+  if (m) return { title: 'Class ' + m[1], cls: [m[1]], secs: [], subOk: () => true, perClass: false };
+  m = /^Test Performance - (.+) Class (\d+)-(\d+)$/.exec(f[2]);
+  if (m) { const sj = m[1], cls = []; for (let c = +m[2]; c <= +m[3]; c++) cls.push(String(c));
+    return { title: `${sj} · Class ${m[2]}-${m[3]}`, cls, secs: [], subOk: x => x === sj || x.startsWith(sj + ' '), perClass: true }; }
+  return null;
+}
+const WT = { S: null, sel: [], abng: false };
+function renderWText() {
+  const list = waTests(WT.S), keys = new Set(list.map(t => t.k)); WT.sel = WT.sel.filter(k => keys.has(k));
+  const box = $('ws-tests'); box.replaceChildren(); const many = WT.S.cls.length > 1;
+  for (const t of list.slice(0, 60)) {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'chip';
+    b.textContent = `${many ? 'Class ' + t.cls + ' · ' : ''}${t.subj} ${fmtLes(t.lesson)} · ${dfmt(t.date)}`;
+    b.setAttribute('aria-pressed', WT.sel.includes(t.k));
+    b.onclick = () => { WT.sel = WT.sel.includes(t.k) ? WT.sel.filter(x => x !== t.k) : [...WT.sel, t.k]; renderWText(); };
+    box.appendChild(b);
+  }
+  if (!list.length) { const p = document.createElement('span'); p.className = 'note'; p.textContent = 'No tests yet.'; box.appendChild(p); }
+  $('ws-abng').checked = WT.abng;
+  $('ws-text').textContent = waText(WT.S, WT) || 'Tap one or more tests above.';
+}
+function openWText(f) {
+  if (!D.tests.length) return toast('Data is still loading.');
+  WT.S = tpScope(f); WT.abng = false;
+  const list = waTests(WT.S);
+  if (WT.S.perClass) { const seen = new Set(); WT.sel = []; for (const t of list) if (!seen.has(t.cls)) { seen.add(t.cls); WT.sel.push(t.k); } }   // latest test of each class
+  else WT.sel = list.slice(0, 2).map(t => t.k).reverse();   // latest two tests, older first
+  $('ws-t').textContent = 'WhatsApp text · ' + WT.S.title;
+  renderWText(); $('wsheet').hidden = false;
+}
+$('ws-abng').onchange = e => { WT.abng = e.target.checked; renderWText(); };
+$('ws-copy').onclick = () => { const t = waText(WT.S, WT); if (!t) return toast('Tap a test first.'); copyText(t, 'Defaulter list'); };
+$('ws-share').onclick = async () => { const t = waText(WT.S, WT); if (!t) return toast('Tap a test first.');
+  if (navigator.share) { try { await navigator.share({ text: t }); } catch (e) { if (e?.name !== 'AbortError') copyText(t, 'Defaulter list'); } } else copyText(t, 'Defaulter list'); };
+$('ws-close').onclick = () => { $('wsheet').hidden = true; };
+$('wsheet').addEventListener('click', e => { if (e.target === $('wsheet')) $('wsheet').hidden = true; });
+
 function render() {
   $('segA').setAttribute('aria-pressed', seg === 'A'); $('segB').setAttribute('aria-pressed', seg === 'B'); $('segP').setAttribute('aria-pressed', seg === 'P');
   const poor = seg === 'P';
@@ -500,13 +557,14 @@ function render() {
     r.innerHTML = `<span class="code"></span><div class="t"><b></b><span></span></div><div class="acts">
       <button class="btn primary" type="button" data-a="view">View</button>
       <button class="btn" type="button" data-a="save">Save</button>
-      <button class="btn wa" type="button" data-a="wa">WhatsApp PDF</button></div>`;
+      <button class="btn wa" type="button" data-a="wa">WhatsApp PDF</button>${tpScope(f) ? '<button class="btn" type="button" data-a="wt">WhatsApp text</button>' : ''}</div>`;
     r.querySelector('.code').textContent = f[1];
     r.querySelector('b').textContent = f[2];
     r.querySelector('.t span').textContent = `${f[3]} pages · ${f[4] >= 1024 ? (f[4] / 1024).toFixed(1) + ' MB' : f[4] + ' KB'}` + (query ? ` · ${CATS[f[0]]}` : '');
     r.querySelector('[data-a=view]').onclick = () => openReader(f);
     r.querySelector('[data-a=save]').onclick = () => save(f);
     r.querySelector('[data-a=wa]').onclick = () => sendSheet(f);
+    const wt = r.querySelector('[data-a=wt]'); if (wt) wt.onclick = () => openWText(f);
     list.appendChild(r);
   }
 }
@@ -856,28 +914,29 @@ const W = { sel: [], abng: false };
 const fmtLes = l => { const m = /^([A-Za-z]+)\s*-?\s*(\d.*)$/.exec(String(l || '').trim()); return m ? `${m[1]}-${m[2]}` : String(l || '').trim(); };
 const num = v => String(+(+v).toFixed(2));
 const clsOf = sec => /^(\d+)/.exec(sec)[1];
-function waSecs() {
-  return [...new Set(D.tests.map(t => t.sec))].filter(s => { const m = /^(\d+)(.*)$/.exec(s); return (!P.cls.length || P.cls.includes(m[1])) && (!P.secs.length || P.secs.includes(m[2])); }).sort(bySec);
+const PSCOPE = { get cls() { return P.cls; }, get secs() { return P.secs; }, subOk: sj => !P.subs.length || P.subs.includes(sj) };
+function waSecs(S = PSCOPE) {
+  return [...new Set(D.tests.map(t => t.sec))].filter(s => { const m = /^(\d+)(.*)$/.exec(s); return (!S.cls.length || S.cls.includes(m[1])) && (!S.secs.length || S.secs.includes(m[2])); }).sort(bySec);
 }
 // a lesson can be tested more than once (test, then retest): the nth test of a lesson in each section is round n
 function roundOf(t) {
   return D.tests.filter(x => x.sec === t.sec && x.subj === t.subj && x.lesson === t.lesson && ((x.date || '') < (t.date || '') || ((x.date || '') === (t.date || '') && D.tests.indexOf(x) < D.tests.indexOf(t)))).length + 1;
 }
-function waTests() {   // one entry per class + subject + lesson + round, newest first
-  const secs = new Set(waSecs()); const g = new Map();
+function waTests(S = PSCOPE) {   // one entry per class + subject + lesson + round, newest first
+  const secs = new Set(waSecs(S)); const g = new Map();
   for (const t of D.tests) {
-    if (!secs.has(t.sec) || (P.subs.length && !P.subs.includes(t.subj))) continue;
+    if (!secs.has(t.sec) || !S.subOk(t.subj)) continue;
     const k = [clsOf(t.sec), t.subj, t.lesson, roundOf(t)].join('|');
     const e = g.get(k) || { k, cls: clsOf(t.sec), subj: t.subj, lesson: t.lesson, date: '' };
     if ((t.date || '') > e.date) e.date = t.date || ''; g.set(k, e);
   }
   return [...g.values()].sort((a, b) => b.date.localeCompare(a.date) || +a.cls - +b.cls || a.subj.localeCompare(b.subj));
 }
-function waText() {
-  const sel = W.sel.map(k => k.split('|'));
+function waText(S = PSCOPE, st = W) {
+  const sel = st.sel.map(k => k.split('|'));
   if (!sel.length) return '';
   const out = [];
-  for (const sec of waSecs()) {
+  for (const sec of waSecs(S)) {
     const c = clsOf(sec);
     const tests = sel.filter(x => x[0] === c).map(([, subj, les, rnd]) => D.tests.find(t => t.sec === sec && t.subj === subj && t.lesson === les && roundOf(t) === +rnd)).filter(Boolean);
     if (!tests.length) continue;
@@ -888,7 +947,7 @@ function waText() {
       tests.forEach((t, i) => {
         const v = t.marks[nm], lab = `${t.subj} / ${fmtLes(t.lesson)}`;
         if (low(v, t.max)) { parts.push(`(${num(v)}/${num(t.max)}) ${lab}`); n++; if (i < first) { first = i; firstScore = v / t.max; } }
-        else if (W.abng && (v === 'A' || v === 'NG')) parts.push(`(${v === 'A' ? 'Ab' : 'NG'}) ${lab}`);
+        else if (st.abng && (v === 'A' || v === 'NG')) parts.push(`(${v === 'A' ? 'Ab' : 'NG'}) ${lab}`);
       });
       if (parts.length) rows.push({ nm, parts, n, first, firstScore });
     }
