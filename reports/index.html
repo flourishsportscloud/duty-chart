@@ -194,6 +194,10 @@ main .wrap > *, .poor > * { min-width: 0 }
 .tb td.b { font-weight: 700 }
 .tb td.s-lo, .tb td.s-ns, .tb td.s-bl { color: var(--bad); font-weight: 600 } .tb td.s-ic { color: var(--warn); font-weight: 600 } .tb td.s-ng, .tb td.s-ab { color: var(--muted) }
 .poor, .plist { display: grid; gap: 16px }
+.wa-pad { padding: 4px 16px 16px; display: grid; gap: 12px }
+.wa-bar { display: flex; flex-wrap: wrap; gap: 10px 16px; justify-content: space-between; align-items: center }
+.wa-chk { display: flex; gap: 6px; align-items: center; font-size: 14px }
+.wa-pre { margin: 0; white-space: pre-wrap; word-break: break-word; font: 14px/1.5 system-ui, sans-serif; background: var(--chip); border-radius: 10px; padding: 12px 14px; max-height: 30rem; overflow: auto }
 .pc-h { display: flex; flex-wrap: wrap; gap: 8px 12px; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line) }
 .panel .pc-h h2 { padding: 0; border: 0 }
 .tw.ptw { margin: 0; max-height: none }
@@ -253,6 +257,22 @@ main .wrap > *, .poor > * { min-width: 0 }
           <select class="inp" id="p-run"><option value="2">Below 60% in 2 tests in a row</option><option value="3">Below 60% in 3 tests in a row</option><option value="4">Below 60% in 4 tests in a row</option></select></label>
         <label class="fg"><span class="fl">Tests shown</span>
           <select class="inp" id="p-show"><option value="6">Latest 6</option><option value="10">Latest 10</option><option value="0">All tests</option></select></label>
+      </section>
+      <section class="panel" id="wa-card">
+        <h2>Test defaulters · copy for WhatsApp <small id="wa-scope"></small></h2>
+        <p class="note">Pick one or more tests. Students below 60% are listed section by section: students low in more than one test first, then lowest score first.</p>
+        <div class="wa-pad">
+          <div class="fg wide"><span class="fl">Tests <small>newest first · tap one or more</small></span><div class="chips" id="wa-tests"></div></div>
+          <div class="wa-bar">
+            <label class="wa-chk"><input type="checkbox" id="wa-abng"> Also list Ab / NG</label>
+            <div class="acts">
+              <button class="btn wa" type="button" id="wa-copy">Copy for WhatsApp</button>
+              <button class="btn" type="button" id="wa-share">Share</button>
+              <button class="btn" type="button" id="wa-clear">Clear tests</button>
+            </div>
+          </div>
+          <pre class="wa-pre" id="wa-text"></pre>
+        </div>
       </section>
       <p class="take" id="p-sum"></p>
       <div class="plist" id="p-list"></div>
@@ -831,7 +851,82 @@ function poorText(sec, r) {
   });
   return lines.join('\n');
 }
+// ---------- test defaulters: WhatsApp text ----------
+const W = { sel: [], abng: false };
+const fmtLes = l => { const m = /^([A-Za-z]+)\s*-?\s*(\d.*)$/.exec(String(l || '').trim()); return m ? `${m[1]}-${m[2]}` : String(l || '').trim(); };
+const num = v => String(+(+v).toFixed(2));
+const clsOf = sec => /^(\d+)/.exec(sec)[1];
+function waSecs() {
+  return [...new Set(D.tests.map(t => t.sec))].filter(s => { const m = /^(\d+)(.*)$/.exec(s); return (!P.cls.length || P.cls.includes(m[1])) && (!P.secs.length || P.secs.includes(m[2])); }).sort(bySec);
+}
+// a lesson can be tested more than once (test, then retest): the nth test of a lesson in each section is round n
+function roundOf(t) {
+  return D.tests.filter(x => x.sec === t.sec && x.subj === t.subj && x.lesson === t.lesson && ((x.date || '') < (t.date || '') || ((x.date || '') === (t.date || '') && D.tests.indexOf(x) < D.tests.indexOf(t)))).length + 1;
+}
+function waTests() {   // one entry per class + subject + lesson + round, newest first
+  const secs = new Set(waSecs()); const g = new Map();
+  for (const t of D.tests) {
+    if (!secs.has(t.sec) || (P.subs.length && !P.subs.includes(t.subj))) continue;
+    const k = [clsOf(t.sec), t.subj, t.lesson, roundOf(t)].join('|');
+    const e = g.get(k) || { k, cls: clsOf(t.sec), subj: t.subj, lesson: t.lesson, date: '' };
+    if ((t.date || '') > e.date) e.date = t.date || ''; g.set(k, e);
+  }
+  return [...g.values()].sort((a, b) => b.date.localeCompare(a.date) || +a.cls - +b.cls || a.subj.localeCompare(b.subj));
+}
+function waText() {
+  const sel = W.sel.map(k => k.split('|'));
+  if (!sel.length) return '';
+  const out = [];
+  for (const sec of waSecs()) {
+    const c = clsOf(sec);
+    const tests = sel.filter(x => x[0] === c).map(([, subj, les, rnd]) => D.tests.find(t => t.sec === sec && t.subj === subj && t.lesson === les && roundOf(t) === +rnd)).filter(Boolean);
+    if (!tests.length) continue;
+    const names = [...new Set(tests.flatMap(t => Object.keys(t.marks)))];
+    const rows = [];
+    for (const nm of names) {
+      const parts = []; let n = 0, first = 99, firstScore = 99;
+      tests.forEach((t, i) => {
+        const v = t.marks[nm], lab = `${t.subj} / ${fmtLes(t.lesson)}`;
+        if (low(v, t.max)) { parts.push(`(${num(v)}/${num(t.max)}) ${lab}`); n++; if (i < first) { first = i; firstScore = v / t.max; } }
+        else if (W.abng && (v === 'A' || v === 'NG')) parts.push(`(${v === 'A' ? 'Ab' : 'NG'}) ${lab}`);
+      });
+      if (parts.length) rows.push({ nm, parts, n, first, firstScore });
+    }
+    rows.sort((a, b) => b.n - a.n || a.first - b.first || a.firstScore - b.firstScore || a.nm.localeCompare(b.nm));
+    out.push(`*Class ${sec}*`);
+    out.push(...(rows.length ? rows.map(r => `${r.nm} ${r.parts.join(', ')}`) : ['All 60% and above']));
+    out.push('');
+  }
+  return out.join('\n').trim();
+}
+function renderWA() {
+  const list = waTests(), keys = new Set(list.map(t => t.k));
+  W.sel = W.sel.filter(k => keys.has(k));
+  const box = $('wa-tests'); box.replaceChildren();
+  const many = new Set(list.map(t => t.cls)).size > 1;
+  for (const t of list.slice(0, 60)) {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'chip';
+    b.textContent = `${many ? 'Class ' + t.cls + ' · ' : ''}${t.subj} ${fmtLes(t.lesson)} · ${dfmt(t.date)}`;
+    b.setAttribute('aria-pressed', W.sel.includes(t.k));
+    b.onclick = () => { W.sel = W.sel.includes(t.k) ? W.sel.filter(x => x !== t.k) : [...W.sel, t.k]; renderWA(); };
+    box.appendChild(b);
+  }
+  if (!list.length) { const p = document.createElement('span'); p.className = 'note'; p.textContent = 'No tests for these filters.'; box.appendChild(p); }
+  $('wa-abng').checked = W.abng;
+  const txt = waText();
+  $('wa-text').textContent = txt || 'Tap one or more tests above to make the list.';
+  $('wa-scope').textContent = W.sel.length ? `· ${W.sel.length} test${W.sel.length === 1 ? '' : 's'}` : '';
+}
+$('wa-abng').onchange = e => { W.abng = e.target.checked; renderWA(); };
+$('wa-clear').onclick = () => { W.sel = []; renderWA(); };
+$('wa-copy').onclick = () => { const t = waText(); if (!t) return toast('Tap a test first.'); copyText(t, 'Defaulter list'); };
+$('wa-share').onclick = async () => {
+  const t = waText(); if (!t) return toast('Tap a test first.');
+  if (navigator.share) { try { await navigator.share({ text: t }); } catch (e) { if (e?.name !== 'AbortError') copyText(t, 'Defaulter list'); } }
+  else copyText(t, 'Defaulter list');
+};
 function renderPoor() {
+  renderWA();
   paintChips($('p-cls'), P.cls); paintChips($('p-sec'), P.secs); paintChips($('p-subs'), P.subs); $('p-run').value = String(P.run); $('p-show').value = String(P.show);
   const box = $('p-list'); box.replaceChildren();
   const secs = [...new Set(D.tests.map(t => t.sec))].filter(s => { const m = /^(\d+)(.*)$/.exec(s); return (!P.cls.length || P.cls.includes(m[1])) && (!P.secs.length || P.secs.includes(m[2])); }).sort(bySec);
