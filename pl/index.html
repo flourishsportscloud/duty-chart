@@ -185,8 +185,8 @@ const DE=[
 const DEFS={dp:DP,de:DE};
 const ROWS={dp:[],de:[]};
 Object.keys(DEFS).forEach(m=>DEFS[m].forEach(b=>b.items.forEach(it=>{
-  if(it.subs) it.subs.forEach(s=>ROWS[m].push({key:it.id+'-'+s[0],item:it,label:s[1],block:b,rem:it.rem||'',sub:true}));
-  else ROWS[m].push({key:it.id,item:it,label:it.name,block:b,rem:it.rem||'',sub:false});
+  if(it.subs) it.subs.forEach(s=>ROWS[m].push({key:it.id+'-'+s[0],item:it,label:s[1],block:b,rem:it.rem||(m==='de'?'r':''),sub:true}));
+  else ROWS[m].push({key:it.id,item:it,label:it.name,block:b,rem:it.rem||(m==='de'?'r':''),sub:false});
 })));
 const ROWMAP={dp:{},de:{}};Object.keys(ROWS).forEach(m=>ROWS[m].forEach(r=>ROWMAP[m][r.key]=r));
 const DAYN=['Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -410,7 +410,7 @@ function onRemInput(el){
   const mode=S.mode,date=S.date,id=docId(plId,mode,date),doc=ensureDoc(id,plId,mode,date),key=rk+'__'+sec;
   const e=doc.rem[key]||{n:'',x:''};e[f]=el.value;e.by=whoName();e.at=Date.now();doc.rem[key]=e;
   const has=(e.n!==''&&e.n!=null)||String(e.x||'').trim()!=='';
-  if(has&&!(doc.cells[key]&&doc.cells[key].s==='D'))doc.cells[key]=mkCell(rk,'D',Date.now(),mode,date);
+  if(has&&!(doc.cells[key]&&doc.cells[key].s))doc.cells[key]=mkCell(rk,'D',Date.now(),mode,date);
   schedule(id,key);
 }
 
@@ -501,16 +501,16 @@ function obsBoxHTML(pl,r,sec,c,yn,editable){
   return `<button class="box obs ${cls} ${editable?'':'ro'}"${st} data-act="obsadd" data-pl="${pl.id}" data-row="${r.key}" data-sec="${sec}"><span class="sl">${esc(sec)}</span><span class="sy">${obs.length||'+'}</span><span class="tm">${list}</span></button>`;
 }
 function remPanel(pl,r,doc,editable){
-  return `<div class="rembox">`+pl.sections.map(s=>{
+  return `<div class="rembox">`+secsFor(pl,S.mode,r).map(s=>{
     const e=(doc&&doc.rem&&doc.rem[r.key+'__'+s])||{};
-    return `<div class="rr"><div class="sn">${esc(s)}</div>`+
+    return `<div class="rr">${s==='x'?'':`<div class="sn">${esc(s)}</div>`}`+
       (r.rem==='n'?`<input class="remin" type="number" inputmode="decimal" placeholder="#" data-pl="${pl.id}" data-row="${r.key}" data-sec="${s}" data-f="n" value="${esc(e.n==null?'':e.n)}" ${editable?'':'readonly'}>`:'')+
       `<textarea class="remin" rows="1" placeholder="Remark" data-pl="${pl.id}" data-row="${r.key}" data-sec="${s}" data-f="x" ${editable?'':'readonly'}>${esc(e.x||'')}</textarea>`+
       (e.by?`<div class="by">${esc(e.by.split(' ')[0])}<br>${e.at?fmtT(e.at):''}</div>`:'')+`</div>`;
   }).join('')+`</div>`;
 }
 function remCount(pl,r,doc){
-  let n=0;pl.sections.forEach(s=>{const e=doc&&doc.rem&&doc.rem[r.key+'__'+s];if(e&&((e.n!==''&&e.n!=null)||String(e.x||'').trim()))n++});return n;
+  let n=0;secsFor(pl,S.mode,r).forEach(s=>{const e=doc&&doc.rem&&doc.rem[r.key+'__'+s];if(e&&((e.n!==''&&e.n!=null)||String(e.x||'').trim()))n++});return n;
 }
 function rowHTML(pl,r,doc,mode,editable,yn){
   const secs=secsFor(pl,mode,r);const de=secs[0]==='x';
@@ -524,7 +524,7 @@ function rowHTML(pl,r,doc,mode,editable,yn){
   h+=`<div class="boxes">`+secs.map(s=>(r.item.multi?obsBoxHTML:boxHTML)(pl,r,s,doc&&doc.cells[r.key+'__'+s],yn,editable,!de)).join('')+`</div>`;
   if(r.item.multi)h+=`<div class="muted" style="margin-top:3px">Tap a section each time you observe (up to ${OBS_MAX}) — every observation is saved with its time.</div><div class="obsleg">`+OBS_NAME.slice(1).map((nm,i)=>`<span><i style="background:${OBS_COL[i+1]}"></i>${i+1} ${nm}</span>`).join('')+`</div>`;
   if(r.rem&&open&&!de)h+=remPanel(pl,r,doc,editable);
-  return h+'</div>';
+  return h+'</div>'+(r.rem&&open&&de?`<div class="row sub" style="padding-top:0">${remPanel(pl,r,doc,editable)}</div>`:'');
 }
 function blocksHTML(pl,doc,mode,editable){
   let h='';
@@ -580,7 +580,7 @@ function remarksCard(plsList){
   names.forEach(n=>{
     const c=cats[n];
     h+=`<div class="cat"><b>${esc(n)}</b>${c.hasNum?`<span class="tot">Total: ${c.tot}</span>`:''}<table><tr><th>Section</th><th>No.</th><th>Remark</th><th>By · time</th></tr>`+
-      c.list.map(e=>`<tr><td>${plsList.length>1?esc(e.pl.name)+' · ':''}${esc(e.sec)}</td><td>${esc(e.n)}</td><td>${esc(e.x)}</td><td>${esc(e.by||'')}${e.at?' · '+fmtT(e.at):''}</td></tr>`).join('')+`</table></div>`;
+      c.list.map(e=>`<tr><td>${plsList.length>1?esc(e.pl.name)+' · ':''}${e.sec==='x'?'–':esc(e.sec)}</td><td>${esc(e.n)}</td><td>${esc(e.x)}</td><td>${esc(e.by||'')}${e.at?' · '+fmtT(e.at):''}</td></tr>`).join('')+`</table></div>`;
   });
   return h+'</div>';
 }
@@ -612,7 +612,7 @@ function plPage(pl){
   h+=`<div class="card"><h3>This week</h3>${weekChart(pl)}</div>`;
   if(mode==='dp')h+=`<div class="card"><h3>Section-wise completion</h3>${sectionBoxes(pl,doc)}</div>`;
   h+=`<div class="card"><h3>Not Done</h3><div class="nd">${notDone(pl,doc,mode)}</div></div>`;
-  if(mode==='dp')h+=remarksCard([pl]);
+  h+=remarksCard([pl]);
   h+=blocksHTML(pl,doc,mode,editable);
   return h;
 }
@@ -636,7 +636,7 @@ function dashboard(){
       if(d>today)return '<td class="c">🔒</td>';const c=stats(getDoc(pl,mode,d),pl,mode);const any=c.D+c.A+c.N>0;
       return `<td class="c ${c.N?'r':(c.pct===100?'g':'')}">${any?c.pct+'%':'–'}</td>`}).join('')+'</tr>').join('')+`</table></div>`;
   h+=`<div class="card"><h3>Not Done by PL</h3>`+PLS.map(pl=>`<div style="margin-bottom:8px"><b>${esc(pl.name)}</b><div class="nd">${notDone(pl,getDoc(pl,mode,S.date),mode)}</div></div>`).join('')+`</div>`;
-  if(mode==='dp')h+=remarksCard(PLS);
+  h+=remarksCard(PLS);
   return h;
 }
 
