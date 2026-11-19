@@ -49,7 +49,10 @@ h1{font-family:var(--f-head);font-size:24px;line-height:1.1;margin:2px 0 0}
 .pill.sample{background:var(--gold);color:var(--gold-ink)}
 .pill.today{background:rgba(255,255,255,.12);color:#fff;font-family:var(--f-mono)}
 .sw{display:grid;gap:6px;background:rgba(255,255,255,.08);border-radius:14px;padding:4px}
-.sw.two{grid-template-columns:1fr 1fr}.sw.three{grid-template-columns:repeat(3,minmax(0,1fr))}.sw.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+.sw.two{grid-template-columns:1fr 1fr}.sw.three{grid-template-columns:repeat(3,minmax(0,1fr))}.sw.four{grid-template-columns:repeat(4,minmax(0,1fr))}.sw.five{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media (max-width:640px){.sw.five{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.docrow{display:grid;gap:6px}
+a.btn{text-decoration:none}
 @media (max-width:640px){.sw.four{grid-template-columns:1fr 1fr}}
 .kind.mentor{background:var(--done-ink);color:var(--surface)}
 label.chip input{margin:0 2px 0 0}
@@ -277,6 +280,8 @@ details.rules summary{font-size:14px}
   .sw button{font-size:15px;padding:10px 6px}
   .sw.four{grid-template-columns:repeat(4,minmax(0,1fr))}
   .sw.four button{font-size:12.5px;padding:10px 0;white-space:nowrap;letter-spacing:-.015em}
+  .sw.five button{font-size:14px;padding:10px 2px;white-space:nowrap}
+  .sw.five{grid-template-columns:repeat(3,minmax(0,1fr))}
   .sw.three button{font-size:14px;padding:10px 2px;white-space:nowrap}
   .sw.four{padding:3px;gap:2px}
   .line{grid-template-columns:86px minmax(0,1fr)}
@@ -303,6 +308,7 @@ details.rules summary{font-size:14px}
       <button type="button" id="seg-prep" aria-pressed="true">Preparation<small>Before the lesson starts</small></button>
       <button type="button" id="seg-check" aria-pressed="false">Checking<small>Assignment, test, notebook</small></button>
       <button type="button" id="seg-mentor" aria-pressed="false">Mentor tasks<small>Daily, weekend, class</small></button>
+      <button type="button" id="seg-docs" aria-pressed="false">Documents<small>Class-wise PDFs</small></button>
       <button type="button" id="seg-dash" aria-pressed="false">Dashboard<small>Pending work</small></button>
     </div>
   </div>
@@ -328,6 +334,7 @@ details.rules summary{font-size:14px}
   </div>
   <div id="dashView" class="stack" hidden></div>
   <div id="mentorView" class="stack" hidden></div>
+  <div id="docsView" class="stack" hidden></div>
 </div></main>
 
 <script>
@@ -487,9 +494,10 @@ function allStaff(all){ const m=new Map(); all.forEach(r=>{ if(!m.has(r.t)) m.se
 
 function render(){
   ['mid','sen'].forEach(k=>$('wing-'+k).setAttribute('aria-pressed',String(wing===k)));
-  ['prep','check','mentor','dash'].forEach(k=>$('seg-'+k).setAttribute('aria-pressed',String(seg===k)));
+  ['prep','check','mentor','docs','dash'].forEach(k=>$('seg-'+k).setAttribute('aria-pressed',String(seg===k)));
   $('todayPill').textContent=nice(TODAY);
   const all=records(); all.forEach(r=>r.st=stat(r));
+  $('docsView').hidden=seg!=='docs'; if(seg==='docs'){ $('listView').hidden=true; $('dashView').hidden=true; $('mentorView').hidden=true; renderDocs(); return; }
   $('mentorView').hidden=seg!=='mentor'; if(seg==='mentor'){ $('listView').hidden=true; $('dashView').hidden=true; renderMentor(); return; } window.mBusy=false;
   const dash=seg==='dash'; $('listView').hidden=dash; $('dashView').hidden=!dash;
   if(dash){ renderDash(all); return; }
@@ -651,7 +659,7 @@ function renderDash(all){
 }
 
 ['mid','sen'].forEach(k=>$('wing-'+k).addEventListener('click',()=>{wing=k;teacher='All';grade='All';picking=editing=null;render()}));
-['prep','check','mentor','dash'].forEach(k=>$('seg-'+k).addEventListener('click',()=>{seg=k;picking=editing=null;render()}));
+['prep','check','mentor','docs','dash'].forEach(k=>$('seg-'+k).addEventListener('click',()=>{seg=k;picking=editing=null;render()}));
 $('leftOnly').addEventListener('click',()=>{leftOnly=!leftOnly;render()});
 $('manage').addEventListener('click',()=>{manage=!manage;editing=confirmKey=null;render()});
 /* ---------- Mentor tasks: daily, weekend and class tasks per section ---------- */
@@ -723,10 +731,45 @@ function renderMentor(){
   box.append(list,el('p',{class:'note',text:'Select a section to update its status.'+(head?' Heads can add, change, allocate or remove tasks with "Edit tasks".':'')}));
 }
 
+/* ---------- Documents: class-wise links to PDFs kept in Google Drive ---------- */
+let dClass=null, dEdit=null, dAdd=false, dConfirm=null;
+const dPath=id=>'status/'+PFX+'d.'+id;
+const okUrl=u=>/^https:\/\/(drive|docs)\.google\.com\/\S+$/.test(u)&&u.length<=140;
+function dRow(id,title,where,custom){
+  const n=noteOf(dPath(id))||{}, url=okUrl(n.u||'')?n.u:'', head=canDash(), wrap=el('div',{class:'docrow'});
+  wrap.append(el('div',{class:'secrow',style:'cursor:default'},el('span',{class:'cls',text:where}),
+    el('span',{class:'sn'},el('b',{text:title}),el('span',{class:'note',text:url?'PDF attached':'Not attached yet'})),
+    el('span',{class:'toolr'},url?el('a',{class:'btn xs',href:url,target:'_blank',rel:'noopener'},'Open'):null,
+      head?el('button',{type:'button',class:'btn ghost xs',onclick:()=>{dEdit=dEdit===id?null:id;dConfirm=null;render()}},url?'Change':'Attach'):null)));
+  if(head&&dEdit===id){ const f=el('input',{id:'doc-url',type:'url',inputmode:'url',placeholder:'Paste the Google Drive link',value:url});
+    wrap.append(el('div',{class:'editbox'},el('div',{class:'form'},el('label',{},'Google Drive link to the PDF',f)),
+      el('div',{class:'toolr'},el('button',{type:'button',class:'btn',onclick:()=>{ const u=f.value.trim(); if(!okUrl(u)){toast('Paste a Google Drive link (drive.google.com).',1);f.focus();return} dEdit=null; push(dPath(id),{note:JSON.stringify(Object.assign({},custom||{},{u}))},'Document attached'); }},'Save'),
+        url||custom?el('button',{type:'button',class:'btn warn',onclick:()=>{ if(dConfirm===id){ dEdit=dConfirm=null; push(dPath(id),{note:JSON.stringify(custom?Object.assign({},custom,{rm:1,u:''}):{u:''})},'Removed'); } else { dConfirm=id; render(); } }},dConfirm===id?'Confirm: remove':custom?'Remove document':'Remove link'):null,
+        el('button',{type:'button',class:'btn ghost',onclick:()=>{dEdit=dConfirm=null;render()}},'Cancel')))); }
+  return wrap; }
+function renderDocs(){
+  const box=$('docsView'); box.replaceChildren(); const head=canDash(); if(GRADES[wing].indexOf(dClass)<0) dClass=GRADES[wing][0]; window.mBusy=!!(dEdit||dAdd);
+  box.append(el('div',{class:'chips','aria-label':'Class'},...GRADES[wing].map(c=>el('button',{type:'button',class:'chip','aria-pressed':String(dClass===c),onclick:()=>{dClass=c;dEdit=null;dAdd=false;render()}},'Class '+c))));
+  box.append(el('div',{class:'tools'},el('h2',{class:'lt'},'Class '+dClass+' documents',el('small',{text:'Select Open to view the PDF'})),
+    head?el('button',{type:'button',class:'chip sm','aria-pressed':String(dAdd),onclick:()=>{dAdd=!dAdd;dEdit=null;render()}},'Add document'):null));
+  const secs=SECTIONS[wing].filter(cs=>cs.replace(/[A-C]$/,'')===dClass);
+  if(head&&dAdd){ const fT=el('input',{id:'da-title',type:'text',maxlength:'40',placeholder:'e.g. Syllabus'}), fU=el('input',{id:'da-url',type:'url',inputmode:'url',placeholder:'Paste the Google Drive link'});
+    const fW=el('select',{id:'da-for'},el('option',{value:''},'Whole class'),...secs.map(cs=>el('option',{value:cs},cs)));
+    box.append(el('div',{class:'panel'},el('h2',{text:'Add a document for Class '+dClass}),el('div',{class:'form'},el('label',{},'Title',fT),el('label',{},'For',fW),el('label',{},'Google Drive link to the PDF',fU)),
+      el('div',{class:'toolr'},el('button',{type:'button',class:'btn',onclick:()=>{ const t=cut(fT.value,40),u=fU.value.trim(); if(!t){fT.focus();return} if(!okUrl(u)){toast('Paste a Google Drive link (drive.google.com).',1);fU.focus();return}
+        dAdd=false; push(dPath('x'+Date.now().toString(36)),{note:JSON.stringify({t,c:dClass,w:fW.value,u})},'Document added'); }},'Add document')))); }
+  const card=el('div',{class:'card'}), list=el('div',{class:'secs'});
+  list.append(dRow('lp-'+dClass,'Learning plan','Class '+dClass));
+  secs.forEach(cs=>list.append(dRow('pi-'+cs,'Parent Insight Chart',cs)));
+  Object.keys(DOCS).filter(p=>p.indexOf(dPath('x'))===0).sort().forEach(p=>{ const n=noteOf(p); if(!n||n.rm||n.c!==dClass) return; list.append(dRow(p.slice(dPath('').length),n.t||'Document',n.w||'Class '+dClass,{t:n.t,c:n.c,w:n.w||''})); });
+  card.append(list); box.append(card);
+  box.append(el('p',{class:'note',text:head?'Documents stay in Google Drive; this page only keeps the link. Who can open a document is decided by its sharing setting in Drive.':'If a document does not open, ask your PL to share it with your Google account.'}));
+}
+
 let outArm=0; $('meBtn').addEventListener('click',()=>{ if(!ME) return; if(Date.now()-outArm<4000){ setToken(''); lock(); outArm=0; } else { outArm=Date.now(); $('meBtn').textContent='Tap again to log out'; } });
 $('gateF').addEventListener('submit',async e=>{ e.preventDefault(); const n=$('gateN').value.trim(), w=$('gateW').value; if(!n){$('gateE').textContent='Type your name.';return} if(!w){$('gateE').textContent='Enter your password.';return}
   $('gateGo').disabled=true; $('gateE').textContent=''; try{ const r=await dcall('login',[n,w]); setToken(r.token); enter(r.state.me); }catch(x){ $('gateE').textContent=x.message||'Could not log in.'; } $('gateGo').disabled=false; });
-const render0=render; render=function(){ $('meBtn').textContent=ME?ME+' · log out':'Not logged in'; const cd=canDash(), sd=$('seg-dash'); sd.hidden=!cd; sd.parentNode.className='sw '+(cd?'four':'three'); if(!cd&&seg==='dash') seg='prep'; if(ME) render0(); };
+const render0=render; render=function(){ $('meBtn').textContent=ME?ME+' · log out':'Not logged in'; const cd=canDash(), sd=$('seg-dash'); sd.hidden=!cd; sd.parentNode.className='sw '+(cd?'five':'four'); if(!cd&&seg==='dash') seg='prep'; if(ME) render0(); };
 checkLogin(); setInterval(poll,10000); document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll()});
 </script>
 </body></html>
