@@ -258,6 +258,11 @@ input[type=date] { border-radius: 10px; }
 .tabbtn { color: #b9c3dc; } .tabbtn .badge { background: rgba(255,255,255,0.14); color: #fff; }
 .tabbtn[aria-current="page"] { background: rgba(255,255,255,0.1); color: var(--gold-l); } .tabbtn[aria-current="page"] .badge { background: var(--gold); color: #fff; }
 .card, .filters, .empty, .row { border-radius: 14px; }
+.datehead { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.datehead b { font-family: var(--serif); font-size: 19px; color: var(--navy); } .datehead span { color: var(--gold); font-weight: 700; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; }
+.tile { opacity: 0.78; } .tile.sel { opacity: 1; outline: 3px solid var(--gold); outline-offset: 2px; transform: translateY(-2px); box-shadow: 0 10px 24px rgba(14,33,73,0.22); }
+.scard.sel { outline: 3px solid var(--gold); outline-offset: 2px; }
+.rhead { scroll-margin-top: 8px; }
 </style>
 </head>
 <body>
@@ -329,7 +334,7 @@ input[type=date] { border-radius: 10px; }
   }
   function rerenderPh() {
     if (!S.me) return;
-    if (S.route === "home" || S.route.indexOf("r-") === 0) renderScreen(); else renderList();
+    if (S.route === "home" || S.route === "complaints" || S.route === "found" || S.route.indexOf("r-") === 0) renderScreen(); else renderList();
     if (S.caseId) renderCase();
   }
   function label(list, key) { for (var i = 0; i < list.length; i++) if (list[i][0] === key) return list[i][1]; return key || ""; }
@@ -550,10 +555,11 @@ input[type=date] { border-radius: 10px; }
     if (loading()) { box.innerHTML = emptyBox("Loading records", "One moment."); return; }
     if (S.route === "home") renderHome();
     else if (S.route.indexOf("r-") === 0) renderReport(S.route.slice(2));
-    else if (S.route === "complaints") {
+    else if (S.route === "complaints" || S.route === "found") renderReport(S.route === "found" ? "found" : "comp");
+    else if (S.route === "complaintsOLD") {
       box.innerHTML = '<div class="stack"><div class="screenhead"><h2>Complaints</h2>' + (S.canWrite ? '<button type="button" class="btn primary" data-act="log-comp">Log complaint</button>' : "") + "</div>" + filterBar("complaints", C_STAT) + '<div class="list" id="flist"></div></div>';
       renderList();
-    } else if (S.route === "found") {
+    } else if (S.route === "foundOLD") {
       box.innerHTML = '<div class="stack"><div class="screenhead"><h2>Found and stock</h2>' + (S.canWrite ? '<button type="button" class="btn primary" data-act="log-found">Log found item</button>' : "") + "</div>" + '<div class="chips"><button type="button" class="chip" data-fview="list" aria-pressed="' + (FV.mode === "list") + '">All items</button><button type="button" class="chip" data-fview="item" aria-pressed="' + (FV.mode === "item") + '">Item-wise stock</button></div>' + filterBar("found", F_STAT) + '<div class="list" id="flist"></div></div>';
       renderList();
     } else if (S.route === "history") {
@@ -697,9 +703,11 @@ input[type=date] { border-radius: 10px; }
       st = cPill(r) + (r.demo ? pill("p-line", "Demo") : "");
       if (r.status === "open") due = duePill(daysAgo(r.reportedDate), "Open ");
       cls = r.status === "open" ? "s-open" : r.status === "matched" ? "s-matched" : "s-closed";
-      rows = drow("Reported by", whoLine(r.reporterName, r.reporterClass) + (r.reporterType ? " (" + esc(label(RTYPES, r.reporterType)) + ")" : "")) +
-        drow("Date and time", esc(fmtDate(r.reportedDate) + (r.at ? ", " + hhmm(r.at) : ""))) +
-        drow("Last seen", esc([r.lastSeenPlace, r.lastSeenDate ? fmtDate(r.lastSeenDate) : ""].filter(Boolean).join(", "))) +
+      rows = drow("Date and time", esc(fmtDate(r.reportedDate) + (r.at ? ", " + hhmm(r.at) : ""))) +
+        drow("Complained by", whoLine(r.reporterName, r.reporterClass) + (r.reporterType ? " (" + esc(label(RTYPES, r.reporterType)) + ")" : "")) +
+        drow("Source", esc(label(CHANNELS, r.channel))) +
+        drow("Description", esc(r.desc || "")) +
+        drow("Location", esc([r.lastSeenPlace, r.lastSeenDate ? "seen " + fmtDate(r.lastSeenDate) : ""].filter(Boolean).join(", "))) +
         drow("Action taken", act || (r.status === "open" ? "None yet, still searching" : "")) +
         drow("Logged by", esc(r.loggedBy || ""));
     } else {
@@ -720,6 +728,7 @@ input[type=date] { border-radius: 10px; }
         if (r.status === "in_stock" || r.status === "ready") due = duePill(daysAgo(r.foundDate), "In stock ");
         rows = drow("Found by", esc(r.foundBy || "Not noted")) +
           drow("Date and time", esc(fmtDay(r.foundDate, r.foundTime))) +
+          drow("Description", esc(r.desc || "")) +
           drow("Where", esc([r.location, r.keptAt ? "kept at " + r.keptAt : ""].filter(Boolean).join(", "))) +
           drow("Owner", r.nameOnItem ? whoLine(r.nameOnItem, r.classOnItem) : "") +
           drow("Action taken", act || "Logged in stock");
@@ -736,60 +745,58 @@ input[type=date] { border-radius: 10px; }
       (DPER === "range" ? '<div class="dates"><label>From<input type="date" data-dfrom value="' + esc(perRange("range")[0]) + '"></label><label>To<input type="date" data-dto value="' + esc(perRange("range")[1]) + '"></label></div>' : "") +
       '<div class="perlab">' + esc(perLabel()) + "</div></div>";
   }
-  function renderHome() {
-    var P = perSets(DPER), A = perSets("all");
-    var openC = S.comps.filter(function (c) { return c.status === "open"; });
-    var retAll = S.found.filter(function (f) { return f.status === "returned"; });
-    var demo = S.found.some(function (x) { return x.demo; }) || S.comps.some(function (x) { return x.demo; });
-    var stockAdded = P.stock.filter(function (f) { return inPer(f.foundDate, DPER); }).length;
-    function tile(k, num, name, sub) {
-      return '<button type="button" class="tile k-' + k + '" data-r="' + k + '"><span class="tn">' + num + '</span><span class="tl">' + name + '</span><span class="ts">' + sub + '</span><span class="tg">View list ›</span></button>';
-    }
-    var oldest = openC.slice().sort(function (a, b) { return (a.reportedDate || "").localeCompare(b.reportedDate || ""); });
-    var groups = {};
-    P.stock.forEach(function (f) { var c = f.category || "Other"; (groups[c] = groups[c] || []).push(f); });
-    var cats = Object.keys(groups).sort(function (a, b) { return groups[b].length - groups[a].length; });
-    var html = '<div class="stack">' + perBar() +
-      '<div class="tiles">' +
-      tile("comp", P.comps.length, "Lost Complaints", openC.length + " still open in total") +
-      tile("found", P.found.length, "Items Found in Campus", A.found.length + " till date") +
-      tile("ret", P.ret.length, "Returned", retAll.length + " till date") +
-      tile("stock", P.stock.length, "Stock in Hand", stockAdded + " added in this period") + "</div>" +
-      (S.canWrite ? '<div class="quick"><button type="button" class="btn primary" data-act="log-found">Log Found Item</button><button type="button" class="btn gold" data-act="log-comp">Log Lost Complaint</button></div>' : '<div class="notice">Type your name to log items and complaints.</div>') +
-      '<section class="stack"><div class="dh k-comp"><h2>Open Complaints</h2><a class="more" href="#r-comp" data-rs="open">See all ' + openC.length + " ›</a></div>" +
-      (oldest.length ? '<div class="list">' + oldest.slice(0, 5).map(function (c) { return reportRow("comp", c); }).join("") + "</div>" : emptyBox("No open complaints", "Every complaint has been closed.")) + "</section>" +
-      '<section class="stack"><div class="dh k-stock"><h2>Stock in Hand by Item Type</h2><span>' + P.stock.length + " items</span></div>" +
-      (cats.length ? '<div class="stockgrid">' + cats.map(function (cn) {
-        var it = groups[cn], old = it.reduce(function (m, f) { return Math.max(m, daysAgo(f.foundDate)); }, 0);
-        var th = it.slice(0, 3).map(function (f) { var s = safeImg((f.photos || [])[0]); return s ? '<img src="' + s + '" alt="">' : '<i></i>'; }).join("");
-        return '<button type="button" class="scard" data-r="stock" data-cat="' + esc(cn) + '"><span class="sc-n">' + it.length + '</span><span class="sc-t">' + esc(cn) + '</span><span class="sc-th">' + th + '</span><span class="sc-o">Oldest ' + old + (old === 1 ? " day" : " days") + "</span></button>";
-      }).join("") + "</div>" : emptyBox("No items in stock", "Items waiting for their owners appear here, by item type.")) + "</section>" +
-      '<div class="actions"><button type="button" class="btn small" data-act="export">Export all records (CSV)</button>' + (demo && S.isAdmin ? '<button type="button" class="btn small danger" data-act="demo-delete">Delete demo records</button>' : "") + (!demo && S.isAdmin && !S.found.length && !S.comps.length ? '<button type="button" class="btn small" data-act="demo-load">Load demo records</button>' : "") + "</div></div>";
-    $("#screen").innerHTML = html;
-  }
-  function renderReport(kind) {
-    var K = RKINDS[kind]; if (!K) { go("home"); return; }
-    var P = perSets(DPER), list = P[kind === "comp" ? "comps" : kind], note = "", extra = "";
+  var RSEL = "comp";
+  function longToday() { try { return new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" }); } catch (e) { return today(); } }
+  function listBlock(kind, inHome) {
+    var K = RKINDS[kind], P = perSets(DPER), list = P[kind === "comp" ? "comps" : kind], extra = "", note = "";
     if (kind === "stock") {
       list = P.stock.slice().sort(function (a, b) { return (a.foundDate || "").localeCompare(b.foundDate || ""); });
-      var cs = {}; list.forEach(function (f) { cs[f.category || "Other"] = 1; });
-      if (RCAT && !cs[RCAT]) RCAT = "";
+      var groups = {}; list.forEach(function (f) { var c = f.category || "Other"; (groups[c] = groups[c] || []).push(f); });
+      var cats = Object.keys(groups).sort(function (a, b) { return groups[b].length - groups[a].length; });
+      if (RCAT && !groups[RCAT]) RCAT = "";
+      extra = cats.length ? '<div class="stockgrid">' + cats.map(function (cn) {
+        var it = groups[cn], old = it.reduce(function (m, f) { return Math.max(m, daysAgo(f.foundDate)); }, 0);
+        var th = it.slice(0, 3).map(function (f) { var s2 = safeImg((f.photos || [])[0]); return s2 ? '<img src="' + s2 + '" alt="">' : "<i></i>"; }).join("");
+        return '<button type="button" class="scard' + (RCAT === cn ? " sel" : "") + '" data-sel="stock" data-cat="' + (RCAT === cn ? "" : esc(cn)) + '"><span class="sc-n">' + it.length + '</span><span class="sc-t">' + esc(cn) + '</span><span class="sc-th">' + th + '</span><span class="sc-o">Oldest ' + old + (old === 1 ? " day" : " days") + "</span></button>";
+      }).join("") + "</div>" : "";
       if (RCAT) list = list.filter(function (f) { return (f.category || "Other") === RCAT; });
-      extra = '<div class="field"><label for="rcat">Item type</label><select id="rcat" data-rcat><option value="">All item types</option>' + Object.keys(cs).sort().map(function (c) { return '<option' + (c === RCAT ? " selected" : "") + ">" + esc(c) + "</option>"; }).join("") + "</select></div>";
-      note = "All items currently in stock, longest waiting first.";
+      note = "All items now in stock, longest waiting first." + (RCAT ? " Showing: " + RCAT + " (tap the box again to show all)." : " Tap an item type to see only those.");
     } else {
       list = list.slice().sort(function (a, b) { return (b.at || 0) - (a.at || 0); });
       if (kind === "comp") {
-        extra = '<div class="chips">' + [["", "All"], ["open", "Open"], ["matched", "Matched"], ["closed", "Closed"]].map(function (s) { return '<button type="button" class="chip" data-rst="' + s[0] + '" aria-pressed="' + (RST === s[0]) + '">' + s[1] + "</button>"; }).join("") + "</div>";
+        extra = '<div class="chips">' + [["", "All"], ["open", "Open"], ["matched", "Matched"], ["closed", "Closed"]].map(function (x) { return '<button type="button" class="chip" data-rst="' + x[0] + '" aria-pressed="' + (RST === x[0]) + '">' + x[1] + "</button>"; }).join("") + "</div>";
         if (RST) list = list.filter(function (c) { return c.status === RST; });
       }
-      note = esc(perLabel());
+      note = perLabel();
     }
-    var html = '<div class="stack"><a class="linkbtn" href="#home">‹ Dashboard</a><div class="rhead k-' + kind + '"><h2>' + K[0] + "</h2><span>" + list.length + "</span></div>" +
-      (kind === "stock" ? "" : perBar()) + (extra ? '<div class="filters">' + extra + "</div>" : "") +
-      '<div class="rsub">' + note + '</div>' +
-      (list.length ? '<div class="list">' + list.slice(0, 200).map(function (r) { return reportRow(kind, r); }).join("") + "</div>" + (list.length > 200 ? '<div class="notice">Showing the first 200. Narrow the dates, or export all records.</div>' : "") : emptyBox("Nothing to show", "No records match this period.")) + "</div>";
-    $("#screen").innerHTML = html;
+    return '<section class="stack listsec"><div class="rhead k-' + kind + '"><h2>' + K[0] + "</h2><span>" + list.length + "</span></div>" + (extra || "") +
+      '<div class="rsub">' + esc(note) + "</div>" +
+      (list.length ? '<div class="list">' + list.slice(0, 200).map(function (r) { return reportRow(kind, r); }).join("") + "</div>" + (list.length > 200 ? '<div class="notice">Showing the first 200. Narrow the dates, or export all records.</div>' : "") : emptyBox("Nothing to show", "No records for this period.")) + "</section>";
+  }
+  function renderHome() {
+    var P = perSets(DPER), A = perSets("all");
+    var openC = S.comps.filter(function (c) { return c.status === "open"; }).length;
+    var retAll = S.found.filter(function (f) { return f.status === "returned"; });
+    var demo = S.found.some(function (x) { return x.demo; }) || S.comps.some(function (x) { return x.demo; });
+    var stockAdded = P.stock.filter(function (f) { return inPer(f.foundDate, DPER); }).length;
+    var cOpen = P.comps.filter(function (c) { return c.status === "open"; }).length;
+    function tile(k, num, name, sub) {
+      return '<button type="button" class="tile k-' + k + (RSEL === k ? " sel" : "") + '" data-sel="' + k + '" aria-pressed="' + (RSEL === k) + '"><span class="tn">' + num + '</span><span class="tl">' + name + '</span><span class="ts">' + sub + "</span></button>";
+    }
+    $("#screen").innerHTML = '<div class="stack"><div class="datehead"><b>' + esc(longToday()) + "</b><span>Status report</span></div>" + perBar() +
+      '<div class="tiles">' +
+      tile("comp", P.comps.length, "Lost Complaints", cOpen + " open · " + (P.comps.length - cOpen) + " closed (period)") +
+      tile("found", P.found.length, "Items Found in Campus", A.found.length + " till date") +
+      tile("ret", P.ret.length, "Returned", retAll.length + " till date") +
+      tile("stock", P.stock.length, "Stock in Hand", stockAdded + " added in period · " + openC + " complaints open") + "</div>" +
+      (S.canWrite ? '<div class="quick"><button type="button" class="btn primary" data-act="log-found">Log Found Item</button><button type="button" class="btn gold" data-act="log-comp">Log Lost Complaint</button></div>' : '<div class="notice">Type your name to log items and complaints.</div>') +
+      '<div id="homelist">' + listBlock(RSEL, true) + "</div>" +
+      '<div class="actions"><button type="button" class="btn small" data-act="export">Export all records (CSV)</button>' + (demo && S.isAdmin ? '<button type="button" class="btn small danger" data-act="demo-delete">Delete demo records</button>' : "") + (!demo && S.isAdmin && !S.found.length && !S.comps.length ? '<button type="button" class="btn small" data-act="demo-load">Load demo records</button>' : "") + "</div></div>";
+  }
+  function renderReport(kind) {
+    var tab = S.route === "complaints" || S.route === "found";
+    $("#screen").innerHTML = '<div class="stack"><div class="datehead"><b>' + esc(longToday()) + "</b><span>" + RKINDS[kind][0] + "</span></div>" + perBar() +
+      (S.canWrite ? '<div class="quick"><button type="button" class="btn ' + (kind === "comp" ? "gold" : "primary") + '" data-act="' + (kind === "comp" ? "log-comp" : "log-found") + '">' + (kind === "comp" ? "Log Lost Complaint" : "Log Found Item") + "</button></div>" : "") + listBlock(kind, false) + "</div>";
   }
 
   /* ---------- case screen ---------- */
@@ -1233,7 +1240,7 @@ input[type=date] { border-radius: 10px; }
   }
   function refresh() {
     recompute(); renderBar(); renderWho();
-    if (S.route === "home" || S.route.indexOf("r-") === 0 || loading() || S.noDb || S.fail) renderScreen(); else renderList();
+    if (S.route === "home" || S.route === "complaints" || S.route === "found" || S.route.indexOf("r-") === 0 || loading() || S.noDb || S.fail) renderScreen(); else renderList();
     if (S.caseId) renderCase();
   }
   function go(route) { location.hash = route; }
@@ -1252,6 +1259,8 @@ input[type=date] { border-radius: 10px; }
     }
     var dpb = ev.target.closest("[data-dper]");
     if (dpb) { DPER = dpb.getAttribute("data-dper"); if (DPER === "range" && !DFROM) { DFROM = perRange("week")[0]; DTO = today(); } renderScreen(); return; }
+    var sb = ev.target.closest("[data-sel]");
+    if (sb) { RSEL = sb.getAttribute("data-sel"); RCAT = sb.getAttribute("data-cat") || ""; RST = ""; renderScreen(); var hl = $("#homelist"); if (hl && hl.scrollIntoView) hl.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
     var rb = ev.target.closest("[data-r]");
     if (rb) { RCAT = rb.getAttribute("data-cat") || ""; RST = ""; go("r-" + rb.getAttribute("data-r")); return; }
     var rsb = ev.target.closest("[data-rs]");
