@@ -471,7 +471,7 @@ const TOPICS = [
 ];
 const TOPIC = {}; TOPICS.forEach(t => TOPIC[t.k] = t);
 function topicOf(text){ const t = TOPICS.find(x => x.re.test(text || "")); return t ? t.k : "other"; }
-const ACTION_WORDS = ["Given","Received","Allocated","Changed","Informed","Counselled","Allowed","Sent","Excused","Arranged","Guided","Updated","Warned","Called parent"];
+const ACTION_WORDS = ["Acknowledged","Given","Received","Allocated","Changed","Informed","Counselled","Allowed","Sent","Excused","Arranged","Guided","Updated","Warned","Called parent"];
 const DEF_ACTS = ["Counselled","Called parent","Warned","Informed"];
 </script>
 
@@ -682,14 +682,13 @@ function makeItem(dt, c, s, i, seg){
 }
 function openFus(it){ return it.log.filter(e => entryType(e) === "fu" && !e.done); }
 function itemStatus(it){
-  const fus = openFus(it);
-  if (fus.length) { const d = Math.min.apply(null, fus.map(f => f.due)); return {k: d <= Date.now() ? "late" : "fu", due:d}; }
+  const fus = it.log.filter(e => entryType(e) === "fu");
+  if (fus.length) return {k:"fup", at: Math.max.apply(null, fus.map(f => f.at))};
   if (it.log.some(e => entryType(e) === "act")) return {k:"act"};
-  if (it.log.some(e => entryType(e) === "fu" && e.done)) return {k:"act"};
   if (it.log.length) return {k:"noted"};
   return {k:"pend"};
 }
-const ST_LABEL = {pend:["Pending","t-warn"], noted:["Noted","t-navy"], act:["Actioned","t-ok"], fu:["Follow-up","t-sky"], late:["Follow-up due","t-bad"]};
+const ST_LABEL = {pend:["Pending","t-warn"], noted:["Noted","t-navy"], act:["Actioned","t-ok"], fup:["Followed up","t-sky"]};
 function dayItems(dt, c0, s0, seg){
   const out = [];
   for (let c = 1; c <= 11; c++){
@@ -744,8 +743,8 @@ function itemCard(it, opts){
   opts = opts || {};
   const id = iid(it), st = ST_LABEL[it.st.k].slice();
   if (it.st.k === "act") { const la = it.log.filter(e => entryType(e) === "act").sort((a,b) => b.at - a.at)[0]; if (la && la.a.length <= 24) st[0] = la.a + " ✓"; }
-  if (it.st.k === "fu" || it.st.k === "late") st[0] = (it.st.k === "late" ? "Due " : "Follow-up ") + hm(it.st.due);
-  const card = el("article","rc" + (it.st.k === "late" ? " over" : "")); card.id = "rc-" + id.replace(/[^a-z0-9]/gi, "");
+  if (it.st.k === "fup") st[0] = "Followed up " + hm(it.st.at);
+  const card = el("article","rc"); card.id = "rc-" + id.replace(/[^a-z0-9]/gi, "");
   const h = el("div","rc-h");
   h.appendChild(el("span","roll", String(it.i + 1)));
   const n = el("div","rc-n", title(it.nm)); n.appendChild(el("span","cs", it.c + it.s)); h.appendChild(n);
@@ -790,15 +789,13 @@ function itemCard(it, opts){
 }
 function entryRow(it, e, first){
   const t = entryType(e), r = roleOf(e);
-  const row = el("div","te " + r + (t === "fu" ? " fu" + (e.done ? " dn" : e.due <= Date.now() ? " late" : "") : ""));
+  const row = el("div","te " + r + (t === "fu" ? " fu dn" : ""));
   row.appendChild(el("span","rb " + r, r.toUpperCase()));
   if (t === "ack") row.appendChild(el("b", null, "Noted"));
   else if (t === "act") { row.appendChild(document.createTextNode("Action: ")); row.appendChild(el("b", null, e.a)); }
   else if (t === "fu") {
-    row.appendChild(document.createTextNode("Follow-up " + fmtT(e.due)));
-    if (!e.done) { const late = e.due <= Date.now(); row.appendChild(el("span","due " + (late ? "t-bad" : "t-sky"), until(e.due))); }
-    else row.appendChild(el("span","due t-ok", "Done " + hm(e.done)));
-    if (e.a) { row.appendChild(el("br")); row.appendChild(el("b", null, e.a)); }
+    row.appendChild(el("b", null, "Follow-up taken"));
+    if (e.a) { row.appendChild(document.createTextNode(" – ")); row.appendChild(el("span", null, e.a)); }
   } else if (editing[e.id]) {
     const ta = el("textarea"); ta.value = e.a; ta.id = "ed-" + e.id; row.appendChild(ta);
     const rr = el("div","row"); rr.style.marginTop = "6px";
@@ -806,12 +803,11 @@ function entryRow(it, e, first){
     rr.appendChild(btn("btn ghost sm", "Cancel", () => { delete editing[e.id]; render(true); }));
     row.appendChild(rr); return row;
   } else row.appendChild(el("span", null, e.a));
-  const tm = el("span","tm", (e.who || "") + " · " + fmtT(e.at) + (first && t !== "fu" ? " · " + gap(first, e.at) + " after" : "") + (e.ed ? " · edited" : ""));
+  const tm = el("span","tm", (e.who || "") + " · " + fmtT(e.at) + (first ? " · " + gap(first, e.at) + " after" : "") + (e.ed ? " · edited" : ""));
   const own = canAdmin() || e.who === (me && me.name);
   if (canPL() && own && !String(e.id || "").startsWith("tmp") && e.id) {
     const ed = el("span","ed");
     if (t === "note") ed.appendChild(btn("lnk", "Edit", () => { editing[e.id] = true; render(true); setTimeout(() => { const x = $("ed-" + e.id); if (x) x.focus(); }, 30); }));
-    if (t === "fu") ed.appendChild(btn("lnk", e.done ? "Reopen" : "Mark done", () => remarkOp(it, {t: e.done ? "undo" : "done", id:e.id})));
     let armed = false;
     const del = btn("lnk", "Delete", () => { if (!armed) { armed = true; del.textContent = "Tap again to delete"; return; } remarkOp(it, {t:"del", id:e.id}); });
     ed.appendChild(del); tm.appendChild(ed);
@@ -823,7 +819,7 @@ function panel(it, p, id){
   const box = el("div","rc-p");
   if (p === "act") {
     box.appendChild(el("div","lab", "Pick the action taken"));
-    const sug = it.seg === "rem" ? TOPIC[it.topic].acts : DEF_ACTS;
+    const sug = ["Acknowledged"].concat(it.seg === "rem" ? TOPIC[it.topic].acts : DEF_ACTS);
     const words = sug.concat(ACTION_WORDS.filter(w => !sug.includes(w)));
     const ws = el("div","words");
     words.forEach(w => ws.appendChild(btn("word" + (sug.includes(w) ? " sug" : ""), w, () => { panelOpen[id] = null; remarkOp(it, {t:"act", a:w}); toast("Action saved: " + w); })));
@@ -841,27 +837,10 @@ function panel(it, p, id){
     r.appendChild(btn("btn ghost", "Cancel", () => { panelOpen[id] = null; render(true); }));
     box.appendChild(r);
   } else if (p === "fu") {
-    box.appendChild(el("div","lab", "Remind at"));
-    const now = new Date(), nx = new Date(Math.ceil(now.getTime() / 9e5) * 9e5 + 9e5);
-    const p2 = n => String(n).padStart(2,"0");
-    const di = el("input"); di.type = "date"; di.value = todayStr(); di.min = todayStr();
-    const ti = el("input"); ti.type = "time"; ti.value = p2(nx.getHours()) + ":" + p2(nx.getMinutes());
-    const quick = el("div","words"); quick.style.marginBottom = "9px";
-    const setQ = ms => { const d = new Date(ms); di.value = d.getFullYear() + "-" + p2(d.getMonth()+1) + "-" + p2(d.getDate()); ti.value = p2(d.getHours()) + ":" + p2(d.getMinutes()); };
-    [["In 30 min", 18e5],["In 1 hour", 36e5],["In 2 hours", 72e5]].forEach(([l, ms]) => quick.appendChild(btn("word", l, () => setQ(Date.now() + ms))));
-    quick.appendChild(btn("word", "Tomorrow 9 am", () => { const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(9, 0, 0, 0); setQ(d.getTime()); }));
-    box.appendChild(quick);
-    const r1 = el("div","row"); r1.appendChild(di); r1.appendChild(ti); box.appendChild(r1);
-    const note = el("input"); note.type = "text"; note.placeholder = "What to check (e.g. give medicine at 2:15)"; note.style.marginTop = "9px";
-    if (it.seg === "rem") note.value = "";
-    box.appendChild(note);
-    const r2 = el("div","row"); r2.style.marginTop = "9px";
-    r2.appendChild(btn("btn", "Set follow-up", () => {
-      const due = new Date(di.value + "T" + (ti.value || "09:00")).getTime();
-      if (!isFinite(due)) { toast("Pick a date and time"); return; }
-      if (due < Date.now() - 6e4) { toast("Pick a time later than now"); return; }
-      panelOpen[id] = null; remarkOp(it, {t:"fu", due, a: note.value.trim()}); toast("Follow-up set for " + fmtT(due));
-    }));
+    box.appendChild(el("div","lab", "Record a follow-up now · " + hm(Date.now())));
+    const ta = el("textarea"); ta.id = "fp-" + id; ta.placeholder = "Remark (optional) – e.g. spoke to mother, book handed over"; box.appendChild(ta);
+    const r2 = el("div","row"); r2.style.marginTop = "8px";
+    r2.appendChild(btn("btn", "Record follow-up", () => { const v = ta.value.trim(); panelOpen[id] = null; remarkOp(it, {t:"fu", due: Date.now(), a: v}); toast("Follow-up recorded at " + hm(Date.now())); }));
     r2.appendChild(btn("btn ghost", "Cancel", () => { panelOpen[id] = null; render(true); }));
     box.appendChild(r2);
   }
@@ -882,7 +861,8 @@ function allFollowUps(){
   });
   return out.sort((a,b) => (a.e.done ? 1 : 0) - (b.e.done ? 1 : 0) || a.e.due - b.e.due);
 }
-function fuStrip(filter){
+function fuStrip(){ return null; }
+function fuStripOld(filter){
   const due = allFollowUps().filter(f => !f.e.done && f.e.due <= Date.now() + 36e5 && (!filter || filter(f)));
   if (!due.length) return null;
   const box = el("div","fus");
@@ -977,13 +957,13 @@ function itemsIn(seg, sc, from, to){ return rangeItems(seg, from, to, 0, "all").
 function emptyCard(t, sub){ const e = el("div","card"); const m = el("div","empty"); m.appendChild(el("b", null, t)); m.appendChild(document.createTextNode(sub)); e.appendChild(m); return e; }
 function statChips(all, cur, set){
   const sc = el("div","chips");
-  [["all","All"],["pend","Pending"],["noted","Noted"],["act","Actioned"],["fu","Follow-up"]].forEach(([k,l]) => {
-    const n = k === "all" ? all.length : all.filter(x => k === "fu" ? (x.st.k === "fu" || x.st.k === "late") : x.st.k === k).length;
+  [["all","All"],["pend","Pending"],["noted","Noted"],["act","Actioned"],["fup","Followed up"]].forEach(([k,l]) => {
+    const n = k === "all" ? all.length : all.filter(x => x.st.k === k).length;
     sc.appendChild(btn("chip sm" + (cur === k ? " on" : ""), l + " · " + n, () => set(k)));
   });
   return sc;
 }
-const statOk = (x, k) => k === "all" || (k === "fu" ? (x.st.k === "fu" || x.st.k === "late") : x.st.k === k);
+const statOk = (x, k) => k === "all" || x.st.k === k;
 function listCards(box, list, per){
   list.sort((a,b) => (a.dt < b.dt ? 1 : a.dt > b.dt ? -1 : 0) || a.c - b.c || a.s.localeCompare(b.s) || a.i - b.i);
   let last = "";
@@ -1005,10 +985,6 @@ function renderRem(){
   const box = $("vRem"); box.textContent = "";
   const from = rper === "day" ? date : shiftDate(date, -6);
   const all = itemsIn("rem", rsc, from, date);
-  const fuAll = allFollowUps().filter(f => f.seg === "rem" && !f.e.done && inScope(rsc, f.c, f.s));
-  const top = el("div","seg"); top.style.marginBottom = "12px";
-  [["rem","Parent remarks", all.filter(x => x.st.k === "pend").length],["fu","Follow-ups", fuAll.length]].forEach(([k,l,n]) => { const b = btn(rseg === k ? "on" : "", l, () => { rseg = k; render(true); }); if (n) b.appendChild(el("em", null, String(n))); top.appendChild(b); });
-  box.appendChild(top);
   const f = el("div","card"); const fp = el("div","selector");
   if (rseg === "rem") { const per = el("div","seg"); [["day", nice(date)],["week","Last 7 days"]].forEach(([k,l]) => per.appendChild(btn(rper === k ? "on" : "", l, () => { rper = k; render(true); }))); fp.appendChild(per); }
   fp.appendChild(scopePicker(rsc));
@@ -1020,7 +996,6 @@ function renderRem(){
     fp.appendChild(searchBox(rq, "rq", v => { rq = v; }));
   }
   f.appendChild(fp); box.appendChild(f);
-  if (rseg === "fu") return renderFUs(box, "rem", rsc);
   const fs = fuStrip(x => x.seg === "rem" && inScope(rsc, x.c, x.s)); if (fs) box.appendChild(fs);
   const list = all.filter(x => (rtopic === "all" || x.topic === rtopic) && statOk(x, rstat) && (!rq || x.nm.toLowerCase().includes(rq)));
   const ex = el("div","row"); ex.style.margin = "4px 2px 0";
@@ -1040,7 +1015,7 @@ function renderDef(){
   const all = itemsIn("def", dsc, from, date);
   const sms = smsDue().filter(x => inScope(dsc, x.c, x.s));
   const top = el("div","seg"); top.style.marginBottom = "12px";
-  [["def","Defaulters", all.filter(x => x.st.k === "pend").length],["fu","Follow-ups", allFollowUps().filter(f => f.seg !== "rem" && !f.e.done && inScope(dsc, f.c, f.s)).length],["sms","SMS", sms.filter(x => !x.sent).length]].forEach(([k,l,n]) => { const b = btn(dseg === k ? "on" : "", l, () => { dseg = k; render(true); }); if (n) b.appendChild(el("em", null, String(n))); top.appendChild(b); });
+  [["def","Defaulters", all.filter(x => x.st.k === "pend").length],["sms","SMS", sms.filter(x => !x.sent).length]].forEach(([k,l,n]) => { const b = btn(dseg === k ? "on" : "", l, () => { dseg = k; render(true); }); if (n) b.appendChild(el("em", null, String(n))); top.appendChild(b); });
   box.appendChild(top);
   const f = el("div","card"); const fp = el("div","selector");
   if (dseg === "def") { const per = el("div","seg"); [["day", nice(date)],["week","Last 7 days"]].forEach(([k,l]) => per.appendChild(btn(dperd === k ? "on" : "", l, () => { dperd = k; render(true); }))); fp.appendChild(per); }
@@ -1054,7 +1029,6 @@ function renderDef(){
   }
   f.appendChild(fp); box.appendChild(f);
   if (dseg === "sms") return renderSms(box, sms);
-  if (dseg === "fu") return renderFUs(box, "def", dsc);
   const fs = fuStrip(x => x.seg !== "rem" && inScope(dsc, x.c, x.s)); if (fs) box.appendChild(fs);
   const list = all.filter(x => (dcat === "all" || x.cats.includes(dcat)) && statOk(x, dstat) && (!dq || x.nm.toLowerCase().includes(dq)));
   const ex = el("div","row"); ex.style.margin = "4px 2px 0";
@@ -1131,16 +1105,90 @@ function buildReports(){
   add("Follow-through", "pend", "Remarks pending", "warn", mk("pend"), "No one has noted or acted yet");
   add("Follow-through", "noted", "Noted only", "navy", mk("noted"));
   add("Follow-through", "act", "Actioned", "ok", mk("act"));
-  const fus = allFollowUps().filter(f => !f.e.done && inScope(bsc, f.c, f.s)).map(f => ({dt:f.dt, c:f.c, s:f.s, i:f.i, nm:f.nm, d:(f.e.a || "Follow-up") + " · " + fmtT(f.e.due), st: until(f.e.due)}));
-  add("Follow-through", "fu", "Open follow-ups", "sky", fus);
+  add("Follow-through", "fup", "Followed up", "sky", mk("fup"));
   const sm = smsDue().filter(x => !x.sent && inScope(bsc, x.c, x.s)).map(x => ({dt:date, c:x.c, s:x.s, i:x.i, nm:x.nm, d:LABEL[x.cat] + " · " + x.n + " days", st:"To send"}));
   add("Follow-through", "sms", "SMS to send", "bad", sm);
   const nsub = []; for (let c = 1; c <= 11; c++) sections(c).forEach(s => { if (inScope(bsc, c, s) && (ROSTER[c][s] || []).length && !subOf(c, s, date)) nsub.push({dt:date, c, s, i:-1, nm:"Class " + c + " " + s, d: secDone(c, s, date) ? "Marked, not submitted" : "Not marked"}); });
   add("Follow-through", "nsub", "Sections not submitted", "mute", nsub, "For " + nice(date));
   return R;
 }
+/* ---------- student lookup: one child's last 7 / 30 days for talking to the parent ---------- */
+let kq = "", kid = null, kper = 30;
+function kidMatches(q){
+  const out = []; if (q.length < 2) return out;
+  for (let c = 1; c <= 11; c++) sections(c).forEach(s => (ROSTER[c][s] || []).forEach((n, i) => { if (n.toLowerCase().includes(q)) out.push({c, s, i, n}); }));
+  return out.slice(0, 30);
+}
+const CELL = {
+  a: v => v === 2 ? ["P","ok"] : v === 1 ? ["A","bad"] : v === 3 ? ["NB","warn"] : ["–",""],
+  d: v => v === 2 ? ["OK","ok"] : v === 1 ? ["Not done","warn"] : ["–",""],
+  g: v => v === 1 ? ["✓","ok"] : v === 2 ? ["✗","bad"] : ["–",""]
+};
+function kidProfile(k){
+  const card = el("div","card"); const nm = (ROSTER[k.c][k.s] || [])[k.i] || "";
+  const h = el("div","cardh"); const h2 = el("h2", null, title(nm)); h2.appendChild(el("small", null, "Class " + k.c + " " + k.s + " · Roll " + (k.i + 1))); h.appendChild(h2);
+  h.appendChild(btn("btn ghost sm", "Close", () => { kid = null; render(true); })); card.appendChild(h);
+  const pad = el("div","pad");
+  const per = el("div","seg"); [[7,"Last 7 days"],[30,"Last 30 days"]].forEach(([n,l]) => per.appendChild(btn(kper === n ? "on" : "", l, () => { kper = n; render(true); }))); pad.appendChild(per);
+  const days = []; for (let b = 0; b < kper; b++) { const dt = shiftDate(date, -b); if (docs[docId(k.c, dt)] && secDone(k.c, k.s, dt)) days.push(dt); }
+  const cnt = {}; CATS.forEach(x => cnt[x.k] = 0);
+  days.forEach(dt => { const m = mark(k.c, k.s, k.i, dt); CATS.forEach(x => { if (x.test(m)) cnt[x.k]++; }); });
+  const tl = el("div","tiles"); tl.style.marginTop = "12px";
+  const t0 = el("div","tile"); t0.appendChild(el("b", null, String(days.length))); t0.appendChild(el("span", null, "Days marked")); tl.appendChild(t0);
+  CATS.forEach(x => { const t = el("div","tile" + (cnt[x.k] ? "" : " zero")); t.style.setProperty("--c", "var(--" + ({bad:"bad",warn:"warn",plum:"plum",sky:"sky"}[x.tone] || "navy") + ")"); t.appendChild(el("b", null, String(cnt[x.k]))); t.appendChild(el("span", null, x.l)); t.appendChild(el("small", null, cnt[x.k] === 1 ? "1 day" : cnt[x.k] + " days")); tl.appendChild(t); });
+  pad.appendChild(tl);
+  // remarks
+  const rems = []; for (let b = 0; b < kper; b++) { const dt = shiftDate(date, -b); const it = makeItem(dt, k.c, k.s, k.i, "rem"); if (it) rems.push(it); }
+  pad.appendChild(el("div","eyebrow", "Parent remarks · " + rems.length));
+  if (!rems.length) pad.appendChild(el("div","small muted", "No parent remarks in this period."));
+  rems.forEach(it => {
+    const r = el("div"); r.style.padding = "9px 0"; r.style.borderBottom = "1px solid var(--line2)";
+    const top = el("div","row"); top.appendChild(el("b", null, nice(it.dt))); top.appendChild(el("span","tag t-" + TOPIC[it.topic].tone, TOPIC[it.topic].l)); top.appendChild(el("span","sp")); top.appendChild(el("span","pill " + ST_LABEL[it.st.k][1], ST_LABEL[it.st.k][0])); r.appendChild(top);
+    r.appendChild(el("div", null, it.iss[0].text)).style.marginTop = "4px";
+    const acts2 = it.log.slice().sort((a,b) => a.at - b.at).map(e => { const t = entryType(e); return (roleOf(e).toUpperCase()) + " " + (t === "ack" ? "Noted" : t === "fu" ? "Follow-up" + (e.a ? ": " + e.a : "") : e.a) + " (" + hm(e.at) + ")"; });
+    if (acts2.length) r.appendChild(el("div","small muted", acts2.join(" · "))).style.marginTop = "3px";
+    pad.appendChild(r);
+  });
+  // day by day
+  pad.appendChild(el("div","eyebrow", "Diary status day by day"));
+  if (!days.length) pad.appendChild(el("div","small muted", "No marked days in this period."));
+  else {
+    const tw = el("div","tw"); tw.style.border = "1px solid var(--line)"; tw.style.borderRadius = "12px"; const tb = el("table");
+    const hr = el("tr"); ["Date","Attend","Diary","Sign","English","Behav","TV","Study","Play"].forEach(x => hr.appendChild(el("th", null, x))); tb.appendChild(hr);
+    days.forEach(dt => { const m = mark(k.c, k.s, k.i, dt); const tr = el("tr"); tr.appendChild(el("td","nw", nice(dt).replace(/^\w+, /, "")));
+      [CELL.a(m.a), CELL.d(m.d), CELL.g(m.s), CELL.g(m.e), CELL.g(m.b), CELL.g(m.v), CELL.g(m.y), CELL.g(m.p)].forEach(([v, tone], j) => { const td = el("td","nw"); const off = j > 0 && m.a === 1; const sp = el("span", tone && !off ? "tag t-" + tone : "muted", off ? "–" : v); td.appendChild(sp); tr.appendChild(td); });
+      tb.appendChild(tr); });
+    tw.appendChild(tb); pad.appendChild(tw);
+  }
+  const cp = el("div","row"); cp.style.marginTop = "12px";
+  cp.appendChild(btn("btn sm", "Copy summary for WhatsApp", () => {
+    const L = ["*" + title(nm) + "* – Class " + k.c + " " + k.s + " (Roll " + (k.i + 1) + ")", "Last " + kper + " days · " + days.length + " days marked", ""];
+    CATS.forEach(x => { if (cnt[x.k]) L.push("• " + x.l + ": " + cnt[x.k] + (cnt[x.k] === 1 ? " day" : " days")); });
+    if (!CATS.some(x => cnt[x.k])) L.push("• No defaults recorded");
+    if (rems.length) { L.push(""); L.push("*Parent remarks*"); rems.forEach(it => L.push(dmy(it.dt) + " – " + it.iss[0].text.replace(/\s+/g, " ") + " _(" + ST_LABEL[it.st.k][0] + ")_")); }
+    copyText(L.join("\n"), "Summary copied");
+  }));
+  pad.appendChild(cp);
+  card.appendChild(pad); return card;
+}
+function lookupCard(){
+  const card = el("div","card"); const pad = el("div","selector");
+  const q = el("input","search"); q.type = "search"; q.id = "kq"; q.placeholder = "Find a student by name (whole school)"; q.value = kq;
+  q.oninput = () => { kq = q.value.trim().toLowerCase(); kid = null; render(true); setTimeout(() => { const x = $("kq"); if (x) { x.focus(); x.setSelectionRange(x.value.length, x.value.length); } }, 0); };
+  pad.appendChild(q);
+  if (kq.length >= 2 && !kid) {
+    const ms = kidMatches(kq), names = el("div","names");
+    if (!ms.length) pad.appendChild(el("div","small muted", "No student found."));
+    ms.forEach(x => { const b = btn("nm t-navy", "", () => { kid = {c:x.c, s:x.s, i:x.i}; render(true); }); b.appendChild(el("small", null, x.c + x.s)); b.appendChild(document.createTextNode(title(x.n))); names.appendChild(b); });
+    pad.appendChild(names);
+  }
+  card.appendChild(pad);
+  return card;
+}
 function renderDash(){
   const box = $("vDash"); box.textContent = "";
+  box.appendChild(lookupCard());
+  if (kid) { box.appendChild(kidProfile(kid)); return; }
   const per = el("div","seg period");
   [["day", nice(date)],["week","Last 7 days"],["month","Last 30 days"]].forEach(([k,l]) => per.appendChild(btn(dper === k ? "on" : "", l, () => { dper = k; render(); })));
   box.appendChild(per);
@@ -1333,9 +1381,8 @@ function render(force){
 }
 function badges(){
   const set = (v, n) => { const b = document.querySelector('#nav [data-v="' + v + '"]'); if (!b) return; let e = b.querySelector("em"); if (!n) { if (e) e.remove(); return; } if (!e) { e = el("em"); b.appendChild(e); } e.textContent = String(n); };
-  const now = Date.now(), fus = allFollowUps().filter(f => !f.e.done && f.e.due <= now + 9e5);
-  set("rem", dayItems(date, 0, "all", "rem").filter(x => x.st.k === "pend").length + fus.filter(f => f.seg === "rem").length);
-  set("def", dayItems(date, 0, "all", "def").filter(x => x.st.k === "pend").length + fus.filter(f => f.seg !== "rem").length + (canAdmin() ? smsDue().filter(x => !x.sent).length : 0));
+  set("rem", dayItems(date, 0, "all", "rem").filter(x => x.st.k === "pend").length);
+  set("def", dayItems(date, 0, "all", "def").filter(x => x.st.k === "pend").length + (canAdmin() ? smsDue().filter(x => !x.sent).length : 0));
 }
 function setView(v){
   view = v; history.replaceState(null, "", "#" + v);
@@ -1366,7 +1413,7 @@ setInterval(() => { if (document.visibilityState === "visible" && me && view !==
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && me) { retryDirty(); refresh(); } });
 
 /* ---------- auto-update: if a newer page is published, reload into it ---------- */
-const BUILD = "202611191723";
+const BUILD = "202611191819";
 (function(){
   const run = () => fetch(location.pathname + "?v=" + Date.now(), {cache:"no-store"}).then(r => r.text()).then(t => {
     const m = t.match(/const BUILD = "(\d+)"/);
