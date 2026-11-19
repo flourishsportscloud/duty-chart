@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FIS · Announcements</title>
+<link rel="apple-touch-icon" href="../fis/fis-logo-180.png">
+<link rel="icon" href="../fis/fis-logo-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Announcements">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1F2D5A">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#1F2D5A;--navy2:#16214A;--gold:#E3A94F;--crimson:#D23D63;--purple:#5F3585;--sky:#5FA8D8;--green:#2E8B57;
+  --bg:#F5F3EE;--surface:#FFFFFF;--chip:#F1EEE6;--ink:#1B2340;--muted:#646B80;--line:#E6E2D8;
+  --serif:'Lora',Georgia,'Times New Roman',serif;--sans:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif}
+@media (prefers-color-scheme:dark){:root{--purple:#A987D6;--crimson:#E8668A;--green:#5CC28A;--bg:#0F1530;--surface:#18214A;--chip:#212B5A;--ink:#EEF0F7;--muted:#A6ADC4;--line:#2A3566}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+.top{background:var(--navy);color:#fff;padding:calc(env(safe-area-inset-top,0px) + 16px) 18px 18px;border-bottom:4px solid var(--gold)}
+@media (display-mode:standalone){.top{padding-top:calc(max(env(safe-area-inset-top,0px),50px) + 10px)}}
+.top .in{max-width:720px;margin:0 auto}
+.back{color:var(--gold);text-decoration:none;font-size:.68rem;letter-spacing:.22em;text-transform:uppercase;font-weight:600}
+.trow{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-top:4px}
+h1{font-family:var(--serif);font-weight:600;font-size:1.75rem;line-height:1.15;margin:0}
+.newc{font-size:.75rem;font-weight:700;background:var(--crimson);color:#fff;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.me{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:.85rem;color:#C9CFE3}
+.me input{flex:1;min-width:0;max-width:300px;font-size:16px;padding:8px 12px;border-radius:10px;border:0;background:#fff;color:#1B2340;font-weight:600}
+.adm{margin-left:auto;background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:10px;padding:7px 12px;font-size:.8rem;font-weight:600;cursor:pointer}
+.adm.on{background:var(--gold);border-color:var(--gold);color:#1B2340}
+/* moving highlights */
+.tick{background:var(--navy2);color:#fff;overflow:hidden;white-space:nowrap;border-bottom:1px solid rgba(255,255,255,.08)}
+.tick .in{display:flex;align-items:center;max-width:720px;margin:0 auto}
+.tick .lb{flex:0 0 auto;background:var(--gold);color:#1B2340;font-size:.66rem;letter-spacing:.16em;font-weight:700;text-transform:uppercase;padding:9px 12px;z-index:1}
+.tick .vp{flex:1;overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent);mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent)}
+.tick .run{display:inline-flex;gap:34px;padding-left:100%;animation:run var(--dur,30s) linear infinite}
+.tick:hover .run,.tick:focus-within .run{animation-play-state:paused}
+.tick button{background:none;border:0;color:#fff;font-size:.85rem;font-weight:500;padding:9px 0;cursor:pointer;white-space:nowrap}
+.tick button b{color:var(--gold);font-weight:700;margin-right:6px;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase}
+@keyframes run{to{transform:translateX(-100%)}}
+@media (prefers-reduced-motion:reduce){.tick .run{animation:none;padding-left:12px}}
+.wrap{max-width:720px;margin:0 auto;padding:14px 14px calc(env(safe-area-inset-bottom,0px) + 40px)}
+.chips{display:flex;gap:7px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;padding:6px 13px;font-size:.82rem;font-weight:600;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+@media (prefers-color-scheme:dark){.chip[aria-pressed="true"]{background:var(--gold);border-color:var(--gold);color:#1B2340}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;margin-top:10px;overflow:hidden;box-shadow:0 1px 2px rgba(20,25,60,.04)}
+.card.unread{border-left:4px solid var(--crimson)}
+.ch{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;background:none;border:0;padding:14px;cursor:pointer}
+.ty{flex:0 0 auto;font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;border-radius:6px;padding:4px 7px;margin-top:2px}
+.ty.Notice{background:color-mix(in srgb,var(--sky) 18%,var(--surface));color:#245F86}
+.ty.Circular{background:color-mix(in srgb,var(--purple) 15%,var(--surface));color:var(--purple)}
+.ty.SMS{background:color-mix(in srgb,var(--gold) 24%,var(--surface));color:#8A5B12}
+@media (prefers-color-scheme:dark){.ty.Notice{color:var(--sky)}.ty.SMS{color:var(--gold)}}
+.cm{flex:1;min-width:0}
+.cm b{display:block;font-family:var(--serif);font-weight:600;font-size:1.06rem;line-height:1.25}
+.cm small{display:block;color:var(--muted);font-size:.78rem;margin-top:4px}
+.st{flex:0 0 auto;font-size:.68rem;font-weight:700;border-radius:999px;padding:3px 9px;white-space:nowrap;margin-top:2px}
+.st.new{background:var(--crimson);color:#fff}
+.st.seen{background:var(--chip);color:var(--muted)}
+.st.pend{background:color-mix(in srgb,var(--gold) 26%,var(--surface));color:#8A5B12}
+.st.ok{background:color-mix(in srgb,var(--green) 16%,var(--surface));color:var(--green)}
+.cb{padding:0 14px 14px;border-top:1px solid var(--line)}
+.body{white-space:pre-wrap;margin:12px 0 0;font-size:.95rem}
+.due{font-size:.8rem;color:var(--crimson);font-weight:600;margin-top:8px}
+.acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.btn{border:0;border-radius:10px;padding:10px 16px;font-weight:700;font-size:.88rem;background:var(--navy);color:#fff;cursor:pointer}
+.btn.gh{background:var(--chip);color:var(--ink)}
+.btn.rd{background:transparent;color:var(--crimson);border:1px solid var(--line)}
+.btn:disabled{opacity:.55}
+.done{display:flex;align-items:center;gap:8px;font-size:.86rem;color:var(--green);font-weight:700;margin-top:14px}
+.trail{font-size:.76rem;color:var(--muted);margin-top:6px}
+.empty{color:var(--muted);text-align:center;padding:30px 0}
+.msg{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);transform:translateX(-50%);background:var(--navy);color:#fff;border-radius:12px;padding:10px 16px;font-size:.88rem;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.2);z-index:50;max-width:90vw}
+/* report */
+.rep{margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:12px;background:color-mix(in srgb,var(--chip) 50%,var(--surface))}
+.bars{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.bar{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px;cursor:pointer;text-align:left}
+.bar[aria-pressed="true"]{outline:2px solid var(--navy)}
+.bar b{display:block;font-size:1.15rem;font-family:var(--serif);white-space:nowrap}
+.bar span{display:block;font-size:.62rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+.rl{margin:10px 0 0;padding:0;list-style:none;max-height:340px;overflow:auto}
+.rl li{display:flex;justify-content:space-between;gap:10px;padding:6px 2px;border-bottom:1px solid var(--line);font-size:.86rem}
+.rl li span{color:var(--muted);font-size:.78rem;white-space:nowrap}
+.rl li .late{color:var(--crimson);font-weight:700}
+/* form */
+.sheet{position:fixed;inset:0;background:rgba(10,14,35,.55);display:flex;align-items:flex-end;justify-content:center;z-index:40}
+.sheet .pn{background:var(--surface);width:100%;max-width:640px;max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;padding:18px 16px calc(env(safe-area-inset-bottom,0px) + 18px)}
+@media (min-width:700px){.sheet{align-items:center}.sheet .pn{border-radius:18px}}
+.pn h2{font-family:var(--serif);font-weight:600;margin:0 0 12px;font-size:1.3rem}
+.fl{display:block;font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:12px 0 5px}
+.pn input[type=text],.pn input[type=password],.pn input[type=date],.pn textarea,.pn select{width:100%;font-size:16px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg)}
+.pn textarea{min-height:130px;resize:vertical}
+.tg{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:.92rem;cursor:pointer}
+.tg input{width:20px;height:20px;accent-color:var(--navy)}
+.pn .acts{justify-content:flex-end}
+.err{color:var(--crimson);font-size:.85rem;margin-top:8px;min-height:1em}
+</style>
+</head>
+<body>
+<header class="top"><div class="in">
+  <a class="back" href="../fis/">‹ FIS Staff Hub</a>
+  <div class="trow"><h1>Announcements</h1><span class="newc" id="newc" hidden></span></div>
+  <div class="me"><label for="me">You are</label>
+    <input id="me" list="staff" placeholder="Type your name" autocomplete="off" enterkeyhint="done">
+    <datalist id="staff"></datalist>
+    <button type="button" class="adm" id="adm">Admin</button></div>
+</div></header>
+<div class="tick" id="tick" hidden><div class="in"><span class="lb">Highlights</span><div class="vp"><div class="run" id="run"></div></div></div></div>
+<main class="wrap">
+  <div class="chips" id="types" role="group" aria-label="Type"></div>
+  <div class="chips" id="auds" role="group" aria-label="For"></div>
+  <div id="adminBar" hidden><div class="acts" style="margin:4px 0 2px"><button class="btn" id="newBtn">+ New announcement</button><button class="btn gh" id="outBtn">Lock admin</button></div></div>
+  <div id="list"><p class="empty">Loading…</p></div>
+</main>
+<div id="msg" class="msg" hidden></div>
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbyxWYwmvDDlIR6VjS2W4209yu-72ex0vfNlRThchzInQ_pCIWO1ACbH31iuOdk410_JkA/exec';
+const API = new URLSearchParams(location.search).get('api') || API_URL;
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const call = (fn, args) => fetch(API, {method:'POST', redirect:'follow', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({fn, args: args || []})})
+  .then(r => r.json()).then(j => { if (!j.ok) throw new Error(j.err || 'Server error'); return j.v; });
+const store = { get(k){ try { return localStorage.getItem(k) || ''; } catch(e){ return ''; } }, set(k,v){ try { v ? localStorage.setItem(k,v) : localStorage.removeItem(k); } catch(e){} } };
+
+const TYPES = [['all','All'],['Notice','Notices'],['Circular','Circulars'],['SMS','Parent SMS']];
+const AUDS = ['All staff','Pre-primary','Primary','Middle','Secondary','Co-curricular','Admin & Operations'];
+/* who is expected to read an announcement, from the staff category in the Duty Chart list */
+const AUD_CATS = {
+  'Pre-primary': ['Pre Primary Teacher'],
+  'Primary': ['Primary Teacher','Hindi Teacher','Computer Teacher'],
+  'Middle': ['Secondary Teacher','Hindi Teacher','Computer Teacher'],
+  'Secondary': ['Secondary Teacher','Hindi Teacher','Computer Teacher'],
+  'Co-curricular': ['Activity'],
+  'Admin & Operations': ['Admin','PL','CM','Floor Manager','Support Staff']
+};
+let STAFF = [], LIST = [], MINE = {}, LOG = null, OPEN = '', REPV = {}, TF = 'all', AF = 'all';
+let PIN = sessionStorage.getItem('fisAnnPin') || '';
+let ME = store.get('fisAnnName');
+
+function toast(t){ const m = $('#msg'); m.textContent = t; m.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => m.hidden = true, 2600); }
+const fmt = t => t ? new Date(t).toLocaleString('en-IN', {day:'numeric', month:'short', hour:'numeric', minute:'2-digit'}) : '';
+function ago(t){ const m = Math.round((Date.now() - t) / 60000); if (m < 1) return 'just now'; if (m < 60) return m + ' min ago'; const h = Math.round(m / 60); if (h < 24) return h + ' h ago'; const d = Math.round(h / 24); return d === 1 ? 'yesterday' : d + ' days ago'; }
+const dueEnd = a => a.due ? new Date(a.due + 'T23:59:59').getTime() : 0;
+
+/* staff names come from the Duty Chart staff list, so there is one list to keep up to date */
+async function loadStaff(){
+  try {
+    const html = await fetch('../index.html', {cache:'no-cache'}).then(r => r.text());
+    const m = html.match(/const STAFF_LIST = (\[[\s\S]*?\]\]);/); const g = html.match(/const GONE = (\[[^\]]*\]);/);
+    const gone = g ? JSON.parse(g[1].replace(/'/g, '"')) : [];
+    STAFF = m ? JSON.parse(m[1]).filter(r => !gone.includes(r[0].toLowerCase())).map(r => ({n: r[0], d: r[1], c: r[2]})) : [];
+  } catch(e){ STAFF = []; }
+  $('#staff').innerHTML = STAFF.map(s => `<option value="${esc(s.n)}">${esc(s.d)}</option>`).join('');
+}
+function expected(a){
+  const aud = a.aud && a.aud.length ? a.aud : ['All staff'];
+  if (aud.includes('All staff')) return STAFF;
+  const cats = new Set(); aud.forEach(x => (AUD_CATS[x] || []).forEach(c => cats.add(c)));
+  return STAFF.filter(s => cats.has(s.c));
+}
+function forMe(a){
+  if (!ME) return true; const s = STAFF.find(x => x.n.toLowerCase() === ME.toLowerCase());
+  return !s || expected(a).includes(s);
+}
+function status(a){
+  const m = MINE[a.id] || {};
+  if (a.ack) return m.a ? ['ok','Acknowledged'] : m.s ? ['pend','Acknowledge'] : ['new','New'];
+  return m.s ? ['seen','Seen'] : ['new','New'];
+}
+
+async function load(){
+  try {
+    const v = await call('annList', [ME]);
+    LIST = v.list || []; MINE = v.me || {};
+    if (PIN) LOG = await call('annReport', [PIN]).catch(() => { PIN = ''; sessionStorage.removeItem('fisAnnPin'); return null; });
+    draw();
+    const id = new URLSearchParams(location.search).get('id'); if (id && !OPEN && LIST.some(a => a.id === id)) toggle(id);
+  } catch(e){ $('#list').innerHTML = `<p class="empty">Could not load announcements. Check the internet and pull down to refresh.<br><small>${esc(e.message)}</small></p>`; }
+}
+
+function drawFilters(){
+  $('#types').innerHTML = TYPES.map(([k,l]) => `<button type="button" class="chip" data-t="${k}" aria-pressed="${TF===k}">${l}</button>`).join('');
+  $('#auds').innerHTML = [['all','All groups']].concat(AUDS.map(x => [x,x])).map(([k,l]) => `<button type="button" class="chip" data-a="${esc(k)}" aria-pressed="${AF===k}">${esc(l)}</button>`).join('');
+  document.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { TF = b.dataset.t; draw(); });
+  document.querySelectorAll('[data-a]').forEach(b => b.onclick = () => { AF = b.dataset.a; draw(); });
+}
+function drawTicker(){
+  const hi = LIST.filter(a => a.hi);
+  $('#tick').hidden = !hi.length; if (!hi.length) return;
+  $('#run').innerHTML = hi.map(a => `<button type="button" data-go="${a.id}"><b>${esc(a.type)}</b>${esc(a.title)}</button>`).join('');
+  $('#run').style.setProperty('--dur', Math.max(18, hi.reduce((n, a) => n + a.title.length, 0) / 5) + 's');
+  $('#run').querySelectorAll('[data-go]').forEach(b => b.onclick = () => { TF = 'all'; AF = 'all'; if (OPEN !== b.dataset.go) toggle(b.dataset.go); else draw(); setTimeout(() => { const c = document.getElementById('c_' + b.dataset.go); if (c) c.scrollIntoView({behavior:'smooth', block:'start'}); }, 60); });
+}
+function draw(){
+  drawFilters(); drawTicker();
+  $('#adm').classList.toggle('on', !!PIN); $('#adm').textContent = PIN ? 'Admin ✓' : 'Admin'; $('#adminBar').hidden = !PIN;
+  const vis = LIST.filter(a => (TF === 'all' || a.type === TF) && (AF === 'all' || (a.aud || ['All staff']).includes(AF) || (a.aud || []).includes('All staff')));
+  const pending = LIST.filter(a => forMe(a) && status(a)[0] !== 'ok' && status(a)[0] !== 'seen').length;
+  $('#newc').hidden = !ME || !pending; $('#newc').textContent = pending + (pending === 1 ? ' needs you' : ' need you');
+  if (!vis.length){ $('#list').innerHTML = '<p class="empty">Nothing here yet.</p>'; return; }
+  $('#list').innerHTML = vis.map(card).join('');
+  bind();
+}
+function card(a){
+  const [sk, sl] = status(a), open = OPEN === a.id, m = MINE[a.id] || {};
+  const aud = (a.aud || ['All staff']).join(', ');
+  let inner = '';
+  if (open){
+    inner += `<div class="cb"><p class="body">${esc(a.body)}</p>`;
+    if (a.due) inner += `<div class="due">Acknowledge by ${new Date(a.due + 'T00:00').toLocaleDateString('en-IN', {weekday:'short', day:'numeric', month:'short'})}</div>`;
+    if (a.ack && m.a) inner += `<div class="done">✓ You acknowledged this on ${esc(fmt(m.a))}</div>`;
+    inner += `<div class="acts">`;
+    if (a.ack && !m.a) inner += `<button class="btn" data-ack="${a.id}">I have read and noted this · Acknowledge</button>`;
+    if (a.type === 'SMS') inner += `<button class="btn gh" data-copy="${a.id}">Copy SMS text</button>`;
+    if (PIN) inner += `<button class="btn gh" data-edit="${a.id}">Edit</button><button class="btn rd" data-del="${a.id}">Remove</button>`;
+    inner += `</div>`;
+    if (m.s) inner += `<div class="trail">Seen ${esc(fmt(m.s))}${m.a ? ' · Acknowledged ' + esc(fmt(m.a)) : ''}</div>`;
+    if (PIN && LOG) inner += report(a);
+    inner += `</div>`;
+  }
+  return `<article class="card${sk === 'new' && forMe(a) ? ' unread' : ''}" id="c_${a.id}">
+    <button type="button" class="ch" data-open="${a.id}" aria-expanded="${open}">
+      <span class="ty ${esc(a.type)}">${esc(a.type === 'SMS' ? 'SMS' : a.type)}</span>
+      <span class="cm"><b>${esc(a.title)}</b><small>${esc(aud)} · ${esc(ago(a.at))} · ${esc(a.by || '')}${a.sample ? ' · sample' : ''}</small></span>
+      ${ME && forMe(a) ? `<span class="st ${sk}">${sl}</span>` : ''}
+    </button>${inner}</article>`;
+}
+/* admin view: who has acknowledged, who has only seen, who has not opened it */
+function report(a){
+  const exp = expected(a), rows = LOG.filter(r => r.id === a.id), by = {};
+  rows.forEach(r => { const k = r.n.toLowerCase(); const o = by[k] || (by[k] = {n: r.n}); if (!o[r.k] || r.t < o[r.k]) o[r.k] = r.t; });
+  const ack = Object.values(by).filter(o => o.a).sort((x, y) => x.a - y.a);
+  const seen = Object.values(by).filter(o => o.s && !o.a).sort((x, y) => x.s - y.s);
+  const not = exp.filter(s => !by[s.n.toLowerCase()]);
+  const tot = exp.length, end = dueEnd(a);
+  const views = a.ack ? [['ack','Acknowledged',ack.length],['seen','Seen only',seen.length],['not','Not seen',not.length]] : [['seen','Seen',ack.length + seen.length],['not','Not seen',not.length]];
+  const v = REPV[a.id] || 'not';
+  let items = '';
+  if (v === 'ack') items = ack.map(o => `<li>${esc(o.n)}<span class="${end && o.a > end ? 'late' : ''}">${esc(fmt(o.a))}${end && o.a > end ? ' · late' : ''}</span></li>`).join('');
+  if (v === 'seen') items = (a.ack ? seen : ack.concat(seen)).map(o => `<li>${esc(o.n)}<span>${esc(fmt(o.s))}</span></li>`).join('');
+  if (v === 'not') items = not.map(s => `<li>${esc(s.n)}<span>${esc(s.d)}</span></li>`).join('');
+  return `<div class="rep"><div class="bars" style="grid-template-columns:repeat(${views.length},1fr)">${views.map(([k,l,n]) => `<button type="button" class="bar" data-rv="${a.id}" data-k="${k}" aria-pressed="${v===k}"><b>${n}<small style="font-size:.7rem;color:var(--muted);font-family:var(--sans)"> / ${tot}</small></b><span>${l}</span></button>`).join('')}</div>
+    <div class="trail">${tot} staff expected · ${esc((a.aud || ['All staff']).join(', '))}</div>
+    <ul class="rl">${items || '<li>No one</li>'}</ul>
+    ${v === 'not' && not.length ? `<div class="acts"><button class="btn gh" data-cpnot="${a.id}">Copy names for WhatsApp</button></div>` : ''}</div>`;
+}
+function bind(){
+  document.querySelectorAll('[data-open]').forEach(b => b.onclick = () => toggle(b.dataset.open));
+  document.querySelectorAll('[data-ack]').forEach(b => b.onclick = () => mark(b.dataset.ack, 'a', b));
+  document.querySelectorAll('[data-copy]').forEach(b => b.onclick = () => copy(LIST.find(a => a.id === b.dataset.copy).body, 'SMS text copied'));
+  document.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => form(LIST.find(a => a.id === b.dataset.edit)));
+  document.querySelectorAll('[data-del]').forEach(b => b.onclick = () => del(b.dataset.del, b));
+  document.querySelectorAll('[data-rv]').forEach(b => b.onclick = () => { REPV[b.dataset.rv] = b.dataset.k; draw(); });
+  document.querySelectorAll('[data-cpnot]').forEach(b => b.onclick = () => {
+    const a = LIST.find(x => x.id === b.dataset.cpnot), got = new Set(LOG.filter(r => r.id === a.id).map(r => r.n.toLowerCase()));
+    const names = expected(a).filter(s => !got.has(s.n.toLowerCase())).map(s => '• ' + s.n);
+    copy(`*${a.title}*\nNot yet seen (${names.length}):\n${names.join('\n')}\n\nPlease open Announcements in the FIS Staff Hub and acknowledge.`, 'Names copied');
+  });
+}
+function copy(t, ok){ (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => toast(ok)).catch(() => { const x = document.createElement('textarea'); x.value = t; document.body.appendChild(x); x.select(); document.execCommand('copy'); x.remove(); toast(ok); }); }
+function toggle(id){
+  OPEN = OPEN === id ? '' : id; draw();
+  if (OPEN && ME && !(MINE[id] || {}).s) mark(id, 's');
+}
+async function mark(id, k, btn){
+  if (!ME){ toast('Type your name at the top first'); $('#me').focus(); return; }
+  if (btn) btn.disabled = true;
+  try { MINE[id] = await call('annMark', [id, ME, k]); if (PIN) LOG = await call('annReport', [PIN]); draw(); if (k === 'a') toast('Acknowledged ✓'); }
+  catch(e){ toast(e.message); if (btn) btn.disabled = false; }
+}
+async function del(id, btn){
+  if (btn.dataset.sure !== '1'){ btn.dataset.sure = '1'; btn.textContent = 'Tap again to remove'; return; }
+  btn.disabled = true;
+  try { await call('annDel', [PIN, id]); OPEN = ''; toast('Removed'); load(); } catch(e){ toast(e.message); btn.disabled = false; }
+}
+function sheet(html){ const d = document.createElement('div'); d.className = 'sheet'; d.innerHTML = `<div class="pn" role="dialog" aria-modal="true">${html}</div>`; d.onclick = e => { if (e.target === d) d.remove(); }; document.body.appendChild(d); return d; }
+function askPin(){
+  const d = sheet(`<h2>Admin</h2><p style="margin:0;color:var(--muted);font-size:.9rem">Enter the Duty Chart edit PIN to post announcements and see who has seen or acknowledged them.</p>
+    <label class="fl" for="pin">PIN</label><input type="password" id="pin" inputmode="numeric" autocomplete="off"><div class="err" id="perr"></div>
+    <div class="acts"><button class="btn gh" data-x>Cancel</button><button class="btn" id="pok">Unlock</button></div>`);
+  d.querySelector('[data-x]').onclick = () => d.remove();
+  const go = async () => { const p = d.querySelector('#pin').value.trim(); if (!p) return;
+    try { if (!(await call('checkPin', [p]))) throw new Error('Wrong PIN'); PIN = p; sessionStorage.setItem('fisAnnPin', p); d.remove(); LOG = await call('annReport', [PIN]); draw(); toast('Admin unlocked'); }
+    catch(e){ d.querySelector('#perr').textContent = e.message; } };
+  d.querySelector('#pok').onclick = go; d.querySelector('#pin').onkeydown = e => { if (e.key === 'Enter') go(); };
+  setTimeout(() => d.querySelector('#pin').focus(), 50);
+}
+function form(a){
+  a = a || {type:'Notice', aud:['All staff'], ack:true, hi:false};
+  const d = sheet(`<h2>${a.id ? 'Edit announcement' : 'New announcement'}</h2>
+    <label class="fl">Type</label><div class="chips" id="fty">${['Notice','Circular','SMS'].map(t => `<button type="button" class="chip" data-v="${t}" aria-pressed="${a.type===t}">${t === 'SMS' ? 'Parent SMS' : t}</button>`).join('')}</div>
+    <label class="fl" for="ftitle">Title</label><input type="text" id="ftitle" maxlength="160" value="${esc(a.title || '')}">
+    <label class="fl" for="fbody">Message</label><textarea id="fbody" maxlength="6000">${esc(a.body || '')}</textarea>
+    <label class="fl">For</label><div class="chips" id="faud" style="flex-wrap:wrap">${AUDS.map(x => `<button type="button" class="chip" data-v="${esc(x)}" aria-pressed="${(a.aud || []).includes(x)}">${esc(x)}</button>`).join('')}</div>
+    <label class="tg"><input type="checkbox" id="fack" ${a.ack ? 'checked' : ''}> Staff must acknowledge</label>
+    <label class="fl" for="fdue">Acknowledge by (optional)</label><input type="date" id="fdue" value="${esc(a.due || '')}">
+    <label class="tg"><input type="checkbox" id="fhi" ${a.hi ? 'checked' : ''}> Show in the moving highlights</label>
+    <label class="fl" for="fby">Posted by</label><input type="text" id="fby" maxlength="80" value="${esc(a.by || store.get('fisAnnBy') || 'Director')}">
+    <div class="err" id="ferr"></div>
+    <div class="acts"><button class="btn gh" data-x>Cancel</button><button class="btn" id="fok">${a.id ? 'Save changes' : 'Post'}</button></div>`);
+  d.querySelector('[data-x]').onclick = () => d.remove();
+  d.querySelectorAll('#fty .chip').forEach(b => b.onclick = () => { d.querySelectorAll('#fty .chip').forEach(x => x.setAttribute('aria-pressed', x === b)); if (b.dataset.v === 'SMS') d.querySelector('#fack').checked = false; });
+  d.querySelectorAll('#faud .chip').forEach(b => b.onclick = () => {
+    const on = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', on);
+    if (on && b.dataset.v === 'All staff') d.querySelectorAll('#faud .chip').forEach(x => { if (x !== b) x.setAttribute('aria-pressed', false); });
+    if (on && b.dataset.v !== 'All staff') d.querySelector('#faud [data-v="All staff"]').setAttribute('aria-pressed', false);
+  });
+  d.querySelector('#fok').onclick = async () => {
+    const o = { id: a.id, type: d.querySelector('#fty [aria-pressed="true"]').dataset.v, title: d.querySelector('#ftitle').value.trim(), body: d.querySelector('#fbody').value.trim(),
+      aud: [...d.querySelectorAll('#faud [aria-pressed="true"]')].map(b => b.dataset.v), ack: d.querySelector('#fack').checked, due: d.querySelector('#fdue').value, hi: d.querySelector('#fhi').checked, by: d.querySelector('#fby').value.trim() };
+    if (!o.title){ d.querySelector('#ferr').textContent = 'Add a title.'; return; }
+    store.set('fisAnnBy', o.by);
+    const btn = d.querySelector('#fok'); btn.disabled = true;
+    try { const s = await call('annSave', [PIN, o]); d.remove(); OPEN = s.id; toast(a.id ? 'Saved' : 'Posted'); load(); }
+    catch(e){ d.querySelector('#ferr').textContent = e.message; btn.disabled = false; }
+  };
+}
+
+$('#me').value = ME;
+$('#me').onchange = () => {
+  const v = $('#me').value.trim(), s = STAFF.find(x => x.n.toLowerCase() === v.toLowerCase());
+  ME = s ? s.n : v; $('#me').value = ME; store.set('fisAnnName', ME); load();
+};
+$('#adm').onclick = () => PIN ? null : askPin();
+$('#newBtn').onclick = () => form();
+$('#outBtn').onclick = () => { PIN = ''; LOG = null; sessionStorage.removeItem('fisAnnPin'); draw(); };
+document.addEventListener('visibilitychange', () => { if (!document.hidden) load(); });
+loadStaff().then(load);
+</script>
+</body>
+</html>

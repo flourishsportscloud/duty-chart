@@ -52,7 +52,7 @@ function boot() {
            settings: { Title: s['Title'] || '', Month: s['Month'] || '' } };
 }
 function api_(req) {
-  const fns = { boot: boot, getAll: getAll, getVer: getVer, checkPin: checkPin, saveAll: saveAll, savePatch: savePatch, getPhones: getPhones };
+  const fns = { boot: boot, getAll: getAll, getVer: getVer, checkPin: checkPin, saveAll: saveAll, savePatch: savePatch, getPhones: getPhones, annList: annList, annMark: annMark, annSave: annSave, annDel: annDel, annReport: annReport };
   try {
     ensure_();
     const f = fns[req && req.fn];
@@ -374,3 +374,79 @@ function updateDutyChart22Oct() {
   ss.setActiveSheet(sh);
   SpreadsheetApp.getActive().toast('Duty Chart updated – reload the app link', 'Done', 8);
 }
+
+/* ===================== Announcements (Staff Hub) =====================
+   Tabs: "Announcements" (one row per notice / circular / SMS) and "Announcement Log" (seen / acknowledged, one row each, server time).
+   Staff open and acknowledge without a PIN; posting, editing and the who-has-not-seen report need the Edit PIN. */
+const T_ANN = 'Announcements', T_ANNLOG = 'Announcement Log';
+function annSheets_() {
+  const ss = ss_();
+  let a = ss.getSheetByName(T_ANN), l = ss.getSheetByName(T_ANNLOG);
+  if (!a) { a = ss.insertSheet(T_ANN); header_(a, ['ID', 'Data (do not edit by hand)', 'Updated'], [150, 700, 160]);
+    const now = Date.now(); a.getRange(2, 1, ANN_SAMPLES.length, 3).setValues(ANN_SAMPLES.map(function (x, i) {
+      const o = Object.assign({ id: 'a' + (now - i * 3600e3).toString(36), at: now - i * 3600e3, by: 'Director', sample: true }, x);
+      return [o.id, JSON.stringify(o), new Date(o.at)]; })); }
+  if (!l) { l = ss.insertSheet(T_ANNLOG); header_(l, ['Announcement ID', 'Staff', 'Action', 'Time', 'Title'], [150, 220, 120, 170, 360]); }
+  return { a: a, l: l };
+}
+const ANN_SAMPLES = [
+  { type: 'Circular', title: 'Annual Sports Day – duty briefing', body: 'All staff will attend the Sports Day briefing on Monday at 2:00 pm in the Auditorium.\nHouse incharges bring the final participant lists.', aud: ['All staff'], ack: true, hi: true, due: '' },
+  { type: 'Notice', title: 'Uniform check from Monday', body: 'Class teachers will check uniform and ID cards during the first period every Monday and note defaulters in the diary.', aud: ['Primary', 'Middle', 'Secondary'], ack: true, hi: true, due: '' },
+  { type: 'SMS', title: 'Parent SMS – Half-yearly result day', body: 'Dear Parent, the Half-yearly result of your ward will be shared on Saturday, 9:00 am – 12:00 noon in the classroom. Kindly attend. – FIS', aud: ['Primary', 'Middle', 'Secondary'], ack: false, hi: false, due: '' },
+  { type: 'Circular', title: 'Pre-primary Annual Day rehearsal timetable', body: 'Rehearsals will run from 10:30 am to 12:00 noon daily. Assistant teachers stay with their sections throughout.', aud: ['Pre-primary'], ack: true, hi: false, due: '' }
+];
+function annRows_() {
+  const s = annSheets_(), n = s.a.getLastRow();
+  return n > 1 ? s.a.getRange(2, 1, n - 1, 2).getValues().map(function (r) { try { return JSON.parse(r[1]); } catch (e) { return null; } }).filter(function (x) { return x && !x.del; }) : [];
+}
+function annLog_() {
+  const s = annSheets_(), n = s.l.getLastRow();
+  return n > 1 ? s.l.getRange(2, 1, n - 1, 4).getValues().map(function (r) { return { id: clean_(r[0]), n: clean_(r[1]), k: clean_(r[2]) === 'Acknowledged' ? 'a' : 's', t: r[3] instanceof Date ? r[3].getTime() : Number(new Date(r[3])) || 0 }; }) : [];
+}
+function annList(name) {
+  const list = annRows_().sort(function (x, y) { return (y.at || 0) - (x.at || 0); });
+  const me = {}; name = clean_(name).toLowerCase();
+  if (name) annLog_().forEach(function (r) { if (r.n.toLowerCase() !== name) return; const m = me[r.id] || (me[r.id] = {}); if (!m[r.k]) m[r.k] = r.t; });
+  return { list: list, me: me, now: Date.now() };
+}
+function annMark(id, name, kind) {
+  id = clean_(id); name = clean_(name).slice(0, 80); if (!id || !name) throw new Error('Choose your name first.');
+  const a = annRows_().filter(function (x) { return x.id === id; })[0]; if (!a) throw new Error('This announcement was removed.');
+  const k = kind === 'a' ? 'a' : 's';
+  const lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    const log = annLog_(), lo = name.toLowerCase(), have = {};
+    log.forEach(function (r) { if (r.id === id && r.n.toLowerCase() === lo) have[r.k] = r.t; });
+    const now = new Date(), add = [];
+    if (!have.s) { add.push([id, name, 'Seen', now, a.title]); have.s = now.getTime(); }
+    if (k === 'a' && !have.a) { add.push([id, name, 'Acknowledged', now, a.title]); have.a = now.getTime(); }
+    if (add.length) { const l = annSheets_().l; l.getRange(l.getLastRow() + 1, 1, add.length, 5).setValues(add); }
+    return have;
+  } finally { lock.releaseLock(); }
+}
+function annSave(pin, a) {
+  if (!checkPin(pin)) throw new Error('Wrong PIN');
+  a = a || {}; const s = annSheets_();
+  const types = ['Notice', 'Circular', 'SMS'];
+  const o = { type: types.indexOf(a.type) >= 0 ? a.type : 'Notice', title: clean_(a.title).slice(0, 160), body: String(a.body || '').slice(0, 6000),
+    aud: (a.aud || []).map(clean_).filter(Boolean).slice(0, 8), ack: !!a.ack, hi: !!a.hi, due: clean_(a.due).slice(0, 16), by: clean_(a.by).slice(0, 80) || 'Admin' };
+  if (!o.title) throw new Error('Add a title.');
+  if (!o.aud.length) o.aud = ['All staff'];
+  const lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    const n = s.a.getLastRow(), ids = n > 1 ? s.a.getRange(2, 1, n - 1, 1).getValues().map(function (r) { return clean_(r[0]); }) : [];
+    const i = a.id ? ids.indexOf(clean_(a.id)) : -1;
+    if (i >= 0) { const old = JSON.parse(s.a.getRange(i + 2, 2).getValue()); o.id = old.id; o.at = old.at; o.edited = Date.now(); s.a.getRange(i + 2, 2, 1, 2).setValues([[JSON.stringify(o), new Date()]]); }
+    else { o.id = 'a' + Date.now().toString(36); o.at = Date.now(); s.a.getRange(n + 1, 1, 1, 3).setValues([[o.id, JSON.stringify(o), new Date()]]); }
+    return o;
+  } finally { lock.releaseLock(); }
+}
+function annDel(pin, id) {
+  if (!checkPin(pin)) throw new Error('Wrong PIN');
+  const s = annSheets_(), n = s.a.getLastRow(); if (n < 2) return false;
+  const ids = s.a.getRange(2, 1, n - 1, 1).getValues().map(function (r) { return clean_(r[0]); }), i = ids.indexOf(clean_(id));
+  if (i < 0) return false;
+  const o = JSON.parse(s.a.getRange(i + 2, 2).getValue()); o.del = Date.now(); s.a.getRange(i + 2, 2, 1, 2).setValues([[JSON.stringify(o), new Date()]]);
+  return true;
+}
+function annReport(pin) { if (!checkPin(pin)) throw new Error('Wrong PIN'); return annLog_(); }
