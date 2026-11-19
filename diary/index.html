@@ -1,322 +1,314 @@
-<title>Diary Report – FIS</title>
+<!DOCTYPE html>
+<html lang="en">
+<head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#16467A">
-<link rel="icon" href="../fis/fis-icon-192.png">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Source+Sans+3:wght@400;500;600;700&display=swap">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#1F2D5A">
+<title>Diary &amp; Remarks · FIS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-/* Layout: sticky control bar (date, class chips, section tabs) over a one-column list of student cards, each with five tap-to-cycle marks; report sheet slides up from the bottom. */
 :root{
-  --bg:#f3f5f8; --card:#ffffff; --ink:#0e1a2b; --muted:#5a6678; --line:#e0e5ec;
-  --accent:#16467a; --accent-ink:#ffffff; --accent-soft:#e7eef6;
-  --ok:#1d6b49; --ok-soft:#e2f1e9; --bad:#9e3a33; --bad-soft:#f7e7e5; --warn:#855710; --warn-soft:#f9efd9;
-  --font-display:"Manrope","Segoe UI",system-ui,sans-serif;
-  --font-body:"Source Sans 3","Segoe UI",system-ui,sans-serif;
-}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --bg:#0e1622; --card:#161f2d; --ink:#e7edf6; --muted:#97a4b8; --line:#243246;
-    --accent:#86abd8; --accent-ink:#0e1622; --accent-soft:#1c2c44;
-    --ok:#62c796; --ok-soft:#14352a; --bad:#f08c84; --bad-soft:#3b1f1d; --warn:#e8b861; --warn-soft:#3a2c0f;
-    color-scheme:dark;
-  }
-}
-:root[data-theme="dark"]{
-  --bg:#0e1622; --card:#161f2d; --ink:#e7edf6; --muted:#97a4b8; --line:#243246;
-  --accent:#86abd8; --accent-ink:#0e1622; --accent-soft:#1c2c44;
-  --ok:#62c796; --ok-soft:#14352a; --bad:#f08c84; --bad-soft:#3b1f1d; --warn:#e8b861; --warn-soft:#3a2c0f;
-  color-scheme:dark;
+  --navy:#1F2D5A;--navy2:#16214A;--navy-soft:#E8ECF6;--gold:#E3A94F;--gold-soft:#FBF1DF;--gold-ink:#8A5B12;
+  --plum:#5F3585;--plum-soft:#F1EAF8;--rose:#C2385B;--rose-soft:#FBE8EE;
+  --bg:#F5F3EE;--card:#FFFFFF;--ink:#1B2340;--mute:#646B80;--faint:#9AA0B1;--line:#E6E2D8;--line2:#EFECE4;
+  --ok:#2E7D5B;--ok-soft:#E4F3EB;--bad:#C0353F;--bad-soft:#FBE7E8;--warn:#A8670A;--warn-soft:#FDF1DC;--sky:#1B74AB;--sky-soft:#E3F2FB;
+  --head:'Lora',Georgia,'Times New Roman',serif;--body:Inter,system-ui,-apple-system,'Segoe UI',sans-serif;
+  --r:16px;--sh:0 1px 2px rgba(20,25,60,.05),0 8px 24px rgba(20,25,60,.05);
 }
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.35;
-  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 96px}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-family:var(--body);background:var(--bg);color:var(--ink);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased;padding-bottom:calc(84px + env(safe-area-inset-bottom))}
 button{font:inherit;color:inherit;cursor:pointer}
-button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-.wrap{max-width:720px;margin:0 auto}
-header.top{padding-top:14px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
-h1{font-family:var(--font-display);font-size:26px;line-height:1.1;margin:0;letter-spacing:-.01em}
-.sub{color:var(--muted);font-size:14px;margin-top:2px}
-.datebox{display:flex;flex-direction:column;gap:2px}
-.datebox label{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
-.datebox input{font:inherit;font-weight:600;padding:8px 10px;border:1.5px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
-.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:10px 0 8px;margin-top:8px;border-bottom:1px solid var(--line)}
-body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
-.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin}
-.chip{flex:0 0 auto;min-width:44px;height:40px;padding:0 12px;border:1.5px solid var(--line);background:var(--card);border-radius:20px;font-weight:600;position:relative}
-.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-.chip .dot{position:absolute;top:4px;right:5px;width:8px;height:8px;border-radius:50%;background:var(--ok)}
-.tabs{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-.tab{height:36px;padding:0 16px;border:1.5px solid var(--line);background:var(--card);border-radius:8px;font-weight:600}
-.tab[aria-selected="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
-.stats{margin-left:auto;display:flex;gap:10px;font-size:13px;color:var(--muted);flex-wrap:wrap;font-variant-numeric:tabular-nums}
-.stats b{color:var(--ink)}
-.stats .bad b{color:var(--bad)} .stats .warn b{color:var(--warn)}
-.status{font-size:13px;color:var(--muted);padding:8px 0 0;min-height:24px}
-.list{display:flex;flex-direction:column;gap:8px;margin-top:8px}
-.stu{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 10px 10px 12px}
-.stu.absent{background:var(--bad-soft)}
-.head{display:flex;align-items:center;gap:10px;min-width:0}
-.roll{font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px;width:22px;flex:0 0 auto}
-.nm{font-weight:600;flex:1 1 auto;min-width:0;overflow-wrap:anywhere}
-.pen{flex:0 0 auto;width:40px;height:36px;border:1.5px solid var(--line);background:transparent;border-radius:8px;color:var(--muted);font-size:13px;font-weight:600}
-.pen.has{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
-.marks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:8px}
-.mk{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-height:50px;border:1.5px solid var(--line);background:var(--bg);border-radius:9px;padding:4px 2px}
-.mk small{font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600}
-.mk span{font-weight:700;font-size:14px}
-.mk.ok{background:var(--ok-soft);border-color:var(--ok)} .mk.ok span{color:var(--ok)}
-.mk.bad{background:var(--bad-soft);border-color:var(--bad)} .mk.bad span{color:var(--bad)}
-.mk.warn{background:var(--warn-soft);border-color:var(--warn)} .mk.warn span{color:var(--warn)}
-.mk:disabled{opacity:.35;cursor:default}
-.sumwrap{max-height:34vh;overflow-y:auto;margin-top:4px}
-.stbl{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
-.stbl th{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600;text-align:left;padding:5px 8px;border-bottom:1px solid var(--line)}
-.stbl td{padding:5px 8px;border-bottom:1px solid var(--line);vertical-align:top}
-.stbl tr.cur td{background:var(--accent-soft)}
-.stbl .sec1{font-weight:700;background:none;border:0;color:var(--accent);padding:0;cursor:pointer;font-size:14px}
-.stbl .hot{color:var(--bad);font-weight:700} .stbl .wn{color:var(--warn);font-weight:700}
-.stbl .xd td{background:var(--bg);font-size:13px;line-height:1.5}
-.stbl .xd div{padding:2px 0} .stbl .xd small{color:var(--muted)}
-.stbl .ns{font-size:11px;color:var(--muted);display:block}
-.stbl td.dnames{font-size:12.5px;line-height:1.4;min-width:140px}
-.stbl td.dnames div{padding:1px 0} .stbl td.dnames small{color:var(--muted)} .stbl td.dnames .muted{color:var(--muted)}
-.pen.all{width:auto;padding:0 10px}
-.subbar{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px 12px;margin-bottom:8px;border:1.5px solid var(--warn);background:var(--warn-soft);border-radius:10px}
-.subbar.done{border-color:var(--ok);background:var(--ok-soft)}
-.subbar .subtxt{font-size:13px;line-height:1.35}
-.subbar .btn{flex:0 0 auto;min-height:40px;padding:0 14px;border-radius:9px;border:0;background:var(--accent);color:#fff;font-weight:700;cursor:pointer}
-.rem{margin-top:8px}
-.rem textarea{width:100%;font:inherit;padding:8px 10px;border:1.5px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);resize:vertical;min-height:62px}
-.fab{position:fixed;left:0;right:0;bottom:0;padding:10px max(16px,env(safe-area-inset-left,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));background:linear-gradient(transparent,var(--bg) 35%);z-index:6}
-.fab .wrap{display:flex;gap:8px}
-.btn{height:48px;border-radius:12px;border:1.5px solid var(--accent);background:var(--accent);color:var(--accent-ink);font-weight:700;padding:0 18px;flex:1}
-.btn.alt{background:var(--card);color:var(--accent)}
-.sheet{position:fixed;inset:0;z-index:20;background:rgba(10,16,28,.55);display:flex;align-items:flex-end;justify-content:center}
-.sheet[hidden]{display:none}
-.panel{background:var(--card);width:100%;max-width:720px;max-height:88%;border-radius:18px 18px 0 0;display:flex;flex-direction:column;padding:14px max(16px,env(safe-area-inset-left,0px)) calc(14px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));gap:10px}
-.panel h2{font-family:var(--font-display);font-size:20px;margin:0}
-.scope{display:flex;gap:6px;flex-wrap:wrap}
-#rtext{flex:1 1 auto;min-height:200px;width:100%;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13.5px;line-height:1.45;padding:10px;border:1.5px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);resize:none}
-.opt{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--muted)}
-.opt input{width:20px;height:20px}
-.row{display:flex;gap:8px}
-.empty{padding:30px 10px;text-align:center;color:var(--muted)}
-.toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:30;max-width:90%}
-.toast[hidden]{display:none}
-.nav{display:flex;gap:6px;margin-top:10px}
-.nav .tab{flex:1;height:42px}
-.dsub{font-size:13px;color:var(--muted);padding:2px 0 4px}
-h2.sec{font-family:var(--font-display);font-size:18px;margin:18px 0 8px}
-.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:8px;margin-top:10px}
-.tile{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:10px 12px;border:1.5px solid var(--line);border-radius:12px;background:var(--card)}
-.tile[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
-.tile b{font-family:var(--font-display);font-size:26px;line-height:1;font-variant-numeric:tabular-nums}
-.tile small{font-size:12px;color:var(--muted);font-weight:600}
-.tile.t-warn b{color:var(--warn)} .tile.t-bad b{color:var(--bad)} .tile.t-ok b{color:var(--ok)}
-.tscroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--card)}
-.tbl{border-collapse:collapse;width:100%;min-width:520px;font-size:14px;font-variant-numeric:tabular-nums}
-.tbl th,.tbl td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
-.tbl th:first-child,.tbl td:first-child{text-align:left}
-.tbl th{font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600}
-.tbl tr:last-child td{border-bottom:0}
-.tbl tr.me td{background:var(--accent-soft)}
-.tbl td.hot{color:var(--bad);font-weight:700}
-.tbl button.lnk{background:none;border:0;color:var(--accent);font-weight:700;padding:4px 0}
-.filters{display:flex;gap:6px;flex-wrap:wrap}
-.item{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
-.item.done{opacity:.62}
-.ihead{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.pill{font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
-.pill.warn{background:var(--warn-soft);color:var(--warn);border-color:var(--warn)}
-.pill.bad{background:var(--bad-soft);color:var(--bad);border-color:var(--bad)}
-.pill.ok{background:var(--ok-soft);color:var(--ok);border-color:var(--ok)}
-.pill.acc{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
-.iname{font-weight:700}
-.iwhere{color:var(--muted);font-size:13px;margin-left:auto}
-.itext{font-size:15px;overflow-wrap:anywhere}
-.arow{display:flex;gap:6px;flex-wrap:wrap}
-.arow select,.arow input{font:inherit;min-width:0;padding:8px 10px;border:1.5px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
-.arow select{flex:1 1 150px}.arow input{flex:2 1 160px}
-.srow{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.sbtn{height:40px;border:1.5px solid var(--line);background:var(--bg);border-radius:8px;font-weight:600;font-size:14px}
-.sbtn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-.fab[hidden]{display:none}
-.when{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
-.sbtn-go{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-.iss{display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap}
-.rem-text{flex:1 1 200px;min-width:0;font-size:16px;font-weight:500}
-.streak{font-size:12.5px;font-weight:700;color:var(--warn)} .streak.hot{color:var(--bad)}
-.logl{font-size:13.5px;color:var(--ok);font-weight:600}
-.flatbar{margin-top:12px;padding-bottom:6px}
-.row2{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:12px}
-.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
-.kpi b{font-family:var(--font-display);font-size:28px;line-height:1.05;font-variant-numeric:tabular-nums}
-.kpi span{font-size:12.5px;color:var(--muted);font-weight:600}
-.kpi.w b{color:var(--warn)} .kpi.a b{color:var(--accent)} .kpi.b b{color:var(--bad)}
-h3.grp{font-family:var(--font-display);font-size:13px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:14px 0 2px;font-weight:700}
-.summary{font-size:13px;color:var(--muted);font-weight:600;padding:2px 2px 0}
-.ic{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px}
-.ic-head{display:flex;align-items:center;gap:10px;min-width:0}
-.ic-name{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
-.ic-name b{font-family:var(--font-display);font-size:16px;font-weight:700;overflow-wrap:anywhere}
-.ic-name small{font-size:12.5px;color:var(--muted)}
-.stat{flex:0 0 auto;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;white-space:nowrap}
-.stat.ok{background:var(--ok-soft);color:var(--ok)} .stat.warn{background:var(--warn-soft);color:var(--warn)}
-.stat.acc{background:var(--accent-soft);color:var(--accent)} .stat.mute{background:var(--bg);color:var(--muted)}
-.ic-body{display:flex;flex-direction:column;gap:8px}
-.quote{margin:0;padding:10px 12px;background:var(--bg);border-radius:10px;font-size:16px;line-height:1.45;overflow-wrap:anywhere}
-.meta{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
-.flag{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:15px}
-.flag-l{font-weight:600}
-.flag-s{font-size:12.5px;font-weight:700;color:var(--warn)} .flag-s.hot{color:var(--bad)}
-.dot2{width:8px;height:8px;border-radius:50%;flex:0 0 auto;background:var(--muted)} .dot2.w{background:var(--warn)} .dot2.b{background:var(--bad)}
-.tl{display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--line);padding-top:10px}
-.tl-row{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;align-items:baseline}
-.tl-role{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:6px;grid-row:span 2}
-.tl-role.pl{background:var(--accent-soft);color:var(--accent)} .tl-role.ad{background:var(--ok-soft);color:var(--ok)}
-.tl-text{font-size:15px;overflow-wrap:anywhere}
-.tl-time{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
-.qrow{display:flex;gap:6px;flex-wrap:wrap}
-.qbtn{height:36px;padding:0 12px;border:1.5px solid var(--line);background:var(--card);border-radius:8px;font-weight:600;font-size:14px}
-.arow2{display:flex;gap:6px;flex-wrap:wrap}
-.arow2 input{flex:1 1 180px;min-width:0;font:inherit;padding:9px 11px;border:1.5px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
-.gobtn{height:40px;padding:0 16px;border-radius:8px;border:1.5px solid var(--accent);background:var(--accent);color:var(--accent-ink);font-weight:700}
-.tab[aria-selected="true"]{font-weight:700}
-.tbl th{white-space:normal;text-align:right;vertical-align:bottom}
-.tbl th:first-child{text-align:left}
-@media (prefers-reduced-motion:no-preference){.mk,.chip,.tab{transition:background .12s,border-color .12s}}
+button:disabled{opacity:.45;cursor:default}
+input,select,textarea{font:inherit;color:var(--ink)}
+:focus-visible{outline:3px solid rgba(227,169,79,.55);outline-offset:2px}
+[hidden]{display:none!important}
 
-.drow{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}
-.drow label{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;display:flex;flex-direction:column;gap:2px}
-.drow input{font:inherit;font-size:15px;padding:8px 10px;border:1.5px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
-.drow input[type=search]{flex:1 1 140px;min-width:120px}
-.dt{border-collapse:collapse;width:100%;min-width:760px;font-size:14px}
-.dt th{font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600;text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);background:var(--bg)}
-.dt td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}
-.dt td.nw{white-space:nowrap}.dt td.nm2{font-weight:700;min-width:120px}.dt td.rmk{min-width:200px}
-.dt small{display:block;color:var(--muted);font-size:12px}
-.dt .eline{margin-bottom:4px}.dt .dash{color:var(--muted)}
-.lnk2{background:none;border:0;color:var(--accent);font-weight:700;padding:4px 0;font-size:13px}
-.xr td{background:var(--accent-soft)}
-.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:8px;margin-top:10px}
-.stile{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:9px 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);text-align:left}
-.stile b{font-size:16px}.stile small{font-size:11.5px;color:var(--muted);font-weight:600}
-.stile.hot{border-color:var(--accent)}.stile.hot small{color:var(--accent)}
-.stile.on{background:var(--accent-soft);border-color:var(--accent)}
+/* header */
+header{background:var(--navy);color:#fff;position:sticky;top:0;z-index:30;border-bottom:3px solid var(--gold);box-shadow:0 4px 18px rgba(15,22,50,.28);padding:10px 14px 0;padding-top:calc(10px + env(safe-area-inset-top))}
+.hrow{display:flex;align-items:center;gap:10px;max-width:980px;margin:0 auto}
+.logo{width:42px;height:42px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.logo img{width:34px;height:auto}
+.ttl{flex:1;min-width:0}
+.ttl h1{margin:0;font-family:var(--head);font-weight:600;font-size:19px;line-height:1.15;letter-spacing:.1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ttl a{display:block;font-size:10.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);text-decoration:none;margin-top:2px}
+.hdate{border:0;border-radius:10px;padding:7px 8px;font-weight:600;font-size:13.5px;background:rgba(255,255,255,.96);color:var(--navy2);max-width:142px}
+nav{display:flex;gap:6px;overflow-x:auto;padding:10px 0 11px;max-width:980px;margin:0 auto;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav button{flex:none;display:flex;align-items:center;gap:6px;font-family:var(--head);font-weight:600;font-size:14.5px;color:#DCE1F0;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:7px 11px}
+nav button.on{background:var(--gold);color:var(--navy2);border-color:var(--gold)}
+nav button em{font-style:normal;font-family:var(--body);font-size:11px;font-weight:800;min-width:19px;height:19px;line-height:19px;border-radius:10px;text-align:center;padding:0 5px;background:var(--rose);color:#fff}
+nav button.on em{background:var(--navy);color:var(--gold)}
 
-.who{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--muted);padding-top:8px}
+main{max-width:980px;margin:0 auto;padding:12px 12px 24px}
+@media (max-width:420px){main{padding:10px 10px 20px}.ttl h1{font-size:17px}.hdate{max-width:128px;font-size:13px}}
+
+/* generic */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);margin-bottom:12px;overflow:hidden}
+.card>.pad{padding:14px 14px}
+.cardh{display:flex;align-items:center;gap:10px;padding:13px 14px 11px;border-bottom:1px solid var(--line2)}
+.cardh h2{margin:0;font-family:var(--head);font-weight:600;color:var(--navy);font-size:18px;line-height:1.2;flex:1;min-width:0}
+.cardh h2 small{display:block;font-family:var(--body);font-size:12px;font-weight:600;color:var(--mute);margin-top:2px}
+.eyebrow{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);font-weight:700;margin:16px 2px 8px}
+.muted{color:var(--mute)} .small{font-size:12.5px}
+.btn{border:0;border-radius:11px;padding:10px 15px;font-weight:700;background:var(--navy);color:#fff;letter-spacing:.01em}
+.btn.gold{background:var(--gold);color:var(--navy2)}
+.btn.ghost{background:#F3F0E8;color:var(--navy);border:1px solid var(--line)}
+.btn.ok{background:var(--ok)}
+.btn.sm{padding:7px 11px;font-size:13px;border-radius:10px}
+.lnk{background:none;border:0;padding:4px 0;color:var(--navy);font-weight:700;font-size:13px;text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(31,45,90,.3)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sp{flex:1}
+.banner{border-radius:12px;padding:11px 13px;margin-bottom:12px;background:var(--warn-soft);color:#6E4508;font-size:14px;border:1px solid #F3DDB2}
+.banner.info{background:var(--navy-soft);color:var(--navy);border-color:#D6DDEF}
+.empty{padding:26px 16px;text-align:center;color:var(--mute);font-size:14px}
+.empty b{display:block;font-family:var(--head);font-size:17px;color:var(--navy);margin-bottom:4px;font-weight:600}
+.who{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mute);margin:0 2px 10px}
 .who b{color:var(--ink)}
-.who .lnkb{background:none;border:0;color:var(--accent);font-weight:700;padding:4px 0;font-size:13px;margin-left:auto}
-.home{color:var(--accent);font-weight:700;font-size:13px;text-decoration:none}
-.banner{margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--warn-soft);color:var(--warn);font-size:14px;overflow-wrap:anywhere}
-.banner.info{background:var(--accent-soft);color:var(--accent)}
-.authcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:14px;display:grid;gap:12px}
-.authcard h2{margin:0;font-family:var(--font-display);font-size:20px}
-.authcard p{margin:0;color:var(--muted);font-size:14px}
-.field{display:grid;gap:4px}
-.field label{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
-.field input,.field select{font:inherit;padding:10px 11px;border:1.5px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
-.authcard .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.ucard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.ucard .un{font-weight:700;flex:1 1 140px}.ucard small{color:var(--muted);display:block;font-weight:400}
-.ucard select{font:inherit;padding:7px 8px;border:1.5px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.rolepill{font-size:10.5px;font-weight:800;letter-spacing:.08em;padding:3px 8px;border-radius:20px;background:var(--navy-soft);color:var(--navy)}
+
+/* chips & segmented */
+.chips{display:flex;gap:6px;overflow-x:auto;padding:2px 1px 4px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;min-width:40px;height:38px;padding:0 12px;border-radius:20px;border:1px solid var(--line);background:#fff;font-weight:700;font-size:14px;color:var(--ink);position:relative}
+.chip.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.chip i{position:absolute;top:3px;right:3px;width:8px;height:8px;border-radius:50%;background:var(--gold);border:1.5px solid #fff}
+.chip.sm{height:32px;font-size:12.5px;min-width:0;padding:0 11px}
+.seg{display:flex;background:#F0EDE5;border-radius:12px;padding:3px;gap:3px;overflow-x:auto;scrollbar-width:none}
+.seg::-webkit-scrollbar{display:none}
+.seg button{flex:1 0 auto;border:0;background:none;border-radius:9px;padding:8px 12px;font-weight:700;font-size:13.5px;color:var(--mute);white-space:nowrap}
+.seg button.on{background:#fff;color:var(--navy);box-shadow:0 1px 3px rgba(20,25,60,.12)}
+.seg button em{font-style:normal;font-size:11px;font-weight:800;margin-left:5px;padding:1px 6px;border-radius:10px;background:var(--rose-soft);color:var(--rose)}
+.selector{padding:12px 12px 10px;display:grid;gap:9px}
+
+/* stat strip */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--line2)}
+.stat{padding:12px 6px 11px;text-align:center;border-right:1px solid var(--line2)}
+.stat:last-child{border-right:0}
+.stat b{display:block;font-family:var(--head);font-size:24px;font-weight:600;line-height:1.1;color:var(--navy)}
+.stat span{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--mute)}
+.stat.bad b{color:var(--bad)} .stat.warn b{color:var(--warn)} .stat.plum b{color:var(--plum)}
+
+/* summary groups */
+.groups{padding:4px 14px 12px}
+.grp{padding:10px 0;border-bottom:1px solid var(--line2)}
+.grp:last-child{border-bottom:0}
+.grp-h{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13.5px;margin-bottom:7px}
+.grp-h .dot{width:9px;height:9px;border-radius:50%;flex:none}
+.grp-h .n{margin-left:auto;font-size:12px;font-weight:800;color:var(--mute)}
+.names{display:flex;flex-wrap:wrap;gap:6px}
+.nm{display:inline-flex;align-items:baseline;gap:6px;border:0;border-radius:9px;padding:6px 10px;font-size:14px;font-weight:600;line-height:1.25;text-align:left}
+.nm small{font-size:11px;font-weight:700;opacity:.75}
+.t-bad{background:var(--bad-soft);color:#8E1F28}.t-warn{background:var(--warn-soft);color:#7A4A05}.t-plum{background:var(--plum-soft);color:#4A2768}
+.t-sky{background:var(--sky-soft);color:#155985}.t-ok{background:var(--ok-soft);color:#1F5E43}.t-mute{background:#F0EEE8;color:var(--mute)}.t-navy{background:var(--navy-soft);color:var(--navy)}
+.d-bad{background:var(--bad)}.d-warn{background:var(--warn)}.d-plum{background:var(--plum)}.d-sky{background:var(--sky)}.d-ok{background:var(--ok)}.d-mute{background:var(--faint)}.d-navy{background:var(--navy)}.d-gold{background:var(--gold)}
+.allclear{display:flex;gap:10px;align-items:center;padding:14px;color:var(--ok);font-weight:700}
+.secs{display:flex;gap:6px;flex-wrap:wrap;padding:10px 14px;border-top:1px solid var(--line2);background:#FBFAF7}
+.secpill{border:1px solid var(--line);background:#fff;border-radius:10px;padding:6px 10px;font-size:12.5px;font-weight:700;color:var(--ink)}
+.secpill span{color:var(--mute);font-weight:600;margin-left:4px}
+.secpill.on{border-color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy)}
+.secpill.done span{color:var(--ok)}
+
+/* marking list */
+.kid{padding:12px 14px;border-bottom:1px solid var(--line2);scroll-margin-top:150px}
+.kid:last-child{border-bottom:0}
+.kid.flash{animation:fl 1.6s ease}
+@keyframes fl{0%,40%{background:var(--gold-soft)}100%{background:transparent}}
+.kid-h{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.roll{flex:none;width:28px;height:28px;border-radius:50%;background:var(--navy-soft);color:var(--navy);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.kid-n{flex:1;min-width:0;font-weight:700;font-size:15.5px;line-height:1.25}
+.kid-n small{display:block;font-size:11.5px;font-weight:500;color:var(--faint);margin-top:1px}
+.mini{border:1px solid var(--line);background:#fff;border-radius:10px;padding:6px 10px;font-size:12.5px;font-weight:700;color:var(--navy);flex:none}
+.mini.on{background:var(--gold-soft);border-color:#EDD3A3;color:var(--gold-ink)}
+.mk{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.mb{border:0;border-radius:10px;padding:7px 4px 8px;background:#F3F1EC;text-align:center;min-height:48px}
+.mb small{display:block;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--mute)}
+.mb span{display:block;font-weight:800;font-size:14.5px;margin-top:1px;color:var(--faint)}
+.mb.ok{background:var(--ok-soft)}.mb.ok span{color:var(--ok)}
+.mb.bad{background:var(--bad-soft)}.mb.bad span{color:var(--bad)}.mb.bad small{color:#9E3A42}
+.mb.warn{background:var(--warn-soft)}.mb.warn span{color:var(--warn)}.mb.warn small{color:#8A5B12}
+.kid.abs .mb:not(.att){opacity:.35}
+.note{margin-top:9px}
+.note textarea{width:100%;min-height:62px;border:1px solid var(--line);border-radius:11px;padding:9px 11px;background:#FBFAF7;resize:vertical;font-size:14.5px}
+.note textarea:focus{outline:0;border-color:var(--gold);box-shadow:0 0 0 3px rgba(227,169,79,.25);background:#fff}
+
+/* bottom action bar */
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:25;background:rgba(255,255,255,.96);backdrop-filter:blur(8px);border-top:1px solid var(--line);padding:10px 12px calc(10px + env(safe-area-inset-bottom));box-shadow:0 -6px 20px rgba(20,25,60,.07)}
+.dock .in{max-width:980px;margin:0 auto;display:flex;gap:8px}
+.dock .btn{flex:1;padding:12px 8px;font-size:14px}
+body.dock-on .toast{bottom:calc(92px + env(safe-area-inset-bottom))}
+.status{font-size:12px;color:var(--mute);text-align:right;margin:-4px 4px 8px}
+
+/* remark / item cards */
+.rc{background:#fff;border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);margin-bottom:12px;overflow:hidden}
+.rc.over{border-color:#E9B4B9;box-shadow:0 0 0 2px rgba(192,53,63,.12),var(--sh)}
+.rc-h{display:flex;align-items:center;gap:10px;padding:12px 14px 0}
+.rc-n{flex:1;min-width:0;font-weight:700;font-size:15.5px;line-height:1.25}
+.rc-n .cs{display:inline-block;margin-left:6px;font-size:11.5px;font-weight:800;color:var(--navy);background:var(--navy-soft);padding:2px 7px;border-radius:7px;vertical-align:1px}
+.pill{flex:none;font-size:11px;font-weight:800;letter-spacing:.03em;padding:4px 9px;border-radius:20px;white-space:nowrap}
+.rc-q{margin:10px 14px 0;padding:11px 13px;background:#FBF8F1;border-left:3px solid var(--gold);border-radius:4px 12px 12px 4px;font-size:15.5px;line-height:1.5;color:#232A45;white-space:pre-line;overflow-wrap:anywhere}
+.rc-m{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 14px 0;font-size:12px;color:var(--mute)}
+.tag{font-size:11px;font-weight:700;padding:3px 8px;border-radius:7px}
+.flags{display:flex;flex-wrap:wrap;gap:6px;margin:10px 14px 0}
+.flag{font-size:13px;font-weight:700;padding:6px 10px;border-radius:9px}
+.flag small{font-weight:600;opacity:.8;margin-left:4px}
+.tl{margin:10px 14px 0;border-left:2px solid var(--line);padding-left:12px;display:grid;gap:9px}
+.te{position:relative;font-size:13.5px;line-height:1.4}
+.te::before{content:"";position:absolute;left:-17px;top:5px;width:8px;height:8px;border-radius:50%;background:var(--navy);box-shadow:0 0 0 2px #fff}
+.te.fo::before{background:var(--plum)}
+.te.fu::before{background:var(--sky)}.te.fu.late::before{background:var(--bad)}.te.fu.dn::before{background:var(--ok)}
+.te .rb{font-size:10px;font-weight:800;letter-spacing:.08em;padding:2px 6px;border-radius:6px;margin-right:6px;vertical-align:1px}
+.rb.pl{background:var(--navy-soft);color:var(--navy)}.rb.fo{background:var(--plum-soft);color:var(--plum)}
+.te b{font-weight:700}
+.te .tm{display:block;font-size:11.5px;color:var(--faint);margin-top:1px}
+.te .ed{display:inline-flex;gap:10px;margin-left:8px}
+.te textarea{width:100%;margin-top:6px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;min-height:56px}
+.due{display:inline-block;font-size:11.5px;font-weight:800;padding:2px 8px;border-radius:20px;margin-left:4px}
+.rc-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:12px;border-top:1px solid var(--line2)}
+.rc-bar button{border:0;background:#fff;padding:11px 4px 10px;font-size:12.5px;font-weight:700;color:var(--navy);border-right:1px solid var(--line2);display:flex;flex-direction:column;align-items:center;gap:3px}
+.rc-bar button:last-child{border-right:0}
+.rc-bar svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.rc-bar button.on{background:var(--navy);color:#fff}
+.rc-bar button.done{color:var(--ok)}
+.rc-p{padding:12px 14px 14px;background:#FBFAF7;border-top:1px solid var(--line2)}
+.rc-p .lab{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--mute);margin-bottom:8px}
+.words{display:flex;flex-wrap:wrap;gap:7px}
+.word{border:1px solid var(--line);background:#fff;border-radius:20px;padding:8px 14px;font-weight:700;font-size:13.5px;color:var(--navy)}
+.word.sug{border-color:#EDD3A3;background:var(--gold-soft);color:var(--gold-ink)}
+.rc-p textarea,.rc-p input[type=text]{width:100%;border:1px solid var(--line);border-radius:11px;padding:10px 11px;background:#fff;font-size:14.5px}
+.rc-p textarea{min-height:70px;resize:vertical}
+.rc-p input[type=date],.rc-p input[type=time]{border:1px solid var(--line);border-radius:10px;padding:8px 9px;background:#fff}
+.dgrp{font-family:var(--head);font-weight:600;color:var(--navy);font-size:16px;margin:18px 4px 9px;display:flex;align-items:center;gap:8px}
+.dgrp::before{content:"";width:4px;height:20px;border-radius:2px;background:var(--gold)}
+.dgrp small{font-family:var(--body);font-size:12px;color:var(--mute);font-weight:600}
+
+/* follow-up strip */
+.fus{background:linear-gradient(135deg,#1F2D5A,#2C3D73);color:#fff;border-radius:var(--r);padding:12px 14px;margin-bottom:12px;box-shadow:var(--sh)}
+.fus h3{margin:0 0 8px;font-family:var(--head);font-weight:600;font-size:16px;display:flex;align-items:center;gap:8px}
+.fus .it{display:flex;gap:10px;align-items:center;padding:8px 0;border-top:1px solid rgba(255,255,255,.12);font-size:13.5px}
+.fus .it b{font-weight:700}
+.fus .it .due{background:rgba(255,255,255,.16);color:#fff}
+.fus .it .due.late{background:var(--rose)}
+.fus .it button{margin-left:auto;flex:none}
+
+/* dashboard */
+.period{margin-bottom:12px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(106px,1fr));gap:8px}
+.tile{position:relative;text-align:left;border:1px solid var(--line);background:#fff;border-radius:14px;padding:12px 12px 11px;box-shadow:0 1px 2px rgba(20,25,60,.04)}
+.tile b{display:block;font-family:var(--head);font-size:24px;font-weight:600;line-height:1.05;color:var(--navy)}
+.tile span{display:block;font-size:12.5px;font-weight:700;margin-top:3px;color:var(--ink);line-height:1.25}
+.tile small{display:block;font-size:11px;color:var(--mute);margin-top:1px}
+.tile::after{content:"";position:absolute;left:12px;right:12px;bottom:0;height:3px;border-radius:3px 3px 0 0;background:var(--c,var(--navy))}
+.tile.on{border-color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy)}
+.tile.zero b{color:var(--faint)}
+.rep{margin-top:4px}
+.tw{overflow:auto;max-height:70vh}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th{position:sticky;top:0;background:#F7F5F0;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);font-weight:700;text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:10px 10px;border-bottom:1px solid var(--line2);vertical-align:top}
+td.nw{white-space:nowrap}
+td .s{display:block;font-size:11.5px;color:var(--mute);margin-top:2px}
+tr:last-child td{border-bottom:0}
+
+/* forms / auth / settings */
+.field{display:grid;gap:5px;margin-bottom:11px}
+.field label{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--mute)}
+.field input,.field select,.inp{border:1px solid var(--line);border-radius:11px;padding:11px 12px;background:#fff;width:100%}
+.field input:focus,.field select:focus,.inp:focus{outline:0;border-color:var(--gold);box-shadow:0 0 0 3px rgba(227,169,79,.25)}
+.auth{max-width:440px;margin:18px auto}
+.auth .hero{text-align:center;padding:22px 16px 6px}
+.auth .hero h2{font-family:var(--head);font-weight:600;color:var(--navy);margin:0 0 6px;font-size:23px}
+.auth .hero p{margin:0;color:var(--mute);font-size:14px}
+.urow{display:flex;gap:9px;align-items:center;flex-wrap:wrap;padding:11px 14px;border-bottom:1px solid var(--line2)}
+.urow:last-child{border-bottom:0}
+.urow .un{flex:1 1 150px;font-weight:700}
+.urow .un small{display:block;font-weight:500;color:var(--mute);font-size:12px}
+.urow select{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#fff}
+.search{width:100%;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff}
+
+/* sheet & toast */
+.sheet{position:fixed;inset:0;background:rgba(14,20,45,.5);z-index:60;display:flex;align-items:flex-end;justify-content:center}
+.sheet .panel{background:#fff;width:100%;max-width:640px;border-radius:20px 20px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom));max-height:88vh;overflow:auto;border-top:4px solid var(--gold)}
+.sheet h2{margin:0;font-family:var(--head);font-weight:600;color:var(--navy);font-size:19px}
+.sheet textarea{width:100%;min-height:42vh;border:1px solid var(--line);border-radius:12px;padding:11px;font:13px/1.45 ui-monospace,Menlo,Consolas,monospace;background:#FBFAF7}
+.toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--navy2);color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;z-index:70;box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:90vw;text-align:center}
+.sms-q{margin:10px 14px 0;padding:11px 13px;background:#F7F5F0;border-radius:12px;font-size:14px;white-space:pre-line}
+.sms-a{display:flex;gap:8px;padding:12px 14px 14px;flex-wrap:wrap}
+.sms-a input{flex:1 1 160px;border:1px solid var(--line);border-radius:10px;padding:9px 10px}
 </style>
+</head>
+<body>
+<header>
+  <div class="hrow">
+    <div class="logo"><img src="data:image/png;base64,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" alt="FIS"></div>
+    <div class="ttl"><h1>Diary &amp; Remarks</h1><a href="../fis/">‹ FIS Apps</a></div>
+    <input type="date" id="date" class="hdate" aria-label="Report date">
+  </div>
+  <nav id="nav" aria-label="Sections" hidden>
+    <button data-v="cm" type="button">CM</button>
+    <button data-v="pl" type="button">PL</button>
+    <button data-v="fo" type="button">FO</button>
+    <button data-v="dash" type="button">Dashboard</button>
+    <button data-v="set" type="button">Settings</button>
+  </nav>
+</header>
 
-<div class="wrap">
-  <header class="top">
-    <div>
-      <h1>Diary Report</h1>
-      <div class="sub"><a class="home" href="../fis/">‹ FIS apps</a> · Class Managers mark each child's diary in front of them</div>
-    </div>
-    <div class="datebox">
-      <label for="date">Report date</label>
-      <input id="date" type="date">
-    </div>
-  </header>
-
+<main>
   <div class="banner" id="banner" hidden></div>
   <div id="auth" hidden></div>
-  <div class="who" id="who" hidden></div>
   <div id="app" hidden>
-  <nav class="nav" id="nav" aria-label="View">
-    <button class="tab" type="button" data-view="mark" aria-selected="true">Marking</button>
-    <button class="tab" type="button" data-view="cls" aria-selected="false">Class (PL)</button>
-    <button class="tab" type="button" data-view="cen" aria-selected="false">Central</button>
-    <button class="tab" type="button" data-view="staff" aria-selected="false" id="navStaff" hidden>Staff</button>
-  </nav>
-
-  <div id="viewMark">
-  <div class="bar">
-    <div class="chips" id="chips" role="group" aria-label="Class"></div>
-    <div class="tabs" id="tabs" role="tablist" aria-label="Section"></div>
-    <div id="summary"></div>
+    <div class="who" id="who"></div>
+    <section id="vCM" hidden></section>
+    <section id="vPL" hidden></section>
+    <section id="vFO" hidden></section>
+    <section id="vDash" hidden></section>
+    <section id="vSet" hidden></section>
   </div>
-  <div class="status" id="status" aria-live="polite"></div>
-  <div class="list" id="list"></div>
-  </div>
+</main>
 
-  <div id="viewCls" hidden>
-    <div class="bar">
-      <div class="chips" id="pchips" role="group" aria-label="Class"></div>
-      <div class="tabs" id="ptabs" role="tablist" aria-label="Section"></div>
-      <div class="tabs" id="psegs" role="tablist" aria-label="Segment" style="margin-top:6px"></div>
-    </div>
-    <div class="status" id="psub"></div>
-    <div class="list" id="pitems"></div>
-  </div>
-
-  <div id="viewCen" hidden>
-    <div class="row2" style="margin-top:12px"><h2 class="sec" style="margin:0">Central dashboard</h2><button class="tab sbtn-go" id="cxl" type="button">Copy for Excel</button></div>
-    <div class="flatbar">
-      <div class="tabs" id="csegs" role="tablist" aria-label="Segment"></div>
-      <div id="cremctl">
-        <div class="drow"><label>From <input type="date" id="cfrom"></label><label>To <input type="date" id="cto"></label><input type="search" id="cq" placeholder="Search name" aria-label="Search name"></div>
-        <div class="chips" id="cchips" role="group" aria-label="Class scope" style="margin-top:8px"></div>
-        <div class="tabs" id="ctabs" role="tablist" aria-label="Section scope" style="margin-top:6px"></div>
-      </div>
-    </div>
-    <div id="cbody"></div>
-  </div>
-
-  <div id="viewStaff" hidden></div>
-  </div>
-</div>
-
-<div class="fab"><div class="wrap">
-  <button class="btn alt" id="btnAllPresent" type="button">Mark all present</button>
-  <button class="btn" id="btnReport" type="button">Make report</button>
+<div class="dock" id="dock" hidden><div class="in">
+  <button class="btn ghost" id="bAll" type="button">All present</button>
+  <button class="btn gold" id="bSubmit" type="button">Submit</button>
+  <button class="btn" id="bReport" type="button">Report</button>
 </div></div>
 
 <div class="sheet" id="sheet" hidden>
-  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="rtitle">
-    <div class="row" style="justify-content:space-between;align-items:center">
-      <h2 id="rtitle">Diary Remarks</h2>
-      <button class="tab" id="rclose" type="button">Close</button>
-    </div>
-    <div class="scope" id="scope">
-      <button class="tab" type="button" data-scope="class" aria-selected="true">This class</button>
-      <button class="tab" type="button" data-scope="all" aria-selected="false">All classes</button>
-    </div>
-    <label class="opt"><input id="optNames" type="checkbox"> Include defaulter names</label>
-    <textarea id="rtext" readonly aria-label="Report text"></textarea>
-    <div class="row"><button class="btn" id="rcopy" type="button">Copy report</button></div>
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="sTitle">
+    <div class="row" style="margin-bottom:10px"><h2 id="sTitle">Diary Remarks</h2><span class="sp"></span><button class="btn ghost sm" id="sClose" type="button">Close</button></div>
+    <div class="seg" id="sScope" style="margin-bottom:10px"><button type="button" data-s="class" class="on">This class</button><button type="button" data-s="all">All classes</button></div>
+    <label class="row small" style="margin-bottom:10px"><input type="checkbox" id="sNames"> Include defaulter names</label>
+    <textarea id="sText" readonly aria-label="Report text"></textarea>
+    <div class="row" style="margin-top:10px"><button class="btn" id="sCopy" type="button">Copy report</button></div>
   </div>
 </div>
 <div class="toast" id="toast" hidden></div>
 
 <script>
+/* ================= Diary & Remarks · FIS =================
+   Same Google Sheet backend as before (Apps Script web app). Roles: cm = Class Manager (CM),
+   pl = Class incharge (PL), admin = Front Office (FO). */
 function EMPTY_ROSTER(){ const r = {}; for (let c = 1; c <= 11; c++) r[c] = {A: []}; return r; }
 let ROSTER = EMPTY_ROSTER(), rosterVer = "";
 const rosterReady = () => Object.keys(ROSTER).some(c => Object.values(ROSTER[c]).some(l => l.length));
 const ORD = ["","1st","2nd","3rd","4th","5th","6th","7th","8th","9th","10th","11th"];
 const $ = id => document.getElementById(id);
 const el = (t, c, txt) => { const e = document.createElement(t); if (c) e.className = c; if (txt != null) e.textContent = txt; return e; };
+const btn = (c, txt, fn, title) => { const b = el("button", c, txt); b.type = "button"; if (fn) b.onclick = fn; if (title) b.setAttribute("aria-label", title); return b; };
+const ICON = {
+  check:'<path d="M5 12.5l4.2 4.2L19 7"/>',
+  bolt:'<path d="M13 3L5 14h6l-1 7 8-11h-6l1-7z"/>',
+  note:'<path d="M5 4h14v12H9l-4 4z"/><path d="M8.5 8.5h7M8.5 12h4.5"/>',
+  clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>'
+};
+const svg = k => '<svg viewBox="0 0 24 24" aria-hidden="true">' + ICON[k] + '</svg>';
 
 const API_URL = new URLSearchParams(location.search).get("api") || "https://script.google.com/macros/s/AKfycbyvWTDOKOQ8F0vD-oy9vchmq04GdhfZfgtpomgWg73rIa13gmkrFkpZsvQl9ISZKrSFQw/exec";
 let token = ""; try { token = localStorage.getItem("diary-token") || ""; } catch(e){}
 let me = null, ready = false, authMode = "login", users = [], refreshing = false;
-const ROLE_LABEL = {cm:"Class Manager", pl:"Class incharge (PL)", admin:"Admin / central team"};
+const ROLE_LABEL = {cm:"CM · Class Manager", pl:"PL · Class incharge", admin:"FO · Front Office"};
+const ROLE_SHORT = {cm:"CM", pl:"PL", admin:"FO"};
 const canMark = () => !!me && (me.role === "cm" || me.role === "admin");
 const canPL = () => !!me && (me.role === "pl" || me.role === "admin");
 const canAdmin = () => !!me && me.role === "admin";
@@ -326,49 +318,63 @@ async function api(fn, args){
   try { r = await fetch(API_URL, {method:"POST", redirect:"follow", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({fn, args:args || []})}); }
   catch(e){ throw new Error("Can't reach the server. Check your internet and try again."); }
   const txt = await r.text(); let j;
-  try { j = JSON.parse(txt); } catch(e){ throw new Error("The server didn't answer properly. Check the Apps Script deployment (Anyone can access)."); }
+  try { j = JSON.parse(txt); } catch(e){ throw new Error("The server didn't answer properly. Please try again."); }
   if (!j.ok) { if (/log in again/i.test(j.err || "")) { setToken(""); me = null; render(); } throw new Error(j.err || "Something went wrong."); }
   return j.v;
 }
 function banner(msg, info){ const b = $("banner"); b.textContent = msg || ""; b.hidden = !msg; b.className = "banner" + (info ? " info" : ""); }
+let toastT;
+function toast(t){ const e = $("toast"); e.textContent = t; e.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { e.hidden = true; }, 2400); }
+async function copyText(t, ok){ try { await navigator.clipboard.writeText(t); toast(ok || "Copied"); } catch(e){ toast("Copy is blocked here. Long-press to select."); } }
+
+/* ---------- dates & times ---------- */
+function todayStr(){ const d = new Date(), p = n => String(n).padStart(2,"0"); return d.getFullYear() + "-" + p(d.getMonth()+1) + "-" + p(d.getDate()); }
+function shiftDate(s, n){ const [y,m,d] = s.split("-").map(Number); const t = new Date(Date.UTC(y, m-1, d + n)), p = x => String(x).padStart(2,"0"); return t.getUTCFullYear() + "-" + p(t.getUTCMonth()+1) + "-" + p(t.getUTCDate()); }
+function dayGap(a, b){ return Math.round((new Date(b + "T00:00:00Z") - new Date(a + "T00:00:00Z")) / 864e5); }
+const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"], WD = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+function dmy(s){ const [y,m,d] = s.split("-"); return d + "-" + m + "-" + y; }
+function nice(s){ const [y,m,d] = s.split("-").map(Number); const w = new Date(Date.UTC(y,m-1,d)).getUTCDay(); return WD[w] + ", " + d + " " + MON[m-1]; }
+function hm(ms){ const d = new Date(ms); let h = d.getHours(); const ap = h >= 12 ? "pm" : "am"; h = h % 12 || 12; return h + ":" + String(d.getMinutes()).padStart(2,"0") + " " + ap; }
+function fmtT(ms){ if (!ms) return "time not recorded"; const d = new Date(ms); const ds = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0"); return (ds === todayStr() ? "Today" : d.getDate() + " " + MON[d.getMonth()]) + ", " + hm(ms); }
+function gap(from, to){ if (!from || !to) return ""; const m = Math.max(0, Math.round((to - from) / 60000)); return m < 1 ? "within a minute" : m < 60 ? m + " min" : m < 1440 ? Math.floor(m/60) + " h " + (m%60 ? (m%60) + " min" : "") : Math.floor(m/1440) + " d " + Math.floor((m%1440)/60) + " h"; }
+function until(ms){ const m = Math.round((ms - Date.now()) / 60000), a = Math.abs(m); const t = a < 60 ? a + " min" : a < 1440 ? Math.floor(a/60) + " h" + (a%60 ? " " + (a%60) + " min" : "") : Math.floor(a/1440) + " d"; return m >= 0 ? "in " + t : t + " overdue"; }
+
 let date = todayStr();
 let cls = 1, sec = "A";
 let docs = {};            // "date_cls" -> {date, cls, m:{}}
-const timers = {}, writing = {}, dirtyKeys = {};
+let acts = {};            // "date_1A9" -> {log:[...]}
+let smsRec = {};          // "1A9_def" -> {sentOn, sentAt, remark, by}
+const timers = {}, writing = {}, dirtyKeys = {}, aBusy = {};
 const openRem = new Set();
 
-function todayStr(){
-  const d = new Date(); const p = n => String(n).padStart(2,"0");
-  return d.getFullYear() + "-" + p(d.getMonth()+1) + "-" + p(d.getDate());
-}
-function dmy(s){ const [y,m,d] = s.split("-"); return d + "-" + m + "-" + y; }
-function docId(c){ return date + "_" + c; }
+function docId(c, dt){ return (dt || date) + "_" + c; }
 function getDoc(c){ const id = docId(c); if (!docs[id]) docs[id] = {date, cls:c, m:{}}; return docs[id]; }
-function sections(c){ return Object.keys(ROSTER[c]); }
+function sections(c){ return Object.keys(ROSTER[c] || {}); }
 function key(s, i){ return s + "-" + (i+1); }
-function mark(c, s, i, dt){ const d = docs[(dt || date) + "_" + c]; return (d && d.m[key(s,i)]) || {}; }
+function mark(c, s, i, dt){ const d = docs[docId(c, dt)]; return (d && d.m[key(s,i)]) || {}; }
 function firstName(n){ return n.trim().split(/\s+/)[0].toUpperCase(); }
+function title(n){ return n.trim().split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" "); }
 
-/* ---------- storage (Google Sheet through the Apps Script web app) ---------- */
+/* ---------- saving marks ---------- */
 function scheduleSave(c, k){
   const id = docId(c); (dirtyKeys[id] = dirtyKeys[id] || new Set()).add(k);
-  setStatus("Saving…");
-  clearTimeout(timers[id]);
-  timers[id] = setTimeout(() => flush(id), 500);
+  setStatus("Saving…"); clearTimeout(timers[id]); timers[id] = setTimeout(() => flush(id), 500);
 }
 async function flush(id){
-  if (!me || !API_URL) return;
+  if (!me) return;
   const keys = dirtyKeys[id]; if (!keys || !keys.size) return;
   if (writing[id]) { timers[id] = setTimeout(() => flush(id), 400); return; }
   writing[id] = true;
   const sent = Array.from(keys); keys.clear();
   const d = docs[id], set = {}, del = [];
   sent.forEach(k => { if (d.m[k]) set[k] = d.m[k]; else del.push(k); });
-  try { await api("saveMarks", [token, d.date, d.cls, set, del]); setStatus("Saved for everyone"); }
-  catch(e){ sent.forEach(k => keys.add(k)); setStatus("Not saved yet. Will retry. " + e.message); toast(e.message); }
+  try { await api("saveMarks", [token, d.date, d.cls, set, del]); setStatus("Saved for everyone · " + hm(Date.now())); }
+  catch(e){ sent.forEach(k => keys.add(k)); setStatus("Not saved yet. Will retry."); toast(e.message); }
   finally { writing[id] = false; }
 }
 function retryDirty(){ Object.keys(dirtyKeys).forEach(id => { if (dirtyKeys[id].size && !writing[id]) flush(id); }); }
+let statusText = "";
+function setStatus(t){ statusText = t; const s = $("cmStatus"); if (s) s.textContent = t; }
 function applyState(s){
   if (!s) return;
   me = s.me || null; users = s.users || [];
@@ -387,31 +393,25 @@ function applyState(s){
   Object.keys(s.acts || {}).forEach(id => { if (aBusy[id]) return; acts[id] = {log: s.acts[id].log || []}; });
   smsRec = s.sms || {};
   ready = true;
-  const p = n => String(n).padStart(2,"0"), n = new Date();
-  setStatus("Live · updated " + p(n.getHours()) + ":" + p(n.getMinutes()));
+  if (!statusText || /^Live/.test(statusText)) setStatus("Live · updated " + hm(Date.now()));
   render();
 }
 async function refresh(){
-  if (!API_URL || !token || refreshing) return;
+  if (!token || refreshing) return;
   refreshing = true;
   try { applyState(await api("state", [token, date, rosterVer])); }
   catch(e){ setStatus("Can't reach the server. Retrying."); if (!ready) { ready = true; render(); } }
   finally { refreshing = false; }
 }
 
-/* ---------- state changes ---------- */
-const MF = ["a","d","e","s","b","v","y","p"];   // absent, diary, english, sign, behaviour, tv, study, play
-/* Every child starts as Present · Diary OK · English Yes · Sign Yes · Behaviour Good · TV/Study/Play Yes.
-   Only the exceptions (the defaulters) are stored. A section is "submitted" when the marker taps Submit. */
+/* ---------- marks ---------- */
+const MF = ["a","d","e","s","b","v","y","p"];
+/* value codes: a 2 present · 1 absent · 3 diary not brought | d 2 OK · 1 not completed | others 1 yes/good · 2 no/bad */
 function subKey(s){ return "_" + s; }
-function subOf(c, s, dt){ const d = docs[(dt || date) + "_" + c]; return (d && d.m[subKey(s)]) || null; }
-function hasMarks(c, s, dt){ const d = docs[(dt || date) + "_" + c]; return !!d && Object.keys(d.m).some(k => k.indexOf(s + "-") === 0); }
+function subOf(c, s, dt){ const d = docs[docId(c, dt)]; return (d && d.m[subKey(s)]) || null; }
+function hasMarks(c, s, dt){ const d = docs[docId(c, dt)]; return !!d && Object.keys(d.m).some(k => k.indexOf(s + "-") === 0); }
 function secDone(c, s, dt){ return !!subOf(c, s, dt) || hasMarks(c, s, dt); }
-function submitSec(c, s){
-  const d = getDoc(c), k = subKey(s);
-  d.m[k] = {k:1, at:Date.now(), u:(typeof me !== "undefined" && me && me.name) || ""};
-  scheduleSave(c, k);
-}
+function submitSec(c, s){ const d = getDoc(c), k = subKey(s); d.m[k] = {k:1, at:Date.now(), u:(me && me.name) || ""}; scheduleSave(c, k); }
 function setMark(c, s, i, patch){
   const d = getDoc(c), k = key(s,i), prev = d.m[k] || {};
   const cur = Object.assign({}, prev, patch);
@@ -421,283 +421,488 @@ function setMark(c, s, i, patch){
   MF.forEach(f => { if (!cur[f]) delete cur[f]; });
   if (!cur.r || !cur.r.trim()) delete cur.r;
   cur.t = tm; if (!Object.keys(tm).length) delete cur.t;
-  const has = MF.concat(["r"]).some(f => cur[f]);
-  if (has) d.m[k] = cur; else delete d.m[k];
+  if (MF.concat(["r"]).some(f => cur[f])) d.m[k] = cur; else delete d.m[k];
   scheduleSave(c, k);
 }
-const flip2 = v => v === 2 ? 0 : 2;
-const cycle3 = v => ((v||0) + 1) % 3;
 
-/* ---------- render ---------- */
-function setStatus(t){ $("status").textContent = t; }
-let toastT;
-function toast(t){ const e = $("toast"); e.textContent = t; e.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { e.hidden = true; }, 2200); }
+/* categories used everywhere */
+const CATS = [
+  {k:"abs",  l:"Absent",              tone:"bad",  test:m => m.a === 1},
+  {k:"nb",   l:"Diary not brought",   tone:"warn", test:m => m.a === 3, f:"a"},
+  {k:"def",  l:"Diary not completed", tone:"warn", test:m => m.a !== 1 && m.d === 1, f:"d"},
+  {k:"sig",  l:"Diary not signed",    tone:"bad",  test:m => m.a !== 1 && m.s === 2, f:"s"},
+  {k:"eng",  l:"Spoken English",      tone:"plum", test:m => m.a !== 1 && m.e === 2, f:"e"},
+  {k:"beh",  l:"Behaviour",           tone:"bad",  test:m => m.a !== 1 && m.b === 2, f:"b"},
+  {k:"tv",   l:"TV hour",             tone:"sky",  test:m => m.a !== 1 && m.v === 2, f:"v"},
+  {k:"study",l:"Study hour",          tone:"sky",  test:m => m.a !== 1 && m.y === 2, f:"y"},
+  {k:"play", l:"Play hour",           tone:"sky",  test:m => m.a !== 1 && m.p === 2, f:"p"}
+];
+const DCATS = CATS.filter(x => x.k !== "abs");
+const CAT = {}; CATS.forEach(x => CAT[x.k] = x);
+const LABEL = {rem:"Parent remark"}; DCATS.forEach(x => LABEL[x.k] = x.l);
+function flagged(m, cat){ return !!m && !!CAT[cat] && CAT[cat].test(m); }
+function counts(c, s, dt){
+  const names = ROSTER[c][s] || [], k = {total:names.length, present:0, absent:0, unmarked:0, def:0, kids:0, rem:0};
+  names.forEach((n,i) => {
+    const m = mark(c,s,i,dt);
+    if (m.r && m.r.trim()) k.rem++;
+    if (m.a === 1) { k.absent++; return; }
+    if (m.a === 2 || m.a === 3) k.present++; else k.unmarked++;
+    if (m.d === 1 || m.a === 3) k.def++;
+    if (DCATS.some(x => x.test(m))) k.kids++;
+  });
+  return k;
+}
 
-function renderChips(){
-  const box = $("chips"); box.textContent = "";
+/* ---------- topics for parent remarks (from the last weeks of real remarks) ---------- */
+const TOPICS = [
+  {k:"health", l:"Health & medicine", tone:"bad", re:/not well|unwell|fever|sick|injur|pain|hurt|wound|medicine|doctor|stomach|\bfell\b|fall (down|from)|vomit|cough|\bcold\b|allerg|muscle|fracture|headache/i, acts:["Informed","Given","Counselled"]},
+  {k:"leave", l:"Leave & absence", tone:"mute", re:/\bleave\b|absent|out of (the )?(town|station)|wedding|marriage|function|could ?n['’]?t (come|attend)|not (be )?able to (come|attend)|late for school|nani|grandparent|election|went to/i, acts:["Informed","Allowed","Excused"]},
+  {k:"stay", l:"Stay back & academy", tone:"plum", re:/stay ?back|staying back|stay in school|smart study|after school|evening academy|(not|won['’]?t|n['’]?t) (do )?stay|stay (for|only|till|from)|will stay/i, acts:["Updated","Informed","Allowed"]},
+  {k:"pickup", l:"Pick-up & transport", tone:"sky", re:/pick(ed)? ?up|\bpick\b|by walk|\bbus\b|\bvan\b|\bauto\b|transport|conveyance|go with|drop/i, acts:["Informed","Arranged","Updated"]},
+  {k:"uniform", l:"Uniform", tone:"navy", re:/uniform|dress|jacket|shoes?\b|\bshirt\b|\bpant|beige|blazer|sweater/i, acts:["Allowed","Excused","Informed"]},
+  {k:"books", l:"Books & material", tone:"warn", re:/\bbooks?\b|notebook|\bkit\b|stationery|\bcopy\b|guide book/i, acts:["Given","Sent","Received"]},
+  {k:"food", l:"Lunch & water", tone:"ok", re:/lunch|tiffin|\bfood\b|\beat\b|fruit|water bottle|\bmeal/i, acts:["Informed","Counselled","Given"]},
+  {k:"work", l:"Homework & tests", tone:"warn", re:/assignment|home ?work|worksheet|\btests?\b|exam|submit|pending work|written work|work done|complete (his|her|the)/i, acts:["Allowed","Received","Informed"]},
+  {k:"study", l:"Academic help", tone:"sky", re:/explain|doubt|understood|understand|guide|concept|teach|learn|spelling|practi[cs]e|correct/i, acts:["Guided","Arranged","Informed"]},
+  {k:"behav", l:"Behaviour concerns", tone:"bad", re:/behav|misbehav|disciplin|rude|fight/i, acts:["Counselled","Informed","Warned"]},
+  {k:"activity", l:"Activity & sports change", tone:"plum", re:/activit|academy|sports?\b|skill course|dance|music|guitar|karate|taekwondo|yoga|skating|tennis|shooting|cricket|tabla|harmonium|pottery|\bart\b|archery|fitness|abacus|keyboard|photography|acting|legacy league|tournament|olympiad|swimming|chess/i, acts:["Changed","Allocated","Informed"]},
+  {k:"other", l:"Other", tone:"mute", re:/.^/, acts:["Informed"]}
+];
+const TOPIC = {}; TOPICS.forEach(t => TOPIC[t.k] = t);
+function topicOf(text){ const t = TOPICS.find(x => x.re.test(text || "")); return t ? t.k : "other"; }
+const ACTION_WORDS = ["Given","Received","Allocated","Changed","Informed","Counselled","Allowed","Sent","Excused","Arranged","Guided","Updated","Warned","Called parent"];
+const DEF_ACTS = ["Counselled","Called parent","Warned","Informed"];
+</script>
+
+<script>
+/* ================= CM · marking ================= */
+function classChips(cur, onPick, dotFn){
+  const box = el("div","chips"); box.setAttribute("role","group"); box.setAttribute("aria-label","Class");
   for (let c = 1; c <= 11; c++){
-    const b = el("button","chip", String(c)); b.type = "button";
-    b.setAttribute("aria-pressed", String(c === cls)); b.setAttribute("aria-label","Class " + c);
-    const d = docs[docId(c)]; if (d && Object.keys(d.m).length) b.appendChild(el("i","dot"));
-    b.onclick = () => { cls = c; if (!ROSTER[c][sec]) sec = "A"; render(); };
+    const b = btn("chip" + (c === cur ? " on" : ""), String(c), () => onPick(c), "Class " + c);
+    b.setAttribute("aria-pressed", String(c === cur));
+    if (dotFn && dotFn(c)) b.appendChild(el("i"));
     box.appendChild(b);
   }
+  return box;
 }
-function counts(c, s){
-  const names = ROSTER[c][s]; let absent = 0, present = 0, def = 0, enNo = 0, sgNo = 0, bad = 0, tvNo = 0, stNo = 0, plNo = 0;
-  names.forEach((n,i) => {
-    const m = mark(c,s,i);
-    if (m.a === 1) { absent++; return; }
-    if (m.a === 2 || m.a === 3) present++;
-    if (m.d === 1 || m.a === 3) def++; if (m.e === 2) enNo++; if (m.s === 2) sgNo++; if (m.b === 2) bad++;
-    if (m.v === 2) tvNo++; if (m.y === 2) stNo++; if (m.p === 2) plNo++;
+function secSeg(c, cur, onPick, labelFn){
+  const seg = el("div","seg"); seg.setAttribute("role","tablist");
+  sections(c).forEach(s => {
+    const b = btn(s === cur ? "on" : "", c + " " + s, () => onPick(s)); b.setAttribute("role","tab"); b.setAttribute("aria-selected", String(s === cur));
+    const extra = labelFn && labelFn(s); if (extra) b.appendChild(el("em", null, extra));
+    seg.appendChild(b);
   });
-  return {total:names.length, absent, present, def, enNo, sgNo, bad, tvNo, stNo, plNo};
+  return seg;
 }
-function renderTabs(){
-  const box = $("tabs"); box.textContent = "";
-  sections(cls).forEach(s => {
-    const b = el("button","tab", cls + " " + s); b.type = "button"; b.setAttribute("role","tab");
-    b.setAttribute("aria-selected", String(s === sec));
-    b.onclick = () => { sec = s; render(); };
-    box.appendChild(b);
+function summaryGroups(c, s){
+  const names = ROSTER[c][s] || [], out = [];
+  CATS.forEach(cat => {
+    const l = []; names.forEach((n,i) => { if (cat.test(mark(c,s,i))) l.push({i, n}); });
+    if (l.length) out.push({k:cat.k, l:cat.l, tone:cat.tone, list:l});
   });
-}
-function markBtn(label, text, tone, onclick, disabled){
-  const b = el("button","mk" + (tone ? " " + tone : "")); b.type = "button";
-  b.appendChild(el("small", null, label)); b.appendChild(el("span", null, text));
-  b.onclick = onclick; b.disabled = !!disabled;
-  b.setAttribute("aria-label", label + ": " + text);
-  return b;
-}
-function submitBar(){
-  const sb = subOf(cls, sec), k = counts(cls, sec), bar = el("div", "subbar" + (sb ? " done" : ""));
-  const txt = el("div", "subtxt");
-  if (sb) txt.textContent = "Submitted " + fmtT(sb.at) + (sb.u ? " by " + sb.u : "") + " · " + k.def + " diary defaulters";
-  else txt.textContent = "Mark every child (or tap Select all for a child who is fine), then tap Submit.";
-  bar.appendChild(txt);
-  const b = el("button", "btn", sb ? "Submit again" : "Submit " + cls + " " + sec); b.type = "button";
-  b.onclick = () => { submitSec(cls, sec); render(); toast("Section " + cls + " " + sec + " submitted"); };
-  bar.appendChild(b);
-  return bar;
-}
-function renderList(){
-  const box = $("list"); box.textContent = "";
-  const names = ROSTER[cls][sec];
-  if (!names || !names.length){ box.appendChild(el("div","empty","No students in this section.")); return; }
-  box.appendChild(submitBar());
-  names.forEach((n, i) => {
-    const m = mark(cls, sec, i), abs = m.a === 1;
-    const card = el("div","stu" + (abs ? " absent" : ""));
-    const head = el("div","head");
-    head.appendChild(el("span","roll", String(i+1)));
-    head.appendChild(el("span","nm", n));
-    if (m.t) { const lt = Math.max.apply(null, Object.values(m.t)); head.appendChild(el("span","when", fmtT(lt))); }
-    const pen = el("button","pen" + (m.r ? " has" : ""), m.r ? "Note" : "+ Note"); pen.type = "button";
-    pen.style.width = "auto"; pen.style.padding = "0 10px";
-    const ALLOK = {a:2, d:2, e:1, s:1, b:1, v:1, y:1, p:1};
-    const isAll = Object.keys(ALLOK).every(f => m[f] === ALLOK[f]);
-    const allBtn = el("button","pen all", isAll ? "Clear all" : "Select all"); allBtn.type = "button";
-    allBtn.setAttribute("aria-label", (isAll ? "Clear all marks for " : "Mark everything OK for ") + n);
-    allBtn.onclick = () => { const p = {}; Object.keys(ALLOK).forEach(f => { p[f] = isAll ? 0 : ALLOK[f]; }); setMark(cls,sec,i,p); render(); };
-    head.appendChild(allBtn);
-    pen.onclick = () => { const k = cls+sec+i; if (openRem.has(k)) openRem.delete(k); else openRem.add(k); renderList(); };
-    head.appendChild(pen); card.appendChild(head);
-    const mk = el("div","marks");
-    // value codes: attendance a: 2 present / 1 absent · diary d: 2 OK / 1 defaulter · all others: 1 good / 2 bad
-    const tri = (label, f, yes, no, noTone) => {
-      const good = (f === "a" || f === "d") ? 2 : 1, bad = 3 - good, v = m[f];
-      return markBtn(label, v === good ? yes : v === bad ? no : "–", v === good ? "ok" : v === bad ? noTone : "",
-        () => { setMark(cls,sec,i,{[f]: v === good ? bad : v === bad ? 0 : good}); render(); }, f !== "a" && abs);
-    };
-    {  // attendance: blank → P (2) → A (1) → NB, diary not brought (3) → blank
-      const av = m.a, nx = {0:2, 2:1, 1:3, 3:0}[av || 0];
-      mk.appendChild(markBtn("Attend", av === 2 ? "P" : av === 1 ? "A" : av === 3 ? "NB" : "–", av === 2 ? "ok" : av === 1 ? "bad" : av === 3 ? "warn" : "",
-        () => { setMark(cls,sec,i,{a: nx}); render(); }));
-    }
-    mk.appendChild(tri("Diary","d","OK","DEF","warn"));
-    mk.appendChild(tri("English","e","Yes","No","bad"));
-    mk.appendChild(tri("Sign","s","Yes","No","bad"));
-    mk.appendChild(tri("Behav","b","Good","Bad","bad"));
-    mk.appendChild(tri("TV hr","v","Yes","No","bad"));
-    mk.appendChild(tri("Study hr","y","Yes","No","bad"));
-    mk.appendChild(tri("Play hr","p","Yes","No","bad"));
-    card.appendChild(mk);
-    if (m.r || openRem.has(cls+sec+i)){
-      const r = el("div","rem"); const ta = el("textarea"); ta.id = "rem-" + cls + sec + i;
-      ta.placeholder = "Remark from parent"; ta.value = m.r || ""; ta.setAttribute("aria-label","Parent remark for " + n);
-      let t; ta.oninput = () => { clearTimeout(t); t = setTimeout(() => { setMark(cls,sec,i,{r: ta.value}); renderTabs(); renderChips(); }, 400); };
-      ta.onblur = () => { const has = !!ta.value.trim(); pen.className = "pen" + (has ? " has" : ""); pen.textContent = has ? "Note" : "+ Note"; };
-      r.appendChild(ta); card.appendChild(r);
-    }
-    box.appendChild(card);
-  });
-}
-/* ---------- class summary table ---------- */
-const FLAGS = [["a","Diary not brought",3],["d","Diary",1],["e","English",2],["s","Sign",2],["b","Behaviour",2],["v","TV hr",2],["y","Study hr",2],["p","Play hr",2]];
-function kidFlags(m){ return FLAGS.filter(f => m[f[0]] === f[2]).map(f => f[1]); }
-function secSummary(c, s){
-  const names = ROSTER[c][s], absent = [], def = []; let present = 0;
-  names.forEach((n, i) => { const a = mark(c, s, i).a; if (a === 2 || a === 3) present++; });
-  names.forEach((n, i) => { const m = mark(c, s, i); if (m.a === 1) absent.push({i, n}); else { const fl = kidFlags(m); if (fl.length) def.push({i, n, fl}); } });
-  return {total:names.length, present, absent, def};
-}
-let sumAll = false; const sumOpen = new Set();
-function renderSummary(){
-  const box = $("summary"); box.textContent = "";
-  const wrap = el("div","tscroll sumwrap"), tbl = el("table","stbl");
-  const hr = el("tr"); ["Section","Present","Absent","Defaulter","Details"].forEach(h => hr.appendChild(el("th", null, h))); tbl.appendChild(hr);
-  [cls].forEach(c => sections(c).forEach(sc => {
-    const r = summaryRow(c, sc); r.forEach(x => tbl.appendChild(x));
-  }));
-  wrap.appendChild(tbl); box.appendChild(wrap);
-}
-function summaryRow(c, sc){
-  const k = secSummary(c, sc), id = c + sc, out = [];
-  const tr = el("tr", c === cls && sc === sec ? "cur" : "");
-  const t1 = el("td"); const b = el("button","sec1", c + sc); b.type = "button";
-  b.onclick = () => { cls = c; sec = sc; render(); }; t1.appendChild(b);
-  if (!secDone(c, sc)) t1.appendChild(el("span","ns","not submitted"));
-  tr.appendChild(t1);
-  tr.appendChild(el("td", null, k.present + "/" + k.total));
-  tr.appendChild(el("td", k.absent.length ? "hot" : "", String(k.absent.length)));
-  tr.appendChild(el("td", k.def.length ? "wn" : "", String(k.def.length)));
-  // Details: defaulter names (with what they missed) and absentees, shown directly in the row
-  const td = el("td","dnames");
-  if (!k.absent.length && !k.def.length) td.appendChild(el("span","muted","–"));
-  k.def.forEach(x => { const dv = el("div"); dv.appendChild(el("b", null, (x.i + 1) + ". " + x.n)); dv.appendChild(el("small", null, " – " + x.fl.join(", "))); td.appendChild(dv); });
-  k.absent.forEach(x => { const dv = el("div"); dv.appendChild(el("b", null, (x.i + 1) + ". " + x.n)); dv.appendChild(el("small", null, " – Absent")); td.appendChild(dv); });
-  tr.appendChild(td); out.push(tr);
+  const rem = []; names.forEach((n,i) => { const m = mark(c,s,i); if (m.r && m.r.trim()) rem.push({i, n}); });
+  if (rem.length) out.push({k:"rem", l:"Parent remarks", tone:"gold", list:rem});
+  const un = []; names.forEach((n,i) => { const m = mark(c,s,i); if (!m.a) un.push({i, n}); });
+  if (un.length && un.length < names.length) out.push({k:"un", l:"Attendance not marked", tone:"mute", list:un});
   return out;
 }
-function renderMark(){
-  renderSummary();
-  renderChips(); renderTabs();
-  const ae = document.activeElement;
-  if (ae && ae.tagName === "TEXTAREA" && $("list").contains(ae)) return; // don't disturb typing
-  renderList();
-}
+function jumpTo(i){ const r = $("kid-" + i); if (!r) return; r.scrollIntoView({behavior:"smooth", block:"center"}); r.classList.remove("flash"); void r.offsetWidth; r.classList.add("flash"); }
 
-/* ---------- report ---------- */
+let showUn = false;
+function renderCM(){
+  const box = $("vCM");
+  const ae = document.activeElement;
+  if (ae && ae.tagName === "TEXTAREA" && box.contains(ae)) { renderDock(); return; }
+  box.textContent = "";
+  if (!(ROSTER[cls] && ROSTER[cls][sec])) sec = sections(cls)[0];
+
+  // selector
+  const sel = el("div","card"); const sp = el("div","selector");
+  sp.appendChild(classChips(cls, c => { cls = c; if (!ROSTER[c][sec]) sec = sections(c)[0]; render(); }, c => { const d = docs[docId(c)]; return d && Object.keys(d.m).length; }));
+  sp.appendChild(secSeg(cls, sec, s => { sec = s; render(); }));
+  sel.appendChild(sp); box.appendChild(sel);
+
+  // summary
+  const k = counts(cls, sec), sb = subOf(cls, sec);
+  const sum = el("div","card");
+  const h = el("div","cardh"); const h2 = el("h2", null, "Class " + cls + " " + sec);
+  h2.appendChild(el("small", null, nice(date) + " · " + (sb ? "Submitted " + hm(sb.at) + (sb.u ? " by " + sb.u : "") : "Not submitted yet")));
+  h.appendChild(h2); h.appendChild(el("span","pill " + (sb ? "t-ok" : "t-warn"), sb ? "Submitted" : "Open"));
+  sum.appendChild(h);
+  const st = el("div","stats");
+  [[k.present + "/" + k.total, "Present", ""],[k.absent, "Absent", k.absent ? "bad" : ""],[k.kids, "Defaulters", k.kids ? "warn" : ""],[k.rem, "Remarks", k.rem ? "plum" : ""]].forEach(([v,l,t]) => {
+    const d = el("div","stat " + t); d.appendChild(el("b", null, String(v))); d.appendChild(el("span", null, l)); st.appendChild(d);
+  });
+  sum.appendChild(st);
+  const gs = summaryGroups(cls, sec);
+  const gw = el("div","groups");
+  if (!gs.length) gw.appendChild(el("div","empty", k.present ? "Everyone marked so far is fine." : "Nothing marked yet for this section."));
+  gs.forEach(g => {
+    const d = el("div","grp"); const gh = el("div","grp-h");
+    gh.appendChild(el("span","dot d-" + g.tone)); gh.appendChild(el("span", null, g.l)); gh.appendChild(el("span","n", String(g.list.length)));
+    d.appendChild(gh);
+    const ns = el("div","names");
+    const many = g.k === "un" && g.list.length > 8 && !showUn;
+    (many ? g.list.slice(0, 8) : g.list).forEach(x => { const b = btn("nm t-" + (g.tone === "gold" ? "warn" : g.tone), "", () => jumpTo(x.i)); b.appendChild(el("small", null, String(x.i + 1))); b.appendChild(document.createTextNode(x.n)); ns.appendChild(b); });
+    if (g.k === "un" && g.list.length > 8) ns.appendChild(btn("lnk", showUn ? "Show fewer" : "+ " + (g.list.length - 8) + " more", () => { showUn = !showUn; render(); }));
+    d.appendChild(ns); gw.appendChild(d);
+  });
+  sum.appendChild(gw);
+  if (sections(cls).length > 1) {
+    const ss = el("div","secs");
+    sections(cls).forEach(s2 => { const kk = counts(cls, s2), done = !!subOf(cls, s2);
+      const b = btn("secpill" + (s2 === sec ? " on" : "") + (done ? " done" : ""), cls + s2, () => { sec = s2; render(); });
+      b.appendChild(el("span", null, done ? "✓ " + kk.present + "/" + kk.total : kk.present + "/" + kk.total)); ss.appendChild(b); });
+    sum.appendChild(ss);
+  }
+  box.appendChild(sum);
+
+  box.appendChild(el("div","status", "")).id = "cmStatus"; $("cmStatus").textContent = statusText;
+
+  // list
+  const names = ROSTER[cls][sec] || [];
+  const list = el("div","card");
+  if (!names.length) list.appendChild(el("div","empty", rosterReady() ? "No students in this section." : "Class lists are not loaded yet."));
+  names.forEach((n, i) => list.appendChild(kidRow(n, i)));
+  box.appendChild(list);
+  renderDock();
+}
+function mbtn(label, val, tone, fn, dis, extra){
+  const b = btn("mb" + (tone ? " " + tone : "") + (extra ? " " + extra : ""), "", fn, label + ": " + val);
+  b.appendChild(el("small", null, label)); b.appendChild(el("span", null, val)); b.disabled = !!dis; return b;
+}
+function kidRow(n, i){
+  const m = mark(cls, sec, i), abs = m.a === 1;
+  const row = el("div","kid" + (abs ? " abs" : "")); row.id = "kid-" + i;
+  const h = el("div","kid-h");
+  h.appendChild(el("span","roll", String(i + 1)));
+  const nm = el("div","kid-n", n);
+  if (m.t) { const lt = Math.max.apply(null, Object.values(m.t)); nm.appendChild(el("small", null, "Marked " + hm(lt))); }
+  h.appendChild(nm);
+  const ALLOK = {a:2, d:2, e:1, s:1, b:1, v:1, y:1, p:1};
+  const isAll = Object.keys(ALLOK).every(f => m[f] === ALLOK[f]);
+  h.appendChild(btn("mini" + (isAll ? " on" : ""), isAll ? "All OK ✓" : "All OK", () => { const p = {}; Object.keys(ALLOK).forEach(f => { p[f] = isAll ? 0 : ALLOK[f]; }); setMark(cls,sec,i,p); render(); }, (isAll ? "Clear all marks for " : "Mark everything OK for ") + n));
+  const hasR = !!(m.r && m.r.trim());
+  h.appendChild(btn("mini" + (hasR ? " on" : ""), hasR ? "Remark" : "+ Remark", () => { const k = cls + sec + i; if (openRem.has(k)) openRem.delete(k); else openRem.add(k); render(); setTimeout(() => { const t = $("rem-" + k); if (t) t.focus(); }, 30); }, "Parent remark for " + n));
+  row.appendChild(h);
+  const mk = el("div","mk");
+  const av = m.a, nx = {0:2, 2:1, 1:3, 3:0}[av || 0];
+  mk.appendChild(mbtn("Attend", av === 2 ? "P" : av === 1 ? "A" : av === 3 ? "NB" : "–", av === 2 ? "ok" : av === 1 ? "bad" : av === 3 ? "warn" : "", () => { setMark(cls,sec,i,{a: nx}); render(); }, false, "att"));
+  const tri = (label, f, yes, no, noTone) => {
+    const good = f === "d" ? 2 : 1, bad = 3 - good, v = m[f];
+    return mbtn(label, v === good ? yes : v === bad ? no : "–", v === good ? "ok" : v === bad ? noTone : "", () => { setMark(cls,sec,i,{[f]: v === good ? bad : v === bad ? 0 : good}); render(); }, abs);
+  };
+  mk.appendChild(tri("Diary","d","OK","Not done","warn"));
+  mk.appendChild(tri("Sign","s","Yes","No","bad"));
+  mk.appendChild(tri("English","e","Yes","No","bad"));
+  mk.appendChild(tri("Behav","b","Good","Bad","bad"));
+  mk.appendChild(tri("TV hr","v","Yes","No","bad"));
+  mk.appendChild(tri("Study hr","y","Yes","No","bad"));
+  mk.appendChild(tri("Play hr","p","Yes","No","bad"));
+  row.appendChild(mk);
+  const k = cls + sec + i;
+  if (hasR || openRem.has(k)) {
+    const nt = el("div","note"); const ta = el("textarea"); ta.id = "rem-" + k;
+    ta.placeholder = "Parent's remark from the diary"; ta.value = m.r || ""; ta.setAttribute("aria-label","Parent remark for " + n);
+    let t; ta.oninput = () => { clearTimeout(t); t = setTimeout(() => setMark(cls,sec,i,{r: ta.value}), 450); };
+    ta.onblur = () => { clearTimeout(t); setMark(cls,sec,i,{r: ta.value}); if (!ta.value.trim()) openRem.delete(k); setTimeout(render, 50); };
+    nt.appendChild(ta); row.appendChild(nt);
+  }
+  return row;
+}
+function renderDock(){
+  const show = view === "cm" && !!me && canMark();
+  $("dock").hidden = !show; document.body.classList.toggle("dock-on", show); if (!show) return;
+  const sb = subOf(cls, sec);
+  $("bSubmit").textContent = sb ? "Submitted ✓" : "Submit " + cls + " " + sec;
+}
+$("bAll").onclick = () => { (ROSTER[cls][sec] || []).forEach((n,i) => { if (!mark(cls,sec,i).a) setMark(cls,sec,i,{a:2}); }); render(); toast("Unmarked children set to present"); };
+$("bSubmit").onclick = () => { const was = !!subOf(cls, sec); submitSec(cls, sec); render(); toast(was ? "Submitted again" : "Class " + cls + " " + sec + " submitted"); };
+
+/* ---------- WhatsApp report ---------- */
 function reportFor(c, withNames){
   const lines = [];
-  const secs = sections(c);
-  secs.forEach(s => {
+  sections(c).forEach(s => {
     const k = counts(c, s), label = "Class " + ORD[c] + " " + s;
     lines.push("*" + label + " - Present - " + k.present + "/" + k.total + "*" + (secDone(c, s) ? "" : " _(not submitted yet)_"));
     const rem = [];
-    ROSTER[c][s].forEach((n,i) => { const m = mark(c,s,i); if (m.r && m.r.trim()) rem.push(firstName(n) + " - " + m.r.trim().replace(/\s+/g," ")); });
+    (ROSTER[c][s] || []).forEach((n,i) => { const m = mark(c,s,i); if (m.r && m.r.trim()) rem.push(firstName(n) + " - " + m.r.trim().replace(/\s+/g," ")); });
     if (rem.length) rem.forEach((t,i) => lines.push((i+1) + ". " + t)); else lines.push("NA");
     const extra = [];
-    if (k.enNo) extra.push("Spoken English (No): " + k.enNo);
-    if (k.sgNo) extra.push("Parent sign (No): " + k.sgNo);
-    if (k.bad) extra.push("Behaviour (Bad): " + k.bad);
-    if (k.tvNo) extra.push("TV hour (No): " + k.tvNo);
-    if (k.stNo) extra.push("Study hour (No): " + k.stNo);
-    if (k.plNo) extra.push("Play hour (No): " + k.plNo);
+    DCATS.filter(x => !["def","nb"].includes(x.k)).forEach(x => { const n = (ROSTER[c][s] || []).filter((nm,i) => x.test(mark(c,s,i))).length; if (n) extra.push(x.l + ": " + n); });
     if (extra.length) lines.push("_" + extra.join(" | ") + "_");
     lines.push("");
   });
   lines.push("*Diary defaulters -*");
-  secs.forEach(s => {
+  sections(c).forEach(s => {
     const k = counts(c, s);
     let t = "*" + c + ORD[c].replace(/^\d+/, "") + " " + s + " -* " + k.def;
-    if (withNames && k.def){
-      const nm = []; ROSTER[c][s].forEach((n,i) => { const m = mark(c,s,i); if (m.a !== 1 && (m.d === 1 || m.a === 3)) nm.push(n); });
-      t += " (" + nm.join(", ") + ")";
-    }
+    if (withNames && k.def){ const nm = []; (ROSTER[c][s] || []).forEach((n,i) => { const m = mark(c,s,i); if (m.a !== 1 && (m.d === 1 || m.a === 3)) nm.push(n); }); t += " (" + nm.join(", ") + ")"; }
     lines.push(t);
   });
   return lines.join("\n");
 }
 let scope = "class";
 function buildReport(){
-  const wn = $("optNames").checked;
-  const head = "*Diary Remarks*- " + dmy(date) + "\n\n";
-  let body;
-  if (scope === "class") body = reportFor(cls, wn);
-  else { const parts = []; for (let c = 1; c <= 11; c++) parts.push(reportFor(c, wn)); body = parts.join("\n\n"); }
-  $("rtext").value = head + body;
+  const wn = $("sNames").checked, head = "*Diary Remarks*- " + dmy(date) + "\n\n";
+  let body; if (scope === "class") body = reportFor(cls, wn); else { const p = []; for (let c = 1; c <= 11; c++) p.push(reportFor(c, wn)); body = p.join("\n\n"); }
+  $("sText").value = head + body;
+}
+$("bReport").onclick = () => { buildReport(); $("sheet").hidden = false; };
+$("sClose").onclick = () => { $("sheet").hidden = true; };
+$("sheet").onclick = e => { if (e.target === $("sheet")) $("sheet").hidden = true; };
+$("sNames").onchange = buildReport;
+$("sScope").querySelectorAll("button").forEach(b => { b.onclick = () => { scope = b.dataset.s; $("sScope").querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b)); buildReport(); }; });
+$("sCopy").onclick = () => copyText($("sText").value, "Report copied");
+document.addEventListener("keydown", e => { if (e.key === "Escape") $("sheet").hidden = true; });
+</script>
+
+<script>
+/* ================= items: remarks & defaulters, and the PL / FO workflow ================= */
+function aid(c, s, i, dt){ return dt + "_" + c + s + (i+1); }
+function rawLog(c, s, i, dt){ const a = acts[aid(c,s,i,dt)]; return (a && a.log) || []; }
+/* older entries had no type: "Noted" was the acknowledgement, anything else a written action */
+function entryType(e){ return e.t || (e.a === "Noted" ? "ack" : "act"); }
+function issuesFor(c, s, i, seg, dt){
+  const m = mark(c, s, i, dt), t = m.t || {}, out = [];
+  if (seg === "rem") { if (m.r && m.r.trim()) out.push({cat:"rem", text:m.r.trim(), at:t.r}); }
+  else if (m.a !== 1) DCATS.forEach(x => { if (x.test(m)) out.push({cat:x.k, at:t[x.f]}); });
+  return out;
+}
+function makeItem(dt, c, s, i, seg){
+  const iss = issuesFor(c, s, i, seg, dt); if (!iss.length) return null;
+  const nm = (ROSTER[c][s] || [])[i] || "";
+  const cats = seg === "rem" ? ["rem"] : iss.map(x => x.cat);
+  const log = rawLog(c, s, i, dt).filter(e => !e.x && (e.cats || []).some(x => seg === "rem" ? x === "rem" : x !== "rem"));
+  const it = {dt, c, s, i, nm, seg, iss, cats, log, topic: seg === "rem" ? topicOf(iss[0].text) : "def"};
+  it.st = itemStatus(it);
+  return it;
+}
+function openFus(it){ return it.log.filter(e => entryType(e) === "fu" && !e.done); }
+function itemStatus(it){
+  const fus = openFus(it);
+  if (fus.length) { const d = Math.min.apply(null, fus.map(f => f.due)); return {k: d <= Date.now() ? "late" : "fu", due:d}; }
+  if (it.log.some(e => entryType(e) === "act")) return {k:"act"};
+  if (it.log.some(e => entryType(e) === "fu" && e.done)) return {k:"act"};
+  if (it.log.length) return {k:"noted"};
+  return {k:"pend"};
+}
+const ST_LABEL = {pend:["Pending","t-warn"], noted:["Noted","t-navy"], act:["Actioned","t-ok"], fu:["Follow-up","t-sky"], late:["Follow-up due","t-bad"]};
+function dayItems(dt, c0, s0, seg){
+  const out = [];
+  for (let c = 1; c <= 11; c++){
+    if (c0 && c !== c0) continue; if (!docs[docId(c, dt)]) continue;
+    sections(c).forEach(s => { if (s0 && s0 !== "all" && s !== s0) return; (ROSTER[c][s] || []).forEach((n, i) => { const it = makeItem(dt, c, s, i, seg); if (it) out.push(it); }); });
+  }
+  return out;
+}
+function rangeItems(seg, from, to, c0, s0){
+  const out = []; let dt = to, g = 0;
+  while (dt >= from && g++ < 62) { dayItems(dt, c0, s0, seg).forEach(x => out.push(x)); dt = shiftDate(dt, -1); }
+  return out;
 }
 
-/* ---------- wiring ---------- */
-$("date").value = date;
-$("date").onchange = e => { if (!e.target.value) return; date = e.target.value; render(); refresh(); };
-$("btnAllPresent").onclick = () => {
-  ROSTER[cls][sec].forEach((n,i) => { if (!mark(cls,sec,i).a) setMark(cls,sec,i,{a:2}); });
-  render(); toast("Unmarked children set to present");
-};
-$("btnReport").onclick = () => { buildReport(); $("sheet").hidden = false; };
-$("rclose").onclick = () => { $("sheet").hidden = true; };
-$("sheet").onclick = e => { if (e.target === $("sheet")) $("sheet").hidden = true; };
-$("optNames").onchange = buildReport;
-$("scope").querySelectorAll("button").forEach(b => { b.onclick = () => {
-  scope = b.dataset.scope;
-  $("scope").querySelectorAll("button").forEach(x => x.setAttribute("aria-selected", String(x === b)));
-  buildReport();
-}; });
-$("rcopy").onclick = async () => {
-  const t = $("rtext").value;
-  try { await navigator.clipboard.writeText(t); toast("Report copied"); }
-  catch(e){ const ta = $("rtext"); ta.removeAttribute("readonly"); ta.focus(); ta.select(); ta.setAttribute("readonly",""); toast("Text selected. Use Copy."); }
-};
-document.addEventListener("keydown", e => { if (e.key === "Escape") $("sheet").hidden = true; });
+/* ---------- saving workflow entries ---------- */
+let noRemarkOp = false;
+function remarkOp(it, op){
+  const id = aid(it.c, it.s, it.i, it.dt), before = rawLog(it.c, it.s, it.i, it.dt);
+  const tmp = Object.assign({id:"tmp" + Date.now(), at:Date.now(), by: canAdmin() ? "admin" : "pl", who: me.name, cats: it.cats}, op);
+  let next = before.slice();
+  if (["ack","act","note","fu"].includes(op.t)) next.push(tmp);
+  else next = next.map(e => {
+    if (e.id !== op.id) return e;
+    const c = Object.assign({}, e);
+    if (op.t === "edit") { c.a = op.a; c.ed = Date.now(); }
+    if (op.t === "del") c.x = Date.now();
+    if (op.t === "done") { c.done = Date.now(); c.dw = me.name; }
+    if (op.t === "undo") { delete c.done; delete c.dw; }
+    return c;
+  });
+  acts[id] = {log: next}; aBusy[id] = (aBusy[id] || 0) + 1;
+  render();
+  const by = canAdmin() ? "admin" : "pl";
+  /* until the server has the new workflow (remarkOp), Noted / Action / Remark still save through the older addLog */
+  const legacy = () => {
+    if (!["ack","act","note"].includes(op.t)) throw new Error("Follow-ups, edit and delete start working once the server update is installed.");
+    return api("addLog", [token, it.dt, it.c, it.s, it.i + 1, it.nm, op.a || "Noted", it.cats, by]);
+  };
+  (noRemarkOp ? legacy() : api("remarkOp", [token, it.dt, it.c, it.s, it.i + 1, it.nm, Object.assign({cats: it.cats}, op)])
+    .catch(e => { if (/^Unknown action\.$/.test(e.message) && ["ack","act","note"].includes(op.t)) { noRemarkOp = true; return legacy(); } throw e; }))
+    .then(r => { acts[id] = {log: r.log}; })
+    .catch(e => { acts[id] = {log: before}; toast(e.message); })
+    .finally(() => { aBusy[id]--; if (!aBusy[id]) delete aBusy[id]; render(true); });
+}
 
-/* ---------- action log, class view (PL) and central view (admin) ---------- */
-let view = "mark", pcls = 1, psec = "A", pseg = "rem";
-let ccls = 0, csec = "all", cseg = "rem";
-let acts = {};            // "2026-10-27_1A9" -> {log:[{a,cats,at,by}]}
-let smsRec = {};          // "1A9_def" -> {sentOn, sentAt, remark}
-const aPending = {}, aWriting = {};
-let pMsg = ""; const aBusy = {};
-const FIELD = {def:"d", nb:"a", eng:"e", sig:"s", beh:"b", tv:"v", study:"y", play:"p", rem:"r"};
-const LABEL = {rem:"Parent remark", def:"Diary not completed", nb:"Diary not brought", eng:"Spoken English", sig:"Parent signature", beh:"Conduct", tv:"TV hour", study:"Study hour", play:"Play hour"};
-const QUICK = {
-  rem:["Noted","Counselled","Warned"],
-  def:["Student cautioned","Called parent"],
-  nb:["Student cautioned","Called parent"],
-  eng:["Student guided","Called parent"],
-  sig:["Parent reminded","Called parent"],
-  beh:["Student counselled","Called parent"],
-  tv:["Student guided","Called parent"],
-  study:["Student guided","Called parent"],
-  play:["Student guided","Called parent"]
-};
-const ADMIN_QUICK = ["Noted","Counselled","Warned"];
-// days in a row before a parent SMS is due: Diary not brought after 2 days, everything else after 3
+/* ---------- the card ---------- */
+const panelOpen = {};          // item id -> "act" | "note" | "fu"
+const editing = {};            // entry id -> true
+const iid = it => it.seg + ":" + aid(it.c, it.s, it.i, it.dt);
+function roleOf(e){ return e.by === "admin" ? "fo" : "pl"; }
+function itemCard(it, opts){
+  opts = opts || {};
+  const id = iid(it), st = ST_LABEL[it.st.k];
+  const card = el("article","rc" + (it.st.k === "late" ? " over" : "")); card.id = "rc-" + id.replace(/[^a-z0-9]/gi, "");
+  const h = el("div","rc-h");
+  h.appendChild(el("span","roll", String(it.i + 1)));
+  const n = el("div","rc-n", title(it.nm)); n.appendChild(el("span","cs", it.c + it.s)); h.appendChild(n);
+  h.appendChild(el("span","pill " + st[1], st[0]));
+  card.appendChild(h);
+
+  if (it.seg === "rem") {
+    card.appendChild(el("div","rc-q", it.iss[0].text));
+    const mt = el("div","rc-m"); const tp = TOPIC[it.topic];
+    mt.appendChild(el("span","tag t-" + tp.tone, tp.l));
+    mt.appendChild(el("span", null, "Written " + (opts.showDate ? fmtT(it.iss[0].at) : (it.iss[0].at ? hm(it.iss[0].at) : ""))));
+    card.appendChild(mt);
+  } else {
+    const fl = el("div","flags");
+    it.iss.forEach(x => { const c = CAT[x.cat]; const f = el("span","flag t-" + c.tone, c.l);
+      const s2 = streak(it.c, it.s, it.i, x.cat);
+      if (s2.n >= 2 && it.dt === date) f.appendChild(el("small", null, s2.n + " days in a row" + (s2.n >= smsAfter(x.cat) ? " · SMS" : "")));
+      fl.appendChild(f); });
+    card.appendChild(fl);
+  }
+
+  // timeline
+  const first = it.iss[0].at;
+  const log = it.log.slice().sort((a,b) => a.at - b.at);
+  if (log.length) {
+    const tl = el("div","tl");
+    log.forEach(e => tl.appendChild(entryRow(it, e, first)));
+    card.appendChild(tl);
+  }
+
+  if (!canPL()) { card.appendChild(el("div","rc-m", " ")); return card; }
+  const mine = it.log.find(e => entryType(e) === "ack" && e.who === me.name);
+  const bar = el("div","rc-bar"), p = panelOpen[id];
+  const mk = (k, label, ic, fn, cls2) => { const b = btn((p === k ? "on " : "") + (cls2 || ""), "", fn, label + " · " + title(it.nm)); b.innerHTML = svg(ic) + "<span>" + label + "</span>"; bar.appendChild(b); };
+  mk("ack", mine ? "Noted ✓" : "Noted", "check", () => { if (mine) return; remarkOp(it, {t:"ack", a:"Noted"}); toast("Noted"); }, mine ? "done" : "");
+  mk("act", "Action", "bolt", () => { panelOpen[id] = p === "act" ? null : "act"; render(true); });
+  mk("note", "Remark", "note", () => { panelOpen[id] = p === "note" ? null : "note"; render(true); setTimeout(() => { const t = $("np-" + id); if (t) t.focus(); }, 30); });
+  mk("fu", "Follow-up", "clock", () => { panelOpen[id] = p === "fu" ? null : "fu"; render(true); });
+  card.appendChild(bar);
+  if (p) card.appendChild(panel(it, p, id));
+  return card;
+}
+function entryRow(it, e, first){
+  const t = entryType(e), r = roleOf(e);
+  const row = el("div","te " + r + (t === "fu" ? " fu" + (e.done ? " dn" : e.due <= Date.now() ? " late" : "") : ""));
+  row.appendChild(el("span","rb " + r, r.toUpperCase()));
+  if (t === "ack") row.appendChild(el("b", null, "Noted"));
+  else if (t === "act") { row.appendChild(document.createTextNode("Action: ")); row.appendChild(el("b", null, e.a)); }
+  else if (t === "fu") {
+    row.appendChild(document.createTextNode("Follow-up " + fmtT(e.due)));
+    if (!e.done) { const late = e.due <= Date.now(); row.appendChild(el("span","due " + (late ? "t-bad" : "t-sky"), until(e.due))); }
+    else row.appendChild(el("span","due t-ok", "Done " + hm(e.done)));
+    if (e.a) { row.appendChild(el("br")); row.appendChild(el("b", null, e.a)); }
+  } else if (editing[e.id]) {
+    const ta = el("textarea"); ta.value = e.a; ta.id = "ed-" + e.id; row.appendChild(ta);
+    const rr = el("div","row"); rr.style.marginTop = "6px";
+    rr.appendChild(btn("btn sm", "Save", () => { const v = ta.value.trim(); if (!v) return; delete editing[e.id]; remarkOp(it, {t:"edit", id:e.id, a:v}); }));
+    rr.appendChild(btn("btn ghost sm", "Cancel", () => { delete editing[e.id]; render(true); }));
+    row.appendChild(rr); return row;
+  } else row.appendChild(el("span", null, e.a));
+  const tm = el("span","tm", (e.who || "") + " · " + fmtT(e.at) + (first && t !== "fu" ? " · " + gap(first, e.at) + " after" : "") + (e.ed ? " · edited" : ""));
+  const own = canAdmin() || e.who === (me && me.name);
+  if (canPL() && own && !String(e.id || "").startsWith("tmp") && e.id) {
+    const ed = el("span","ed");
+    if (t === "note") ed.appendChild(btn("lnk", "Edit", () => { editing[e.id] = true; render(true); setTimeout(() => { const x = $("ed-" + e.id); if (x) x.focus(); }, 30); }));
+    if (t === "fu") ed.appendChild(btn("lnk", e.done ? "Reopen" : "Mark done", () => remarkOp(it, {t: e.done ? "undo" : "done", id:e.id})));
+    let armed = false;
+    const del = btn("lnk", "Delete", () => { if (!armed) { armed = true; del.textContent = "Tap again to delete"; return; } remarkOp(it, {t:"del", id:e.id}); });
+    ed.appendChild(del); tm.appendChild(ed);
+  }
+  row.appendChild(tm);
+  return row;
+}
+function panel(it, p, id){
+  const box = el("div","rc-p");
+  if (p === "act") {
+    box.appendChild(el("div","lab", "Pick the action taken"));
+    const sug = it.seg === "rem" ? TOPIC[it.topic].acts : DEF_ACTS;
+    const words = sug.concat(ACTION_WORDS.filter(w => !sug.includes(w)));
+    const ws = el("div","words");
+    words.forEach(w => ws.appendChild(btn("word" + (sug.includes(w) ? " sug" : ""), w, () => { panelOpen[id] = null; remarkOp(it, {t:"act", a:w}); toast("Action saved: " + w); })));
+    box.appendChild(ws);
+  } else if (p === "note") {
+    box.appendChild(el("div","lab", (canAdmin() ? "FO" : "PL") + " remark"));
+    const ta = el("textarea"); ta.id = "np-" + id; ta.placeholder = "Write what was done or what is needed"; box.appendChild(ta);
+    const r = el("div","row"); r.style.marginTop = "8px";
+    r.appendChild(btn("btn", "Save remark", () => { const v = ta.value.trim(); if (!v) { ta.focus(); return; } panelOpen[id] = null; remarkOp(it, {t:"note", a:v}); }));
+    r.appendChild(btn("btn ghost", "Cancel", () => { panelOpen[id] = null; render(true); }));
+    box.appendChild(r);
+  } else if (p === "fu") {
+    box.appendChild(el("div","lab", "Remind at"));
+    const now = new Date(), nx = new Date(Math.ceil(now.getTime() / 9e5) * 9e5 + 9e5);
+    const p2 = n => String(n).padStart(2,"0");
+    const di = el("input"); di.type = "date"; di.value = todayStr(); di.min = todayStr();
+    const ti = el("input"); ti.type = "time"; ti.value = p2(nx.getHours()) + ":" + p2(nx.getMinutes());
+    const quick = el("div","words"); quick.style.marginBottom = "9px";
+    const setQ = ms => { const d = new Date(ms); di.value = d.getFullYear() + "-" + p2(d.getMonth()+1) + "-" + p2(d.getDate()); ti.value = p2(d.getHours()) + ":" + p2(d.getMinutes()); };
+    [["In 30 min", 18e5],["In 1 hour", 36e5],["In 2 hours", 72e5]].forEach(([l, ms]) => quick.appendChild(btn("word", l, () => setQ(Date.now() + ms))));
+    quick.appendChild(btn("word", "Tomorrow 9 am", () => { const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(9, 0, 0, 0); setQ(d.getTime()); }));
+    box.appendChild(quick);
+    const r1 = el("div","row"); r1.appendChild(di); r1.appendChild(ti); box.appendChild(r1);
+    const note = el("input"); note.type = "text"; note.placeholder = "What to check (e.g. give medicine at 2:15)"; note.style.marginTop = "9px";
+    if (it.seg === "rem") note.value = "";
+    box.appendChild(note);
+    const r2 = el("div","row"); r2.style.marginTop = "9px";
+    r2.appendChild(btn("btn", "Set follow-up", () => {
+      const due = new Date(di.value + "T" + (ti.value || "09:00")).getTime();
+      if (!isFinite(due)) { toast("Pick a date and time"); return; }
+      if (due < Date.now() - 6e4) { toast("Pick a time later than now"); return; }
+      panelOpen[id] = null; remarkOp(it, {t:"fu", due, a: note.value.trim()}); toast("Follow-up set for " + fmtT(due));
+    }));
+    r2.appendChild(btn("btn ghost", "Cancel", () => { panelOpen[id] = null; render(true); }));
+    box.appendChild(r2);
+  }
+  return box;
+}
+
+/* ---------- follow-ups across everything loaded ---------- */
+function allFollowUps(){
+  const out = [];
+  Object.keys(acts).forEach(id => {
+    const m = /^(\d{4}-\d\d-\d\d)_(\d{1,2})([A-Z])(\d+)$/.exec(id); if (!m) return;
+    const dt = m[1], c = +m[2], s = m[3], i = +m[4] - 1;
+    (acts[id].log || []).forEach(e => {
+      if (e.x || entryType(e) !== "fu") return;
+      const seg = (e.cats || []).includes("rem") ? "rem" : "def";
+      out.push({e, dt, c, s, i, seg, nm: ((ROSTER[c] || {})[s] || [])[i] || ""});
+    });
+  });
+  return out.sort((a,b) => (a.e.done ? 1 : 0) - (b.e.done ? 1 : 0) || a.e.due - b.e.due);
+}
+function fuStrip(filter){
+  const due = allFollowUps().filter(f => !f.e.done && f.e.due <= Date.now() + 36e5 && (!filter || filter(f)));
+  if (!due.length) return null;
+  const box = el("div","fus");
+  const h = el("h3"); h.textContent = "Follow-ups due · " + due.length; box.appendChild(h);
+  due.slice(0, 6).forEach(f => {
+    const r = el("div","it"); const late = f.e.due <= Date.now();
+    const t = el("div"); t.appendChild(el("b", null, title(f.nm) + " · " + f.c + f.s));
+    t.appendChild(el("span","due" + (late ? " late" : ""), until(f.e.due)));
+    if (f.e.a) { t.appendChild(el("br")); t.appendChild(document.createTextNode(f.e.a)); }
+    r.appendChild(t);
+    const it = makeItem(f.dt, f.c, f.s, f.i, f.seg);
+    if (it && canPL()) r.appendChild(btn("btn gold sm", "Done", () => remarkOp(it, {t:"done", id:f.e.id})));
+    box.appendChild(r);
+  });
+  return box;
+}
+
+/* ---------- streaks & SMS ---------- */
 const SMS_AFTER = {nb:2};
 const smsAfter = cat => SMS_AFTER[cat] || 3;
-const STREAK_CATS = ["def","nb","eng","sig","beh","tv","study","play"];
-const DEF_SEG = ["def","nb","eng","sig","beh","tv","study","play"];
-
-function shiftDate(s, n){
-  const [y,m,d] = s.split("-").map(Number); const t = new Date(Date.UTC(y, m-1, d + n));
-  const p = x => String(x).padStart(2,"0");
-  return t.getUTCFullYear() + "-" + p(t.getUTCMonth()+1) + "-" + p(t.getUTCDate());
-}
-function fmtT(ms){
-  if (!ms) return "time not recorded";
-  const d = new Date(ms), p = n => String(n).padStart(2,"0");
-  let h = d.getHours(); const ap = h >= 12 ? "pm" : "am"; h = h % 12 || 12;
-  return p(d.getDate()) + "-" + p(d.getMonth()+1) + " " + h + ":" + p(d.getMinutes()) + " " + ap;
-}
-function gap(from, to){
-  if (!from || !to) return "";
-  const m = Math.max(0, Math.round((to - from) / 60000));
-  return m < 1 ? "under 1 min" : m < 60 ? m + " min" : m < 1440 ? Math.floor(m/60) + " h " + (m%60) + " min" : Math.floor(m/1440) + " d " + Math.floor((m%1440)/60) + " h";
-}
-function flagged(m, cat){
-  if (!m || m.a === 1) return false;
-  return cat === "def" ? m.d === 1 : cat === "nb" ? m.a === 3 : cat === "eng" ? m.e === 2 : cat === "sig" ? m.s === 2 : cat === "beh" ? m.b === 2 : cat === "tv" ? m.v === 2 : cat === "study" ? m.y === 2 : m.p === 2;
-}
-/* Consecutive-day count for the SMS list. Only days on which the child's section was marked count as
-   school days. The run must end on the section's latest marked day, and it breaks on any day the child
-   was not flagged (absent, marked fine, or left blank) and on any gap of more than 4 calendar days
-   between marked days (holidays, or days nobody marked), so old cases never join up with new ones. */
+const STREAK_CATS = DCATS.map(x => x.k);
+/* Only days on which the section was marked count as school days. The run must end on the section's
+   latest marked day; absence, a fine mark, a blank, or a gap of more than 4 calendar days breaks it. */
 function streak(c, s, i, cat){
   const k = key(s,i); let n = 0, start = null, prev = null;
   for (let b = 0; b < 21; b++){
-    const dt = shiftDate(date, -b), d = docs[dt + "_" + c];
+    const dt = shiftDate(date, -b), d = docs[docId(c, dt)];
     if (!d || !secDone(c, s, dt)) continue;
     if (prev && dayGap(dt, prev) > 4) break;
     if (!flagged(d.m[k] || {}, cat)) break;
@@ -705,159 +910,6 @@ function streak(c, s, i, cat){
   }
   return {n, start};
 }
-function dayGap(a, b){ return Math.round((new Date(b + "T00:00:00Z") - new Date(a + "T00:00:00Z")) / 864e5); }
-function issuesFor(c, s, i, seg, dt){
-  const m = mark(c, s, i, dt), t = m.t || {}, out = [];
-  if (seg === "rem") {
-    if (m.r && m.r.trim()) out.push({cat:"rem", text:m.r.trim(), at:t.r});
-  } else if (m.a !== 1) {
-    if (m.a === 3) out.push({cat:"nb", at:t.a});
-    if (m.d === 1) out.push({cat:"def", at:t.d});
-    if (m.e === 2) out.push({cat:"eng", at:t.e});
-    if (m.s === 2) out.push({cat:"sig", at:t.s});
-    if (m.b === 2) out.push({cat:"beh", at:t.b});
-    if (m.v === 2) out.push({cat:"tv", at:t.v});
-    if (m.y === 2) out.push({cat:"study", at:t.y});
-    if (m.p === 2) out.push({cat:"play", at:t.p});
-  }
-  return out;
-}
-function aid(c, s, i, dt){ return dt + "_" + c + s + (i+1); }
-function allLog(c, s, i, dt){ const a = acts[aid(c,s,i,dt)]; return (a && a.log) || []; }
-function dayList(dt, c, s, seg){
-  const out = [], cats = seg === "rem" ? ["rem"] : DEF_SEG;
-  ROSTER[c][s].forEach((nm, i) => {
-    const iss = issuesFor(c, s, i, seg, dt); if (!iss.length) return;
-    const mine = allLog(c, s, i, dt).filter(l => (l.cats || []).some(x => cats.includes(x)));
-    out.push({dt, c, s, i, nm, seg, iss, pl: mine.filter(l => l.by !== "admin"), ad: mine.filter(l => l.by === "admin")});
-  });
-  return out;
-}
-function rangeItems(seg, c0, s0, days){
-  const out = [];
-  for (let b = 0; b < days; b++){
-    const dt = shiftDate(date, -b);
-    for (let c = 1; c <= 11; c++){
-      if (c0 && c !== c0) continue; if (!docs[dt + "_" + c]) continue;
-      sections(c).forEach(s => { if (s0 && s0 !== "all" && s !== s0) return; dayList(dt, c, s, seg).forEach(x => out.push(x)); });
-    }
-  }
-  return out;
-}
-function saveLog(it, text, by){
-  const id = aid(it.c, it.s, it.i, it.dt);
-  const cats = it.seg === "rem" ? ["rem"] : it.iss.map(x => x.cat);
-  const at = Date.now(), before = allLog(it.c, it.s, it.i, it.dt);
-  acts[id] = {log: before.concat([{a:text, cats, at, by, who: me ? me.name : ""}])};
-  aBusy[id] = (aBusy[id] || 0) + 1; pMsg = "Saving\u2026";
-  api("addLog", [token, it.dt, it.c, it.s, it.i + 1, it.nm, text, cats, by]).then(r => {
-    acts[id] = {log: r.log}; pMsg = "Saved for everyone";
-  }).catch(e => {
-    acts[id] = {log: allLog(it.c, it.s, it.i, it.dt).filter(l => l.at !== at)}; pMsg = ""; toast(e.message);
-  }).finally(() => { aBusy[id]--; if (!aBusy[id]) delete aBusy[id]; render(); });
-}
-
-/* shared card */
-function statusChip(txt, tone){ return el("span", "stat " + tone, txt); }
-function itemCard(it, role){
-  const box = el("article", "ic");
-  const head = el("div", "ic-head");
-  head.appendChild(el("span", "roll", String(it.i + 1)));
-  const nm = el("div", "ic-name"); nm.appendChild(el("b", null, it.nm));
-  if (role === "admin") nm.appendChild(el("small", null, "Class " + it.c + " " + it.s + " · " + dmy(it.dt)));
-  head.appendChild(nm);
-  if (role === "pl") {
-    head.appendChild(it.pl.length ? statusChip("Actioned", "ok") : statusChip("Awaiting action", "warn"));
-  } else {
-    head.appendChild(it.pl.length ? statusChip("PL actioned", "ok") : statusChip("No PL action yet", "mute"));
-  }
-  box.appendChild(head);
-
-  const body = el("div", "ic-body");
-  it.iss.forEach(x => {
-    if (x.cat === "rem") {
-      const q = el("blockquote", "quote", x.text); body.appendChild(q);
-      body.appendChild(el("div", "meta", "Remark entered " + fmtT(x.at)));
-    } else {
-      const row = el("div", "flag");
-      row.appendChild(el("span", "dot2 " + (x.cat === "def" ? "w" : "b")));
-      row.appendChild(el("span", "flag-l", LABEL[x.cat]));
-      const st = STREAK_CATS.includes(x.cat) && role === "pl" ? streak(it.c, it.s, it.i, x.cat) : null;
-      if (st && st.n >= 2) row.appendChild(el("span", "flag-s" + (st.n >= smsAfter(x.cat) ? " hot" : ""), st.n + " consecutive days" + (st.n >= smsAfter(x.cat) ? " · SMS by admin" : "")));
-      row.appendChild(el("span", "meta", "Marked " + fmtT(x.at)));
-      body.appendChild(row);
-    }
-  });
-  box.appendChild(body);
-
-  const first = Math.min.apply(null, it.iss.map(x => x.at || Infinity));
-  const entries = it.pl.map(l => ({l, r:"PL"})).concat(it.ad.map(l => ({l, r:"Admin"}))).sort((a,b) => a.l.at - b.l.at);
-  if (entries.length) {
-    const tl = el("div", "tl");
-    entries.forEach(e => {
-      const r = el("div", "tl-row");
-      r.appendChild(el("span", "tl-role " + (e.r === "Admin" ? "ad" : "pl"), e.r));
-      r.appendChild(el("span", "tl-text", e.l.a));
-      r.appendChild(el("span", "tl-time", (e.l.who ? e.l.who + " · " : "") + fmtT(e.l.at) + (isFinite(first) ? " · " + gap(first, e.l.at) + " after marking" : "")));
-      tl.appendChild(r);
-    });
-    box.appendChild(tl);
-  }
-
-  if (role === "pl" && !canPL()) return box;
-  const quick = [];
-  if (role === "admin") ADMIN_QUICK.forEach(q => quick.push(q));
-  else it.iss.forEach(x => (QUICK[x.cat] || []).forEach(q => { if (!quick.includes(q)) quick.push(q); }));
-  const qr = el("div", "qrow");
-  quick.forEach(q => { const b = el("button", "qbtn", q); b.type = "button"; b.onclick = () => { saveLog(it, q, role === "admin" ? "admin" : "pl"); render(); }; qr.appendChild(b); });
-  box.appendChild(qr);
-  const ar = el("div", "arow2");
-  const inp = el("input"); inp.id = role + "-" + it.seg + "-" + aid(it.c, it.s, it.i, it.dt);
-  inp.placeholder = role === "admin" ? "Additional remark or action, if required" : it.seg === "rem" ? "Action / follow-up on this remark" : "Other action or note";
-  inp.setAttribute("aria-label", (role === "admin" ? "Admin remark for " : "Action note for ") + it.nm);
-  const go = el("button", "gobtn", role === "admin" ? "Add remark" : "Log action"); go.type = "button";
-  const submit = () => { const v = inp.value.trim(); if (!v) return; saveLog(it, v, role === "admin" ? "admin" : "pl"); render(); };
-  go.onclick = submit; inp.onkeydown = e => { if (e.key === "Enter") submit(); };
-  ar.appendChild(inp); ar.appendChild(go); box.appendChild(ar);
-  return box;
-}
-function typing(box){ const ae = document.activeElement; return ae && ae.tagName === "INPUT" && box.contains(ae); }
-
-/* ---------- PL class view ---------- */
-function plCount(c, s, seg){ const l = dayList(date, c, s, seg); return {n: l.filter(x => !x.pl.length).length, all: l.length}; }
-function renderPLSub(){ $("psub").textContent = "Class " + pcls + " " + psec + " · " + dmy(date) + (pMsg ? " · " + pMsg : ""); }
-function renderPL(){
-  const cb = $("pchips"); cb.textContent = "";
-  for (let c = 1; c <= 11; c++){
-    let n = 0; sections(c).forEach(s => { n += plCount(c,s,"rem").n + plCount(c,s,"def").n; });
-    const b = el("button","chip", String(c)); b.type = "button"; b.setAttribute("aria-pressed", String(c === pcls));
-    b.setAttribute("aria-label","Class " + c + (n ? ", " + n + " awaiting action" : ""));
-    if (n) b.appendChild(el("i","dot"));
-    b.onclick = () => { pcls = c; if (!ROSTER[c][psec]) psec = "A"; history.replaceState(null,"","#class-" + c); renderPL(); };
-    cb.appendChild(b);
-  }
-  const tb = $("ptabs"); tb.textContent = "";
-  sections(pcls).forEach(s => {
-    const n = plCount(pcls,s,"rem").n + plCount(pcls,s,"def").n;
-    const b = el("button","tab", pcls + " " + s + (n ? " (" + n + ")" : "")); b.type = "button"; b.setAttribute("aria-selected", String(s === psec));
-    b.onclick = () => { psec = s; renderPL(); }; tb.appendChild(b);
-  });
-  const sg = $("psegs"); sg.textContent = "";
-  const r = plCount(pcls,psec,"rem"), d = plCount(pcls,psec,"def");
-  [["rem","Parent remarks · " + r.all], ["def","Diary and conduct · " + d.all]].forEach(([k,l]) => {
-    const b = el("button","tab", l); b.type = "button"; b.setAttribute("aria-selected", String(pseg === k));
-    b.onclick = () => { pseg = k; renderPL(); }; sg.appendChild(b);
-  });
-  renderPLSub();
-  const box = $("pitems"); if (typing(box)) return; box.textContent = "";
-  const list = dayList(date, pcls, psec, pseg).sort((a,b) => (a.pl.length ? 1 : 0) - (b.pl.length ? 1 : 0) || a.i - b.i);
-  if (!list.length) { box.appendChild(el("div","empty", (pseg === "rem" ? "No parent remarks" : "Nothing to follow up") + " in " + pcls + " " + psec + " on " + dmy(date) + ".")); return; }
-  const pend = list.filter(x => !x.pl.length).length;
-  box.appendChild(el("div","summary", pend + " awaiting action · " + (list.length - pend) + " actioned"));
-  list.forEach(it => box.appendChild(itemCard(it, "pl")));
-}
-
-/* ---------- SMS (admin) ---------- */
 function smsText(first, cat, n){
   const f = first.charAt(0) + first.slice(1).toLowerCase(), p = n + " days";
   const t = {
@@ -874,7 +926,7 @@ function smsText(first, cat, n){
 }
 function smsDue(){
   const out = [];
-  for (let c = 1; c <= 11; c++) sections(c).forEach(s => ROSTER[c][s].forEach((nm,i) => {
+  for (let c = 1; c <= 11; c++) sections(c).forEach(s => (ROSTER[c][s] || []).forEach((nm,i) => {
     STREAK_CATS.forEach(cat => {
       const st = streak(c,s,i,cat); if (st.n < smsAfter(cat)) return;
       const rec = smsRec[c + s + (i+1) + "_" + cat];
@@ -885,263 +937,247 @@ function smsDue(){
 }
 async function markSms(it, sent, remark){
   const id = it.c + it.s + (it.i+1) + "_" + it.cat;
-  try {
-    const r = await api("markSms", [token, id, sent, {cls:it.c, sec:it.s, name:it.nm, cat:it.cat, sentOn:date, remark}]);
-    if (sent) smsRec[id] = r; else delete smsRec[id];
-    render();
-  } catch(e){ toast(e.message); }
+  try { const r = await api("markSms", [token, id, sent, {cls:it.c, sec:it.s, name:it.nm, cat:it.cat, sentOn:date, remark}]); if (sent) smsRec[id] = r; else delete smsRec[id]; render(true); }
+  catch(e){ toast(e.message); }
+}
+</script>
+
+<script>
+/* ================= PL ================= */
+let view = "cm", pcls = 1, psec = "A", pseg = "rem";
+function renderPL(){
+  const box = $("vPL"); box.textContent = "";
+  if (!(ROSTER[pcls] && ROSTER[pcls][psec])) psec = sections(pcls)[0];
+  const pend = (c, s) => dayItems(date, c, s, "rem").concat(dayItems(date, c, s, "def")).filter(x => x.st.k === "pend").length;
+  const sel = el("div","card"); const sp = el("div","selector");
+  sp.appendChild(classChips(pcls, c => { pcls = c; if (!ROSTER[c][psec]) psec = sections(c)[0]; render(); }, c => sections(c).some(s => pend(c, s))));
+  sp.appendChild(secSeg(pcls, psec, s => { psec = s; render(); }, s => { const n = pend(pcls, s); return n ? String(n) : ""; }));
+  const rem = dayItems(date, pcls, psec, "rem"), def = dayItems(date, pcls, psec, "def");
+  const sg = el("div","seg");
+  [["rem","Parent remarks", rem],["def","Defaulters", def]].forEach(([k,l,list]) => {
+    const b = btn(pseg === k ? "on" : "", l, () => { pseg = k; render(); });
+    const n = list.filter(x => x.st.k === "pend").length; b.appendChild(el("em", null, n ? String(n) : String(list.length))); if (!n) b.lastChild.style.background = "#ECE9E1", b.lastChild.style.color = "#646B80";
+    sg.appendChild(b);
+  });
+  sp.appendChild(sg); sel.appendChild(sp); box.appendChild(sel);
+  const fs = fuStrip(f => f.c === pcls && f.s === psec); if (fs) box.appendChild(fs);
+  const list = (pseg === "rem" ? rem : def).sort((a,b) => a.i - b.i);   // stable order: cards don't jump after an action
+  const h = el("div","dgrp", "Class " + pcls + " " + psec); h.appendChild(el("small", null, nice(date) + " · " + list.filter(x => x.st.k === "pend").length + " pending of " + list.length)); box.appendChild(h);
+  if (!list.length) { const e = el("div","card"); const m = el("div","empty"); m.appendChild(el("b", null, pseg === "rem" ? "No parent remarks" : "No defaulters")); m.appendChild(document.createTextNode("Nothing for Class " + pcls + " " + psec + " on " + nice(date) + ".")); e.appendChild(m); box.appendChild(e); return; }
+  list.forEach(it => box.appendChild(itemCard(it)));
 }
 
-/* ---------- central view (admin) ---------- */
-let cfrom = null, cto = null, cq = "", ssel = null, lastRem = [];
-const cexp = new Set();
-function cRange(){ if (!cto) cto = date; if (!cfrom) cfrom = shiftDate(cto, -6); return [cfrom, cto]; }
-function rangeBetween(seg, c0, s0, from, to){
-  const out = []; let dt = to, guard = 0;
-  while (dt >= from && guard++ < 62){
-    for (let c = 1; c <= 11; c++){
-      if (c0 && c !== c0) continue; if (!docs[dt + "_" + c]) continue;
-      sections(c).forEach(s => { if (s0 && s0 !== "all" && s !== s0) return; dayList(dt, c, s, seg).forEach(x => out.push(x)); });
-    }
-    dt = shiftDate(dt, -1);
-  }
-  return out;
+/* ================= FO ================= */
+let fseg = "rem", fper = "day", fcls = 0, ftopic = "all", fstat = "all", fq = "";
+function foRemarks(){
+  const from = fper === "day" ? date : shiftDate(date, -6);
+  let l = rangeItems("rem", from, date, fcls, "all");
+  return l;
 }
-function adminControls(it){
-  const wrap = el("div","xrow");
-  const qr = el("div","qrow");
-  ADMIN_QUICK.forEach(q => { const b = el("button","qbtn", q); b.type = "button"; b.onclick = () => { saveLog(it, q, "admin"); renderCentral(true); }; qr.appendChild(b); });
-  wrap.appendChild(qr);
-  const ar = el("div","arow2");
-  const inp = el("input"); inp.id = "adm-" + it.seg + "-" + aid(it.c, it.s, it.i, it.dt);
-  inp.placeholder = "Follow-up remark or action, if required"; inp.setAttribute("aria-label","Follow-up for " + it.nm);
-  const go = el("button","gobtn","Add follow-up"); go.type = "button";
-  const submit = () => { const v = inp.value.trim(); if (!v) return; inp.blur(); saveLog(it, v, "admin"); renderCentral(true); };
-  go.onclick = submit; inp.onkeydown = e => { if (e.key === "Enter") submit(); };
-  ar.appendChild(inp); ar.appendChild(go); wrap.appendChild(ar);
-  return wrap;
-}
-function entryLines(list){
-  const d = el("div","elines");
-  if (!list.length) { d.appendChild(el("span","dash","–")); return d; }
-  list.forEach(l => { const r = el("div","eline"); r.appendChild(el("span", null, l.a)); r.appendChild(el("small", null, (l.who ? l.who + " · " : "") + fmtT(l.at))); d.appendChild(r); });
-  return d;
-}
-function renderRemTable(box){
-  const [from, to] = cRange();
-  let rem = rangeBetween("rem", ccls, csec, from, to);
-  if (cq) rem = rem.filter(x => x.nm.toLowerCase().includes(cq));
-  rem.sort((a,b) => (a.dt < b.dt ? 1 : a.dt > b.dt ? -1 : 0) || a.c - b.c || a.s.localeCompare(b.s) || a.i - b.i);
-  lastRem = rem;
-  box.appendChild(el("div","summary", rem.length + " remark" + (rem.length === 1 ? "" : "s") + " · " + dmy(from) + " to " + dmy(to)));
-  if (!rem.length) { box.appendChild(el("div","empty","No parent remarks for this selection.")); return rem.length; }
-  const wrap = el("div","tscroll"), tbl = el("table","dt");
-  const hr = el("tr"); ["Date","Name","Class","Section","Remark","Action","Follow-up"].forEach(h => hr.appendChild(el("th", null, h))); tbl.appendChild(hr);
-  rem.forEach(it => {
-    const id = aid(it.c, it.s, it.i, it.dt) + it.seg;
-    const tr = el("tr");
-    tr.appendChild(el("td","nw", dmy(it.dt)));
-    tr.appendChild(el("td","nm2", it.nm));
-    tr.appendChild(el("td","nw", String(it.c)));
-    tr.appendChild(el("td","nw", it.s));
-    const rt = el("td","rmk"); rt.appendChild(el("div", null, it.iss[0].text)); rt.appendChild(el("small", null, "Entered " + fmtT(it.iss[0].at))); tr.appendChild(rt);
-    const at = el("td"); at.appendChild(entryLines(it.pl)); tr.appendChild(at);
-    const ft = el("td"); ft.appendChild(entryLines(it.ad));
-    if (canAdmin()) {
-      const tg = el("button","lnk2", cexp.has(id) ? "Close" : "+ Add"); tg.type = "button";
-      tg.onclick = () => { if (cexp.has(id)) cexp.delete(id); else cexp.add(id); renderCentral(true); };
-      ft.appendChild(tg);
-    }
-    tr.appendChild(ft);
-    tbl.appendChild(tr);
-    if (cexp.has(id)) { const xr = el("tr","xr"), xd = el("td"); xd.colSpan = 7; xd.appendChild(adminControls(it)); xr.appendChild(xd); tbl.appendChild(xr); }
+function renderFO(){
+  const box = $("vFO"); box.textContent = "";
+  const sm = smsDue().filter(x => !x.sent).length, fuAll = allFollowUps().filter(f => !f.e.done), fuLate = fuAll.filter(f => f.e.due <= Date.now()).length;
+  const all = foRemarks(), pend = all.filter(x => x.st.k === "pend").length;
+  const top = el("div","seg"); top.style.marginBottom = "12px";
+  [["rem","Remarks", pend],["fu","Follow-ups", fuLate || fuAll.length],["sms","SMS", sm]].forEach(([k,l,n]) => { const b = btn(fseg === k ? "on" : "", l, () => { fseg = k; render(); }); if (n) b.appendChild(el("em", null, String(n))); top.appendChild(b); });
+  box.appendChild(top);
+  if (fseg === "fu") return renderFUs(box);
+  if (fseg === "sms") return renderSms(box);
+
+  const fs = fuStrip(); if (fs) box.appendChild(fs);
+  const f = el("div","card"); const fp = el("div","selector");
+  const per = el("div","seg");
+  [["day", nice(date)],["week","Last 7 days"]].forEach(([k,l]) => per.appendChild(btn(fper === k ? "on" : "", l, () => { fper = k; render(); })));
+  fp.appendChild(per);
+  const cc = el("div","chips");
+  [["All",0]].concat(Array.from({length:11}, (_,k) => [String(k+1), k+1])).forEach(([l,v]) => cc.appendChild(btn("chip sm" + (fcls === v ? " on" : ""), l, () => { fcls = v; render(); })));
+  fp.appendChild(cc);
+  const tc = el("div","chips");
+  const present = TOPICS.filter(t => all.some(x => x.topic === t.k));
+  [["all","All topics"]].concat(present.map(t => [t.k, t.l + " · " + all.filter(x => x.topic === t.k).length])).forEach(([k,l]) => tc.appendChild(btn("chip sm" + (ftopic === k ? " on" : ""), l, () => { ftopic = k; render(); })));
+  fp.appendChild(tc);
+  const sc = el("div","chips");
+  [["all","All"],["pend","Pending"],["noted","Noted"],["act","Actioned"],["fu","Follow-up"]].forEach(([k,l]) => {
+    const n = k === "all" ? all.length : all.filter(x => k === "fu" ? (x.st.k === "fu" || x.st.k === "late") : x.st.k === k).length;
+    sc.appendChild(btn("chip sm" + (fstat === k ? " on" : ""), l + " · " + n, () => { fstat = k; render(); }));
   });
-  wrap.appendChild(tbl); box.appendChild(wrap);
-  return rem.length;
+  fp.appendChild(sc);
+  const q = el("input","search"); q.type = "search"; q.placeholder = "Search a child's name"; q.value = fq; q.id = "fq";
+  q.oninput = () => { fq = q.value.trim().toLowerCase(); render(true); setTimeout(() => { const x = $("fq"); if (x) { x.focus(); x.setSelectionRange(x.value.length, x.value.length); } }, 0); };
+  fp.appendChild(q);
+  f.appendChild(fp); box.appendChild(f);
+
+  let list = all.filter(x => (ftopic === "all" || x.topic === ftopic) && (fstat === "all" || (fstat === "fu" ? (x.st.k === "fu" || x.st.k === "late") : x.st.k === fstat)) && (!fq || x.nm.toLowerCase().includes(fq)));
+  list.sort((a,b) => (a.dt < b.dt ? 1 : a.dt > b.dt ? -1 : 0) || a.c - b.c || a.s.localeCompare(b.s) || a.i - b.i);
+  const ex = el("div","row"); ex.style.margin = "4px 2px 0";
+  ex.appendChild(el("span","small muted", list.length + " remark" + (list.length === 1 ? "" : "s")));
+  ex.appendChild(el("span","sp"));
+  ex.appendChild(btn("btn ghost sm", "Copy for Excel", () => copyText(remarksTSV(list), list.length + " rows copied. Paste into Excel.")));
+  box.appendChild(ex);
+  if (!list.length) { const e = el("div","card"); const m = el("div","empty"); m.appendChild(el("b", null, "Nothing here")); m.appendChild(document.createTextNode("No parent remarks for this selection.")); e.appendChild(m); box.appendChild(e); return; }
+  let last = "";
+  list.forEach(it => {
+    if (fper === "week" && it.dt !== last) { const g = el("div","dgrp", nice(it.dt)); g.appendChild(el("small", null, list.filter(x => x.dt === it.dt).length + " remarks")); box.appendChild(g); last = it.dt; }
+    box.appendChild(itemCard(it));
+  });
 }
-function smsCard(it){
-  const card = el("article","ic");
-  const head = el("div","ic-head");
-  head.appendChild(el("span","roll", String(it.i + 1)));
-  const nm = el("div","ic-name"); nm.appendChild(el("b", null, it.nm)); nm.appendChild(el("small", null, "Class " + it.c + " " + it.s + " · " + LABEL[it.cat] + " · " + it.n + " consecutive days")); head.appendChild(nm);
-  head.appendChild(it.sent ? statusChip("SMS sent", "ok") : statusChip("SMS to send", "acc"));
-  card.appendChild(head);
-  const msg = smsText(firstName(it.nm), it.cat, it.n);
-  const q = el("blockquote","quote", msg); q.style.whiteSpace = "pre-line"; card.appendChild(q);
-  if (it.sent) {
-    const tl = el("div","tl"), r = el("div","tl-row");
-    r.appendChild(el("span","tl-role ad","Admin")); r.appendChild(el("span","tl-text", "SMS sent" + (it.rec.remark ? " · " + it.rec.remark : "")));
-    r.appendChild(el("span","tl-time", (it.rec.by ? it.rec.by + " · " : "") + (it.rec.sentAt ? fmtT(it.rec.sentAt) : dmy(it.rec.sentOn)))); tl.appendChild(r); card.appendChild(tl);
-  }
-  if (!canAdmin()) { const cp0 = el("button","qbtn","Copy SMS"); cp0.type = "button"; cp0.onclick = async () => { try { await navigator.clipboard.writeText(msg); toast("SMS copied"); } catch(e){ toast("Select the text and copy"); } }; card.appendChild(cp0); return card; }
-  const ar = el("div","arow2");
-  const inp = el("input"); inp.id = "sms-" + it.c + it.s + (it.i+1) + it.cat; inp.placeholder = "Remark (optional)"; inp.setAttribute("aria-label","Remark for SMS to " + it.nm);
-  if (it.sent) inp.style.display = "none";
-  const cp = el("button","qbtn","Copy SMS"); cp.type = "button";
-  cp.onclick = async () => { try { await navigator.clipboard.writeText(msg); toast("SMS copied"); } catch(e){ toast("Select the text and copy"); } };
-  const sb = el("button","gobtn", it.sent ? "Undo" : "Mark sent"); sb.type = "button";
-  sb.onclick = () => { inp.blur(); markSms(it, !it.sent, inp.value.trim()); };
-  ar.appendChild(inp); ar.appendChild(cp); ar.appendChild(sb); card.appendChild(ar);
+function logText(it, t){ return it.log.filter(e => entryType(e) === t).map(e => (t === "fu" ? fmtT(e.due) + (e.a ? " " + e.a : "") + (e.done ? " (done)" : "") : e.a) + " — " + (e.who || "") + " " + fmtT(e.at)).join("; "); }
+function remarksTSV(list){
+  const clean = v => String(v == null ? "" : v).replace(/[\t\r\n]+/g, " ");
+  const rows = [["Date","Class","Section","Roll","Name","Topic","Remark","Remark time","Status","Noted","Action","Remarks (PL/FO)","Follow-up"]];
+  list.forEach(it => rows.push([dmy(it.dt), it.c, it.s, it.i + 1, it.nm, it.seg === "rem" ? TOPIC[it.topic].l : it.iss.map(x => LABEL[x.cat]).join(", "), it.seg === "rem" ? it.iss[0].text : "", fmtT(it.iss[0].at), ST_LABEL[it.st.k][0], logText(it, "ack"), logText(it, "act"), logText(it, "note"), logText(it, "fu")]));
+  return rows.map(r => r.map(clean).join("\t")).join("\n");
+}
+function renderFUs(box){
+  const l = allFollowUps(), now = Date.now();
+  const groups = [["Overdue", l.filter(f => !f.e.done && f.e.due <= now)], ["Coming up", l.filter(f => !f.e.done && f.e.due > now)], ["Done", l.filter(f => f.e.done).sort((a,b) => b.e.done - a.e.done).slice(0, 30)]];
+  if (!l.length) { const e = el("div","card"); const m = el("div","empty"); m.appendChild(el("b", null, "No follow-ups")); m.appendChild(document.createTextNode("Set one from any remark with the Follow-up button.")); e.appendChild(m); box.appendChild(e); return; }
+  groups.forEach(([t, g]) => {
+    if (!g.length) return;
+    box.appendChild(el("div","dgrp", t + " · " + g.length));
+    g.forEach(f => { const it = makeItem(f.dt, f.c, f.s, f.i, f.seg); if (it) box.appendChild(itemCard(it, {showDate: true})); });
+  });
+}
+function renderSms(box){
+  const all = smsDue(), open = all.filter(x => !x.sent);
+  const head = el("div","card"); const hp = el("div","cardh");
+  const h2 = el("h2", null, open.length + " SMS to send"); h2.appendChild(el("small", null, (all.length - open.length) + " sent · counted up to " + nice(date) + " · Diary not brought after 2 days, others after 3")); hp.appendChild(h2);
+  hp.appendChild(btn("btn ghost sm", "Copy for Excel", () => {
+    const rows = [["Class","Section","Roll","Name","Category","Days in a row","SMS","Status","Sent time"].join("\t")];
+    all.forEach(it => rows.push([it.c, it.s, it.i + 1, it.nm, LABEL[it.cat], it.n, smsText(firstName(it.nm), it.cat, it.n).replace(/\n/g, " "), it.sent ? "Sent" : "To send", it.sent && it.rec.sentAt ? fmtT(it.rec.sentAt) : ""].join("\t")));
+    copyText(rows.join("\n"), all.length + " rows copied");
+  }));
+  head.appendChild(hp); box.appendChild(head);
+  if (!all.length) { const e = el("div","card"); const m = el("div","empty"); m.appendChild(el("b", null, "No SMS due")); m.appendChild(document.createTextNode("No child has been flagged enough days in a row.")); e.appendChild(m); box.appendChild(e); return; }
+  let last = "";
+  all.sort((a,b) => (a.sent ? 1 : 0) - (b.sent ? 1 : 0) || a.c - b.c || a.s.localeCompare(b.s) || a.i - b.i).forEach(it => {
+    const g = it.sent ? "Sent" : "Class " + it.c + " " + it.s; if (g !== last) { box.appendChild(el("div","dgrp", g)); last = g; }
+    const card = el("article","rc"); const h = el("div","rc-h");
+    h.appendChild(el("span","roll", String(it.i + 1)));
+    const n = el("div","rc-n", title(it.nm)); n.appendChild(el("span","cs", it.c + it.s)); h.appendChild(n);
+    h.appendChild(el("span","pill " + (it.sent ? "t-ok" : "t-bad"), it.sent ? "Sent" : "To send"));
+    card.appendChild(h);
+    const m = el("div","rc-m"); m.appendChild(el("span","tag t-" + CAT[it.cat].tone, LABEL[it.cat])); m.appendChild(el("span", null, it.n + " days in a row")); card.appendChild(m);
+    const msg = smsText(firstName(it.nm), it.cat, it.n);
+    card.appendChild(el("div","sms-q", msg));
+    if (it.sent) card.appendChild(el("div","rc-m", "Sent " + (it.rec.sentAt ? fmtT(it.rec.sentAt) : dmy(it.rec.sentOn)) + (it.rec.by ? " by " + it.rec.by : "") + (it.rec.remark ? " · " + it.rec.remark : "")));
+    const a = el("div","sms-a");
+    const inp = el("input"); inp.placeholder = "Remark (optional)"; inp.setAttribute("aria-label","Remark for SMS to " + it.nm);
+    if (!it.sent && canAdmin()) a.appendChild(inp);
+    a.appendChild(btn("btn ghost sm", "Copy SMS", () => copyText(msg, "SMS copied")));
+    if (canAdmin()) a.appendChild(btn("btn sm" + (it.sent ? " ghost" : ""), it.sent ? "Undo" : "Mark sent", () => markSms(it, !it.sent, inp.value.trim())));
+    card.appendChild(a); box.appendChild(card);
+  });
+}
+
+/* ================= Dashboard: one-click reports ================= */
+let dper = "day", drep = null;
+function dashRange(){ return dper === "day" ? [date, date] : dper === "week" ? [shiftDate(date, -6), date] : [shiftDate(date, -29), date]; }
+function eachKid(from, to, fn){
+  let dt = to, g = 0;
+  while (dt >= from && g++ < 40) { for (let c = 1; c <= 11; c++) { if (!docs[docId(c, dt)]) continue; sections(c).forEach(s => (ROSTER[c][s] || []).forEach((nm, i) => fn(dt, c, s, i, nm, mark(c, s, i, dt)))); } dt = shiftDate(dt, -1); }
+}
+function buildReports(){
+  const [from, to] = dashRange(), R = [];
+  const add = (grp, k, l, tone, rows, note) => R.push({grp, k, l, tone, rows, note});
+  CATS.forEach(cat => { const rows = []; eachKid(from, to, (dt, c, s, i, nm, m) => { if (cat.test(m)) rows.push({dt, c, s, i, nm, d: cat.l}); }); add("Attendance & diary", cat.k, cat.l, cat.tone, rows); });
+  const rem = rangeItems("rem", from, to, 0, "all");
+  TOPICS.forEach(t => { const rows = rem.filter(x => x.topic === t.k).map(x => ({dt:x.dt, c:x.c, s:x.s, i:x.i, nm:x.nm, d:x.iss[0].text, st:ST_LABEL[x.st.k][0]})); if (rows.length || t.k !== "other") add("Parent remarks by topic", "t-" + t.k, t.l, t.tone, rows); });
+  const mk = (k) => rem.filter(x => x.st.k === k).map(x => ({dt:x.dt, c:x.c, s:x.s, i:x.i, nm:x.nm, d:x.iss[0].text, st:ST_LABEL[x.st.k][0]}));
+  add("Follow-through", "pend", "Remarks pending", "warn", mk("pend"), "No one has noted or acted yet");
+  add("Follow-through", "noted", "Noted only", "navy", mk("noted"));
+  add("Follow-through", "act", "Actioned", "ok", mk("act"));
+  const fus = allFollowUps().filter(f => !f.e.done).map(f => ({dt:f.dt, c:f.c, s:f.s, i:f.i, nm:f.nm, d:(f.e.a || "Follow-up") + " · " + fmtT(f.e.due), st: until(f.e.due)}));
+  add("Follow-through", "fu", "Open follow-ups", "sky", fus);
+  const sm = smsDue().filter(x => !x.sent).map(x => ({dt:date, c:x.c, s:x.s, i:x.i, nm:x.nm, d:LABEL[x.cat] + " · " + x.n + " days", st:"To send"}));
+  add("Follow-through", "sms", "SMS to send", "bad", sm);
+  const nsub = []; for (let c = 1; c <= 11; c++) sections(c).forEach(s => { if ((ROSTER[c][s] || []).length && !subOf(c, s, date)) nsub.push({dt:date, c, s, i:-1, nm:"Class " + c + " " + s, d: secDone(c, s, date) ? "Marked, not submitted" : "Not marked"}); });
+  add("Follow-through", "nsub", "Sections not submitted", "mute", nsub, "For " + nice(date));
+  return R;
+}
+function renderDash(){
+  const box = $("vDash"); box.textContent = "";
+  const per = el("div","seg period");
+  [["day", nice(date)],["week","Last 7 days"],["month","Last 30 days"]].forEach(([k,l]) => per.appendChild(btn(dper === k ? "on" : "", l, () => { dper = k; render(); })));
+  box.appendChild(per);
+  const R = buildReports();
+  let grp = "";
+  let tiles = null;
+  R.forEach(r => {
+    if (r.grp !== grp) { box.appendChild(el("div","eyebrow", r.grp)); tiles = el("div","tiles"); box.appendChild(tiles); grp = r.grp; }
+    const kids = new Set(r.rows.map(x => x.c + x.s + x.i)).size;
+    const t = btn("tile" + (drep === r.k ? " on" : "") + (r.rows.length ? "" : " zero"), "", () => { drep = drep === r.k ? null : r.k; render(); setTimeout(() => { const x = $("rep"); if (x) x.scrollIntoView({behavior:"smooth", block:"start"}); }, 30); }, r.l);
+    t.style.setProperty("--c", getComputedStyle(document.documentElement).getPropertyValue("--" + ({bad:"bad",warn:"warn",plum:"plum",sky:"sky",ok:"ok",navy:"navy",mute:"faint"}[r.tone] || "navy")));
+    t.appendChild(el("b", null, String(r.rows.length))); t.appendChild(el("span", null, r.l));
+    t.appendChild(el("small", null, r.note || (!r.rows.length ? "None" : dper === "day" || r.k === "nsub" ? "Tap to open" : kids + " child" + (kids === 1 ? "" : "ren"))));
+    tiles.appendChild(t);
+    if (drep === r.k) tiles.after(reportPanel(r));
+  });
+}
+function reportPanel(r){
+  const card = el("div","card rep"); card.id = "rep";
+  const [from, to] = dashRange();
+  const h = el("div","cardh"); const h2 = el("h2", null, r.l); h2.appendChild(el("small", null, (from === to ? nice(to) : nice(from) + " – " + nice(to)) + " · " + r.rows.length + " entr" + (r.rows.length === 1 ? "y" : "ies"))); h.appendChild(h2);
+  h.appendChild(btn("btn ghost sm", "Close", () => { drep = null; render(); }));
+  card.appendChild(h);
+  const rows = r.rows.slice().sort((a,b) => (a.dt < b.dt ? 1 : a.dt > b.dt ? -1 : 0) || a.c - b.c || a.s.localeCompare(b.s) || a.i - b.i);
+  const act = el("div","row"); act.style.padding = "10px 14px"; act.style.borderBottom = "1px solid var(--line2)";
+  act.appendChild(btn("btn sm", "Copy for WhatsApp", () => {
+    const L = ["*" + r.l + "* – " + (from === to ? dmy(to) : dmy(from) + " to " + dmy(to)), ""]; let g = "";
+    rows.forEach((x, n) => { const gg = (from === to ? "" : dmy(x.dt) + " · ") + "Class " + x.c + " " + x.s; if (gg !== g) { if (g) L.push(""); L.push("*" + gg + "*"); g = gg; } L.push((x.i >= 0 ? (x.i + 1) + ". " + title(x.nm) : x.nm) + (r.grp === "Attendance & diary" ? "" : " – " + String(x.d).replace(/\s+/g, " ")) + (x.st ? " _(" + x.st + ")_" : "")); });
+    copyText(L.join("\n"), "Report copied for WhatsApp");
+  }));
+  act.appendChild(btn("btn ghost sm", "Copy for Excel", () => {
+    const clean = v => String(v == null ? "" : v).replace(/[\t\r\n]+/g, " ");
+    const L = [["Date","Class","Section","Roll","Name","Detail","Status"].join("\t")].concat(rows.map(x => [dmy(x.dt), x.c, x.s, x.i >= 0 ? x.i + 1 : "", x.nm, x.d, x.st || ""].map(clean).join("\t")));
+    copyText(L.join("\n"), rows.length + " rows copied");
+  }));
+  card.appendChild(act);
+  if (!rows.length) { card.appendChild(el("div","empty","Nothing in this period.")); return card; }
+  const tw = el("div","tw"), tb = el("table");
+  const hr = el("tr"); ["Date","Class","Name","Detail"].concat(r.rows.some(x => x.st) ? ["Status"] : []).forEach(x => hr.appendChild(el("th", null, x))); tb.appendChild(hr);
+  rows.forEach(x => {
+    const tr = el("tr");
+    tr.appendChild(el("td","nw", nice(x.dt).replace(/^\w+, /, "")));
+    tr.appendChild(el("td","nw", x.c + x.s));
+    const n = el("td"); n.appendChild(el("b", null, x.i >= 0 ? title(x.nm) : x.nm)); if (x.i >= 0) n.appendChild(el("span","s", "Roll " + (x.i + 1))); tr.appendChild(n);
+    tr.appendChild(el("td", null, x.d));
+    if (r.rows.some(y => y.st)) tr.appendChild(el("td","nw", x.st || ""));
+    tb.appendChild(tr);
+  });
+  tw.appendChild(tb); card.appendChild(tw);
   return card;
 }
-function renderSmsDash(box){
-  const all = smsDue(), open = all.filter(x => !x.sent).length;
-  box.appendChild(el("div","summary", open + " to send · " + (all.length - open) + " sent · counted to " + dmy(date)));
-  const grid = el("div","sgrid");
-  const tile = (label, n, sent, sel, fn) => {
-    const b = el("button","stile" + (sel ? " on" : "") + (n ? " hot" : "")); b.type = "button";
-    b.appendChild(el("b", null, label)); b.appendChild(el("small", null, n ? n + " to send" : sent ? "all sent" : "none"));
-    b.setAttribute("aria-pressed", String(sel)); b.onclick = fn; grid.appendChild(b);
-  };
-  tile("All", open, all.length - open, !ssel, () => { ssel = null; renderCentral(true); });
-  for (let c = 1; c <= 11; c++) sections(c).forEach(s => {
-    const l = all.filter(x => x.c === c && x.s === s), n = l.filter(x => !x.sent).length;
-    tile(c + s, n, l.length - n, !!ssel && ssel.c === c && ssel.s === s, () => { ssel = {c, s}; renderCentral(true); });
-  });
-  box.appendChild(grid);
-  let list = all.filter(x => !ssel || (x.c === ssel.c && x.s === ssel.s));
-  list = list.sort((a,b) => a.c - b.c || a.s.localeCompare(b.s) || a.i - b.i || (a.sent ? 1 : 0) - (b.sent ? 1 : 0));
-  const hd = el("div","row2"); hd.style.marginTop = "14px";
-  hd.appendChild(el("h2","sec", ssel ? "Class " + ssel.c + " · Section " + ssel.s : "All classes"));
-  const cpl = el("button","tab sbtn-go","Copy list for Excel"); cpl.type = "button";
-  cpl.onclick = async () => {
-    const lines = [["Class","Section","Roll","Name","Category","Consecutive days","SMS","Status","Sent time"].join("\t")];
-    list.forEach(it => lines.push([it.c, it.s, it.i + 1, it.nm, LABEL[it.cat], it.n, smsText(firstName(it.nm), it.cat, it.n).replace(/\n/g, " "), it.sent ? "Sent" : "To send", it.sent && it.rec.sentAt ? fmtT(it.rec.sentAt) : ""].join("\t")));
-    try { await navigator.clipboard.writeText(lines.join("\n")); toast(list.length + " rows copied. Paste into Excel."); } catch(e){ toast("Copy not allowed here"); }
-  };
-  hd.appendChild(cpl); box.appendChild(hd);
-  if (!list.length) { box.appendChild(el("div","empty","No child is due for an SMS here (Diary not brought: 2 days in a row; other cases: 3 days in a row).")); return; }
-  const wrap = el("div","list"); let last = "";
-  list.forEach(it => {
-    const g = "Class " + it.c + " · Section " + it.s;
-    if (!ssel && g !== last) { wrap.appendChild(el("h3","grp", g)); last = g; }
-    wrap.appendChild(smsCard(it));
-  });
-  box.appendChild(wrap);
-}
-function renderCentral(force){
-  const ae = document.activeElement;
-  if (!force && ae && ae.tagName === "INPUT" && $("viewCen").contains(ae)) return;
-  const [from, to] = cRange();
-  if ($("cfrom").value !== from) $("cfrom").value = from;
-  if ($("cto").value !== to) $("cto").value = to;
-  $("cfrom").min = $("cto").min = shiftDate(date, -30); $("cfrom").max = $("cto").max = date;
-  const smsOpen = smsDue().filter(x => !x.sent).length;
-  const remCount = rangeBetween("rem", 0, "all", from, to).length;
-  const sg = $("csegs"); sg.textContent = "";
-  [["rem","Remarks · " + remCount],["sms","SMS · " + smsOpen + " to send"]].forEach(([k,l]) => { const b = el("button","tab", l); b.type = "button"; b.setAttribute("aria-selected", String(cseg === k)); b.onclick = () => { cseg = k; renderCentral(true); }; sg.appendChild(b); });
-  $("cremctl").hidden = cseg !== "rem";
-  const box = $("cbody"); box.textContent = "";
-  if (cseg === "rem") {
-    const cb = $("cchips"); cb.textContent = "";
-    const mk = (lab, v) => { const b = el("button","chip", lab); b.type = "button"; b.setAttribute("aria-pressed", String(ccls === v)); b.onclick = () => { ccls = v; csec = "all"; renderCentral(true); }; cb.appendChild(b); };
-    mk("All", 0); for (let c = 1; c <= 11; c++) mk(String(c), c);
-    const tb = $("ctabs"); tb.textContent = "";
-    if (ccls) [["all","All sections"]].concat(sections(ccls).map(s => [s, ccls + " " + s])).forEach(([k,l]) => { const b = el("button","tab", l); b.type = "button"; b.setAttribute("aria-selected", String(csec === k)); b.onclick = () => { csec = k; renderCentral(true); }; tb.appendChild(b); });
-    renderRemTable(box);
-  } else renderSmsDash(box);
-}
-$("cfrom").onchange = e => { if (!e.target.value) return; cfrom = e.target.value; cRange(); if (cfrom > cto) cto = cfrom; renderCentral(true); };
-$("cto").onchange = e => { if (!e.target.value) return; cto = e.target.value; cRange(); if (cto < cfrom) cfrom = cto; renderCentral(true); };
-$("cq").oninput = e => { cq = e.target.value.trim().toLowerCase(); renderCentral(true); };
-$("cxl").onclick = async () => {
-  const lines = [["Date","Class","Section","Roll","Name","Remark","Remark time","Action","Action time","Follow-up","Follow-up time"].join("\t")];
-  const clean = v => String(v == null ? "" : v).replace(/[\t\r\n]+/g, " ");
-  lastRem.slice().reverse().forEach(it => lines.push([dmy(it.dt), it.c, it.s, it.i + 1, it.nm, it.iss[0].text, fmtT(it.iss[0].at),
-    it.pl.map(l => l.a).join("; "), it.pl.map(l => fmtT(l.at)).join("; "), it.ad.map(l => l.a).join("; "), it.ad.map(l => fmtT(l.at)).join("; ")].map(clean).join("\t")));
-  try { await navigator.clipboard.writeText(lines.join("\n")); toast(lastRem.length + " remarks copied. Paste into Excel."); } catch(e){ toast("Copy not allowed here"); }
-};
+</script>
 
-function updateBadge(){
-  const rem = rangeItems("rem", 0, "all", 7).filter(x => !x.ad.length && !x.pl.length).length;
-  const sm = smsDue().filter(x => !x.sent).length, n = rem + sm;
-  const b = document.querySelector('#nav [data-view="cen"]'); if (b) b.textContent = n ? "Central (" + n + ")" : "Central";
-}
-
-/* ---------- views & routing ---------- */
-function allowedView(v){ return v === "mark" ? canMark() : v === "staff" ? canAdmin() : true; }
-function render(){
-  const authed = !!me;
-  $("auth").hidden = authed || !API_URL || !ready; $("app").hidden = !authed; $("who").hidden = !authed;
-  if (!API_URL) { banner("Setup needed: add the Apps Script web app URL to API_URL in this page (see SETUP.md)."); return; }
-  if (!authed) { if (ready && !$("loginForm")) renderAuth(); document.querySelector(".fab").hidden = true; return; }
-  if ($("loginForm")) { $("auth").textContent = ""; banner(""); }
-  if (!allowedView(view)) { setView(canMark() ? "mark" : "cls"); return; }
-  renderWho();
-  if (!rosterReady()) banner(canAdmin() ? "Class lists are not loaded yet. Open the Staff tab and upload them." : "Class lists are not loaded yet. Ask the admin to upload them.", true);
-  else if (/Class lists are not loaded/.test($("banner").textContent)) banner("");
-  $("nav").querySelectorAll("button").forEach(b => { b.hidden = !allowedView(b.dataset.view); });
-  document.querySelector(".fab").hidden = view !== "mark";
-  if (view === "cls") renderPL(); else if (view === "cen") renderCentral(); else if (view === "staff") renderStaff(); else renderMark();
-  updateBadge();
-}
-function renderWho(){
-  const w = $("who"); w.textContent = "";
-  const a = el("span", null, "Logged in as "); a.appendChild(el("b", null, me.name)); a.appendChild(document.createTextNode(" · " + ROLE_LABEL[me.role])); w.appendChild(a);
-  const o = el("button","lnkb","Log out"); o.type = "button"; o.onclick = () => { setToken(""); me = null; docs = {}; acts = {}; smsRec = {}; ready = true; authMode = "login"; render(); };
-  w.appendChild(o);
-}
-function renderAuth(){
-  const setup = authMode === "setup";
-  const name = el("input"); name.type = "text"; name.id = "lgName"; name.maxLength = 40; name.autocomplete = "username"; name.placeholder = "e.g. Anita Sharma";
-  const role = el("select"); role.id = "lgRole"; ["cm","pl","admin"].forEach(r => { const o = el("option", null, ROLE_LABEL[r]); o.value = r; role.appendChild(o); });
-  const pw = el("input"); pw.type = "password"; pw.id = "lgPw"; pw.autocomplete = setup ? "new-password" : "current-password"; pw.placeholder = setup ? "Set a password (6+ characters)" : "Password";
-  const go = el("button","btn", setup ? "Create login" : "Log in"); go.type = "submit"; go.id = "lgGo";
-  const sw = el("button","tab", setup ? "I already have a password" : "First time? Set password"); sw.type = "button"; sw.onclick = () => { authMode = setup ? "login" : "setup"; banner(""); $("loginForm") && $("loginForm").remove(); renderAuth(); };
-  const f = el("form","authcard"); f.id = "loginForm"; f.noValidate = true;
-  f.appendChild(el("h2", null, setup ? "First-time setup" : "Log in"));
-  f.appendChild(el("p", null, setup ? "Type your name, choose your role and your own password. The admin approves your login once; nobody can see your password." : "Log in to mark diaries, log actions or view the central dashboard."));
-  const fld = (lab, inp, id) => { const d = el("div","field"); const l = el("label", null, lab); l.htmlFor = id; d.appendChild(l); d.appendChild(inp); return d; };
-  f.appendChild(fld("Your name", name, "lgName"));
-  if (setup) f.appendChild(fld("I am", role, "lgRole"));
-  f.appendChild(fld("Password", pw, "lgPw"));
-  const row = el("div","row"); row.appendChild(go); row.appendChild(sw); f.appendChild(row);
-  f.onsubmit = async e => {
-    e.preventDefault();
-    const nm = name.value.trim(); if (!nm) { banner("Type your name."); return; } if (!pw.value) { banner("Enter your password."); return; }
-    go.disabled = true; banner("");
-    try {
-      if (setup) {
-        const r = await api("setup", [nm, pw.value, role.value]);
-        if (r.token) { setToken(r.token); applyState(r.state); }
-        else { authMode = "login"; $("loginForm") && $("loginForm").remove(); renderAuth(); banner("Password set for " + nm + ". The admin needs to approve your login once. After that, log in with this password.", true); }
-      } else { const r2 = await api("login", [nm, pw.value]); setToken(r2.token); applyState(r2.state); }
-    } catch(err){ banner(err.message); }
-    go.disabled = false;
-  };
-  $("auth").textContent = ""; $("auth").appendChild(f);
-}
-function renderStaff(){
-  const box = $("viewStaff"); const a0 = document.activeElement; if (a0 && a0.tagName === "SELECT" && box.contains(a0)) return; box.textContent = "";
-  const h = el("h2","sec","Staff logins"); h.style.marginTop = "12px"; box.appendChild(h);
-  box.insertBefore(rosterCard(), h);
-  if (rosterReady()) box.insertBefore(moveCard(), h);
+<script>
+/* ================= Settings (FO) ================= */
+function renderSet(){
+  const box = $("vSet"); const a0 = document.activeElement; if (a0 && (a0.tagName === "SELECT" || a0.tagName === "INPUT") && box.contains(a0)) return; box.textContent = "";
+  box.appendChild(rosterCard());
+  if (rosterReady()) box.appendChild(moveCard());
   const pend = users.filter(u => u.status === "pending"), act = users.filter(u => u.status !== "pending");
-  const roleSel = cur => { const sel = el("select"); ["cm","pl","admin"].forEach(r => { const o = el("option", null, ROLE_LABEL[r]); o.value = r; if (r === cur) o.selected = true; sel.appendChild(o); }); return sel; };
-  const card = u => {
-    const c = el("div","ucard"); const n = el("div","un", u.name);
+  const roleSel = cur => { const s = el("select"); ["cm","pl","admin"].forEach(r => { const o = el("option", null, ROLE_LABEL[r]); o.value = r; if (r === cur) o.selected = true; s.appendChild(o); }); return s; };
+  const row = u => {
+    const c = el("div","urow"); const n = el("div","un", u.name);
     n.appendChild(el("small", null, ROLE_LABEL[u.role] + " · " + (u.status === "active" ? "active" : u.status === "reset" ? "password reset, waiting for a new password" : "waiting for approval")));
     c.appendChild(n);
     if (u.status === "pending") {
-      const sel = roleSel(u.role);
-      const ok = el("button","gobtn","Approve"); ok.type = "button";
-      ok.onclick = async () => { ok.disabled = true; try { applyState(await api("approve", [token, u.name, sel.value])); toast("Approved " + u.name); } catch(e){ toast(e.message); ok.disabled = false; } };
-      c.appendChild(sel); c.appendChild(ok);
+      const s = roleSel(u.role);
+      c.appendChild(s); c.appendChild(btn("btn sm", "Approve", async ev => { ev.target.disabled = true; try { applyState(await api("approve", [token, u.name, s.value])); toast("Approved " + u.name); } catch(e){ toast(e.message); ev.target.disabled = false; } }));
     } else if (u.name !== me.name) {
-      const sel = roleSel(u.role);
-      sel.onchange = async () => { try { applyState(await api("approve", [token, u.name, sel.value])); toast("Role changed"); } catch(e){ toast(e.message); } };
-      const rs = el("button","qbtn","Reset password"); rs.type = "button"; let ar = false;
-      rs.onclick = async () => { if (!ar) { ar = true; rs.textContent = "Tap again to reset"; return; } try { applyState(await api("resetUser", [token, u.name])); toast("Reset. " + u.name + " sets a new password."); } catch(e){ toast(e.message); } };
-      const rm = el("button","qbtn","Remove"); rm.type = "button"; let am = false;
-      rm.onclick = async () => { if (!am) { am = true; rm.textContent = "Tap again to remove"; return; } try { applyState(await api("removeUser", [token, u.name])); toast("Removed"); } catch(e){ toast(e.message); } };
-      c.appendChild(sel); c.appendChild(rs); c.appendChild(rm);
+      const s = roleSel(u.role);
+      s.onchange = async () => { try { applyState(await api("approve", [token, u.name, s.value])); toast("Role changed"); } catch(e){ toast(e.message); } };
+      let ar = false, am = false;
+      const rs = btn("btn ghost sm", "Reset password", async () => { if (!ar) { ar = true; rs.textContent = "Tap again"; return; } try { applyState(await api("resetUser", [token, u.name])); toast("Reset. " + u.name + " sets a new password."); } catch(e){ toast(e.message); } });
+      const rm = btn("btn ghost sm", "Remove", async () => { if (!am) { am = true; rm.textContent = "Tap again"; return; } try { applyState(await api("removeUser", [token, u.name])); toast("Removed"); } catch(e){ toast(e.message); } });
+      c.appendChild(s); c.appendChild(rs); c.appendChild(rm);
     }
     return c;
   };
-  if (pend.length) { box.appendChild(el("h3","grp","Waiting for approval · " + pend.length)); const l1 = el("div","list"); pend.forEach(u => l1.appendChild(card(u))); box.appendChild(l1); }
-  box.appendChild(el("h3","grp","Everyone"));
-  const l2 = el("div","list"); act.forEach(u => l2.appendChild(card(u))); box.appendChild(l2);
-  if (!act.length && !pend.length) box.appendChild(el("div","empty","No logins yet."));
+  const card = (t, sub, list) => { const k = el("div","card"); const h = el("div","cardh"); const h2 = el("h2", null, t); if (sub) h2.appendChild(el("small", null, sub)); h.appendChild(h2); k.appendChild(h); list.forEach(u => k.appendChild(row(u))); if (!list.length) k.appendChild(el("div","empty","No one here.")); return k; };
+  if (pend.length) box.appendChild(card("Waiting for approval", pend.length + " request" + (pend.length === 1 ? "" : "s"), pend));
+  box.appendChild(card("Staff logins", "CM marks diaries · PL acts on remarks · FO sees everything and sends SMS", act));
 }
 function parseRoster(text){
   const out = {}; let n = 0, bad = 0;
@@ -1156,85 +1192,135 @@ function parseRoster(text){
   return {out, n, bad};
 }
 function rosterCard(){
-  const c = el("div","ucard"); c.style.marginTop = "12px"; c.style.display = "grid";
-  const total = Object.keys(ROSTER).reduce((a, k) => a + Object.values(ROSTER[k]).reduce((b, l) => b + l.length, 0), 0);
-  const t = el("div","un","Class lists"); t.appendChild(el("small", null, total ? total + " students loaded. Upload a new file to replace the classes it contains." : "Not loaded yet. Upload the class list file (CSV with columns Class, Section, Name)."));
-  c.appendChild(t);
-  const inp = el("input"); inp.type = "file"; inp.accept = ".csv,.txt,text/csv"; inp.setAttribute("aria-label","Class list CSV file");
-  const msg = el("small", null, ""); const go = el("button","gobtn","Upload class lists"); go.type = "button"; go.disabled = true; let parsed = null;
-  inp.onchange = async () => {
-    parsed = null; go.disabled = true; const f = inp.files && inp.files[0]; if (!f) return;
-    const r = parseRoster(await f.text());
+  const k = el("div","card"); const h = el("div","cardh");
+  const total = Object.keys(ROSTER).reduce((a, x) => a + Object.values(ROSTER[x]).reduce((b, l) => b + l.length, 0), 0);
+  const h2 = el("h2", null, "Class lists"); h2.appendChild(el("small", null, total ? total + " students loaded" : "Not loaded yet")); h.appendChild(h2); k.appendChild(h);
+  const p = el("div","pad");
+  p.appendChild(el("div","small muted", "Upload a CSV with columns Class, Section, Name. It replaces only the classes it contains."));
+  const inp = el("input"); inp.type = "file"; inp.accept = ".csv,.txt,text/csv"; inp.style.margin = "10px 0"; inp.setAttribute("aria-label","Class list CSV file");
+  const msg = el("div","small muted"); const go = btn("btn", "Upload class lists"); go.disabled = true; let parsed = null;
+  inp.onchange = async () => { parsed = null; go.disabled = true; const f = inp.files && inp.files[0]; if (!f) return; const r = parseRoster(await f.text());
     if (!r.n) { msg.textContent = "No students found. Columns must be Class, Section, Name."; return; }
     parsed = r; const secs = Object.values(r.out).reduce((a, o) => a + Object.keys(o).length, 0);
-    msg.textContent = r.n + " students in " + secs + " sections of " + Object.keys(r.out).length + " classes" + (r.bad ? " (" + r.bad + " rows skipped)" : "") + ". Check, then tap Upload."; go.disabled = false;
-  };
+    msg.textContent = r.n + " students in " + secs + " sections of " + Object.keys(r.out).length + " classes" + (r.bad ? " (" + r.bad + " rows skipped)" : "") + ". Check, then tap Upload."; go.disabled = false; };
   go.onclick = async () => { if (!parsed) return; go.disabled = true; try { applyState(await api("saveRoster", [token, parsed.out])); toast("Class lists saved"); } catch(e){ toast(e.message); go.disabled = false; } };
-  c.appendChild(inp); c.appendChild(msg); c.appendChild(go);
-  return c;
+  p.appendChild(inp); p.appendChild(msg); const r = el("div","row"); r.style.marginTop = "10px"; r.appendChild(go); p.appendChild(r);
+  k.appendChild(p); return k;
 }
 function moveCard(){
-  const c = el("div","ucard"); c.style.marginTop = "12px"; c.style.display = "grid"; c.style.gap = "8px";
-  const t = el("div","un","Move a student to another section"); t.appendChild(el("small", null, "Their past marks, actions and SMS records move with them. Roll numbers in both sections are renumbered in name order."));
-  c.appendChild(t);
-  const row = el("div"); row.style.display = "flex"; row.style.gap = "6px"; row.style.flexWrap = "wrap";
-  const sCls = el("select"), sFrom = el("select"), sName = el("select"), sTo = el("select");
-  sCls.setAttribute("aria-label","Class"); sFrom.setAttribute("aria-label","From section"); sName.setAttribute("aria-label","Student"); sTo.setAttribute("aria-label","To section");
-  for (let k = 1; k <= 11; k++) { const o = el("option", null, "Class " + k); o.value = k; sCls.appendChild(o); }
+  const k = el("div","card"); const h = el("div","cardh"); const h2 = el("h2", null, "Move a student to another section");
+  h2.appendChild(el("small", null, "Past marks, actions and SMS records move with the child")); h.appendChild(h2); k.appendChild(h);
+  const p = el("div","pad"); const r = el("div","row");
+  const sC = el("select","inp"), sF = el("select","inp"), sN = el("select","inp"), sT = el("select","inp");
+  [sC, sF, sT].forEach(x => x.style.width = "auto"); sN.style.flex = "1 1 200px";
+  for (let c = 1; c <= 11; c++) { const o = el("option", null, "Class " + c); o.value = c; sC.appendChild(o); }
   const fill = (sel, items) => { sel.textContent = ""; items.forEach(([v, l]) => { const o = el("option", null, l); o.value = v; sel.appendChild(o); }); };
-  const upd = (lvl) => {
-    const k = Number(sCls.value), secs = sections(k);
-    if (lvl < 1) fill(sFrom, secs.map(x => [x, "From " + k + x]));
-    if (lvl < 2) fill(sName, (ROSTER[k][sFrom.value] || []).map((n, i) => [n, (i + 1) + ". " + n]));
-    fill(sTo, secs.filter(x => x !== sFrom.value).map(x => [x, "To " + k + x]));
+  const upd = lvl => { const c = +sC.value, secs = sections(c);
+    if (lvl < 1) fill(sF, secs.map(x => [x, "From " + c + x]));
+    if (lvl < 2) fill(sN, (ROSTER[c][sF.value] || []).map((n, i) => [n, (i + 1) + ". " + n]));
+    fill(sT, secs.filter(x => x !== sF.value).map(x => [x, "To " + c + x])); };
+  sC.onchange = () => upd(0); sF.onchange = () => upd(1); upd(0);
+  [sC, sF, sN, sT].forEach(x => r.appendChild(x)); p.appendChild(r);
+  const go = btn("btn", "Move student", async () => { if (!sN.value || !sT.value) return; go.disabled = true;
+    try { const st = await api("moveStudent", [token, +sC.value, sF.value, sN.value, sT.value]); docs = {}; applyState(st); toast(st.msg || "Moved"); } catch(e){ toast(e.message); } finally { go.disabled = false; } });
+  const r2 = el("div","row"); r2.style.marginTop = "10px"; r2.appendChild(go); p.appendChild(r2);
+  k.appendChild(p); return k;
+}
+
+/* ================= auth ================= */
+function renderAuth(){
+  const setup = authMode === "setup";
+  const wrap = el("div","card auth"); wrap.id = "loginCard";
+  const hero = el("div","hero"); hero.appendChild(el("h2", null, setup ? "First-time setup" : "Welcome"));
+  hero.appendChild(el("p", null, setup ? "Type your name, choose your role and set your own password. FO approves your login once." : "Log in to mark diaries, act on remarks or open the FO desk.")); wrap.appendChild(hero);
+  const f = el("form","pad"); f.id = "loginForm"; f.noValidate = true;
+  const fld = (lab, inp) => { const d = el("div","field"); const l = el("label", null, lab); l.htmlFor = inp.id; d.appendChild(l); d.appendChild(inp); return d; };
+  const name = el("input"); name.type = "text"; name.id = "lgName"; name.maxLength = 40; name.autocomplete = "username"; name.placeholder = "e.g. Anita Sharma";
+  const role = el("select"); role.id = "lgRole"; ["cm","pl","admin"].forEach(r => { const o = el("option", null, ROLE_LABEL[r]); o.value = r; role.appendChild(o); });
+  const pw = el("input"); pw.type = "password"; pw.id = "lgPw"; pw.autocomplete = setup ? "new-password" : "current-password"; pw.placeholder = setup ? "Set a password (6+ characters)" : "Password";
+  f.appendChild(fld("Your name", name)); if (setup) f.appendChild(fld("I am", role)); f.appendChild(fld("Password", pw));
+  const go = el("button","btn", setup ? "Create login" : "Log in"); go.type = "submit"; go.style.width = "100%"; go.style.padding = "13px";
+  f.appendChild(go);
+  const sw = btn("lnk", setup ? "I already have a password" : "First time? Set your password", () => { authMode = setup ? "login" : "setup"; banner(""); renderAuth(); });
+  const sr = el("div","row"); sr.style.justifyContent = "center"; sr.style.marginTop = "12px"; sr.appendChild(sw); f.appendChild(sr);
+  f.onsubmit = async e => {
+    e.preventDefault();
+    const nm = name.value.trim(); if (!nm) { banner("Type your name."); return; } if (!pw.value) { banner("Enter your password."); return; }
+    go.disabled = true; banner("");
+    try {
+      if (setup) { const r = await api("setup", [nm, pw.value, role.value]);
+        if (r.token) { setToken(r.token); applyState(r.state); }
+        else { authMode = "login"; renderAuth(); banner("Password set for " + nm + ". FO needs to approve your login once. After that, log in with this password.", true); } }
+      else { const r2 = await api("login", [nm, pw.value]); setToken(r2.token); applyState(r2.state); }
+    } catch(err){ banner(err.message); }
+    go.disabled = false;
   };
-  sCls.onchange = () => upd(0); sFrom.onchange = () => upd(1);
-  upd(0);
-  [sCls, sFrom, sName, sTo].forEach(x => row.appendChild(x)); c.appendChild(row);
-  const go = el("button","gobtn","Move student"); go.type = "button";
-  go.onclick = async () => {
-    if (!sName.value || !sTo.value) return;
-    go.disabled = true;
-    try { const st = await api("moveStudent", [token, Number(sCls.value), sFrom.value, sName.value, sTo.value]); docs = {}; applyState(st); toast(st.msg || "Moved"); }
-    catch(e){ toast(e.message); }
-    finally { go.disabled = false; }
-  };
-  c.appendChild(go);
-  return c;
+  wrap.appendChild(f);
+  $("auth").textContent = ""; $("auth").appendChild(wrap);
+}
+
+/* ================= views & routing ================= */
+const VIEWS = {cm:"vCM", pl:"vPL", fo:"vFO", dash:"vDash", set:"vSet"};
+function allowedView(v){ return v === "cm" ? canMark() : v === "pl" ? canPL() : v === "set" ? canAdmin() : !!me; }
+function typingIn(box){ const a = document.activeElement; return a && (a.tagName === "TEXTAREA" || (a.tagName === "INPUT" && a.type !== "search" && a.type !== "date" && a.type !== "time")) && box.contains(a); }
+function render(force){
+  const authed = !!me;
+  $("auth").hidden = authed || !ready; $("app").hidden = !authed; $("nav").hidden = !authed;
+  if (!authed) { if (ready && !$("loginCard")) renderAuth(); $("dock").hidden = true; document.body.classList.remove("dock-on"); return; }
+  if ($("loginCard")) { $("auth").textContent = ""; banner(""); }
+  if (!allowedView(view)) { setView(canMark() ? "cm" : canPL() ? "pl" : "dash"); return; }
+  const w = $("who"); w.textContent = "";
+  w.appendChild(el("span","rolepill", ROLE_SHORT[me.role])); const nb = el("span"); nb.appendChild(el("b", null, me.name)); w.appendChild(nb);
+  w.appendChild(el("span","sp"));
+  w.appendChild(btn("lnk", "Log out", () => { setToken(""); me = null; docs = {}; acts = {}; smsRec = {}; ready = true; authMode = "login"; render(); }));
+  if (!rosterReady()) banner(canAdmin() ? "Class lists are not loaded yet. Open Settings and upload them." : "Class lists are not loaded yet. Ask FO to upload them.", true);
+  else if (/Class lists are not loaded/.test($("banner").textContent)) banner("");
+  $("nav").querySelectorAll("button").forEach(b => { b.hidden = !allowedView(b.dataset.v); b.classList.toggle("on", b.dataset.v === view); });
+  Object.keys(VIEWS).forEach(v => { $(VIEWS[v]).hidden = v !== view; });
+  const box = $(VIEWS[view]);
+  if (!(force !== true && view !== "cm" && typingIn(box))) {
+    const y = window.scrollY;
+    if (view === "cm") renderCM(); else if (view === "pl") renderPL(); else if (view === "fo") renderFO(); else if (view === "dash") renderDash(); else renderSet();
+    if (view !== "cm" || force !== "nav") window.scrollTo(0, y);
+  }
+  renderDock(); badges();
+}
+function badges(){
+  const set = (v, n) => { const b = document.querySelector('#nav [data-v="' + v + '"]'); if (!b) return; let e = b.querySelector("em"); if (!n) { if (e) e.remove(); return; } if (!e) { e = el("em"); b.appendChild(e); } e.textContent = String(n); };
+  const remToday = dayItems(date, 0, "all", "rem"), now = Date.now(), fu = allFollowUps().filter(f => !f.e.done && f.e.due <= now + 9e5).length;
+  set("pl", canPL() ? remToday.concat(dayItems(date, 0, "all", "def")).filter(x => x.st.k === "pend").length : 0);
+  set("fo", remToday.filter(x => x.st.k === "pend").length + fu + (canAdmin() ? smsDue().filter(x => !x.sent).length : 0));
 }
 function setView(v){
-  view = v;
-  [["Mark","mark"],["Cls","cls"],["Cen","cen"],["Staff","staff"]].forEach(([n,m]) => { $("view" + n).hidden = v !== m; });
-  $("nav").querySelectorAll("button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.view === v)));
-  render();
+  view = v; history.replaceState(null, "", "#" + v);
+  render("nav"); window.scrollTo(0, 0);
 }
-$("nav").querySelectorAll("button").forEach(b => { b.onclick = () => {
-  const v = b.dataset.view;
-  history.replaceState(null, "", v === "cls" ? "#class-" + pcls : v === "cen" ? "#central" : v === "staff" ? "#staff" : "#marking");
-  setView(v);
-}; });
+$("nav").querySelectorAll("button").forEach(b => { b.onclick = () => setView(b.dataset.v); });
+$("date").value = date; $("date").max = todayStr();
+$("date").onchange = e => { if (!e.target.value) return; date = e.target.value; render(true); refresh(); };
 function route(){
   const h = location.hash.replace("#","");
-  const m = /^(?:class|actions|dashboard)(?:-(\d{1,2}))?$/.exec(h);
-  if (m) { if (m[1]) pcls = Math.min(11, Math.max(1, +m[1])); if (!ROSTER[pcls][psec]) psec = "A"; setView("cls"); }
-  else if (h === "central" || h === "sms") setView("cen");
-  else if (h === "staff") setView("staff");
-  else setView("mark");
+  const map = {cm:"cm", marking:"cm", pl:"pl", "class":"pl", fo:"fo", central:"fo", sms:"fo", dash:"dash", dashboard:"dash", set:"set", staff:"set", settings:"set"};
+  const m = /^class-(\d{1,2})$/.exec(h); if (m) { pcls = Math.min(11, Math.max(1, +m[1])); view = "pl"; }
+  else view = map[h] || "cm";
+  if (h === "sms") fseg = "sms";
+  Object.keys(VIEWS).forEach(v => { $(VIEWS[v]).hidden = v !== view; });
 }
-window.addEventListener("hashchange", route);
-
-route(); setStatus("");
-if (API_URL && token) refresh(); else { ready = true; render(); }
+window.addEventListener("hashchange", () => { route(); render(true); });
+route();
+if (token) refresh(); else { ready = true; render(); }
 setInterval(() => {
   if (document.visibilityState !== "visible" || !me) return;
   retryDirty();
   const a = document.activeElement, typing = a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA");
   if (!typing) refresh();
 }, 20000);
+/* time-sensitive: keep "due in / overdue" fresh every 30 seconds */
+setInterval(() => { if (document.visibilityState === "visible" && me && view !== "cm") { const a = document.activeElement; if (!(a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA"))) render(); } }, 30000);
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && me) { retryDirty(); refresh(); } });
 
 /* ---------- auto-update: if a newer page is published, reload into it ---------- */
-const BUILD = "202611171020";
+const BUILD = "202611191657";
 (function(){
   const run = () => fetch(location.pathname + "?v=" + Date.now(), {cache:"no-store"}).then(r => r.text()).then(t => {
     const m = t.match(/const BUILD = "(\d+)"/);
@@ -1243,3 +1329,5 @@ const BUILD = "202611171020";
   run(); document.addEventListener("visibilitychange", () => { if (!document.hidden) run(); });
 })();
 </script>
+</body>
+</html>

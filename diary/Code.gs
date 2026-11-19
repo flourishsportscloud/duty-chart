@@ -165,6 +165,39 @@ const API={
     return {log};
   },
 
+  // PL / FO workflow on a remark or defaulter item: noted, one-word action, remarks (edit/delete), follow-ups
+  remarkOp(ctx,token,date,cls,sec,roll,name,op){
+    const me=needPL(ctx,token);
+    if(!isoDate(date)||date>ctx.today)fail("Pick a valid date.");
+    if(date<addDays(ctx.today,-BACKDATE_DAYS))fail("Only the last "+BACKDATE_DAYS+" days can be updated.");
+    cls=Number(cls);if(!(cls>=1&&cls<=11))fail("Unknown class.");
+    sec=str(sec,2);if(!/^[A-Z]$/.test(sec))fail("Unknown section.");
+    roll=Number(roll);if(!(roll>=1&&roll<=99))fail("Unknown student.");
+    op=op&&typeof op==="object"?op:{};
+    const t=str(op.t,8),by=me.role==="admin"?"admin":"pl";
+    const id=date+"_"+cls+sec+roll,row=findRow_("Actions",id);
+    let log=[];if(row){try{log=JSON.parse(row.json)}catch(e){}}
+    const cats=(Array.isArray(op.cats)?op.cats:[]).filter(c=>CATS.includes(c));
+    const find=eid=>{const e=log.find(x=>x.id===str(eid,24));if(!e)fail("That entry is no longer there. Refresh and try again.");return e};
+    const mayEdit=e=>{if(e.who!==me.name&&me.role!=="admin")fail("Only the person who wrote it (or FO) can change it.")};
+    const nid=ctx.now.toString(36)+Math.floor(Math.random()*1296).toString(36);
+    let msg="";
+    if(t==="ack"){log.push({id:nid,t,a:"Noted",cats,at:ctx.now,by,who:me.name});msg="noted"}
+    else if(t==="act"){const w=str(op.a,30);if(!w)fail("Pick an action.");log.push({id:nid,t,a:w,cats,at:ctx.now,by,who:me.name});msg="action "+w}
+    else if(t==="note"){const a=str(op.a,400);if(!a)fail("Type the remark.");log.push({id:nid,t,a,cats,at:ctx.now,by,who:me.name});msg="remark "+a.slice(0,50)}
+    else if(t==="fu"){const due=Number(op.due);if(!(due>ctx.now-36e5&&due<ctx.now+60*864e5))fail("Pick a follow-up time in the next 60 days.");
+      log.push({id:nid,t,a:str(op.a,200),due,cats,at:ctx.now,by,who:me.name});msg="follow-up "+new Date(due).toISOString()}
+    else if(t==="edit"){const e=find(op.id);if(e.t!=="note")fail("Only remarks can be edited.");mayEdit(e);const a=str(op.a,400);if(!a)fail("Type the remark.");e.a=a;e.ed=ctx.now;e.edw=me.name;msg="edit remark"}
+    else if(t==="del"){const e=find(op.id);mayEdit(e);e.x=ctx.now;e.xw=me.name;msg="delete "+(e.t||"entry")}
+    else if(t==="done"){const e=find(op.id);if(e.t!=="fu")fail("Not a follow-up.");e.done=ctx.now;e.dw=me.name;if(op.a)e.dn=str(op.a,200);msg="follow-up done"}
+    else if(t==="undo"){const e=find(op.id);if(e.t!=="fu")fail("Not a follow-up.");delete e.done;delete e.dw;delete e.dn;msg="follow-up reopened"}
+    else fail("Unknown action.");
+    if(log.length>150)log=log.slice(-150);
+    upsert_("Actions",{id,date,cls,sec,name:str(name,60)||(row&&row.name)||"",json:JSON.stringify(log),updated:new Date(ctx.now).toISOString()});
+    ctx.log(me.name,"remark "+t,id,msg);
+    return {log};
+  },
+
   // admin: SMS sent / undone for a child and category
   markSms(ctx,token,id,sent,info){
     const me=needAdmin(ctx,token);
