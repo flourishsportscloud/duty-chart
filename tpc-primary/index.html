@@ -311,6 +311,8 @@ function pushAdd(a){ const n={k:a.kind,d:a.d,c:a.cs,s:cut(a.s,24),l:cut(a.l,40),
 const pushSub=(k,w,rm)=>push('status/'+PFX+'s.'+h36(w+'|'+k),{note:JSON.stringify({k:cut(k,24),w,rm:rm?1:0})},rm?'Removed':'Added');
 function byLine(r,e){ const j=DOCS[r.dp], k=slotOf(r,e); if(!j||!j[k+'_by']) return ''; const d=new Date(j[k+'_at']); let h=d.getHours(); const ap=h<12?'AM':'PM'; h=h%12||12;
   return ' · '+String(j[k+'_by']).split(' ')[0]+', '+d.getDate()+' '+MO[d.getMonth()]+' '+h+':'+String(d.getMinutes()).padStart(2,'0')+' '+ap; }
+const VIEWERS=['1vut0erx8m94h','1hkv5s2x5ymsg','wj56ym193nows','wixt2s193dbkm','1svlg0a1imaq08','1km2jdpxojekf','14sca5akd6lrw','wj4eyr193sw0x','1hkvo5ox5z20e','7ire5c1vbmuki','19icgwg1nunenm','17uw0dvkup68h','82fqvh1vvbdtb'];
+const canDash=()=>VIEWERS.indexOf(h36('v|'+ME.trim().toLowerCase().split(/\s+/)[0].replace(/[^a-z]/g,'')))>=0;
 function askName(){ $('gate').hidden=false; $('gateN').value=ME; $('gateN').focus(); }
 function records(){
   OV={subAdd:[],subRm:{}};
@@ -515,7 +517,7 @@ $('leftOnly').addEventListener('click',()=>{leftOnly=!leftOnly;render()});
 $('manage').addEventListener('click',()=>{manage=!manage;editing=confirmKey=null;render()});
 $('meBtn').addEventListener('click',askName);
 $('gateF').addEventListener('submit',e=>{e.preventDefault();const n=$('gateN').value.trim().replace(/\s+/g,' ');if(n.length<3){$('gateE').textContent='Please type your full name.';return}ME=n;try{localStorage.setItem('fis-tpc-name',n)}catch(x){}$('gate').hidden=true;render();loadAll()});
-const render0=render; render=function(){ $('meBtn').textContent=ME?'Updating as '+ME+' · change':'Enter your name'; render0(); };
+const render0=render; render=function(){ $('meBtn').textContent=ME?'Updating as '+ME+' · change':'Enter your name'; const cd=canDash(), sd=$('seg-dash'); sd.hidden=!cd; sd.parentNode.className='sw '+(cd?'three':'two'); if(!cd&&seg==='dash') seg='prep'; render0(); };
 render(); if(!ME) askName(); else loadAll(); setInterval(poll,10000); document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll()});
 </script>
 </body></html>
