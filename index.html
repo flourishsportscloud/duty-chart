@@ -184,9 +184,10 @@ tr.cov td{background:color-mix(in srgb,var(--sports) 10%,transparent)}
 .actg{display:inline-block;font-size:.72rem;font-weight:700;background:var(--chip);border-radius:6px;padding:0 6px}
 .qbtns .btn{flex:1 1 30%;font-size:.85rem;padding:9px 8px}
 .notice table.adjt{table-layout:fixed}
-.adjt th:nth-child(1),.adjt td:nth-child(1){width:30%}
-.adjt th:nth-child(2),.adjt td:nth-child(2){width:32%}
-.adjt td{overflow-wrap:break-word;hyphens:auto}
+.adjt th:nth-child(1),.adjt td:nth-child(1){width:22%}
+.adjt th:nth-child(2),.adjt td:nth-child(2){width:38%}
+.adjt td{overflow-wrap:normal;hyphens:none}
+.adjt .nw,.adjt b.by{white-space:nowrap}
 .notice .adjt td:first-child{white-space:normal;overflow-wrap:normal;hyphens:none;font-size:.86rem}
 .notice .adjt td.duty{font-weight:600;font-size:.82rem}
 .adjt b.by{display:block;font-weight:700}
@@ -219,7 +220,7 @@ tr.cov td{background:color-mix(in srgb,var(--sports) 10%,transparent)}
 .pna{border:1px solid var(--line);background:var(--chip);color:var(--muted)}
 .pendt{font-size:.78rem;font-weight:700;color:var(--gate)}
 .pendc{font-family:var(--body);font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;font-weight:700;color:var(--gate);background:color-mix(in srgb,var(--gate) 12%,transparent);border-radius:999px;padding:1px 8px}
-.natag{font:inherit;font-size:.76rem;font-weight:700;border:1px dashed var(--line);background:var(--chip);color:var(--muted);border-radius:999px;padding:4px 10px;cursor:pointer}
+.natag{font:inherit;font-size:.68rem;font-weight:600;letter-spacing:.02em;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:6px;padding:2px 7px;line-height:1.4;white-space:nowrap;cursor:pointer}
 .nar td{color:var(--muted)}
 .pend{margin:12px 0 4px;padding:10px;border-radius:12px;background:color-mix(in srgb,var(--gate) 10%,var(--surface));border:1px dashed color-mix(in srgb,var(--gate) 50%,var(--line));display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .pend>b{width:100%;font-size:.8rem;color:var(--gate)}
@@ -906,13 +907,13 @@ function renderNotice(){
     const rt = t => `<span class="rtag">${t}</span>`;
     const byCls = a => [a.b ? [a.b, a.t, 'Class Teacher'] : null, a.b2 ? [a.b2, a.t2, 'Subject Teacher'] : null, a.b3 ? [a.b3, a.t3, 'Subject Teacher'] : null].filter(Boolean)
       .map(([n, t, r], k) => `<div class="${k ? 'by2' : ''}">${by(n, t)}${rt(r)}</div>`).join('');
-    const ab = n => n ? esc(n) : '<span class="dim">—</span>';
+    const ab = n => n ? `<span class="nw">${esc(n)}</span>` : '';
     const stt = l => stKey(l) ? `<small class="tm">${esc(stLabel(l))}</small>` : '';
-    const absCell = l => `${esc(l.n)}${stt(l)}`;
+    const absCell = l => `<span class="nw">${esc(l.n)}</span>${stt(l)}`;
     const grpOf = k => GRP.find(g => g[2].includes(k)) || GRP[0];
     const sub = (g, n) => `<tr class="gsub"><td colspan="3">${g[1]}${n ? ` <span class="pendc">${n} pending</span>` : ''}</td></tr>`;
     const adjBtns = (l, mode) => CAN_UI() ? `<div class="pbtns"><button type="button" class="padj" data-padj="${esc(l.n)}" data-pc="${esc(clsOf(l.n))}" data-pm="${mode}">+ ${mode === 'cover' ? 'Cover' : 'Adjust'}</button><button type="button" class="pna" data-na="${esc(l.n)}" data-nk="${mode === 'cover' ? 'cna' : 'na'}">NA</button></div>` : '<span class="pendt">Pending</span>';
-    const naCell = (l, k) => CAN_UI() ? `<button type="button" class="natag" data-unna="${esc(l.n)}" data-nk="${k}" title="Tap to undo">NA · Not applicable</button>` : '<span class="natag">NA · Not applicable</span>';
+    const naCell = (l, k) => CAN_UI() ? `<button type="button" class="natag" data-unna="${esc(l.n)}" data-nk="${k}" title="Tap to undo">Not applicable</button>` : '<span class="natag">Not applicable</span>';
     const adjRow = ([a,i]) => a.a
       ? `<tr${ed('adj',i)}><td>${esc(a.a)}${a.c?`<small class="tm">${esc(a.c)}</small>`:''}</td><td>${ab(a.f)}</td><td>${by2(a)}</td></tr>`
       : `<tr${ed('adj',i)}><td>${esc(a.c)}</td><td>${a.f ? ab(a.f) : ctOf(a.c) ? `${esc(ctOf(a.c))}<small class="tm">Class teacher</small>` : ab('')}</td><td>${byCls(a)}</td></tr>`;
@@ -927,8 +928,8 @@ function renderNotice(){
           const mine = items.map((x,i) => [x,i]).filter(([x], k) => !used.has(k) && same1(x.f, l.n));
           mine.forEach(([,i]) => used.add(i));
           if (mine.length) rows.push(...mine.map(kind === 'cover' ? covRow : adjRow));
-          else if (l[kind === 'cover' ? 'cna' : 'na']) rows.push(`<tr class="nar"><td>${kind === 'cover' ? '<span class="dim">—</span>' : clsOf(l.n) ? esc(clsOf(l.n)) : '<span class="dim">—</span>'}</td><td>${absCell(l)}</td><td>${naCell(l, kind === 'cover' ? 'cna' : 'na')}</td></tr>`);
-          else { gp++; rows.push(`<tr class="pendr"><td>${kind === 'cover' ? '<span class="dim">—</span>' : clsOf(l.n) ? esc(clsOf(l.n)) : '<span class="dim">—</span>'}</td><td>${absCell(l)}</td><td>${adjBtns(l, kind === 'cover' ? 'cover' : lcat(l) === 'Activity' ? 'act' : 'adj')}</td></tr>`); }
+          else if (l[kind === 'cover' ? 'cna' : 'na']) rows.push(`<tr class="nar"><td>${kind !== 'cover' && clsOf(l.n) ? esc(clsOf(l.n)) : ''}</td><td>${absCell(l)}</td><td>${naCell(l, kind === 'cover' ? 'cna' : 'na')}</td></tr>`);
+          else { gp++; rows.push(`<tr class="pendr"><td>${kind !== 'cover' && clsOf(l.n) ? esc(clsOf(l.n)) : ''}</td><td>${absCell(l)}</td><td>${adjBtns(l, kind === 'cover' ? 'cover' : lcat(l) === 'Activity' ? 'act' : 'adj')}</td></tr>`); }
         });
         /* entries whose absent person is not on the leave list */
         const orphan = items.map((x,i) => [x,i]).filter(([x], k) => !used.has(k) && (kind === 'cover' ? g === GRP[1] : x.a ? g === GRP[2] : g === GRP[0]));
