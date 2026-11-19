@@ -1,11 +1,11 @@
 {
- "name": "FIS – Flourish International School",
+ "name": "FIS Staff Hub",
  "short_name": "FIS",
  "start_url": "./",
  "scope": "./",
  "display": "standalone",
- "background_color": "#FFFFFF",
- "theme_color": "#18213A",
+ "background_color": "#F5F3EE",
+ "theme_color": "#1F2D5A",
  "icons": [
   {
    "src": "fis-logo-192.png",
