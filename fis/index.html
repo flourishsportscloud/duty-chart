@@ -6,8 +6,8 @@
 <title>FIS</title>
 <meta name="description" content="Flourish International School – staff apps">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="fis-icon-192.png">
-<link rel="icon" href="fis-icon-192.png">
+<link rel="apple-touch-icon" href="fis-logo-180.png">
+<link rel="icon" href="fis-logo-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="FIS">
@@ -22,7 +22,7 @@
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
 .wrap{max-width:640px;margin:0 auto;padding:24px 16px 40px}
 header{display:flex;align-items:center;gap:14px;margin-bottom:22px}
-.logo{width:52px;height:52px;border-radius:14px;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-family:var(--head);font-weight:800;font-size:1.25rem;letter-spacing:.02em;flex:0 0 auto}
+.logo{width:56px;height:56px;border-radius:14px;background:#fff;border:1px solid var(--line);flex:0 0 auto;object-fit:contain}
 h1{font-family:var(--head);font-weight:800;font-size:2rem;line-height:1;margin:0}
 .sub{color:var(--muted);font-weight:600;font-size:.9rem;margin-top:2px}
 .apps{display:grid;gap:12px}
@@ -41,7 +41,7 @@ footer{margin-top:22px;color:var(--muted);font-size:.8rem}
 <body>
 <div class="wrap">
   <header>
-    <div class="logo" aria-hidden="true">FIS</div>
+    <img class="logo" src="fis-logo-192.png" alt="" aria-hidden="true">
     <div><h1>FIS</h1><div class="sub">Flourish International School · Staff apps</div></div>
   </header>
   <nav class="apps" id="apps" aria-label="FIS apps"></nav>
