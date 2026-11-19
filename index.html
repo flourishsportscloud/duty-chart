@@ -201,6 +201,15 @@ tr.cov td{background:color-mix(in srgb,var(--sports) 10%,transparent)}
 .ntfr .nm{flex:1;min-width:0;font-weight:700;font-size:.9rem}.ntfr .nm small{display:block;font-weight:400;color:var(--muted);font-size:.78rem}
 .ntfr a{white-space:nowrap;text-decoration:none;font-weight:800;font-size:.82rem;padding:7px 11px;border-radius:999px;background:#25D366;color:#fff}
 .ntfr a.nonum{background:var(--chip);color:var(--ink)}.ntfr a.sent{background:var(--chip);color:var(--muted)}
+.pendr td{background:color-mix(in srgb,var(--gate) 6%,var(--surface))}
+.pbtns{display:flex;gap:6px;flex-wrap:wrap}
+.padj,.pna{font:inherit;font-size:.8rem;font-weight:700;border-radius:999px;padding:5px 11px;cursor:pointer}
+.padj{border:0;background:var(--navy,#1F2D5A);color:#fff}
+.pna{border:1px solid var(--line);background:var(--chip);color:var(--muted)}
+.pendt{font-size:.78rem;font-weight:700;color:var(--gate)}
+.pendc{font-family:var(--body);font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;font-weight:700;color:var(--gate);background:color-mix(in srgb,var(--gate) 12%,transparent);border-radius:999px;padding:1px 8px}
+.natag{font:inherit;font-size:.76rem;font-weight:700;border:1px dashed var(--line);background:var(--chip);color:var(--muted);border-radius:999px;padding:4px 10px;cursor:pointer}
+.nar td{color:var(--muted)}
 .pend{margin:12px 0 4px;padding:10px;border-radius:12px;background:color-mix(in srgb,var(--gate) 10%,var(--surface));border:1px dashed color-mix(in srgb,var(--gate) 50%,var(--line));display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .pend>b{width:100%;font-size:.8rem;color:var(--gate)}
 .pendb{font:inherit;font-size:.85rem;font-weight:800;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:5px 9px;cursor:pointer;text-align:left}
@@ -878,11 +887,19 @@ function renderNotice(){
     const byCls = a => [a.b ? [a.b, a.t, 'Class Teacher'] : null, a.b2 ? [a.b2, a.t2, 'Subject Teacher'] : null, a.b3 ? [a.b3, a.t3, 'Subject Teacher'] : null].filter(Boolean)
       .map(([n, t, r], k) => `<div class="${k ? 'by2' : ''}">${by(n, t)}${rt(r)}</div>`).join('');
     const ab = n => n ? esc(n) : '<span class="dim">—</span>';
-    const done = new Set(cls.map(([a]) => normCls(a.c)));
-    const pending = lv.filter(l => !l.late && clsOf(l.n) && !done.has(normCls(clsOf(l.n)))).map(l => [clsOf(l.n), l]);
-    if (pending.length) body += `<div class="pend"><b>Class not adjusted yet</b>` + pending.map(([c,l]) => `<button type="button" class="pendb" data-pend="${esc(c)}" data-pf="${esc(l.n)}">${esc(c)} <span>${esc(l.n)}${l.half?' · '+esc(stLabel(l)):''}</span>${CAN_UI()?' <i>+ Adjust</i>':''}</button>`).join('') + `</div>`;
-    if (cls.length) body += `<h3>Class adjustment <span class="cnt k2">${cls.length}</span></h3><table class="adjt"><thead><tr><th>Class</th><th>Absent</th><th>Adjusted by</th></tr></thead><tbody>` +
-      cls.map(([a,i]) => `<tr${ed('adj',i)}><td>${esc(a.c)}</td><td>${a.f ? ab(a.f) : ctOf(a.c) ? `${esc(ctOf(a.c))}<small class="tm">Class teacher</small>` : ab('')}</td><td>${byCls(a)}</td></tr>`).join('') + `</tbody></table>`;
+    const handled = n => (d.adj||[]).some(a => same1(a.f, n)) || cv.some(c => same1(c.f, n));
+    const openL = lv.filter(l => !handled(l.n) && !l.na), naL = lv.filter(l => !handled(l.n) && l.na);
+    const stt = l => stKey(l) ? `<small class="tm">${esc(stLabel(l))}</small>` : '';
+    const isAct = l => lcat(l) === 'Activity';
+    const openRow = l => `<tr class="pendr"><td>${clsOf(l.n) ? esc(clsOf(l.n)) : '<span class="dim">—</span>'}</td><td>${esc(l.n)}${stt(l)}</td><td>` +
+      (CAN_UI() ? `<div class="pbtns"><button type="button" class="padj" data-padj="${esc(l.n)}" data-pc="${esc(clsOf(l.n))}" data-pm="${isAct(l)?'act':'adj'}">+ Adjust</button><button type="button" class="pna" data-na="${esc(l.n)}">NA</button></div>` : '<span class="pendt">Pending</span>') + `</td></tr>`;
+    const naRow = l => `<tr class="nar"><td>${clsOf(l.n) ? esc(clsOf(l.n)) : '<span class="dim">—</span>'}</td><td>${esc(l.n)}${stt(l)}</td><td>` +
+      (CAN_UI() ? `<button type="button" class="natag" data-unna="${esc(l.n)}" title="Tap to undo">NA · Not applicable</button>` : '<span class="natag">NA · Not applicable</span>') + `</td></tr>`;
+    const nRows = cls.length + openL.length + naL.length;
+    if (nRows) body += `<h3>Class adjustment <span class="cnt k2">${nRows}</span>${openL.length ? ` <span class="pendc">${openL.length} pending</span>` : ''}</h3><table class="adjt"><thead><tr><th>Class</th><th>Absent</th><th>Adjusted by</th></tr></thead><tbody>` +
+      openL.map(openRow).join('') +
+      cls.map(([a,i]) => `<tr${ed('adj',i)}><td>${esc(a.c)}</td><td>${a.f ? ab(a.f) : ctOf(a.c) ? `${esc(ctOf(a.c))}<small class="tm">Class teacher</small>` : ab('')}</td><td>${byCls(a)}</td></tr>`).join('') +
+      naL.map(naRow).join('') + `</tbody></table>`;
     if (act.length) body += `<h3>Activity adjustment <span class="cnt k3">${act.length}</span></h3><table class="adjt"><thead><tr><th>Activity</th><th>Absent</th><th>Adjusted by</th></tr></thead><tbody>` +
       act.map(([a,i]) => `<tr${ed('adj',i)}><td>${esc(a.a)}${a.c?`<small class="tm">${esc(a.c)}</small>`:''}</td><td>${ab(a.f)}</td><td>${by2(a)}</td></tr>`).join('') + `</tbody></table>`;
     if (cv.length) body += `<h3>Duty cover <span class="cnt k4">${cv.length}</span></h3><table class="adjt"><thead><tr><th>Duty</th><th>Absent</th><th>Covered by</th></tr></thead><tbody>` +
@@ -910,7 +927,11 @@ function renderNotice(){
   $('#copyWa').onclick = copyWa;
   $('#openEd').onclick = () => openEditor(DAY);
   const cil = $('#notice').querySelector('[data-goci]'); if (cil) cil.onclick = () => { render('checkin'); window.scrollTo({top:0}); };
-  $('#notice').querySelectorAll('[data-pend]').forEach(b => b.onclick = () => { if (CAN_UI()) openQA({mode:'adj', c: b.dataset.pend, f: b.dataset.pf || ctOf(b.dataset.pend)}); });
+  $('#notice').querySelectorAll('[data-padj]').forEach(b => b.onclick = e => { e.stopPropagation(); if (CAN_UI()) openQA({mode: b.dataset.pm, ...(b.dataset.pc ? {c: b.dataset.pc} : {}), f: b.dataset.padj}); });
+  const setNA = (n, on) => { if (!ART){ toast('Enter the edit PIN to save'); return; } const next = JSON.parse(JSON.stringify(DAILY)); const dd = next[DAY] || {};
+    const l = (dd.leave || []).find(x => same1(x.n, n)); if (!l) return; if (on) l.na = true; else delete l.na; save(next, DAY); };
+  $('#notice').querySelectorAll('[data-na]').forEach(b => b.onclick = e => { e.stopPropagation(); setNA(b.dataset.na, true); });
+  $('#notice').querySelectorAll('[data-unna]').forEach(b => b.onclick = e => { e.stopPropagation(); setNA(b.dataset.unna, false); });
   $('#notice').querySelectorAll('[data-qnew]').forEach(b => b.onclick = () => openQA({mode: b.dataset.qnew}));
   $('#notice').querySelectorAll('[data-qa]').forEach(r => r.onclick = () => { const [m,i] = r.dataset.qa.split(':'); openQA({mode: m, idx: +i}); });
 }
@@ -924,7 +945,8 @@ function waText(){
     t += `\n${k} -\n` + (ps.length ? ps.map(l => `* ${l.n}${stKey(l)?' ( '+stLabel(l)+' )':''}`).join('\n') : '* ') + '\n';
   });
   const cls = (d.adj||[]).filter(a => !a.a), act = (d.adj||[]).filter(a => a.a);
-  if (cls.length) t += `\n*Class Adjustment*\n` + cls.map(a => `${a.c} - ${a.f ? a.f+' - ' : ctOf(a.c) ? ctOf(a.c)+' (CT) - ' : ''}${[a.b ? a.b+' (Class Teacher'+(a.t?', '+a.t:'')+')' : '', a.b2 ? a.b2+' (Subject Teacher'+(a.t2?', '+a.t2:'')+')' : '', a.b3 ? a.b3+' (Subject Teacher'+(a.t3?', '+a.t3:'')+')' : ''].filter(Boolean).join(' + ')}`).join('\n') + '\n';
+  const naW = (d.leave||[]).filter(l => l.na && !(d.adj||[]).some(a => same1(a.f, l.n)) && !(d.cover||[]).some(c => same1(c.f, l.n)));
+  if (cls.length || naW.length) t += `\n*Class Adjustment*\n` + cls.map(a => `${a.c} - ${a.f ? a.f+' - ' : ctOf(a.c) ? ctOf(a.c)+' (CT) - ' : ''}${[a.b ? a.b+' (Class Teacher'+(a.t?', '+a.t:'')+')' : '', a.b2 ? a.b2+' (Subject Teacher'+(a.t2?', '+a.t2:'')+')' : '', a.b3 ? a.b3+' (Subject Teacher'+(a.t3?', '+a.t3:'')+')' : ''].filter(Boolean).join(' + ')}`).concat(naW.map(l => `${clsOf(l.n) ? clsOf(l.n)+' - ' : ''}${l.n} - NA (Not applicable)`)).join('\n') + '\n';
   if (act.length) t += `\n*Activity Adjustment*\n` + act.map(a => `${a.a}${a.c?' ('+a.c+')':''} - ${a.f?a.f+' - ':''}${a.b}${a.t?' ('+a.t+')':''}${a.b2?' + '+a.b2+(a.t2?' ('+a.t2+')':''):''}`).join('\n') + '\n';
   if ((d.cover||[]).length) t += `\n*Duty Cover*\n` + d.cover.map(c => `* ${c.n} for ${c.f}${c.d?' – '+c.d:''}`).join('\n') + '\n';
   return t;
@@ -1521,7 +1543,7 @@ $('#edDelete').onclick = () => { if (!ED) return; ED.leave = []; ED.cover = []; 
 $('#edSave').onclick = async () => {
   readEditor();
   const clean = {
-    leave: ED.leave.filter(l => l.n).map(l => { const n = canon(l.n, l.k); return {n, k: resolve(n) ? resolve(n)[2] : (OLDCAT[l.k]||l.k||'Secondary Teacher'), ...(l.half?{half:l.half}:{}), ...(l.half&&l.ht?{ht:l.ht}:{}), ...(l.late?{late:l.late}:{})}; }),
+    leave: ED.leave.filter(l => l.n).map(l => { const n = canon(l.n, l.k); return {n, k: resolve(n) ? resolve(n)[2] : (OLDCAT[l.k]||l.k||'Secondary Teacher'), ...(l.half?{half:l.half}:{}), ...(l.half&&l.ht?{ht:l.ht}:{}), ...(l.late?{late:l.late}:{}), ...(l.na?{na:true}:{})}; }),
     cover: ED.cover.filter(c => c.n && c.f).map(c => ({n:canon(c.n), f:canon(c.f, (ED.leave.find(l => sameName(c.f, l.n))||{}).k), ...(c.d?{d:c.d}:{})})),
     adj: ED.adj.filter(a => a.c || a.b || a.a).map(a => ({c:a.c||'', ...(a.a?{a:a.a}:{}), b:a.b||'', ...(a.t?{t:a.t}:{}), ...(a.b2?{b2:canon(a.b2)}:{}), ...(a.b2&&a.t2?{t2:a.t2}:{}), ...(a.b3?{b3:canon(a.b3)}:{}), ...(a.b3&&a.t3?{t3:a.t3}:{}), ...(a.f?{f:canon(a.f)}:{})}))
   };
