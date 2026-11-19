@@ -136,7 +136,7 @@ function subscribeConfig(){
   store.subDoc('config/alloc',o=>{S.alloc=(o&&o.map)||{};render()});
   store.subDoc('config/sbRegular',o=>{S.sbReg=(o&&o.kids)||{};render()});
   store.subDoc('config/walkRegular',o=>{S.walkReg=(o&&o.kids)||{};render()});
-  store.subDoc('config/settings',o=>{S.settings=o||{};S.lateAfter=(o&&o.lateAfter)||'08:00';
+  store.subDoc('config/settings',o=>{S.settings=o||{};S.lateAfter=(o&&o.lateAfter)||'08:00';S.lateAfterPP=(o&&o.lateAfterPP)||'09:00';
     const nl=(o&&o.left)?o.left:LEFT_DEFAULT;const back=Object.keys(LEFT).some(id=>!nl[id]);LEFT=Object.assign({},nl);applyLeft(LEFT);
     if(back)toast('A student was restored – close and reopen the app to see them');render()});
   store.subDoc('config/privateVan',o=>{S.privVan=(o&&o.kids)||{};render()});
@@ -238,7 +238,7 @@ function renderDuty(){
   $('dutyList').classList.remove('hide');$('dutyVeh').classList.add('hide');
   $('dutyList').innerHTML='<div class="secthead"><i></i><span>'+(isMgr(who)?'All Vehicles':'Assigned Vehicles')+'</span><small>Tap a vehicle to mark attendance</small></div><div class="grid">'+mine.map(v=>{const s=vehStats(v);const marked=s.roll-s.un;
     const pill=s.submitted?'<span class="pill done">Submitted '+esc(s.time)+'</span>':marked?'<span class="pill part">'+marked+'/'+s.roll+' marked</span>':'<span class="pill pend">Pending</span>';
-    return '<button class="vcard" data-open="'+v.k+'"><b>'+esc(v.l)+'</b>'+(isMgr(who)?'<div class="st">'+esc(staffOf(v.k))+'</div>':'')+(foCountVeh(v)?'<div class="st" style="color:var(--mag);font-weight:600">Front Office updates: '+foCountVeh(v)+'</div>':'')+'<div class="st">'+s.roll+' students · Present '+s.bus+' · Abs '+s.abs+'</div><div style="margin-top:6px">'+pill+'</div></button>'}).join('')+'</div>';
+    return '<button class="vcard" data-open="'+v.k+'"><b>'+esc(v.l)+'</b>'+(isPPveh(v.k)?'<div class="st" style="color:var(--late);font-weight:700">Pre-Primary · 9:00 AM – 2:00 PM</div>':'')+(isMgr(who)?'<div class="st">'+esc(staffOf(v.k))+'</div>':'')+(foCountVeh(v)?'<div class="st" style="color:var(--mag);font-weight:600">Front Office updates: '+foCountVeh(v)+'</div>':'')+'<div class="st">'+s.roll+' students · Present '+s.bus+' · Abs '+s.abs+'</div><div style="margin-top:6px">'+pill+'</div></button>'}).join('')+'</div>';
 }
 let draft=null; // local edits before save for the open vehicle
 function renderDutyVeh(){
@@ -250,7 +250,7 @@ function renderDutyVeh(){
   const dirty=JSON.stringify(sortObj(draft))!==JSON.stringify(sortObj(vd.marks||{}))||(mDraft&&((mDraft.driverU||null)!==(vd.driverU||null)||(mDraft.condU||null)!==(vd.condU||null)||JSON.stringify(sortObj(mDraft.depBy||{}))!==JSON.stringify(sortObj(vd.depBy||{}))||JSON.stringify(mDraft.extra||{})!==JSON.stringify(vd.extra||{})));
   const tgL=st=>st==='P'?'Present':st==='A'?'Absent':st==='PD'?'By Parent':'—';
   const pdLine=n=>draft[n]==='PD'?'<div class="row" style="gap:6px;margin-top:4px"><span class="muted" style="font-size:12px">Going home:</span><button class="tg XS '+((mDraft.depBy||{})[n]==='PARENT'?'PD':'U')+'" data-depby="'+n+':PARENT">By Parent</button><button class="tg XS '+((mDraft.depBy||{})[n]!=='PARENT'?'P':'U')+'" data-depby="'+n+':AUTO">Auto will come</button></div>':'';
-  $('dutyVeh').innerHTML='<div class="row" style="justify-content:space-between"><button class="btn ghost sm" id="backV">← Back</button><b style="font-size:17px">'+esc(v.l)+'</b><span class="muted">'+esc(staffOf(v.k))+'</span></div>'+
+  $('dutyVeh').innerHTML='<div class="row" style="justify-content:space-between"><button class="btn ghost sm" id="backV">← Back</button><b style="font-size:17px">'+esc(v.l)+'</b><span class="muted">'+esc(staffOf(v.k))+'</span></div>'+(isPPveh(v.k)?'<p class="muted" style="margin:4px 0 0;color:var(--late)"><b>Pre-Primary · School 9:00 AM – 2:00 PM</b> · late after '+hm12(ppCut())+'</p>':'')+
    '<div class="counts"><div><b>'+v.kids.length+'</b>Total</div><div><b style="color:var(--p)">'+c.P+'</b>Present</div><div><b style="color:var(--a)">'+c.A+'</b>Absent</div><div><b style="color:var(--un)">'+c.U+'</b>Pending</div>'+(vd.submitted?'<div><b style="font-size:14px">'+esc(vd.time)+'</b>Submitted by '+esc(vd.by)+'</div>':'')+'</div>'+
    (foCountVeh(v)?'<div class="banner" style="background:var(--brand2);color:var(--brand)"><b>Front Office updates ('+foCountVeh(v)+')</b> – late arrivals / early pickups for this vehicle are shown under each child. Front Office marks override this list.</div>':'')+
    mchkHtml()+
@@ -274,8 +274,8 @@ function renderFO(){const _lh=gatePick?lateHist(gatePick):[];window._lateRec=_lh
   const k=KID[gatePick];const st=kidStatus(k.id);const g=S.gate[k.id]||{};
   $('modalRoot').innerHTML='<div class="modal" id="fobg"><div class="card"><button class="x" id="gx">×</button><h2>'+esc(k.name)+'</h2><div class="muted">'+esc(k.cls)+' · '+esc(modeLabel(k))+'</div>'+
     '<div class="muted" style="margin-top:6px">Now: <span class="tag t-'+st.IN+'">IN: '+esc(LBL[st.IN]||st.IN)+'</span> <span class="tag t-'+(st.OUT||'U')+'">OUT: '+esc(st.OUT?LBL[st.OUT]:'—')+'</span>'+(k.walk?'':' · Vehicle duty: '+esc(LBL[st.m||'U']))+(S.sbReg[k.id]?' · Regular SB':'')+'</div>'+
-    '<h3>IN – Arrival</h3><div class="row" style="margin-bottom:8px"><label class="f" style="margin:0">IN time</label><input type="time" id="gInT" value="'+esc(fv('inT',to24(g.in&&g.in.time)||nowHM()))+'"><span class="muted">Late after '+hm12(S.lateAfter)+'</span></div><div class="opts">'+
-      opt('in','PRES','Present – on time','Arrived before '+hm12(S.lateAfter),g)+opt('in','LATE','Late Arrival','Arrived after '+hm12(S.lateAfter),g)+opt('in','ABS','Absent','Not in school today',g)+'</div>'+
+    '<h3>IN – Arrival</h3><div class="row" style="margin-bottom:8px"><label class="f" style="margin:0">IN time</label><input type="time" id="gInT" value="'+esc(fv('inT',to24(g.in&&g.in.time)||nowHM()))+'"><span class="muted">Late after '+hm12(kidCut(k.id))+'</span></div><div class="opts">'+
+      opt('in','PRES','Present – on time','Arrived before '+hm12(kidCut(k.id)),g)+opt('in','LATE','Late Arrival','Arrived after '+hm12(kidCut(k.id)),g)+opt('in','ABS','Absent','Not in school today',g)+'</div>'+
     '<h3>OUT – Departure</h3><div class="row" style="margin-bottom:8px"><label class="f" style="margin:0">OUT time</label><input type="time" id="gOutT" value="'+esc(fv('outT',to24(g.out&&g.out.time)||nowHM()))+'"><span class="muted">used for Leaving Early</span></div><div class="opts">'+
       opt('out','EARLY','Leaving Early','Leaves before dispersal (time above)',g)+
       (k.walk?opt('out','HOME',modeOf(k),'Regular mode of going home',g):opt('out','VEH','By '+(VBY[k.v].t==='Auto'?'':VBY[k.v].t==='Van'||k.v==='VI'?'School ':'School ')+VBY[k.v].l,'Regular mode of transport',g)+opt('out','GOWALK','Parent Pick-up','Parent collects the student today',g))+
@@ -689,14 +689,19 @@ function recText(){const r=S.recLast;if(!r)return '';let t='*FIS '+r.label+' –
 
 /* ARRIVAL TIME & UNIFORM REPORT */
 const hmMin=hm=>{const x=to24(hm)||hm;if(!x||!/^\d{1,2}:\d{2}$/.test(x))return null;const [h,m]=x.split(':').map(Number);return h*60+m};
+const PP_VEH=/^(B[A-H]|VI)$/,PP_CLS=/^(P\.G\.|Nursery|L\.KG\.|U\.KG\.)/i;
+function ppCut(){return S.lateAfterPP||'09:00'}
+function vehCut(vk){return PP_VEH.test(vk)?ppCut():S.lateAfter}
+function kidCut(id){const k=KID[id];return k&&(PP_VEH.test(k.v)||PP_CLS.test(k.cls||''))?ppCut():S.lateAfter}
+function isPPveh(vk){return PP_VEH.test(vk)}
 function uniOf(dd,vk){const v=(dd.veh||{})[vk]||{};const d=((dd.derr||{})[vk]||{}).checks||{};return {md:v.driverU,mc:v.condU,dd:d.driver,dc:d.conductor}}
 function arrChart(list,vehDocs){
-  const rows=list.map(v=>{const d=vehDocs[v.k]||{};return {v,m:hmMin(d.arr),arr:d.arr}}).filter(r=>r.m!==null).sort((a,b)=>a.m-b.m);
+  const rows=list.map(v=>{const d=vehDocs[v.k]||{};return {v,m:hmMin(d.arr),arr:d.arr,c:hmMin(vehCut(v.k))}}).filter(r=>r.m!==null).sort((a,b)=>a.m-b.m);
   if(!rows.length)return '<p class="muted">No arrival times recorded.</p>';
-  const cut=hmMin(S.lateAfter)||465;const lo=Math.min(...rows.map(r=>r.m),cut)-10,hi=Math.max(...rows.map(r=>r.m),cut)+5;const pct=m=>((m-lo)/(hi-lo)*100).toFixed(1);
-  const late=rows.filter(r=>r.m>cut).length;
-  return '<div class="muted" style="margin-bottom:6px">Arrived after '+hm12(S.lateAfter)+': <b style="color:var(--a)">'+late+'</b> of '+rows.length+' · earliest '+hm12(rows[0].arr)+' · latest '+hm12(rows[rows.length-1].arr)+'</div>'+
-    '<div class="achart">'+rows.map(r=>'<div class="arow"><span class="alab">'+esc(r.v.l)+'</span><div class="atrack"><div class="acut" style="left:'+pct(cut)+'%"></div><div class="abar '+(r.m>cut?'late':'')+'" style="width:'+pct(r.m)+'%"></div></div><span class="aval'+(r.m>cut?' late':'')+'">'+hm12(r.arr)+'</span></div>').join('')+
+  const cut=hmMin(S.lateAfter)||465;const lo=Math.min(...rows.map(r=>r.m),cut)-10,hi=Math.max(...rows.map(r=>Math.max(r.m,r.c)),cut)+5;const pct=m=>((m-lo)/(hi-lo)*100).toFixed(1);
+  const late=rows.filter(r=>r.m>r.c).length;const anyPP=rows.some(r=>isPPveh(r.v.k));
+  return '<div class="muted" style="margin-bottom:6px">Arrived after '+hm12(S.lateAfter)+(anyPP?' (Pre-Primary '+hm12(ppCut())+')':'')+': <b style="color:var(--a)">'+late+'</b> of '+rows.length+' · earliest '+hm12(rows[0].arr)+' · latest '+hm12(rows[rows.length-1].arr)+'</div>'+
+    '<div class="achart">'+rows.map(r=>'<div class="arow"><span class="alab">'+esc(r.v.l)+'</span><div class="atrack"><div class="acut" style="left:'+pct(r.c)+'%"></div><div class="abar '+(r.m>r.c?'late':'')+'" style="width:'+pct(r.m)+'%"></div></div><span class="aval'+(r.m>r.c?' late':'')+'">'+hm12(r.arr)+'</span></div>').join('')+
     '<div class="arow"><span class="alab"></span><div class="atrack axis"><span style="left:0">'+hm12(String(Math.floor(lo/60)).padStart(2,'0')+':'+String(lo%60).padStart(2,'0'))+'</span><span style="left:'+pct(cut)+'%;color:var(--a)">'+hm12(S.lateAfter)+'</span><span style="right:0">'+hm12(String(Math.floor(hi/60)).padStart(2,'0')+':'+String(hi%60).padStart(2,'0'))+'</span></div><span class="aval"></span></div></div>';
 }
 function uniTag(x){return x==='OK'?'<span class="tag t-P">In Uniform</span>':x==='NOT'?'<span class="tag t-A">Not in Uniform</span>':'<span class="muted">–</span>'}
@@ -720,8 +725,8 @@ function renderDashArr(list){
       '<div class="row" style="margin-top:6px;font-size:12px"><span><i class="lg" style="background:#c8323c"></i>Driver – morning ('+tot.md+')</span><span><i class="lg" style="background:#e5737a"></i>Driver – departure ('+tot.dd+')</span><span><i class="lg" style="background:#6a3a92"></i>Conductor – morning ('+tot.mc+')</span><span><i class="lg" style="background:#a88cc6"></i>Conductor – departure ('+tot.dc+')</span></div>':'<p class="muted">No non-uniform records this week.</p>');
   // weekly arrival table
   h+='<div class="secthead" style="margin-top:18px"><i></i><span>Arrival Time – Week</span><small>red = after '+hm12(S.lateAfter)+'</small></div><div class="tw"><table><tr><th>Vehicle</th>'+dates.map(d=>'<th>'+fmtD(d)+'</th>').join('')+'<th>Late days</th></tr>'+
-    list.map(v=>{let ld=0;const cut=hmMin(S.lateAfter);return '<tr><td><b>'+esc(v.l)+'</b></td>'+dates.map(d=>{const a=((WK.data[d].veh||{})[v.k]||{}).arr;const m=hmMin(a);if(m===null)return '<td class="muted">–</td>';const late=m>cut;if(late)ld++;return '<td style="'+(late?'color:var(--a);font-weight:700':'')+'">'+hm12(a)+'</td>'}).join('')+'<td style="color:var(--a)"><b>'+(ld||'')+'</b></td></tr>'}).join('')+'</table></div>';
-  $('kpis').innerHTML=[['Vehicles not in uniform (day)',nu.length,'var(--a)'],['Non-uniform this week',tot.md+tot.mc+tot.dd+tot.dc,'var(--a)'],['Arrived after '+hm12(S.lateAfter)+' (day)',list.filter(v=>{const m=hmMin((S.veh[v.k]||{}).arr);return m!==null&&m>hmMin(S.lateAfter)}).length,'var(--late)']].map(k=>'<div class="kpi"><span>'+k[0]+'</span><b style="color:'+k[2]+'">'+k[1]+'</b></div>').join('');
+    list.map(v=>{let ld=0;const cut=hmMin(vehCut(v.k));return '<tr><td><b>'+esc(v.l)+'</b></td>'+dates.map(d=>{const a=((WK.data[d].veh||{})[v.k]||{}).arr;const m=hmMin(a);if(m===null)return '<td class="muted">–</td>';const late=m>cut;if(late)ld++;return '<td style="'+(late?'color:var(--a);font-weight:700':'')+'">'+hm12(a)+'</td>'}).join('')+'<td style="color:var(--a)"><b>'+(ld||'')+'</b></td></tr>'}).join('')+'</table></div>';
+  $('kpis').innerHTML=[['Vehicles not in uniform (day)',nu.length,'var(--a)'],['Non-uniform this week',tot.md+tot.mc+tot.dd+tot.dc,'var(--a)'],['Arrived after '+hm12(S.lateAfter)+' (day)',list.filter(v=>{const m=hmMin((S.veh[v.k]||{}).arr);return m!==null&&m>hmMin(vehCut(v.k))}).length,'var(--late)']].map(k=>'<div class="kpi"><span>'+k[0]+'</span><b style="color:'+k[2]+'">'+k[1]+'</b></div>').join('');
   h+='<button class="btn ghost sm" id="wkRefresh" style="margin-top:10px">Refresh Week</button>';
   $('dashExtra').innerHTML=h;
 }
@@ -745,7 +750,7 @@ function renderDep(){
   if(!S.depVeh){depDraft=null;
     $('depVeh').classList.add('hide');$('depList').classList.remove('hide');
     $('depList').innerHTML='<div class="secthead"><i></i><span>'+(isMgr(who)?'All Vehicles':'Assigned Vehicles')+'</span><small>Departure list</small></div><div class="grid">'+mine.map(v=>{const od=S.out[v.k]||{};const go=depRows(v).filter(r=>r.i.go).length;const b=Object.keys(od.marks||{}).length;
-      return '<button class="vcard" data-depopen="'+v.k+'"><b>'+esc(v.l)+'</b>'+(isMgr(who)?'<div class="st">'+esc(staffOf(v.k))+'</div>':'')+'<div class="st">Going '+go+' of '+v.kids.length+'</div><div style="margin-top:6px">'+(od.submitted?'<span class="pill done">Departed '+esc(od.time)+'</span>':'<span class="pill pend">Boarded '+b+'/'+go+'</span>')+'</div></button>'}).join('')+'</div>';
+      return '<button class="vcard" data-depopen="'+v.k+'"><b>'+esc(v.l)+'</b>'+(isPPveh(v.k)?'<div class="st" style="color:var(--late);font-weight:700">Pre-Primary · 9:00 AM – 2:00 PM</div>':'')+(isMgr(who)?'<div class="st">'+esc(staffOf(v.k))+'</div>':'')+'<div class="st">Going '+go+' of '+v.kids.length+'</div><div style="margin-top:6px">'+(od.submitted?'<span class="pill done">Departed '+esc(od.time)+'</span>':'<span class="pill pend">Boarded '+b+'/'+go+'</span>')+'</div></button>'}).join('')+'</div>';
     return}
   $('depList').classList.add('hide');$('depVeh').classList.remove('hide');
   const v=VBY[S.depVeh];const od=S.out[v.k]||{};if(!depDraft)depDraft=Object.assign({},od.marks||{});
@@ -754,7 +759,7 @@ function renderDep(){
   const c=t=>no.filter(r=>r.i.tag===t).length;const boarded=go.filter(r=>depDraft[r.k[0]]).length;
   const line=r=>'<div class="kid"><div class="n">'+(/^x/.test(r.k[0])?'+':r.k[0])+'</div><div class="nm"><div>'+esc(r.k[1])+'</div><span>'+esc(r.k[2])+'</span>'+(r.id?foLine(r.id):'')+'</div>'+
     (r.i.go?'<button class="tg '+(depDraft[r.k[0]]?'P':'U')+'" data-dtg="'+r.k[0]+'">'+(depDraft[r.k[0]]?'Boarded ✓':'Board')+'</button>':'<span class="tag t-'+r.i.tag+'" style="min-width:84px;text-align:center;padding:8px 6px">'+esc(r.i.txt)+'</span>')+'</div>';
-  $('depVeh').innerHTML='<div class="row" style="justify-content:space-between"><button class="btn ghost sm" id="depBack">← Back</button><b style="font-size:17px">'+esc(v.l)+' – Departure</b><span class="muted">'+esc(staffOf(v.k))+'</span></div>'+
+  $('depVeh').innerHTML='<div class="row" style="justify-content:space-between"><button class="btn ghost sm" id="depBack">← Back</button><b style="font-size:17px">'+esc(v.l)+' – Departure</b><span class="muted">'+esc(staffOf(v.k))+'</span></div>'+(isPPveh(v.k)?'<p class="muted" style="margin:4px 0 0;color:var(--late)"><b>Pre-Primary · Departure 2:00 PM</b></p>':'')+
     '<div class="counts"><div><b>'+v.kids.length+'</b>Total</div><div><b style="color:var(--brand)">'+go.length+'</b>Going in vehicle</div><div><b style="color:var(--p)">'+boarded+'</b>Boarded</div><div><b style="color:var(--a)">'+(c('A')+c('U'))+'</b>Absent</div><div><b style="color:var(--early)">'+c('EARLY')+'</b>Leaving Early</div><div><b style="color:var(--sb)">'+c('SB')+'</b>Stayback</div><div><b style="color:var(--walk)">'+c('GOWALK')+'</b>Parent Pick-up</div></div>'+
     '<h3>Going in vehicle ('+go.length+')</h3><div class="row" style="margin-bottom:4px"><button class="btn green sm" id="depAll">Mark All Boarded</button><button class="btn ghost sm" id="depClr">Clear</button></div>'+go.map(line).join('')+
     (no.length?'<h3>Not going in vehicle ('+no.length+')</h3>'+no.sort((a,b)=>a.i.tag.localeCompare(b.i.tag)).map(line).join(''):'')+
@@ -840,6 +845,7 @@ function renderAlloc(){
   $('leftList').innerHTML=ids.length?ids.map(id=>{const x=LEFT[id];const a=ALLKIDS[id];return '<div class="kid"><div class="nm"><div>'+esc(x.name||(a&&a.kid[1])||id)+'</div><span>'+esc(x.cls||'')+' · '+esc((a&&a.l)||'')+(x.note?' · '+esc(x.note):'')+'</span></div><button class="btn ghost sm" data-leftdel="'+id+'">↺ Restore</button></div>'}).join(''):'<span class="muted">None</span>';
   if(document.activeElement!==$('leftAdd'))$('leftAdd').innerHTML='<option value="">Remove a student (left / TC)…</option>'+Object.values(KID).sort((a,b)=>a.name.localeCompare(b.name)).map(k=>'<option value="'+k.id+'">'+esc(k.name)+' – '+esc(k.cls)+' ('+esc(VBY[k.v].l)+')</option>').join('');
   if(document.activeElement!==$('lateAfter'))$('lateAfter').value=S.lateAfter;
+  if($('lateAfterPP')&&document.activeElement!==$('lateAfterPP'))$('lateAfterPP').value=ppCut();
   $('mgrList').innerHTML=S.managers.length?S.managers.map((m,i)=>'<span class="tag t-VEH" style="font-size:13px;padding:6px 10px">'+esc(m)+' <button class="x" style="float:none;font-size:16px;padding:0 0 0 6px;color:var(--brand)" data-mgrdel="'+i+'">×</button></span>').join(''):'<span class="muted">No managers added yet.</span>';
   $('allocT').innerHTML='<tr><th>Vehicle</th><th>Students</th><th>Default In-charge</th><th>Assigned In-charge</th></tr>'+VEH.map(v=>'<tr><td><b>'+esc(v.l)+'</b></td><td>'+v.kids.length+'</td><td class="l muted">'+esc(defaultStaff(v))+'</td><td class="l"><select data-alloc="'+v.k+'" style="min-width:170px">'+STAFF.map(s=>'<option'+(s===staffOf(v.k)?' selected':'')+'>'+esc(s)+'</option>').join('')+'</select></td></tr>').join('');
 }
@@ -902,7 +908,7 @@ document.addEventListener('click',async e=>{
     await store.set('att/'+S.date+'/veh/'+v.k,{marks:sortObj(draft),by:markBy('dutyStaff',v.k),time:nowT(),arr:$('arrT').value||'',driverU:(mDraft||{}).driverU||null,condU:(mDraft||{}).condU||null,depBy:(mDraft||{}).depBy||{},extra:(mDraft||{}).extra||{},submitted:true,ts:Date.now()});
     toast(v.l+' saved');S.openVeh=null;draft=null;mDraft=null;render();return}
   if(t.dataset.pick){gatePick=t.dataset.pick;gDraft=null;foBy=t.dataset.foby==='sb'?$('sbBy').value:t.dataset.foby==='late'?$('lateBy').value:null;
-    if(t.dataset.foby==='late'){const g=S.gate[gatePick]||{};gDraft={in:g.in&&g.in.type?g.in.type:(nowHM()>S.lateAfter?'LATE':'PRES'),out:g.out&&g.out.type||null}}
+    if(t.dataset.foby==='late'){const g=S.gate[gatePick]||{};gDraft={in:g.in&&g.in.type?g.in.type:(nowHM()>kidCut(gatePick)?'LATE':'PRES'),out:g.out&&g.out.type||null}}
     renderFO();return}
   if(t.id==='gx'||(t.id==='fobg'&&e.target.id==='fobg')){gatePick=null;gDraft=null;$('modalRoot').innerHTML='';return}
   if(t.dataset.gopt){const [side,type]=t.dataset.gopt.split(':');const g=S.gate[gatePick]||{};
@@ -931,8 +937,9 @@ document.addEventListener('click',async e=>{
 function showText(txt){$('modalRoot').innerHTML='<div class="modal" id="mbg"><div class="card"><button class="x" id="mx">×</button><h2>Report – select &amp; copy</h2><textarea readonly>'+esc(txt)+'</textarea></div></div>'}
 document.addEventListener('change',async e=>{
   const t=e.target;
-  if(t.id==='gInT'&&gatePick){const g=S.gate[gatePick]||{};if(!gDraft)gDraft={in:g.in&&g.in.type||null,out:g.out&&g.out.type||null};gDraft.rem=$('gRem').value;gDraft.inT=t.value;gDraft.outT=$('gOutT').value;if(gDraft.in!=='ABS')gDraft.in=t.value>S.lateAfter?'LATE':'PRES';renderFO();return}
+  if(t.id==='gInT'&&gatePick){const g=S.gate[gatePick]||{};if(!gDraft)gDraft={in:g.in&&g.in.type||null,out:g.out&&g.out.type||null};gDraft.rem=$('gRem').value;gDraft.inT=t.value;gDraft.outT=$('gOutT').value;if(gDraft.in!=='ABS')gDraft.in=t.value>kidCut(gatePick)?'LATE':'PRES';renderFO();return}
   if(t.id==='gOutT'&&gatePick){const g=S.gate[gatePick]||{};if(!gDraft)gDraft={in:g.in&&g.in.type||null,out:g.out&&g.out.type||null};gDraft.rem=$('gRem').value;gDraft.inT=$('gInT').value;gDraft.outT=t.value;gDraft.out='EARLY';renderFO();return}
+  if(t.id==='lateAfterPP'){await store.set('config/settings',Object.assign({},S.settings||{},{lateAfter:S.lateAfter,lateAfterPP:t.value||'09:00',left:LEFT,ts:Date.now()}));toast('Pre-Primary late after '+hm12(t.value));return}
   if(t.id==='signOut'){if(confirm('Sign out of this phone?'))window.FIS_LOGOUT();return}
   if(t.id==='lateAfter'){await store.set('config/settings',Object.assign({},S.settings||{},{lateAfter:t.value||'07:45',left:LEFT,ts:Date.now()}));toast('Late after '+hm12(t.value));return}
   if(t.id==='leftAdd'&&t.value){const id=t.value,a=ALLKIDS[id];const nl=Object.assign({},LEFT);nl[id]={name:a.kid[1],cls:a.kid[2],v:a.k,note:'TC',on:S.date};
