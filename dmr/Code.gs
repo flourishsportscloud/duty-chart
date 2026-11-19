@@ -8,7 +8,7 @@
 */
 const FLOORS=["LGF","GF","1F","2F","3F","OUTDOOR","CAMPUS"];
 const CATS=["CCTV","Computer lab","Digital board","Electric","Machinery","Wifi","Vendors","Others"];
-const KINDS=["complaint","task"];
+const KINDS=["complaint","task","vendor"];
 const PRIOS=["urgent","normal","low"];
 const STATUSES=["open","working","done"];
 const ROLES=["staff","manager","director"];
@@ -151,6 +151,7 @@ const API={
     const P={};LOGGED_KEYS.forEach(k=>{P[k]=rec[k]});
     if(!rec.floor)fail("Choose the location: a floor, Outdoor or Campus-wide.");
     applyLogged(rec,P);
+    if(me.role==="manager"&&c.vendor)rec.vendor=str(c.vendor,60);
     if(c.date){
       if(!isoDate(c.date)||c.date>ctx.today)fail("The date cannot be in the future.");
       if(c.date<addDays(ctx.today,-BACKDATE_DAYS))fail("Pick a date within the last "+BACKDATE_DAYS+" days.");

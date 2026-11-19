@@ -49,6 +49,13 @@ Send staff the link. Each taps **First time? Set password**, types their name, c
 
 This tracker stores staff names (who logged each complaint) and login names. Both stay in the Google Sheet and are never in this public GitHub page. Keep the sheet shared only with the people who need it.
 
+## Newer features
+
+- Maintenance manager can upload a completion photo on done jobs; cards show Logged, Resolved and Time taken.
+- Entry types: Complaint, Management task, Vendor repair (manager can set the vendor when logging).
+- Overview tiles open filtered lists; the manager and Director see a performance score (resolution 40%, on time 35%, speed 25%; formula shown in the page).
+- Paste the latest `Code.gs` and redeploy as a New version after each update; the page needs it for completion photos and the Vendor repair type.
+
 ## Updating the script later
 
 After pasting a new `Code.gs`: **Deploy → Manage deployments → ✏️ Edit → Version: New version → Deploy**. The URL stays the same.
