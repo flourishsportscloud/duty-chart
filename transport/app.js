@@ -229,6 +229,17 @@ function render(){
 }
 
 /* DUTY */
+const DRV_U=/^(B([1-9]|1[0-6]|34)|B[A-H])$/,CON_U=/^(B(1|2|3|4|5|8|9|10|14|15)|B[A-H])$/;
+function hasDrvU(vk){return DRV_U.test(vk)}function hasConU(vk){return CON_U.test(vk)}
+function vcardInfo(v){const s=vehStats(v);const vd=S.veh[v.k]||{},od=S.out[v.k]||{};const ch=((S.derr[v.k]||{}).checks)||{};
+  const tk=x=>x==='OK'?'<span style="color:#1a7f4b;font-weight:800">✓</span>':x==='NOT'?'<span style="color:var(--a);font-weight:800">✗</span>':'<span class="muted">–</span>';
+  const fo=foCountVeh(v);
+  let h='<div class="st">In <span style="font-weight:700;color:var(--ink,#1c2440)">'+(vd.arr?esc(hm12(vd.arr)):'–')+'</span> · Out <span style="font-weight:700;color:var(--ink,#1c2440)">'+(od.submitted&&od.time?esc(od.time):'–')+'</span></div>'+
+    '<div class="st">T <span style="font-weight:700;color:var(--ink,#1c2440)">'+s.roll+'</span> · P <span style="font-weight:700;color:var(--ink,#1c2440)">'+s.bus+'</span> · A <span style="font-weight:700;color:var(--ink,#1c2440)">'+s.abs+'</span> · S <span style="font-weight:700;color:var(--ink,#1c2440)">'+s.sb+'</span></div>';
+  if(fo)h+='<div class="st" style="color:var(--mag);font-weight:600">Front Office updates: '+fo+(s.early||s.late?' <span style="font-weight:400">('+[s.early?'Early leaver '+s.early:'',s.late?'Late comer '+s.late:''].filter(Boolean).join(' · ')+')</span>':'')+'</div>';
+  const u=[];if(hasDrvU(v.k))u.push('Driver M '+tk(vd.driverU)+' D '+tk(ch.driver));if(hasConU(v.k))u.push('Conductor M '+tk(vd.condU)+' D '+tk(ch.conductor));
+  if(u.length)h+=u.map(x=>'<div class="st">'+x+'</div>').join('');
+  return h}
 function renderDuty(){
   const who=$('dutyStaff').value;
   const mine=vehOf(who);
@@ -238,7 +249,7 @@ function renderDuty(){
   $('dutyList').classList.remove('hide');$('dutyVeh').classList.add('hide');
   $('dutyList').innerHTML='<div class="secthead"><i></i><span>'+(isMgr(who)?'All Vehicles':'Assigned Vehicles')+'</span><small>Tap a vehicle to mark attendance</small></div><div class="grid">'+mine.map(v=>{const s=vehStats(v);const marked=s.roll-s.un;
     const pill=s.submitted?'<span class="pill done">Submitted '+esc(s.time)+'</span>':marked?'<span class="pill part">'+marked+'/'+s.roll+' marked</span>':'<span class="pill pend">Pending</span>';
-    return '<button class="vcard" data-open="'+v.k+'"><b>'+esc(v.l)+'</b>'+(isPPveh(v.k)?'<div class="st" style="color:var(--late);font-weight:700">Pre-Primary · 9:00 AM – 2:00 PM</div>':'')+(isMgr(who)?'<div class="st">'+esc(staffOf(v.k))+'</div>':'')+(foCountVeh(v)?'<div class="st" style="color:var(--mag);font-weight:600">Front Office updates: '+foCountVeh(v)+'</div>':'')+'<div class="st">'+s.roll+' students · Present '+s.bus+' · Abs '+s.abs+'</div><div style="margin-top:6px">'+pill+'</div></button>'}).join('')+'</div>';
+    return '<button class="vcard" data-open="'+v.k+'"><b>'+esc(v.l)+'</b>'+(isPPveh(v.k)?'<div class="st" style="color:var(--late);font-weight:700">Pre-Primary · 9:00 AM – 2:00 PM</div>':'')+(isMgr(who)?'<div class="st">'+esc(staffOf(v.k))+'</div>':'')+vcardInfo(v)+'<div style="margin-top:6px">'+pill+'</div></button>'}).join('')+'</div>';
 }
 let draft=null; // local edits before save for the open vehicle
 function renderDutyVeh(){
@@ -253,7 +264,7 @@ function renderDutyVeh(){
   $('dutyVeh').innerHTML='<div class="row" style="justify-content:space-between"><button class="btn ghost sm" id="backV">← Back</button><b style="font-size:17px">'+esc(v.l)+'</b><span class="muted">'+esc(staffOf(v.k))+'</span></div>'+(isPPveh(v.k)?'<p class="muted" style="margin:4px 0 0;color:var(--late)"><b>Pre-Primary · School 9:00 AM – 2:00 PM</b> · late after '+hm12(ppCut())+'</p>':'')+
    '<div class="counts"><div><b>'+v.kids.length+'</b>Total</div><div><b style="color:var(--p)">'+c.P+'</b>Present</div><div><b style="color:var(--a)">'+c.A+'</b>Absent</div><div><b style="color:var(--un)">'+c.U+'</b>Pending</div>'+(vd.submitted?'<div><b style="font-size:14px">'+esc(vd.time)+'</b>Submitted by '+esc(vd.by)+'</div>':'')+'</div>'+
    (foCountVeh(v)?'<div class="banner" style="background:var(--brand2);color:var(--brand)"><b>Front Office updates ('+foCountVeh(v)+')</b> – late arrivals / early pickups for this vehicle are shown under each child. Front Office marks override this list.</div>':'')+
-   mchkHtml()+
+   mchkHtml(v.k)+
    '<div class="row" style="margin-bottom:6px"><button class="btn green sm" id="allP">Mark All Present</button><button class="btn ghost sm" id="clrV">Clear</button><span class="muted">Tap the status to switch Present / Absent'+(isAuto?' / By Parent (auto did not come, parent dropped)':'')+'</span></div>'+
    v.kids.map(k=>{const st=draft[k[0]]||'U';const id=v.k+'-'+k[0];const g=S.gate[id];
      return '<div class="kid"><div class="n">'+k[0]+'</div><div class="nm"><div>'+esc(k[1])+'</div><span>'+esc(k[2])+(sbOf(id)?' · <span class="tag t-SB">Stayback</span>':'')+(S.walkReg[id]?' · <span class="tag t-GOWALK">Goes by walk</span>':'')+'</span>'+foLine(id)+pdLine(k[0])+'</div><button class="tg '+st+'" data-tg="'+k[0]+'">'+tgL(st)+'</button></div>'}).join('')+
@@ -447,7 +458,7 @@ function depChecksHtml(v){
   const de=S.derr[v.k]||{};const ch=de.checks||{};const items=de.items||[];
   const chk=(key,lbl)=>'<div class="row" style="margin:4px 0"><span style="min-width:150px;font-weight:600">'+lbl+'</span>'+
     ['OK','NOT'].map(val=>'<button class="tg '+(ch[key]===val?(val==='OK'?'P':'A'):'U')+'" data-chk="'+key+':'+val+'">'+(val==='OK'?'In Uniform':'Not in Uniform')+'</button>').join(' ')+'</div>';
-  return '<div class="card" style="margin:12px 0 0;border:1px solid var(--line)"><h2>Departure Checks</h2>'+chk('driver','Driver uniform')+chk('conductor','Conductor uniform')+
+  return '<div class="card" style="margin:12px 0 0;border:1px solid var(--line)"><h2>Departure Checks</h2>'+(hasDrvU(v.k)?chk('driver','Driver uniform'):'')+(hasConU(v.k)?chk('conductor','Conductor uniform'):'')+(!hasDrvU(v.k)&&!hasConU(v.k)?'<p class="muted" style="margin:0 0 6px">No uniform check for this vehicle.</p>':'')+
     '<h3>Report an Error</h3><div class="row"><select id="derrType" style="min-width:200px">'+DERR_TYPES.map(t=>'<option>'+esc(t)+'</option>').join('')+'</select>'+
     '<select id="derrKid" style="min-width:180px"><option value="">Child (optional)</option>'+v.kids.map(k=>'<option value="'+v.k+'-'+k[0]+'">'+k[0]+'. '+esc(k[1])+'</option>').join('')+'</select></div>'+
     '<div class="row" style="margin-top:8px"><input type="text" id="derrRem" placeholder="What happened? (remark)" style="flex:1"><button class="btn" id="derrAdd">Add Error</button></div>'+
@@ -730,8 +741,8 @@ function renderDashArr(list){
   h+='<button class="btn ghost sm" id="wkRefresh" style="margin-top:10px">Refresh Week</button>';
   $('dashExtra').innerHTML=h;
 }
-function mchkHtml(){const c=mDraft||{};const row=(key,lbl)=>'<div class="row" style="margin:4px 0"><span style="min-width:150px;font-weight:600">'+lbl+'</span>'+['OK','NOT'].map(val=>'<button class="tg '+(c[key]===val?(val==='OK'?'P':'A'):'U')+'" data-mchk="'+key+':'+val+'">'+(val==='OK'?'In Uniform':'Not in Uniform')+'</button>').join(' ')+'</div>';
-  return '<div class="card" style="margin:10px 0;border:1px solid var(--line)"><h2 style="margin-bottom:6px">Vehicle Staff Check</h2>'+row('driverU','Driver uniform')+row('condU','Conductor uniform')+'</div>'}
+function mchkHtml(vk){const c=mDraft||{};if(!hasDrvU(vk)&&!hasConU(vk))return '';const row=(key,lbl)=>'<div class="row" style="margin:4px 0"><span style="min-width:150px;font-weight:600">'+lbl+'</span>'+['OK','NOT'].map(val=>'<button class="tg '+(c[key]===val?(val==='OK'?'P':'A'):'U')+'" data-mchk="'+key+':'+val+'">'+(val==='OK'?'In Uniform':'Not in Uniform')+'</button>').join(' ')+'</div>';
+  return '<div class="card" style="margin:10px 0;border:1px solid var(--line)"><h2 style="margin-bottom:6px">Vehicle Staff Check</h2>'+(hasDrvU(vk)?row('driverU','Driver uniform'):'')+(hasConU(vk)?row('condU','Conductor uniform'):'')+'</div>'}
 let mDraft=null;
 
 /* DEPARTURE */
@@ -750,7 +761,7 @@ function renderDep(){
   if(!S.depVeh){depDraft=null;
     $('depVeh').classList.add('hide');$('depList').classList.remove('hide');
     $('depList').innerHTML='<div class="secthead"><i></i><span>'+(isMgr(who)?'All Vehicles':'Assigned Vehicles')+'</span><small>Departure list</small></div><div class="grid">'+mine.map(v=>{const od=S.out[v.k]||{};const go=depRows(v).filter(r=>r.i.go).length;const b=Object.keys(od.marks||{}).length;
-      return '<button class="vcard" data-depopen="'+v.k+'"><b>'+esc(v.l)+'</b>'+(isPPveh(v.k)?'<div class="st" style="color:var(--late);font-weight:700">Pre-Primary · 9:00 AM – 2:00 PM</div>':'')+(isMgr(who)?'<div class="st">'+esc(staffOf(v.k))+'</div>':'')+'<div class="st">Going '+go+' of '+v.kids.length+'</div><div style="margin-top:6px">'+(od.submitted?'<span class="pill done">Departed '+esc(od.time)+'</span>':'<span class="pill pend">Boarded '+b+'/'+go+'</span>')+'</div></button>'}).join('')+'</div>';
+      return '<button class="vcard" data-depopen="'+v.k+'"><b>'+esc(v.l)+'</b>'+(isPPveh(v.k)?'<div class="st" style="color:var(--late);font-weight:700">Pre-Primary · 9:00 AM – 2:00 PM</div>':'')+(isMgr(who)?'<div class="st">'+esc(staffOf(v.k))+'</div>':'')+'<div class="st">Going '+go+' of '+v.kids.length+'</div>'+vcardInfo(v)+'<div style="margin-top:6px">'+(od.submitted?'<span class="pill done">Departed '+esc(od.time)+'</span>':'<span class="pill pend">Boarded '+b+'/'+go+'</span>')+'</div></button>'}).join('')+'</div>';
     return}
   $('depList').classList.add('hide');$('depVeh').classList.remove('hide');
   const v=VBY[S.depVeh];const od=S.out[v.k]||{};if(!depDraft)depDraft=Object.assign({},od.marks||{});
