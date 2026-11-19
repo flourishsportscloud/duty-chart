@@ -11,6 +11,7 @@ html{-webkit-text-size-adjust:100%}body{margin:0}
 #gate form{background:var(--surface);border-radius:16px;padding:22px;max-width:380px;width:100%;display:grid;gap:12px}
 #gate h2{font-family:var(--f-head);color:var(--ink);margin:0;font-size:20px}
 #gate input{font:inherit;font-size:16px;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--text)}
+body.locked main,body.locked header .sw{display:none}
 #toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:60;background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:12px;font-weight:600;font-size:13.5px;max-width:90vw}
 #toast.err{background:var(--late-ink);color:#fff}
 .me{all:unset;cursor:pointer;border-radius:999px;padding:4px 11px;font-size:12px;font-weight:600;background:var(--gold);color:var(--gold-ink)}
@@ -158,7 +159,7 @@ details.rules li{margin:6px 0;font-size:13.5px}
   .sumline{grid-template-columns:1fr 1fr}
 }
 </style>
-</head><body>
+</head><body class="locked">
 
 <header class="band">
   <div class="wrap">
@@ -178,7 +179,7 @@ details.rules li{margin:6px 0;font-size:13.5px}
   </div>
 </header>
 
-<div id="gate" hidden><form id="gateF"><h2>Your name</h2><p class="note">Type your full name once. It is saved with every update you make.</p><input id="gateN" type="text" autocomplete="name" placeholder="Full name" required minlength="3" maxlength="60"><p class="note" id="gateE" style="color:var(--late-ink)"></p><button class="btn" type="submit">Continue</button></form></div>
+<div id="gate"><form id="gateF"><h2>Log in</h2><p class="note">Use the same name and password as the Diary app.</p><input id="gateN" type="text" autocomplete="username" placeholder="Your name" maxlength="40"><input id="gateW" type="password" autocomplete="current-password" placeholder="Password"><p class="note" id="gateE" style="color:var(--late-ink)"></p><button class="btn" type="submit" id="gateGo">Log in</button><p class="note">No password yet? Set one in the <a href="../diary/" style="color:var(--today)">Diary app</a> first; the admin approves it once.</p></form></div>
 <div id="toast" hidden role="status"></div>
 <main><div class="wrap">
   <div id="listView" class="stack">
@@ -287,7 +288,13 @@ DUE.forEach(([t,cs,sb,l,item,dept])=>{
 /* ---------- Shared saving: the FIS preparation data sheet (same server as Lesson Readiness) ---------- */
 const PFX='t1.', API_URL=new URLSearchParams(location.search).get('api')||'https://script.google.com/macros/s/AKfycbxQrXl7D_nzkJcC1FOG2AgKX27efM-wg_7mS5LVt2Mu6zU07kiz4Pn3oAZQospDg1o-/exec';
 let DOCS={}, REV=0, ME='', LOADED=false, OV={subAdd:[],subRm:{}};
-try{ME=localStorage.getItem('fis-tpc-name')||''}catch(e){}
+let TOKEN='', ROLE=''; try{TOKEN=localStorage.getItem('diary-token')||''}catch(e){}
+const DIARY_URL=new URLSearchParams(location.search).get('dapi')||'https://script.google.com/macros/s/AKfycbyvWTDOKOQ8F0vD-oy9vchmq04GdhfZfgtpomgWg73rIa13gmkrFkpZsvQl9ISZKrSFQw/exec';
+async function dcall(fn,args){ const r=await fetch(DIARY_URL,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn,args:args||[]})}); const j=await r.json(); if(!j.ok) throw new Error(j.err||'Could not log in.'); return j.v; }
+function setToken(t){ TOKEN=t||''; try{ if(TOKEN) localStorage.setItem('diary-token',TOKEN); else localStorage.removeItem('diary-token'); }catch(e){} }
+function enter(me){ ME=me.name; ROLE=me.role||''; document.body.classList.remove('locked'); $('gate').hidden=true; $('gateW').value=''; render(); loadAll(); }
+function lock(msg){ ME=''; ROLE=''; LOADED=false; DOCS={}; document.body.classList.add('locked'); $('gate').hidden=false; $('gateE').textContent=msg||''; }
+async function checkLogin(){ if(!TOKEN){ lock(); return; } try{ const st=await dcall('state',[TOKEN,TODAY,'']); if(st&&st.me) enter(st.me); else { setToken(''); lock('Please log in again.'); } }catch(e){ if(/log in again/i.test(e.message)){ setToken(''); lock('Please log in again.'); } else lock('Could not check your login. Check the internet connection and reload.'); } }
 const h36=s=>{let a=5381,b=52711;for(let i=0;i<s.length;i++){const c=s.charCodeAt(i);a=(a*33^c)>>>0;b=(b*33^c)>>>0}return a.toString(36)+b.toString(36)};
 const dpath=id=>'status/'+PFX+'r.'+h36(id);
 async function call(fn,args){ const r=await fetch(API_URL,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn,args:args||[],who:ME})}); const j=await r.json(); if(!j.ok) throw new Error(j.err||'Could not save.'); return j.v; }
@@ -295,7 +302,7 @@ function take(v){ let ch=false; (v.docs||[]).forEach(d=>{ if(d.p.indexOf('status
 let toastT; function toast(m,err){ const t=$('toast'); t.textContent=m; t.className=err?'err':''; t.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>t.hidden=true,err?6000:2200); }
 async function loadAll(){ try{ take(await call('all')); LOADED=true; render(); }catch(e){ toast('Could not load saved updates. Check the internet connection.',1); } }
 async function poll(){ if(document.hidden||!LOADED) return; try{ if(take(await call('sync',[REV]))&&!picking&&!editing&&!manage) render(); }catch(e){} }
-async function push(path,fields,msg){ if(!ME){ askName(); return; }
+async function push(path,fields,msg){ if(!ME){ lock(); return; }
   const old=DOCS[path]; DOCS[path]=Object.assign({},old||{},fields); render();
   try{ const v=await call('merge',[path,fields]); DOCS[path]=v.j; if(v.rev) REV=Math.max(REV,v.rev); render(); if(msg) toast(msg); }
   catch(e){ if(old) DOCS[path]=old; else delete DOCS[path]; render(); toast(e.message||'Could not save. Please try again.',1); } }
@@ -312,8 +319,8 @@ const pushSub=(k,w,rm)=>push('status/'+PFX+'s.'+h36(w+'|'+k),{note:JSON.stringif
 function byLine(r,e){ const j=DOCS[r.dp], k=slotOf(r,e); if(!j||!j[k+'_by']) return ''; const d=new Date(j[k+'_at']); let h=d.getHours(); const ap=h<12?'AM':'PM'; h=h%12||12;
   return ' · '+String(j[k+'_by']).split(' ')[0]+', '+d.getDate()+' '+MO[d.getMonth()]+' '+h+':'+String(d.getMinutes()).padStart(2,'0')+' '+ap; }
 const VIEWERS=['1vut0erx8m94h','1hkv5s2x5ymsg','wj56ym193nows','wixt2s193dbkm','1svlg0a1imaq08','1km2jdpxojekf','14sca5akd6lrw','wj4eyr193sw0x','1hkvo5ox5z20e','7ire5c1vbmuki','19icgwg1nunenm','17uw0dvkup68h','82fqvh1vvbdtb'];
-const canDash=()=>VIEWERS.indexOf(h36('v|'+ME.trim().toLowerCase().split(/\s+/)[0].replace(/[^a-z]/g,'')))>=0;
-function askName(){ $('gate').hidden=false; $('gateN').value=ME; $('gateN').focus(); }
+const canDash=()=>ROLE==='admin'||ROLE==='pl'||VIEWERS.indexOf(h36('v|'+ME.trim().toLowerCase().split(/\s+/)[0].replace(/[^a-z]/g,'')))>=0;
+function askName(){ lock(); }
 function records(){
   OV={subAdd:[],subRm:{}};
   const out=[];
@@ -515,9 +522,10 @@ function renderDash(all){
 ['prep','check','dash'].forEach(k=>$('seg-'+k).addEventListener('click',()=>{seg=k;picking=editing=null;render()}));
 $('leftOnly').addEventListener('click',()=>{leftOnly=!leftOnly;render()});
 $('manage').addEventListener('click',()=>{manage=!manage;editing=confirmKey=null;render()});
-$('meBtn').addEventListener('click',askName);
-$('gateF').addEventListener('submit',e=>{e.preventDefault();const n=$('gateN').value.trim().replace(/\s+/g,' ');if(n.length<3){$('gateE').textContent='Please type your full name.';return}ME=n;try{localStorage.setItem('fis-tpc-name',n)}catch(x){}$('gate').hidden=true;render();loadAll()});
-const render0=render; render=function(){ $('meBtn').textContent=ME?'Updating as '+ME+' · change':'Enter your name'; const cd=canDash(), sd=$('seg-dash'); sd.hidden=!cd; sd.parentNode.className='sw '+(cd?'three':'two'); if(!cd&&seg==='dash') seg='prep'; render0(); };
-render(); if(!ME) askName(); else loadAll(); setInterval(poll,10000); document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll()});
+let outArm=0; $('meBtn').addEventListener('click',()=>{ if(!ME) return; if(Date.now()-outArm<4000){ setToken(''); lock(); outArm=0; } else { outArm=Date.now(); $('meBtn').textContent='Tap again to log out'; } });
+$('gateF').addEventListener('submit',async e=>{ e.preventDefault(); const n=$('gateN').value.trim(), w=$('gateW').value; if(!n){$('gateE').textContent='Type your name.';return} if(!w){$('gateE').textContent='Enter your password.';return}
+  $('gateGo').disabled=true; $('gateE').textContent=''; try{ const r=await dcall('login',[n,w]); setToken(r.token); enter(r.state.me); }catch(x){ $('gateE').textContent=x.message||'Could not log in.'; } $('gateGo').disabled=false; });
+const render0=render; render=function(){ $('meBtn').textContent=ME?ME+' · log out':'Not logged in'; const cd=canDash(), sd=$('seg-dash'); sd.hidden=!cd; sd.parentNode.className='sw '+(cd?'three':'two'); if(!cd&&seg==='dash') seg='prep'; if(ME) render0(); };
+checkLogin(); setInterval(poll,10000); document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll()});
 </script>
 </body></html>
