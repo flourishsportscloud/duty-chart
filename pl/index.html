@@ -3,11 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#111827">
+<meta name="theme-color" content="#1F2D5A">
 <link rel="icon" href="../fis/fis-icon-192.png">
 <title>PL Plan – Live</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 /* ===== PL Plan – Live · cool-neutral corporate theme ===== */
 :root{
@@ -213,11 +214,85 @@ td.g span{background:var(--greenS);color:var(--green)}td.r span{background:var(-
   .heatrow{grid-template-columns:1fr;gap:6px}
   .card{padding:14px}
 }
+/* ===== FIS premium theme · navy + gold (school logo colours) ===== */
+:root{--navy:#1F2D5A;--navy2:#16214A;--navy3:#2B3C74;--gold:#E3A94F;--goldlt:#F4D9A6;--goldink:#8A5B12;--ac:#E3A94F;
+--bg:#F5F3EE;--card:#fff;--card2:#F8F6F1;--ink:#1B2340;--ink2:#3A4260;--mut:#646B80;--faint:#9AA0B3;--line:#E6E2D8;--line2:#D5CFBF;
+--head:#16214A;--head2:#1F2D5A;--accent:#1F2D5A;--accentS:#EAEEF8;
+--green:#1F7A52;--greenS:#E6F1EA;--greenL:#A9D3BD;--red:#B83247;--redS:#F8E6EA;--redL:#E8B3BF;--amber:#A8670A;--amberS:#FBF1DC;--grey:#8A91A6;--greyS:#ECEEF4;--blue:#2F5BB5;
+--serif:'Lora',Georgia,'Times New Roman',serif;--sh:0 1px 2px rgba(20,25,60,.05),0 6px 20px rgba(20,25,60,.04)}
+body{background:var(--bg);color:var(--ink)}
+header{background:linear-gradient(135deg,var(--navy2),var(--navy) 60%,var(--navy3))!important;border-bottom:3px solid var(--gold);box-shadow:0 4px 18px rgba(15,22,50,.28)!important}
+.h1 h1{font-family:var(--serif);font-weight:600;letter-spacing:.1px;gap:10px}
+.h1 h1 small{display:block;font-family:Inter,system-ui,sans-serif;font-weight:600;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-top:2px}
+.h1 h1 a{color:var(--goldlt)!important;border-color:rgba(227,169,79,.45)!important;background:rgba(227,169,79,.12)}
+.hlogo{width:42px;height:42px;border-radius:11px;background:#fff;padding:3px;object-fit:contain;flex:none;box-shadow:0 2px 8px rgba(0,0,0,.28)}
+.who b{color:var(--goldlt)}
+.who button{border-color:rgba(227,169,79,.5)!important;background:rgba(227,169,79,.14)!important;color:var(--goldlt)!important}
+.chip{background:rgba(227,169,79,.16)!important;color:var(--goldlt)!important;border:1px solid rgba(227,169,79,.4)}
+.chip.live{background:rgba(46,125,91,.35)!important;border-color:rgba(120,210,165,.5);color:#D5F5E5!important}
+.chip.err{background:rgba(184,50,71,.4)!important;border-color:rgba(255,150,165,.5);color:#FFE0E5!important}
+.seg{background:rgba(255,255,255,.08)!important;border:1px solid rgba(227,169,79,.4)}
+.seg button{color:#DCE1F0!important}
+.seg button.on{background:linear-gradient(180deg,#F0C16F,var(--gold))!important;color:var(--navy2)!important}
+nav{background:var(--navy2)!important;border-bottom:1px solid rgba(227,169,79,.35)!important;gap:8px!important;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav button{display:flex!important;flex-direction:column;align-items:flex-start;background:rgba(255,255,255,.06)!important;border:1px solid rgba(255,255,255,.13)!important;border-left:4px solid var(--ac)!important;color:#DCE1F0!important;border-radius:12px!important;font-family:var(--serif);font-weight:600!important;font-size:14px!important;padding:7px 14px 7px 12px!important}
+nav button small{font-family:Inter,system-ui,sans-serif;color:#DCE1F0!important;opacity:.8;font-weight:500;font-size:10px!important}
+nav button.on{background:linear-gradient(180deg,#F0C16F,var(--gold))!important;color:var(--navy2)!important;border-color:var(--gold)!important;border-left-color:var(--ac)!important;box-shadow:0 2px 10px rgba(227,169,79,.35)}
+nav button.on small{color:var(--navy2)!important}
+.card,.plc,.blk,.kpi{border-radius:16px}
+.card{border:1px solid var(--line);border-top:4px solid var(--ac,var(--navy));box-shadow:var(--sh)}
+.card h3,.plc h4,.hero h2{font-family:var(--serif);color:var(--navy);font-weight:600}
+.pct,.kpi .v,.cnt b,.sbox b,.day b{font-family:var(--serif)}
+.pct,.day b{color:var(--navy)}
+.plc{border-top:4px solid var(--ac,var(--navy))}
+.kpi{border-top:3px solid var(--gold)}
+.kpi.main{background:linear-gradient(135deg,var(--navy2),var(--navy3));border-color:var(--navy)}.kpi.main .k{color:var(--goldlt)}.kpi.main .v{color:#fff}
+.day.sel{background:var(--navy);border-color:var(--navy);box-shadow:none;color:#C9D0E6}
+.day.sel b,.day.sel .pc{color:#fff}.day.sel .tg{color:var(--gold)}
+.day.today{box-shadow:0 0 0 2px var(--gold)}.day.today.sel{box-shadow:0 0 0 2px var(--gold)}
+.day .tg{color:var(--goldink)}.day:not(.today) .tg{color:transparent}
+.weeknav .wl{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);font-weight:700}
+.bar i{background:linear-gradient(90deg,#C98A2B,var(--gold))!important}
+.bar.rd i{background:linear-gradient(90deg,#9E2A3E,var(--red))!important}
+.cnt{background:#F3F0E8;border-color:transparent}
+.cnt span{text-transform:uppercase;letter-spacing:.08em;font-size:10px;font-weight:600}
+.cnt.h b{color:var(--red)}
+.bh{background:linear-gradient(90deg,var(--navy),var(--navy3))!important;color:#fff!important;border-left:5px solid var(--gold);border-bottom:0!important}
+.bh .bn{font-family:var(--serif);font-weight:600;font-size:15px;letter-spacing:.02em;color:#fff}
+.bh .bn small{font-family:Inter,sans-serif;font-weight:600;color:var(--goldlt);margin-left:8px;font-size:10px;letter-spacing:.1em;text-transform:uppercase}
+.bh .st{background:#fff!important}
+.tm-chip{background:var(--gold)!important;color:var(--navy2)!important;border:0!important;font-weight:700}
+.bpc{font-family:var(--serif);color:var(--gold)!important;font-size:13px}
+.timed{background:#F8F2E3!important}.timed button{background:var(--navy)!important}.timed button.sec{background:#E6E2D8!important;color:var(--ink)!important}
+.ih{color:var(--navy)}
+.row.sub{border-left:3px solid var(--goldlt)}
+.mini.on{background:var(--navy)!important;border-color:var(--navy)!important;color:var(--gold)!important}
+.mini{color:var(--navy)}
+.box{border-color:#D3CCBA;border-radius:11px}
+.box.d{background:var(--greenS);border-color:#2E7D5B}.box.n{background:var(--redS);border-color:var(--red)}.box.a{border-color:var(--grey)}
+.nbox input.f{border-color:var(--gold)!important;background:#FBF1DC!important;color:var(--navy2)!important}
+.wk .col i{background:var(--navy)}.wk .col i.g{background:var(--green)}.wk .col i.r{background:var(--red)}
+.rembox{background:#FBFAF7}
+th{background:#F3F0E8;color:var(--mut);letter-spacing:.1em}
+.cat .tot{font-family:var(--serif);color:var(--goldink)}
+.plc small,.muted{color:var(--mut)}
+.notice{background:#FBF1DC;color:#6B4A0E;border-color:#F0DDB3}
+.notice.info{background:#EAEEF8;color:#2A3A70;border-color:#CBD3EA}
+.due{border-radius:12px}
+.btn{background:linear-gradient(180deg,var(--navy3),var(--navy))!important;color:var(--gold)!important;letter-spacing:.04em;box-shadow:0 4px 12px rgba(31,45,90,.3)}
+.btn.sec{background:#E6E2D8!important;color:var(--ink)!important;box-shadow:none}
+.login{border-top:5px solid var(--gold)!important;border-radius:20px!important;box-shadow:0 20px 50px rgba(20,25,60,.18)!important;max-width:380px}
+.login .llogo{width:58px;height:58px;border-radius:15px;background:#fff;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;margin-bottom:12px;box-shadow:0 3px 10px rgba(20,25,60,.12)}
+.login .llogo img{width:46px;height:auto}
+.login h3{font-family:var(--serif);font-size:22px!important;color:var(--navy)}
+.login label{text-transform:uppercase;letter-spacing:.14em;font-size:10.5px!important;font-weight:700}
+textarea:focus,input:focus,select:focus{outline:0;border-color:var(--gold)!important;box-shadow:0 0 0 3px rgba(227,169,79,.3)}
 </style>
 </head>
 <body>
 <header>
-  <div class="h1"><h1><a href="../fis/">‹ FIS</a>PL Plan – Live</h1>
+  <div class="h1"><h1><a href="../fis/">‹ FIS</a><img class="hlogo" src="../fis/fis-logo-192.png" alt="FIS"><span>PL Plan – Live<small>Flourish International School</small></span></h1>
     <div class="who" id="whobox"></div></div>
   <div class="sub"><div class="seg" id="modeseg"></div><span class="chip" id="conn"></span></div>
 </header>
@@ -228,9 +303,9 @@ td.g span{background:var(--greenS);color:var(--green)}td.r span{background:var(-
 /* ================= CONFIG ================= */
 const secList=(cls,letters)=>{const o=[];cls.forEach(c=>[...letters].forEach(l=>o.push(c+l)));return o};
 const PLS=[
- {id:'poonam',name:'Poonam',cls:'Class 6–7',sections:secList([6,7],'ABC')},
- {id:'garima',name:'Garima',cls:'Class 8–9',sections:['8A','8B','8C','9A','9B']},
- {id:'santosh',name:'Santosh Yadav',cls:'Class 10–11',sections:['10A','10B','11A']}
+ {id:'poonam',ac:'#C2385B',name:'Poonam',cls:'Class 6–7',sections:secList([6,7],'ABC')},
+ {id:'garima',ac:'#5F3585',name:'Garima',cls:'Class 8–9',sections:['8A','8B','8C','9A','9B']},
+ {id:'santosh',ac:'#2B8FBF',name:'Santosh Yadav',cls:'Class 10–11',sections:['10A','10B','11A']}
 ];
 const SENIORS=[{id:'sarita',name:'Sarita (Head of Secondary)'},{id:'dean',name:'Dean of Academics'},{id:'director',name:'Director–Admin'}];
 const PEOPLE=[...PLS.map(p=>({id:p.id,name:p.name,pl:p.id})),...SENIORS.map(s=>({id:s.id,name:s.name,senior:true}))];
@@ -404,7 +479,7 @@ async function doChangePw(target,inId,in2Id){
 }
 function showOk(t){const el=document.getElementById('msg');el.innerHTML=`<div class="notice info">${esc(t)}</div>`;clearTimeout(msgTimer);msgTimer=setTimeout(()=>showMsg(''),5000)}
 function loginHTML(){
-  return `<div class="card login"><h3 style="font-size:17px">Log in</h3><div class="muted">PL Plan – Live · FIS</div>
+  return `<div class="card login"><div class="llogo"><img src="../fis/fis-logo-192.png" alt="FIS"></div><h3 style="font-size:17px">Log in</h3><div class="muted">PL Plan – Live · FIS</div>
   <label for="lid">Your name</label><select id="lid"><option value="">— choose —</option>${PEOPLE.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select>
   <label for="lpw">Password</label><input id="lpw" type="password" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false">
   <label style="display:flex;align-items:center;gap:6px;font-weight:400;margin-top:6px"><input type="checkbox" onchange="document.getElementById('lpw').type=this.checked?'text':'password'" style="width:auto;margin:0"> Show password</label>
@@ -545,7 +620,7 @@ function render(force){
   if(!S.me.senior&&S.tab!==S.me.id)S.tab=S.me.id;
   const root=document.getElementById('root');
   const scroll=window.scrollY;
-  root.innerHTML=strip()+(S.tab==='dash'?dashboard():plPage(plOf(S.tab)));
+  root.style.setProperty('--ac',(plOf(S.tab)||{}).ac||'#E3A94F');root.innerHTML=strip()+(S.tab==='dash'?dashboard():plPage(plOf(S.tab)));
   window.scrollTo(0,scroll);
 }
 function paintTop(){
@@ -556,8 +631,8 @@ function paintTop(){
   document.getElementById('tabs').style.display=show?'':'none';
   document.getElementById('modeseg').innerHTML=`<button data-act="mode" data-v="dp" class="${S.mode==='dp'?'on':''}">Day Plan</button><button data-act="mode" data-v="de" class="${S.mode==='de'?'on':''}">Day End</button>`;
   const vis=!S.me?[]:S.me.senior?PLS:PLS.filter(p=>p.id===S.me.id);
-  document.getElementById('tabs').innerHTML=(S.me&&S.me.senior?`<button data-act="tab" data-v="dash" class="${S.tab==='dash'?'on':''}">Dashboard</button>`:'')+
-    vis.map(p=>`<button data-act="tab" data-v="${p.id}" class="${S.tab===p.id?'on':''}">${esc(p.name)}<small>${p.cls}</small></button>`).join('');
+  document.getElementById('tabs').innerHTML=(S.me&&S.me.senior?`<button data-act="tab" data-v="dash" style="--ac:#E3A94F" class="${S.tab==='dash'?'on':''}">Dashboard</button>`:'')+
+    vis.map(p=>`<button data-act="tab" data-v="${p.id}" style="--ac:${p.ac}" class="${S.tab===p.id?'on':''}">${esc(p.name)}<small>${p.cls}</small></button>`).join('');
   paintConn();
 }
 function strip(){
