@@ -201,6 +201,17 @@ tr.cov td{background:color-mix(in srgb,var(--sports) 10%,transparent)}
 .ntfr .nm{flex:1;min-width:0;font-weight:700;font-size:.9rem}.ntfr .nm small{display:block;font-weight:400;color:var(--muted);font-size:.78rem}
 .ntfr a{white-space:nowrap;text-decoration:none;font-weight:800;font-size:.82rem;padding:7px 11px;border-radius:999px;background:#25D366;color:#fff}
 .ntfr a.nonum{background:var(--chip);color:var(--ink)}.ntfr a.sent{background:var(--chip);color:var(--muted)}
+.nmin{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;width:100%;margin:4px 0 0;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--chip);color:var(--ink);font:inherit;font-weight:700;font-size:.82rem;text-align:left;cursor:pointer}
+.nmin span{font-weight:500;color:var(--muted);font-size:.78rem}
+#notice.min .nbody{display:none}
+#notice:not(.min) .nmin span{display:none}
+.exsw{display:flex;gap:8px;margin:14px 0 4px;padding:4px;background:var(--chip);border:1px solid var(--line);border-radius:12px}
+.exb{flex:1;font:inherit;font-family:var(--head);font-weight:600;font-size:1.05rem;padding:9px 10px;border:0;border-radius:9px;background:transparent;color:var(--muted);cursor:pointer}
+.exb[aria-selected="true"]{background:var(--navy,#1F2D5A);color:#fff}
+.exone{grid-template-columns:1fr !important}
+.exone > div > h3{display:none}
+.gsub td{background:var(--chip);font-family:var(--body);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;font-weight:700;color:var(--navy,#1F2D5A);padding:7px 10px}
+@media (prefers-color-scheme:dark){.gsub td{color:var(--gold,#E3A94F)}}
 .pendr td{background:color-mix(in srgb,var(--gate) 6%,var(--surface))}
 .pbtns{display:flex;gap:6px;flex-wrap:wrap}
 .padj,.pna{font:inherit;font-size:.8rem;font-weight:700;border-radius:999px;padding:5px 11px;cursor:pointer}
@@ -845,14 +856,17 @@ function cardHTML(card, prefix, shift){
     <div class="card-h"><span class="dot"></span><h2>${esc(card.t)}</h2>${card.w?`<span class="when">${esc(card.w)}</span>`:''}</div>${body}</section>`;
 }
 let TAB = null;
+let EXSH = '';
 function render(tabId){
   TAB = tabId;
   const tab = TABS.find(t => t.id === tabId);
   let html = '';
-  $('#notice').hidden = !!tab.checkin;
+  $('#notice').hidden = !!tab.checkin || !!tab.extra;
   if (tab.checkin){ try { sessionStorage.setItem('dutyTab', tabId); } catch(e){} $('#main').innerHTML = checkinHTML(); document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', b.dataset.id === tabId)); return; }
   if (tab.extra){
-    html = `<div class="grid2">` + tab.cols.map(col =>
+    if (!EXSH || !tab.cols.some(c => c.h === EXSH)) EXSH = (tab.cols[autoTab() === 'morning' ? 0 : 1] || tab.cols[0] || {}).h;
+    html = `<div class="exsw" role="tablist">` + tab.cols.map(col => `<button type="button" role="tab" class="exb" data-exsh="${esc(col.h)}" aria-selected="${col.h === EXSH}">${esc(col.h)}</button>`).join('') + `</div>` +
+      `<div class="grid2 exone">` + tab.cols.filter(col => col.h === EXSH).map(col =>
       `<div><h3 style="font-family:var(--head);margin:16px 0 0;font-size:1.25rem">${col.h}</h3>` +
       col.groups.map(g => cardHTML(g, tab.id + '-' + slug(col.h), 'Extra – ' + col.h)).join('') + `</div>`).join('') + `</div>`;
   } else {
@@ -861,11 +875,18 @@ function render(tabId){
       tab.cards.map(c => cardHTML(c, tab.id, tab.label)).join('');
   }
   $('#main').innerHTML = html;
+  $('#main').querySelectorAll('[data-exsh]').forEach(b => b.onclick = () => { EXSH = b.dataset.exsh; render(TAB); });
   document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', b.dataset.id === tabId));
   try { sessionStorage.setItem('dutyTab', tabId); } catch(e){}
 }
 
 /* ---------- today's leave panel ---------- */
+let NMIN = false; try { NMIN = localStorage.getItem('dutyNoticeMin') === '1'; } catch(e){}
+function nSummary(){
+  const d = dayData(), lv = d.leave||[], adj = d.adj||[], cv = d.cover||[];
+  const pa = lv.filter(l => !l.na && !adj.some(a => same1(a.f, l.n))).length, pc = lv.filter(l => !l.cna && !cv.some(c => same1(c.f, l.n))).length;
+  return `${lv.length} on leave · Adjustment ${pa ? pa + ' pending' : 'done'} · Cover ${pc ? pc + ' pending' : 'done'}`;
+}
 function renderNotice(){
   const d = dayData(), lv = d.leave||[], cv = d.cover||[], adj = d.adj||[];
   const today = ymd(new Date());
@@ -876,41 +897,59 @@ function renderNotice(){
     body = `<p class="none">No leave or adjustments entered for this day.</p>`;
   } else {
     const byCat = CATS.concat([...new Set(lv.map(lcat).filter(k=>!CATS.includes(k)))]);
-    body += `<h3>Staff on leave <span class="cnt">${lv.length}</span></h3><table><thead><tr><th>Category</th><th>Staff</th></tr></thead><tbody>` +
+    body += `<h3>Staff Leaves <span class="cnt">${lv.length}</span></h3><table><thead><tr><th>Category</th><th>Staff</th></tr></thead><tbody>` +
       byCat.map(k => { const ps = lv.filter(l => lcat(l) === k);
         return `<tr><td>${esc(CAT_LABEL[k]||k)}</td><td>${ps.length ? ps.map(l => esc(l.n) + (clsOf(l.n)?` <span class="ctg">CT ${esc(clsOf(l.n))}</span>`:'') + (stKey(l)?' <em>('+esc(stLabel(l))+')</em>':'')).join(', ') : '—'}</td></tr>`; }).join('') + `</tbody></table>`;
     const ed = (m,i) => CAN_UI() ? ` data-qa="${m}:${i}"` : '';
-    const cls = adj.map((a,i) => [a,i]).filter(([a]) => !a.a), act = adj.map((a,i) => [a,i]).filter(([a]) => a.a);
     const by = (n, t) => `<b class="by">${esc(n)}</b>${t?`<small class="tm">${esc(t)}</small>`:''}`;
     const by2 = a => by(a.b, a.t) + (a.b2 ? `<div class="by2">${by(a.b2, a.t2)}</div>` : '');
     const rt = t => `<span class="rtag">${t}</span>`;
     const byCls = a => [a.b ? [a.b, a.t, 'Class Teacher'] : null, a.b2 ? [a.b2, a.t2, 'Subject Teacher'] : null, a.b3 ? [a.b3, a.t3, 'Subject Teacher'] : null].filter(Boolean)
       .map(([n, t, r], k) => `<div class="${k ? 'by2' : ''}">${by(n, t)}${rt(r)}</div>`).join('');
     const ab = n => n ? esc(n) : '<span class="dim">—</span>';
-    const handled = n => (d.adj||[]).some(a => same1(a.f, n)) || cv.some(c => same1(c.f, n));
-    const openL = lv.filter(l => !handled(l.n) && !l.na), naL = lv.filter(l => !handled(l.n) && l.na);
     const stt = l => stKey(l) ? `<small class="tm">${esc(stLabel(l))}</small>` : '';
-    const isAct = l => lcat(l) === 'Activity';
-    const openRow = l => `<tr class="pendr"><td>${clsOf(l.n) ? esc(clsOf(l.n)) : '<span class="dim">—</span>'}</td><td>${esc(l.n)}${stt(l)}</td><td>` +
-      (CAN_UI() ? `<div class="pbtns"><button type="button" class="padj" data-padj="${esc(l.n)}" data-pc="${esc(clsOf(l.n))}" data-pm="${isAct(l)?'act':'adj'}">+ Adjust</button><button type="button" class="pna" data-na="${esc(l.n)}">NA</button></div>` : '<span class="pendt">Pending</span>') + `</td></tr>`;
-    const naRow = l => `<tr class="nar"><td>${clsOf(l.n) ? esc(clsOf(l.n)) : '<span class="dim">—</span>'}</td><td>${esc(l.n)}${stt(l)}</td><td>` +
-      (CAN_UI() ? `<button type="button" class="natag" data-unna="${esc(l.n)}" title="Tap to undo">NA · Not applicable</button>` : '<span class="natag">NA · Not applicable</span>') + `</td></tr>`;
-    const nRows = cls.length + openL.length + naL.length;
-    if (nRows) body += `<h3>Class adjustment <span class="cnt k2">${nRows}</span>${openL.length ? ` <span class="pendc">${openL.length} pending</span>` : ''}</h3><table class="adjt"><thead><tr><th>Class</th><th>Absent</th><th>Adjusted by</th></tr></thead><tbody>` +
-      openL.map(openRow).join('') +
-      cls.map(([a,i]) => `<tr${ed('adj',i)}><td>${esc(a.c)}</td><td>${a.f ? ab(a.f) : ctOf(a.c) ? `${esc(ctOf(a.c))}<small class="tm">Class teacher</small>` : ab('')}</td><td>${byCls(a)}</td></tr>`).join('') +
-      naL.map(naRow).join('') + `</tbody></table>`;
-    if (act.length) body += `<h3>Activity adjustment <span class="cnt k3">${act.length}</span></h3><table class="adjt"><thead><tr><th>Activity</th><th>Absent</th><th>Adjusted by</th></tr></thead><tbody>` +
-      act.map(([a,i]) => `<tr${ed('adj',i)}><td>${esc(a.a)}${a.c?`<small class="tm">${esc(a.c)}</small>`:''}</td><td>${ab(a.f)}</td><td>${by2(a)}</td></tr>`).join('') + `</tbody></table>`;
-    if (cv.length) body += `<h3>Duty cover <span class="cnt k4">${cv.length}</span></h3><table class="adjt"><thead><tr><th>Duty</th><th>Absent</th><th>Covered by</th></tr></thead><tbody>` +
-      cv.map((c,i) => `<tr${ed('cover',i)}><td class="duty">${esc(c.d||'All duties')}</td><td>${ab(c.f)}</td><td>${by(c.n)}</td></tr>`).join('') + `</tbody></table>`;
+    const absCell = l => `${esc(l.n)}${stt(l)}`;
+    const grpOf = k => GRP.find(g => g[2].includes(k)) || GRP[0];
+    const sub = (g, n) => `<tr class="gsub"><td colspan="3">${g[1]}${n ? ` <span class="pendc">${n} pending</span>` : ''}</td></tr>`;
+    const adjBtns = (l, mode) => CAN_UI() ? `<div class="pbtns"><button type="button" class="padj" data-padj="${esc(l.n)}" data-pc="${esc(clsOf(l.n))}" data-pm="${mode}">+ ${mode === 'cover' ? 'Cover' : 'Adjust'}</button><button type="button" class="pna" data-na="${esc(l.n)}" data-nk="${mode === 'cover' ? 'cna' : 'na'}">NA</button></div>` : '<span class="pendt">Pending</span>';
+    const naCell = (l, k) => CAN_UI() ? `<button type="button" class="natag" data-unna="${esc(l.n)}" data-nk="${k}" title="Tap to undo">NA · Not applicable</button>` : '<span class="natag">NA · Not applicable</span>';
+    const adjRow = ([a,i]) => a.a
+      ? `<tr${ed('adj',i)}><td>${esc(a.a)}${a.c?`<small class="tm">${esc(a.c)}</small>`:''}</td><td>${ab(a.f)}</td><td>${by2(a)}</td></tr>`
+      : `<tr${ed('adj',i)}><td>${esc(a.c)}</td><td>${a.f ? ab(a.f) : ctOf(a.c) ? `${esc(ctOf(a.c))}<small class="tm">Class teacher</small>` : ab('')}</td><td>${byCls(a)}</td></tr>`;
+    const covRow = ([c,i]) => `<tr${ed('cover',i)}><td class="duty">${esc(c.d||'All duties')}</td><td>${ab(c.f)}</td><td>${by(c.n)}</td></tr>`;
+    /* one section (Adjustment or Duty Cover): every absentee, grouped Teachers / Operations / Co-curricular, in leave order */
+    const section = (title, items, kind, head3) => {
+      const used = new Set(); let html = '', pend = 0;
+      GRP.forEach(g => {
+        const ls = lv.filter(l => grpOf(lcat(l)) === g).slice().sort((x, y) => x.n.localeCompare(y.n));
+        const rows = []; let gp = 0;
+        ls.forEach(l => {
+          const mine = items.map((x,i) => [x,i]).filter(([x], k) => !used.has(k) && same1(x.f, l.n));
+          mine.forEach(([,i]) => used.add(i));
+          if (mine.length) rows.push(...mine.map(kind === 'cover' ? covRow : adjRow));
+          else if (l[kind === 'cover' ? 'cna' : 'na']) rows.push(`<tr class="nar"><td>${kind === 'cover' ? '<span class="dim">—</span>' : clsOf(l.n) ? esc(clsOf(l.n)) : '<span class="dim">—</span>'}</td><td>${absCell(l)}</td><td>${naCell(l, kind === 'cover' ? 'cna' : 'na')}</td></tr>`);
+          else { gp++; rows.push(`<tr class="pendr"><td>${kind === 'cover' ? '<span class="dim">—</span>' : clsOf(l.n) ? esc(clsOf(l.n)) : '<span class="dim">—</span>'}</td><td>${absCell(l)}</td><td>${adjBtns(l, kind === 'cover' ? 'cover' : lcat(l) === 'Activity' ? 'act' : 'adj')}</td></tr>`); }
+        });
+        /* entries whose absent person is not on the leave list */
+        const orphan = items.map((x,i) => [x,i]).filter(([x], k) => !used.has(k) && (kind === 'cover' ? g === GRP[1] : x.a ? g === GRP[2] : g === GRP[0]));
+        orphan.forEach(([,i]) => used.add(i));
+        rows.push(...orphan.map(kind === 'cover' ? covRow : adjRow));
+        if (rows.length){ pend += gp; html += sub(g, gp) + rows.join(''); }
+      });
+      if (!html) return '';
+      return `<h3>${title} <span class="cnt ${head3}">${items.length}</span>${pend ? ` <span class="pendc">${pend} pending</span>` : ''}</h3><table class="adjt"><thead><tr><th>${kind === 'cover' ? 'Duty' : 'Class / Activity'}</th><th>Absent</th><th>${kind === 'cover' ? 'Covered by' : 'Adjusted by'}</th></tr></thead><tbody>${html}</tbody></table>`;
+    };
+    body += section('Adjustment', adj, 'adj', 'k2');
+    body += section('Duty Cover', cv, 'cover', 'k4');
   }
   $('#notice').innerHTML = `
     <div class="nhead">
       <button class="nav" id="prevDay" aria-label="Previous day">‹</button>
-      <div class="ntitle"><h2>${rel?rel+' · ':''}${esc(nice(DAY))}</h2><small>Leave &amp; adjustments</small></div>
+      <div class="ntitle"><h2>${rel?rel+' · ':''}${esc(nice(DAY))}</h2><small>Staff leaves · adjustment · duty cover</small></div>
       <button class="nav" id="nextDay" aria-label="Next day">›</button>
     </div>
+    <button type="button" class="nmin" id="nMin" aria-expanded="${!NMIN}">${NMIN ? '▾ Show details' : '▴ Hide details'}<span>${esc(nSummary())}</span></button>
+    <div class="nbody">
     ${myBox()}${ciLine}${body}${notifyBox()}
     <div class="nbtns qbtns" ${CAN_UI()?'':'hidden'}>
       <button class="btn ghost" data-qnew="adj">+ Class adjustment</button>
@@ -921,17 +960,19 @@ function renderNotice(){
     <div class="nbtns">
       <button class="btn ghost" id="copyWa">Copy for WhatsApp</button>
       <button class="btn" id="openEd" ${CAN_UI()?'':'hidden'}>${CAN_EDIT ? '✎ Update leave' : '✎ Fill leave → WhatsApp'}</button>
-    </div>`;
+    </div></div>`;
+  $('#notice').classList.toggle('min', NMIN);
+  $('#nMin').onclick = () => { NMIN = !NMIN; try { localStorage.setItem('dutyNoticeMin', NMIN ? '1' : ''); } catch(e){} renderNotice(); };
   $('#prevDay').onclick = () => setDay(addDays(DAY,-1));
   $('#nextDay').onclick = () => setDay(addDays(DAY,1));
   $('#copyWa').onclick = copyWa;
   $('#openEd').onclick = () => openEditor(DAY);
   const cil = $('#notice').querySelector('[data-goci]'); if (cil) cil.onclick = () => { render('checkin'); window.scrollTo({top:0}); };
-  $('#notice').querySelectorAll('[data-padj]').forEach(b => b.onclick = e => { e.stopPropagation(); if (CAN_UI()) openQA({mode: b.dataset.pm, ...(b.dataset.pc ? {c: b.dataset.pc} : {}), f: b.dataset.padj}); });
-  const setNA = (n, on) => { if (!ART){ toast('Enter the edit PIN to save'); return; } const next = JSON.parse(JSON.stringify(DAILY)); const dd = next[DAY] || {};
-    const l = (dd.leave || []).find(x => same1(x.n, n)); if (!l) return; if (on) l.na = true; else delete l.na; save(next, DAY); };
-  $('#notice').querySelectorAll('[data-na]').forEach(b => b.onclick = e => { e.stopPropagation(); setNA(b.dataset.na, true); });
-  $('#notice').querySelectorAll('[data-unna]').forEach(b => b.onclick = e => { e.stopPropagation(); setNA(b.dataset.unna, false); });
+  $('#notice').querySelectorAll('[data-padj]').forEach(b => b.onclick = e => { e.stopPropagation(); if (CAN_UI()) openQA({mode: b.dataset.pm, ...(b.dataset.pc && b.dataset.pm === 'adj' ? {c: b.dataset.pc} : {}), f: b.dataset.padj}); });
+  const setNA = (n, on, k) => { if (!ART){ toast('Enter the edit PIN to save'); return; } const next = JSON.parse(JSON.stringify(DAILY)); const dd = next[DAY] || {};
+    const l = (dd.leave || []).find(x => same1(x.n, n)); if (!l) return; if (on) l[k] = true; else delete l[k]; save(next, DAY); };
+  $('#notice').querySelectorAll('[data-na]').forEach(b => b.onclick = e => { e.stopPropagation(); setNA(b.dataset.na, true, b.dataset.nk || 'na'); });
+  $('#notice').querySelectorAll('[data-unna]').forEach(b => b.onclick = e => { e.stopPropagation(); setNA(b.dataset.unna, false, b.dataset.nk || 'na'); });
   $('#notice').querySelectorAll('[data-qnew]').forEach(b => b.onclick = () => openQA({mode: b.dataset.qnew}));
   $('#notice').querySelectorAll('[data-qa]').forEach(r => r.onclick = () => { const [m,i] = r.dataset.qa.split(':'); openQA({mode: m, idx: +i}); });
 }
@@ -939,16 +980,34 @@ function setDay(d){ DAY = d; LV = leaveMap(); renderNotice(); render(TAB); doSea
 
 function waText(){
   const d = dayData(), lv = d.leave||[];
-  let t = `*Staff ON Leave* – ${nice(DAY)} (${dm(DAY)})\n`;
+  let t = `*Staff Leaves* – ${nice(DAY)} (${dm(DAY)})\n`;
   CATS.concat([...new Set(lv.map(lcat).filter(k=>!CATS.includes(k)))]).forEach(k => {
     const ps = lv.filter(l => lcat(l) === k);
     t += `\n*${CAT_LABEL[k] || k}*\n` + (ps.length ? ps.map(l => `* ${l.n}${stKey(l)?' ( '+stLabel(l)+' )':''}`).join('\n') : '* ') + '\n';
   });
-  const cls = (d.adj||[]).filter(a => !a.a), act = (d.adj||[]).filter(a => a.a);
-  const naW = (d.leave||[]).filter(l => l.na && !(d.adj||[]).some(a => same1(a.f, l.n)) && !(d.cover||[]).some(c => same1(c.f, l.n)));
-  if (cls.length || naW.length) t += `\n*Class Adjustment*\n` + cls.map(a => `${a.c} - ${a.f ? a.f+' - ' : ctOf(a.c) ? ctOf(a.c)+' (CT) - ' : ''}${[a.b ? a.b+' (Class Teacher'+(a.t?', '+a.t:'')+')' : '', a.b2 ? a.b2+' (Subject Teacher'+(a.t2?', '+a.t2:'')+')' : '', a.b3 ? a.b3+' (Subject Teacher'+(a.t3?', '+a.t3:'')+')' : ''].filter(Boolean).join(' + ')}`).concat(naW.map(l => `${clsOf(l.n) ? clsOf(l.n)+' - ' : ''}${l.n} - NA (Not applicable)`)).join('\n') + '\n';
-  if (act.length) t += `\n*Activity Adjustment*\n` + act.map(a => `${a.a}${a.c?' ('+a.c+')':''} - ${a.f?a.f+' - ':''}${a.b}${a.t?' ('+a.t+')':''}${a.b2?' + '+a.b2+(a.t2?' ('+a.t2+')':''):''}`).join('\n') + '\n';
-  if ((d.cover||[]).length) t += `\n*Duty Cover*\n` + d.cover.map(c => `* ${c.n} for ${c.f}${c.d?' – '+c.d:''}`).join('\n') + '\n';
+  const grpOf = k => GRP.find(g => g[2].includes(k)) || GRP[0];
+  const aTxt = a => a.a
+    ? `${a.a}${a.c?' ('+a.c+')':''} - ${a.f?a.f+' - ':''}${a.b}${a.t?' ('+a.t+')':''}${a.b2?' + '+a.b2+(a.t2?' ('+a.t2+')':''):''}`
+    : `${a.c} - ${a.f ? a.f+' - ' : ctOf(a.c) ? ctOf(a.c)+' (CT) - ' : ''}${[a.b ? a.b+' (Class Teacher'+(a.t?', '+a.t:'')+')' : '', a.b2 ? a.b2+' (Subject Teacher'+(a.t2?', '+a.t2:'')+')' : '', a.b3 ? a.b3+' (Subject Teacher'+(a.t3?', '+a.t3:'')+')' : ''].filter(Boolean).join(' + ')}`;
+  const cTxt = c => `${c.n} for ${c.f}${c.d?' – '+c.d:''}`;
+  const sect = (title, items, txt, naKey) => {
+    const used = new Set(); let out = '';
+    GRP.forEach(g => {
+      const lines = [];
+      lv.filter(l => grpOf(lcat(l)) === g).slice().sort((x, y) => x.n.localeCompare(y.n)).forEach(l => {
+        const mine = items.map((x,i) => [x,i]).filter(([x], k) => !used.has(k) && same1(x.f, l.n));
+        mine.forEach(([,i]) => used.add(i));
+        if (mine.length) lines.push(...mine.map(([x]) => '* ' + txt(x)));
+        else lines.push(`* ${naKey === 'na' && clsOf(l.n) ? clsOf(l.n)+' - ' : ''}${l.n} - ${l[naKey] ? 'NA (Not applicable)' : 'Pending'}`);
+      });
+      const orphan = items.map((x,i) => [x,i]).filter(([x], k) => !used.has(k) && (naKey === 'cna' ? g === GRP[1] : x.a ? g === GRP[2] : g === GRP[0]));
+      orphan.forEach(([,i]) => used.add(i)); lines.push(...orphan.map(([x]) => '* ' + txt(x)));
+      if (lines.length) out += `_${g[1]}_\n` + lines.join('\n') + '\n';
+    });
+    return out ? `\n*${title}*\n` + out : '';
+  };
+  t += sect('Adjustment', d.adj||[], aTxt, 'na');
+  t += sect('Duty Cover', d.cover||[], cTxt, 'cna');
   return t;
 }
 async function copyWa(){
@@ -1000,7 +1059,7 @@ function doSearch(){
   const raw = $('#q').value, q = norm(raw);
   $('#clear').style.display = q ? 'block' : 'none';
   const res = $('#results');
-  if (q.length < 2){ res.hidden = true; $('#main').hidden = false; $('#notice').hidden = TAB === 'checkin'; return; }
+  if (q.length < 2){ res.hidden = true; $('#main').hidden = false; $('#notice').hidden = TAB === 'checkin' || !!(TABS.find(t => t.id === TAB) || {}).extra; return; }
   $('#notice').hidden = true;
   const tokHit = n => n.split(SEP).some(t => /[a-z]/i.test(t) && sameName(t, raw));
   let hits = entries.filter(e => norm(e.name).includes(q) || tokHit(e.name)).map(h => ({...h}));
@@ -1351,6 +1410,9 @@ function canon(n, cat){
   const s = resolve(n, cat); return s ? s[0] : n;
 }
 const OLDCAT = {'Teacher':'Secondary Teacher','Admin & PL':'Admin'};
+const GRP = [['teach','Teachers',['Pre Primary Teacher','Primary Teacher','Secondary Teacher','Hindi Teacher','Computer Teacher','Teacher']],
+  ['ops','Operations',['Admin','PL','CM','Floor Manager','Support Staff','Admin & PL']],
+  ['cocur','Co-curricular',['Activity']]];
 const lcat = l => (resolve(l.n, l.k) || [])[2] || OLDCAT[l.k] || l.k || 'Secondary Teacher';
 const catOfName = (n, fallback) => { const s = resolve(n, fallback); return s ? s[2] : (OLDCAT[fallback] || fallback || 'Secondary Teacher'); };
 /* check-in reports pasted from WhatsApp – the chart's own "✅ Check-in" messages or the usual floor posts */
@@ -1374,7 +1436,7 @@ function parseCheckins(txt){
       const dmm = line.match(/(\d{1,2})\s*\/\s*(\d{1,2})/); if (dmm) date = new Date().getFullYear() + '-' + pad(dmm[2]) + '-' + pad(dmm[1]);
       return;
     }
-    if (cur && /on\s*leave|adjust|absentee|duty\s*cover/i.test(line)) cur = null;
+    if (cur && /on\s*leave|staff\s*leaves|adjust|absentee|duty\s*cover/i.test(line)) cur = null;
     if (!cur){ rest.push(line0); return; }
     if (!line){ gap = true; return; }
     const isHead = /^(late|absent|late\s*\/\s*absent)/i.test(line) || /^reached\b/i.test(line);
@@ -1411,10 +1473,11 @@ function parseNote(txt){
       const y = dm[3] ? (dm[3].length === 2 ? 2000 + +dm[3] : +dm[3]) : new Date().getFullYear();
       if (+dm[2] >= 1 && +dm[2] <= 12 && +dm[1] >= 1 && +dm[1] <= 31) out.date = y + '-' + pad(dm[2]) + '-' + pad(dm[1]);
     }
-    if (/on\s*leave/i.test(line)){ sec = 'leave'; LATE_SEC = false; return; }
+    if (/on\s*leave|staff\s*leaves/i.test(line)){ sec = 'leave'; LATE_SEC = false; return; }
     if (/^late\s*(comers?|staff|arrivals?)?\s*[:\-–]?\s*$/i.test(line)){ sec = 'leave'; cat = 'Secondary Teacher'; LATE_SEC = true; return; }
     if (/adjust|absentee/i.test(line)){ sec = 'adj'; return; }
     if (/cover/i.test(line) && !/for/i.test(line)){ sec = 'cover'; return; }
+    if (sec !== 'leave' && (/^[_*\s]*(teachers|operations|co-?curricular)[_*\s]*$/i.test(line) || /-\s*(pending|na\s*\(not applicable\))\s*$/i.test(line))) return;
     const cov = line.match(/^[\s*•\-–·]*(.+?)\s+(?:for|in place of|instead of)\s+(.+?)(?:\s*[–:\-]\s*(.+))?$/i);
     if (cov && sec !== 'adj'){ out.cover.push({n:canon(cov[1]), f:canon(cov[2]), ...(cov[3]?{d:cov[3].trim()}:{})}); return; }
     if (sec === 'leave'){
@@ -1547,7 +1610,7 @@ $('#edDelete').onclick = () => { if (!ED) return; ED.leave = []; ED.cover = []; 
 $('#edSave').onclick = async () => {
   readEditor();
   const clean = {
-    leave: ED.leave.filter(l => l.n).map(l => { const n = canon(l.n, l.k); return {n, k: resolve(n) ? resolve(n)[2] : (OLDCAT[l.k]||l.k||'Secondary Teacher'), ...(l.half?{half:l.half}:{}), ...(l.half&&l.ht?{ht:l.ht}:{}), ...(l.late?{late:l.late}:{}), ...(l.na?{na:true}:{})}; }),
+    leave: ED.leave.filter(l => l.n).map(l => { const n = canon(l.n, l.k); return {n, k: resolve(n) ? resolve(n)[2] : (OLDCAT[l.k]||l.k||'Secondary Teacher'), ...(l.half?{half:l.half}:{}), ...(l.half&&l.ht?{ht:l.ht}:{}), ...(l.late?{late:l.late}:{}), ...(l.na?{na:true}:{}), ...(l.cna?{cna:true}:{})}; }),
     cover: ED.cover.filter(c => c.n && c.f).map(c => ({n:canon(c.n), f:canon(c.f, (ED.leave.find(l => sameName(c.f, l.n))||{}).k), ...(c.d?{d:c.d}:{})})),
     adj: ED.adj.filter(a => a.c || a.b || a.a).map(a => ({c:a.c||'', ...(a.a?{a:a.a}:{}), b:a.b||'', ...(a.t?{t:a.t}:{}), ...(a.b2?{b2:canon(a.b2)}:{}), ...(a.b2&&a.t2?{t2:a.t2}:{}), ...(a.b3?{b3:canon(a.b3)}:{}), ...(a.b3&&a.t3?{t3:a.t3}:{}), ...(a.f?{f:canon(a.f)}:{})}))
   };
