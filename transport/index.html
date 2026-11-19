@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Student Entry Exit Report</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#f3f5f9;--card:#fff;--ink:#17233d;--mute:#5f6b80;--line:#e1e6ee;
@@ -104,6 +104,70 @@ h3{font-size:14px;margin:14px 0 6px;color:var(--mute);text-transform:uppercase;l
 .hide{display:none!important}
 textarea{width:100%;font:13px/1.4 ui-monospace,monospace;border:1px solid var(--line);border-radius:9px;padding:9px;min-height:160px}
 @media (max-width:560px){select{min-width:0;width:100%}.opts{grid-template-columns:1fr 1fr}th,td{padding:6px 4px}}
+
+/* ===== FIS premium theme – school logo colours, Lora + Inter ===== */
+:root{--navy:#1F2D5A;--navy2:#16214A;--gold:#E3A94F;--goldInk:#8A5B12;--brand:#1F2D5A;--brand2:#F3F0E8;--bg:#F5F3EE;--line:#E6E2D8;--mute:#646B80;--ink:#1B2340;--mag:#C2385B;--amb:#E3A94F;--head:'Lora',Georgia,'Times New Roman',serif}
+body{-webkit-font-smoothing:antialiased;background:var(--bg)}
+header{background:var(--navy);border-top:0;border-bottom:3px solid var(--gold);box-shadow:0 4px 18px rgba(15,22,50,.28);padding:12px 16px 0}
+.logo{border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.hrow h1{font-family:var(--head);font-weight:600;font-size:19px;letter-spacing:.1px}
+.hrow h1 small{font-family:Inter,sans-serif;color:var(--gold);opacity:1;font-weight:600;font-size:10.5px;letter-spacing:.2em}
+.hrow input[type=date]{background:rgba(255,255,255,.96);color:var(--navy2);border-radius:10px;font-weight:600}
+.sync{background:rgba(227,169,79,.18);color:#F4D9A6;border:1px solid rgba(227,169,79,.4);font-weight:600;letter-spacing:.04em}
+nav{gap:6px;padding-bottom:12px;margin-top:12px}
+nav button{font-family:var(--head);font-weight:600;font-size:14px;color:#DCE1F0;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:9px 14px}
+nav button.on{background:var(--gold);color:var(--navy2);border-color:var(--gold)}
+nav button b{font-family:Inter,sans-serif;background:rgba(255,255,255,.14);color:#fff}
+nav button.on b{background:var(--navy);color:var(--gold)}
+.card{border-radius:16px;border:1px solid var(--line);box-shadow:0 1px 2px rgba(20,25,60,.05),0 6px 20px rgba(20,25,60,.04);border-top:4px solid var(--navy);padding:16px}
+.modal .card{border-top-color:var(--gold)}
+h2{font-family:var(--head);font-weight:600;color:var(--navy);font-size:18px}
+h3{font-size:11px;letter-spacing:.16em;color:var(--mute);font-weight:700}
+.secthead i{width:4px;height:24px;background:var(--gold)}
+.secthead span{font-family:var(--head);font-weight:600;font-size:19px;color:var(--navy)}
+.secthead small{letter-spacing:.02em}
+label.f{text-transform:uppercase;letter-spacing:.14em;font-size:10.5px;font-weight:700;color:var(--mute)}
+select,input[type=text],input[type=search],input[type=time]{border-radius:11px;border-color:var(--line);background:#fff}
+select:focus,input:focus{outline:0;border-color:var(--gold);box-shadow:0 0 0 3px rgba(227,169,79,.3)}
+.btn{background:var(--navy);border-radius:11px;letter-spacing:.01em}
+.btn.ghost{background:#F3F0E8;color:var(--navy);border:1px solid var(--line)}
+.btn.green{background:#2E7D5B}
+/* vehicle cards */
+.grid{grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:10px}@media (max-width:560px){.vcard{padding:12px 9px 10px}.vcard>b{font-size:18px}.vtime{gap:4px}.vtime div{padding:4px 5px}.vtime strong{font-size:11.5px}.vstats{gap:3px}.vstats strong{font-size:15px}.vuni{font-size:11px}.vuni b{min-width:20px;padding:1px 3px}.vfo{font-size:11.5px}}
+.vcard{display:flex;flex-direction:column;justify-content:flex-start;min-width:0;position:relative;border:1px solid var(--line);border-radius:16px;padding:14px 14px 12px;background:#fff;box-shadow:0 1px 2px rgba(20,25,60,.05);overflow:hidden;transition:transform .12s,box-shadow .12s}
+.vcard::before{content:"";position:absolute;left:0;top:0;right:0;height:4px;background:linear-gradient(90deg,var(--navy),#5F3585 55%,var(--gold))}
+.vcard:hover{border-color:var(--gold);box-shadow:0 6px 18px rgba(20,25,60,.1);transform:translateY(-1px)}
+.vcard>b{font-family:var(--head);font-weight:700;font-size:20px;color:var(--navy);display:block;line-height:1.2}
+.vcard .st{font-size:12.5px;color:var(--mute);margin-top:5px}
+.vtime{display:flex;gap:6px;margin-top:10px}
+.vtime div{flex:1;min-width:0;background:#F8F6F1;border:1px solid var(--line);border-radius:10px;padding:5px 8px}
+.vtime span{display:block;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);font-weight:700}
+.vtime strong{font-size:13.5px;color:var(--navy2);font-weight:700;white-space:nowrap}
+.vstats{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:8px;text-align:center}
+.vstats div{border-radius:9px;padding:5px 2px;background:#F3F0E8}
+.vstats span{display:block;font-size:9.5px;letter-spacing:.14em;font-weight:700;color:var(--mute)}
+.vstats strong{font-family:var(--head);font-size:17px;font-weight:700;color:var(--navy2)}
+.vstats .p{background:#E6F1EA}.vstats .p strong{color:#1F6B47}
+.vstats .a{background:#F8E6EA}.vstats .a strong{color:#A42A47}
+.vstats .s{background:#EFE7F5}.vstats .s strong{color:#5F3585}
+.vfo{margin-top:8px;font-size:12px;color:#A8326E;font-weight:700;background:#FBEEF3;border-radius:9px;padding:5px 8px}
+.vfo small{display:block;font-weight:500;color:#7D2A55;font-size:11.5px}
+.vuni{margin-top:8px;border-top:1px dashed var(--line);padding-top:7px;font-size:12px;color:var(--mute)}
+.vuni div{display:flex;justify-content:space-between;align-items:center;gap:4px;padding:1px 0;flex-wrap:wrap}
+.vuni em{font-style:normal;font-weight:600;color:var(--ink)}
+.vuni i{font-style:normal;display:inline-flex;gap:4px;align-items:center;white-space:nowrap}
+.vuni b{display:inline-block;min-width:34px;text-align:center;border-radius:6px;font-size:11px;padding:1px 4px;background:#EEF0F4;color:var(--mute);font-weight:700}
+.vuni b.ok{background:#E6F1EA;color:#1F6B47}.vuni b.no{background:#F8E6EA;color:#A42A47}
+.pill{border-radius:8px;padding:3px 9px;letter-spacing:.02em}
+.pill.done{background:#E6F1EA;color:#1F6B47}
+.kpi{border:1px solid var(--line);border-top:3px solid var(--gold);border-radius:14px}
+.kpi span{text-transform:uppercase;letter-spacing:.12em;font-size:10px}
+.kpi b{font-family:var(--head)}
+th{background:#F3F0E8;color:var(--mute);letter-spacing:.12em;font-size:10.5px}
+tr.tot td{background:#F8F6F1}
+.tw{border-radius:12px}
+.toast{background:var(--navy);border-bottom:2px solid var(--gold)}
+.banner{background:#FBF1DC;color:#6B4A0E;border:1px solid #F0DDB3}
 </style>
 </head>
 <body>
@@ -274,7 +338,7 @@ textarea{width:100%;font:13px/1.4 ui-monospace,monospace;border:1px solid var(--
   };
   window.FIS_LOGOUT=function(){['token','me','roster','gcache','grev','goutbox'].forEach(k=>localStorage.removeItem(K(k)));location.reload()};
   const $=id=>document.getElementById(id);
-  function startApp(r){window.FIS_R=r;window.FIS_ME=get('me')||'';const s=document.createElement('script');s.src='app.js?v=202611191036';s.onload=()=>$('fisBoot').remove();document.body.appendChild(s)}
+  function startApp(r){window.FIS_R=r;window.FIS_ME=get('me')||'';const s=document.createElement('script');s.src='app.js?v=202611191042';s.onload=()=>$('fisBoot').remove();document.body.appendChild(s)}
   function showLogin(msg){$('fisBoot').classList.add('hide');$('fisLogin').classList.remove('hide');$('fisLE').textContent=msg||'';if(!API_URL)$('fisLE').textContent='This app is being set up. Please try again later.'}
   $('fisLoginF').addEventListener('submit',async e=>{e.preventDefault();const n=$('fisLN').value.trim(),p=$('fisLP').value;
     if(n.length<3||!p){$('fisLE').textContent='Type your full name and the password.';return}
