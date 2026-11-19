@@ -17,96 +17,69 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* FIS house colours from the school logo (crimson, purple, sky blue, gold on navy) with hexagon motifs — same look as Announcements */
 :root{
-  --navy:#152952;--navy2:#0E1D3D;--gold:#E7AE55;--crimson:#D33E64;--purple:#5F3685;--sky:#4F9FD3;--sky2:#72B7E1;--amber:#C98A2B;--lilac:#8B5FB0;
-  --bg:#F6F4EF;--surface:#FFFFFF;--s1:#F3F0EA;--ink:#1A2340;--muted:#5F667C;--line:#E3DED3;
-  --serif:'Lora',Georgia,'Times New Roman',serif;--sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
-  --e1:0 1px 2px rgba(16,24,56,.06),0 1px 3px 1px rgba(16,24,56,.05);--e2:0 2px 6px 2px rgba(16,24,56,.08),0 1px 2px rgba(16,24,56,.10);
-  --hex:polygon(25% 4%,75% 4%,100% 50%,75% 96%,25% 96%,0 50%)}
-@media (prefers-color-scheme:dark){:root{--purple:#B08FDB;--crimson:#EC6F8F;--sky:#7CC0EC;--gold:#F0BE6E;--amber:#F0BE6E;--lilac:#C3A6E6;--navy-c:#9DB4E8;
-  --bg:#0B1430;--surface:#141F44;--s1:#1A2650;--ink:#EEF1F8;--muted:#A9B0C7;--line:#2A3768}}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  --navy:#1F2D5A;--navy2:#16214A;--gold:#E3A94F;--crimson:#D23D63;--purple:#5F3585;--sky:#5FA8D8;
+  --bg:#F5F3EE;--surface:#FFFFFF;--ink:#1B2340;--muted:#646B80;--line:#E6E2D8;
+  --serif:'Lora',Georgia,'Times New Roman',serif;--sans:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif}
+@media (prefers-color-scheme:dark){:root{--purple:#A987D6;--crimson:#E8668A;--bg:#0F1530;--surface:#18214A;--ink:#EEF0F7;--muted:#A6ADC4;--line:#2A3566}}
+*{box-sizing:border-box}
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
-.top{position:relative;overflow:hidden;background:radial-gradient(120% 140% at 100% 0%,#24407A 0%,var(--navy) 45%,var(--navy2) 100%);color:#fff;padding:calc(env(safe-area-inset-top,0px) + 22px) 18px 24px}
-@media (display-mode:standalone){.top{padding-top:calc(max(env(safe-area-inset-top,0px),50px) + 14px)}}
-.top::before{content:"";position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='97' viewBox='0 0 56 97'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.07' stroke-width='1.2'%3E%3Cpath d='M28 1 54 16v31L28 62 2 47V16z'/%3E%3Cpath d='M28 62v35M0 96l28-34 28 34'/%3E%3C/g%3E%3C/svg%3E");pointer-events:none}
-.top .deco{position:absolute;right:-30px;top:-22px;width:200px;height:200px;pointer-events:none}
-.top .in{position:relative;max-width:720px;margin:0 auto;display:flex;align-items:center;gap:15px}
-.logo{width:62px;height:62px;background:#fff;flex:0 0 auto;display:grid;place-items:center;clip-path:var(--hex)}
-.logo img{width:48px;height:48px;object-fit:contain}
-.kick{font-size:.66rem;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:700}
-h1{font-family:var(--serif);font-weight:600;font-size:1.9rem;line-height:1.1;margin:3px 0 0;letter-spacing:-.01em}
-.date{font-size:.8rem;color:#C7D0EA;margin-top:4px}
-.band{display:flex;height:5px}
-.band i{flex:1}
-.band i:nth-child(1){background:#D33E64}.band i:nth-child(2){background:#5F3685}.band i:nth-child(3){background:#72B7E1}.band i:nth-child(4){background:#E7AE55}
-.wrap{max-width:720px;margin:0 auto;padding:16px 16px calc(env(safe-area-inset-bottom,0px) + 32px)}
-.search{position:relative;display:block;margin:0 0 6px}
-.search input{width:100%;font:inherit;font-size:16px;padding:13px 16px 13px 44px;border-radius:999px;border:0;background:var(--surface);color:var(--ink);box-shadow:var(--e1)}
-.search input:focus{outline:2px solid var(--purple);outline-offset:1px}
-.search svg{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--muted)}
-.sec{margin-top:22px}
-.sec h2{display:flex;align-items:center;gap:9px;font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);font-weight:800;margin:0 4px 10px}
-.sec h2 i{width:12px;height:12px;clip-path:var(--hex);background:var(--c)}
-.sec h2::after{content:"";flex:1;height:1px;background:var(--line)}
+.top{background:var(--navy);color:#fff;padding:calc(env(safe-area-inset-top,0px) + 22px) 18px 26px;border-bottom:4px solid var(--gold)}
+@media (display-mode:standalone){.top{padding-top:calc(max(env(safe-area-inset-top,0px),50px) + 16px)}}
+.top .in{max-width:680px;margin:0 auto;display:flex;align-items:center;gap:14px}
+.logo{width:58px;height:58px;border-radius:14px;background:#fff;flex:0 0 auto;object-fit:contain;padding:3px}
+.kick{font-size:.68rem;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:600}
+h1{font-family:var(--serif);font-weight:600;font-size:1.75rem;line-height:1.15;margin:3px 0 0}
+.date{font-size:.8rem;color:#C9CFE3;margin-top:4px}
+.wrap{max-width:680px;margin:0 auto;padding:16px 16px calc(env(safe-area-inset-bottom,0px) + 32px)}
+.search{position:relative;margin:0 0 6px}
+.search input{width:100%;font:inherit;font-size:16px;padding:12px 14px 12px 40px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.search input:focus{outline:2px solid var(--gold);outline-offset:1px}
+.search svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.sec{margin-top:20px}
+.sec h2{display:flex;align-items:center;gap:8px;font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:0 2px 10px}
+.sec h2 i{width:18px;height:3px;border-radius:2px;background:var(--c)}
 .grid{display:grid;grid-template-columns:1fr;gap:10px}
 @media (min-width:560px){.grid{grid-template-columns:1fr 1fr}}
-a.app{position:relative;overflow:hidden;display:flex;align-items:center;gap:13px;text-decoration:none;color:var(--ink);background:var(--surface);border-radius:18px;padding:14px 14px 14px 18px;min-height:76px;box-shadow:var(--e1);transition:box-shadow .2s,transform .1s}
-a.app::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--c)}
-a.app::after{content:"";position:absolute;right:-18px;bottom:-22px;width:64px;height:64px;clip-path:var(--hex);background:var(--c);opacity:.06;pointer-events:none}
-a.app:hover{box-shadow:var(--e2)}
+a.app{display:flex;align-items:center;gap:13px;text-decoration:none;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 14px;min-height:74px;box-shadow:0 1px 2px rgba(20,25,60,.04)}
 a.app:active{transform:scale(.99)}
-a.app:focus-visible{outline:2px solid var(--purple);outline-offset:2px}
-.ic{width:46px;height:46px;clip-path:var(--hex);display:grid;place-items:center;flex:0 0 auto;background:color-mix(in srgb,var(--c) 15%,var(--surface));color:var(--c)}
+a.app:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;flex:0 0 auto;background:color-mix(in srgb,var(--c) 13%,var(--surface));color:var(--c)}
 .t{flex:1;min-width:0}
-.t b{display:block;text-wrap:balance;font-family:var(--serif);font-weight:600;font-size:1.08rem;line-height:1.2}
+.t b{display:block;font-family:var(--serif);font-weight:600;font-size:1.08rem;line-height:1.2}
 .t small{display:block;color:var(--muted);font-size:.8rem;margin-top:3px;line-height:1.35}
-.tag{position:relative;z-index:1;font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;font-weight:800;border-radius:999px;padding:4px 9px;background:color-mix(in srgb,var(--gold) 26%,var(--surface));color:#7A4E0E;white-space:nowrap}
+.tag{font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;border-radius:999px;padding:3px 8px;background:color-mix(in srgb,var(--gold) 22%,var(--surface));color:#8A5B12;white-space:nowrap}
 @media (prefers-color-scheme:dark){.tag{color:var(--gold)}}
-.go{position:relative;z-index:1;color:var(--muted);flex:0 0 auto}
+.go{color:var(--muted);flex:0 0 auto}
 .none{color:var(--muted);text-align:center;padding:24px 0}
-.tick{display:flex;align-items:center;gap:10px;background:var(--surface);border-bottom:1px solid var(--line);color:var(--ink);text-decoration:none;overflow:hidden;white-space:nowrap;padding:8px 0 8px max(14px,calc((100% - 720px)/2 + 14px))}
-.tick .lb{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;font-size:.64rem;letter-spacing:.16em;font-weight:800;text-transform:uppercase;color:var(--crimson)}
-.tick .lb::before{content:"";width:9px;height:9px;background:var(--crimson);clip-path:var(--hex);animation:pulse 1.6s ease-in-out infinite}
-@keyframes pulse{50%{transform:scale(1.5);opacity:.55}}
-.tick .vp{flex:1;overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)}
-.tick .run{display:inline-flex;gap:12px;padding-left:100%;animation:run var(--dur,30s) linear infinite}
-.tick .run span{display:inline-flex;align-items:center;gap:8px;background:var(--s1);border:1px solid var(--line);border-radius:999px;padding:5px 12px 5px 6px;font-size:.84rem;font-weight:600}
-.tick .run span i{width:18px;height:18px;clip-path:var(--hex);background:var(--c)}
+.tick{display:flex;align-items:center;background:var(--navy2);color:#fff;text-decoration:none;overflow:hidden;white-space:nowrap}
+.tick .lb{flex:0 0 auto;background:var(--gold);color:#1B2340;font-size:.64rem;letter-spacing:.16em;font-weight:700;text-transform:uppercase;padding:9px 12px;z-index:1}
+.tick .vp{flex:1;overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent);mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent)}
+.tick .run{display:inline-flex;gap:34px;padding-left:100%;animation:run var(--dur,30s) linear infinite;font-size:.85rem;padding-top:9px;padding-bottom:9px}
+.tick .run b{color:var(--gold);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;margin-right:6px}
 @keyframes run{to{transform:translateX(-100%)}}
-@media (prefers-reduced-motion:reduce){.tick .run{animation:none;padding-left:0}.tick .lb::before{animation:none}}
+@media (prefers-reduced-motion:reduce){.tick .run{animation:none;padding-left:12px}}
 .tick[hidden]{display:none}
 .tag.new{background:var(--crimson);color:#fff}
-footer{margin-top:28px;color:var(--muted);font-size:.78rem;text-align:center;line-height:1.5}
-footer .hx{display:flex;justify-content:center;gap:6px;margin-bottom:10px}
-footer .hx i{width:10px;height:10px;clip-path:var(--hex)}
+footer{margin-top:26px;color:var(--muted);font-size:.78rem;text-align:center;line-height:1.5}
 </style>
 </head>
 <body>
-<header class="top">
-  <svg class="deco" viewBox="0 0 200 200" aria-hidden="true">
-    <polygon points="100,12 176,56 176,144 100,188 24,144 24,56" fill="none" stroke="#E7AE55" stroke-opacity=".5" stroke-width="2"/>
-    <polygon points="100,12 176,56 100,74 24,56" fill="#D33E64" fill-opacity=".32"/>
-    <polygon points="24,56 100,74 60,160 24,144" fill="#5F3685" fill-opacity=".4"/>
-    <polygon points="176,56 176,144 140,160 100,74" fill="#72B7E1" fill-opacity=".28"/>
-    <polygon points="100,74 140,160 60,160" fill="#E7AE55" fill-opacity=".34"/>
-  </svg><div class="in">
-  <span class="logo"><img src="fis-logo-192.png" alt="FIS logo"></span>
+<header class="top"><div class="in">
+  <img class="logo" src="fis-logo-192.png" alt="FIS logo">
   <div><div class="kick">Flourish International School</div><h1>Staff Hub</h1><div class="date" id="date"></div></div>
 </div></header>
-<div class="band" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-<a class="tick" id="tick" href="../announcements/" hidden><span class="lb">Live</span><span class="vp"><span class="run" id="run"></span></span></a>
+<a class="tick" id="tick" href="../announcements/" hidden><span class="lb">Highlights</span><span class="vp"><span class="run" id="run"></span></span></a>
 <main class="wrap">
   <label class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
     <input id="q" type="search" placeholder="Find an app…" aria-label="Find an app" autocomplete="off"></label>
   <div id="apps"></div>
-  <footer><div class="hx" aria-hidden="true"><i style="background:#D33E64"></i><i style="background:#5F3685"></i><i style="background:#72B7E1"></i><i style="background:#E7AE55"></i></div>Add this page to your home screen once (iPhone: Safari › Share › Add to Home Screen · Android: Chrome › ⋮ › Install app).<br>All FIS staff apps open from here.</footer>
+  <footer>Add this page to your home screen once (iPhone: Safari › Share › Add to Home Screen · Android: Chrome › ⋮ › Install app).<br>All FIS staff apps open from here.</footer>
 </main>
 <script>
 const APPS = [{"name": "Announcements", "was": "Notices and Circulars", "desc": "Notices · Circulars · Parent SMS · Primary, Middle and Secondary", "url": "../announcements/", "group": "ann", "icon": "bell", "status": "live"}, {"name": "Leaves & Duty Cover", "was": "Duty Chart", "desc": "Staff leaves · Adjustments · Duty cover · Check-in", "url": "../", "group": "ops", "icon": "duty", "status": "live"}, {"name": "Maintenance Desk", "was": "Daily Maintenance Record", "desc": "Repairs · Vendor jobs · CCTV issues · Manager updates", "url": "../dmr/", "group": "campus", "icon": "tool", "status": "live"}, {"name": "Academic Reports", "was": "FIS Reports", "desc": "Checking reports · Test performance · Defaulter dashboard", "url": "../reports/", "group": "acad", "icon": "chart", "status": "live"}, {"name": "Diary & Remarks", "was": "Diary Report", "desc": "Daily diary · Defaulters · Parent remarks · SMS list", "url": "../diary/?v=202611191819", "group": "acad", "icon": "diary", "status": "live"}, {"name": "Lost & Found", "was": "Lost and Found Desk", "desc": "Found items · Lost complaints · Handover with photo proof", "url": "../lostfound/", "group": "campus", "icon": "search", "status": "live"}, {"name": "Store & Purchase", "was": "Stock and Purchase Desk", "desc": "Store orders · Purchase requests · Handover · Deadlines", "url": "../stock/", "group": "campus", "icon": "box", "status": "live"}, {"name": "PL Day Plan", "was": "PL Plan – Live", "desc": "Section-wise day plan · Day-end checklist · Remarks", "url": "../pl/", "group": "heads", "icon": "plan", "status": "live"}, {"name": "PM Day Plan", "was": "PM Plan – Live", "desc": "Daily operations report · Classes 1–5", "url": "../pm/", "group": "heads", "icon": "plan2", "status": "live"}, {"name": "Support Staff", "was": "Support Staff – Live", "desc": "Guards · Housekeeping · Water · Supervisor visits with time, photo and remark", "url": "../support/?v=20261120a", "group": "campus", "icon": "team", "status": "live"}, {"name": "Teacher Prep & Checking 6–11", "was": "Teacher Preparation and Checking", "desc": "Subject-wise preparation · Checking status · Pending work", "url": "../tpc/?v=20261120a", "group": "acad", "icon": "check", "status": "live"}, {"name": "Teacher Prep & Checking 1–5", "was": "Teacher Preparation and Checking Primary", "desc": "Class teacher and Hindi preparation · Checking status · Pending work", "url": "../tpc-primary/?v=20261120a", "group": "acad", "icon": "book", "status": "live"}, {"name": "Lesson Readiness", "was": "Academic Preparation Tracker", "desc": "Lesson plans · Presentations · Tests · Booklets · Classes 1–11", "url": "../prep/?v=20261111d", "group": "acad", "icon": "book", "status": "live"}, {"name": "Transport Operations", "was": "Transport Daily Report", "desc": "Supervisor checklist · Driver attendance · Vehicle documents · Servicing", "url": "../tdaily/?v=202611181215", "group": "trans", "icon": "bus", "status": "live"}, {"name": "Transport Helpdesk", "was": "Transport Complaints & Requests", "desc": "Parent complaints · Requests · Route changes · Follow-up", "url": "../complaints/?v=202611171030", "group": "trans", "icon": "chat", "status": "live"}, {"name": "Arrivals & Departures", "was": "Student Entry Exit", "desc": "Bus, van and auto attendance · Late arrivals · Early pick-ups · Stayback", "url": "../transport/?v=202611191930", "group": "ops", "icon": "door", "status": "live"}];
-const GROUPS = [['ann','Announcements','var(--crimson)'],['ops','Admin & Daily Operations','var(--purple)'],['heads','Heads Reporting','var(--navy-c,var(--navy))'],['acad','Academics','var(--sky)'],['trans','Transport','var(--amber)'],['campus','Operations','var(--lilac)'],['more','More','var(--muted)']];
+const GROUPS = [['ann','Announcements','var(--gold)'],['ops','Admin & Daily Operations','var(--crimson)'],['heads','Heads Reporting','var(--navy)'],['acad','Academics','var(--purple)'],['trans','Transport','var(--gold)'],['campus','Operations','var(--sky)'],['more','More','var(--navy)']];
 const P = {
  bell:'<path d="M6 9a6 6 0 0 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9"/><path d="M10 20a2 2 0 0 0 4 0"/>',
  duty:'<rect x="4" y="4" width="16" height="17" rx="2"/><path d="M8 2v4M16 2v4M4 9h16M8 13h3M8 17h6"/>',
@@ -132,7 +105,7 @@ function draw(q){
   const hit = a => !q || [a.name, a.was, a.desc].join(' ').toLowerCase().includes(q);
   const html = GROUPS.map(([g, label, c]) => { const list = APPS.filter(a => (a.group || 'more') === g && hit(a)); if (!list.length) return '';
     return `<section class="sec" style="--c:${c}"><h2><i></i>${label}</h2><div class="grid">` + list.map(a => `<a class="app" href="${esc(a.url)}">
-      <span class="ic">${svg(a.icon)}</span><span class="t"><b>${esc(a.name).replace(/(\d)–(\d)/g, '$1\u2060–\u2060$2')}</b><small>${esc(a.desc)}</small></span>
+      <span class="ic">${svg(a.icon)}</span><span class="t"><b>${esc(a.name)}</b><small>${esc(a.desc)}</small></span>
       ${a.group === 'ann' && ANN_NEW ? `<span class="tag new">${ANN_NEW} new</span>` : a.status === 'setup' ? '<span class="tag">Setting up</span>' : '<svg class="go" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>'}</a>`).join('') + `</div></section>`; }).join('');
   document.getElementById('apps').innerHTML = html || '<p class="none">No app matches your search.</p>';
 }
@@ -146,8 +119,8 @@ draw('');
   fetch(API, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({fn:'annList', args:[me]})})
     .then(r => r.json()).then(j => { if (!j.ok) return; const L = j.v.list || [], M = j.v.me || {};
       const hi = L.filter(a => a.hi);
-      if (hi.length){ const run = document.getElementById('run'); run.innerHTML = hi.map(a => `<span><i style="background:${({Notice:'var(--sky)',Circular:'var(--purple)',SMS:'var(--amber)'})[a.type] || 'var(--crimson)'}"></i>${esc(a.title)}</span>`).join('');
-        run.style.setProperty('--dur', Math.max(20, hi.reduce((n, a) => n + a.title.length + 8, 0) / 4.5) + 's'); document.getElementById('tick').hidden = false; }
+      if (hi.length){ const run = document.getElementById('run'); run.innerHTML = hi.map(a => `<span><b>${esc(a.type)}</b>${esc(a.title)}</span>`).join('');
+        run.style.setProperty('--dur', Math.max(18, hi.reduce((n, a) => n + a.title.length, 0) / 5) + 's'); document.getElementById('tick').hidden = false; }
       if (me){ ANN_NEW = L.filter(a => !(M[a.id] || {}).s || (a.ack && !(M[a.id] || {}).a)).length; draw(document.getElementById('q').value); } }).catch(() => {});
 })();
 </script>
