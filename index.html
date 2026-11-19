@@ -338,8 +338,9 @@ Saturday Adjustment - 26/09
       <label class="fl m-cover">Duty<input id="qD" list="duties" placeholder="e.g. Bus Duty (Morning)" autocomplete="off"></label>
       <label class="fl">Absent / late teacher<input id="qF" list="staffnames" placeholder="Name (optional for class)" autocomplete="off"></label>
       <div class="frow">
-        <label class="fl">Mark them as<select id="qSt"><option value="">Not marked</option><option value="leave">On leave</option><option value="half">Half day</option><option value="late">Late</option></select></label>
+        <label class="fl">Mark them as<select id="qSt"><option value="">Not marked</option><option value="leave">On leave</option><option value="half1">First half (7:30 – 11:15)</option><option value="half2">Second half (11:15 – 3:00)</option><option value="late">Late</option></select></label>
         <label class="fl" id="qLtWrap" hidden="">Late till<input id="qLt" placeholder="e.g. 8:30" inputmode="numeric"></label>
+        <label class="fl" id="qHtWrap" hidden="">Half-day time<input id="qHt" placeholder="7:30 – 11:15" autocomplete="off"></label>
       </div>
       <label class="fl"><span class="m-cls qbl1">Adjusted by</span><span class="m-cover">Covering</span><input id="qB" list="staffnames" placeholder="Replacement name" autocomplete="off"></label>
       <div class="sugh">Suggestions – tap to pick</div>
@@ -440,8 +441,9 @@ Saturday Adjustment - 26/09
       <label class="fl m-cover">Duty<input id="qD" list="duties" placeholder="e.g. Bus Duty (Morning)" autocomplete="off"></label>
       <label class="fl">Absent / late teacher<input id="qF" list="staffnames" placeholder="Name (optional for class)" autocomplete="off"></label>
       <div class="frow">
-        <label class="fl">Mark them as<select id="qSt"><option value="">Not marked</option><option value="leave">On leave</option><option value="half">Half day</option><option value="late">Late</option></select></label>
+        <label class="fl">Mark them as<select id="qSt"><option value="">Not marked</option><option value="leave">On leave</option><option value="half1">First half (7:30 – 11:15)</option><option value="half2">Second half (11:15 – 3:00)</option><option value="late">Late</option></select></label>
         <label class="fl" id="qLtWrap" hidden="">Late till<input id="qLt" placeholder="e.g. 8:30" inputmode="numeric"></label>
+        <label class="fl" id="qHtWrap" hidden="">Half-day time<input id="qHt" placeholder="7:30 – 11:15" autocomplete="off"></label>
       </div>
       <label class="fl"><span class="m-cls qbl1">Adjusted by</span><span class="m-cover">Covering</span><input id="qB" list="staffnames" placeholder="Replacement name" autocomplete="off"></label>
       <div class="sugh">Suggestions – tap to pick</div>
@@ -676,8 +678,12 @@ function leaveMap(){
   return { get: tok => list.find(l => sameName(tok, l.n) || key(tok) === key(l.n)) };
 }
 let LV = leaveMap();
-const stLabel = l => l.late ? 'Late' + (typeof l.late === 'string' ? ' till ' + l.late : '') : l.half ? 'Half day' : 'Leave';
-const stKey = l => l.late ? 'late' : l.half ? 'half' : '';
+const HALF_T = {first:'7:30 – 11:15', second:'11:15 – 3:00'};
+const halfT = l => l.ht || HALF_T[l.half] || '';
+const stLabel = l => l.late ? 'Late' + (typeof l.late === 'string' ? ' till ' + l.late : '') : l.half === 'first' ? 'First half, ' + halfT(l) : l.half === 'second' ? 'Second half, ' + halfT(l) : l.half ? 'Half day' + (l.ht ? ', ' + l.ht : '') : 'Leave';
+const stKey = l => l.late ? 'late' : l.half === 'first' ? 'half1' : l.half === 'second' ? 'half2' : l.half ? 'half' : '';
+const stOpts = l => [['','Full day'],['half1','First half (7:30 – 11:15)'],['half2','Second half (11:15 – 3:00)'],...(stKey(l)==='half'?[['half','Half day']]:[]),['late','Late']];
+const halfOf = st => st === 'half1' ? 'first' : st === 'half2' ? 'second' : st === 'half' ? true : null;
 
 /* ---------- chart ---------- */
 function nameHTML(n){
@@ -758,7 +764,7 @@ function renderNotice(){
     const ab = n => n ? esc(n) : '<span class="dim">—</span>';
     const done = new Set(cls.map(([a]) => normCls(a.c)));
     const pending = lv.filter(l => !l.late && clsOf(l.n) && !done.has(normCls(clsOf(l.n)))).map(l => [clsOf(l.n), l]);
-    if (pending.length) body += `<div class="pend"><b>Class not adjusted yet</b>` + pending.map(([c,l]) => `<button type="button" class="pendb" data-pend="${esc(c)}" data-pf="${esc(l.n)}">${esc(c)} <span>${esc(l.n)}${l.half?' · half day':''}</span>${CAN_UI()?' <i>+ Adjust</i>':''}</button>`).join('') + `</div>`;
+    if (pending.length) body += `<div class="pend"><b>Class not adjusted yet</b>` + pending.map(([c,l]) => `<button type="button" class="pendb" data-pend="${esc(c)}" data-pf="${esc(l.n)}">${esc(c)} <span>${esc(l.n)}${l.half?' · '+esc(stLabel(l)):''}</span>${CAN_UI()?' <i>+ Adjust</i>':''}</button>`).join('') + `</div>`;
     if (cls.length) body += `<h3>Class adjustment <span class="cnt k2">${cls.length}</span></h3><table class="adjt"><thead><tr><th>Class</th><th>Absent</th><th>Adjusted by</th></tr></thead><tbody>` +
       cls.map(([a,i]) => `<tr${ed('adj',i)}><td>${esc(a.c)}</td><td>${a.f ? ab(a.f) : ctOf(a.c) ? `${esc(ctOf(a.c))}<small class="tm">Class teacher</small>` : ab('')}</td><td>${byCls(a)}</td></tr>`).join('') + `</tbody></table>`;
     if (act.length) body += `<h3>Activity adjustment <span class="cnt k3">${act.length}</span></h3><table class="adjt"><thead><tr><th>Activity</th><th>Absent</th><th>Adjusted by</th></tr></thead><tbody>` +
@@ -954,6 +960,7 @@ function openQA(o){
   const l = f ? LV.get(f) : null;
   $('#qSt').value = l ? (stKey(l) || 'leave') : (o.f ? 'leave' : '');
   $('#qLt').value = l && typeof l.late === 'string' ? l.late : '';
+  $('#qHt').value = l && l.ht ? l.ht : '';
   QA.actSet = null; $('#qF').dataset.touched = f ? '1' : '';
   const ai = cur && cur.a ? ACTS.findIndex(x => x.a === cur.a) : -1;
   $('#qA').value = ai >= 0 ? String(ai) : '';
@@ -973,6 +980,7 @@ function drawQA(){
     L('.qbl1', c ? 'Cover as Class Teacher' : 'Adjusted by'); L('.qbl2', c ? 'Cover as Subject Teacher 1' : '2nd teacher (optional)'); L('.qtl2', c ? 'Subject period(s)' : '2nd time / period'); }
   document.querySelectorAll('[data-qmode]').forEach(b => b.setAttribute('aria-selected', b.dataset.qmode === QA.mode));
   $('#qLtWrap').hidden = $('#qSt').value !== 'late';
+  { const v = $('#qSt').value, h = halfOf(v); $('#qHtWrap').hidden = !h; $('#qHt').placeholder = HALF_T[h] || 'e.g. 7:30 – 11:15'; }
   if (QA.mode === 'act'){ const x = ACTS[+$('#qA').value]; if (x && QA.actSet !== $('#qA').value){ QA.actSet = $('#qA').value; $('#qF').value = x.ns[0] || ''; } }
   const groups = relevant($('#qF').value.trim(), QA.mode === 'cover' ? ($('#qD').value.match(/\(([^)]+)\)\s*$/) || [])[1] || QA.shift : '', QA.mode === 'act' ? ACTS[+$('#qA').value] : null);
   $('#qSug').innerHTML = groups.length ? groups.map(g => `<div class="sgh">${esc(g.h)}</div>` + g.list.map(s => `<button type="button" class="sg" data-sg="${esc(s.n)}">${esc(s.n)}${s.d?`<small>${esc(s.d)}</small>`:''}</button>`).join('')).join('') : '<span class="none">No suggestions – type a name.</span>';
@@ -1016,8 +1024,8 @@ function qaApply(del){
     }
     if (F && st){
       const n = canon(F), i = d.leave.findIndex(l => key(l.n) === key(n) || sameName(F, l.n));
-      const lt = $('#qLt').value.trim();
-      const e = {n: i >= 0 ? d.leave[i].n : n, k: i >= 0 ? d.leave[i].k : catOfName(n), ...(st==='half'?{half:true}:{}), ...(st==='late'?{late: lt || true}:{})};
+      const lt = $('#qLt').value.trim(), h = halfOf(st), ht = $('#qHt').value.trim();
+      const e = {n: i >= 0 ? d.leave[i].n : n, k: i >= 0 ? d.leave[i].k : catOfName(n), ...(h?{half:h}:{}), ...(h&&ht&&ht!==HALF_T[h]?{ht}:{}), ...(st==='late'?{late: lt || true}:{})};
       if (i >= 0) d.leave[i] = e; else d.leave.push(e);
     }
   }
@@ -1250,10 +1258,10 @@ function parseNote(txt){
   let sec = null, cat = 'Secondary Teacher', LATE_SEC = false;
   const catOf = s => /hindi/i.test(s) ? 'Hindi Teacher' : /computer/i.test(s) ? 'Computer Teacher' : /pre[\s-]*primary|nursery|\b[lu]kg\b|play\s*group/i.test(s) ? 'Pre Primary Teacher' : /primary/i.test(s) ? 'Primary Teacher' : /teach/i.test(s) ? 'Secondary Teacher' : /\bpl\b|program\s*lead/i.test(s) ? 'PL' : /admin/i.test(s) ? 'Admin' : /^\W*cm\b|class\s*manager/i.test(s) ? 'CM' : /floor/i.test(s) ? 'Floor Manager' : /coach|instructor|sport|music|dance/i.test(s) ? 'Activity' : /activit/i.test(s) ? 'Activity' : null;
   const addLeave = raw => raw.split(/,|\band\b/i).forEach(p => {
-    const half = /half/i.test(p), lm = p.match(/\blate\b(?:[^0-9)]*(\d{1,2}[:.]\d{2}|\d{1,2}\s*(?:am|pm)))?/i), n = canon(p.replace(/^[\s*•\-–·]+/,'').replace(/\b(late|till|upto|up to|by|arriv\w*|coming)\b.*$/i,'').replace(/\d.*$/,'').replace(/[\-–:]+\s*$/,''), cat);
+    const half = /(first|1st|pehl\w*)\s*half/i.test(p) ? 'first' : /(second|2nd|dusr\w*)\s*half/i.test(p) ? 'second' : /half/i.test(p), lm = p.match(/\blate\b(?:[^0-9)]*(\d{1,2}[:.]\d{2}|\d{1,2}\s*(?:am|pm)))?/i), n = canon(p.replace(/^[\s*•\-–·]+/,'').replace(/\b(late|till|upto|up to|by|arriv\w*|coming)\b.*$/i,'').replace(/\d.*$/,'').replace(/[\-–:]+\s*$/,''), cat);
     const tm2 = p.match(/(\d{1,2}[:.]\d{2}|\d{1,2}\s*(?:am|pm))/i);
     const late = lm ? (lm[1] ? lm[1].replace('.',':').replace(/\s+/g,'') : true) : LATE_SEC ? (tm2 ? tm2[1].replace('.',':').replace(/\s+/g,'') : true) : null;
-    if (n.length > 1 && !out.leave.some(l => key(l.n) === key(n))) out.leave.push({n, k:catOfName(n, cat), ...(half?{half:true}:{}), ...(late?{late}:{})});
+    if (n.length > 1 && !out.leave.some(l => key(l.n) === key(n))) out.leave.push({n, k:catOfName(n, cat), ...(half?{half}:{}), ...(late?{late}:{})});
   });
   txt.split(/\r?\n/).forEach(line0 => {
     const line = line0.replace(/[*_~]/g,'').trim();
@@ -1326,10 +1334,10 @@ function drawEditor(){
   $('#edLeave').innerHTML = ED.leave.map((l,i) => { const st = resolve(l.n, l.k);
     return st && key(st[0]) === key(l.n)
       ? row('leave', i, `<input type="hidden" data-f="n" value="${esc(l.n)}"><input type="hidden" data-f="k" value="${esc(st[2])}"><div class="who-n"><b>${esc(l.n)}</b><small>${esc(st[1])} · ${esc(CAT_LABEL[st[2]])}</small></div>` +
-          `<select data-f="st" class="st">${[['','Full day'],['half','Half day'],['late','Late']].map(([v,t]) => `<option value="${v}"${stKey(l)===v?' selected':''}>${t}</option>`).join('')}</select>` + (l.late ? `<input data-f="lt" class="lt-in" value="${esc(typeof l.late==='string'?l.late:'')}" placeholder="till e.g. 8:30" inputmode="numeric">` : ''))
+          `<select data-f="st" class="st">${stOpts(l).map(([v,t]) => `<option value="${v}"${stKey(l)===v?' selected':''}>${t}</option>`).join('')}</select>` + (l.half ? `<input data-f="ht" class="lt-in" value="${esc(l.ht||'')}" placeholder="${esc(HALF_T[l.half]||'time')}">` : '') + (l.late ? `<input data-f="lt" class="lt-in" value="${esc(typeof l.late==='string'?l.late:'')}" placeholder="till e.g. 8:30" inputmode="numeric">` : ''))
       : row('leave', i, inp('n', l.n, 'Name', 'staffnames') +
           `<select data-f="k">${CATS.concat(CATS.includes(l.k)||!l.k?[]:[l.k]).map(c => `<option value="${esc(c)}"${c===(OLDCAT[l.k]||l.k||'Secondary Teacher')?' selected':''}>${esc(CAT_LABEL[c]||c)}</option>`).join('')}</select>` +
-          `<select data-f="st" class="st">${[['','Full day'],['half','Half day'],['late','Late']].map(([v,t]) => `<option value="${v}"${stKey(l)===v?' selected':''}>${t}</option>`).join('')}</select>` + (l.late ? `<input data-f="lt" class="lt-in" value="${esc(typeof l.late==='string'?l.late:'')}" placeholder="till e.g. 8:30" inputmode="numeric">` : '')); }).join('') || '<p class="none">No one selected yet – tap names above.</p>';
+          `<select data-f="st" class="st">${stOpts(l).map(([v,t]) => `<option value="${v}"${stKey(l)===v?' selected':''}>${t}</option>`).join('')}</select>` + (l.half ? `<input data-f="ht" class="lt-in" value="${esc(l.ht||'')}" placeholder="${esc(HALF_T[l.half]||'time')}">` : '') + (l.late ? `<input data-f="lt" class="lt-in" value="${esc(typeof l.late==='string'?l.late:'')}" placeholder="till e.g. 8:30" inputmode="numeric">` : '')); }).join('') || '<p class="none">No one selected yet – tap names above.</p>';
   $('#leaveCnt').textContent = ED.leave.length ? ED.leave.length + ' selected' : '';
   $('#edCover').innerHTML = ED.cover.map((c,i) => row('cover', i,
     inp('n', c.n, 'Covering (name)', 'staffnames') + inp('f', c.f, 'For (on leave)', 'staffnames') + inp('d', c.d, 'Duty (optional)', 'duties'))).join('') || '<p class="none">No covers yet.</p>';
@@ -1344,8 +1352,9 @@ function readEditor(){
     const o = ED[r.dataset.k][+r.dataset.i]; if (!o) return;
     r.querySelectorAll('[data-f]').forEach(el => {
       const f = el.dataset.f;
-      if (f === 'st'){ const v = el.value; delete o.half; if (v === 'half') o.half = true; if (v === 'late') o.late = o.late || true; else delete o.late; return; }
+      if (f === 'st'){ const v = el.value, h = halfOf(v); delete o.half; delete o.ht; if (h) o.half = h; if (v === 'late') o.late = o.late || true; else delete o.late; return; }
       if (f === 'lt'){ if (o.late) o.late = el.value.trim() || true; return; }
+      if (f === 'ht'){ const v = el.value.trim(); if (o.half && v && v !== HALF_T[o.half]) o.ht = v; else delete o.ht; return; }
       if (el.type === 'checkbox'){ if (el.checked) o[f] = true; else delete o[f]; }
       else { const v = el.value.trim(); if (v) o[f] = v; else delete o[f]; }
     });
@@ -1393,7 +1402,7 @@ $('#edDelete').onclick = () => { if (!ED) return; ED.leave = []; ED.cover = []; 
 $('#edSave').onclick = async () => {
   readEditor();
   const clean = {
-    leave: ED.leave.filter(l => l.n).map(l => { const n = canon(l.n, l.k); return {n, k: resolve(n) ? resolve(n)[2] : (OLDCAT[l.k]||l.k||'Secondary Teacher'), ...(l.half?{half:true}:{}), ...(l.late?{late:l.late}:{})}; }),
+    leave: ED.leave.filter(l => l.n).map(l => { const n = canon(l.n, l.k); return {n, k: resolve(n) ? resolve(n)[2] : (OLDCAT[l.k]||l.k||'Secondary Teacher'), ...(l.half?{half:l.half}:{}), ...(l.half&&l.ht?{ht:l.ht}:{}), ...(l.late?{late:l.late}:{})}; }),
     cover: ED.cover.filter(c => c.n && c.f).map(c => ({n:canon(c.n), f:canon(c.f, (ED.leave.find(l => sameName(c.f, l.n))||{}).k), ...(c.d?{d:c.d}:{})})),
     adj: ED.adj.filter(a => a.c || a.b || a.a).map(a => ({c:a.c||'', ...(a.a?{a:a.a}:{}), b:a.b||'', ...(a.t?{t:a.t}:{}), ...(a.b2?{b2:canon(a.b2)}:{}), ...(a.b2&&a.t2?{t2:a.t2}:{}), ...(a.b3?{b3:canon(a.b3)}:{}), ...(a.b3&&a.t3?{t3:a.t3}:{}), ...(a.f?{f:canon(a.f)}:{})}))
   };
