@@ -1256,7 +1256,9 @@ function checkinHTML(){
 }
 function areaWa(ar){
   const {rows} = areaState(ar);
-  const r = rows.filter(x => x.st === 'r'), la = rows.filter(x => x.st === 'l' || x.st === 'a');
+  const tm = x => { const m = String(x.t || '').match(/(\d{1,2})[:.](\d{2})/); return m ? +m[1] * 60 + +m[2] : 1e9; };
+  const byTime = (p, q) => tm(p) - tm(q);
+  const r = rows.filter(x => x.st === 'r').slice().sort(byTime), la = rows.filter(x => x.st === 'l').slice().sort(byTime).concat(rows.filter(x => x.st === 'a'));
   const nm = x => (ar.seg === 'cls' && secTag(x.n) ? secTag(x.n) + ' – ' : '') + x.n;
   return `*${ar.t.toUpperCase()} – Reached*\n` + (r.map(x => `• ${nm(x)}${x.t?' ('+x.t+')':''}`).join('\n') || '• —') +
     `\n\n*Late/Absent:*\n` + (la.map(x => `• ${nm(x)} (${ST_LABEL[x.st]}${x.t?' '+x.t:''})`).join('\n') || 'None') + '\n';
