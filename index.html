@@ -11,10 +11,10 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Duty Chart">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#18213A">
+<meta name="theme-color" content="#1F2D5A">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style id="css">
 :root{
   box-sizing:border-box;
@@ -274,13 +274,73 @@ body.can-edit .chip,body.can-edit .bus{cursor:pointer}
 .ciarea.mine{border:2px solid var(--time)}
 [hidden]{display:none!important}
 @media (prefers-reduced-motion:no-preference){.card{animation:none}}
+
+/* ===== FIS premium theme (19 Nov 2026) – school logo colours, Lora + Inter ===== */
+:root{
+  --navy:#1F2D5A; --navy2:#16214A; --gold:#E3A94F; --goldInk:#8A5B12;
+  --bg:#F5F3EE; --surface:#FFFFFF; --ink:#1B2340; --muted:#646B80; --line:#E6E2D8;
+  --gate:#C2385B; --transport:#C8902F; --floor:#2F86B8; --disc:#5F3585; --time:#2F4F9A; --stay:#A8326E; --sports:#2E7D5B;
+  --chip:#F3F0E8; --tile:#FBF1DC; --tileInk:#6B4A0E;
+  --head:'Lora', Georgia, 'Times New Roman', serif;
+  --body:'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --bg:#0F1530; --surface:#18214A; --ink:#EEF0F7; --muted:#A6ADC4; --line:#2A3566; --chip:#212B58; --tile:#3A2F14; --tileInk:#F4D08A;
+  --gate:#E8668A; --disc:#A987D6; --time:#7C9BE6; --stay:#E06BA3; --floor:#6BB7E3; --sports:#5FBF8E; } }
+:root[data-theme="dark"]{ --bg:#0F1530; --surface:#18214A; --ink:#EEF0F7; --muted:#A6ADC4; --line:#2A3566; --chip:#212B58;
+  --gate:#E8668A; --disc:#A987D6; --time:#7C9BE6; --stay:#E06BA3; --floor:#6BB7E3; --sports:#5FBF8E; }
+body{-webkit-font-smoothing:antialiased}
+header.top{background:var(--navy);color:#fff;border-bottom:3px solid var(--gold);box-shadow:0 0 0 100vmax var(--navy);clip-path:inset(0 -100vmax);padding:12px 0 12px}
+h1{font-family:var(--head);font-weight:600;font-size:1.8rem;letter-spacing:0;color:#fff}
+.fis{font-family:var(--body);font-weight:600;font-size:.66rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}
+.month{font-family:var(--body);font-weight:500;font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:#C9CFE3}
+.search input{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.96);color:#1B2340;border-radius:12px;font-family:var(--body)}
+.search input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(227,169,79,.35)}
+.tab{font-family:var(--head);font-weight:600;background:rgba(255,255,255,.08);color:#DCE1F0;border:1px solid rgba(255,255,255,.12);border-radius:12px}
+.tab small{font-family:var(--body);font-weight:500;color:#AEB6CF;opacity:1}
+.tab[aria-selected="true"]{background:var(--gold);color:var(--navy2);border-color:var(--gold)}
+.tab[aria-selected="true"] small{color:#5A3E0C}
+.now{background:var(--gate);font-family:var(--body);letter-spacing:.06em;text-transform:uppercase;font-weight:700}
+.whobar{color:#C9CFE3}
+.whobar select{background:rgba(255,255,255,.96);color:#1B2340;border:1px solid rgba(255,255,255,.2)}
+.whobar small{color:var(--gold)}
+.card{border:1px solid var(--line);border-radius:14px;box-shadow:0 1px 2px rgba(20,25,60,.05)}
+.card-h{background:var(--surface);border-bottom:1px solid var(--line);box-shadow:inset 4px 0 0 var(--c)}
+.card-h h2{font-family:var(--head);font-weight:600;font-size:1.1rem}
+.chip{background:var(--chip);border-radius:9px;font-weight:500}
+.jump a{font-weight:500;border-width:1px;background:var(--surface)}
+.notice{border:1px solid var(--line);border-top:4px solid var(--navy);border-radius:14px;box-shadow:0 1px 2px rgba(20,25,60,.05)}
+.ntitle h2{font-family:var(--head);font-weight:600;font-size:1.2rem}
+.notice h3{font-family:var(--body);font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-top:16px}
+.notice th{font-family:var(--body);text-transform:uppercase;letter-spacing:.1em;font-size:.64rem}
+.notice td:first-child{font-weight:600}
+.cnt{background:var(--navy);font-weight:700}
+.btn{font-family:var(--body);font-weight:600;background:var(--navy);color:#fff;border-radius:11px}
+.btn.ghost{background:var(--chip);color:var(--ink);border:1px solid var(--line)}
+.btn.warn{background:transparent;color:var(--gate);border:1.5px solid var(--gate)}
+.nav{background:var(--chip);border:1px solid var(--line)}
+.sheet-h h2,.sheet h3{font-family:var(--head);font-weight:600}
+.ptab{font-family:var(--body);font-weight:600}
+.ptab[aria-selected="true"]{background:var(--navy);color:#fff}
+.pk.on{border-color:var(--gold);background:color-mix(in srgb,var(--gold) 16%,var(--bg))}
+.pk.on b::after{color:var(--goldInk)}
+.ctg{background:color-mix(in srgb,var(--navy) 10%,transparent);color:var(--navy);font-weight:700}
+.mych{background:color-mix(in srgb,var(--gold) 14%,var(--surface));border-color:color-mix(in srgb,var(--gold) 55%,var(--line))}
+.mych b{font-family:var(--head);font-weight:600}
+.toast{background:var(--navy);color:#fff;font-family:var(--body)}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .ctg{background:rgba(255,255,255,.1);color:var(--gold)}
+  :root:not([data-theme="light"]) .cnt{background:var(--gold);color:var(--navy2)}
+  :root:not([data-theme="light"]) .notice{border-top-color:var(--gold)}
+  :root:not([data-theme="light"]) .btn:not(.ghost):not(.warn){background:var(--gold);color:var(--navy2)}
+  :root:not([data-theme="light"]) .ptab[aria-selected="true"]{background:var(--gold);color:var(--navy2)} }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header class="top">
     <div class="titlerow">
-      <a class="fis" href="fis/" aria-label="All FIS apps">FIS · all apps</a>
+      <a class="fis" href="fis/" aria-label="All FIS apps">‹ FIS Staff Hub</a>
       <h1>Duty Chart</h1>
       <span class="month">September 2026</span>
     </div>
@@ -383,7 +443,7 @@ Saturday Adjustment - 26/09
 <div class="wrap">
   <header class="top">
     <div class="titlerow">
-      <a class="fis" href="fis/" aria-label="All FIS apps">FIS · all apps</a>
+      <a class="fis" href="fis/" aria-label="All FIS apps">‹ FIS Staff Hub</a>
       <h1>Duty Chart</h1>
       <span class="month">September 2026</span>
     </div>
@@ -579,7 +639,7 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbyxWYwmvDDlIR6VjS2W4209
 <title>FIS · Duty Chart – September 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </script>
 <script type="application/json" id="daily">{}</script>
 <script type="application/json" id="roster">{}</script>
@@ -1654,7 +1714,7 @@ async function gsEnable(){
 (async () => {
   const st = window.__B.settings || {};
   if (st.Title) { const h = document.querySelector('h1'); if (h) h.textContent = st.Title; }
-  if (st.Month) { const m = document.querySelector('.month'); if (m) m.textContent = st.Month; document.title = (st.Title || 'Duty Chart') + ' – ' + st.Month; }
+  if (st.Month) { const m = document.querySelector('.month'); if (m) m.textContent = new Date().toLocaleDateString('en-IN', {month:'long', year:'numeric'}); document.title = (st.Title || 'Duty Chart') + ' – ' + st.Month; }
   whoBar();
   /* a PIN saved on this phone unlocks at once; it is re-checked in the background */
   if (GS.pin) {
