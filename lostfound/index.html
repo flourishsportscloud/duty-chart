@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="../fis/fis-icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap">
 <style>
 /* Layout: phone-first single column. Top bar with the signed-in staff name, one screen at a time, and a fixed bottom tab bar (Home, Complaints, Found, Floor round, History). Cases open as a full-screen layer; forms open as bottom sheets. */
 :root {
@@ -31,22 +31,6 @@
   --grey-bg: #eceff3;
   --grey-fg: #4a5662;
   --font: "Figtree", "Segoe UI", system-ui, -apple-system, sans-serif;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #11171e; --surface: #19222c; --surface-2: #1f2a36; --ink: #e7edf3; --muted: #94a3b2; --line: #2c3946;
-    --accent: #6aa5ec; --accent-ink: #0b1b2e; --danger: #f28b82;
-    --amber-bg: #4a3a12; --amber-fg: #f3d58a; --blue-bg: #1b3552; --blue-fg: #a9cdf5;
-    --green-bg: #1b4127; --green-fg: #a8ddb2; --grey-bg: #27323d; --grey-fg: #b6c2cd;
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #11171e; --surface: #19222c; --surface-2: #1f2a36; --ink: #e7edf3; --muted: #94a3b2; --line: #2c3946;
-  --accent: #6aa5ec; --accent-ink: #0b1b2e; --danger: #f28b82;
-  --amber-bg: #4a3a12; --amber-fg: #f3d58a; --blue-bg: #1b3552; --blue-fg: #a9cdf5;
-  --green-bg: #1b4127; --green-fg: #a8ddb2; --grey-bg: #27323d; --grey-fg: #b6c2cd;
-  color-scheme: dark;
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -216,6 +200,64 @@ table.sum tr:last-child td { border-bottom: 0; }
 .pill.d-g { background: var(--green-bg); color: var(--green-fg); } .pill.d-a { background: var(--amber-bg); color: var(--amber-fg); } .pill.d-r { background: var(--c-red); color: #fff; }
 .pill.p-purple { background: #e9e1fa; color: #4b2a96; }
 .kv { font-size: 14px; color: var(--ink); overflow-wrap: anywhere; }
+
+/* Premium theme: navy, gold, ivory */
+:root { color-scheme: light; --bg: #f6f1e6; --surface: #fffdf9; --surface-2: #f9f5ec; --ink: #1c2434; --muted: #5f6675; --line: #e4dccb; --accent: #14284b; --gold: #b58a2e; --gold-l: #e9d9a8;
+  --navy: #0e2149; --serif: "Playfair Display", Georgia, "Times New Roman", serif; }
+body { background: var(--bg); }
+h1, h2 { font-family: var(--serif); letter-spacing: 0.1px; }
+.brand { background: linear-gradient(135deg, #0b1b3d 0%, #17356b 100%); border-radius: 16px; padding: 16px; border-bottom: 3px solid var(--gold); box-shadow: 0 6px 18px rgba(14,33,73,0.22); }
+.brand img { width: 58px; height: 58px; border-radius: 50%; padding: 3px; border: 2px solid var(--gold); }
+.brand .bt b { font-family: var(--serif); font-size: 22px; letter-spacing: 0.3px; }
+.brand .bt span { color: var(--gold-l); font-size: 12.5px; letter-spacing: 1.4px; text-transform: uppercase; opacity: 1; }
+.who { font-size: 13.5px; }
+.linkbtn { color: var(--navy); }
+.btn { border-radius: 12px; border-color: var(--line); }
+.btn.primary { background: var(--navy); border-color: var(--navy); box-shadow: 0 3px 10px rgba(14,33,73,0.25); }
+.btn.gold { background: linear-gradient(180deg, #c99d3d, #a97d22); color: #fff; border-color: #a97d22; box-shadow: 0 3px 10px rgba(169,125,34,0.3); }
+.perbar { display: flex; flex-direction: column; gap: 8px; }
+.seg { border-radius: 14px; border: 1px solid var(--line); background: var(--surface); padding: 4px; gap: 4px; box-shadow: 0 2px 8px rgba(14,33,73,0.06); }
+.seg button { border: 0 !important; border-radius: 10px; min-height: 44px; color: var(--muted); font-size: 15px; }
+.seg button[aria-pressed="true"] { background: var(--navy); color: #fff; box-shadow: inset 0 -3px 0 var(--gold); }
+.dates { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.dates label { font-size: 13px; font-weight: 600; color: var(--muted); display: flex; flex-direction: column; gap: 3px; }
+input[type=date] { border-radius: 10px; }
+.perlab { font-size: 13.5px; color: var(--muted); font-weight: 600; text-align: center; letter-spacing: 0.2px; }
+.tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.tile { text-align: left; border: 1px solid var(--line); border-radius: 16px; padding: 16px 14px 12px; background: var(--surface); display: flex; flex-direction: column; gap: 2px; min-height: 142px; position: relative; overflow: hidden; box-shadow: 0 4px 14px rgba(14,33,73,0.08); border-top: 5px solid var(--tc); }
+.tile .tn { font-family: var(--serif); font-size: 42px; line-height: 1.05; font-weight: 700; color: var(--tc); font-variant-numeric: tabular-nums; }
+.tile .tl { font-weight: 700; font-size: 15px; color: var(--ink); line-height: 1.25; }
+.tile .ts { font-size: 12.5px; color: var(--muted); }
+.tile .tg { margin-top: auto; padding-top: 6px; font-size: 12.5px; font-weight: 700; color: var(--tc); }
+.tile.k-comp { --tc: #b4571b; background: linear-gradient(180deg, #fff, #fff5ea); } .tile.k-found { --tc: #1d5fa8; background: linear-gradient(180deg, #fff, #eef5fd); }
+.tile.k-ret { --tc: #1f7048; background: linear-gradient(180deg, #fff, #eef8f2); } .tile.k-stock { --tc: #5b3f9e; background: linear-gradient(180deg, #fff, #f3effb); }
+.dh { border-bottom: 2px solid var(--gold-l); } .dh h2 { font-size: 19px; } .dh .more { color: var(--navy); font-weight: 700; font-size: 14px; }
+.rhead { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 12px 16px; border-radius: 14px; background: var(--navy); color: #fff; border-left: 8px solid var(--tc, var(--gold)); }
+.rhead h2 { font-size: 20px; } .rhead span { background: var(--gold); color: #fff; font-weight: 700; border-radius: 999px; padding: 2px 14px; font-size: 17px; }
+.rhead.k-comp { --tc: #e08a45; } .rhead.k-found { --tc: #5aa0e6; } .rhead.k-ret { --tc: #52b788; } .rhead.k-stock { --tc: #a68be0; }
+.stockgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.scard { text-align: left; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); padding: 12px; display: flex; flex-direction: column; gap: 4px; border-top: 4px solid #5b3f9e; box-shadow: 0 3px 10px rgba(14,33,73,0.06); }
+.scard .sc-n { font-family: var(--serif); font-size: 32px; font-weight: 700; color: #5b3f9e; line-height: 1; }
+.scard .sc-t { font-weight: 700; font-size: 14.5px; }
+.scard .sc-th { display: flex; gap: 5px; min-height: 40px; }
+.scard .sc-th img, .scard .sc-th i { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 1px solid var(--line); background: var(--surface-2); display: block; }
+.scard .sc-o { font-size: 12.5px; color: var(--muted); }
+.rp { display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 12px; background: var(--surface); border: 1px solid var(--line); border-left: 6px solid var(--line); border-radius: 14px; padding: 12px; box-shadow: 0 2px 8px rgba(14,33,73,0.06); }
+.rp.s-open { border-left-color: #b4571b; } .rp.s-matched, .rp.s-ready { border-left-color: #1d5fa8; } .rp.s-in_stock { border-left-color: #5b3f9e; } .rp.s-returned { border-left-color: #1f7048; } .rp.s-closed { border-left-color: #9aa1ad; }
+.rp .thumb, .rp .nothumb { width: 84px; height: 84px; border-radius: 10px; object-fit: cover; border: 1px solid var(--line); background: var(--surface-2); display: grid; place-items: center; font-size: 12px; color: var(--muted); text-align: center; }
+.rpb { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.rpb h3 { font-size: 16.5px; }
+.rpdl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 3px 10px; margin: 2px 0 0; font-size: 14px; }
+.rpdl dt { color: var(--muted); font-size: 12.5px; padding-top: 1px; white-space: nowrap; }
+.rpdl dd { margin: 0; overflow-wrap: anywhere; font-weight: 500; }
+@media (max-width: 400px) { .rp { grid-template-columns: 64px minmax(0, 1fr); } .rp .thumb, .rp .nothumb { width: 64px; height: 64px; } }
+.pill { border-radius: 999px; padding: 3px 11px; }
+.pill.due.d-n { background: var(--green-bg); color: var(--green-fg); }
+.chip { border-radius: 999px; } .chip[aria-pressed="true"] { background: var(--navy); border-color: var(--navy); box-shadow: inset 0 -3px 0 var(--gold); }
+.bar { background: var(--navy); border-top: 3px solid var(--gold); }
+.tabbtn { color: #b9c3dc; } .tabbtn .badge { background: rgba(255,255,255,0.14); color: #fff; }
+.tabbtn[aria-current="page"] { background: rgba(255,255,255,0.1); color: var(--gold-l); } .tabbtn[aria-current="page"] .badge { background: var(--gold); color: #fff; }
+.card, .filters, .empty, .row { border-radius: 14px; }
 </style>
 </head>
 <body>
@@ -287,7 +329,7 @@ table.sum tr:last-child td { border-bottom: 0; }
   }
   function rerenderPh() {
     if (!S.me) return;
-    if (S.route === "home") renderScreen(); else renderList();
+    if (S.route === "home" || S.route.indexOf("r-") === 0) renderScreen(); else renderList();
     if (S.caseId) renderCase();
   }
   function label(list, key) { for (var i = 0; i < list.length; i++) if (list[i][0] === key) return list[i][1]; return key || ""; }
@@ -490,7 +532,7 @@ table.sum tr:last-child td { border-bottom: 0; }
     var badges = { home: act, complaints: openC, found: stock, round: "", history: "" };
     $("#bar").innerHTML = TABS.map(function (t) {
       var b = badges[t[0]];
-      return '<button type="button" class="tabbtn" data-tab="' + t[0] + '"' + (S.route === t[0] ? ' aria-current="page"' : "") + "><span>" + t[1] + "</span>" + (b !== "" && b != null ? '<span class="badge">' + b + "</span>" : '<span class="badge" style="visibility:hidden">0</span>') + "</button>";
+      return '<button type="button" class="tabbtn" data-tab="' + t[0] + '"' + ((S.route === t[0] || (t[0] === "home" && S.route.indexOf("r-") === 0)) ? ' aria-current="page"' : "") + "><span>" + t[1] + "</span>" + (b !== "" && b != null ? '<span class="badge">' + b + "</span>" : '<span class="badge" style="visibility:hidden">0</span>') + "</button>";
     }).join("");
   }
   function renderWho() {
@@ -507,6 +549,7 @@ table.sum tr:last-child td { border-bottom: 0; }
     if (S.fail) { box.innerHTML = emptyBox("The records did not load", "Reload the page. If it keeps happening, check that you still have access."); return; }
     if (loading()) { box.innerHTML = emptyBox("Loading records", "One moment."); return; }
     if (S.route === "home") renderHome();
+    else if (S.route.indexOf("r-") === 0) renderReport(S.route.slice(2));
     else if (S.route === "complaints") {
       box.innerHTML = '<div class="stack"><div class="screenhead"><h2>Complaints</h2>' + (S.canWrite ? '<button type="button" class="btn primary" data-act="log-comp">Log complaint</button>' : "") + "</div>" + filterBar("complaints", C_STAT) + '<div class="list" id="flist"></div></div>';
       renderList();
@@ -607,79 +650,145 @@ table.sum tr:last-child td { border-bottom: 0; }
     });
     return out.sort(function (a, b) { return a.p - b.p; });
   }
-  /* Dashboard: counts, period summary, due days, and case lists with Name / Class-Section / Status / Image / By */
-  var DPER = "today";
-  function dueCls(d) { return d >= 21 ? "d-r" : d >= 8 ? "d-a" : "d-g"; }
-  function duePill(d) { return '<span class="pill ' + dueCls(d) + '">' + d + (d === 1 ? " day" : " days") + "</span>"; }
-  function weekStart() { var d = new Date(); d.setDate(d.getDate() - 6); return dstr(d); }
-  function inPer(date, per) { if (!date) return false; if (per === "today") return date === today(); if (per === "week") return date >= weekStart() && date <= today(); return true; }
+  /* ---------- dashboard and reports ---------- */
+  var DPER = "today", DFROM = "", DTO = "", RCAT = "", RST = "";
+  var PERS = [["today", "Today"], ["week", "7 Days"], ["month", "1 Month"], ["range", "Calendar"]];
+  var RKINDS = { comp: ["Lost Complaints", "comp"], found: ["Items Found in Campus", "found"], ret: ["Returned", "ret"], stock: ["Stock in Hand", "stock"] };
+  function perRange(per) {
+    var t = today(), d;
+    if (per === "today") return [t, t];
+    if (per === "week") { d = new Date(); d.setDate(d.getDate() - 6); return [dstr(d), t]; }
+    if (per === "month") { d = new Date(); d.setDate(d.getDate() - 29); return [dstr(d), t]; }
+    if (per === "range") { var a = DFROM || t, b = DTO || t; return a <= b ? [a, b] : [b, a]; }
+    return ["0000-01-01", "9999-12-31"];
+  }
+  function inPer(date, per) { if (!date) return false; var r = perRange(per); return date >= r[0] && date <= r[1]; }
+  function perLabel() {
+    var r = perRange(DPER);
+    if (DPER === "today") return "Today, " + fmtDate(r[0]);
+    return fmtDate(r[0]) + " to " + fmtDate(r[1]) + (DPER === "week" ? " (last 7 days)" : DPER === "month" ? " (last 30 days)" : "");
+  }
   function retDate(f) { return f.returnedAt ? dstr(new Date(f.returnedAt)) : ""; }
+  function hhmm(ms) { try { return new Date(ms).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" }); } catch (e) { return ""; } }
   function perSets(per) {
     return {
       comps: S.comps.filter(function (c) { return inPer(c.reportedDate, per); }),
       found: S.found.filter(function (f) { return inPer(f.foundDate, per); }),
-      ret: S.found.filter(function (f) { return f.status === "returned" && inPer(retDate(f), per); })
+      ret: S.found.filter(function (f) { return f.status === "returned" && inPer(retDate(f), per); }),
+      stock: S.found.filter(function (f) { return f.status === "in_stock" || f.status === "ready"; })
     };
   }
+  function dueCls(d) { return d >= 21 ? "d-r" : d >= 8 ? "d-a" : "d-g"; }
+  function duePill(d, pre) { return '<span class="pill due ' + dueCls(d) + '">' + (pre || "") + (d === 0 ? "Today" : d + (d === 1 ? " day" : " days")) + "</span>"; }
   function whoLine(name, cls) { return (name ? esc(name) : "Name not recorded") + (cls ? " · Class " + esc(cls) : ""); }
-  function dashRow(kind, r) {
-    var isC = kind === "comp", ph = "", st = "", who = "", by = "", when = "", due = "";
+  function lastAct(id) {
+    var best = null;
+    (S.hist || []).forEach(function (h) { if (h.caseId === id && (!best || h.at > best.at)) best = h; });
+    if (!best) return "";
+    return best.action + (best.detail ? ": " + best.detail : "") + " (" + (best.by || "staff") + ", " + fmtDay(dstr(new Date(best.at)), "") + ", " + hhmm(best.at) + ")";
+  }
+  function drow(k, v) { return v ? "<dt>" + k + "</dt><dd>" + v + "</dd>" : ""; }
+  function reportRow(kind, r) {
+    var isC = kind === "comp", ph = "", st = "", due = "", rows = "", cls;
+    var act = esc(lastAct(r.id));
     if (isC) {
       var m = r.matchedItemId ? byId(S.found, r.matchedItemId) : null;
       ph = safeImg((((m || {}).photos) || [])[0]);
-      st = cPill(r); who = whoLine(r.reporterName, r.reporterClass);
-      by = "Logged by " + (r.loggedBy || "not noted"); when = fmtDT(r.at);
-      if (r.status === "open") due = duePill(daysAgo(r.reportedDate));
+      st = cPill(r) + (r.demo ? pill("p-line", "Demo") : "");
+      if (r.status === "open") due = duePill(daysAgo(r.reportedDate), "Open ");
+      cls = r.status === "open" ? "s-open" : r.status === "matched" ? "s-matched" : "s-closed";
+      rows = drow("Reported by", whoLine(r.reporterName, r.reporterClass) + (r.reporterType ? " (" + esc(label(RTYPES, r.reporterType)) + ")" : "")) +
+        drow("Date and time", esc(fmtDate(r.reportedDate) + (r.at ? ", " + hhmm(r.at) : ""))) +
+        drow("Last seen", esc([r.lastSeenPlace, r.lastSeenDate ? fmtDate(r.lastSeenDate) : ""].filter(Boolean).join(", "))) +
+        drow("Action taken", act || (r.status === "open" ? "None yet, still searching" : "")) +
+        drow("Logged by", esc(r.loggedBy || ""));
     } else {
       ph = safeImg((r.photos || [])[0]);
-      st = fPills(r);
-      if (r.status === "returned") { who = whoLine(r.collectedBy || r.nameOnItem, r.collectedClass || r.classOnItem); by = "Returned by " + (r.returnedBy || "not noted"); when = fmtDT(r.returnedAt); st = pill("p-green", "Returned"); }
-      else { who = r.nameOnItem ? whoLine(r.nameOnItem, r.classOnItem) : "Owner not identified"; by = "Found by " + (r.foundBy || "not noted") + " · logged by " + (r.loggedBy || "not noted"); when = fmtDay(r.foundDate, r.foundTime); }
-      if (r.status === "in_stock" || r.status === "ready") due = duePill(daysAgo(r.foundDate));
+      cls = "s-" + (r.status === "disposed" ? "closed" : r.status);
+      if (kind === "ret") {
+        st = pill("p-green", "Returned");
+        var took = r.returnedAt ? Math.max(0, dayDiff(r.foundDate, retDate(r))) : 0;
+        due = duePill(took, "Returned in ");
+        due = due.replace(/d-[gar]/, "d-n");
+        rows = drow("Returned to", whoLine(r.collectedBy || r.nameOnItem, r.collectedClass || r.classOnItem)) +
+          drow("Returned on", esc(r.returnedAt ? fmtDate(retDate(r)) + ", " + hhmm(r.returnedAt) : "")) +
+          drow("Handed over by", esc(r.returnedBy || "")) +
+          drow("Found", esc(fmtDay(r.foundDate, r.foundTime) + (r.foundBy ? " by " + r.foundBy : ""))) +
+          drow("Action taken", act);
+      } else {
+        st = fPills(r);
+        if (r.status === "in_stock" || r.status === "ready") due = duePill(daysAgo(r.foundDate), "In stock ");
+        rows = drow("Found by", esc(r.foundBy || "Not noted")) +
+          drow("Date and time", esc(fmtDay(r.foundDate, r.foundTime))) +
+          drow("Where", esc([r.location, r.keptAt ? "kept at " + r.keptAt : ""].filter(Boolean).join(", "))) +
+          drow("Owner", r.nameOnItem ? whoLine(r.nameOnItem, r.classOnItem) : "") +
+          drow("Action taken", act || "Logged in stock");
+      }
     }
-    var cls = isC ? (r.status === "open" ? "s-open" : r.status === "matched" ? "s-matched" : "s-closed") : "s-" + (r.status === "disposed" ? "closed" : r.status);
-    return '<a class="row cr withthumb ' + cls + '" href="#case-' + r.id + '">' +
+    return '<a class="rp ' + cls + '" href="#case-' + r.id + '">' +
       (ph ? '<img class="thumb" src="' + ph + '" alt="">' : '<div class="nothumb">' + (!isC && hasPh(r.photos) ? "Loading" : "No photo") + "</div>") +
-      '<div><div class="rtop"><h3>' + esc(r.title) + '</h3><span class="tags">' + (r.demo ? pill("p-line", "Demo") : "") + st + (due ? due : "") + "</span></div>" +
-      '<div class="kv"><b>' + who + "</b></div>" +
-      '<div class="rsub">' + esc(by) + "</div><div class=\"rsub\">" + esc(when) + (isC && r.lastSeenPlace ? " · Last seen: " + r.lastSeenPlace : "") + (!isC && r.keptAt ? " · Kept at: " + r.keptAt : "") + "</div></div></a>";
+      '<div class="rpb"><div class="rptop"><h3>' + esc(r.title) + '</h3></div><div class="tags">' + st + due + "</div><dl class=\"rpdl\">" + rows + "</dl></div></a>";
   }
-  function dsec(k, title, count, rows, emptyT) {
-    return '<section class="stack"><div class="dh k-' + k + '"><h2>' + title + "</h2><span>" + count + "</span></div>" +
-      (rows.length ? '<div class="list">' + rows.join("") + "</div>" : emptyBox(emptyT[0], emptyT[1])) + "</section>";
+  function perBar() {
+    return '<div class="perbar"><div class="seg" role="group" aria-label="Report period">' + PERS.map(function (p) {
+      return '<button type="button" data-dper="' + p[0] + '" aria-pressed="' + (DPER === p[0]) + '">' + p[1] + "</button>";
+    }).join("") + "</div>" +
+      (DPER === "range" ? '<div class="dates"><label>From<input type="date" data-dfrom value="' + esc(perRange("range")[0]) + '"></label><label>To<input type="date" data-dto value="' + esc(perRange("range")[1]) + '"></label></div>' : "") +
+      '<div class="perlab">' + esc(perLabel()) + "</div></div>";
   }
   function renderHome() {
-    var openC = S.comps.filter(function (c) { return c.status === "open"; }).length;
-    var stockHold = S.found.filter(function (f) { return f.status === "in_stock" || f.status === "ready"; });
+    var P = perSets(DPER), A = perSets("all");
+    var openC = S.comps.filter(function (c) { return c.status === "open"; });
     var retAll = S.found.filter(function (f) { return f.status === "returned"; });
-    var n = needs(), demo = S.found.some(function (x) { return x.demo; }) || S.comps.some(function (x) { return x.demo; });
-    var T = perSets("today"), W = perSets("week"), A = perSets("all"), P = perSets(DPER);
-    var perName = { today: "Today's Report", week: "Weekly Review (last 7 days)", all: "Till Date" }[DPER];
-    var html = '<div class="stack">' +
-      '<div class="counts">' +
-      '<button type="button" class="count k-comp" data-go="complaints"><b>' + S.comps.length + "</b><span>Lost Complaints</span><small>" + openC + " still open</small></button>" +
-      '<button type="button" class="count k-found" data-go="found"><b>' + S.found.length + "</b><span>Items Found in Campus</span><small>" + S.found.filter(function (f) { return f.status === "ready"; }).length + " matched to an owner</small></button>" +
-      '<button type="button" class="count k-ret" data-go="found" data-status="returned"><b>' + retAll.length + "</b><span>Returned</span><small>" + W.ret.length + " in the last 7 days</small></button>" +
-      '<button type="button" class="count k-stock" data-go="found" data-status="in_stock"><b>' + stockHold.length + "</b><span>Stock in Hand</span><small>" + stockHold.filter(flagged).length + " due for 30-day review</small></button></div>" +
-      (S.canWrite ? '<div class="quick"><button type="button" class="btn primary" data-act="log-found">Log Found Item</button><button type="button" class="btn primary" data-act="log-comp">Log Lost Complaint</button></div>' : '<div class="notice">You can view records. Logging needs Contributor access.</div>') +
-      '<table class="sum"><thead><tr><th></th><th>Today</th><th>This week</th><th>Till date</th></tr></thead><tbody>' +
-      "<tr><td>Lost complaints</td><td>" + T.comps.length + "</td><td>" + W.comps.length + "</td><td>" + A.comps.length + "</td></tr>" +
-      "<tr><td>Items found</td><td>" + T.found.length + "</td><td>" + W.found.length + "</td><td>" + A.found.length + "</td></tr>" +
-      "<tr><td>Returned</td><td>" + T.ret.length + "</td><td>" + W.ret.length + "</td><td>" + A.ret.length + "</td></tr></tbody></table>" +
-      "<h2>Needs action</h2>" +
-      (n.length ? '<div class="list">' + n.slice(0, 20).map(function (x) { return '<a class="row" href="#case-' + x.id + '"><h3>' + esc(x.t) + '</h3><div class="rsub">' + esc(x.s) + "</div></a>"; }).join("") + (n.length > 20 ? '<div class="notice">' + (n.length - 20) + " more. Use Complaints and Found to see them all.</div>" : "") + "</div>"
-        : emptyBox("Nothing needs action", "New matches, items ready to hand over and items waiting 30 days or more show up here.")) +
-      dsec("comp", "Open Complaints: Due Days", openC + " open", S.comps.filter(function (c) { return c.status === "open"; }).sort(function (a, b) { return (a.reportedDate || "").localeCompare(b.reportedDate || ""); }).slice(0, 15).map(function (c) { return dashRow("comp", c); }), ["No open complaints", "Every lost complaint is matched or closed."]) +
-      dsec("stock", "Stock in Hand: Due Days", stockHold.length + " items", stockHold.slice().sort(function (a, b) { return (a.foundDate || "").localeCompare(b.foundDate || ""); }).slice(0, 15).map(function (f) { return dashRow("found", f); }), ["No items in stock", "Found items waiting for their owners appear here."]) +
-      '<div class="seg" role="group" aria-label="Report period"><button type="button" data-dper="today" aria-pressed="' + (DPER === "today") + '">Today\'s Report</button><button type="button" data-dper="week" aria-pressed="' + (DPER === "week") + '">Weekly Review</button><button type="button" data-dper="all" aria-pressed="' + (DPER === "all") + '">Till Date</button></div>' +
-      '<div class="notice"><b>' + perName + "</b>: " + P.comps.length + " lost complaints, " + P.found.length + " items found, " + P.ret.length + " returned.</div>" +
-      dsec("comp", "Lost Complaints", P.comps.length, P.comps.slice().sort(function (a, b) { return (b.at || 0) - (a.at || 0); }).slice(0, 30).map(function (c) { return dashRow("comp", c); }), ["No complaints in this period", "Complaints logged in this period appear here."]) +
-      dsec("found", "Items Found in Campus", P.found.length, P.found.slice().sort(function (a, b) { return (b.at || 0) - (a.at || 0); }).slice(0, 30).map(function (f) { return dashRow("found", f); }), ["No items found in this period", "Found items logged in this period appear here."]) +
-      dsec("ret", "Returned", P.ret.length, P.ret.slice().sort(function (a, b) { return (b.returnedAt || 0) - (a.returnedAt || 0); }).slice(0, 30).map(function (f) { return dashRow("found", f); }), ["Nothing returned in this period", "Items handed over to their owners appear here."]) +
-      (DPER === "all" && (A.comps.length > 30 || A.found.length > 30) ? '<div class="notice">The latest 30 of each list are shown here. Use Complaints and Found for the full lists, or export all records.</div>' : "") +
-      '<div class="actions"><button type="button" class="btn" data-act="export">Export All Records (CSV)</button>' + (demo && S.isAdmin ? '<button type="button" class="btn danger" data-act="demo-delete">Delete Demo Records</button>' : "") + (!demo && S.isAdmin && !S.found.length && !S.comps.length ? '<button type="button" class="btn" data-act="demo-load">Load Demo Records</button>' : "") + "</div>" +
-      (demo && !S.isAdmin ? '<div class="notice">Demo records are shown so you can try the flow. The admin can delete them from this screen.</div>' : "") +
-      "</div>";
+    var demo = S.found.some(function (x) { return x.demo; }) || S.comps.some(function (x) { return x.demo; });
+    var stockAdded = P.stock.filter(function (f) { return inPer(f.foundDate, DPER); }).length;
+    function tile(k, num, name, sub) {
+      return '<button type="button" class="tile k-' + k + '" data-r="' + k + '"><span class="tn">' + num + '</span><span class="tl">' + name + '</span><span class="ts">' + sub + '</span><span class="tg">View list ›</span></button>';
+    }
+    var oldest = openC.slice().sort(function (a, b) { return (a.reportedDate || "").localeCompare(b.reportedDate || ""); });
+    var groups = {};
+    P.stock.forEach(function (f) { var c = f.category || "Other"; (groups[c] = groups[c] || []).push(f); });
+    var cats = Object.keys(groups).sort(function (a, b) { return groups[b].length - groups[a].length; });
+    var html = '<div class="stack">' + perBar() +
+      '<div class="tiles">' +
+      tile("comp", P.comps.length, "Lost Complaints", openC.length + " still open in total") +
+      tile("found", P.found.length, "Items Found in Campus", A.found.length + " till date") +
+      tile("ret", P.ret.length, "Returned", retAll.length + " till date") +
+      tile("stock", P.stock.length, "Stock in Hand", stockAdded + " added in this period") + "</div>" +
+      (S.canWrite ? '<div class="quick"><button type="button" class="btn primary" data-act="log-found">Log Found Item</button><button type="button" class="btn gold" data-act="log-comp">Log Lost Complaint</button></div>' : '<div class="notice">Type your name to log items and complaints.</div>') +
+      '<section class="stack"><div class="dh k-comp"><h2>Open Complaints</h2><a class="more" href="#r-comp" data-rs="open">See all ' + openC.length + " ›</a></div>" +
+      (oldest.length ? '<div class="list">' + oldest.slice(0, 5).map(function (c) { return reportRow("comp", c); }).join("") + "</div>" : emptyBox("No open complaints", "Every complaint has been closed.")) + "</section>" +
+      '<section class="stack"><div class="dh k-stock"><h2>Stock in Hand by Item Type</h2><span>' + P.stock.length + " items</span></div>" +
+      (cats.length ? '<div class="stockgrid">' + cats.map(function (cn) {
+        var it = groups[cn], old = it.reduce(function (m, f) { return Math.max(m, daysAgo(f.foundDate)); }, 0);
+        var th = it.slice(0, 3).map(function (f) { var s = safeImg((f.photos || [])[0]); return s ? '<img src="' + s + '" alt="">' : '<i></i>'; }).join("");
+        return '<button type="button" class="scard" data-r="stock" data-cat="' + esc(cn) + '"><span class="sc-n">' + it.length + '</span><span class="sc-t">' + esc(cn) + '</span><span class="sc-th">' + th + '</span><span class="sc-o">Oldest ' + old + (old === 1 ? " day" : " days") + "</span></button>";
+      }).join("") + "</div>" : emptyBox("No items in stock", "Items waiting for their owners appear here, by item type.")) + "</section>" +
+      '<div class="actions"><button type="button" class="btn small" data-act="export">Export all records (CSV)</button>' + (demo && S.isAdmin ? '<button type="button" class="btn small danger" data-act="demo-delete">Delete demo records</button>' : "") + (!demo && S.isAdmin && !S.found.length && !S.comps.length ? '<button type="button" class="btn small" data-act="demo-load">Load demo records</button>' : "") + "</div></div>";
+    $("#screen").innerHTML = html;
+  }
+  function renderReport(kind) {
+    var K = RKINDS[kind]; if (!K) { go("home"); return; }
+    var P = perSets(DPER), list = P[kind === "comp" ? "comps" : kind], note = "", extra = "";
+    if (kind === "stock") {
+      list = P.stock.slice().sort(function (a, b) { return (a.foundDate || "").localeCompare(b.foundDate || ""); });
+      var cs = {}; list.forEach(function (f) { cs[f.category || "Other"] = 1; });
+      if (RCAT && !cs[RCAT]) RCAT = "";
+      if (RCAT) list = list.filter(function (f) { return (f.category || "Other") === RCAT; });
+      extra = '<div class="field"><label for="rcat">Item type</label><select id="rcat" data-rcat><option value="">All item types</option>' + Object.keys(cs).sort().map(function (c) { return '<option' + (c === RCAT ? " selected" : "") + ">" + esc(c) + "</option>"; }).join("") + "</select></div>";
+      note = "All items currently in stock, longest waiting first.";
+    } else {
+      list = list.slice().sort(function (a, b) { return (b.at || 0) - (a.at || 0); });
+      if (kind === "comp") {
+        extra = '<div class="chips">' + [["", "All"], ["open", "Open"], ["matched", "Matched"], ["closed", "Closed"]].map(function (s) { return '<button type="button" class="chip" data-rst="' + s[0] + '" aria-pressed="' + (RST === s[0]) + '">' + s[1] + "</button>"; }).join("") + "</div>";
+        if (RST) list = list.filter(function (c) { return c.status === RST; });
+      }
+      note = esc(perLabel());
+    }
+    var html = '<div class="stack"><a class="linkbtn" href="#home">‹ Dashboard</a><div class="rhead k-' + kind + '"><h2>' + K[0] + "</h2><span>" + list.length + "</span></div>" +
+      (kind === "stock" ? "" : perBar()) + (extra ? '<div class="filters">' + extra + "</div>" : "") +
+      '<div class="rsub">' + note + '</div>' +
+      (list.length ? '<div class="list">' + list.slice(0, 200).map(function (r) { return reportRow(kind, r); }).join("") + "</div>" + (list.length > 200 ? '<div class="notice">Showing the first 200. Narrow the dates, or export all records.</div>' : "") : emptyBox("Nothing to show", "No records match this period.")) + "</div>";
     $("#screen").innerHTML = html;
   }
 
@@ -1119,12 +1228,12 @@ table.sum tr:last-child td { border-bottom: 0; }
       renderCase(); $("#case").scrollTop = 0; return;
     }
     S.caseId = ""; $("#case").hidden = true;
-    var r = TABS.some(function (t) { return t[0] === h; }) ? h : "home";
+    var r = TABS.some(function (t) { return t[0] === h; }) || /^r-(comp|found|ret|stock)$/.test(h) ? h : "home";
     if (r !== S.route || !$("#screen").innerHTML) { S.route = r; renderBar(); renderScreen(); } else { renderBar(); }
   }
   function refresh() {
     recompute(); renderBar(); renderWho();
-    if (S.route === "home" || loading() || S.noDb || S.fail) renderScreen(); else renderList();
+    if (S.route === "home" || S.route.indexOf("r-") === 0 || loading() || S.noDb || S.fail) renderScreen(); else renderList();
     if (S.caseId) renderCase();
   }
   function go(route) { location.hash = route; }
@@ -1142,7 +1251,13 @@ table.sum tr:last-child td { border-bottom: 0; }
       if (S.route === r) renderScreen(); go(r); return;
     }
     var dpb = ev.target.closest("[data-dper]");
-    if (dpb) { DPER = dpb.getAttribute("data-dper"); renderScreen(); return; }
+    if (dpb) { DPER = dpb.getAttribute("data-dper"); if (DPER === "range" && !DFROM) { DFROM = perRange("week")[0]; DTO = today(); } renderScreen(); return; }
+    var rb = ev.target.closest("[data-r]");
+    if (rb) { RCAT = rb.getAttribute("data-cat") || ""; RST = ""; go("r-" + rb.getAttribute("data-r")); return; }
+    var rsb = ev.target.closest("[data-rs]");
+    if (rsb) { RST = rsb.getAttribute("data-rs"); return; }
+    var rsc = ev.target.closest("[data-rst]");
+    if (rsc) { RST = rsc.getAttribute("data-rst"); renderScreen(); return; }
     var fvb = ev.target.closest("[data-fview]");
     if (fvb) { FV.mode = fvb.getAttribute("data-fview"); renderScreen(); return; }
     var fr = ev.target.closest("[data-frange]");
@@ -1178,7 +1293,13 @@ table.sum tr:last-child td { border-bottom: 0; }
     }
   });
   function onField(ev) {
-    var el = ev.target, fk = el.getAttribute && el.getAttribute("data-fk"), rk = el.getAttribute && el.getAttribute("data-rk");
+    var el = ev.target;
+    if (ev.type === "change" && el.getAttribute) {
+      if (el.hasAttribute("data-dfrom")) { DFROM = el.value || DFROM; renderScreen(); return; }
+      if (el.hasAttribute("data-dto")) { DTO = el.value || DTO; renderScreen(); return; }
+      if (el.hasAttribute("data-rcat")) { RCAT = el.value; renderScreen(); return; }
+    }
+    var fk = el.getAttribute && el.getAttribute("data-fk"), rk = el.getAttribute && el.getAttribute("data-rk");
     if (fk) { var key = el.closest("[data-fkey]").getAttribute("data-fkey"); F[key][fk] = el.value; renderList(); }
     else if (rk) { F.round[rk] = el.type === "checkbox" ? el.checked : el.value; renderList(); }
   }
