@@ -942,7 +942,7 @@ function waText(){
   let t = `*Staff ON Leave* – ${nice(DAY)} (${dm(DAY)})\n`;
   CATS.concat([...new Set(lv.map(lcat).filter(k=>!CATS.includes(k)))]).forEach(k => {
     const ps = lv.filter(l => lcat(l) === k);
-    t += `\n${k} -\n` + (ps.length ? ps.map(l => `* ${l.n}${stKey(l)?' ( '+stLabel(l)+' )':''}`).join('\n') : '* ') + '\n';
+    t += `\n*${CAT_LABEL[k] || k}*\n` + (ps.length ? ps.map(l => `* ${l.n}${stKey(l)?' ( '+stLabel(l)+' )':''}`).join('\n') : '* ') + '\n';
   });
   const cls = (d.adj||[]).filter(a => !a.a), act = (d.adj||[]).filter(a => a.a);
   const naW = (d.leave||[]).filter(l => l.na && !(d.adj||[]).some(a => same1(a.f, l.n)) && !(d.cover||[]).some(c => same1(c.f, l.n)));
@@ -1396,9 +1396,9 @@ function parseCheckins(txt){
 function parseNote(txt){
   const out = {date:null, leave:[], cover:[], adj:[]};
   let sec = null, cat = 'Secondary Teacher', LATE_SEC = false;
-  const catOf = s => /hindi/i.test(s) ? 'Hindi Teacher' : /computer/i.test(s) ? 'Computer Teacher' : /pre[\s-]*primary|nursery|\b[lu]kg\b|play\s*group/i.test(s) ? 'Pre Primary Teacher' : /primary/i.test(s) ? 'Primary Teacher' : /teach/i.test(s) ? 'Secondary Teacher' : /\bpl\b|program\s*lead/i.test(s) ? 'PL' : /admin/i.test(s) ? 'Admin' : /^\W*cm\b|class\s*manager/i.test(s) ? 'CM' : /floor/i.test(s) ? 'Floor Manager' : /coach|instructor|sport|music|dance/i.test(s) ? 'Activity' : /activit/i.test(s) ? 'Activity' : null;
-  const addLeave = raw => raw.split(/,|\band\b/i).forEach(p => {
-    const half = /(first|1st|pehl\w*)\s*half/i.test(p) ? 'first' : /(second|2nd|dusr\w*)\s*half/i.test(p) ? 'second' : /half/i.test(p), lm = p.match(/\blate\b(?:[^0-9)]*(\d{1,2}[:.]\d{2}|\d{1,2}\s*(?:am|pm)))?/i), n = canon(p.replace(/^[\s*•\-–·]+/,'').replace(/\b(late|till|upto|up to|by|arriv\w*|coming)\b.*$/i,'').replace(/\d.*$/,'').replace(/[\-–:]+\s*$/,''), cat);
+  const catOf = s => /hindi/i.test(s) ? 'Hindi Teacher' : /computer/i.test(s) ? 'Computer Teacher' : /pre[\s-]*primary|nursery|\b[lu]kg\b|play\s*group/i.test(s) ? 'Pre Primary Teacher' : /primary/i.test(s) ? 'Primary Teacher' : /teach/i.test(s) ? 'Secondary Teacher' : /\bpl\b|program\s*lead/i.test(s) ? 'PL' : /admin/i.test(s) ? 'Admin' : /^\W*cm\b|class\s*manager/i.test(s) ? 'CM' : /floor/i.test(s) ? 'Floor Manager' : /coach|instructor|sport|music|dance|curricular/i.test(s) ? 'Activity' : /activit/i.test(s) ? 'Activity' : /support|guard|driver/i.test(s) ? 'Support Staff' : null;
+  const addLeave = raw => raw.replace(/\([^)]*\)/g, m => m.replace(/,/g, ' ')).split(/,|\band\b/i).forEach(p => {
+    const half = /(first|1st|pehl\w*)\s*half/i.test(p) ? 'first' : /(second|2nd|dusr\w*)\s*half/i.test(p) ? 'second' : /half/i.test(p), lm = p.match(/\blate\b(?:[^0-9)]*(\d{1,2}[:.]\d{2}|\d{1,2}\s*(?:am|pm)))?/i), n = canon(p.replace(/^[\s*•\-–·]+/,'').replace(/\(.*$/,'').replace(/\b(late|till|upto|up to|by|arriv\w*|coming)\b.*$/i,'').replace(/\d.*$/,'').replace(/[\-–:]+\s*$/,''), cat);
     const tm2 = p.match(/(\d{1,2}[:.]\d{2}|\d{1,2}\s*(?:am|pm))/i);
     const late = lm ? (lm[1] ? lm[1].replace('.',':').replace(/\s+/g,'') : true) : LATE_SEC ? (tm2 ? tm2[1].replace('.',':').replace(/\s+/g,'') : true) : null;
     if (n.length > 1 && !out.leave.some(l => key(l.n) === key(n))) out.leave.push({n, k:catOfName(n, cat), ...(half?{half}:{}), ...(late?{late}:{})});
@@ -1419,6 +1419,8 @@ function parseNote(txt){
     if (cov && sec !== 'adj'){ out.cover.push({n:canon(cov[1]), f:canon(cov[2]), ...(cov[3]?{d:cov[3].trim()}:{})}); return; }
     if (sec === 'leave'){
       const c = catOf(line);
+      const plain = line.replace(/[*_]/g, '').replace(/\s*[\-–—:]\s*$/, '').trim();
+      if (c && CATS.concat(Object.values(CAT_LABEL)).some(x => key(x) === key(plain))){ cat = c; return; }
       if (c){ cat = c; const rest = line.replace(/^[^\-–—:]*[\-–—:]\s*/, ''); if (rest !== line && /[a-z]/i.test(rest)) addLeave(rest); return; }
       if (/^[\s*•\-–·]+$/.test(line)) return;
       if (/[\-–—:]\s*$/.test(line)){ cat = line.replace(/[\-–—:]+\s*$/,'').trim(); return; }
