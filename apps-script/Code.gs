@@ -52,7 +52,7 @@ function boot() {
            settings: { Title: s['Title'] || '', Month: s['Month'] || '' } };
 }
 function api_(req) {
-  const fns = { boot: boot, getAll: getAll, getVer: getVer, checkPin: checkPin, saveAll: saveAll, savePatch: savePatch };
+  const fns = { boot: boot, getAll: getAll, getVer: getVer, checkPin: checkPin, saveAll: saveAll, savePatch: savePatch, getPhones: getPhones };
   try {
     ensure_();
     const f = fns[req && req.fn];
@@ -61,6 +61,20 @@ function api_(req) {
   } catch (err) {
     return json_({ ok: false, err: String(err && err.message || err) });
   }
+}
+/** Staff WhatsApp numbers – kept only in this Sheet (tab "Staff Phones"), given out only with the edit PIN.
+    Names from the app are added automatically; fill the Mobile column (10-digit or with 91). */
+function getPhones(pin, names) {
+  if (!checkPin(pin)) throw new Error('Wrong PIN');
+  const ss = ss_(); let sh = ss.getSheetByName('Staff Phones');
+  if (!sh) { sh = ss.insertSheet('Staff Phones'); sh.getRange(1, 1, 1, 2).setValues([['Staff name', 'Mobile (WhatsApp)']]).setFontWeight('bold');
+    sh.setFrozenRows(1); sh.setColumnWidth(1, 220); sh.setColumnWidth(2, 170); sh.getRange('B:B').setNumberFormat('@'); }
+  const rows = sh.getLastRow() > 1 ? sh.getRange(2, 1, sh.getLastRow() - 1, 2).getDisplayValues() : [];
+  const have = {}, out = {};
+  rows.forEach(function (r) { const n = clean_(r[0]); if (!n) return; have[n.toLowerCase()] = 1; const m = clean_(r[1]).replace(/\D/g, ''); if (m) out[n] = m; });
+  const add = (names || []).map(clean_).filter(function (n) { return n && !have[n.toLowerCase()]; });
+  if (add.length) { const L = Utilities.formatDate ? add.sort() : add; sh.getRange(sh.getLastRow() + 1, 1, L.length, 2).setValues(L.map(function (n) { return [n, '']; })); }
+  return out;
 }
 function json_(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
 

@@ -194,6 +194,13 @@ tr.cov td{background:color-mix(in srgb,var(--sports) 10%,transparent)}
 .adjt .dim{color:var(--muted)}
 .notice tr[data-qa] td:last-child b.by::after{content:" ✎";color:var(--muted);font-weight:400;font-size:.8rem}
 .ctg{display:inline-block;font-size:.66rem;font-weight:800;background:color-mix(in srgb,var(--time) 16%,transparent);color:var(--time);border-radius:5px;padding:0 5px;vertical-align:1px}
+.mych{margin:10px 0 4px;padding:10px 12px;border-radius:12px;background:color-mix(in srgb,var(--sports,#2F6FDE) 12%,var(--surface));border:1px solid color-mix(in srgb,var(--sports,#2F6FDE) 40%,var(--line))}
+.mych b{font-family:var(--head);font-size:.95rem}.mych ul{margin:4px 0 0;padding-left:18px;font-size:.9rem}
+.ntf{margin:12px 0 4px}.ntf h3{margin-top:0}.ntfl{display:flex;flex-direction:column;gap:6px}
+.ntfr{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.ntfr .nm{flex:1;min-width:0;font-weight:700;font-size:.9rem}.ntfr .nm small{display:block;font-weight:400;color:var(--muted);font-size:.78rem}
+.ntfr a{white-space:nowrap;text-decoration:none;font-weight:800;font-size:.82rem;padding:7px 11px;border-radius:999px;background:#25D366;color:#fff}
+.ntfr a.nonum{background:var(--chip);color:var(--ink)}.ntfr a.sent{background:var(--chip);color:var(--muted)}
 .pend{margin:12px 0 4px;padding:10px;border-radius:12px;background:color-mix(in srgb,var(--gate) 10%,var(--surface));border:1px dashed color-mix(in srgb,var(--gate) 50%,var(--line));display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .pend>b{width:100%;font-size:.8rem;color:var(--gate)}
 .pendb{font:inherit;font-size:.85rem;font-weight:800;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:5px 9px;cursor:pointer;text-align:left}
@@ -683,6 +690,52 @@ const halfT = l => l.ht || HALF_T[l.half] || '';
 const stLabel = l => l.late ? 'Late' + (typeof l.late === 'string' ? ' till ' + l.late : '') : l.half === 'first' ? 'First half, ' + halfT(l) : l.half === 'second' ? 'Second half, ' + halfT(l) : l.half ? 'Half day' + (l.ht ? ', ' + l.ht : '') : 'Leave';
 const stKey = l => l.late ? 'late' : l.half === 'first' ? 'half1' : l.half === 'second' ? 'half2' : l.half ? 'half' : '';
 const stOpts = l => [['','Full day'],['half1','First half (7:30 – 11:15)'],['half2','Second half (11:15 – 3:00)'],...(stKey(l)==='half'?[['half','Half day']]:[]),['late','Late']];
+/* ---------- Duty-change messages for one staff member (A: WhatsApp send, B: "My changes today") ---------- */
+let PHONES = {};
+const same1 = (a, b) => !!a && !!b && (key(a) === key(b) || sameName(a, b) || sameName(b, a));
+function changesFor(n, d){
+  d = d || dayData(); const out = [];
+  (d.leave || []).forEach(l => { if (same1(l.n, n)) out.push({me: 'You are marked: ' + stLabel(l), wa: 'You are marked *' + stLabel(l) + '*'}); });
+  (d.cover || []).forEach(c => { if (same1(c.n, n)) { const t = `${c.d || 'duty'}${c.f ? ' for ' + c.f : ''}`; out.push({me: 'Cover ' + t, wa: 'You are covering *' + t + '*'}); } });
+  (d.adj || []).forEach(a => {
+    const lv = a.f ? (d.leave || []).find(l => same1(l.n, a.f)) : null, why = a.f ? ' for ' + a.f + (lv && stKey(lv) ? ' (' + stLabel(lv) + ')' : '') : '';
+    const what = a.a ? a.a + (a.c ? ' (' + a.c + ')' : '') : a.c;
+    [[a.b, a.t, a.a ? '' : 'Class Teacher'], [a.b2, a.t2, a.a ? '' : 'Subject Teacher'], [a.b3, a.t3, 'Subject Teacher']].forEach(([b, t, r]) => {
+      if (!same1(b, n)) return; const how = [r, t].filter(Boolean).join(', ');
+      out.push({me: `${what}${why}${how ? ' · ' + how : ''}`, wa: `You are covering *${what}*${why}${how ? ' – *' + how + '*' : ''}`}); });
+  });
+  return out;
+}
+function affected(d){
+  d = d || dayData(); const names = [];
+  const add = x => { if (x && !names.some(y => same1(y, x))) names.push(x); };
+  (d.cover || []).forEach(c => add(c.n)); (d.adj || []).forEach(a => { add(a.b); add(a.b2); add(a.b3); });
+  return names;
+}
+const phoneOf = n => { const k = Object.keys(PHONES).find(x => same1(x, n)); let p = k ? String(PHONES[k]).replace(/\D/g, '') : ''; if (p.length === 10) p = '91' + p; return p.length >= 11 ? p : ''; };
+function waMsg(n){
+  const ch = changesFor(n); if (!ch.length) return '';
+  return `*FIS Duty Change – ${nice(DAY)}*\n${n.split(' ')[0]}, ` + (ch.length === 1 ? ch[0].wa.charAt(0).toLowerCase() + ch[0].wa.slice(1) : '\n' + ch.map(c => '• ' + c.wa).join('\n')) +
+    `\n\nPlease check the Duty Chart app: https://flourishsportscloud.github.io/duty-chart/`;
+}
+const waLink = n => { const p = phoneOf(n), t = encodeURIComponent(waMsg(n)); return p ? `https://wa.me/${p}?text=${t}` : `https://wa.me/?text=${t}`; };
+const SENT = new Set();
+function myBox(){
+  if (!WHO) return ''; const ch = changesFor(WHO); if (!ch.length) return '';
+  return `<div class="mych" role="status"><b>🔔 Your changes${DAY === ymd(new Date()) ? ' today' : ' · ' + esc(nice(DAY))}</b><ul>${ch.map(c => `<li>${esc(c.me)}</li>`).join('')}</ul></div>`;
+}
+function notifyBox(){
+  if (!(CAN_EDIT && isAdmin())) return ''; const ns = affected(); if (!ns.length) return '';
+  return `<div class="ntf"><h3>📲 Notify staff <span class="cnt">${ns.length}</span></h3><div class="ntfl">` + ns.map(n => { const p = phoneOf(n), sk = DAY + '|' + key(n);
+    return `<div class="ntfr"><span class="nm">${esc(n)}<small>${esc(changesFor(n).map(c => c.me).join(' · '))}</small></span><a href="${esc(waLink(n))}" target="_blank" rel="noopener" data-sent="${esc(sk)}" class="${SENT.has(sk) ? 'sent' : p ? '' : 'nonum'}">${SENT.has(sk) ? '✓ Sent' : p ? 'WhatsApp' : 'Choose chat'}</a></div>`; }).join('') +
+    `</div><p class="hint" style="margin:6px 0 0">Opens WhatsApp with the message ready – just press Send. "Choose chat" means no number is saved yet: add it in the Google Sheet tab "Staff Phones".</p></div>`;
+}
+document.addEventListener('click', e => { const a = e.target.closest('a[data-sent]'); if (!a) return; SENT.add(a.dataset.sent); try { sessionStorage.setItem('dutySent', JSON.stringify([...SENT])); } catch(x){} setTimeout(() => { a.classList.add('sent'); a.classList.remove('nonum'); a.textContent = '✓ Sent'; }, 300); });
+try { JSON.parse(sessionStorage.getItem('dutySent') || '[]').forEach(x => SENT.add(x)); } catch(e){}
+async function loadPhones(){
+  if (!GS.pin) return;
+  try { const r = await GS.run('getPhones', GS.pin, [...STAFF_LIST.map(x => x[0]), ...EXTRA_NAMES]); if (r && typeof r === 'object'){ PHONES = r; renderNotice(); } } catch(e){}
+}
 const halfOf = st => st === 'half1' ? 'first' : st === 'half2' ? 'second' : st === 'half' ? true : null;
 
 /* ---------- chart ---------- */
@@ -778,7 +831,7 @@ function renderNotice(){
       <div class="ntitle"><h2>${rel?rel+' · ':''}${esc(nice(DAY))}</h2><small>Leave &amp; adjustments</small></div>
       <button class="nav" id="nextDay" aria-label="Next day">›</button>
     </div>
-    ${ciLine}${body}
+    ${myBox()}${ciLine}${body}${notifyBox()}
     <div class="nbtns qbtns" ${CAN_UI()?'':'hidden'}>
       <button class="btn ghost" data-qnew="adj">+ Class adjustment</button>
       <button class="btn ghost" data-qnew="act">+ Activity adjustment</button>
@@ -1571,7 +1624,7 @@ const GS = (() => {
 })();
 async function gsEnable(){
   ART = GS; CAN_EDIT = true;
-  whoBar();
+  whoBar(); loadPhones();
   document.body.classList.toggle('can-edit', CAN_ALL()); renderNotice(); render(TAB);
   let pt = null; try { pt = JSON.parse(sessionStorage.getItem('dutyPendingAtt') || 'null'); } catch(e){}
   if (pt && pt.day && pt.id){ try { sessionStorage.removeItem('dutyPendingAtt'); } catch(e){} Q.ops.push(...diffOps(DAILY, applyAtt(DAILY, pt), ROSTER, pt.roster ? {...ROSTER, [pt.id]: pt.roster} : null)); qSave(); }
