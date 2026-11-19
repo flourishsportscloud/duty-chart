@@ -724,7 +724,7 @@ function remarkOp(it, op){
   render();
   const by = canAdmin() ? "admin" : "pl";
   /* until the server has the new workflow (remarkOp), Noted / Action / Remark still save through the older addLog */
-  const legacy = () => {
+  const legacy = async () => {
     if (!["ack","act","note"].includes(op.t)) throw new Error("Follow-ups, edit and delete start working once the server update is installed.");
     return api("addLog", [token, it.dt, it.c, it.s, it.i + 1, it.nm, op.a || "Noted", it.cats, by]);
   };
@@ -1320,7 +1320,7 @@ setInterval(() => { if (document.visibilityState === "visible" && me && view !==
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && me) { retryDirty(); refresh(); } });
 
 /* ---------- auto-update: if a newer page is published, reload into it ---------- */
-const BUILD = "202611191657";
+const BUILD = "202611191701";
 (function(){
   const run = () => fetch(location.pathname + "?v=" + Date.now(), {cache:"no-store"}).then(r => r.text()).then(t => {
     const m = t.match(/const BUILD = "(\d+)"/);
