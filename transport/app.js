@@ -232,13 +232,13 @@ function render(){
 const DRV_U=/^(B([1-9]|1[0-6]|34)|B[A-H])$/,CON_U=/^(B(1|2|3|4|5|8|9|10|14|15)|B[A-H])$/;
 function hasDrvU(vk){return DRV_U.test(vk)}function hasConU(vk){return CON_U.test(vk)}
 function vcardInfo(v){const s=vehStats(v);const vd=S.veh[v.k]||{},od=S.out[v.k]||{};const ch=((S.derr[v.k]||{}).checks)||{};
-  const tk=x=>x==='OK'?'<span style="color:#1a7f4b;font-weight:800">✓</span>':x==='NOT'?'<span style="color:var(--a);font-weight:800">✗</span>':'<span class="muted">–</span>';
+  const tk=x=>x==='OK'?'<b class="ok">✓</b>':x==='NOT'?'<b class="no">✗</b>':'<b>–</b>';
   const fo=foCountVeh(v);
-  let h='<div class="st">In <span style="font-weight:700;color:var(--ink,#1c2440)">'+(vd.arr?esc(hm12(vd.arr)):'–')+'</span> · Out <span style="font-weight:700;color:var(--ink,#1c2440)">'+(od.submitted&&od.time?esc(od.time):'–')+'</span></div>'+
-    '<div class="st">T <span style="font-weight:700;color:var(--ink,#1c2440)">'+s.roll+'</span> · P <span style="font-weight:700;color:var(--ink,#1c2440)">'+s.bus+'</span> · A <span style="font-weight:700;color:var(--ink,#1c2440)">'+s.abs+'</span> · S <span style="font-weight:700;color:var(--ink,#1c2440)">'+s.sb+'</span></div>';
-  if(fo)h+='<div class="st" style="color:var(--mag);font-weight:600">Front Office updates: '+fo+(s.early||s.late?' <span style="font-weight:400">('+[s.early?'Early leaver '+s.early:'',s.late?'Late comer '+s.late:''].filter(Boolean).join(' · ')+')</span>':'')+'</div>';
-  const u=[];if(hasDrvU(v.k))u.push('Driver M '+tk(vd.driverU)+' D '+tk(ch.driver));if(hasConU(v.k))u.push('Conductor M '+tk(vd.condU)+' D '+tk(ch.conductor));
-  if(u.length)h+=u.map(x=>'<div class="st">'+x+'</div>').join('');
+  let h='<div class="vtime"><div><span>In</span><strong>'+(vd.arr?esc(hm12(vd.arr)):'–')+'</strong></div><div><span>Out</span><strong>'+(od.submitted&&od.time?esc(String(od.time).replace(/^0/,'')):'–')+'</strong></div></div>'+
+    '<div class="vstats"><div><span>T</span><strong>'+s.roll+'</strong></div><div class="p"><span>P</span><strong>'+s.bus+'</strong></div><div class="a"><span>A</span><strong>'+s.abs+'</strong></div><div class="s"><span>S</span><strong>'+s.sb+'</strong></div></div>';
+  if(fo)h+='<div class="vfo">Front Office updates: '+fo+(s.early||s.late?'<small>'+[s.early?'Early leaver '+s.early:'',s.late?'Late comer '+s.late:''].filter(Boolean).join(' · ')+'</small>':'')+'</div>';
+  const u=[];if(hasDrvU(v.k))u.push('<div><em>Driver</em><i>'+'M '+tk(vd.driverU)+' D '+tk(ch.driver)+'</i></div>');if(hasConU(v.k))u.push('<div><em>Conductor</em><i>M '+tk(vd.condU)+' D '+tk(ch.conductor)+'</i></div>');
+  if(u.length)h+='<div class="vuni">'+u.join('')+'</div>';
   return h}
 function renderDuty(){
   const who=$('dutyStaff').value;
