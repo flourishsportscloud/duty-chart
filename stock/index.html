@@ -379,7 +379,30 @@ main { padding-block: 16px 150px; gap: 14px; }
 .banner { padding: 7px 10px; font-size: 12.5px; }
 .banner .btn.small { padding: 3px 9px; font-size: 12px; }
 main { padding-block: 12px 150px; gap: 11px; }
+/* multi-item request form */
+.irows { counter-reset: ir; }
+.irow { counter-increment: ir; border-left: 3px solid var(--gold); }
+.irow::before { content: 'Item ' counter(ir); grid-column: 1 / -1; font: 700 12px var(--font); letter-spacing: .06em; text-transform: uppercase; color: var(--navy); }
+.btn.add-item { width: 100%; border: 1.5px dashed var(--gold); background: var(--gold-soft); color: #6b4e10; font-weight: 700; min-height: 44px; }
+.il { display: flex; flex-direction: column; gap: 4px; }
+.il-r { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px dashed var(--line); font-size: 14px; }
+.il-r:last-child { border-bottom: 0; }
+.il-n { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.il-n .q { color: var(--muted); font-weight: 500; font-size: 13px; }
+.il .more { color: var(--muted); font-size: 13px; }
+.ovgrid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+@media (min-width: 820px) { .ovgrid { grid-template-columns: 1fr 1fr; } }
+.ovc { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+.ovc h4 { font-family: var(--serif); font-size: 16px; color: var(--navy); margin-bottom: 8px; }
+.ovr { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--soft); font-size: 14px; }
+.ovr:last-child { border-bottom: 0; }
+.ovr b { font-variant-numeric: tabular-nums; }
+.rmk { padding: 8px 0; border-bottom: 1px solid var(--soft); font-size: 14px; }
+.rmk:last-child { border-bottom: 0; }
+.rmk small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
 /* views */
+.okc { color: var(--green); } .badc { color: var(--red); } .warnc { color: #8a6417; }
+.rmk[data-id] { cursor: pointer; }
 .vh h2 { font-family: var(--serif); font-size: 24px; color: var(--navy); }
 .vh p { color: var(--muted); font-size: 14px; margin-top: 2px; }
 .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
@@ -521,16 +544,17 @@ main { padding-block: 12px 150px; gap: 11px; }
 
   var STATUS = { pending: 'Pending', bought: 'Bought, to hand over', handed: 'Handed over', arranged: 'Arranged', cancelled: 'Cancelled', unapproved: 'Not approved', unavailable: 'Not available in market', refunded: 'Refunded' };
   var REMARKS = ['Waiting for approval', 'Reminder sent', 'Vendor will deliver tomorrow', 'Stock expected next week', 'Budget not available', 'Called the vendor'];
-  var ISTATE = { pending: 'Waiting', purchased: 'Purchased', unavailable: 'Not available', expensive: 'Too expensive', soldout: 'Sold out', skipped: 'Not bought', arranged: 'Arranged', other: 'Other', instock: 'In stock' };
+  var ISTATE = { pending: 'Waiting', purchased: 'Purchased', unavailable: 'Not available', expensive: 'Too expensive', soldout: 'Sold out', skipped: 'Not bought', arranged: 'Arranged', other: 'Other', instock: 'Issued' };
   var isGot = function (it) { return it.state === 'purchased' || it.state === 'instock'; };
   var isBought = function (it) { return it.state === 'purchased'; };
+  function stText(r) { return r.kind === 'stock' && r.status === 'bought' ? 'Ready to hand over' : (STATUS[r.status] || r.status); }
   function itemTag(state) { return '<span class="ist i-' + esc(state) + '">' + esc(ISTATE[state] || state) + '</span>'; }
   var HASH = { overview: 'overview', today: 'today', pending: 'pending', sboard: 'stock-board', pboard: 'purchase-board', accounts: 'accounts', itemlog: 'item-log', deadlines: 'deadlines', datewise: 'datewise', tilldate: 'till-date' };
 
   var assets = true;
   var canWrite = true, canDelete = false;
   var TOKEN = '', ME = null, USERS = [], lastRev = '', pollTimer = null;
-  var S = { items: [], dept: '', resp: 'all', itemIdx: null, preResp: '', ready: false, loaded: false, tab: 'overview', bf: { stock: 'pending', purchase: 'due' }, rng: 'month', kind: 'all', q: '', stat: 'all', from: '', to: '', sel: null, mode: 'view', busy: false };
+  var S = { items: [], dept: '', resp: 'all', itemIdx: null, preResp: '', ready: false, loaded: false, tab: 'overview', bf: { stock: 'pending', purchase: 'due' }, rngs: { overview: 'all', sboard: 'all', pboard: 'all', accounts: 'month' }, kind: 'all', q: '', stat: 'all', from: '', to: '', sel: null, mode: 'view', busy: false };
   var lastFocus = null, toastTimer = null;
 
   function lsGet(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
@@ -644,7 +668,7 @@ main { padding-block: 12px 150px; gap: 11px; }
       '<div class="c-main">' +
       '<div class="c-kind">' + (r.kind === 'stock' ? 'STOCK ORDER' : 'PURCHASE') + (r.routedFrom ? ' · SENT FROM ' + esc(r.routedFrom).toUpperCase() : '') + (r.sample ? ' · EXAMPLE' : '') + '</div>' +
       body +
-      '<div class="c-state"><span class="pill s-' + esc(r.status) + '">' + esc(STATUS[r.status] || r.status) + '</span>' +
+      '<div class="c-state"><span class="pill s-' + esc(r.status) + '">' + esc(stText(r)) + '</span>' +
       (pur && open && its.length > 1 && nBought ? '<span class="pill s-part">' + nBought + ' of ' + its.length + ' purchased</span>' : '') +
       (open && !r.approvedBy ? '<span class="pill s-warnapp">Needs approval</span>' : '') + '</div>' +
       '<div class="c-due ' + due.cls + '">' + esc(due.text) + '</div>' +
@@ -682,7 +706,6 @@ main { padding-block: 12px 150px; gap: 11px; }
     document.querySelectorAll('#statseg button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.stat === S.stat ? 'true' : 'false'); });
     document.querySelectorAll('#respseg button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.resp === S.resp ? 'true' : 'false'); });
     var isBoard = S.tab === 'sboard' || S.tab === 'pboard' || S.tab === 'accounts' || S.tab === 'overview';
-    document.querySelector('.filters').hidden = S.tab === 'overview';
     $('#extra').hidden = S.tab !== 'tilldate';
     $('#statseg').hidden = S.tab !== 'tilldate';
     $('#kindseg').hidden = isBoard;
@@ -831,22 +854,29 @@ main { padding-block: 12px 150px; gap: 11px; }
   }
   function renderSample() {
     var el = $('#samplebar'), n = S.items.filter(function (r) { return r.sample; }).length;
-    if (!n && ME && ME.role !== 'staff' && S.loaded) {
-      el.hidden = false;
-      el.innerHTML = S.seeding ? 'Loading sample data…' : 'Want to see how it works? <button class="btn small" type="button" data-seed>Load sample data</button> <span class="muted">Stock orders and purchases covering every case. You can remove them later.</span>';
-      return;
-    }
     if (!n || !canDelete || !canWrite) { el.hidden = true; return; }
     el.hidden = false;
     el.innerHTML = S.clearAsk
       ? 'Remove all ' + n + ' example requests for good? <button class="btn small danger" type="button" data-clear-yes>Yes, remove</button> <button class="btn small" type="button" data-clear-no>Keep</button>'
       : n + ' example requests are loaded so staff can see every case. <button class="btn small" type="button" data-clear-ask>Remove examples</button>';
   }
+  var DEPT_GROUPS = [
+    ['Pre-school and classes', ['Nursery', 'LKG', 'UKG', 'Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5', 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10', 'Class 11']],
+    ['Departments', ['Front Office', 'Back Office', 'Operations', 'Events', 'Music', 'Dance', 'Arts', 'Sports', 'Fitness', 'Skill Courses', 'Administration']]
+  ];
+  var DEPT_ALL = DEPT_GROUPS.reduce(function (a, g) { return a.concat(g[1]); }, []);
+  function deptOptions(sel, withAll, seenExtra) {
+    var h = withAll ? '<option value="">All departments</option>' : '<option value="">Choose department</option>';
+    DEPT_GROUPS.forEach(function (g) { h += '<optgroup label="' + g[0] + '">' + g[1].map(function (n) { return '<option value="' + esc(n) + '"' + (n === sel ? ' selected' : '') + '>' + esc(n) + '</option>'; }).join('') + '</optgroup>'; });
+    var ex = Object.keys(seenExtra || {}).filter(function (n) { return DEPT_ALL.indexOf(n) < 0; }).sort();
+    if (ex.length) h += '<optgroup label="Other (older entries)">' + ex.map(function (n) { return '<option value="' + esc(n) + '"' + (n === sel ? ' selected' : '') + '>' + esc(n) + '</option>'; }).join('') + '</optgroup>';
+    return h;
+  }
   function renderDept() {
     var el = $('#dept'), seen = {};
     S.items.forEach(function (r) { if (r.department) seen[r.department] = 1; });
-    if (S.dept && !seen[S.dept]) S.dept = '';
-    var html = '<option value="">All departments</option>' + Object.keys(seen).sort().map(function (n) { return '<option value="' + esc(n) + '">' + esc(n) + '</option>'; }).join('');
+    if (S.dept && !seen[S.dept] && DEPT_ALL.indexOf(S.dept) < 0) S.dept = '';
+    var html = deptOptions('', true, seen);
     if (el.innerHTML !== html) el.innerHTML = html;
     el.value = S.dept;
   }
@@ -886,7 +916,9 @@ main { padding-block: 12px 150px; gap: 11px; }
         if (nb) return nb + ' of ' + r.items.length + (r.items.length === 1 ? ' item' : ' items') + ' purchased. Waiting for the rest.';
         return r.approvedBy ? 'Approved. Waiting for the buyer to purchase it.' : 'Needs approval. Then the buyer will purchase it.';
       }
-      return r.approvedBy ? 'Approved. Waiting for the store manager to hand it over.' : 'Needs approval. Then the store manager will hand it over.';
+      var ng = r.items.filter(isGot).length;
+      if (ng) return ng + ' of ' + r.items.length + (r.items.length === 1 ? ' item' : ' items') + ' issued. Waiting for the rest.';
+      return r.approvedBy ? 'Approved. The store manager issues each item.' : 'Needs approval. Then the store manager issues each item.';
     }
     if (s === 'bought') return 'Bought. Waiting to be handed over to ' + r.staff + '.';
     if (s === 'handed') return 'Done. Handed over to ' + (r.handedTo || r.staff) + '.';
@@ -922,7 +954,7 @@ main { padding-block: 12px 150px; gap: 11px; }
   }
   function itemForm(r, i) {
     var it = r.items[i], pre = S.preResp || '';
-    var chips = [['purchased', 'Purchased'], ['instock', 'In stock'], ['unavailable', 'Not available'], ['expensive', 'Too expensive'], ['soldout', 'Sold out'], ['other', 'Other'], ['pending', 'Back to waiting']];
+    var chips = r.kind === 'stock' ? [['instock', 'Issue it'], ['unavailable', 'Not in stock'], ['other', 'Other'], ['pending', 'Back to waiting']] : [['purchased', 'Purchased'], ['instock', 'Issued from store'], ['unavailable', 'Not available'], ['expensive', 'Too expensive'], ['soldout', 'Sold out'], ['other', 'Other'], ['pending', 'Back to waiting']];
     var pv = it.price != null ? it.price : (it.quote != null ? it.quote : (it.est != null ? it.est : ''));
     return '<form data-act="item" class="iform" data-i="' + i + '">' +
       '<div class="chiprow">' + chips.map(function (c) {
@@ -939,22 +971,23 @@ main { padding-block: 12px 150px; gap: 11px; }
       photoField('f-iimg', 'Item photo') +
       '<div class="row"><button class="btn primary" type="submit">Save</button><button class="btn" type="button" data-mode="view">Cancel</button></div></form>';
   }
+  function rr0Kind() { var x = cur(); return x ? x.kind : ''; }
   function syncItemForm() {
     var f = panel.querySelector('form.iform');
     if (!f) return;
     var c = f.querySelector('input[name="resp"]:checked'), val = c ? c.value : '';
     f.classList.toggle('showprice', val === 'purchased' || val === 'expensive');
     f.classList.toggle('showbuy', val === 'purchased');
-    f.classList.toggle('showshop', val === 'purchased' || val === 'expensive' || val === 'soldout' || val === 'unavailable');
+    f.classList.toggle('showshop', rr0Kind() !== 'stock' && (val === 'purchased' || val === 'expensive' || val === 'soldout' || val === 'unavailable'));
     var rr = cur(), ii = rr && rr.items[Number(f.dataset.i)], pe = f.querySelector('#f-iprice'), te = f.querySelector('#f-itotal');
     if (te && ii) { var pn = pe && pe.value !== '' ? Number(pe.value) : NaN; te.textContent = pn >= 0 ? money(round2(pn * Number(ii.qty || 0))) + ' (' + ii.qty + (ii.unit ? ' ' + ii.unit : '') + ' x ' + money(pn) + ')' : '-'; }
     var lab = f.querySelector('.price-f label');
     if (lab) lab.textContent = val === 'expensive' ? 'Price quoted per unit (Rs)' : 'Price per unit (Rs)';
   }
   function itemCards(r, readonly) {
-    if (r.kind !== 'purchase') return itemsTable(r);
+    if (r.kind !== 'purchase' && r.items.length < 2 && r.status !== 'pending') return itemsTable(r);
     var its = r.items, editable = !readonly && canWrite && (r.status === 'pending' || r.status === 'bought');
-    var nBought = its.filter(isBought).length, nWait = its.filter(function (x) { return x.state === 'pending'; }).length;
+    var nBought = its.filter(function (x) { return r.kind === 'stock' ? isGot(x) : isBought(x); }).length, nWait = its.filter(function (x) { return x.state === 'pending'; }).length;
     var cards = its.map(function (it, i) {
       var q = esc(it.qty + (it.unit ? ' ' + it.unit : '')), detail = '';
       if (it.state === 'purchased') detail = it.price != null ? esc(money(it.price)) + ' per unit' + (it.lineTotal != null ? ' · total <b>' + esc(money(it.lineTotal)) + '</b>' : '') : 'Price not entered';
@@ -970,7 +1003,7 @@ main { padding-block: 12px 150px; gap: 11px; }
       if (editable && !inForm) {
         var b = function (resp, t, cls) { return '<button class="btn small ' + (cls || '') + '" type="button" data-item="' + i + '" data-resp="' + resp + '">' + t + '</button>'; };
         acts = it.state === 'pending'
-          ? '<div class="ic-actions">' + b('purchased', 'Purchased', 'go') + b('instock', 'In stock') + b('unavailable', 'Not available') + b('expensive', 'Too expensive') + b('soldout', 'Sold out') + b('', 'Remark') + '</div>'
+          ? (r.kind === 'stock' ? '<div class="ic-actions">' + b('instock', 'Issue', 'go') + b('unavailable', 'Not in stock') + b('', 'Remark') + '</div>' : '<div class="ic-actions">' + b('purchased', 'Bought', 'go') + b('instock', 'Issued from store') + b('unavailable', 'Not available') + b('expensive', 'Too expensive') + b('soldout', 'Sold out') + b('', 'Remark') + '</div>')
           : '<div class="ic-actions">' + b(it.state, 'Change response') + b('', 'Add remark') + '</div>';
       }
       return '<div class="icard ic-' + esc(it.state) + '"><div class="ic-top"><strong>' + esc(it.item) + '</strong><span class="qty">' + q + '</span></div>' +
@@ -978,19 +1011,19 @@ main { padding-block: 12px 150px; gap: 11px; }
         (when ? '<div class="ic-when muted">' + when + '</div>' : '') + remark + img + acts + (inForm ? itemForm(r, i) : '') + '</div>';
     }).join('');
     var done = editable && nBought && nWait && S.mode !== 'item'
-      ? '<div><button class="btn" type="button" data-done-buying>Done buying: close the ' + nWait + ' waiting ' + (nWait === 1 ? 'item' : 'items') + ' as not bought</button></div>' : '';
-    var hint = r.status === 'pending' && !nWait && !nBought ? '<p class="hint">No item has been purchased. Try again, or close the whole order with "Not available in market".</p>' : '';
-    return '<div class="sec"><h3 class="sec-h">Items (' + its.length + ') · ' + nBought + ' purchased' + (nWait ? ', ' + nWait + ' waiting' : '') + '</h3><div class="icards">' + cards + '</div>' + done + hint + '</div>';
+      ? '<div><button class="btn" type="button" data-done-buying>' + (r.kind === 'stock' ? 'Finish: close the ' + nWait + ' waiting ' + (nWait === 1 ? 'item' : 'items') + ' as not issued' : 'Done buying: close the ' + nWait + ' waiting ' + (nWait === 1 ? 'item' : 'items') + ' as not bought') + '</button></div>' : '';
+    var hint = r.status === 'pending' && r.kind === 'purchase' && !nWait && !nBought ? '<p class="hint">No item has been purchased. Try again, or close the whole order with "Not available in market".</p>' : '';
+    return '<div class="sec"><h3 class="sec-h">Items (' + its.length + ') · ' + (r.kind === 'stock' ? its.filter(isGot).length + ' issued' : nBought + ' purchased') + (nWait ? ', ' + nWait + ' waiting' : '') + '</h3><div class="icards">' + cards + '</div>' + done + hint + '</div>';
   }
   function applyItems(r, items, entries, now, actor) {
     var anyP = items.some(function (x) { return x.state === 'pending'; });
     var bought = items.filter(isBought), got = items.filter(isGot), st = r.status;
-    if (st === 'pending' || st === 'bought') st = (!anyP && got.length) ? 'bought' : 'pending';
+    if (st === 'pending' || st === 'bought') st = (!anyP && got.length) ? 'bought' : ((!anyP && r.kind === 'stock') ? 'unavailable' : 'pending');
     var priced = bought.filter(function (x) { return x.lineTotal != null; });
     var last = bought.slice().sort(function (a, b) { return String(a.at || '').localeCompare(String(b.at || '')); }).pop();
     var total = priced.length ? round2(priced.reduce(function (a, x) { return a + Number(x.lineTotal); }, 0)) : null;
     var log = entries.slice();
-    if (st !== r.status) log.push({ at: now, by: actor, kind: 'event', text: st === 'bought' ? 'All items answered: ' + bought.length + ' of ' + items.length + ' purchased' + (total != null ? ', total ' + money(total) : '') + '. Ready to hand over.' : 'Order is open again' });
+    if (st !== r.status) log.push({ at: now, by: actor, kind: 'event', text: st === 'unavailable' ? 'None of the items could be issued from stock' : st === 'bought' ? 'All items answered: ' + (r.kind === 'stock' ? got.length + ' of ' + items.length + ' issued' : bought.length + ' of ' + items.length + ' purchased') + (total != null ? ', total ' + money(total) : '') + '. Ready to hand over.' : 'Order is open again' });
     return { items: items, status: st, total: total, price: items.length === 1 && items[0].price != null ? items[0].price : null, buyer: last ? (last.by || '') : '', boughtAt: last ? (last.at || null) : null, log: (r.log || []).concat(log) };
   }
   async function finishBuying() {
@@ -1000,7 +1033,7 @@ main { padding-block: 12px 150px; gap: 11px; }
     try {
       var now = new Date().toISOString(), actor = me(), n = 0;
       var items = r.items.map(function (x) { var o = Object.assign({}, x); if (o.state === 'pending') { o.state = 'skipped'; o.at = now; o.by = actor; n++; } return o; });
-      var fields = applyItems(r, items, [{ at: now, by: actor, kind: 'event', text: 'Finished buying. ' + n + (n === 1 ? ' item' : ' items') + ' closed as not bought' }], now, actor);
+      var fields = applyItems(r, items, [{ at: now, by: actor, kind: 'event', text: (r.kind === 'stock' ? 'Finished issuing. ' : 'Finished buying. ') + n + (n === 1 ? ' item' : ' items') + (r.kind === 'stock' ? ' closed as not issued' : ' closed as not bought') }], now, actor);
       await db.doc('requests/' + r.id).update(fields);
       renderSheet(); toast('Buying finished');
     } catch (err) { toast(errMsg(err)); }
@@ -1021,14 +1054,15 @@ main { padding-block: 12px 150px; gap: 11px; }
     return o === 'stock' ? 'Stock room → Market' : 'Market → Stock room';
   }
   function rowStatus(r, it) {
-    if (r.status === 'handed' || r.status === 'refunded' || r.status === 'cancelled' || r.status === 'unapproved') return { cat: r.status === 'handed' ? 'done' : 'problem', html: '<span class="ist i-' + (r.status === 'handed' ? 'purchased' : 'soldout') + '">' + esc(STATUS[r.status]) + '</span>' };
+    if (r.kind === 'stock' && it.state && it.state !== 'pending') return { cat: it.state === 'instock' ? 'done' : 'problem', html: itemTag(it.state) };
+    if (r.status === 'handed' || r.status === 'refunded' || r.status === 'cancelled' || r.status === 'unapproved') return { cat: r.status === 'handed' ? 'done' : 'problem', html: '<span class="ist i-' + (r.status === 'handed' ? 'purchased' : 'soldout') + '">' + esc(stText(r)) + '</span>' };
     if (r.kind === 'purchase') {
       var st = it.state;
       return { cat: st === 'pending' ? 'pending' : (st === 'purchased' || st === 'arranged' || st === 'instock' ? 'done' : 'problem'), html: itemTag(st) };
     }
     if (r.status === 'pending' && !r.approvedBy) return { cat: 'pending', html: '<span class="ist i-pending">Needs approval</span>' };
-    if (r.status === 'pending' || r.status === 'bought') return { cat: 'pending', html: '<span class="ist i-pending">' + esc(STATUS[r.status]) + '</span>' };
-    return { cat: 'problem', html: '<span class="ist i-soldout">' + esc(STATUS[r.status] || r.status) + '</span>' };
+    if (r.status === 'pending' || r.status === 'bought') return { cat: 'pending', html: '<span class="ist i-pending">' + esc(stText(r)) + '</span>' };
+    return { cat: 'problem', html: '<span class="ist i-soldout">' + esc(stText(r)) + '</span>' };
   }
   function rowRemark(r, it) {
     if (it.remark) return it.remark;
@@ -1080,7 +1114,7 @@ main { padding-block: 12px 150px; gap: 11px; }
       var nb = (r.items || []).filter(isGot).length;
       return r.kind === 'purchase' && nb ? 'Part done (' + nb + ' of ' + r.items.length + ')' : 'Approved, waiting';
     }
-    return STATUS[r.status] || r.status;
+    return stText(r);
   }
   function whyText(r, it) {
     var parts = [];
@@ -1128,6 +1162,13 @@ main { padding-block: 12px 150px; gap: 11px; }
     var first = its.slice(0, 3).map(function (x) { return esc(x.item) + ' <span class="q">' + esc(x.qty + (x.unit ? ' ' + x.unit : '')) + '</span>'; }).join('<span class="dot"> · </span>');
     return first + (its.length > 3 ? ' <span class="more">+' + (its.length - 3) + ' more</span>' : '');
   }
+  function itemRowsHtml(r) {
+    var its = r.items || [], pur = r.kind === 'purchase';
+    return '<div class="il">' + its.slice(0, 8).map(function (x) {
+      var st = x.state && x.state !== 'pending' ? itemTag(x.state) : (r.status === 'handed' ? itemTag('instock') : '');
+      return '<div class="il-r"><span class="il-n">' + esc(x.item) + ' <span class="q">' + esc(x.qty + (x.unit ? ' ' + x.unit : '')) + '</span></span>' + st + '</div>';
+    }).join('') + (its.length > 8 ? '<div class="more">+' + (its.length - 8) + ' more</div>' : '') + '</div>';
+  }
   function totalQty(r) { return (r.items || []).reduce(function (a, x) { return a + (Number(x.qty) || 0); }, 0); }
   function stockCat(r) {
     if (r.status === 'handed') return 'issued';
@@ -1150,7 +1191,7 @@ main { padding-block: 12px 150px; gap: 11px; }
   }
   function stockCard(r) {
     var cat = stockCat(r), open = isOpen(r), due = dueInfo(r), n = r.items.length;
-    var pill = cat === 'issued' ? '<span class="pill s-handed">Issued</span>' : cat === 'pending' ? '<span class="pill s-pending">' + esc(reqLabel(r)) + '</span>' : '<span class="pill s-cancelled">' + esc(STATUS[r.status] || r.status) + '</span>';
+    var pill = cat === 'issued' ? '<span class="pill s-handed">Issued</span>' : cat === 'pending' ? '<span class="pill s-pending">' + esc(reqLabel(r)) + '</span>' : '<span class="pill s-cancelled">' + esc(stText(r)) + '</span>';
     var issuedAt = r.status === 'handed' ? closedAt(r) : null;
     var tl = '<div class="tl"><div><small>Asked</small><b>' + esc(fmtDTs(r.createdAt)) + '</b></div>' +
       '<div><small>' + (issuedAt ? 'Issued' : 'Issued') + '</small><b>' + (issuedAt ? esc(fmtDTs(issuedAt)) : '<span class="muted">not yet</span>') + '</b></div>' +
@@ -1158,15 +1199,16 @@ main { padding-block: 12px 150px; gap: 11px; }
     var why = stockWhy(r);
     var handed = r.status === 'handed' && (r.handedTo || r.keptAt) ? '<div class="lc-note"><b>Issued to:</b> ' + esc(r.handedTo || r.keptAt) + (r.accepted === 'yes' ? ' · accepted' : '') + '</div>' : '';
     return '<div class="lc' + (open && due.cls === 'due-over' ? ' over' : '') + '" role="button" tabindex="0" data-id="' + esc(r.id) + '">' +
-      '<div class="lc-top"><div class="lc-title">' + itemsLine(r) + '</div>' + pill + '</div>' +
-      '<div class="lc-sub"><b>' + esc(r.staff || '-') + '</b>' + (r.department ? ' · ' + esc(r.department) : '') + ' · ' + esc(plural(n, 'item')) + (r.sample ? ' · example' : '') + '</div>' +
+      '<div class="lc-top"><div class="lc-title">' + (n > 1 ? esc(plural(n, 'item')) + ' requested' : itemsLine(r)) + '</div>' + pill + '</div>' +
+      '<div class="lc-sub"><b>' + esc(r.staff || '-') + '</b>' + (r.department ? ' · ' + esc(r.department) : '') + (r.sample ? ' · example' : '') + '</div>' +
+      (n > 1 ? itemRowsHtml(r) : '') +
       tl +
       '<div class="lc-foot">' + (open ? waitChip(waitDays(r)) + (hasDl(r) ? '<span class="due ' + due.cls + '">' + esc(due.text) + '</span>' : '') : '') + '</div>' +
       (why ? '<div class="lc-note ' + (cat === 'issued' ? '' : 'why') + '"><b>' + (cat === 'issued' ? 'Remark:' : 'Why not issued:') + '</b> ' + esc(why) + '</div>' : '') + handed + '</div>';
   }
   function boardHead(title, sub) { return '<div class="vh"><h2>' + esc(title) + '</h2><p>' + esc(sub) + '</p></div>'; }
   function stockBoard() {
-    var rows = S.items.filter(function (r) { return (r.origKind || r.kind) === 'stock' && (!S.dept || r.department === S.dept) && matchQ(r); }), t = todayStr();
+    var rows = S.items.filter(function (r) { return (r.origKind || r.kind) === 'stock' && inRng(r.createdAt, 'sboard') && (!S.dept || r.department === S.dept) && matchQ(r); }), t = todayStr();
     var cnt = { pending: 0, issued: 0, notsupplied: 0 };
     rows.forEach(function (r) { cnt[stockCat(r)]++; });
     var askedToday = rows.filter(function (r) { return ymd(new Date(r.createdAt)) === t; }).length;
@@ -1177,7 +1219,7 @@ main { padding-block: 12px 150px; gap: 11px; }
     var f = S.bf.stock;
     var list = rows.filter(function (r) { return f === 'all' || stockCat(r) === f; });
     list.sort(function (a, b) { return f === 'pending' ? a.createdAt.localeCompare(b.createdAt) : b.createdAt.localeCompare(a.createdAt); });
-    var out = boardHead('Stock Room', 'What staff asked for, when, what was issued and what is still pending.') +
+    var out = boardHead('Stock Room', 'What staff asked for, when, what was issued and what is still pending.') + rangeBar('sboard') +
       '<div class="kpis">' + kpi(askedToday, 'Asked today') + kpi(cnt.pending, 'Pending', cnt.pending ? 'warn' : '') + kpi(issuedToday, 'Issued today', 'ok') + kpi(avgTxt, 'Avg. time to issue') + '</div>' +
       chipBar('data-bf', f, [['pending', 'Pending', cnt.pending], ['issued', 'Issued', cnt.issued], ['notsupplied', 'Not supplied', cnt.notsupplied], ['all', 'All', rows.length]]);
     out += list.length ? '<div class="lcs">' + list.map(stockCard).join('') + '</div>' : '<p class="empty">' + (rows.length ? 'Nothing in this list.' : 'No stock room requests yet. Tap New request.') + '</p>';
@@ -1186,7 +1228,7 @@ main { padding-block: 12px 150px; gap: 11px; }
   function purchaseLines() {
     var out = [];
     S.items.forEach(function (r) {
-      if (r.kind !== 'purchase' || (S.dept && r.department !== S.dept) || !matchQ(r)) return;
+      if (r.kind !== 'purchase' || !inRng(r.createdAt, 'pboard') || (S.dept && r.department !== S.dept) || !matchQ(r)) return;
       r.items.forEach(function (it) { out.push({ r: r, it: it, st: rowStatus(r, it) }); });
     });
     return out;
@@ -1223,20 +1265,25 @@ main { padding-block: 12px 150px; gap: 11px; }
     var f = S.bf.purchase;
     var list = lines.filter(function (x) { return f === 'all' || (f === 'due' && x.st.cat === 'pending') || (f === 'bought' && x.st.cat === 'done') || (f === 'notbought' && x.st.cat === 'problem'); });
     list.sort(function (a, b) { return f === 'due' ? a.r.createdAt.localeCompare(b.r.createdAt) : b.r.createdAt.localeCompare(a.r.createdAt); });
-    var out = boardHead('Purchase', 'What was asked from the market, who bought it, bill and price, and why anything is still due.') +
+    var out = boardHead('Purchase', 'What was asked from the market, who bought it, bill and price, and why anything is still due.') + rangeBar('pboard') +
       '<div class="kpis">' + kpi(cnt.pending, 'Items still due', cnt.pending ? 'warn' : '') + kpi(late, 'Late (3+ days)', late ? 'bad' : '') + kpi(boughtToday, 'Bought today', 'ok') + kpi(askedToday, 'Asked today') + '</div>' +
       chipBar('data-bf', f, [['due', 'Due', cnt.pending], ['bought', 'Bought', cnt.done], ['notbought', 'Not bought', cnt.problem], ['all', 'All', lines.length]]);
     out += list.length ? '<div class="lcs">' + list.map(purchaseCard).join('') + '</div>' : '<p class="empty">' + (lines.length ? 'Nothing in this list.' : 'No purchase requests yet. Tap New request.') + '</p>';
     return out;
   }
-  function setRange(k) {
-    var t = new Date(), a = '', b = '';
-    if (k === 'today') { a = b = ymd(t); }
-    else if (k === '7') { var d = new Date(t); d.setDate(d.getDate() - 6); a = ymd(d); b = ymd(t); }
-    else if (k === 'month') { a = ymd(new Date(t.getFullYear(), t.getMonth(), 1)); b = ymd(t); }
-    S.rng = k; S.from = a; S.to = b;
-    $('#from').value = a; $('#to').value = b;
+  var RNG_OPTS = [['today', 'Today'], ['7', '7 days'], ['month', '1 month'], ['all', 'All time']];
+  function rangeBounds(k) {
+    var t = new Date();
+    if (k === 'today') return [ymd(t), ymd(t)];
+    if (k === '7') { var d = new Date(t); d.setDate(d.getDate() - 6); return [ymd(d), ymd(t)]; }
+    if (k === 'month') { var m = new Date(t); m.setDate(m.getDate() - 29); return [ymd(m), ymd(t)]; }
+    return ['', ''];
   }
+  function inRng(iso, tab) {
+    var b = rangeBounds(S.rngs[tab] || 'all'), d = ymd(new Date(iso));
+    return (!b[0] || d >= b[0]) && (!b[1] || d <= b[1]);
+  }
+  function rangeBar(tab) { return chipBar('data-rng', S.rngs[tab] || 'all', RNG_OPTS); }
   function accountsView() {
     var rows = [];
     S.items.forEach(function (r) {
@@ -1244,8 +1291,7 @@ main { padding-block: 12px 150px; gap: 11px; }
       r.items.forEach(function (it) {
         if (it.state !== 'purchased') return;
         var at = it.at || r.boughtAt || r.createdAt, d = ymd(new Date(at));
-        if (S.from && d < S.from) return;
-        if (S.to && d > S.to) return;
+        if (!inRng(at, 'accounts')) return;
         rows.push({ r: r, it: it, at: at });
       });
     });
@@ -1261,7 +1307,7 @@ main { padding-block: 12px 150px; gap: 11px; }
       if (x.r.status === 'refunded' && !seen[x.r.id]) { seen[x.r.id] = 1; refund += Number(x.r.refundAmount || 0); }
     });
     var out = boardHead('Accounts', 'Money summary: amount, price per unit, shop and bill for everything bought.') +
-      chipBar('data-rng', S.rng, [['today', 'Today'], ['7', 'Last 7 days'], ['month', 'This month'], ['all', 'All time']]) +
+      rangeBar('accounts') +
       '<div class="kpis m">' + kpi(esc(money(round2(spent))), 'Total spent') + kpi(rows.length, 'Items bought') + kpi(noBill, 'Bills missing', noBill ? 'bad' : 'ok') + kpi(esc(money(round2(refund))), 'Refunded') + '</div>';
     if (!rows.length) return out + '<p class="empty">Nothing was bought in this period.</p>';
     out += '<h3 class="sh">By shop</h3><div class="shops">' + Object.keys(shops).sort(function (a, b) { return shops[b].amt - shops[a].amt; }).map(function (k) {
@@ -1278,28 +1324,47 @@ main { padding-block: 12px 150px; gap: 11px; }
     return out;
   }
   function overview() {
-    var t = todayStr(), openS = [], openP = [], attn = [];
-    S.items.forEach(function (r) {
-      if (!isOpen(r)) return;
-      if ((r.origKind || r.kind) === 'stock' && r.kind === 'stock') openS.push(r);
-      if (r.kind === 'purchase') r.items.forEach(function (it) { var s = rowStatus(r, it); if (s.cat === 'pending') openP.push({ r: r, it: it }); });
-      var late = (hasDl(r) && daysTo(r.deadline) < 0) || waitDays(r) >= 3;
-      if (late) attn.push(r);
-    });
-    var askedToday = S.items.filter(function (r) { return ymd(new Date(r.createdAt)) === t; }).length;
-    var doneToday = S.items.filter(function (r) { var c = closedAt(r); return !isOpen(r) && c && ymd(new Date(c)) === t; }).length;
-    attn.sort(function (a, b) { return a.createdAt.localeCompare(b.createdAt); });
-    var m0 = ymd(new Date(new Date().getFullYear(), new Date().getMonth(), 1)), spent = 0, nb = 0;
-    S.items.forEach(function (r) { r.items.forEach(function (it) { if (it.state !== 'purchased') return; var d = ymd(new Date(it.at || r.boughtAt || r.createdAt)); if (d < m0) return; if (it.lineTotal != null) spent += Number(it.lineTotal); if (billOf(r, it) !== 'yes') nb++; }); });
-    var out = boardHead('Overview', 'Everything at a glance. Tap a tile to open it.') +
-      '<div class="kpis">' + kpi(openS.length, 'Stock room pending', openS.length ? 'warn' : 'ok', 'sboard') + kpi(openP.length, 'Purchase items due', openP.length ? 'warn' : 'ok', 'pboard') + kpi(askedToday, 'Asked today', '', 'tilldate') + kpi(doneToday, 'Completed today', 'ok', 'tilldate') + '</div>' +
-      '<h3 class="sh">Needs attention <i>' + attn.length + '</i></h3>';
-    out += attn.length ? '<div class="lcs">' + attn.slice(0, 8).map(function (r) {
+    var rows = S.items.filter(function (r) { return inRng(r.createdAt, 'overview') && (!S.dept || r.department === S.dept) && matchQ(r); });
+    var t = todayStr(), placed = rows.length;
+    var completed = rows.filter(function (r) { return r.status === 'handed' || r.status === 'arranged'; }).length;
+    var progress = rows.filter(isOpen).length, notful = placed - completed - progress;
+    var sRows = rows.filter(function (r) { return r.kind === 'stock'; }), pRows = rows.filter(function (r) { return r.kind === 'purchase'; });
+    function tally(list) {
+      var o = { items: 0, done: 0, wait: 0, bad: 0, spent: 0 };
+      list.forEach(function (r) { r.items.forEach(function (it) {
+        o.items++; var c = rowStatus(r, it).cat;
+        if (c === 'done') o.done++; else if (c === 'pending') o.wait++; else o.bad++;
+        if (it.state === 'purchased' && it.lineTotal != null) o.spent += Number(it.lineTotal);
+      }); });
+      return o;
+    }
+    var ts = tally(sRows), tp = tally(pRows);
+    var attn = rows.filter(function (r) { return isOpen(r) && ((hasDl(r) && daysTo(r.deadline) < 0) || waitDays(r) >= 3); }).sort(function (a, b) { return a.createdAt.localeCompare(b.createdAt); });
+    var row = function (k, v, cls) { return '<div class="ovr"><span>' + k + '</span><b class="' + (cls || '') + '">' + v + '</b></div>'; };
+    var out = boardHead('Overview', 'Orders placed by everyone in school, and how they are going.') + rangeBar('overview') +
+      '<div class="kpis">' + kpi(placed, 'Orders placed') + kpi(completed, 'Completed', 'ok') + kpi(progress, 'In progress', progress ? 'warn' : 'ok') + kpi(notful, 'Not fulfilled', notful ? 'bad' : '') + '</div>' +
+      '<div class="ovgrid"><div class="ovc"><h4>Stock Room</h4>' + row('Orders placed', sRows.length) + row('Items asked', ts.items) + row('Items issued', ts.done, 'okc') + row('Items not in stock', ts.bad, ts.bad ? 'badc' : '') + row('Items still pending', ts.wait, ts.wait ? 'warnc' : '') + '</div>' +
+      '<div class="ovc"><h4>Purchase</h4>' + row('Orders placed', pRows.length) + row('Items asked', tp.items) + row('Items bought', tp.done, 'okc') + row('Items not bought', tp.bad, tp.bad ? 'badc' : '') + row('Items still due', tp.wait, tp.wait ? 'warnc' : '') + row('Amount spent', esc(money(round2(tp.spent)))) + '</div></div>';
+    // departments
+    var dm = {};
+    rows.forEach(function (r) { var d = r.department || 'Not entered', o = dm[d] || (dm[d] = { n: 0, open: 0 }); o.n++; if (isOpen(r)) o.open++; });
+    var dk = Object.keys(dm).sort(function (a, b) { return dm[b].n - dm[a].n; });
+    out += '<h3 class="sh">By department</h3>' + (dk.length ? '<div class="ovc">' + dk.slice(0, 12).map(function (d) { return '<div class="ovr"><span>' + esc(d) + '</span><b>' + plural(dm[d].n, 'order') + (dm[d].open ? ' · <span class="warnc">' + dm[d].open + ' open</span>' : '') + '</b></div>'; }).join('') + '</div>' : '<p class="empty">No orders in this period.</p>');
+    // needs attention
+    out += '<h3 class="sh">Needs attention <i>' + attn.length + '</i></h3>';
+    out += attn.length ? '<div class="lcs">' + attn.slice(0, 6).map(function (r) {
       var pur = r.kind === 'purchase', due = dueInfo(r);
-      return '<div class="lc over" role="button" tabindex="0" data-id="' + esc(r.id) + '"><div class="lc-top"><div class="lc-title">' + itemsLine(r) + '</div><span class="pill ' + (pur ? 's-bought' : 's-pending') + '">' + (pur ? 'Purchase' : 'Stock room') + '</span></div>' +
+      return '<div class="lc over" role="button" tabindex="0" data-id="' + esc(r.id) + '"><div class="lc-top"><div class="lc-title">' + (r.items.length > 1 ? esc(plural(r.items.length, 'item')) + ': ' : '') + itemsLine(r) + '</div><span class="pill ' + (pur ? 's-bought' : 's-pending') + '">' + (pur ? 'Purchase' : 'Stock room') + '</span></div>' +
         '<div class="lc-sub"><b>' + esc(r.staff || '-') + '</b>' + (r.department ? ' · ' + esc(r.department) : '') + '</div><div class="lc-foot">' + waitChip(waitDays(r)) + (hasDl(r) ? '<span class="due ' + due.cls + '">' + esc(due.text) + '</span>' : '') + '</div></div>';
     }).join('') + '</div>' : '<p class="empty ok">All clear. Nothing is overdue or waiting more than 2 days.</p>';
-    out += '<h3 class="sh">Accounts this month</h3><div class="kpis two"><button type="button" class="kpi" data-go="accounts"><b>' + esc(money(round2(spent))) + '</b><span>Spent</span></button><button type="button" class="kpi ' + (nb ? 'bad' : 'ok') + '" data-go="accounts"><b>' + nb + '</b><span>Bills missing</span></button></div>';
+    // latest remarks
+    var rm = [];
+    rows.forEach(function (r) {
+      r.items.forEach(function (it) { if (it.remark) rm.push({ at: it.remarkAt || it.at || r.createdAt, by: it.remarkBy || it.by || '', text: it.item + ': ' + it.remark, r: r }); });
+      if (!r.items.some(function (it) { return it.remark; })) (r.log || []).forEach(function (e) { if (e.kind === 'remark' && e.text) rm.push({ at: e.at, by: e.by, text: (r.items.length > 1 ? r.items[0].item + ' +' + (r.items.length - 1) : r.item) + ': ' + e.text, r: r }); });
+    });
+    rm.sort(function (a, b) { return String(b.at).localeCompare(String(a.at)); });
+    out += '<h3 class="sh">Latest remarks from store manager and buyers</h3>' + (rm.length ? '<div class="ovc">' + rm.slice(0, 6).map(function (x) { return '<div class="rmk" data-id="' + esc(x.r.id) + '">' + esc(x.text) + '<small>' + esc(x.by || 'Team') + ' · ' + esc(fmtDTs(x.at)) + '</small></div>'; }).join('') + '</div>' : '<p class="empty">No remarks yet.</p>');
     return out;
   }
   function factSec(title, rows) {
@@ -1352,7 +1417,7 @@ main { padding-block: 12px 150px; gap: 11px; }
     if (!canWrite) return '';
     var open = isOpen(r), main = [], more = [];
     var btn = function (m, t, cls) { return '<button class="btn ' + (cls || '') + '" type="button" data-mode="' + m + '">' + t + '</button>'; };
-    if (r.status === 'pending' && r.kind === 'stock') main.push(btn('handover', 'Hand over to staff', 'primary'));
+    if (r.status === 'pending' && r.kind === 'stock' && r.items.length < 2) main.push(btn('handover', 'Hand over to staff', 'primary'));
     if (r.status === 'bought') main.push(btn('handover', 'Hand over to staff', 'primary'));
     if (r.status === 'unapproved' || r.status === 'unavailable' || r.status === 'cancelled') main.push(btn('reopen', 'Reopen this request', 'primary'));
     if (open && !r.approvedBy) more.push(btn('approve', 'Approve'));
@@ -1419,10 +1484,10 @@ main { padding-block: 12px 150px; gap: 11px; }
       '<div class="field"><span class="lbl">Type</span><div class="segopts">' +
       '<label class="segopt"><input type="radio" name="k" value="stock"' + (k === 'stock' ? ' checked' : '') + '><span>Stock order<small>Taken from the store room</small></span></label>' +
       '<label class="segopt"><input type="radio" name="k" value="purchase"' + (k === 'purchase' ? ' checked' : '') + '><span>Purchase<small>Needs to be bought</small></span></label></div></div>' +
-      '<div class="two">' + field('Department', '<input id="f-dept" type="text" required list="dl-dept" placeholder="For example: Housekeeping">') +
+      '<div class="two">' + field('Department', '<select id="f-dept" required>' + deptOptions('', false, null) + '</select>') +
       field('Person', '<input id="f-staff" type="text" required list="dl-staff" value="' + esc(me()) + '">', 'Who needs these items') + '</div>' +
       '<div class="field"><span class="lbl">Items in this order</span><div id="item-rows" class="irows">' + itemRow() + '</div>' +
-      '<div><button class="btn small" type="button" data-add-row>Add another item</button></div></div>' +
+      '<div><button class="btn add-item" type="button" data-add-row>+ Add another item</button></div><p class="hint">Add up to 10 items. Each item has its own quantity, and the store manager or buyer answers every item separately: issue or buy some, reject others.</p></div>' +
       field('Deadline', '<input id="f-date" type="date" required min="' + todayStr() + '">') +
       photoField('f-ref', 'Reference photo', false) +
       field('Approved by', '<input id="f-appr" type="text" list="dl-staff" placeholder="Optional">') +
@@ -1436,7 +1501,7 @@ main { padding-block: 12px 150px; gap: 11px; }
     var due = dueInfo(r), pur = r.kind === 'purchase';
     var head = '<div class="p-head"><span class="p-kind">' + (r.kind === 'stock' ? 'STOCK ORDER' : 'PURCHASE') + (r.routedFrom ? ' · SENT FROM ' + esc(r.routedFrom).toUpperCase() : '') + (r.sample ? ' · EXAMPLE' : '') + '</span><button class="x" type="button" data-close>Close</button></div>' +
       '<h2 class="p-title">' + esc(r.item) + '</h2><div class="p-qty">' + esc(qtyText(r)) + ' · #' + esc(code(r)) + '</div>';
-    var next = '<div class="next s-' + esc(r.status) + '"><b>' + esc(STATUS[r.status] || r.status) + '</b><span>' + esc(nextStep(r)) + '</span></div>' +
+    var next = '<div class="next s-' + esc(r.status) + '"><b>' + esc(stText(r)) + '</b><span>' + esc(nextStep(r)) + '</span></div>' +
       '<div class="c-due ' + due.cls + '">' + esc(due.text) + '</div>';
     var html;
     if (S.mode === 'view' || S.mode === 'item') {
@@ -1705,7 +1770,7 @@ main { padding-block: 12px 150px; gap: 11px; }
     if (t.closest('[data-done-buying]')) { finishBuying(); return; }
     if (t.closest('[data-add-row]')) {
       var box = $('#item-rows');
-      if (box && box.children.length < 30) { box.insertAdjacentHTML('beforeend', itemRow()); var ins = box.querySelectorAll('.i-item'); ins[ins.length - 1].focus(); }
+      if (box && box.children.length < 10) { box.insertAdjacentHTML('beforeend', itemRow()); var ins = box.querySelectorAll('.i-item'); ins[ins.length - 1].focus(); }
       return;
     }
     var rmb = t.closest('[data-rm-row]');
@@ -1761,8 +1826,6 @@ main { padding-block: 12px 150px; gap: 11px; }
   /* ---------- page events ---------- */
   function setTab(t, fromHash) {
     if (!HASH[t]) t = 'overview';
-    if (t === 'accounts') setRange(S.rng || 'month');
-    else if (S.tab === 'accounts') { S.from = ''; S.to = ''; $('#from').value = ''; $('#to').value = ''; }
     S.tab = t;
     try { window.scrollTo(0, 0); } catch (e) { }
     if (!fromHash) { try { history.replaceState(null, '', '#' + HASH[t]); } catch (e) { location.hash = HASH[t]; } }
@@ -1787,8 +1850,9 @@ main { padding-block: 12px 150px; gap: 11px; }
     var pic = e.target.closest('img.ilog-img');
     if (pic) { $('#lb-img').src = pic.src; $('#lightbox').hidden = false; return; }
     var go = e.target.closest('[data-go]'); if (go) { setTab(go.dataset.go); return; }
+    var rk = e.target.closest('.rmk[data-id]'); if (rk) { openSheet(rk.dataset.id, 'view'); return; }
     var bf = e.target.closest('[data-bf]'); if (bf) { S.bf[S.tab === 'sboard' ? 'stock' : 'purchase'] = bf.dataset.bf; renderList(); return; }
-    var rg = e.target.closest('[data-rng]'); if (rg) { setRange(rg.dataset.rng); renderList(); return; }
+    var rg = e.target.closest('[data-rng]'); if (rg) { S.rngs[S.tab] = rg.dataset.rng; renderList(); return; }
     var tr = e.target.closest('tr[data-id]');
     if (tr) { openSheet(tr.dataset.id, 'view'); return; }
     var c = e.target.closest('.card, .lc'); if (c) openSheet(c.dataset.id, 'view');
