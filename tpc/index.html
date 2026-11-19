@@ -47,7 +47,10 @@ h1{font-family:var(--f-head);font-size:24px;line-height:1.1;margin:2px 0 0}
 .pill.sample{background:var(--gold);color:var(--gold-ink)}
 .pill.today{background:rgba(255,255,255,.12);color:#fff;font-family:var(--f-mono)}
 .sw{display:grid;gap:6px;background:rgba(255,255,255,.08);border-radius:14px;padding:4px}
-.sw.two{grid-template-columns:1fr 1fr}.sw.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.sw.two{grid-template-columns:1fr 1fr}.sw.three{grid-template-columns:repeat(3,minmax(0,1fr))}.sw.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:640px){.sw.four{grid-template-columns:1fr 1fr}}
+.kind.mentor{background:var(--done-ink);color:var(--surface)}
+label.chip input{margin:0 2px 0 0}
 .sw button{all:unset;cursor:pointer;text-align:center;border-radius:10px;padding:9px 8px;color:#fff;font-family:var(--f-head);font-weight:600;font-size:15px}
 .sw button small{display:block;font:500 11.5px var(--f-body);color:var(--band-muted)}
 .sw button[aria-pressed="true"]{background:var(--gold);color:var(--gold-ink)}
@@ -174,6 +177,7 @@ details.rules li{margin:6px 0;font-size:13.5px}
     <div class="sw three" role="group" aria-label="Section">
       <button type="button" id="seg-prep" aria-pressed="true">Preparation<small>Before the lesson starts</small></button>
       <button type="button" id="seg-check" aria-pressed="false">Checking<small>Notebook, assignment, test</small></button>
+      <button type="button" id="seg-mentor" aria-pressed="false">Mentor tasks<small>Daily, weekend, class</small></button>
       <button type="button" id="seg-dash" aria-pressed="false">Dashboard<small>Pending work</small></button>
     </div>
   </div>
@@ -198,6 +202,7 @@ details.rules li{margin:6px 0;font-size:13.5px}
     <details class="rules"><summary>How dates and status are worked out</summary><ol id="rules"></ol></details>
   </div>
   <div id="dashView" class="stack" hidden></div>
+  <div id="mentorView" class="stack" hidden></div>
 </div></main>
 
 <script>
@@ -367,7 +372,7 @@ async function call(fn,args){ const r=await fetch(API_URL,{method:'POST',redirec
 function take(v){ let ch=false; (v.docs||[]).forEach(d=>{ if(d.p.indexOf('status/'+PFX)!==0) return; ch=true; if(d.del) delete DOCS[d.p]; else DOCS[d.p]=d.j; }); if(v.rev) REV=v.rev; return ch; }
 let toastT; function toast(m,err){ const t=$('toast'); t.textContent=m; t.className=err?'err':''; t.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>t.hidden=true,err?6000:2200); }
 async function loadAll(){ try{ take(await call('all')); LOADED=true; render(); }catch(e){ toast('Could not load saved updates. Check the internet connection.',1); } }
-async function poll(){ if(document.hidden||!LOADED) return; try{ if(take(await call('sync',[REV]))&&!picking&&!editing&&!manage) render(); }catch(e){} }
+async function poll(){ if(document.hidden||!LOADED) return; try{ if(take(await call('sync',[REV]))&&!picking&&!editing&&!manage&&!window.mBusy) render(); }catch(e){} }
 async function push(path,fields,msg){ if(!ME){ lock(); return; }
   const old=DOCS[path]; DOCS[path]=Object.assign({},old||{},fields); render();
   try{ const v=await call('merge',[path,fields]); DOCS[path]=v.j; if(v.rev) REV=Math.max(REV,v.rev); render(); if(msg) toast(msg); }
@@ -423,9 +428,10 @@ function allStaff(all){ const m=new Map(); all.forEach(r=>{ if(!m.has(r.t)) m.se
 
 function render(){
   ['mid','sen'].forEach(k=>$('wing-'+k).setAttribute('aria-pressed',String(wing===k)));
-  ['prep','check','dash'].forEach(k=>$('seg-'+k).setAttribute('aria-pressed',String(seg===k)));
+  ['prep','check','mentor','dash'].forEach(k=>$('seg-'+k).setAttribute('aria-pressed',String(seg===k)));
   $('todayPill').textContent='Today · '+nice(TODAY);
   const all=records(); all.forEach(r=>r.st=stat(r));
+  $('mentorView').hidden=seg!=='mentor'; if(seg==='mentor'){ $('listView').hidden=true; $('dashView').hidden=true; renderMentor(); return; } window.mBusy=false;
   const dash=seg==='dash'; $('listView').hidden=dash; $('dashView').hidden=!dash;
   if(dash){ renderDash(all); return; }
   const pool=all.filter(r=>r.wing===wing&&r.kind===seg);
@@ -559,15 +565,16 @@ function renderDash(all){
   const box=$('dashView'); box.replaceChildren();
   const rows=all.filter(r=>r.wing===wing&&(dashKind==='all'||r.kind===dashKind)&&r.st.left&&!OV.subRm[wing+'|'+r.g]);
   const items=rows.map(r=>{const nd=r.st.next, n=daysTo(nd); return {r,nd,n,what:r.els.filter(e=>isOpen(getSt(e,r))).map(e=>e.name)}}).sort((a,b)=>a.nd<b.nd?-1:a.nd>b.nd?1:0);
+  if(dashKind==='all'||dashKind==='mentor'){ mentorPending().forEach(o=>items.push(o)); items.sort((a,b)=>a.nd<b.nd?-1:a.nd>b.nd?1:0); }
   const near=items.filter(o=>o.n<=5);
   box.append(el('div',{class:'tools'},el('h2',{class:'lt'},'Pending work',el('small',{text:(wing==='mid'?'Middle grades · Classes 6 to 8':'Senior grades · Classes 9 to 11')+' · overdue and due within 5 working days'})),
-    el('div',{class:'mini',role:'group','aria-label':'Type of work'},...[['all','All'],['prep','Preparation'],['check','Checking']].map(([v,l])=>el('button',{type:'button','aria-pressed':String(dashKind===v),onclick:()=>{dashKind=v;render()}},l)))));
+    el('div',{class:'mini',role:'group','aria-label':'Type of work'},...[['all','All'],['prep','Preparation'],['check','Checking'],['mentor','Mentor tasks']].map(([v,l])=>el('button',{type:'button','aria-pressed':String(dashKind===v),onclick:()=>{dashKind=v;render()}},l)))));
   const tabs=el('div',{class:'tabs',role:'tablist','aria-label':'Arrange by',style:'position:static'});
   [['deadline','By deadline'],['dept','By department'],['class','By class']].forEach(([v,l])=>tabs.append(el('button',{type:'button',class:'tab',role:'tab','aria-selected':String(dashView===v),onclick:()=>{dashView=v;render()}},l)));
   box.append(tabs);
   const line=o=>el('button',{type:'button',class:'line'+(o.n<0?' late':o.n<=1?' soon':''),onclick:()=>go({seg:o.r.kind,subj:o.r.g,teacher:o.r.t})},
     el('span',{class:'ld'},el('b',{text:nice(o.nd)}),el('small',{text:o.n<0?'Overdue':o.n===0?'Due today':o.n===1?'Due next working day':'Upcoming'})),
-    el('span',{class:'lw'},el('b',{},el('span',{class:'kind '+o.r.kind,text:o.r.kind==='prep'?'Preparation':'Checking'}),o.r.cs+' · '+o.r.s+' '+o.r.l),el('small',{text:o.r.t+' · Pending: '+o.what.join(', ')})));
+    el('span',{class:'lw'},el('b',{},el('span',{class:'kind '+o.r.kind,text:o.r.kind==='prep'?'Preparation':o.r.kind==='mentor'?'Mentor task':'Checking'}),o.r.cs+' · '+o.r.s+' '+o.r.l),el('small',{text:o.r.t+' · Pending: '+o.what.join(', ')})));
   const section=(name,list,open)=>{ const late=list.some(o=>o.n<0);
     const d=el('details',{class:'sec',open:open?'':null},el('summary',{},el('span',{class:'nm',text:name}),
       !list.length?el('span',{class:'tag ok',text:'Nothing pending'}):late?el('span',{class:'tag late',text:'Overdue work'}):el('span',{class:'tag soon',text:'Work due soon'})));
@@ -576,7 +583,7 @@ function renderDash(all){
     box.append(section('Overdue',near.filter(o=>o.n<0),true),section('Due today · '+nice(TODAY),near.filter(o=>o.n===0),true),
       section('Due next working day · '+nice(addWork(TODAY,1)),near.filter(o=>o.n===1),false),section('Due later this week',near.filter(o=>o.n>1),false));
   } else if(dashView==='dept'){
-    subjectsOf(all).forEach(k=>box.append(section(k,near.filter(o=>o.r.g===k),false)));
+    subjectsOf(all).forEach(k=>box.append(section(k,near.filter(o=>o.r.g===k),false))); box.append(section('Mentor tasks',near.filter(o=>o.r.kind==='mentor'),false));
   } else {
     [...new Set(SECTIONS[wing].concat(near.map(o=>o.r.cs)))].forEach(cs=>box.append(section('Class '+cs,near.filter(o=>o.r.cs===cs),false)));
   }
@@ -584,13 +591,82 @@ function renderDash(all){
 }
 
 ['mid','sen'].forEach(k=>$('wing-'+k).addEventListener('click',()=>{wing=k;teacher='All';grade='All';picking=editing=null;render()}));
-['prep','check','dash'].forEach(k=>$('seg-'+k).addEventListener('click',()=>{seg=k;picking=editing=null;render()}));
+['prep','check','mentor','dash'].forEach(k=>$('seg-'+k).addEventListener('click',()=>{seg=k;picking=editing=null;render()}));
 $('leftOnly').addEventListener('click',()=>{leftOnly=!leftOnly;render()});
 $('manage').addEventListener('click',()=>{manage=!manage;editing=confirmKey=null;render()});
+/* ---------- Mentor tasks: daily, weekend and class tasks per section ---------- */
+const MENTOR={'6A':'Shailesh','6B':'Ishita','6C':'Monika','7A':'Swati','7B':'Yavnika','7C':'Jyotshna','8A':'Pallavi','8B':'Shreya','8C':'Ritika'};
+const M_ALL=Object.keys(SECTIONS).reduce((a,k)=>a.concat(SECTIONS[k]),[]), M_SLOT=['lp','viva','video','epl','ppt','key','test','book','obs'];
+const M_SEED=[{id:'d1',k:'d',t:'Attendance register'},{id:'d2',k:'d',t:'Action on feedback'},{id:'d3',k:'d',t:'Update on checking'},{id:'d4',k:'d',t:'Update on next preparation'},{id:'d5',k:'d',t:'Record register'},{id:'w1',k:'w',t:'Wall display'},{id:'w2',k:'w',t:'Certificate writing'}];
+const M_KIND={d:'Daily tasks',w:'Weekend tasks',o:'Class tasks'}, M_ONE={d:'Daily task',w:'Weekend task',o:'Class task'};
+let mKind='d', mWho='All', mDate=null, mPick=null, mEdit=null, mManage=false, mConfirm=null;
+const mentorOf=cs=>MENTOR[cs]||'Class mentor';
+const weekStart=s=>{const d=pd(s);d.setDate(d.getDate()-((d.getDay()+6)%7));return ks(d)};
+const addDays=(s,n)=>{const d=pd(s);d.setDate(d.getDate()+n);return ks(d)};
+function mTasks(){ const m=new Map(); M_SEED.forEach(t=>m.set(t.id,Object.assign({s:null,d:null},t)));
+  Object.keys(DOCS).forEach(p=>{ if(p.indexOf('status/'+PFX+'m.')!==0) return; const n=noteOf(p); if(!n) return; const id=p.slice(('status/'+PFX+'m.').length);
+    if(n.rm){ m.delete(id); return; } m.set(id,{id,k:n.k,t:n.t,s:n.s&&n.s!=='*'?String(n.s).split(','):null,d:n.d||null}); });
+  return [...m.values()]; }
+const mPeriod=(t,date)=>t.k==='d'?date:t.k==='w'?weekStart(date):'x';
+const mDue=(t,date)=>t.k==='d'?date:t.k==='w'?addDays(weekStart(date),5):(t.d||date);
+function mRef(t,cs,date){ const i=Math.max(0,M_ALL.indexOf(cs)); return {p:'status/'+PFX+'ms.'+h36(t.id+'|'+mPeriod(t,date)+'|'+Math.floor(i/9)),k:M_SLOT[i%9]}; }
+function mGet(t,cs,date){ const r=mRef(t,cs,date), j=DOCS[r.p], v=j&&j[r.k]; return v?(v==='X'?'I':v):'P'; }
+function mBy(t,cs,date){ const r=mRef(t,cs,date), j=DOCS[r.p]; if(!j||!j[r.k+'_by']) return ''; const d=new Date(j[r.k+'_at']); let h=d.getHours(); const ap=h<12?'AM':'PM'; h=h%12||12;
+  return ' · '+String(j[r.k+'_by']).split(' ')[0]+', '+d.getDate()+' '+MO[d.getMonth()]+' '+h+':'+String(d.getMinutes()).padStart(2,'0')+' '+ap; }
+const mSecs=t=>(t.s||M_ALL).filter(cs=>SECTIONS[wing].indexOf(cs)>=0);
+function pushTask(id,o,msg){ push('status/'+PFX+'m.'+id,{note:JSON.stringify(o)},msg); }
+/* pending mentor work for the dashboard: today's daily tasks, this week's weekend tasks, class tasks due within 5 working days */
+function mentorPending(){ const out=[];
+  mTasks().forEach(t=>{ if(t.k==='d'&&!isWork(pd(TODAY))) return; const due=mDue(t,TODAY), n=daysTo(due); if(t.k==='o'&&n>5) return;
+    mSecs(t).forEach(cs=>{ if(!isOpen(mGet(t,cs,TODAY))) return; out.push({r:{kind:'mentor',cs,c:cs.replace(/[A-C]$/,''),s:t.t,l:'',g:'Mentor tasks',t:mentorOf(cs)},nd:due,n,what:[M_ONE[t.k]]}); }); });
+  return out; }
+function secBoxes(id,sel){ const box=el('div',{class:'toolr',id}); SECTIONS[wing].forEach(cs=>{ const c=el('input',{type:'checkbox',id:id+'-'+cs,value:cs}); c.checked=!sel||sel.indexOf(cs)>=0; box.append(el('label',{class:'chip sm',for:id+'-'+cs},c,cs)); }); return box; }
+const boxVals=id=>[...document.querySelectorAll('#'+id+' input:checked')].map(c=>c.value);
+function secVal(id,old){ const mine=boxVals(id), other=(old||M_ALL).filter(cs=>SECTIONS[wing].indexOf(cs)<0), all=other.concat(mine); return all.length===M_ALL.length?'*':all.join(','); }
+function renderMentor(){
+  const box=$('mentorView'); box.replaceChildren(); if(!mDate) mDate=TODAY; const head=canDash(); if(!head) mManage=false; window.mBusy=!!(mPick||mEdit||mManage);
+  box.append(el('div',{class:'chips','aria-label':'Type of task'},...['d','w','o'].map(k=>el('button',{type:'button',class:'chip','aria-pressed':String(mKind===k),onclick:()=>{mKind=k;mPick=mEdit=null;render()}},M_KIND[k]))));
+  const names=[...new Set(SECTIONS[wing].filter(cs=>MENTOR[cs]).map(cs=>MENTOR[cs]))]; if(mWho!=='All'&&names.indexOf(mWho)<0) mWho='All';
+  const tabs=el('div',{class:'tabs',role:'tablist','aria-label':'Mentor'}); ['All'].concat(names).forEach(n=>tabs.append(el('button',{type:'button',class:'tab',role:'tab','aria-selected':String(mWho===n),onclick:()=>{mWho=n;mPick=mEdit=null;render()}},n))); box.append(tabs);
+  const wk=weekStart(mDate), step=mKind==='w'?7:0;
+  const nav=mKind==='o'?null:el('div',{class:'mini',role:'group','aria-label':'Change date'},
+    el('button',{type:'button','aria-label':'Earlier',onclick:()=>{mDate=step?addDays(mDate,-7):addWork(mDate,-1);mPick=null;render()}},'‹'),
+    el('button',{type:'button','aria-pressed':'true',onclick:()=>{mDate=TODAY;render()}},mKind==='w'?'Week of '+weekOf(mDate):nice(mDate)+(mDate===TODAY?' · today':'')),
+    el('button',{type:'button','aria-label':'Later',onclick:()=>{mDate=step?addDays(mDate,7):addWork(mDate,1);mPick=null;render()}},'›'));
+  box.append(el('div',{class:'tools'},el('h2',{class:'lt'},mWho==='All'?M_KIND[mKind]:mWho,el('small',{text:mKind==='d'?'To be completed every working day':mKind==='w'?'To be completed by Saturday each week':'One-time tasks allocated to class sections'})),
+    el('div',{class:'toolr'},nav,el('div',{class:'mini',role:'group','aria-label':'Class'},...[['All','All classes']].concat(GRADES[wing].map(g=>[g,g])).map(([v,l])=>el('button',{type:'button','aria-pressed':String(grade===v),onclick:()=>{grade=v;render()}},l))),
+      head?el('button',{type:'button',class:'chip sm','aria-pressed':String(mManage),onclick:()=>{mManage=!mManage;mEdit=mConfirm=null;render()}},'Edit tasks'):null)));
+  if(mManage){ const fT=el('input',{id:'mt-title',type:'text',maxlength:'70',placeholder:'e.g. Wall display'}), fD=el('input',{id:'mt-date',type:'date',value:TODAY});
+    box.append(el('div',{class:'panel'},el('h2',{text:'Add a '+M_ONE[mKind].toLowerCase()}),el('p',{class:'note',text:'Tick the sections this task is allocated to. Every change is saved for all staff with your name.'}),
+      el('div',{class:'form'},el('label',{},'Task title',fT),mKind==='o'?el('label',{},'Due date',fD):null),secBoxes('mt-secs',null),
+      el('div',{class:'toolr'},el('button',{type:'button',class:'btn',onclick:()=>{ const t=cut(fT.value,70); if(!t){fT.focus();return} if(!boxVals('mt-secs').length){toast('Tick at least one section.',1);return}
+        pushTask(mKind+Date.now().toString(36),{k:mKind,t,s:boxVals('mt-secs').length===SECTIONS[wing].length&&SECTIONS[wing].length===M_ALL.length?'*':boxVals('mt-secs').join(','),d:mKind==='o'?fD.value:''},'Task added'); }},'Add task')))); }
+  const list=el('div',{class:'list'}); let shown=0;
+  mTasks().filter(t=>t.k===mKind).sort((a,b)=>mKind==='o'?((a.d||'')<(b.d||'')?-1:1):0).forEach(t=>{
+    const secs=mSecs(t).filter(cs=>(grade==='All'||cs.replace(/[A-C]$/,'')===grade)&&(mWho==='All'||MENTOR[cs]===mWho)); if(!secs.length&&!(mManage&&mWho==='All'&&grade==='All')) return; shown++;
+    const due=mDue(t,mDate), n=daysTo(due), sts=secs.map(cs=>mGet(t,cs,mDate)), open=sts.filter(isOpen).length;
+    const tag=!secs.length?el('span',{class:'tag wait',text:'Not allocated in this grade group'}):!open?el('span',{class:'tag ok',text:'Completed'}):n<0?el('span',{class:'tag late',text:'Overdue · was due on '+nice(due)}):el('span',{class:'tag '+(n<=1?'soon':'wait'),text:'Pending · due '+(n===0?'today':'on '+nice(due))});
+    const card=el('div',{class:'card'}), els=el('div',{class:'els'}); let pk=null;
+    secs.forEach((cs,i)=>{ const v=sts[i], late=isOpen(v)&&n<0, key=t.id+'|'+cs; if(mPick===key) pk={cs,v};
+      els.append(el('button',{type:'button',class:'st '+(late?'L':v)+(mPick===key?' sel':''),onclick:()=>{mPick=mPick===key?null:key;render()}},el('b',{text:ICON[v]+' '+cs+' · '+mentorOf(cs)}),el('i',{text:(late?'Overdue':NAME[v])+mBy(t,cs,mDate)}))); });
+    card.append(el('div',{class:'head'},el('div',{class:'what'},el('div',{class:'t1'},el('span',{class:'subj',text:t.t})),
+      el('div',{class:'who',text:mKind==='d'?'Daily · '+nice(mDate):mKind==='w'?'Weekly · due on '+nice(due):'Due on '+nice(due)}),
+      el('div',{class:'t1'},tag,mManage?el('button',{type:'button',class:'btn ghost xs',onclick:()=>{mEdit=mEdit===t.id?null:t.id;mConfirm=null;render()}},'Change'):null))),els);
+    if(pk) card.append(el('div',{class:'pick'},el('b',{text:pk.cs+' · '+t.t+' — select the status'}),el('div',{class:'opts'},...['P','I','D','N'].map(v=>el('button',{type:'button',class:'st '+v+(pk.v===v?' sel':''),onclick:()=>{ const r=mRef(t,pk.cs,mDate); mPick=null; push(r.p,{[r.k]:v==='I'?'X':v},'Saved'); }},ICON[v]+' '+NAME[v])))));
+    if(mManage&&mEdit===t.id){ const eT=el('input',{id:'me-title',type:'text',maxlength:'70',value:t.t}), eD=el('input',{id:'me-date',type:'date',value:t.d||TODAY});
+      card.append(el('div',{class:'editbox'},el('b',{text:'Change this task'}),el('div',{class:'form'},el('label',{},'Task title',eT),t.k==='o'?el('label',{},'Due date',eD):null),el('p',{class:'note',text:'Allocated to these sections:'}),secBoxes('me-secs',t.s),
+        el('div',{class:'toolr'},el('button',{type:'button',class:'btn',onclick:()=>{ const tt=cut(eT.value,70); if(!tt){eT.focus();return} mEdit=null; pushTask(t.id,{k:t.k,t:tt,s:secVal('me-secs',t.s),d:t.k==='o'?eD.value:''},'Change saved'); }},'Save change'),
+          el('button',{type:'button',class:'btn warn',onclick:()=>{ if(mConfirm===t.id){ mEdit=mConfirm=null; pushTask(t.id,{k:t.k,t:t.t,rm:1},'Task removed'); } else { mConfirm=t.id; render(); } }},mConfirm===t.id?'Confirm: remove task':'Remove task'),
+          el('button',{type:'button',class:'btn ghost',onclick:()=>{mEdit=mConfirm=null;render()}},'Cancel')))); }
+    list.append(card); });
+  if(!shown) list.append(el('div',{class:'empty',text:mKind==='o'?'No class tasks have been allocated here yet.'+(head?' Select "Edit tasks" to add one.':''):'No tasks listed here.'}));
+  box.append(list,el('p',{class:'note',text:'Select a section to update its status.'+(head?' Heads can add, change, allocate or remove tasks with "Edit tasks".':'')}));
+}
+
 let outArm=0; $('meBtn').addEventListener('click',()=>{ if(!ME) return; if(Date.now()-outArm<4000){ setToken(''); lock(); outArm=0; } else { outArm=Date.now(); $('meBtn').textContent='Tap again to log out'; } });
 $('gateF').addEventListener('submit',async e=>{ e.preventDefault(); const n=$('gateN').value.trim(), w=$('gateW').value; if(!n){$('gateE').textContent='Type your name.';return} if(!w){$('gateE').textContent='Enter your password.';return}
   $('gateGo').disabled=true; $('gateE').textContent=''; try{ const r=await dcall('login',[n,w]); setToken(r.token); enter(r.state.me); }catch(x){ $('gateE').textContent=x.message||'Could not log in.'; } $('gateGo').disabled=false; });
-const render0=render; render=function(){ $('meBtn').textContent=ME?ME+' · log out':'Not logged in'; const cd=canDash(), sd=$('seg-dash'); sd.hidden=!cd; sd.parentNode.className='sw '+(cd?'three':'two'); if(!cd&&seg==='dash') seg='prep'; if(ME) render0(); };
+const render0=render; render=function(){ $('meBtn').textContent=ME?ME+' · log out':'Not logged in'; const cd=canDash(), sd=$('seg-dash'); sd.hidden=!cd; sd.parentNode.className='sw '+(cd?'four':'three'); if(!cd&&seg==='dash') seg='prep'; if(ME) render0(); };
 checkLogin(); setInterval(poll,10000); document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll()});
 </script>
 </body></html>
