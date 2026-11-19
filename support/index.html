@@ -15,19 +15,19 @@
   --bg:#f1f4f8;--card:#ffffff;--ink:#14202c;--mute:#586676;--line:#dce3ec;--soft:#e8eef6;
   --acc:#1d5fd0;--accT:#ffffff;
   --ok:#11794a;--okbg:#dcf4e6;--warn:#9a5a05;--warnbg:#fcebc9;--bad:#bb2d25;--badbg:#fde0dc;
-  --gGuard:#3b4cc2;--gClean:#0c7667;--gWater:#0a76a3;--gGarden:#4a7710;
+  --gGuard:#3b4cc2;--gClean:#0c7667;--gEve:#7a45c9;--gWater:#0a76a3;--gGarden:#4a7710;
   font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#0f1721;--card:#18222e;--ink:#e8eef6;--mute:#9aa8b8;--line:#2a3745;--soft:#223040;
   --acc:#6ea1ff;--accT:#08111d;
   --ok:#59d79a;--okbg:#14382a;--warn:#f2b45a;--warnbg:#3d2c10;--bad:#ff8f86;--badbg:#431b18;
-  --gGuard:#8e9bff;--gClean:#4fd1bd;--gWater:#5cc4f0;--gGarden:#9bd14d;color-scheme:dark}}
+  --gGuard:#8e9bff;--gClean:#4fd1bd;--gEve:#b79bff;--gWater:#5cc4f0;--gGarden:#9bd14d;color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0f1721;--card:#18222e;--ink:#e8eef6;--mute:#9aa8b8;--line:#2a3745;--soft:#223040;
   --acc:#6ea1ff;--accT:#08111d;
   --ok:#59d79a;--okbg:#14382a;--warn:#f2b45a;--warnbg:#3d2c10;--bad:#ff8f86;--badbg:#431b18;
-  --gGuard:#8e9bff;--gClean:#4fd1bd;--gWater:#5cc4f0;--gGarden:#9bd14d;color-scheme:dark}
+  --gGuard:#8e9bff;--gClean:#4fd1bd;--gEve:#b79bff;--gWater:#5cc4f0;--gGarden:#9bd14d;color-scheme:dark}
 html{padding-block:env(safe-area-inset-top,0px) env(safe-area-inset-bottom,0px)}
 img{max-width:100%}[hidden]{display:none!important}
 body{margin:0}
@@ -116,6 +116,18 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .lb img{max-width:96vw;max-height:92vh;border-radius:10px}
 .toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;z-index:70;font-size:14px;max-width:90vw}
 .hint{color:var(--mute);font-size:13.5px}
+.tg{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px}
+.wr{border:1px solid var(--line);border-left:5px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px;background:var(--card)}
+.wr.ok{border-left-color:var(--ok)}.wr.bad{border-left-color:var(--bad)}
+.wr .h{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.fh{margin:14px 0 8px;font-size:15px;font-weight:700}
+.rr{display:flex;gap:8px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px 8px 8px 12px;margin-bottom:8px}
+.rr .rn{flex:1;min-width:0;text-align:left;background:none;border:0;padding:4px 0}
+.rr .rn b{display:block;font-size:16px}.rr .rn small{color:var(--mute);font-size:13px}
+.tr{display:flex;gap:10px;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:14px;padding:10px;margin-bottom:8px;background:var(--card)}
+.tr.done{border-color:var(--ok);background:var(--okbg)}
+.tr .x{min-width:0;flex:1}.tr .x b{display:block}
+.tr .y{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
 @media(prefers-reduced-motion:no-preference){.btn:active,.ch:active{transform:scale(.98)}}
 .fis{flex:none;text-decoration:none;color:var(--ink);background:var(--soft);border-radius:10px;padding:8px 10px;font-size:13px;font-weight:700}
 </style>
@@ -215,14 +227,15 @@ const FISDB=(()=>{
 </script>
 <script>
 const G={
- guard:{label:'Guards',ico:'🛡️',c:'var(--gGuard)',every:120,tg:0},
- clean:{label:'Housekeeping',ico:'🧹',c:'var(--gClean)',every:30,tg:2},
- water:{label:'Waterman',ico:'💧',c:'var(--gWater)',every:60,tg:1},
- garden:{label:'Gardener',ico:'🌿',c:'var(--gGarden)',every:120,tg:1}
+ guard:{label:'Guards',ico:'🛡️',c:'var(--gGuard)',every:120,tg:0,h0:7,h1:16},
+ clean:{label:'Housekeeping',ico:'🧹',c:'var(--gClean)',every:30,tg:2,h0:7,h1:16},
+ eve:{label:'Evening Housekeeping',ico:'🌆',c:'var(--gEve)',every:60,tg:1,h0:14,h1:21},
+ water:{label:'Waterman',ico:'💧',c:'var(--gWater)',every:60,tg:1,h0:7,h1:16},
+ garden:{label:'Gardener',ico:'🌿',c:'var(--gGarden)',every:120,tg:1,h0:7,h1:16}
 };
-const GK=['guard','clean','water','garden'];
-const H0=7,H1=16;
-const PHOTO={guard:'opt',clean:'req',water:'req',garden:'req'};
+const GK=['guard','clean','eve','water','garden'];
+const FLOORS=['Admin','LG','Ground','First','Second','Third','Outside','Other'];
+const PHOTO={guard:'opt',clean:'req',eve:'req',water:'req',garden:'req'};
 const FORMS={
  guard:[
   {k:'where',l:'Where was he found?',o:['At gate','Guard room','Patrolling','!Not at post']},
@@ -240,6 +253,17 @@ const FORMS={
   {k:'doing',l:'What was the work?',o:['Watering','Weeding','Planting','Resting','!Not found']},
   {k:'quality',l:'Work quality',o:['Good','Average','!Poor']}]
 };
+FORMS.eve=FORMS.clean;
+const WFL=['Admin','LG','Ground','First','Second','Third','Staff','Other'];
+const DEFW=(()=>{const a=[{id:'w_admin',name:'Admin block',floor:'Admin',cub:0},{id:'w_front',name:'Front office',floor:'Admin',cub:0}];['LG','Ground','First','Second','Third'].forEach(f=>['Left','Right'].forEach(x=>a.push({id:'w_'+f.toLowerCase()+'_'+x[0].toLowerCase(),name:f+' floor – '+x+' side',floor:f,cub:0})));a.push({id:'w_staff',name:'Staff room washrooms',floor:'Staff',cub:0});return a})();
+const WASHF=[
+ {k:'clean',l:'Cleanliness',o:['Clean','!Needs cleaning']},
+ {k:'smell',l:'Smell',o:['Fresh','!Bad smell']},
+ {k:'leak',l:'Leakage (taps, flush, pipes)',o:['No leakage','!Leakage']},
+ {k:'dry',l:'Floor dryness',o:['Floor dry','!Floor wet']},
+ {k:'cubicles',l:'Cubicles and doors',o:['All OK','!Cubicle problem']},
+ {k:'toil',l:'Toiletries (soap, tissue)',o:['Stocked','!Finished']},
+ {k:'repair',l:'Repair or damage',o:['None','!Repair needed']}];
 const ls=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}};
 const $=id=>document.getElementById(id);
 const pad=n=>String(n).padStart(2,'0');
@@ -258,10 +282,12 @@ const shiftD=(k,n)=>{const d=pd(k);return dkey(new Date(d.getFullYear(),d.getMon
 const h12=x=>(x%12||12)+(x>=12?'p':'a');
 
 const ROLES=['Staff','Supervisor','Manager','Director'];
-let S={tab:'home',group:null,pid:null,date:today(),me:ls('fis_me')||'',role:ls('fis_role')||'',fg:'all'};
+let S={tab:'home',group:null,pid:null,date:today(),me:ls('fis_me')||'',role:ls('fis_role')||'',fg:'all',view:{}};
 const sup=()=>{const r=S.role==='sup'?'Supervisor':S.role;return ROLES.indexOf(r)>0};
 let staff=[],db=null;
-const D={log:{},visits:{},routine:{}};
+const D={log:{},visits:{},routine:{},wash:{}};
+let washrooms=null;
+const WL=()=>washrooms&&washrooms.length?washrooms:DEFW;
 const pcache={};
 let rt=0;const rsoon=()=>{clearTimeout(rt);rt=setTimeout(render,80)};
 
@@ -272,8 +298,8 @@ async function initDb(){
   db=FISDB;const lv=$('live');
   const paint=(s,n)=>{lv.textContent=s==='live'?'live':s==='offline'?'offline · '+n+' waiting':s==='setup'?'setting up':'connecting';lv.className='live'+(s==='live'?' on':'')};
   FISDB.onState(paint);
-  ['log','visits','routine'].forEach(c=>db.collection(c).onSnapshot(s=>{const m={};rows(s).forEach(r=>{m[r._id]=r});D[c]=m;rsoon()}));
-  db.collection('cfg').onSnapshot(s=>{rows(s).forEach(r=>{if(r._id==='staff')staff=r.list||[]});rsoon()});
+  ['log','visits','routine','wash'].forEach(c=>db.collection(c).onSnapshot(s=>{const m={};rows(s).forEach(r=>{m[r._id]=r});D[c]=m;rsoon()}));
+  db.collection('cfg').onSnapshot(s=>{rows(s).forEach(r=>{if(r._id==='staff')staff=r.list||[];if(r._id==='washrooms')washrooms=r.list||null});rsoon()});
   FISDB.start();paint(FISDB.state(),FISDB.pending());
 }
 function put(coll,id,obj){
@@ -311,10 +337,11 @@ function activeDate(p){ // night guard may still be on duty from yesterday
 }
 const isVis=v=>['Visit','Check-in','Watering check-in','Cleaning check-point'].indexOf(v.type)>=0;
 const vOf=(p,d=S.date)=>Object.values(D.visits).filter(v=>isVis(v)&&v.pid===p.id&&v.group===p.group&&v.date===d).sort((a,b)=>a.t.localeCompare(b.t));
+const defTasks=p=>p.tasks||(p.areas||[]).map((n,i)=>({id:'d'+i,name:n,from:'',to:'',floor:''}));
 function dayDoc(p,d){
   const id='ar_'+d+'_'+p.id,x=D.routine[id];
   if(x&&Array.isArray(x.items))return x;
-  return{id,date:d,pid:p.id,group:p.group,items:(p.areas||[]).map((n,i)=>({id:'d'+i,name:n,from:'',to:'',st:'',t:''}))};
+  return{id,date:d,pid:p.id,group:p.group,items:defTasks(p).map(t=>({id:'t_'+t.id,tid:t.id,name:t.name,from:t.from||'',to:t.to||'',floor:t.floor||'',st:'',t:''}))};
 }
 const itemsOf=(p,d=S.date)=>dayDoc(p,d).items.slice().sort((a,b)=>(a.from||'99').localeCompare(b.from||'99'));
 function mutItems(p,d,fn){const doc=clone(dayDoc(p,d));fn(doc.items);save('routine',doc.id,doc)}
@@ -334,6 +361,7 @@ function sheet(o){
     const close=v=>{L.innerHTML='';res(v)};
     const draw=()=>{
       const fh=o.fields.map(f=>{
+        if(f.type==='multi')return `<div class="fl">${esc(f.l)}</div><div class="chipset">${f.o.map(x=>`<button type="button" class="ch ${st[f.k].indexOf(x)>=0?'on':''}" data-mk="${f.k}" data-mv="${esc(x)}">${esc(x)}</button>`).join('')}</div>`;
         if(f.type==='chips')return `<div class="fl">${esc(f.l)}</div><div class="chipset">${f.o.map(x=>{const bad=x[0]==='!',lb=bad?x.slice(1):x;return `<button type="button" class="ch ${bad?'bad':''} ${st[f.k]===lb?'on':''}" data-k="${f.k}" data-v="${esc(lb)}">${esc(lb)}</button>`}).join('')}</div>`;
         if(f.type==='ta')return `<div class="fl">${esc(f.l)}</div><textarea id="f_${f.k}" rows="${f.rows||3}" data-i="${f.k}" placeholder="${esc(f.ph||'')}">${esc(st[f.k])}</textarea>`;
         return `<div class="fl">${esc(f.l)}</div><input id="f_${f.k}" data-i="${f.k}" type="${f.type||'text'}" value="${esc(st[f.k])}" placeholder="${esc(f.ph||'')}">`}).join('');
@@ -346,7 +374,8 @@ function sheet(o){
         ${o.del?`<button class="btn bad" id="sdl" style="width:100%;margin-top:10px">${arm?'Tap again to delete':'🗑 Delete'}</button>`:''}</div></div>`;
       hydrate();
       L.querySelector('#bd').onclick=e=>{if(e.target.id==='bd')close(null)};
-      L.querySelectorAll('.ch').forEach(b=>b.onclick=()=>{st[b.dataset.k]=st[b.dataset.k]===b.dataset.v?'':b.dataset.v;draw()});
+      L.querySelectorAll('.ch[data-k]').forEach(b=>b.onclick=()=>{st[b.dataset.k]=st[b.dataset.k]===b.dataset.v?'':b.dataset.v;draw()});
+      L.querySelectorAll('.ch[data-mk]').forEach(b=>b.onclick=()=>{const a=st[b.dataset.mk],i=a.indexOf(b.dataset.mv);if(i>=0)a.splice(i,1);else a.push(b.dataset.mv);draw()});
       L.querySelectorAll('[data-i]').forEach(e=>e.oninput=()=>{st[e.dataset.i]=e.value});
       const sp=L.querySelector('#sp');if(sp)sp.onclick=async()=>{const d=await pickPhoto();if(d){pic=d;draw()}};
       L.querySelector('#scn').onclick=()=>close(null);
@@ -364,11 +393,11 @@ async function needName(){if(S.me)return true;return identify()}
 async function welcome(){if(S.me&&S.role)return;await identify();render()}
 
 /* ---------- flows ---------- */
-async function visitFlow(p,v){
+async function visitFlow(p,v,pre){
   if(!(await needName()))return;
-  const g=p.group,items=(g==='clean'||g==='garden')?itemsOf(p,v?v.date:S.date):[];
+  const g=p.group,items=itemsOf(p,v?v.date:S.date);
   const f=[];
-  if(items.length)f.push({k:'area',l:'Which area?',type:'chips',o:items.map(i=>i.name),val:v?v.area:''});
+  if(items.length)f.push({k:'area',l:'Which area?',type:'chips',o:items.map(i=>i.name),val:v?v.area:(pre||'')});
   FORMS[g].forEach(x=>f.push({k:x.k,l:x.l,type:'chips',o:x.o,val:v&&v.f?v.f[x.k]:''}));
   if(items.length)f.push({k:'astatus',l:'Area status now',type:'chips',o:['Not started','Working','Done'],val:''});
   f.push({k:'remark',l:'Remark – what did you see?',type:'ta',val:v?v.remark:'',ph:'Write in your own words'});
@@ -403,6 +432,7 @@ async function outFlow(p){
   if(p.group==='water'){const r=await sheet({title:'Log out – '+p.name,sub:'Time: '+hhmm(),fields:[],photo:'opt',ok:'Log out now'});if(!r)return;pic=r.pic}
   const ph=pic?await savePhoto(pic):'';
   mutLog(p,d,l=>{l.out=hhmm();if(ph)l.outPh=ph});
+  if(sup())await transferFlow(p,true);
 }
 async function timeFlow(p,which){
   const d=activeDate(p),l=getLog(p,d);
@@ -411,42 +441,106 @@ async function timeFlow(p,which){
   mutLog(p,d,x=>{x[which]=r.del?'':r.st.t;if(which==='in'&&!r.del)x.att='P'});
 }
 async function areaFlow(p,it){
-  const r=await sheet({title:it?'Edit area':'Add area for today',sub:'Only changes '+fmtD(S.date)+'. Daily default list is in Setup.',
-    fields:[{k:'name',l:'Area name',type:'text',val:it?it.name:'',ph:'e.g. Ground floor classes'},{k:'from',l:'From (optional)',type:'time',val:it?it.from:''},{k:'to',l:'To (optional)',type:'time',val:it?it.to:''}],
-    photo:'none',del:!!it,validate:s=>s.name?'':'Type the area name'});
+  const r=await sheet({title:it?'Edit task':'Add task',sub:'Task name, time limit and floor.',
+    fields:[{k:'name',l:'Task / area',type:'text',val:it?it.name:'',ph:'e.g. Print gate, Assembly area, Nursery A'},{k:'from',l:'From',type:'time',val:it?it.from:''},{k:'to',l:'To (time limit)',type:'time',val:it?it.to:''},{k:'floor',l:'Floor / block',type:'chips',o:FLOORS,val:it?it.floor:''},{k:'scope',l:'Apply to',type:'chips',o:['Today only','Every day'],val:'Today only'}],
+    photo:'none',del:!!it,validate:s=>s.name?'':'Type the task name'});
   if(!r)return;
+  const every=r.st.scope==='Every day',nm=r.st.name,fr=r.st.from,to=r.st.to,fl=r.st.floor;
+  let tid=it&&it.tid;
+  if(every){
+    let ts=defTasks(p).slice();
+    if(it&&r.del){if(tid)ts=ts.filter(x=>x.id!==tid)}
+    else if(it&&tid)ts=ts.map(x=>x.id===tid?{id:tid,name:nm,from:fr,to:to,floor:fl}:x);
+    else if(!r.del){tid='k'+uid();ts.push({id:tid,name:nm,from:fr,to:to,floor:fl})}
+    saveStaff(staff.map(x=>x.id===p.id?Object.assign({},x,{tasks:ts}):x));
+  }
   mutItems(p,S.date,a=>{
-    if(it&&r.del){const i=a.findIndex(x=>x.id===it.id);if(i>=0)a.splice(i,1);return}
-    if(it){const x=a.find(y=>y.id===it.id);if(x){x.name=r.st.name;x.from=r.st.from;x.to=r.st.to}}
-    else a.push({id:'a'+uid(),name:r.st.name,from:r.st.from,to:r.st.to,st:'',t:''});
+    if(it&&r.del){const i=a.findIndex(y=>y.id===it.id);if(i>=0)a.splice(i,1);return}
+    if(it){const x=a.find(y=>y.id===it.id);if(x){x.name=nm;x.from=fr;x.to=to;x.floor=fl}}
+    else a.push({id:every?'t_'+tid:'a'+uid(),tid:every?tid:'',name:nm,from:fr,to:to,floor:fl,st:'',t:''});
   });
+  toast(every?'Saved for every day':'Saved for today');
 }
 async function moveFlow(p,it){
-  const others=people(p.group).filter(x=>x.id!==p.id);
-  const r=await sheet({title:'Move "'+it.name+'"',sub:others.length?'Give it to another person or another time.':'Only one person here. You can change the time.',
-    fields:[others.length?{k:'to',l:'Move to person',type:'chips',o:others.map(x=>x.name),val:''}:null,{k:'from',l:'New start time',type:'time',val:it.from},{k:'end',l:'New end time',type:'time',val:it.to}].filter(Boolean),photo:'none',ok:'Move'});
+  const others=staff.filter(x=>x.id!==p.id).sort((a,b)=>(b.group===p.group)-(a.group===p.group));
+  const lbl=x=>x.name+(x.group!==p.group?' ('+G[x.group].label+')':'');
+  const r=await sheet({title:'Move "'+it.name+'"',sub:'Give this task to someone else, or change the time.',
+    fields:[{k:'to',l:'Give to (leave empty to keep with '+p.name+')',type:'chips',o:others.map(lbl),val:''},{k:'from',l:'New start time',type:'time',val:it.from},{k:'end',l:'New end time',type:'time',val:it.to}],photo:'none',ok:'Move'});
   if(!r)return;
-  const tp=r.st.to?others.find(x=>x.name===r.st.to):p;
+  const tp=r.st.to?others.find(x=>lbl(x)===r.st.to):p;
   if(tp.id===p.id){mutItems(p,S.date,a=>{const x=a.find(y=>y.id===it.id);if(x){x.from=r.st.from;x.to=r.st.end}});return}
   mutItems(p,S.date,a=>{const i=a.findIndex(y=>y.id===it.id);if(i>=0)a.splice(i,1)});
-  mutItems(tp,S.date,a=>a.push({id:'a'+uid(),name:it.name,from:r.st.from,to:r.st.end,st:it.st,t:it.t}));
+  mutItems(tp,S.date,a=>a.push({id:'a'+uid(),name:it.name,from:r.st.from,to:r.st.end,floor:it.floor||'',st:it.st,t:it.t,was:p.name}));
   toast('Moved to '+tp.name);
+}
+async function transferFlow(p,quiet){
+  const open=itemsOf(p).filter(x=>x.st!=='done');
+  if(!open.length){if(!quiet)toast('No pending tasks');return}
+  const others=staff.filter(x=>x.id!==p.id).sort((a,b)=>(b.group===p.group)-(a.group===p.group));
+  if(!others.length){if(!quiet)toast('No one else to give tasks to');return}
+  const lbl=x=>x.name+(x.group!==p.group?' ('+G[x.group].label+')':'');
+  const names=open.map((x,i)=>(x.from?x.from+' ':'')+x.name+' #'+(i+1));
+  const r=await sheet({title:'Move tasks from '+p.name,sub:p.name+' has '+open.length+' pending task'+(open.length>1?'s':'')+'. They keep the same time.',
+    fields:[{k:'sel',type:'multi',l:'Tasks to move',o:names,val:names.slice()},{k:'to',type:'chips',l:'Give to',o:others.map(lbl),val:''}],photo:'none',ok:'Move tasks',
+    validate:s=>!s.sel.length?'Choose a task':!s.to?'Choose who gets them':''});
+  if(!r)return;
+  const tp=others.find(x=>lbl(x)===r.st.to),moving=open.filter((x,i)=>r.st.sel.indexOf(names[i])>=0);
+  mutItems(p,S.date,a=>{moving.forEach(m=>{const i=a.findIndex(y=>y.id===m.id);if(i>=0)a.splice(i,1)})});
+  mutItems(tp,S.date,a=>moving.forEach(m=>a.push({id:'a'+uid(),name:m.name,from:m.from,to:m.to,floor:m.floor||'',st:'',t:'',was:p.name})));
+  toast(moving.length+' task'+(moving.length>1?'s':'')+' moved to '+tp.name);
 }
 async function staffFlow(p){
   const r=await sheet({title:p?'Edit '+p.name:'Add staff',
     fields:[{k:'name',l:'Name',type:'text',val:p?p.name:''},
      {k:'group',l:'Work',type:'chips',o:GK.map(k=>G[k].label),val:p?G[p.group].label:''},
-     {k:'role',l:'Post / section (e.g. Main Gate, Back kitchen)',type:'text',val:p?p.role:''},
-     {k:'shift',l:'Shift (guards)',type:'chips',o:['Day','Night'],val:p?p.shift:'Day'},
-     {k:'areas',l:'Daily default areas, one per line (Housekeeping, Gardener)',type:'ta',rows:5,val:p?(p.areas||[]).join('\n'):''}],
+     {k:'role',l:'Post / team / section (e.g. Main Gate, Back kitchen, Floor 1 team)',type:'text',val:p?p.role:''},
+     {k:'shift',l:'Shift (guards)',type:'chips',o:['Day','Night'],val:p?p.shift:'Day'}],
     photo:'none',del:!!p,validate:s=>!s.name?'Type the name':!s.group?'Choose the work':''});
   if(!r)return;
   if(r.del){saveStaff(staff.filter(x=>x.id!==p.id));return}
   const g=GK.find(k=>G[k].label===r.st.group);
-  const o={id:p?p.id:'s'+uid(),name:r.st.name,group:g,role:r.st.role||'',shift:r.st.shift||'Day',areas:r.st.areas.split('\n').map(x=>x.trim()).filter(Boolean)};
+  const o=Object.assign({},p||{areas:[]},{id:p?p.id:'s'+uid(),name:r.st.name,group:g,role:r.st.role||'',shift:r.st.shift||'Day'});
   saveStaff(p?staff.map(x=>x.id===p.id?o:x):staff.concat([o]));
 }
-
+async function bulkFlow(){
+  const r=await sheet({title:'Add many names',sub:'Type one name on each line.',
+    fields:[{k:'group',l:'Work',type:'chips',o:GK.map(k=>G[k].label),val:''},{k:'role',l:'Team / floor / post (optional, same for all)',type:'text'},{k:'names',l:'Names',type:'ta',rows:8,ph:'Name 1\nName 2\nName 3'}],
+    photo:'none',ok:'Add all',validate:s=>!s.group?'Choose the work':!s.names.trim()?'Type at least one name':''});
+  if(!r)return;
+  const g=GK.find(k=>G[k].label===r.st.group);
+  const add=r.st.names.split('\n').map(x=>x.trim()).filter(Boolean).map(n=>({id:'s'+uid(),name:n,group:g,role:r.st.role||'',shift:'Day',areas:[]}));
+  saveStaff(staff.concat(add));toast(add.length+' added');
+}
+async function washFlow(w,v){
+  if(!(await needName()))return;
+  const cl=people('clean').map(p=>p.name).concat(['Evening team','Not known']);
+  const F=[{k:'who',l:'Who cleaned it?',type:'chips',o:cl,val:v?v.who:''}];
+  WASHF.forEach(x=>F.push({k:x.k,l:x.l,type:'chips',o:x.o,val:v&&v.f?v.f[x.k]:''}));
+  F.push({k:'cubno',l:'Which cubicle has a problem? (optional)',type:'text',val:v?v.cubno:''});
+  F.push({k:'remark',l:'Remark – repair, damage, smell, cleaning, toiletries',type:'ta',val:v?v.remark:'',ph:'Write what you saw'});
+  if(v)F.push({k:'t',l:'Time',type:'time',val:v.t});
+  const r=await sheet({title:(v?'Edit – ':'Inspect – ')+w.name,sub:v?'':'Time is saved automatically: '+hhmm(),fields:F,photo:'req',photoId:v&&v.ph,del:!!v,ok:'Save inspection',
+    validate:(s,pic,pid)=>(!pic&&!pid)?'Take a photo of the washroom':''});
+  if(!r)return;
+  if(r.del){del('wash',v.id);return}
+  const ph=r.pic?await savePhoto(r.pic):r.pid;
+  const f={};WASHF.forEach(x=>{if(r.st[x.k])f[x.k]=r.st[x.k]});
+  const base=v?clone(v):{id:'w'+uid(),date:S.date,t:hhmm(),by:S.me,wid:w.id,wname:w.name,floor:w.floor||''};
+  if(v&&r.st.t)base.t=r.st.t;
+  save('wash',base.id,Object.assign(base,{who:r.st.who||'',f,cubno:r.st.cubno||'',remark:r.st.remark||'',ph}));
+  toast('Inspection saved '+base.t);
+}
+async function wsFlow(w){
+  const r=await sheet({title:w?'Edit washroom':'Add washroom',
+    fields:[{k:'name',l:'Name',type:'text',val:w?w.name:'',ph:'e.g. Second floor – Left side'},{k:'floor',l:'Floor / block',type:'chips',o:WFL,val:w?w.floor:''},{k:'cub',l:'Number of cubicles (optional)',type:'number',val:w&&w.cub?w.cub:''}],
+    photo:'none',del:!!w,validate:s=>!s.name?'Type the name':!s.floor?'Choose the floor':''});
+  if(!r)return;
+  let list=WL().slice();
+  if(w&&r.del)list=list.filter(x=>x.id!==w.id);
+  else if(w)list=list.map(x=>x.id===w.id?{id:w.id,name:r.st.name,floor:r.st.floor,cub:+r.st.cub||0}:x);
+  else list.push({id:'w'+uid(),name:r.st.name,floor:r.st.floor,cub:+r.st.cub||0});
+  washrooms=list;rsoon();put('cfg','washrooms',{list});
+}
 /* ---------- views ---------- */
 const statusOf=p=>{
   const d=activeDate(p),l=getLog(p,d);
@@ -456,7 +550,7 @@ const statusOf=p=>{
   return['Not in yet','warn'];
 };
 function strip(p){
-  const g=p.group,tg=G[g].tg;if(!tg)return '';
+  const g=p.group,tg=G[g].tg;if(!tg)return '';const H0=G[g].h0,H1=G[g].h1;
   const vs=vOf(p),cnt={};vs.forEach(v=>{const h=+v.t.slice(0,2);cnt[h]=(cnt[h]||0)+1});
   const l=getLog(p),isT=S.date===today(),nh=new Date().getHours();
   const a=l.in?+l.in.slice(0,2):null,b=l.out?+l.out.slice(0,2):(isT?nh:H1);
@@ -469,7 +563,6 @@ function strip(p){
   return `<div class="strip" aria-label="Visits per hour">${h}</div>`;
 }
 function progress(p){
-  if(p.group!=='clean'&&p.group!=='garden')return '';
   const it=itemsOf(p);if(!it.length)return '';
   const n=it.filter(x=>x.st==='done').length,pc=Math.round(n/it.length*100);
   return `<div class="m">Areas done ${n}/${it.length} (${pc}%)</div><div class="bar"><i style="width:${pc}%"></i></div>`;
@@ -509,10 +602,41 @@ function rHome(){
      ${dn?`<div class="m"><span class="tag bad">${dn} need a visit</span></div>`:''}</button>`}).join('');
   return h;
 }
+function taskRow(p,x,withDate){
+  const vs=vOf(p),lv=vs.filter(v=>v.area===x.name).pop(),over=S.date===today()&&x.st!=='done'&&x.to&&x.to<hhmm();
+  return `<div class="tr ${x.st==='done'?'done':''}"><div class="x"><b>${esc(x.name)}</b><div class="hint">${x.from?esc(x.from)+(x.to?' – '+esc(x.to):''):'Any time'} · ${esc(p.name)}${x.floor?' · '+esc(x.floor):''}</div>
+   <div class="tg">${x.st==='done'?`<span class="tag ok">Done ${esc(x.t)}</span>`:x.st==='working'?`<span class="tag warn">Working</span>`:`<span class="tag">Pending</span>`}${over?'<span class="tag bad">Overdue</span>':''}${x.was?`<span class="tag warn">from ${esc(x.was)}</span>`:''}${lv?`<span class="tag ok">Visited ${esc(lv.t)}</span>`:''}</div></div>
+   <div class="y">${lv&&lv.ph?img(lv.ph,'s'):''}${sup()?`<button class="btn sm" data-act="avisit" data-p="${p.id}" data-v="${x.id}">🧭 Visit</button>`:''}</div></div>`;
+}
+function rTaskViews(g,v){
+  const rows=[];people(g).forEach(p=>itemsOf(p).forEach(x=>rows.push({p,x})));
+  if(!rows.length)return `<div class="card empty">No tasks assigned yet.<br>Open a person and tap "Add task".</div>`;
+  const keyOf=r=>v==='floor'?(r.x.floor||'No floor'):v==='time'?(r.x.from?r.x.from.slice(0,2)+':00':'No time'):r.x.name;
+  const m={};rows.forEach(r=>{const k=keyOf(r);(m[k]=m[k]||[]).push(r)});
+  let keys=Object.keys(m);
+  if(v==='floor')keys.sort((a,b)=>{const i=FLOORS.indexOf(a),j=FLOORS.indexOf(b);return (i<0?99:i)-(j<0?99:j)});
+  else keys.sort();
+  return keys.map(k=>{
+    const rs=m[k].sort((a,b)=>(a.x.from||'99').localeCompare(b.x.from||'99')),d=rs.filter(r=>r.x.st==='done').length,who={};rs.forEach(r=>who[r.p.id]=1);
+    const pc=Math.round(d/rs.length*100);
+    return `<div class="fh">${v==='floor'&&k!=='No floor'&&k!=='Admin'&&k!=='Outside'&&k!=='Other'?esc(k)+' floor':esc(k)} <span class="hint" style="font-weight:500">· ${Object.keys(who).length} staff · ${d}/${rs.length} done</span></div><div class="bar" style="margin:0 0 8px"><i style="width:${pc}%"></i></div>`+rs.map(r=>taskRow(r.p,r.x)).join('');
+  }).join('');
+}
+function rRoster(ps){
+  return ps.map(p=>{const l=getLog(p,activeDate(p)),st=statusOf(p);
+    return `<div class="rr"><button class="rn" data-act="pick" data-g="${p.group}" data-v="${p.id}"><b>${esc(p.name)}</b><small>${esc(p.role||'')} · In ${l.in||'–'} · Out ${l.out||'–'}</small></button><span class="tag ${st[1]}">${esc(st[0])}</span>${!l.in||l.out?`<button class="btn ok sm" data-act="qin" data-v="${p.id}">IN</button>`:`<button class="btn warn sm" data-act="qout" data-v="${p.id}">OUT</button>`}</div>`}).join('');
+}
 function rGroup(){
   const g=S.group,ps=people(g);
   let h=dateBar();
   if(!ps.length)return h+`<div class="card empty">No ${G[g].label.toLowerCase()} staff yet.<br><br>${sup()?'<button class="btn" data-act="tab" data-v="setup">Add in Setup</button>':''}</div>`;
+  const multi=(g==='clean'||g==='eve');
+  const v=S.view[g]||(g==='eve'?'roster':'people');
+  if(multi){
+    h+=`<div class="chips">${[['roster','Roster'],['people','People'],['floor','By floor'],['time','By time'],['area','By area']].map(x=>`<button class="${v===x[0]?'on':''}" data-act="gview" data-v="${x[0]}">${x[1]}</button>`).join('')}</div>`;
+    if(v==='floor'||v==='time'||v==='area')return h+rTaskViews(g,v);
+    if(v==='roster')return h+rRoster(ps);
+  }
   if(g==='guard'){
     ['Day','Night'].forEach(sh=>{const x=ps.filter(p=>(p.shift||'Day')===sh);if(x.length)h+=`<h2 style="margin:6px 0 8px;font-size:15px">${sh==='Day'?'☀️ Day guards':'🌙 Night guards'}</h2>`+x.map(pcard).join('')});
   }else h+=ps.map(pcard).join('');
@@ -532,19 +656,20 @@ function rPerson(){
    </div></div>`;
   if(sup())h+=`<button class="btn big" data-act="visit" style="margin-bottom:12px">🧭 Log supervisor visit now</button>`;
   h+=`<div class="card"><h2>Visits ${S.date===today()?'today':'on this day'}: ${vs.length}</h2>${sv&&S.date===today()?`<div style="margin-bottom:8px">${overdue(p)?`<span class="tag bad">${sv.none?'No visit since log-in':'Last visit '+ago(sv.min)}</span>`:`<span class="tag ok">Last visit ${ago(sv.min)}</span>`} <span class="hint">Visit every ${G[g].every} min</span></div>`:''}${strip(p)||''}${G[g].tg?`<div class="hint" style="margin-top:6px">Visits per hour. Target ${G[g].tg}.</div>`:''}</div>`;
-  if(g==='clean'||g==='garden')h+=rAreas(p);
+  h+=rAreas(p);
   h+=`<h2 style="margin:6px 0 8px;font-size:15px">Visit details</h2>`+(vs.slice().reverse().map(v=>vcard(v,false)).join('')||`<div class="card empty">No visit logged yet.</div>`);
   return h;
 }
 function rAreas(p){
-  const it=itemsOf(p),vs=vOf(p);
-  let h=`<div class="card"><div class="row sp" style="margin-bottom:8px"><h2 style="margin:0">Areas today</h2>${sup()?'<button class="btn sm" data-act="aadd">＋ Add area</button>':''}</div>`;
-  if(!it.length)h+=`<div class="empty">No areas. Tap "Add area", or set daily defaults in Setup.</div>`;
+  const it=itemsOf(p),vs=vOf(p),nowT=hhmm(),isT=S.date===today(),n=it.filter(x=>x.st==='done').length;
+  let h=`<div class="card"><div class="row sp" style="margin-bottom:8px"><h2 style="margin:0">Tasks today (${n}/${it.length})</h2>${sup()?'<button class="btn sm" data-act="aadd">＋ Add task</button>':''}</div>`;
+  if(sup()&&it.some(x=>x.st!=='done'))h+=`<button class="btn warn sm" data-act="transfer" style="margin-bottom:10px">↔ Move pending tasks to someone else</button>`;
+  if(!it.length)h+=`<div class="empty">No tasks yet.${sup()?' Tap "Add task", choose Every day to repeat it daily.':''}</div>`;
   h+=it.map(x=>{
-    const lv=vs.filter(v=>v.area===x.name&&v.ph).pop();
-    return `<div class="ar ${x.st==='done'?'done':''}"><div class="h"><div><b>${esc(x.name)}</b><div class="hint">${x.from?esc(x.from)+(x.to?' – '+esc(x.to):''):'Any time'}${x.t?' · marked '+esc(x.t):''}</div></div>${lv?img(lv.ph,'s'):''}</div>
+    const lv=vs.filter(v=>v.area===x.name).pop(),over=isT&&x.st!=='done'&&x.to&&x.to<nowT;
+    return `<div class="ar ${x.st==='done'?'done':''}"><div class="h"><div><b>${esc(x.name)}</b><div class="hint">${x.from?esc(x.from)+(x.to?' – '+esc(x.to):''):'Any time'}${x.floor?' · '+esc(x.floor):''}${x.t?' · marked '+esc(x.t):''}</div><div class="tg">${over?'<span class="tag bad">Overdue</span>':''}${x.was?`<span class="tag warn">from ${esc(x.was)}</span>`:''}${lv?`<span class="tag ok">Visited ${esc(lv.t)}</span>`:''}</div></div>${lv&&lv.ph?img(lv.ph,'s'):''}</div>
      <div class="seg3"><button class="${!x.st?'on':''}" data-act="ast" data-v="${x.id}" data-s="">Pending</button><button class="${x.st==='working'?'on working':''}" data-act="ast" data-v="${x.id}" data-s="working">Working</button><button class="${x.st==='done'?'on done':''}" data-act="ast" data-v="${x.id}" data-s="done">Done</button></div>
-     ${sup()?`<div class="row" style="margin-top:8px"><button class="btn sec sm" data-act="aedit" data-v="${x.id}">✎ Edit</button><button class="btn sec sm" data-act="amove" data-v="${x.id}">↔ Move</button></div>`:''}</div>`}).join('');
+     ${sup()?`<div class="row" style="margin-top:8px"><button class="btn sm" data-act="avisit" data-v="${x.id}">🧭 Visit</button><button class="btn sec sm" data-act="aedit" data-v="${x.id}">✎ Edit</button><button class="btn sec sm" data-act="amove" data-v="${x.id}">↔ Move</button></div>`:''}</div>`}).join('');
   return h+`</div>`;
 }
 function rLog(){
@@ -553,36 +678,72 @@ function rLog(){
   h+=`<div class="row sp" style="margin-bottom:10px"><b>${vs.length} visit${vs.length===1?'':'s'}</b><button class="btn sec sm" data-act="copy">Copy table</button></div>`;
   return h+(vs.map(v=>vcard(v,true)).join('')||`<div class="card empty">No supervisor visits logged on this day.</div>`);
 }
+const washBad=v=>WASHF.filter(x=>{const val=v.f&&v.f[x.k];return val&&x.o.indexOf('!'+val)>=0}).map(x=>v.f[x.k]);
+function washTags(v){
+  const t=[];if(v.who)t.push(`<span class="tag">Cleaned by ${esc(v.who)}</span>`);
+  WASHF.forEach(x=>{const val=v.f&&v.f[x.k];if(val)t.push(`<span class="tag ${x.o.indexOf('!'+val)>=0?'bad':'ok'}">${esc(val)}</span>`)});
+  if(v.cubno)t.push(`<span class="tag bad">Cubicle: ${esc(v.cubno)}</span>`);
+  return t.join('');
+}
+function rWash(){
+  const ws=WL(),isT=S.date===today(),ins=Object.values(D.wash).filter(x=>x.f&&x.date===S.date).sort((a,b)=>a.t.localeCompare(b.t));
+  const lastOf=w=>ins.filter(x=>x.wid===w.id).pop();
+  let ok=0,bad=0;ws.forEach(w=>{const l=lastOf(w);if(l){ok++;if(washBad(l).length)bad++}});
+  let h=dateBar()+`<div class="tiles"><div class="tile"><b>${ok}/${ws.length}</b><small>checked</small></div><div class="tile"><b style="color:${bad?'var(--bad)':'var(--ok)'}">${bad}</b><small>with problems</small></div><div class="tile"><b>${ws.length-ok}</b><small>not checked</small></div></div>`;
+  const fl={};ws.forEach(w=>{(fl[w.floor||'Other']=fl[w.floor||'Other']||[]).push(w)});
+  Object.keys(fl).sort((a,b)=>{const i=WFL.indexOf(a),j=WFL.indexOf(b);return (i<0?99:i)-(j<0?99:j)}).forEach(f=>{
+    h+=`<div class="fh">${esc(f)}${f==='Admin'||f==='Staff'||f==='Other'?'':' floor'}</div>`;
+    fl[f].forEach(w=>{
+      const l=lastOf(w),b=l?washBad(l):[];
+      h+=`<div class="wr ${l?(b.length?'bad':'ok'):''}"><div class="h"><div><b>${esc(w.name)}</b><div class="hint">${w.cub?w.cub+' cubicles · ':''}${l?'Checked '+esc(l.t)+(isT?' · '+ago(Math.max(0,nowM()-mins(l.t))):'')+' · by '+esc(l.by||'?'):'Not checked yet'}</div></div>${l&&l.ph?img(l.ph,'s'):''}</div>
+       ${l?`<div class="tg">${washTags(l)}</div>${l.remark?`<div class="hint">${esc(l.remark)}</div>`:''}`:''}
+       <button class="btn sm" data-act="winspect" data-v="${w.id}" style="margin-top:8px">🧭 Inspect now</button></div>`;
+    });
+  });
+  h+=`<div class="fh">All inspections ${isT?'today':'on this day'} (${ins.length})</div>`;
+  h+=ins.slice().reverse().map(v=>`<button class="vis" data-act="editwash" data-v="${esc(v.id)}"><div class="h"><b>${esc(v.t)}</b><small>${esc(v.wname)} · by ${esc(v.by||'?')}</small></div><div class="tg">${washTags(v)}</div>${v.remark?`<p>${esc(v.remark)}</p>`:''}${img(v.ph)}</button>`).join('')||`<div class="card empty">No washroom inspection logged yet.</div>`;
+  return h;
+}
+function floorSummary(ps){
+  const m={};let inN=0;
+  ps.forEach(p=>{const l=getLog(p,activeDate(p));if(l.in&&!l.out)inN++;itemsOf(p).forEach(x=>{const k=x.floor||'No floor',o=m[k]=m[k]||{n:0,d:0,w:{}};o.n++;if(x.st==='done')o.d++;o.w[p.id]=1})});
+  const keys=Object.keys(m).sort((a,b)=>{const i=FLOORS.indexOf(a),j=FLOORS.indexOf(b);return (i<0?99:i)-(j<0?99:j)});
+  return `<div class="card"><div class="row sp"><b>${inN}/${ps.length} on duty</b><button class="btn sec sm" data-act="grp" data-v="eve">Open team</button></div>`+(keys.map(k=>{const o=m[k],pc=Math.round(o.d/o.n*100);return `<div style="margin-top:10px"><div class="row sp"><b>${esc(k)}</b><span class="hint">${Object.keys(o.w).length} staff · ${o.d}/${o.n} tasks done</span></div><div class="bar"><i style="width:${pc}%"></i></div></div>`}).join('')||'<div class="empty">No tasks assigned yet.</div>')+`</div>`;
+}
 function rDash(){
   let h=dateBar();
   const by={};Object.values(D.visits).filter(v=>isVis(v)&&v.date===S.date).forEach(v=>{const k=v.by||'?';(by[k]=by[k]||[]).push(v.t)});
-  const ks=Object.keys(by);
+  const ks=Object.keys(by),ws=WL(),wi=Object.values(D.wash).filter(x=>x.f&&x.date===S.date);
   h+=`<div class="card"><h2>Supervisor visits</h2>${ks.length?`<table style="width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums"><tr style="text-align:left;color:var(--mute)"><th>Supervisor</th><th>Visits</th><th>First</th><th>Last</th></tr>${ks.map(k=>{const t=by[k].slice().sort();return `<tr><td style="padding:6px 0"><b>${esc(k)}</b></td><td>${t.length}</td><td>${t[0]}</td><td>${t[t.length-1]}</td></tr>`}).join('')}</table>`:'<div class="empty">No visits yet.</div>'}</div>`;
-  GK.forEach(g=>{const ps=people(g);if(!ps.length)return;h+=`<h2 style="margin:14px 0 8px;font-size:16px">${G[g].ico} ${G[g].label}</h2>`+ps.map(pcard).join('')});
+  const wch=ws.filter(w=>wi.some(i=>i.wid===w.id)).length,wbad=ws.filter(w=>{const l=wi.filter(i=>i.wid===w.id).pop();return l&&washBad(l).length}).length;
+  h+=`<button class="gcard" style="--c:var(--gWater)" data-act="tab" data-v="wash"><div class="t"><i>🚻</i>Washrooms</div><div class="m"><span><b>${wch}/${ws.length}</b> checked</span><span><b style="color:${wbad?'var(--bad)':'var(--ok)'}">${wbad}</b> with problems</span></div></button>`;
+  GK.forEach(g=>{const ps=people(g);if(!ps.length)return;h+=`<h2 style="margin:14px 0 8px;font-size:16px">${G[g].ico} ${G[g].label}</h2>`+(g==='eve'?floorSummary(ps):ps.map(pcard).join(''))});
   return h;
 }
 function rSetup(){
   let h=`<div class="card"><h2>You</h2><div class="row sp"><div><b>${esc(S.me)||'Not set'}</b><div class="hint">${esc(S.role==='sup'?'Supervisor':S.role)||'No role'}</div></div><button class="btn sec sm" data-act="setname">Change</button></div></div>`;
   if(!sup())return h;
-  h+=`<div class="row sp" style="margin-bottom:10px"><h2 style="font-size:16px">Staff</h2><button class="btn sm" data-act="sadd">＋ Add staff</button></div>`;
-  GK.forEach(g=>{const ps=people(g);if(!ps.length)return;h+=`<div class="card"><h2>${G[g].ico} ${G[g].label}</h2>`+ps.map(p=>`<div class="row sp" style="padding:6px 0;border-top:1px solid var(--line)"><div><b>${esc(p.name)}</b><div class="hint">${esc(p.role||'')}${g==='guard'?' · '+esc(p.shift||'Day'):''}${(p.areas||[]).length?' · '+p.areas.length+' default areas':''}</div></div><button class="btn sec sm" data-act="sedit" data-v="${p.id}">Edit</button></div>`).join('')+`</div>`});
-  h+=`<p class="hint">Removing a person keeps all past records.</p>`;
+  h+=`<div class="row sp" style="margin-bottom:10px"><h2 style="font-size:16px">Staff</h2><div class="row"><button class="btn sec sm" data-act="sbulk">Add many</button><button class="btn sm" data-act="sadd">＋ Add staff</button></div></div>`;
+  GK.forEach(g=>{const ps=people(g);if(!ps.length)return;h+=`<div class="card"><h2>${G[g].ico} ${G[g].label} (${ps.length})</h2>`+ps.map(p=>`<div class="row sp" style="padding:6px 0;border-top:1px solid var(--line)"><div><b>${esc(p.name)}</b><div class="hint">${esc(p.role||'')}${g==='guard'?' · '+esc(p.shift||'Day'):''} · ${defTasks(p).length} daily tasks</div></div><button class="btn sec sm" data-act="sedit" data-v="${p.id}">Edit</button></div>`).join('')+`</div>`});
+  h+=`<div class="row sp" style="margin:14px 0 10px"><h2 style="font-size:16px">Washrooms (${WL().length})</h2><button class="btn sm" data-act="wsadd">＋ Add</button></div><div class="card">`+WL().map(w=>`<div class="row sp" style="padding:6px 0;border-top:1px solid var(--line)"><div><b>${esc(w.name)}</b><div class="hint">${esc(w.floor)}${w.cub?' · '+w.cub+' cubicles':''}</div></div><button class="btn sec sm" data-act="wsedit" data-v="${w.id}">Edit</button></div>`).join('')+`</div>`;
+  h+=`<p class="hint">Open a person to give daily tasks with a time limit. Removing a person keeps all past records.</p>`;
   return h;
 }
 function render(){
-  if(!sup()&&(S.tab==='log'||S.tab==='dash'))S.tab='home';
+  if(!sup()&&(S.tab==='log'||S.tab==='dash'||S.tab==='wash'))S.tab='home';
   const t=S.tab;let title='Support Staff',sub='Flourish International School',back=false,body='';
   if(t==='home'){
     if(S.pid){const p=staff.find(x=>x.id===S.pid);title=p?p.name:'';sub=p?G[p.group].label:'';back=true;body=rPerson()}
     else if(S.group){title=G[S.group].ico+' '+G[S.group].label;sub='Tap a person';back=true;body=rGroup()}
     else{title='Support Staff';sub='Today · '+fmtD(today());body=rHome()}
-  }else if(t==='log'){title='Visit log';sub='Every supervisor visit';body=rLog()}
+  }else if(t==='wash'){title='Washrooms';sub='Inspect, photo and remark';body=rWash()}
+  else if(t==='log'){title='Visit log';sub='Every supervisor visit';body=rLog()}
   else if(t==='dash'){title='Dashboard';sub='Who was visited, and when';body=rDash()}
   else{title='Setup';sub='Staff and daily areas';body=rSetup()}
   $('ttl').textContent=title;$('sub').textContent=sub;
   const app=$('app');
   app.innerHTML=(back?`<button class="back" data-act="back" style="margin-bottom:10px">◀ Back</button>`:'')+body;
-  $('nav').innerHTML=(sup()?[['home','🏠','Home'],['log','📋','Visit log'],['dash','📊','Dashboard'],['setup','⚙️','Setup']]:[['home','🏠','Home'],['setup','👤','Me']]).map(x=>`<button class="${t===x[0]?'on':''}" data-act="tab" data-v="${x[0]}"><i>${x[1]}</i>${x[2]}</button>`).join('');
+  $('nav').innerHTML=(sup()?[['home','🏠','Home'],['wash','🚻','Washrooms'],['log','📋','Visit log'],['dash','📊','Dashboard'],['setup','⚙️','Setup']]:[['home','🏠','Home'],['setup','👤','Me']]).map(x=>`<button class="${t===x[0]?'on':''}" data-act="tab" data-v="${x[0]}"><i>${x[1]}</i>${x[2]}</button>`).join('');
   hydrate();
 }
 
@@ -602,7 +763,17 @@ document.addEventListener('click',async e=>{
   else if(a==='in'&&p)await inFlow(p);
   else if(a==='out'&&p)await outFlow(p);
   else if(a==='etime'&&p)await timeFlow(p,v);
-  else if(a==='att'&&p)mutLog(p,S.date,l=>{l.att=v;if(v==='A'){l.in='';l.out=''}});
+  else if(a==='att'&&p){mutLog(p,S.date,l=>{l.att=v;if(v==='A'){l.in='';l.out=''}});if(v==='A'&&sup())await transferFlow(p,true)}
+  else if(a==='gview'){S.view[S.group]=v;render()}
+  else if(a==='qin'){const q=staff.find(x=>x.id===v);if(q)await inFlow(q)}
+  else if(a==='qout'){const q=staff.find(x=>x.id===v);if(q)await outFlow(q)}
+  else if(a==='transfer'&&p)await transferFlow(p,false);
+  else if(a==='avisit'){const q=b.dataset.p?staff.find(x=>x.id===b.dataset.p):p;if(q){const it=itemsOf(q).find(y=>y.id===v);await visitFlow(q,null,it?it.name:'')}}
+  else if(a==='winspect'){const w=WL().find(x=>x.id===v);if(w)await washFlow(w,null)}
+  else if(a==='editwash'){const x=D.wash[v];if(x)await washFlow(WL().find(w=>w.id===x.wid)||{id:x.wid,name:x.wname,floor:x.floor},x)}
+  else if(a==='wsadd')await wsFlow(null);
+  else if(a==='wsedit')await wsFlow(WL().find(x=>x.id===v));
+  else if(a==='sbulk')await bulkFlow();
   else if(a==='visit'&&p)await visitFlow(p,null);
   else if(a==='editvisit'){const x=D.visits[v];const q=x&&staff.find(s=>s.id===x.pid);if(x&&q)await visitFlow(q,x)}
   else if(a==='aadd'&&p)await areaFlow(p,null);
