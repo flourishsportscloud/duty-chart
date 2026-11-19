@@ -1,6 +1,6 @@
 {
- "name": "FIS – Duty Chart",
- "short_name": "Duty Chart",
+ "name": "FIS – Leaves & Duty Cover",
+ "short_name": "Leaves & Cover",
  "start_url": "./",
  "scope": "./",
  "display": "standalone",

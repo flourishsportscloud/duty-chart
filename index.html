@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>FIS · Duty Chart</title>
+<title>FIS · Leaves & Duty Cover</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="fis/fis-logo-180.png">
 <link rel="icon" href="fis/fis-logo-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Duty Chart">
+<meta name="apple-mobile-web-app-title" content="Leaves & Duty Cover">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#1F2D5A">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -362,7 +362,7 @@ h1{font-family:var(--head);font-weight:600;font-size:1.8rem;letter-spacing:0;col
   <header class="top">
     <div class="titlerow">
       <a class="fis" href="fis/" aria-label="All FIS apps">‹ FIS Staff Hub</a>
-      <h1>Duty Chart</h1>
+      <h1>Leaves &amp; Duty Cover</h1>
       <span class="month">September 2026</span>
     </div>
     <div class="search">
@@ -465,7 +465,7 @@ Saturday Adjustment - 26/09
   <header class="top">
     <div class="titlerow">
       <a class="fis" href="fis/" aria-label="All FIS apps">‹ FIS Staff Hub</a>
-      <h1>Duty Chart</h1>
+      <h1>Leaves &amp; Duty Cover</h1>
       <span class="month">September 2026</span>
     </div>
     <div class="search">
@@ -800,7 +800,7 @@ const phoneOf = n => { const ks = Object.keys(PHONES); const k = ks.find(x => ke
 function waMsg(n){
   const ch = changesFor(n); if (!ch.length) return '';
   return `*FIS Duty Change – ${nice(DAY)}*\n${n.split(' ')[0]}, ` + (ch.length === 1 ? ch[0].wa.charAt(0).toLowerCase() + ch[0].wa.slice(1) : '\n' + ch.map(c => '• ' + c.wa).join('\n')) +
-    `\n\nPlease check the Duty Chart app: https://flourishsportscloud.github.io/duty-chart/`;
+    `\n\nPlease check the Leaves & Duty Cover app: https://flourishsportscloud.github.io/duty-chart/`;
 }
 const waLink = n => { const p = phoneOf(n), t = encodeURIComponent(waMsg(n)); return p ? `https://wa.me/${p}?text=${t}` : `https://wa.me/?text=${t}`; };
 const SENT = new Set();
@@ -1803,8 +1803,8 @@ async function gsEnable(){
 }
 (async () => {
   const st = window.__B.settings || {};
-  if (st.Title) { const h = document.querySelector('h1'); if (h) h.textContent = st.Title; }
-  if (st.Month) { const m = document.querySelector('.month'); if (m) m.textContent = new Date().toLocaleDateString('en-IN', {month:'long', year:'numeric'}); document.title = (st.Title || 'Duty Chart') + ' – ' + st.Month; }
+  if (st.Title && !/^\s*(fis\s*[·\-–]\s*)?duty chart\s*$/i.test(st.Title)) { const h = document.querySelector('h1'); if (h) h.textContent = st.Title; }
+  if (st.Month) { const m = document.querySelector('.month'); if (m) m.textContent = new Date().toLocaleDateString('en-IN', {month:'long', year:'numeric'}); document.title = (st.Title && !/duty chart/i.test(st.Title) ? st.Title : 'Leaves & Duty Cover') + ' – ' + st.Month; }
   whoBar();
   /* a PIN saved on this phone unlocks at once; it is re-checked in the background */
   if (GS.pin) {
