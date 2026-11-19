@@ -4,7 +4,9 @@
 <title>FIS Primary Preparation and Checking</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;600&display=swap">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="icon" href="../fis/fis-logo-192.png"><link rel="apple-touch-icon" href="../fis/fis-logo-180.png"><meta name="theme-color" content="#152952">
 <style>
 html{-webkit-text-size-adjust:100%}body{margin:0}
 #gate{position:fixed;inset:0;z-index:50;background:var(--band);display:grid;place-items:center;padding:20px}
@@ -161,14 +163,137 @@ details.rules li{margin:6px 0;font-size:13.5px}
   .line{grid-template-columns:92px minmax(0,1fr)}
   .sumline{grid-template-columns:1fr 1fr}
 }
+
+/* ===== FIS premium theme: school logo colours (navy, gold, crimson, purple, sky), Lora + Inter ===== */
+:root{
+  --bg:#F6F4EF; --surface:#FFFFFF; --surface-2:#F3F0EA; --line:#E3DED3; --ink:#152952; --text:#1A2340; --muted:#5A6178;
+  --band:#152952; --band2:#0E1D3D; --band-ink:#FFFFFF; --band-muted:#C7D0EA; --gold:#E7AE55; --gold-ink:#0E1D3D;
+  --done-bg:#E2F2E9; --done-ink:#1F6B43; --prog-bg:#FBF0DC; --prog-ink:#855610; --pend-ink:#B02E4E; --pend-line:#E9B3C1;
+  --na-bg:#ECE8DF; --na-ink:#5A6178; --late-bg:#FBE5EA; --late-ink:#A32342; --today:#2C79AE; --purple:#5F3685;
+  --f-head:'Lora',Georgia,'Times New Roman',serif; --f-body:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; --f-mono:'Inter',system-ui,sans-serif;
+  --e1:0 1px 2px rgba(16,24,56,.06),0 4px 14px rgba(16,24,56,.06);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0B1430; --surface:#141F44; --surface-2:#1A2650; --line:#2A3768; --ink:#EEF1F8; --text:#EEF1F8; --muted:#A9B0C7;
+  --band:#101C40; --band2:#0A122B; --gold:#F0BE6E; --gold-ink:#0E1D3D;
+  --done-bg:#16382B; --done-ink:#7FD9AA; --prog-bg:#3A2E14; --prog-ink:#F0BE6E; --pend-ink:#F28BA5; --pend-line:#6B2E42;
+  --na-bg:#21305E; --na-ink:#A9B0C7; --late-bg:#3F1B28; --late-ink:#F28BA5; --today:#7CC0EC; --purple:#B08FDB; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0B1430; --surface:#141F44; --surface-2:#1A2650; --line:#2A3768; --ink:#EEF1F8; --text:#EEF1F8; --muted:#A9B0C7;
+  --band:#101C40; --band2:#0A122B; --gold:#F0BE6E; --gold-ink:#0E1D3D;
+  --done-bg:#16382B; --done-ink:#7FD9AA; --prog-bg:#3A2E14; --prog-ink:#F0BE6E; --pend-ink:#F28BA5; --pend-line:#6B2E42;
+  --na-bg:#21305E; --na-ink:#A9B0C7; --late-bg:#3F1B28; --late-ink:#F28BA5; --today:#7CC0EC; --purple:#B08FDB; color-scheme:dark}
+body{font-size:15.5px;line-height:1.5;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+header.band{position:relative;overflow:hidden;background:radial-gradient(120% 140% at 100% 0%,#24407A 0%,var(--band) 45%,var(--band2) 100%);border-bottom:3px solid var(--gold);box-shadow:0 4px 18px rgba(10,16,40,.28)}
+header.band::before{content:"";position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='97' viewBox='0 0 56 97'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.06' stroke-width='1.2'%3E%3Cpath d='M28 1 54 16v31L28 62 2 47V16z'/%3E%3Cpath d='M28 62v35M0 96l28-34 28 34'/%3E%3C/g%3E%3C/svg%3E");pointer-events:none}
+header .wrap{position:relative;padding-block:calc(env(safe-area-inset-top,0px) + 14px) 16px;gap:14px}
+.back{display:inline-flex;align-items:center;gap:6px;color:var(--gold);text-decoration:none;font-size:11px;letter-spacing:.2em;text-transform:uppercase;font-weight:700}
+.top{align-items:center;gap:12px}
+.brand{display:flex;align-items:center;gap:13px;min-width:0;flex:1 1 240px}
+.brand .lg{width:52px;height:52px;border-radius:13px;background:#fff;display:grid;place-items:center;flex:0 0 auto;box-shadow:0 2px 10px rgba(0,0,0,.28)}
+.brand .lg img{width:40px;height:40px;object-fit:contain}
+h1{font-family:var(--f-head);font-weight:600;font-size:22px;line-height:1.15;letter-spacing:-.005em;margin:0;text-wrap:balance}
+.school{font-size:10.5px;letter-spacing:.18em;color:var(--gold);font-weight:700;margin-top:4px}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.userrow{display:flex;gap:6px;align-items:center}
+.me{background:rgba(231,174,85,.16);color:#F6DFAF;border:1px solid rgba(231,174,85,.45);font-size:12.5px;padding:6px 13px}
+.pill.today{background:rgba(255,255,255,.1);font-weight:600;font-size:12.5px;padding:6px 12px;letter-spacing:.02em}
+.sw{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:4px;gap:4px}
+.sw button{font-family:var(--f-head);font-weight:600;font-size:15.5px;padding:11px 8px;color:#DCE1F0;border-radius:10px;min-height:44px;box-sizing:border-box}
+.sw button small{font-family:var(--f-body);font-size:11px;color:var(--band-muted);margin-top:1px}
+.sw button[aria-pressed="true"]{background:var(--gold);color:var(--gold-ink);box-shadow:0 2px 8px rgba(0,0,0,.22)}
+.sw.lite button[aria-pressed="true"]{background:#fff;color:#152952}
+.sw.lite button[aria-pressed="true"] small{color:#152952}
+main .wrap{padding-block:18px 48px}
+.stack{gap:16px}
+.chip{font-size:14.5px;padding:9px 16px;border-color:var(--line);box-shadow:var(--e1);min-height:40px;box-sizing:border-box}
+.chip[aria-pressed="true"]{background:var(--band);color:#fff;border-color:var(--band)}
+.chip.sm{font-size:13.5px;padding:7px 13px;min-height:36px;box-shadow:none}
+.dot{background:#D33E64;box-shadow:0 0 0 2px rgba(211,62,100,.18)}
+.tabs{border-bottom:1px solid var(--line)}
+.tab{font-family:var(--f-head);font-size:16px;font-weight:600;padding:13px 16px 11px;min-height:46px;box-sizing:border-box}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--gold)}
+.lt{font-family:var(--f-head);font-weight:600;font-size:21px;letter-spacing:-.005em}
+.lt small{font-size:13px;margin-top:2px}
+.mini{border-radius:11px;box-shadow:var(--e1)}
+.mini button{font-size:13.5px;padding:8px 12px}
+.mini button[aria-pressed="true"]{background:var(--band);color:#fff}
+.note{font-size:13px}
+.wk{font-family:var(--f-head);font-size:16px;margin:10px 0 -2px}
+.todayline{color:var(--today);font-size:11.5px;letter-spacing:.16em}
+.card{border-radius:16px;padding:14px;gap:12px;box-shadow:var(--e1)}
+.card.past{opacity:.86}
+.date{width:58px;border-radius:12px;background:var(--band);border:0;padding:7px 0 8px;box-shadow:inset 0 -3px 0 var(--gold)}
+.date b{font-family:var(--f-head);font-size:22px;color:#fff;font-weight:600}
+.date span{color:#C7D0EA;font-size:10px;font-weight:700;letter-spacing:.1em}
+.what{gap:5px}
+.cls{font-family:var(--f-body);background:var(--band);color:var(--gold);font-weight:700;font-size:12.5px;border-radius:7px;padding:3px 9px;letter-spacing:.02em}
+.subj{font-family:var(--f-head);font-size:17px;font-weight:600}
+.les{font-family:var(--f-body);font-size:14.5px;font-weight:600;color:var(--text)}
+.who{font-size:13px;line-height:1.45}
+.tag{font-size:12.5px;border-radius:999px;padding:4px 11px;white-space:normal}
+.els{grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:8px}
+.st{border-radius:12px;padding:10px 12px;min-height:52px;box-sizing:border-box;align-content:center}
+.st b{font-size:14px;font-weight:600}
+.st i{font-size:12px;opacity:1}
+.st.P{border-color:var(--pend-line)}
+.st.sel{box-shadow:0 0 0 2px var(--gold)}
+.pick{border-radius:14px;padding:12px}
+.pick b{font-size:14px}
+.opts .st{font-size:14px;min-height:46px}
+.secrow{border-radius:12px;padding:10px 12px;min-height:52px;box-sizing:border-box;background:var(--surface-2)}
+.sn b{font-size:14.5px}
+.pbar{height:5px}
+.pbar i{background:#2E8B57}
+.panel,details.sec,details.rules{border-radius:16px;box-shadow:var(--e1)}
+.panel h2{font-family:var(--f-head);font-size:18px;font-weight:600}
+details.sec summary{font-family:var(--f-head);font-size:17px;padding:13px 0;min-height:48px;box-sizing:border-box}
+details.rules summary{font-size:14px}
+.line{border-radius:12px;padding:10px 12px}
+.ld b{font-family:var(--f-body);font-size:13px;font-weight:700}
+.ld small{font-size:12px}
+.lw b{font-size:14.5px;line-height:1.4}
+.lw small{font-size:12.5px}
+.kind{display:table;font-size:10px;border-radius:5px;padding:2px 7px;margin:0 0 4px}
+.kind.prep{background:var(--band);color:var(--gold)}.kind.check{background:var(--gold);color:var(--gold-ink)}.kind.mentor{background:var(--purple);color:#fff}
+.btn{background:var(--band);color:#fff;border-radius:10px;padding:10px 16px;font-size:14px;min-height:42px;box-sizing:border-box}
+.btn.ghost{color:var(--ink)}.btn.xs{min-height:0;padding:5px 11px;font-size:12.5px}
+.form label{font-size:12.5px}
+.form select,.form input{font-size:15px;padding:10px;border-radius:10px}
+.empty{border-radius:16px;font-size:14px}
+#gate{background:radial-gradient(120% 120% at 100% 0%,#24407A 0%,#152952 45%,#0E1D3D 100%)}
+#gate form{border-radius:20px;padding:26px 22px;gap:13px;box-shadow:0 18px 50px rgba(0,0,0,.35);border-top:4px solid var(--gold)}
+#gate .glogo{width:64px;height:64px;border-radius:16px;background:#fff;display:grid;place-items:center;margin:0 auto 2px;box-shadow:0 2px 10px rgba(16,24,56,.18);border:1px solid var(--line)}
+#gate .glogo img{width:50px;height:50px;object-fit:contain}
+#gate h2{font-family:var(--f-head);font-size:23px;text-align:center}
+#gate .gsub{text-align:center;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--prog-ink);font-weight:700;margin:-6px 0 2px}
+#gate input{font-size:16px;padding:13px;border-radius:12px}
+#gate .btn{min-height:48px;font-size:15.5px}
+#toast{border-radius:999px;background:var(--band);color:#fff;box-shadow:0 6px 20px rgba(10,16,40,.3)}
+#sum{display:none}
+@media (max-width:640px){
+  h1{font-size:20px}
+  .brand .lg{width:46px;height:46px}.brand .lg img{width:36px;height:36px}
+  .sw button{font-size:15px;padding:10px 6px}
+  .sw.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .sw.four button{font-size:12.5px;padding:10px 0;white-space:nowrap;letter-spacing:-.015em}
+  .sw.three button{font-size:14px;padding:10px 2px;white-space:nowrap}
+  .sw.four{padding:3px;gap:2px}
+  .line{grid-template-columns:86px minmax(0,1fr)}
+  .me,.pill.today{font-size:12px;padding:5px 10px}
+  .els{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .tools{align-items:flex-start}
+  .head{gap:11px}
+}
 </style>
 </head><body class="locked">
 
 <header class="band">
   <div class="wrap">
+    <div class="bar"><a class="back" href="../fis/"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>FIS Staff Hub</a>
+      <div class="userrow"><span class="pill today" id="todayPill"></span><button type="button" class="me" id="meBtn">Not logged in</button></div></div>
     <div class="top">
-      <div><div class="school">Flourish International School · Primary · Classes 1 to 5</div><h1>Teacher Preparation and Checking</h1></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="me" id="meBtn">Enter your name</button><span class="pill today" id="todayPill"></span></div>
+      <div class="brand"><span class="lg"><img src="../fis/fis-logo-192.png" alt="FIS logo"></span><div><h1>Teacher Preparation &amp; Checking</h1><div class="school">Flourish International School · Classes 1–5</div></div></div>
     </div>
     <div class="sw two lite" role="group" aria-label="Grade group" hidden>
       <button type="button" id="wing-mid" aria-pressed="true">Middle grades<small>Classes 6 to 8</small></button>
@@ -183,7 +308,7 @@ details.rules li{margin:6px 0;font-size:13.5px}
   </div>
 </header>
 
-<div id="gate"><form id="gateF"><h2>Log in</h2><p class="note">Use the same name and password as the Diary app.</p><input id="gateN" type="text" autocomplete="username" placeholder="Your name" maxlength="40"><input id="gateW" type="password" autocomplete="current-password" placeholder="Password"><p class="note" id="gateE" style="color:var(--late-ink)"></p><button class="btn" type="submit" id="gateGo">Log in</button><p class="note">No password yet? Set one in the <a href="../diary/" style="color:var(--today)">Diary app</a> first; the admin approves it once.</p></form></div>
+<div id="gate"><form id="gateF"><div class="glogo"><img src="../fis/fis-logo-192.png" alt="FIS logo"></div><h2>Teacher Preparation &amp; Checking</h2><div class="gsub">Flourish International School · Classes 1–5</div><p class="note">Use the same name and password as the Diary app.</p><input id="gateN" type="text" autocomplete="username" placeholder="Your name" maxlength="40"><input id="gateW" type="password" autocomplete="current-password" placeholder="Password"><p class="note" id="gateE" style="color:var(--late-ink)"></p><button class="btn" type="submit" id="gateGo">Log in</button><p class="note">No password yet? Set one in the <a href="../diary/" style="color:var(--today)">Diary app</a> first; the admin approves it once.</p></form></div>
 <div id="toast" hidden role="status"></div>
 <main><div class="wrap">
   <div id="listView" class="stack">
@@ -363,7 +488,7 @@ function allStaff(all){ const m=new Map(); all.forEach(r=>{ if(!m.has(r.t)) m.se
 function render(){
   ['mid','sen'].forEach(k=>$('wing-'+k).setAttribute('aria-pressed',String(wing===k)));
   ['prep','check','mentor','dash'].forEach(k=>$('seg-'+k).setAttribute('aria-pressed',String(seg===k)));
-  $('todayPill').textContent='Today · '+nice(TODAY);
+  $('todayPill').textContent=nice(TODAY);
   const all=records(); all.forEach(r=>r.st=stat(r));
   $('mentorView').hidden=seg!=='mentor'; if(seg==='mentor'){ $('listView').hidden=true; $('dashView').hidden=true; renderMentor(); return; } window.mBusy=false;
   const dash=seg==='dash'; $('listView').hidden=dash; $('dashView').hidden=!dash;
@@ -386,7 +511,7 @@ function render(){
 
   let rows=mine.filter(r=>(grade==='All'||r.c===grade)&&(teacher==='All'||r.t===teacher));
   const secs=[...new Set(rows.map(r=>r.cs))];
-  $('listTitle').replaceChildren(teacher==='All'?subj:teacher,el('small',{text:(teacher==='All'?'':'Classes '+secs.join(', ')+' · ')+(seg==='prep'?'Lessons in order of start date':'In order of the date copies are received')}));
+  $('listTitle').replaceChildren(subj,el('small',{text:(teacher==='All'?'':'Classes '+secs.join(', ')+' · ')+(seg==='prep'?'Lessons in order of start date':'In order of the date copies are received')}));
 
   const c={late:rows.filter(r=>r.st.late).length,left:rows.filter(r=>r.st.left&&!r.st.late).length,wait:rows.filter(r=>r.st.notIn).length};
   c.done=rows.length-c.late-c.left-c.wait;
@@ -429,7 +554,7 @@ function statusTag(r,st){
 function head(r,label,tag,extra){
   return el('div',{class:'head'},dateBox(r.d),el('div',{class:'what'},
     el('div',{class:'t1'},el('span',{class:'cls',text:label}),el('span',{class:'subj',text:r.s}),el('span',{class:'les',text:r.l})),
-    el('div',{class:'who',text:r.kind==='prep'?'Lesson starts on '+nice(r.d)+' · Preparation due on '+nice(r.due)+(r.testDate?' · Test on '+nice(r.testDate):''):r.listed?'From the 20 Nov task list · receiving date not recorded':'Received on '+nice(r.d)+' · Checking due on '+nice(r.due)}),
+    el('div',{class:'who',text:r.kind==='prep'?'Preparation due '+nice(r.due)+(r.testDate?' · Test '+nice(r.testDate):''):r.listed?'From the 20 Nov task list':'Checking due '+nice(r.due)}),
     el('div',{class:'t1'},tag,extra)));
 }
 function overviewCard(g,all){
@@ -568,7 +693,7 @@ function renderMentor(){
     el('button',{type:'button','aria-label':'Earlier',onclick:()=>{mDate=step?addDays(mDate,-7):addWork(mDate,-1);mPick=null;render()}},'‹'),
     el('button',{type:'button','aria-pressed':'true',onclick:()=>{mDate=TODAY;render()}},mKind==='w'?'Week of '+weekOf(mDate):nice(mDate)+(mDate===TODAY?' · today':'')),
     el('button',{type:'button','aria-label':'Later',onclick:()=>{mDate=step?addDays(mDate,7):addWork(mDate,1);mPick=null;render()}},'›'));
-  box.append(el('div',{class:'tools'},el('h2',{class:'lt'},mWho==='All'?M_KIND[mKind]:mWho,el('small',{text:mKind==='d'?'To be completed every working day':mKind==='w'?'To be completed by Saturday each week':'One-time tasks allocated to class sections'})),
+  box.append(el('div',{class:'tools'},el('h2',{class:'lt'},M_KIND[mKind],el('small',{text:mKind==='d'?'To be completed every working day':mKind==='w'?'To be completed by Saturday each week':'One-time tasks allocated to class sections'})),
     el('div',{class:'toolr'},nav,el('div',{class:'mini',role:'group','aria-label':'Class'},...[['All','All classes']].concat(GRADES[wing].map(g=>[g,g])).map(([v,l])=>el('button',{type:'button','aria-pressed':String(grade===v),onclick:()=>{grade=v;render()}},l))),
       head?el('button',{type:'button',class:'chip sm','aria-pressed':String(mManage),onclick:()=>{mManage=!mManage;mEdit=mConfirm=null;render()}},'Edit tasks'):null)));
   if(mManage){ const fT=el('input',{id:'mt-title',type:'text',maxlength:'70',placeholder:'e.g. Wall display'}), fD=el('input',{id:'mt-date',type:'date',value:TODAY});
