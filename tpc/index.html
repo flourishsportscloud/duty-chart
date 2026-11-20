@@ -14,6 +14,19 @@ html{-webkit-text-size-adjust:100%}body{margin:0}
 #gate h2{font-family:var(--f-head);color:var(--ink);margin:0;font-size:20px}
 #gate input{font:inherit;font-size:16px;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--text)}
 body.locked main,body.locked header .sw{display:none}
+
+.rmk{display:flex;flex-wrap:wrap;gap:8px;align-items:center;border-top:1px dashed var(--line);padding-top:10px}
+.rmk .form{flex:1 1 100%}.rtxt{flex:1 1 220px;font-size:13.5px;color:var(--text)}
+details.hist{border-top:1px dashed var(--line);padding-top:8px}details.hist summary{cursor:pointer;font-size:12.5px;font-weight:600;color:var(--muted)}details.hist .note{padding:3px 0}
+.tblock{gap:10px}.thead{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between}
+.tname{display:flex;align-items:center;gap:10px;cursor:pointer;min-width:0}.tname input{width:22px;height:22px;accent-color:var(--ink);flex:0 0 auto}
+.tname .num{width:28px;height:28px;border-radius:50%;background:var(--band);color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px;flex:0 0 auto}
+.tname b{font-family:var(--f-head);font-size:18px;color:var(--ink)}
+ol.tlist{margin:0;padding:0 0 0 26px;display:grid;gap:6px}ol.tlist li{font-weight:700;color:var(--muted)}ol.tlist li.late{color:var(--late-ink)}
+.tline{all:unset;cursor:pointer;display:flex;gap:10px;align-items:flex-start;justify-content:space-between;width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--surface-2)}
+li.late .tline{background:var(--late-bg);border-color:var(--pend-line)}
+.tl1{display:grid;gap:2px;min-width:0}.tl1 b{font-size:14.5px;color:var(--ink);font-weight:600}.tl1 small{font-size:12.5px;color:var(--muted);font-weight:500}
+.btn.wa{background:#1F8F55;color:#fff}
 #toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:60;background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:12px;font-weight:600;font-size:13.5px;max-width:90vw}
 #toast.err{background:var(--late-ink);color:#fff}
 .me{all:unset;cursor:pointer;border-radius:999px;padding:4px 11px;font-size:12px;font-weight:600;background:var(--gold);color:var(--gold-ink)}
@@ -504,7 +517,7 @@ async function call(fn,args){ const r=await fetch(API_URL,{method:'POST',redirec
 function take(v){ let ch=false; (v.docs||[]).forEach(d=>{ if(d.p.indexOf('status/'+PFX)!==0) return; ch=true; if(d.del) delete DOCS[d.p]; else DOCS[d.p]=d.j; }); if(v.rev) REV=v.rev; return ch; }
 let toastT; function toast(m,err){ const t=$('toast'); t.textContent=m; t.className=err?'err':''; t.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>t.hidden=true,err?6000:2200); }
 async function loadAll(){ try{ take(await call('all')); LOADED=true; render(); }catch(e){ toast('Could not load saved updates. Check the internet connection.',1); } }
-async function poll(){ if(document.hidden||!LOADED) return; try{ if(take(await call('sync',[REV]))&&!picking&&!editing&&!manage&&!window.mBusy) render(); }catch(e){} }
+async function poll(){ if(document.hidden||!LOADED) return; try{ if(take(await call('sync',[REV]))&&!picking&&!editing&&!manage&&!window.mBusy&&!rmkEdit) render(); }catch(e){} }
 async function push(path,fields,msg){ if(!ME){ lock(); return; }
   const old=DOCS[path]; DOCS[path]=Object.assign({},old||{},fields); render();
   try{ const v=await call('merge',[path,fields]); DOCS[path]=v.j; if(v.rev) REV=Math.max(REV,v.rev); render(); if(msg) toast(msg); }
@@ -514,24 +527,24 @@ const CH_SLOT={'Notebook':'lp','Assignment':'viva','Test notebook':'test','Test'
 function slotOf(r,e){ if(r.kind==='prep') return ELEMS.find(x=>x[1]===e.name)[0];
   if(CH_SLOT[e.name]) return CH_SLOT[e.name]; const used=r.els.map(x=>CH_SLOT[x.name]).filter(Boolean), rest=r.els.filter(x=>!CH_SLOT[x.name]);
   return FREE.filter(f=>used.indexOf(f)<0)[rest.indexOf(e)]||'obs'; }
-const pushStatus=(r,e,v)=>push(r.dp,{[slotOf(r,e)]:v==='I'?'X':v},'Saved');
-function pushNote(r,o,msg){ const n=Object.assign({},r.added?noteOf(r.dp):{},o); push(r.dp,{note:JSON.stringify(n)},msg); }
+const pushStatus=(r,e,v)=>{ push(r.dp,{[slotOf(r,e)]:v==='I'?'X':v},'Saved'); trail(r.id,v,e.name); };
+function pushNote(r,o,msg){ trail(r.id,o.rm?'R':'C',''); const n=Object.assign({},r.added?noteOf(r.dp):{},o); push(r.dp,{note:JSON.stringify(n)},msg); }
 const cut=(x,n)=>String(x||'').trim().slice(0,n);
 function pushAdd(a){ const n={k:a.kind,d:a.d,c:a.cs,s:cut(a.s,24),l:cut(a.l,40),t:cut(a.t,30),g:cut(a.g,24),w:wing}; push('status/'+PFX+'a.'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),{note:JSON.stringify(n)},'Lesson added'); }
 const pushSub=(k,w,rm)=>push('status/'+PFX+'s.'+h36(w+'|'+k),{note:JSON.stringify({k:cut(k,24),w,rm:rm?1:0})},rm?'Removed':'Added');
 function byLine(r,e){ const j=DOCS[r.dp], k=slotOf(r,e); if(!j||!j[k+'_by']) return ''; const d=new Date(j[k+'_at']); let h=d.getHours(); const ap=h<12?'AM':'PM'; h=h%12||12;
   return ' · '+String(j[k+'_by']).split(' ')[0]+', '+d.getDate()+' '+MO[d.getMonth()]+' '+h+':'+String(d.getMinutes()).padStart(2,'0')+' '+ap; }
-const VIEWERS=['1vut0erx8m94h','1hkv5s2x5ymsg','wj56ym193nows','wixt2s193dbkm','1svlg0a1imaq08','1km2jdpxojekf','14sca5akd6lrw','wj4eyr193sw0x','1hkvo5ox5z20e','7ire5c1vbmuki','19icgwg1nunenm','17uw0dvkup68h','82fqvh1vvbdtb'];
+const VIEWERS=['1vut0erx8m94h','1hkv5s2x5ymsg','wj56ym193nows','wixt2s193dbkm','1svlg0a1imaq08','1km2jdpxojekf','14sca5akd6lrw','wj4eyr193sw0x','1hkvo5ox5z20e','7ire5c1vbmuki','19icgwg1nunenm','17uw0dvkup68h','82fqvh1vvbdtb','7pnndb1va8iul','1hpns37xai3pt','1vv9pknx964d1','7ngdnb1v812lx','1cvl39e11w0srk','rgj2s61dk0i44','1xx3j1kd5du6i','86831w1vqvo7q'];
 const canDash=()=>ROLE==='admin'||ROLE==='pl'||VIEWERS.indexOf(h36('v|'+ME.trim().toLowerCase().split(/\s+/)[0].replace(/[^a-z]/g,'')))>=0;
 function askName(){ lock(); }
 function records(){
   OV={subAdd:[],subRm:{}};
   const out=[];
-  BASE.forEach(r=>{ r.dp=r.dp||dpath(r.id); const n=noteOf(r.dp); if(n&&n.rm) return; out.push(n&&n.t?Object.assign({},r,{t:n.t,g:n.g||r.g,wing:n.w||r.wing}):r); });
+  BASE.forEach(r=>{ r.dp=r.dp||dpath(r.id); const n=noteOf(r.dp); if(n&&n.rm) return; out.push(applyNote(r,n)); });
   Object.keys(DOCS).forEach(p=>{ const n=noteOf(p); if(!n) return;
     if(p.indexOf('status/'+PFX+'s.')===0){ if(n.rm) OV.subRm[n.w+'|'+n.k]=1; else OV.subAdd.push({k:n.k,wing:n.w}); return; }
     if(p.indexOf('status/'+PFX+'a.')!==0||n.rm||!n.d) return;
-    const r=mkRec(n.k==='check'?'check':'prep',n.d,n.c,n.s,n.l,null,null); r.id='a|'+p; r.key=r.id; r.els.forEach(e=>e.id=r.id+'|'+e.name); r.dp=p; r.added=true; r.t=n.t||r.t; r.g=n.g||r.g; r.wing=n.w||r.wing; out.push(r); });
+    const kd=n.k==='check'?'check':'prep', r=mkRec(kd,n.d,n.c,n.s,n.l,null,(kd==='check'&&n.i)?String(n.i).split('|'):null); if(kd==='prep'&&n.i){ const ks=String(n.i).split(','); r.els=ELEMS.filter(x=>ks.indexOf(x[0])>=0).map(x=>({name:x[1],due:r.due})); } r.id='a|'+p; r.els.forEach(e=>e.id=r.id+'|'+e.name); if(n.e){ r.due=n.e; r.els.forEach(e=>e.due=n.e); } r.dp=p; r.added=true; r.t=n.t||r.t; r.g=n.g||r.g; r.wing=n.w||r.wing; out.push(r); });
   return out
   .sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:(+a.c)-(+b.c)||(a.cs<b.cs?-1:1)); }
 const hash=s=>{let h=7;for(const ch of s)h=(h*31+ch.charCodeAt(0))>>>0;return h};
@@ -566,10 +579,10 @@ function render(){
   $('docsView').hidden=seg!=='docs'; if(seg==='docs'){ $('listView').hidden=true; $('dashView').hidden=true; $('mentorView').hidden=true; renderDocs(); return; }
   $('mentorView').hidden=seg!=='mentor'; if(seg==='mentor'){ $('listView').hidden=true; $('dashView').hidden=true; renderMentor(); return; } window.mBusy=false;
   const dash=seg==='dash'; $('listView').hidden=dash; $('dashView').hidden=!dash;
-  if(dash){ renderDash(all); return; }
+  if(dash){ renderDash2(all); return; }
   const pool=all.filter(r=>r.wing===wing&&r.kind===seg);
 
-  const subs=subjectsOf(all); if(!subs.includes(subj)){subj=subs[0];teacher='All'}
+  let subs=subjectsOf(all); if(!canDash()){ const own=subs.filter(k=>pool.some(r=>r.g===k&&isMe(r.t))); if(own.length) subs=own; } if(!subs.includes(subj)){subj=subs[0];teacher='All'}
   $('subjects').replaceChildren(...subs.map(k=>el('button',{type:'button',class:'chip','aria-pressed':String(k===subj),onclick:()=>{subj=k;teacher='All';picking=editing=null;render()}},k,
     pool.some(r=>r.g===k&&r.st.late)?el('span',{class:'dot',title:'Has overdue work'}):null)));
 
@@ -578,10 +591,10 @@ function render(){
   if(teacher!=='All'&&!staff.includes(teacher)) teacher='All';
   const tab=(v,label)=>el('button',{type:'button',class:'tab',role:'tab','aria-selected':String(teacher===v),onclick:()=>{teacher=v;picking=editing=null;render()}},label,
     mine.some(r=>(v==='All'||r.t===v)&&r.st.late)?el('span',{class:'dot',title:'Has overdue work'}):null);
-  $('teachers').replaceChildren(tab('All','All'),...staff.map(n=>tab(n,n))); centre($('teachers'));
+  if(!canDash()){ const own=staff.filter(isMe); teacher=own[0]||'\u2014'; $('teachers').replaceChildren(...own.map(n=>tab(n,n))); } else $('teachers').replaceChildren(tab('All','All'),...staff.map(n=>tab(n,n))); centre($('teachers'));
 
   $('grades').replaceChildren(...[['All','All classes']].concat(GRADES[wing].map(g=>[g,g])).map(([v,l])=>el('button',{type:'button','aria-pressed':String(grade===v),onclick:()=>{grade=v;render()}},l)));
-  $('leftOnly').setAttribute('aria-pressed',String(leftOnly)); $('manage').setAttribute('aria-pressed',String(manage));
+  $('leftOnly').setAttribute('aria-pressed',String(leftOnly)); if(!canDash()) manage=false; $('manage').hidden=!canDash(); $('manage').setAttribute('aria-pressed',String(manage));
 
   let rows=mine.filter(r=>(grade==='All'||r.c===grade)&&(teacher==='All'||r.t===teacher));
   const secs=[...new Set(rows.map(r=>r.cs))];
@@ -592,7 +605,7 @@ function render(){
   const cell=(lab,n,cls)=>el('div',{class:cls||''},lab,el('b',{text:String(n)}));
   $('sum').replaceChildren(cell('Overdue',c.late,'o'),cell(seg==='prep'?'Preparation pending':'Checking pending',c.left),...(seg==='check'?[cell('Yet to be received',c.wait)]:[]),cell('Completed',c.done));
 
-  renderManage(all);
+  renderManage2(all);
 
   const groups=[],idx={}; rows.forEach(r=>{ if(!(r.key in idx)){idx[r.key]=groups.length;groups.push([])} groups[idx[r.key]].push(r); });
   const shown=groups.filter(g=>!leftOnly||g.some(r=>r.st.left));
@@ -604,7 +617,7 @@ function render(){
   });
   if(!shown.length) out.push(el('div',{class:'empty',text:leftOnly?'No pending work here. Everything is completed.':'No lessons listed here for 12 Nov – 5 Dec.'+(wing==='sen'&&grade==='11'?' The Class 11 plan is still to be added.':'')}));
   $('list').replaceChildren(...out);
-  $('hint').textContent=teacher==='All'?'Select a teacher\'s name to open their list and update the status.':'Select any item to update its status.';
+  $('hint').textContent=teacher==='\u2014'?'No lessons are listed under your login name ('+ME+'). Please ask your PL to check the spelling of your name.':teacher==='All'?'Select a teacher\'s name to open their list and update the status.':'Select any item to update its status.';
 
   $('rules').replaceChildren(...[
     seg==='prep'?'Preparation is due one working day before the lesson starts. The test paper is due one working day before that lesson\'s test.':'Notebook, assignment and test paper are received on the lesson\'s test day. Checking is due within 2 working days of receiving them.',
@@ -654,6 +667,7 @@ function detailCard(r,all){
   card.append(head(r,r.cs,statusTag(r,r.st),manage?el('button',{type:'button',class:'btn ghost xs',onclick:()=>{editing=editing===r.id?null:r.id;render()}},'Change'):null),els);
   if(pk) card.append(el('div',{class:'pick'},el('b',{text:pk.e.name+' — select the status'}),
     el('div',{class:'opts'},...['P','I','D','N'].map(v=>el('button',{type:'button',class:'st '+v+(pk.v===v?' sel':''),onclick:()=>{picking=null;pushStatus(r,pk.e,v)}},ICON[v]+' '+NAME[v])))));
+  card.append(remarkBox(r.id)); { const hb=historyBox(r.id); if(hb) card.append(hb); }
   if(manage&&editing===r.id) card.append(editBox(r,all));
   return card;
 }
@@ -662,14 +676,14 @@ function detailCard(r,all){
 function staffSelect(id,all,cur){ const s=el('select',{id}); allStaff(all).forEach(p=>s.append(el('option',{value:p.n,selected:p.n===cur?'':null},p.n+' — '+p.subs.join(', ')))); return s; }
 function editBox(r,all){
   const subs=[...new Set(ORDER.concat(all.map(x=>x.g)).concat(OV.subAdd.map(x=>x.k)))];
-  const sT=staffSelect('ed-staff',all,r.t), sNew=el('input',{id:'ed-new',type:'text',placeholder:'Type a name'});
+  const sE=el('input',{id:'ed-due',type:'date',value:r.due}), sT=staffSelect('ed-staff',all,r.t), sNew=el('input',{id:'ed-new',type:'text',placeholder:'Type a name'});
   const sG=el('select',{id:'ed-dept'},...subs.map(k=>el('option',{value:k,selected:k===r.g?'':null},k)));
   const sW=el('select',{id:'ed-wing'},el('option',{value:'mid',selected:r.wing==='mid'?'':null},'Middle grades (6–8)'),el('option',{value:'sen',selected:r.wing==='sen'?'':null},'Senior grades (9–11)'));
   const ck='rm|'+r.id;
   return el('div',{class:'editbox'},el('b',{text:'Change '+r.cs+' · '+r.s+' '+r.l+(r.kind==='prep'?' (preparation)':' (checking)')}),
-    el('div',{class:'form'},el('label',{},'Assign to',sT),el('label',{},'Or a new staff name',sNew),el('label',{},'Department',sG),el('label',{},'Show under',sW)),
+    el('div',{class:'form'},el('label',{},'Assign to',sT),el('label',{},'Deadline',sE),el('label',{},'Or a new staff name',sNew),el('label',{},'Department',sG),el('label',{},'Show under',sW)),
     el('div',{class:'toolr'},
-      el('button',{type:'button',class:'btn',onclick:()=>{editing=null;pushNote(r,{t:cut(sNew.value,30)||sT.value,g:sG.value,w:sW.value},'Change saved')}},'Save change'),
+      el('button',{type:'button',class:'btn',onclick:()=>{editing=null;pushNote(r,{e:sE.value,t:cut(sNew.value,30)||sT.value,g:sG.value,w:sW.value},'Change saved')}},'Save change'),
       el('button',{type:'button',class:'btn warn',onclick:()=>{ if(confirmKey===ck){pushNote(r,{rm:1},'Removed from list');confirmKey=editing=null;}else confirmKey=ck; render()}},confirmKey===ck?'Confirm: remove from list':'Remove from list'),
       el('button',{type:'button',class:'btn ghost',onclick:()=>{editing=confirmKey=null;render()}},'Cancel')));
 }
@@ -759,8 +773,8 @@ function secVal(id,old){ const mine=boxVals(id), other=(old||M_ALL).filter(cs=>S
 function renderMentor(){
   const box=$('mentorView'); box.replaceChildren(); if(!mDate) mDate=TODAY; const head=canDash(); if(!head) mManage=false; window.mBusy=!!(mPick||mEdit||mManage);
   box.append(el('div',{class:'chips','aria-label':'Type of task'},...['d','w','o'].map(k=>el('button',{type:'button',class:'chip','aria-pressed':String(mKind===k),onclick:()=>{mKind=k;mPick=mEdit=null;render()}},M_KIND[k]))));
-  const names=[...new Set(SECTIONS[wing].filter(cs=>MENTOR[cs]).map(cs=>MENTOR[cs]))]; if(mWho!=='All'&&names.indexOf(mWho)<0) mWho='All';
-  const tabs=el('div',{class:'tabs',role:'tablist','aria-label':'Mentor'}); ['All'].concat(names).forEach(n=>tabs.append(el('button',{type:'button',class:'tab',role:'tab','aria-selected':String(mWho===n),onclick:()=>{mWho=n;mPick=mEdit=null;render()}},n))); box.append(tabs);
+  const names=[...new Set(SECTIONS[wing].filter(cs=>MENTOR[cs]).map(cs=>MENTOR[cs]))]; if(!head){ const own=names.filter(isMe); names.length=0; own.forEach(x=>names.push(x)); mWho=names[0]||'\u2014'; } else if(mWho!=='All'&&names.indexOf(mWho)<0) mWho='All';
+  const tabs=el('div',{class:'tabs',role:'tablist','aria-label':'Mentor'}); (head?['All']:[]).concat(names).forEach(n=>tabs.append(el('button',{type:'button',class:'tab',role:'tab','aria-selected':String(mWho===n),onclick:()=>{mWho=n;mPick=mEdit=null;render()}},n))); box.append(tabs);
   const wk=weekStart(mDate), step=mKind==='w'?7:0;
   const nav=mKind==='o'?null:el('div',{class:'mini',role:'group','aria-label':'Change date'},
     el('button',{type:'button','aria-label':'Earlier',onclick:()=>{mDate=step?addDays(mDate,-7):addWork(mDate,-1);mPick=null;render()}},'‹'),
@@ -785,12 +799,13 @@ function renderMentor(){
     card.append(el('div',{class:'head'},el('div',{class:'what'},el('div',{class:'t1'},el('span',{class:'subj',text:t.t})),
       el('div',{class:'who',text:mKind==='d'?'Daily · '+nice(mDate):mKind==='w'?'Weekly · due on '+nice(due):'Due on '+nice(due)}),
       el('div',{class:'t1'},tag,mManage?el('button',{type:'button',class:'btn ghost xs',onclick:()=>{mEdit=mEdit===t.id?null:t.id;mConfirm=null;render()}},'Change'):null))),els);
-    if(pk) card.append(el('div',{class:'pick'},el('b',{text:pk.cs+' · '+t.t+' — select the status'}),el('div',{class:'opts'},...['P','I','D','N'].map(v=>el('button',{type:'button',class:'st '+v+(pk.v===v?' sel':''),onclick:()=>{ const r=mRef(t,pk.cs,mDate); mPick=null; push(r.p,{[r.k]:v==='I'?'X':v},'Saved'); }},ICON[v]+' '+NAME[v])))));
+    if(pk) card.append(el('div',{class:'pick'},el('b',{text:pk.cs+' · '+t.t+' — select the status'}),el('div',{class:'opts'},...['P','I','D','N'].map(v=>el('button',{type:'button',class:'st '+v+(pk.v===v?' sel':''),onclick:()=>{ const r=mRef(t,pk.cs,mDate); mPick=null; push(r.p,{[r.k]:v==='I'?'X':v},'Saved'); trail('m|'+t.id+'|'+mPeriod(t,mDate)+'|'+pk.cs,v,pk.cs); }},ICON[v]+' '+NAME[v])))));
     if(mManage&&mEdit===t.id){ const eT=el('input',{id:'me-title',type:'text',maxlength:'70',value:t.t}), eD=el('input',{id:'me-date',type:'date',value:t.d||TODAY});
       card.append(el('div',{class:'editbox'},el('b',{text:'Change this task'}),el('div',{class:'form'},el('label',{},'Task title',eT),t.k==='o'?el('label',{},'Due date',eD):null),el('p',{class:'note',text:'Allocated to these sections:'}),secBoxes('me-secs',t.s),
         el('div',{class:'toolr'},el('button',{type:'button',class:'btn',onclick:()=>{ const tt=cut(eT.value,70); if(!tt){eT.focus();return} mEdit=null; pushTask(t.id,{k:t.k,t:tt,s:secVal('me-secs',t.s),d:t.k==='o'?eD.value:''},'Change saved'); }},'Save change'),
           el('button',{type:'button',class:'btn warn',onclick:()=>{ if(mConfirm===t.id){ mEdit=mConfirm=null; pushTask(t.id,{k:t.k,t:t.t,rm:1},'Task removed'); } else { mConfirm=t.id; render(); } }},mConfirm===t.id?'Confirm: remove task':'Remove task'),
           el('button',{type:'button',class:'btn ghost',onclick:()=>{mEdit=mConfirm=null;render()}},'Cancel')))); }
+    if(pk){ const mk='m|'+t.id+'|'+mPeriod(t,mDate)+'|'+pk.cs; card.append(remarkBox(mk)); const hb=historyBox(mk); if(hb) card.append(hb); }
     list.append(card); });
   if(!shown) list.append(el('div',{class:'empty',text:mKind==='o'?'No class tasks have been allocated here yet.'+(head?' Select "Edit tasks" to add one.':''):'No tasks listed here.'}));
   box.append(list,el('p',{class:'note',text:'Select a section to update its status.'+(head?' Heads can add, change, allocate or remove tasks with "Edit tasks".':'')}));
@@ -829,6 +844,115 @@ function renderDocs(){
   Object.keys(DOCS).filter(p=>p.indexOf(dPath('x'))===0).sort().forEach(p=>{ const n=noteOf(p); if(!n||n.rm||n.c!==dClass) return; list.append(dRow(p.slice(dPath('').length),n.t||'Document',n.w||'Class '+dClass,{t:n.t,c:n.c,w:n.w||''})); });
   card.append(list); box.append(card);
   box.append(el('p',{class:'note',text:head?'Documents stay in Google Drive; this page only keeps the link. Who can open a document is decided by its sharing setting in Drive.':'If a document does not open, ask your PL to share it with your Google account.'}));
+}
+
+/* ===== v2: own-work view for teachers, remarks, change history, quick add, dashboard with WhatsApp ===== */
+const firstOf=n=>String(n||'').trim().toLowerCase().split(/\s+/)[0].replace(/[^a-z]/g,'');
+const isMe=n=>!!ME&&(firstOf(n)===firstOf(ME)||String(n).trim().toLowerCase()===ME.trim().toLowerCase());
+function applyNote(r,n){ if(!n||(!n.t&&!n.e)) return r; const c=Object.assign({},r); if(n.t){c.t=n.t;c.g=n.g||r.g;c.wing=n.w||r.wing} if(n.e){c.due=n.e;c.els=r.els.map(e=>Object.assign({},e,{due:n.e}))} return c; }
+function stamp(ms){ const d=new Date(ms); let h=d.getHours(); const ap=h<12?'AM':'PM'; h=h%12||12; return d.getDate()+' '+MO[d.getMonth()]+', '+h+':'+String(d.getMinutes()).padStart(2,'0')+' '+ap; }
+/* change history: last few changes per item, with time and name */
+const tPath=key=>'status/'+PFX+'h.'+h36(key), kPath=key=>'status/'+PFX+'k.'+h36(key);
+function trail(key,code,what){ const p=tPath(key), old=String((DOCS[p]||{}).note||''), ev=code+':'+String(what||'').replace(/[|:]/g,' ').slice(0,16)+':'+String(ME).split(' ')[0].replace(/[|:]/g,'').slice(0,12)+':'+Date.now().toString(36);
+  let list=(old?old.split('|'):[]).concat(ev); while(list.join('|').length>195) list.shift(); push(p,{note:list.join('|')}); }
+const T_WORD={P:'Pending',I:'In progress',D:'Done',N:'Not applicable',C:'Changed',R:'Removed',K:'Remark saved'};
+function historyBox(key){ const raw=String((DOCS[tPath(key)]||{}).note||''); if(!raw) return null;
+  const d=el('details',{class:'hist'},el('summary',{text:'Change history'}));
+  raw.split('|').reverse().forEach(x=>{ const a=x.split(':'); if(a.length<4) return; d.append(el('div',{class:'note',text:stamp(parseInt(a[3],36))+' · '+(a[1]?a[1]+' → ':'')+(T_WORD[a[0]]||a[0])+' · '+a[2]})); }); return d; }
+let rmkEdit=null;
+function remarkBox(key){ const j=DOCS[kPath(key)]||{}, txt=String(j.note||''), box=el('div',{class:'rmk'});
+  if(rmkEdit===key){ const f=el('input',{id:'rmk-in',type:'text',maxlength:'180',value:txt,placeholder:'Type a remark'});
+    box.append(el('div',{class:'form'},el('label',{},'Remark',f)),el('div',{class:'toolr'},
+      el('button',{type:'button',class:'btn xs',onclick:()=>{ const v=cut(f.value,180); rmkEdit=null; if(!v&&!txt){render();return} push(kPath(key),{note:v||' '},'Remark saved'); trail(key,'K',v?'':'removed'); }},'Save remark'),
+      el('button',{type:'button',class:'btn ghost xs',onclick:()=>{rmkEdit=null;render()}},'Cancel'))); }
+  else { if(txt.trim()) box.append(el('div',{class:'rtxt'},el('b',{text:'Remark: '}),txt.trim(),el('span',{class:'note',text:j.note_by?'  — '+String(j.note_by).split(' ')[0]+', '+stamp(j.note_at):''})));
+    box.append(el('button',{type:'button',class:'btn ghost xs',onclick:()=>{rmkEdit=key;render()}},txt.trim()?'Edit remark':'Add remark')); }
+  return box; }
+/* ---- quick add / allocate (heads) ---- */
+const CHK_OPTS=['Notebook','Assignment','Test notebook','Book'];
+function tickRow(id,opts,checked){ const box=el('div',{class:'toolr',id}); opts.forEach(([v,l],i)=>{ const c=el('input',{type:'checkbox',id:id+'-'+i,value:v}); c.checked=checked(v); box.append(el('label',{class:'chip sm',for:id+'-'+i},c,l)); }); return box; }
+const ticks=id=>[...document.querySelectorAll('#'+id+' input:checked')].map(c=>c.value);
+function renderManage2(all){
+  const box=$('managePanel'); box.hidden=!manage; if(!manage) return;
+  const prep=seg==='prep', kindWord=prep?'preparation':'checking', ck='sub|'+wing+'|'+subj;
+  const subjOpts=[...new Set(all.filter(r=>r.g===subj).map(r=>r.s))];
+  const fS=el('input',{id:'qa-subj',type:'text',maxlength:'22',value:subjOpts[0]||'',placeholder:'e.g. English I',list:'qa-subj-list'}), dl=el('datalist',{id:'qa-subj-list'},...subjOpts.map(s=>el('option',{value:s})));
+  const fL=el('input',{id:'qa-les',type:'text',maxlength:'30',placeholder:'e.g. L-10'});
+  const fD=el('input',{id:'qa-date',type:'date',value:TODAY}), fE=el('input',{id:'qa-due',type:'date',value:prep?addWork(TODAY,-1):addWork(TODAY,2)});
+  fD.addEventListener('change',()=>{ if(fD.value) fE.value=prep?addWork(fD.value,-1):addWork(fD.value,2); });
+  const fO=el('input',{id:'qa-other',type:'text',maxlength:'18',placeholder:'Any other item'});
+  const fT=el('select',{id:'qa-staff'},el('option',{value:''},'Automatic (teacher of each section)'),...allStaff(all).map(p=>el('option',{value:p.n},p.n)));
+  const fSub=el('input',{id:'ad-sub',type:'text',placeholder:'e.g. Art'});
+  const secs=SECTIONS[wing].filter(cs=>grade==='All'||cs.replace(/[A-C]$/,'')===grade);
+  box.replaceChildren(
+    el('h2',{text:'Add '+kindWord+' · '+subj}),
+    el('div',{class:'form'},el('label',{},'Subject',fS,dl),el('label',{},'Lesson or task',fL)),
+    el('b',{text:'Items'}), prep?tickRow('qa-items',ELEMS.map(x=>[x[0],x[1]]),()=>true):tickRow('qa-items',CHK_OPTS.map(x=>[x,x]),v=>CHK_OPTS.indexOf(v)<3),
+    prep?null:el('div',{class:'form'},el('label',{},'Other item (optional)',fO)),
+    el('b',{text:'Sections'}), tickRow('qa-secs',secs.map(x=>[x,x]),()=>false),
+    el('div',{class:'form'},el('label',{},prep?'Lesson start date':'Receiving date',fD),el('label',{},'Deadline',fE),el('label',{},'Staff',fT)),
+    el('div',{class:'toolr'},el('button',{type:'button',class:'btn',onclick:()=>{
+      const s=cut(fS.value,22), l=cut(fL.value,30), ss=ticks('qa-secs'); let it=ticks('qa-items'); if(!prep&&cut(fO.value,18)) it=it.concat(cut(fO.value,18).replace(/[|]/g,' '));
+      if(!s){fS.focus();return} if(!l){fL.focus();return} if(!it.length){toast('Tick at least one item.',1);return} if(!ss.length){toast('Tick at least one section.',1);return} if(!fD.value){fD.focus();return}
+      const base={k:seg,d:fD.value,s,l,t:fT.value,g:subj,w:wing,i:it.join(prep?',':'|'),e:fE.value||''};
+      if(JSON.stringify(Object.assign({c:'10A'},base)).length>198){toast('Please shorten the lesson name or tick fewer items.',1);return}
+      ss.forEach((cs,i)=>push('status/'+PFX+'a.'+Date.now().toString(36)+i+Math.random().toString(36).slice(2,5),{note:JSON.stringify(Object.assign({c:cs},base))},i===ss.length-1?'Added for '+ss.join(', '):''));
+      fL.value=''; }},'Add')),
+    el('p',{class:'note',text:'To change the teacher or deadline of an existing item, or to remove it, select "Change" on it in the list.'}),
+    el('b',{text:'Subjects'}),
+    el('div',{class:'form'},el('label',{},'New name',fSub),
+      el('button',{type:'button',class:'btn',onclick:()=>{const k=cut(fSub.value,24); if(!k){fSub.focus();return} subj=k;teacher='All';pushSub(k,wing,0)}},'Add'),
+      el('button',{type:'button',class:'btn warn',onclick:()=>{ if(confirmKey===ck){pushSub(subj,wing,1);confirmKey=null;}else confirmKey=ck; render()}},confirmKey===ck?'Confirm: remove '+subj:'Remove '+subj)));
+}
+/* ---- dashboard: Preparation / Checking / Mentor tasks -> department -> staff, with WhatsApp ---- */
+let dDept='All', dMk='d', dSel={};
+function pendingOf(all,kind){ return all.filter(r=>r.wing===wing&&r.kind===kind&&r.st.left&&!OV.subRm[wing+'|'+r.g]).map(r=>({r,nd:r.st.next,n:daysTo(r.st.next),what:r.els.filter(e=>isOpen(getSt(e,r))).map(e=>e.name)})).filter(o=>o.n<=5).sort((a,b)=>a.nd<b.nd?-1:a.nd>b.nd?1:0); }
+function mentorOpen(k){ const out=[]; mTasks().forEach(t=>{ if(k&&t.k!==k) return; if(t.k==='d'&&!isWork(pd(TODAY))) return; const due=mDue(t,TODAY), n=daysTo(due); if(t.k==='o'&&n>5) return;
+  mSecs(t).forEach(cs=>{ if(isOpen(mGet(t,cs,TODAY))) out.push({cs,title:t.t,k:t.k,due,n,t:mentorOf(cs)}); }); }); return out; }
+const dueWord=o=>o.n<0?'overdue since '+nice(o.nd||o.due):o.n===0?'due today':'due '+nice(o.nd||o.due);
+function waMsg(all,name){ const P=pendingOf(all,'prep').filter(o=>o.r.t===name), C=pendingOf(all,'check').filter(o=>o.r.t===name), M=mentorOpen(null).filter(o=>o.t===name);
+  const L=['*FIS · Teacher Preparation & Checking*','*Pending work — '+name+'*','_'+nice(TODAY)+'_'];
+  const sec=(title,rows)=>{ if(!rows.length) return; L.push('','*'+title+'*'); rows.forEach((x,i)=>L.push((i+1)+'. '+x)); };
+  sec('Preparation not done',P.map(o=>o.r.cs+' '+o.r.s+' '+o.r.l+' — '+o.what.join(', ')+' ('+dueWord(o)+')'));
+  sec('Overdue checking',C.filter(o=>o.n<0).map(o=>o.r.cs+' '+o.r.s+' '+o.r.l+' — '+o.what.join(', ')+' (was due '+nice(o.nd)+')'));
+  sec('Checking due',C.filter(o=>o.n>=0).map(o=>o.r.cs+' '+o.r.s+' '+o.r.l+' — '+o.what.join(', ')+' ('+dueWord(o)+')'));
+  sec('Mentor tasks not done',M.map(o=>o.cs+' — '+o.title+' ('+M_ONE[o.k]+', '+dueWord(o)+')'));
+  if(L.length===3) L.push('','No pending work. Thank you.'); else L.push('','Kindly complete this and update the app today.');
+  return L.join('\n'); }
+async function copyText(t,msg){ try{ await navigator.clipboard.writeText(t); toast(msg||'Copied. Paste it in WhatsApp.'); }catch(e){ const a=el('textarea',{style:'position:fixed;left:0;top:0;opacity:0'}); a.value=t; document.body.append(a); a.select(); try{document.execCommand('copy'); toast(msg||'Copied. Paste it in WhatsApp.');}catch(x){toast('Could not copy on this device.',1)} a.remove(); } }
+function waSend(t){ if(t.length>3500){ copyText(t,'Message is long, so it was copied. Paste it in WhatsApp.'); return; } window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank','noopener'); }
+function renderDash2(all){
+  const box=$('dashView'); box.replaceChildren(); if(dashKind==='all'||!dashKind) dashKind='prep';
+  box.append(el('div',{class:'chips','aria-label':'Type of work'},...[['prep','Preparation'],['check','Checking'],['mentor','Mentor tasks']].map(([v,l])=>el('button',{type:'button',class:'chip','aria-pressed':String(dashKind===v),onclick:()=>{dashKind=v;dSel={};render()}},l))));
+  let groups=new Map(), title='';
+  if(dashKind==='mentor'){
+    box.append(el('div',{class:'tabs',role:'tablist','aria-label':'Type of task',style:'position:static'},...['d','w','o'].map(k=>el('button',{type:'button',class:'tab',role:'tab','aria-selected':String(dMk===k),onclick:()=>{dMk=k;dSel={};render()}},M_KIND[k]))));
+    mentorOpen(dMk).forEach(o=>{ if(!groups.has(o.t)) groups.set(o.t,[]); groups.get(o.t).push({late:o.n<0,text:o.cs+' · '+o.title,tag:o.n<0?'Overdue · '+nice(o.due):o.n===0?'Due today':'Due '+nice(o.due),go:()=>go({seg:'mentor'})}); });
+    title=M_KIND[dMk]+' not done';
+  } else {
+    const depts=subjectsOf(all); if(dDept!=='All'&&depts.indexOf(dDept)<0) dDept='All';
+    box.append(el('div',{class:'tabs',role:'tablist','aria-label':'Department',style:'position:static'},...['All'].concat(depts).map(k=>el('button',{type:'button',class:'tab',role:'tab','aria-selected':String(dDept===k),onclick:()=>{dDept=k;dSel={};render()}},k==='All'?'All':k))));
+    pendingOf(all,dashKind).filter(o=>dDept==='All'||o.r.g===dDept).forEach(o=>{ if(!groups.has(o.r.t)) groups.set(o.r.t,[]);
+      groups.get(o.r.t).push({late:o.n<0,text:o.r.cs+' · '+o.r.s+' '+o.r.l,sub:o.what.join(', '),tag:o.n<0?'Overdue · '+nice(o.nd):o.n===0?'Due today':'Due '+nice(o.nd),go:()=>go({seg:o.r.kind,subj:o.r.g,teacher:o.r.t})}); });
+    title=(dashKind==='prep'?'Preparation not done':'Checking not done')+(dDept==='All'?'':' · '+dDept);
+  }
+  const names=[...groups.keys()].sort((a,b)=>groups.get(b).filter(x=>x.late).length-groups.get(a).filter(x=>x.late).length||(a<b?-1:1));
+  const picked=()=>{ const s=names.filter(n=>dSel[n]); return s.length?s:names; };
+  const summary=()=>picked().map(n=>waMsg(all,n)).join('\n\n────────────\n\n');
+  box.append(el('div',{class:'tools'},el('h2',{class:'lt'},title,el('small',{text:'Overdue and due within 5 working days · tick names to choose who to notify'})),
+    names.length?el('div',{class:'toolr'},
+      el('button',{type:'button',class:'chip sm',onclick:()=>{ const allOn=names.every(n=>dSel[n]); dSel={}; if(!allOn) names.forEach(n=>dSel[n]=1); render(); }},names.every(n=>dSel[n])?'Clear ticks':'Tick all'),
+      el('button',{type:'button',class:'btn xs',onclick:()=>copyText(summary())},'Copy for WhatsApp'),
+      el('button',{type:'button',class:'btn xs wa',onclick:()=>waSend(summary())},'Send on WhatsApp')):null));
+  if(!names.length) box.append(el('div',{class:'empty',text:'Nothing is overdue or due within 5 working days here.'}));
+  names.forEach((n,i)=>{ const rows=groups.get(n), id='ds-'+i, c=el('input',{type:'checkbox',id}); c.checked=!!dSel[n]; c.addEventListener('change',()=>{ if(c.checked) dSel[n]=1; else delete dSel[n]; });
+    const card=el('div',{class:'card tblock'});
+    card.append(el('div',{class:'thead'},el('label',{class:'tname',for:id},c,el('span',{class:'num',text:String(i+1)}),el('b',{text:n})),
+      el('span',{class:'toolr'},rows.some(x=>x.late)?el('span',{class:'tag late',text:'Overdue'}):el('span',{class:'tag soon',text:'Due'}),
+        el('button',{type:'button',class:'btn ghost xs',onclick:()=>copyText(waMsg(all,n))},'Copy'),el('button',{type:'button',class:'btn xs wa',onclick:()=>waSend(waMsg(all,n))},'WhatsApp'))));
+    const ol=el('ol',{class:'tlist'}); rows.forEach(x=>ol.append(el('li',{class:x.late?'late':''},el('button',{type:'button',class:'tline',onclick:x.go},el('span',{class:'tl1'},el('b',{text:x.text}),x.sub?el('small',{text:x.sub}):null),el('span',{class:'tag '+(x.late?'late':'wait'),text:x.tag})))));
+    card.append(ol); box.append(card); });
+  box.append(el('p',{class:'note',text:'A WhatsApp message lists everything pending for that person: preparation, checking and mentor tasks. "Send on WhatsApp" opens WhatsApp for you to choose the contact.'}));
 }
 
 let outArm=0; $('meBtn').addEventListener('click',()=>{ if(!ME) return; if(Date.now()-outArm<4000){ setToken(''); lock(); outArm=0; } else { outArm=Date.now(); $('meBtn').textContent='Tap again to log out'; } });
