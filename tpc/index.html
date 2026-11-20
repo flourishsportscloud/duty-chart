@@ -27,6 +27,7 @@ ol.tlist{margin:0;padding:0 0 0 26px;display:grid;gap:6px}ol.tlist li{font-weigh
 li.late .tline{background:var(--late-bg);border-color:var(--pend-line)}
 .tl1{display:grid;gap:2px;min-width:0}.tl1 b{font-size:14.5px;color:var(--ink);font-weight:600}.tl1 small{font-size:12.5px;color:var(--muted);font-weight:500}
 .btn.wa{background:#1F8F55;color:#fff}
+.frow{display:grid;grid-template-columns:52px minmax(0,1fr);gap:8px;align-items:center}.flab{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}.frow{align-items:start;margin:6px 0}.frow .flab{padding-top:9px}.frow .chips{flex-wrap:wrap;overflow:visible;gap:6px}.frow .chip.sm{padding:6px 11px;font-size:12.5px}
 #toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:60;background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:12px;font-weight:600;font-size:13.5px;max-width:90vw}
 #toast.err{background:var(--late-ink);color:#fff}
 .me{all:unset;cursor:pointer;border-radius:999px;padding:4px 11px;font-size:12px;font-weight:600;background:var(--gold);color:var(--gold-ink)}
@@ -905,10 +906,12 @@ function renderManage2(all){
       el('button',{type:'button',class:'btn warn',onclick:()=>{ if(confirmKey===ck){pushSub(subj,wing,1);confirmKey=null;}else confirmKey=ck; render()}},confirmKey===ck?'Confirm: remove '+subj:'Remove '+subj)));
 }
 /* ---- dashboard: Preparation / Checking / Mentor tasks -> department -> staff, with WhatsApp ---- */
-let dDept='All', dMk='d', dSel={};
-function pendingOf(all,kind){ return all.filter(r=>r.wing===wing&&r.kind===kind&&r.st.left&&!OV.subRm[wing+'|'+r.g]).map(r=>({r,nd:r.st.next,n:daysTo(r.st.next),what:r.els.filter(e=>isOpen(getSt(e,r))).map(e=>e.name)})).filter(o=>o.n<=5).sort((a,b)=>a.nd<b.nd?-1:a.nd>b.nd?1:0); }
+let dDept='All', dMk='d', dSel={}, dDue={o:1,t:1,n:1,l:0}, dCls={}, dItems={};
+const bucket=n=>n<0?'o':n===0?'t':n===1?'n':'l', anyKey=o=>Object.keys(o).length>0, clsOk=cs=>!anyKey(dCls)||!!dCls[cs];
+function pendingRaw(all,kind){ return all.filter(r=>r.wing===wing&&r.kind===kind&&r.st.left&&!OV.subRm[wing+'|'+r.g]).map(r=>({r,nd:r.st.next,n:daysTo(r.st.next),what:r.els.filter(e=>isOpen(getSt(e,r))).map(e=>e.name)})).filter(o=>o.n<=5).sort((a,b)=>a.nd<b.nd?-1:a.nd>b.nd?1:0); }
+function pendingOf(all,kind){ const pickItems=kind===dashKind&&anyKey(dItems); return pendingRaw(all,kind).filter(o=>dDue[bucket(o.n)]&&clsOk(o.r.cs)).map(o=>pickItems?Object.assign({},o,{what:o.what.filter(w=>dItems[w])}):o).filter(o=>o.what.length); }
 function mentorOpen(k){ const out=[]; mTasks().forEach(t=>{ if(k&&t.k!==k) return; if(t.k==='d'&&!isWork(pd(TODAY))) return; const due=mDue(t,TODAY), n=daysTo(due); if(t.k==='o'&&n>5) return;
-  mSecs(t).forEach(cs=>{ if(isOpen(mGet(t,cs,TODAY))) out.push({cs,title:t.t,k:t.k,due,n,t:mentorOf(cs)}); }); }); return out; }
+  if(!dDue[bucket(n)]) return; mSecs(t).forEach(cs=>{ if(clsOk(cs)&&isOpen(mGet(t,cs,TODAY))) out.push({cs,title:t.t,k:t.k,due,n,t:mentorOf(cs)}); }); }); return out; }
 const dueWord=o=>o.n<0?'overdue since '+nice(o.nd||o.due):o.n===0?'due today':'due '+nice(o.nd||o.due);
 function waMsg(all,name){ const P=pendingOf(all,'prep').filter(o=>o.r.t===name), C=pendingOf(all,'check').filter(o=>o.r.t===name), M=mentorOpen(null).filter(o=>o.t===name);
   const L=['*FIS · Teacher Preparation & Checking*','*Pending work — '+name+'*','_'+nice(TODAY)+'_'];
@@ -917,7 +920,7 @@ function waMsg(all,name){ const P=pendingOf(all,'prep').filter(o=>o.r.t===name),
   sec('Overdue checking',C.filter(o=>o.n<0).map(o=>o.r.cs+' '+o.r.s+' '+o.r.l+' — '+o.what.join(', ')+' (was due '+nice(o.nd)+')'));
   sec('Checking due',C.filter(o=>o.n>=0).map(o=>o.r.cs+' '+o.r.s+' '+o.r.l+' — '+o.what.join(', ')+' ('+dueWord(o)+')'));
   sec('Mentor tasks not done',M.map(o=>o.cs+' — '+o.title+' ('+M_ONE[o.k]+', '+dueWord(o)+')'));
-  if(L.length===3) L.push('','No pending work. Thank you.'); else L.push('','Kindly complete this and update the app today.');
+  if(L.length===3) L.push('','No pending work for the selected dates. Thank you.'); else L.push('','Kindly complete this and update the app today.');
   return L.join('\n'); }
 async function copyText(t,msg){ try{ await navigator.clipboard.writeText(t); toast(msg||'Copied. Paste it in WhatsApp.'); }catch(e){ const a=el('textarea',{style:'position:fixed;left:0;top:0;opacity:0'}); a.value=t; document.body.append(a); a.select(); try{document.execCommand('copy'); toast(msg||'Copied. Paste it in WhatsApp.');}catch(x){toast('Could not copy on this device.',1)} a.remove(); } }
 function waSend(t){ if(t.length>3500){ copyText(t,'Message is long, so it was copied. Paste it in WhatsApp.'); return; } window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank','noopener'); }
@@ -936,15 +939,21 @@ function renderDash2(all){
       groups.get(o.r.t).push({late:o.n<0,text:o.r.cs+' · '+o.r.s+' '+o.r.l,sub:o.what.join(', '),tag:o.n<0?'Overdue · '+nice(o.nd):o.n===0?'Due today':'Due '+nice(o.nd),go:()=>go({seg:o.r.kind,subj:o.r.g,teacher:o.r.t})}); });
     title=(dashKind==='prep'?'Preparation not done':'Checking not done')+(dDept==='All'?'':' · '+dDept);
   }
+  const frow=(label,chips)=>el('div',{class:'frow'},el('span',{class:'flab',text:label}),el('div',{class:'chips'},...chips));
+  const tog=(label,on,fn)=>el('button',{type:'button',class:'chip sm','aria-pressed':String(!!on),onclick:()=>{fn();dSel={};render()}},label);
+  box.append(frow('Due',[['o','Overdue'],['t','Due today'],['n','Due next day'],['l','Later']].map(([k,l])=>tog(l,dDue[k],()=>{dDue[k]=dDue[k]?0:1; if(!dDue.o&&!dDue.t&&!dDue.n&&!dDue.l) dDue[k]=1;}))));
+  box.append(frow('Class',[tog('All',!anyKey(dCls),()=>{dCls={}})].concat(GRADES[wing].map(g=>{ const ss=SECTIONS[wing].filter(cs=>cs.replace(/[A-C]$/,'')===g), on=ss.length&&ss.every(cs=>dCls[cs]); return tog('Class '+g,on,()=>{ ss.forEach(cs=>{ if(on) delete dCls[cs]; else dCls[cs]=1; }); }); }),SECTIONS[wing].map(cs=>tog(cs,dCls[cs],()=>{ if(dCls[cs]) delete dCls[cs]; else dCls[cs]=1; })))));
+  if(dashKind!=='mentor'){ const opts=[...new Set(pendingRaw(all,dashKind).filter(o=>dDept==='All'||o.r.g===dDept).reduce((a,o)=>a.concat(o.what),[]))]; Object.keys(dItems).forEach(k=>{ if(opts.indexOf(k)<0) delete dItems[k]; });
+    box.append(frow('Items',[tog('All',!anyKey(dItems),()=>{dItems={}})].concat(opts.map(w=>tog(w,dItems[w],()=>{ if(dItems[w]) delete dItems[w]; else dItems[w]=1; }))))); }
   const names=[...groups.keys()].sort((a,b)=>groups.get(b).filter(x=>x.late).length-groups.get(a).filter(x=>x.late).length||(a<b?-1:1));
   const picked=()=>{ const s=names.filter(n=>dSel[n]); return s.length?s:names; };
   const summary=()=>picked().map(n=>waMsg(all,n)).join('\n\n────────────\n\n');
-  box.append(el('div',{class:'tools'},el('h2',{class:'lt'},title,el('small',{text:'Overdue and due within 5 working days · tick names to choose who to notify'})),
+  box.append(el('div',{class:'tools'},el('h2',{class:'lt'},title,el('small',{text:'Tick names to choose who to notify. The message follows the Due, Class and Items choices above.'})),
     names.length?el('div',{class:'toolr'},
       el('button',{type:'button',class:'chip sm',onclick:()=>{ const allOn=names.every(n=>dSel[n]); dSel={}; if(!allOn) names.forEach(n=>dSel[n]=1); render(); }},names.every(n=>dSel[n])?'Clear ticks':'Tick all'),
       el('button',{type:'button',class:'btn xs',onclick:()=>copyText(summary())},'Copy for WhatsApp'),
       el('button',{type:'button',class:'btn xs wa',onclick:()=>waSend(summary())},'Send on WhatsApp')):null));
-  if(!names.length) box.append(el('div',{class:'empty',text:'Nothing is overdue or due within 5 working days here.'}));
+  if(!names.length) box.append(el('div',{class:'empty',text:'Nothing pending for these choices.'}));
   names.forEach((n,i)=>{ const rows=groups.get(n), id='ds-'+i, c=el('input',{type:'checkbox',id}); c.checked=!!dSel[n]; c.addEventListener('change',()=>{ if(c.checked) dSel[n]=1; else delete dSel[n]; });
     const card=el('div',{class:'card tblock'});
     card.append(el('div',{class:'thead'},el('label',{class:'tname',for:id},c,el('span',{class:'num',text:String(i+1)}),el('b',{text:n})),
