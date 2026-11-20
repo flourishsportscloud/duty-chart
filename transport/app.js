@@ -380,11 +380,12 @@ function sbHow(k){const st=kidStatus(k.id);const g=st.g||{};const o=g.out&&g.out
   if(o==='VEH')return '<span class="tag t-VEH">Went by '+esc(VBY[k.v].l)+'</span>';
   if(o==='HOME')return '<span class="tag t-U">Went home – '+esc(modeOf(k))+'</span>';
   if(o==='SB')return '<span class="tag t-SB">Stay back – Front Office</span>';
+  if(sbDay(k.id)==='D')return '<span class="tag t-LATE">Doubt – kept back, Front Office to confirm</span>';
   return ''}
-const SBV={true:['Staying','SB'],false:['Not staying','U'],A:['Absent','A'],D:['Doubt','LATE']};
+const SBV={true:['Staying','SB'],false:['Not staying','U'],A:['Absent','A'],D:['Doubt – FO to confirm','LATE']};
 function sbRow(k){const dv=sbDraftOf(k.id),v=sbVal(k.id);const b=(val,code,lbl,c)=>'<button class="sbo'+(v===val?' on '+c:'')+'" data-sbv="'+k.id+'|'+code+'">'+lbl+'</button>';
   return nrow(esc(k.name),dots([esc(modeLabel(k)),S.sbReg[k.id]?'Regular list':'Today only',sbHow(k),dv!==undefined?'<b style="color:var(--late)">not saved</b>':''])+
-    '<div class="sbopts">'+b(true,'S','Staying','s')+b(false,'N','Not staying','n')+b('A','A','Absent','a')+'</div>',
+    '<div class="sbopts">'+b(true,'S','Staying','s')+b(false,'N','Not staying','n')+b('A','A','Absent','a')+b('D','D','Doubt','d')+'</div>',
     v===undefined?'<span class="sbdash">–</span>':'<span class="tag t-'+SBV[v][1]+'">'+SBV[v][0]+'</span>')}
 function renderSB(){
   if(document.activeElement!==$('sbBy'))fillSbBy();
@@ -393,11 +394,11 @@ function renderSB(){
   if(mode==='reg'){const cls=cpGet('sb');$('sbHint').textContent='Regular stay back list – applies to every date. Choose the classes, then tap a student to add or remove.';
     $('sbList').innerHTML=cls.length?catHead('Regular Stay Back List',Object.values(KID).filter(k=>cls.includes(k.cls)&&S.sbReg[k.id]).length,'SB')+strips(Object.values(KID).filter(k=>cls.includes(k.cls)).map(k=>({k})),r=>nrow(esc(r.k.name),esc(modeLabel(r.k)),'<button class="tg '+(S.sbReg[r.k.id]?'SB':'noSB')+'" data-sbreg="'+r.k.id+'">'+(S.sbReg[r.k.id]?'Regular':'—')+'</button>')):'<p class="muted empty">Choose one or more classes above to edit the regular list.</p>';
     renderSBSum();return}
-  $('sbHint').innerHTML=view?'Viewing all entries. Choose your name in <b>Marked by</b> to mark.':'Mark each student yourself – <b>Staying</b>, <b>Not staying</b> or <b>Absent</b> – then press Save for the class. A grey dash means not marked yet.';
+  $('sbHint').innerHTML=view?'Viewing all entries. Choose your name in <b>Marked by</b> to mark.':'Mark each student yourself – <b>Staying</b>, <b>Not staying</b>, <b>Absent</b> or <b>Doubt</b> – then press Save for the class. <b>Doubt</b> keeps the child back from the vehicle and goes to Front Office (FO Entry-Exit) to confirm with the parent as Staying or Not staying. A grey dash means not marked yet.';
   const list=cpList('sb');let tot=0,h='';
   list.forEach(c=>{const ks=sbCands(c);if(!ks.length)return;tot+=ks.length;const sg=seg(c);const d=S.sb[sg];const dn=Object.keys((S.sbDraft||{})[sg]||{}).length;
     const n=x=>ks.filter(k=>sbVal(k.id)===x).length;const um=ks.filter(k=>sbVal(k.id)===undefined).length;
-    h+='<div class="cstrip"><span>'+esc(clsName(c))+'</span><small>'+ks.length+'</small></div><div class="sbcount"><span class="tag t-SB">Staying '+n(true)+'</span><span class="tag t-U">Not staying '+n(false)+'</span><span class="tag t-A">Absent '+n('A')+'</span><span class="tag t-U">– Not marked '+um+'</span>'+(d&&d.by?'<em>Marked by '+esc(byShort(d.by))+' '+esc(d.time||'')+'</em>':'')+'</div>'+
+    h+='<div class="cstrip"><span>'+esc(clsName(c))+'</span><small>'+ks.length+'</small></div><div class="sbcount"><span class="tag t-SB">Staying '+n(true)+'</span><span class="tag t-U">Not staying '+n(false)+'</span><span class="tag t-A">Absent '+n('A')+'</span><span class="tag t-LATE">Doubt '+n('D')+'</span><span class="tag t-U">– Not marked '+um+'</span>'+(d&&d.by?'<em>Marked by '+esc(byShort(d.by))+' '+esc(d.time||'')+'</em>':'')+'</div>'+
       ks.map((k,i)=>'<div class="nrow'+(sbDraftOf(k.id)!==undefined?' drf':'')+'"><span class="no">'+(i+1)+'</span>'+sbRow(k)+'</div>').join('')+
       (view?'':'<div class="row sbact">'+(um?'<button class="btn ghost sm" data-sball="'+esc(c)+'">Mark remaining '+um+' as Staying</button>':'')+(dn?'<button class="btn" data-sbsave="'+esc(sg)+'" style="flex:1">Save '+esc(clsName(c))+' ('+dn+')</button><button class="btn ghost" data-sbcancel="'+esc(sg)+'">Cancel</button>':'')+'</div>')});
   const inL=k=>list.includes(k.cls);const srt=(a,b)=>CLASSES.indexOf(a.cls)-CLASSES.indexOf(b.cls)||a.name.localeCompare(b.name);
@@ -407,13 +408,13 @@ function renderSB(){
   renderSBSum();
 }
 function renderSBSum(){
-  const list=cpList('sb');let T={s:0,n:0,a:0,u:0},h='';
-  list.forEach(c=>{const ks=sbCands(c);if(!ks.length)return;const g={s:[],n:[],a:[],u:[]};
-    ks.forEach(k=>{const v=sbDay(k.id);const fo=((S.gate[k.id]||{}).out||{}).type==='SB';(v===true||v==='D'||(v===undefined&&fo)?g.s:v===false?g.n:v==='A'?g.a:g.u).push(k)});
+  const list=cpList('sb');let T={s:0,d:0,n:0,a:0,u:0},h='';
+  list.forEach(c=>{const ks=sbCands(c);if(!ks.length)return;const g={s:[],d:[],n:[],a:[],u:[]};
+    ks.forEach(k=>{const v=sbDay(k.id);const fo=((S.gate[k.id]||{}).out||{}).type==='SB';(sbDoubt(k.id)?g.d:v===true||v==='D'||(v===undefined&&fo)?g.s:v===false?g.n:v==='A'?g.a:g.u).push(k)});
     Object.keys(T).forEach(x=>T[x]+=g[x].length);const d=S.sb[seg(c)];
     const ln=(arr,t,cc)=>arr.length?'<div class="sumline"><span class="tag t-'+cc+'">'+t+' · '+arr.length+'</span><ol>'+arr.map(k=>'<li><b>'+esc(k.name)+'</b><i>'+dots([esc(modeLabel(k)),sbHow(k)])+'</i></li>').join('')+'</ol></div>':'';
-    h+='<div class="cstrip"><span>'+esc(clsName(c))+'</span><small>'+g.s.length+' staying</small></div>'+ln(g.s,'Staying','SB')+ln(g.n,'Not staying','U')+ln(g.a,'Absent','A')+ln(g.u,'Not marked','U')+(d&&d.by?'<p class="muted" style="margin:6px 6px 0">Marked by '+esc(byShort(d.by))+' '+esc(d.time||'')+'</p>':'')});
-  $('sbSumH').innerHTML=catHead('Stay Back Summary',T.s,'SB')+'<div class="sbcount"><span class="tag t-SB">Staying '+T.s+'</span><span class="tag t-U">Not staying '+T.n+'</span><span class="tag t-A">Absent '+T.a+'</span><span class="tag t-U">– Not marked '+T.u+'</span></div>';
+    h+='<div class="cstrip"><span>'+esc(clsName(c))+'</span><small>'+g.s.length+' staying</small></div>'+ln(g.s,'Staying','SB')+ln(g.d,'Doubt – Front Office to confirm','LATE')+ln(g.n,'Not staying','U')+ln(g.a,'Absent','A')+ln(g.u,'Not marked','U')+(d&&d.by?'<p class="muted" style="margin:6px 6px 0">Marked by '+esc(byShort(d.by))+' '+esc(d.time||'')+'</p>':'')});
+  $('sbSumH').innerHTML=catHead('Stay Back Summary',T.s,'SB')+'<div class="sbcount"><span class="tag t-SB">Staying '+T.s+'</span><span class="tag t-U">Not staying '+T.n+'</span><span class="tag t-A">Absent '+T.a+'</span><span class="tag t-LATE">Doubt '+T.d+'</span><span class="tag t-U">– Not marked '+T.u+'</span></div>';
   $('sbSum').innerHTML=h||'<p class="muted empty">Nothing to show.</p>';
 }
 
@@ -1008,7 +1009,7 @@ document.addEventListener('click',async e=>{
   if(t.dataset.cpall!==undefined){cpSet(t.dataset.cpall,[]);return}
   if(t.dataset.cpg){const [key,g]=t.dataset.cpg.split('|');const secs=CLASSES.filter(c=>c.split(' - ')[0]===g);const a=new Set(cpGet(key));const all=secs.every(c=>a.has(c));secs.forEach(c=>all?a.delete(c):a.add(c));cpSet(key,[...a]);return}
   if(t.dataset.cps){const [key,c]=t.dataset.cps.split('|');const a=new Set(cpGet(key));a.has(c)?a.delete(c):a.add(c);cpSet(key,[...a]);return}
-  if(t.dataset.sbv){if(needBy('sbBy'))return;const [id,code]=t.dataset.sbv.split('|');const v=code==='S'?true:code==='N'?false:'A';const sg=seg(KID[id].cls);S.sbDraft=S.sbDraft||{};const d=S.sbDraft[sg]=S.sbDraft[sg]||{};
+  if(t.dataset.sbv){if(needBy('sbBy'))return;const [id,code]=t.dataset.sbv.split('|');const v=code==='S'?true:code==='N'?false:code==='D'?'D':'A';const sg=seg(KID[id].cls);S.sbDraft=S.sbDraft||{};const d=S.sbDraft[sg]=S.sbDraft[sg]||{};
     if(d[id]===v||(!(id in d)&&sbDay(id)===v))delete d[id];else if(sbDay(id)===v)delete d[id];else d[id]=v;if(!Object.keys(d).length)delete S.sbDraft[sg];render();return}
   if(t.dataset.sball){if(needBy('sbBy'))return;const c=t.dataset.sball,sg=seg(c);S.sbDraft=S.sbDraft||{};const d=S.sbDraft[sg]=S.sbDraft[sg]||{};sbCands(c).forEach(k=>{if(sbVal(k.id)===undefined)d[k.id]=true});if(!Object.keys(d).length)delete S.sbDraft[sg];render();return}
   if(t.id==='dayCopy'){await copyTxt(dayText());return}
