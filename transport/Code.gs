@@ -66,7 +66,7 @@ function roster_(){
   return {veh: all.filter(x => x.t !== 'Walk'), walk: all.filter(x => x.t === 'Walk')};
 }
 /* ---------- documents ---------- */
-const PATH_RE = /^(config\/(alloc|sbRegular|walkRegular|managers|privateVan|settings)|att\/\d{4}-\d\d-\d\d\/(veh|gate|sb|out|derr)\/[A-Za-z0-9_.\-]{1,60})$/;
+const PATH_RE = /^(config\/(alloc|sbRegular|walkRegular|managers|privateVan|settings|ss-[A-Za-z0-9_]{1,40})|att\/\d{4}-\d\d-\d\d\/(veh|gate|sb|out|derr|ss)\/[A-Za-z0-9_.\-]{1,60})$/;
 function parts_(path){ if(!PATH_RE.test(String(path||''))) fail('Bad record.'); const s = path.split('/');
   return s[0] === 'config' ? {coll: 'config', day: 'config'} : {coll: s.slice(0,3).join('/'), day: s[1]}; }
 function rev_(next){ const p = props_(); let r = Number(p.getProperty('rev') || 0); if(next){ r++; p.setProperty('rev', String(r)); } return r; }
