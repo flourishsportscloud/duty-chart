@@ -106,8 +106,8 @@ const K=k=>'fisMS:'+k;
 const lsGet=(k,d)=>{try{const v=localStorage.getItem(K(k));return v==null?d:JSON.parse(v)}catch(e){return d}};
 const lsPut=(k,v)=>{try{localStorage.setItem(K(k),JSON.stringify(v))}catch(e){}};
 /* ---------- catalog: departments, subjects, items checked ---------- */
-const ITEMS=['Book','Notebook','Homework Notebook','Practice Notebook','Assignment','Test Notebook'];
-const IT_SHORT={'Book':'Book','Notebook':'Notebook','Homework Notebook':'Homework NB','Practice Notebook':'Practice NB','Assignment':'Assignment','Test Notebook':'Test NB'};
+const ITEMS=['Book','Notebook','Content Notebook','Homework Notebook','Practice Notebook','Assignment','Test Notebook'];
+const IT_SHORT={'Book':'Book','Notebook':'Notebook','Content Notebook':'Content NB','Homework Notebook':'Homework NB','Practice Notebook':'Practice NB','Assignment':'Assignment','Test Notebook':'Test NB'};
 const NB4=['Book','Notebook','Assignment','Test Notebook'], NB3=['Notebook','Assignment','Test Notebook'];
 const SUBJ=[
  {n:'English I',d:'English',c:[1,10],i:c=>c<=5?NB4:NB3},
@@ -116,13 +116,13 @@ const SUBJ=[
  {n:'EVS',d:'Science',c:[1,2],i:()=>NB4},
  {n:'Science',d:'Science',c:[3,10],i:c=>c<=5?NB4:NB3},
  {n:'S.St.',d:'S.St.',c:[3,10],i:c=>c<=5?NB4:NB3},
- {n:'Maths',d:'Maths',c:[1,10],i:c=>c<=5?NB4:(c===6||c>=9)?['Homework Notebook','Practice Notebook','Assignment','Test Notebook']:['Practice Notebook','Assignment','Test Notebook']},
+ {n:'Maths',d:'Maths',c:[1,10],i:c=>c<=5?NB4:(c===6||c>=9)?['Content Notebook','Homework Notebook','Practice Notebook','Assignment','Test Notebook']:['Content Notebook','Practice Notebook','Assignment','Test Notebook']},
  {n:'GK',d:'GK',c:[1,8],i:c=>c<=5?['Book','Test Notebook']:['Test Notebook','Book']},
- {n:'Computer',d:'Computer',c:[1,10],i:c=>c<=5?['Test Notebook','Book','Notebook']:['Test Notebook']},
+ {n:'Computer',d:'Computer',c:[1,10],i:()=>['Book','Notebook','Test Notebook']},
  {n:'Hindi I',d:'Hindi',c:[1,8],i:c=>c<=2?NB4:['Book','Notebook','Test Notebook']},
  {n:'Hindi II',d:'Hindi',c:[2,8],i:c=>c<=5?['Book','Test Notebook']:['Book','Assignment','Test Notebook']},
  {n:'Hindi',d:'Hindi',c:[9,10],i:()=>NB4},
- {n:'Sanskrit',d:'Sanskrit',c:[2,9],i:()=>['Book']},
+ {n:'Sanskrit',d:'Sanskrit',c:[2,9],i:()=>['Book','Test Notebook']},
  {n:'Business Studies',d:'Commerce',c:[11,11],i:()=>NB3},
  {n:'Accountancy',d:'Commerce',c:[11,11],i:()=>NB3},
  {n:'Economics',d:'Commerce',c:[11,11],i:()=>NB3},
