@@ -143,6 +143,32 @@ td.g{background:#e3f6ec;color:var(--green)}td.r{background:#fde8e8;color:var(--r
 .ph img{display:block;width:58px;height:58px;object-fit:cover;border-radius:6px;background:#eef1f7}
 .phadd{display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;border:2px dashed #c5cce0;border-radius:8px;font-size:11px;font-weight:600;color:var(--navy);cursor:pointer}
 .phadd input{display:none}
+.ph.up{opacity:.6;position:relative}.ph.fail{border-color:var(--red);color:var(--red);font-weight:700}
+.med{border-top:1px dashed var(--line);margin-top:8px;padding-top:8px}
+.med h5{margin:0 0 6px;font-size:12px;color:var(--navy)}
+.mc{border:1px solid var(--line);border-radius:10px;padding:8px;margin-bottom:6px;background:#fbfcfe}
+.mc .mt{display:flex;justify-content:space-between;gap:6px;align-items:flex-start}
+.mc .mn{font-weight:700}.mc .mx{font-size:12px;color:var(--mut);margin-top:2px}
+.mc .tms{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}
+.tmc{font-size:11px;border-radius:99px;padding:2px 8px;background:#e9eefc;color:#2a3f86;font-weight:600}
+.tmc.ack{background:#fff1d6;color:#8a5a00}.tmc.fu{background:#e3f6ec;color:#16733f}
+.mc .acts{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.medf{display:grid;grid-template-columns:1fr 64px;gap:6px;margin-top:4px}
+.medf input,.medf select,.tlr input,.tlr textarea{font:inherit;font-size:13px;border:1px solid #c7cfe2;border-radius:6px;padding:6px;background:#fff;min-width:0}
+.medf .full{grid-column:1/-1}
+.btn2{border:0;border-radius:8px;padding:8px 12px;font-weight:700;font-size:13px;background:var(--navy);color:#fff}
+.btn2.fu{background:#1e9e5a}.btn2.sm{padding:5px 9px;font-size:12px}
+.tlsecs{display:flex;gap:6px;padding:8px 10px;background:#f3f5fa;flex-wrap:wrap;align-items:center}
+.tlsecs button{border:1px solid var(--line);background:#fff;border-radius:99px;padding:5px 14px;font-weight:700;color:var(--navy)}
+.tlsecs button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.tlr{border-top:1px solid var(--line);padding:8px 10px;display:grid;grid-template-columns:74px 1fr;gap:6px 8px;align-items:start}
+.tlr.now{background:#fff8e6;box-shadow:inset 3px 0 0 #e0a800}.tlr.past .tlt{color:var(--mut)}
+.tlt{font-weight:700;font-size:12px;line-height:1.3}.tlt small{display:block;font-weight:600;color:#b07a00;font-size:10px}
+.tlb{display:flex;flex-direction:column;gap:5px}
+.tlo{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.obsbtn{border:2px dashed #c5cce0;background:#fff;border-radius:8px;padding:5px 10px;font-weight:700;font-size:12px;color:var(--navy)}
+.obsbtn.d{border:2px solid var(--green);background:#e3f6ec;color:var(--green)}
+.sumt td,.sumt th{font-size:12px}
 .phview{position:fixed;inset:0;background:rgba(10,15,30,.85);z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px}
 .phview img{max-width:100%;max-height:80vh;border-radius:8px}.phview button{border:0;border-radius:8px;padding:8px 18px;font-weight:700}
 /* ===== FIS premium theme · navy + gold (school logo colours) ===== */
@@ -262,12 +288,12 @@ const DP=[
  {id:'lfr',name:'Lost and Found',rem:1},{id:'statrev',name:'Stationery Review',rem:1},{id:'sbmon',name:'Stayback Monitoring',rem:1},
  {id:'sblunchr',name:'Stayback Lunch',rem:1},{id:'distr',name:'Distribution Round',rem:1},{id:'bookrev',name:'Book Review',rem:1}]},
 {id:'welfare',name:'Student Welfare',time:'14:00',items:[
- {id:'medicalr',name:'Medical',rem:1},{id:'lunchcase',name:'Lunch Observation – Case',rem:1},{id:'washcase',name:'Washroom Cases',rem:1},{id:'sblunchcase',name:'Stayback Lunch Case',rem:1}]},
-{id:'campus',name:'Washroom',tag:'tap each time you check',time:null,items:[
- {id:'wr_dry',name:'Dryness',multi:1,one:1},{id:'wr_clean',name:'Cleanliness',multi:1,one:1},{id:'wr_supply',name:'Supplies',multi:1,one:1},
- {id:'wr_img',name:'Washroom Images',rem:'p',one:1},{id:'wr_light',name:'Lights',multi:1,one:1},{id:'wr_fan',name:'Fans',multi:1,one:1}]},
+ {id:'medicalr',name:'Medical',rem:1,med:1},{id:'lunchcase',name:'Lunch Observation – Case',rem:1},{id:'washcase',name:'Washroom Cases',rem:1},{id:'sblunchcase',name:'Stayback Lunch Case',rem:1}]},
+{id:'campus',name:'Washroom',tag:'tap each time you check · up to 5 · or NA',time:null,items:[
+ {id:'wr_dry',name:'Dryness',multi:1,one:1,max:5},{id:'wr_clean',name:'Cleanliness',multi:1,one:1,max:5},{id:'wr_supply',name:'Supplies',multi:1,one:1,max:5},
+ {id:'wr_img',name:'Washroom Images',rem:'p',one:1},{id:'wr_light',name:'Lights',multi:1,one:1,max:5},{id:'wr_fan',name:'Fans',multi:1,one:1,max:5}]},
 {id:'audit',name:'Other Subjects Observations',time:null,items:[
- {id:'osskill',name:'Skill Course',rem:1},{id:'osfl',name:'Foreign Language',rem:1},{id:'osart',name:'Art',rem:1}]}
+ {id:'osskill',name:'Skill Course',rem:1},{id:'osfl',name:'Foreign Language',rem:1},{id:'osart',name:'Art',rem:1},{id:'oslib',name:'Library',rem:1}]}
 ];
 /* Day End — PM PLAN – DAY END TASKS. sec:1 = marked per section; otherwise one tick per item.
    rem:'n' = number + remark per section, rem:'c' = number + colour, rem:'p' = photo log per section. Ids start with e_ so they never clash with Day Plan rows. */
@@ -297,6 +323,10 @@ const WEEKLY=[['classobs','Classroom Observation'],['groupremark','Group Remark 
 const WKBLOCK={id:'wkblock',name:'Observation Update',time:null};
 const WEEKEND=[['wa_cert','Certificate'],['wa_display','Class Display'],['wa_cupb','Cupboard'],['wa_dcr','DCR Audit – Error SMS']];
 const WEBLOCK={id:'weblock',name:'Weekend Audit',time:null};
+/* Class Timeline (Day Plan): half-hour slots per section — activity, an "Observed" time stamp and a remark.
+   Kept out of the completion % (it is a log, not a checklist). Keys: tl0800__A etc. */
+const TL_START=8*60,TL_END=14*60+30;const TLBLOCK={id:'tline',name:'Class Timeline',time:null};
+const TLSLOTS=[];for(let m=TL_START;m<TL_END;m+=30){const k='tl'+String(Math.floor(m/60)).padStart(2,'0')+String(m%60).padStart(2,'0');TLSLOTS.push({key:k,from:m,to:m+30})}
 
 const ROWS={dp:[],de:[]};const ROWMAP={};
 Object.keys(DEFS).forEach(m=>DEFS[m].forEach(b=>{b.mode=m;b.items.forEach(it=>{
@@ -305,13 +335,14 @@ Object.keys(DEFS).forEach(m=>DEFS[m].forEach(b=>{b.mode=m;b.items.forEach(it=>{
 })}));
 Object.keys(ROWS).forEach(m=>ROWS[m].forEach(r=>ROWMAP[r.key]=r));
 /* Follow-up checks: 3 extra ticks under these items (not counted in block %), so the PM records how many times the item was checked */
-const FU_IDS=['medicalr','washcase','wr_dry','wr_clean','wr_supply'];const FUROWS={};
+const FU_IDS=['washcase','wr_dry','wr_clean','wr_supply'];const FUROWS={};
 ROWS.dp.filter(r=>FU_IDS.indexOf(r.key)>=0).forEach(r=>{FUROWS[r.key]=[1,2,3].map(n=>{
   const fr={key:r.key+'-fu'+n,item:{id:r.key+'-fu'+n,name:'Follow-up '+n,one:r.item.one,sec:r.item.sec},label:'Follow-up '+n,block:r.block,mode:'dp',rem:'',kind:'',sub:true};
   ROWMAP[fr.key]=fr;return fr})});
 const WKROWS=WEEKLY.map(w=>({key:'wk-'+w[0],item:{},label:w[1],block:WKBLOCK,mode:'wk',rem:1,kind:'',sub:false}));
 const WEROWS=WEEKEND.map(w=>({key:'wk-'+w[0],item:{},label:w[1],block:WEBLOCK,mode:'wk',rem:1,kind:'',sub:false}));
 WKROWS.concat(WEROWS).forEach(r=>ROWMAP[r.key]=r);
+TLSLOTS.forEach(t=>{ROWMAP[t.key]={key:t.key,item:{tl:1},label:'',block:TLBLOCK,mode:'dp',rem:1,kind:'',sub:false,tl:1}});
 const wkRowsFor=mode=>mode==='de'?WEROWS:WKROWS;
 const DAYN=['Mon','Tue','Wed','Thu','Fri','Sat'];
 const secsOf=(pl,r)=>((r.mode==='dp'&&!r.item.one)||r.item.sec)?pl.sections:['x'];
@@ -368,16 +399,28 @@ async function api(fn,args){
   return j.v;
 }
 const unacked={},inflight={};
-const hasPend=u=>!!(u&&(Object.keys(u.cells).length||Object.keys(u.rem).length));
+const hasPend=u=>!!(u&&(Object.keys(u.cells).length||Object.keys(u.rem).length||(u.med&&u.med.length)));
+function applyMed(list,m,by){
+  const e=list.find(x=>x.id===m.id);const now=Date.now();
+  if(m.op==='add'&&!e)list.push({id:m.id,name:m.name,sec:m.sec,x:m.x||'',ack:{at:now,by:by},fu:[]});
+  else if(!e)return list;
+  else if(m.op==='fu')e.fu.push({at:now,by:by});
+  else if(m.op==='unfu')e.fu.pop();
+  else if(m.op==='note')e.x=m.x;
+  else if(m.op==='del')return list.filter(x=>x.id!==m.id);
+  return list;
+}
 function overlay(id,doc){
-  doc.cells=doc.cells||{};doc.rem=doc.rem||{};
+  doc.cells=doc.cells||{};doc.rem=doc.rem||{};doc.med=doc.med||[];
   [inflight[id],unacked[id],typed[id]].forEach(u=>{if(u){
     Object.keys(u.cells).forEach(k=>{const c=u.cells[k];doc.cells[k]=c.ops?applyOps(doc.cells[k],c.ops,whoName()):clone(c)});
-    Object.assign(doc.rem,clone(u.rem))}});
+    Object.assign(doc.rem,clone(u.rem));
+    (u.med||[]).forEach(m=>{doc.med=applyMed(doc.med,m,whoName())})}});
   return doc;
 }
 function persist(id,patch){
-  const u=unacked[id]=unacked[id]||{cells:{},rem:{}};
+  const u=unacked[id]=unacked[id]||{cells:{},rem:{},med:[]};u.med=u.med||[];
+  (patch.med||[]).forEach(m=>u.med.push(clone(m)));
   Object.keys(patch.cells||{}).forEach(k=>{const c=clone(patch.cells[k]);
     if(c.ops&&u.cells[k]&&u.cells[k].ops)u.cells[k].ops=u.cells[k].ops.concat(c.ops);else u.cells[k]=c});
   Object.assign(u.rem,clone(patch.rem||{}));
@@ -387,17 +430,19 @@ function persist(id,patch){
 }
 async function sendDoc(id){
   const u=unacked[id];if(!hasPend(u))return;
-  inflight[id]=u;unacked[id]={cells:{},rem:{}};
+  inflight[id]=u;unacked[id]={cells:{},rem:{},med:[]};
   try{
     const doc=await api('pmSave',[id,u]);
-    delete inflight[id];S.docs[id]=overlay(id,doc);setConn('live');saveLocal();render();
+    delete inflight[id];if(u.med&&u.med.length&&!('med' in doc))showMsg('Medical cases need the new server script (pm/Code.gs) — ask the Director to update it.');
+    S.docs[id]=overlay(id,doc);setConn('live');saveLocal();render();
   }catch(e){
     delete inflight[id];
     if(e.server){showMsg(e.message);poll()}
     else{const n=unacked[id];Object.keys(n.cells).forEach(k=>{const c=n.cells[k];if(c.ops&&u.cells[k]&&u.cells[k].ops)u.cells[k].ops=u.cells[k].ops.concat(c.ops);else u.cells[k]=c});
-      unacked[id]={cells:u.cells,rem:Object.assign(u.rem,n.rem)};setConn('err')}
+      unacked[id]={cells:u.cells,rem:Object.assign(u.rem,n.rem),med:(u.med||[]).concat(n.med||[])};setConn('err');retrySoon()}
   }
 }
+let retryT=null;function retrySoon(){clearTimeout(retryT);retryT=setTimeout(()=>{Object.keys(unacked).forEach(id=>{if(hasPend(unacked[id]))enqueue(id,()=>sendDoc(id))})},4000)}
 let polling=false;
 async function poll(){
   if(!API_URL||polling||!S.token)return;polling=true;const wk=S.wk;
@@ -482,7 +527,7 @@ function initDb(){
 /* ================= MUTATIONS ================= */
 function ensureDoc(id,plId,mode,date){
   if(!S.docs[id])S.docs[id]={pl:plId,mode:mode,date:date,wk:mode==='wk'?date:ds(mondayOf(parseD(date))),cells:{},rem:{}};
-  const d=S.docs[id];d.cells=d.cells||{};d.rem=d.rem||{};return d;
+  const d=S.docs[id];d.cells=d.cells||{};d.rem=d.rem||{};d.med=d.med||[];return d;
 }
 function mkCell(rk,s,now,wk){
   const r=ROWMAP[rk];const due=(!wk&&r)?dueOf(r.block):null;
@@ -501,15 +546,15 @@ function setCells(plId,list,wk){
 const NEXT={'':'D',D:'N',N:'A',A:''};
 const OBS_MAX=10;
 function applyOps(cell,ops,by){
-  const obs=((cell&&cell.obs)||[]).slice();
-  ops.forEach(o=>{if(o==='add')obs.push(Date.now());else if(o==='pop')obs.pop()});
-  return {s:obs.length?'D':'',obs:obs,by:by,at:Date.now(),l:0};
+  const obs=((cell&&cell.obs)||[]).slice();let na=!!(cell&&cell.na);
+  ops.forEach(o=>{if(o==='add'){na=false;obs.push(Date.now())}else if(o==='pop')obs.pop();else if(o==='na'){na=!na;if(na)obs.length=0}});
+  const c={s:na?'A':(obs.length?'D':''),obs:obs,by:by,at:Date.now(),l:0};if(na)c.na=1;return c;
 }
 function doObs(plId,rk,sec,op){
   if(!canAct(plId))return;
   const mode=S.mode,id=docId(plId,mode,S.date),doc=ensureDoc(id,plId,mode,S.date),key=rk+'__'+sec;
-  const n=((doc.cells[key]&&doc.cells[key].obs)||[]).length;
-  if(op==='add'&&n>=OBS_MAX){showMsg('Up to '+OBS_MAX+' checks a day.');return}
+  const n=((doc.cells[key]&&doc.cells[key].obs)||[]).length;const r=ROWMAP[rk];const mx=(r&&r.item.max)||(r&&r.tl?1:OBS_MAX);
+  if(op==='add'&&n>=mx){showMsg(r&&r.tl?'Already marked observed — tap ↶ to undo.':'Up to '+mx+' checks a day.');return}
   if(op==='pop'&&!n)return;
   doc.cells[key]=applyOps(doc.cells[key],[op],whoName());
   persist(id,{cells:{[key]:{ops:[op]}}});render();
@@ -537,7 +582,7 @@ function onRemInput(el){
   }else{
     const e=doc.rem[key]||{x:''};e[f]=el.value;e.by=whoName();e.at=Date.now();doc.rem[key]=e;
     const has=(e.n!==''&&e.n!=null)||String(e.x||'').trim()!=='';
-    if(has&&!(doc.cells[key]&&doc.cells[key].s==='D'))doc.cells[key]=mkCell(rk,'D',Date.now(),mode==='wk');
+    if(!ROWMAP[rk].tl&&!/^med-/.test(rk)&&has&&!(doc.cells[key]&&doc.cells[key].s==='D'))doc.cells[key]=mkCell(rk,'D',Date.now(),mode==='wk');
   }
   const t=typed[id]=typed[id]||{cells:{},rem:{}};
   if(doc.rem[key])t.rem[key]=clone(doc.rem[key]);if(doc.cells[key])t.cells[key]=clone(doc.cells[key]);
@@ -576,7 +621,7 @@ function paintConn(){
   const m={live:['Live · shared','live'],local:['Setting up · this device only','loc'],err:["Can't reach server · will retry",'err'],init:['Connecting…','']}[S.conn]||['',''];
   el.textContent=m[0];el.className='chip '+m[1];
 }
-function typing(){const a=document.activeElement;return !!(a&&a.classList&&a.classList.contains('remin'))}
+function typing(){const a=document.activeElement;return !!(a&&a.classList&&(a.classList.contains('remin')||a.classList.contains('medin')))}
 function render(force){
   if(typing()&&!force){S.dirty=true;return}
   S.dirty=false;paintTop();
@@ -617,6 +662,7 @@ function strip(){
 }
 function obsBoxHTML(pl,r,sec,c,editable){
   const obs=(c&&c.obs)||[];
+  if(c&&c.na)return `<button class="box a ${editable?'':'ro'}" data-act="obsadd" data-pl="${pl.id}" data-row="${r.key}" data-sec="${sec}"><span class="sl">Marked</span><span class="sy">NA</span><span class="tm">${c.at?fmtT(c.at):''}</span></button>`;
   const list=obs.map((t,i)=>`${i+1}) ${fmtT(t)}`).join('<br>');
   return `<button class="box obs ${obs.length?'d':''} ${editable?'':'ro'}" data-act="obsadd" data-pl="${pl.id}" data-row="${r.key}" data-sec="${sec}"><span class="sl">${obs.length?'Checks':'Tap'}</span><span class="sy">${obs.length||'+'}</span><span class="tm">${list}</span></button>`;
 }
@@ -637,8 +683,7 @@ function remPanel(pl,r,doc,editable){
     let h=`<div class="rr"><div class="sn">${esc(secLbl(s))}</div>`;
     if(r.rem==='p'){
       const ph=e.ph||[];
-      h+=`<div class="phs">`+ph.map(p=>`<button class="ph" data-act="photo" data-id="${p.id}"><img alt="Photo" data-pid="${p.id}" src="${PHOTOS[p.id]||''}"><span>${fmtT(p.at)}</span></button>`).join('')+
-        (editable&&ph.length<5?`<label class="phadd">📷 Add<input type="file" accept="image/*" capture="environment" data-act="phup" data-pl="${pl.id}" data-row="${r.key}" data-sec="${s}"></label>`:'')+(!ph.length&&!editable?'<span class="muted">No photo</span>':'')+`</div>`;
+      h+=`<div class="phs">`+phThumbs(ph,docId(pl.id,r.mode,S.date),r.key+'__'+s,editable,`data-pl="${pl.id}" data-row="${r.key}" data-sec="${s}"`)+(!ph.length&&!editable?'<span class="muted">No photo</span>':'')+`</div>`;
       return h+`</div>`;
     }
     if(r.rem==='n'||r.rem==='c')h+=`<input class="remin" type="number" inputmode="numeric" placeholder="#" data-pl="${pl.id}" data-row="${r.key}" data-sec="${s}" data-f="n" value="${esc(e.n==null?'':e.n)}" ${editable?'':'readonly'}>`;
@@ -654,6 +699,7 @@ function rowHTML(pl,r,doc,editable){
   const rcount=r.rem?remCount(pl,r,doc):0;const open=S.openRem[pl.id+'|'+r.key];
   let h=`<div class="row ${r.sub?'sub':''} ${one?'de':''}"><div class="rl"><span class="lbl">${esc(r.label)}</span><span class="rb">`;
   if(r.rem)h+=`<button class="mini ${open?'on':''}" data-act="rem" data-pl="${pl.id}" data-row="${r.key}">${REMLBL[r.rem]}${rcount?' ('+rcount+')':''}</button>`;
+  if(r.item.multi&&r.item.max)h+=`<button class="mini ${editable?'':'ro'}" data-act="obsna" data-pl="${pl.id}" data-row="${r.key}" data-sec="${secs[0]}">NA</button>`;
   if(r.item.multi)h+=`<button class="mini ${editable?'':'ro'}" data-act="obsundo" data-pl="${pl.id}" data-row="${r.key}" data-sec="${secs[0]}">↶ Undo last</button>`;
   else if(r.kind!=='num'&&!one)h+=`<button class="mini ${editable?'':'ro'}" data-act="allrow" data-pl="${pl.id}" data-row="${r.key}">all ${r.item.yn?'YES':'✓'}</button>`;
   h+=`</span></div><div class="boxes">`;
@@ -663,7 +709,7 @@ function rowHTML(pl,r,doc,editable){
   return h+'</div>';
 }
 function blocksHTML(pl,doc,editable){
-  let h='';
+  let h=S.mode==='dp'?timelineHTML(pl,doc,editable):'';
   DEFS[S.mode].forEach(b=>{
     const info=blockInfo(doc,pl,b,S.date);
     const timeTxt=info.due?fmt12(info.due):'No fixed time';
@@ -677,12 +723,80 @@ function blocksHTML(pl,doc,editable){
       if(it.subs){
         h+=`<div class="ih"><span>${esc(it.name)}${it.sec&&S.mode==='de'?' <small class="muted" style="font-weight:400">· section-wise</small>':''}</span><button class="mini ${editable?'':'ro'}" data-act="allitem" data-pl="${pl.id}" data-item="${it.id}">All ✓</button></div>`;
         ROWS[S.mode].filter(r=>r.item===it).forEach(r=>{h+=rowHTML(pl,r,doc,editable)});
-      }else{h+=rowHTML(pl,ROWMAP[it.id],doc,editable);if(S.mode==='dp'&&FUROWS[it.id])FUROWS[it.id].forEach(fr=>{h+=rowHTML(pl,fr,doc,editable)})}
+      }else{h+=rowHTML(pl,ROWMAP[it.id],doc,editable);if(S.mode==='dp'&&FUROWS[it.id])FUROWS[it.id].forEach(fr=>{h+=rowHTML(pl,fr,doc,editable)});if(S.mode==='dp'&&it.med)h+=medPanel(pl,doc,editable)}
       h+='</div>';
     });
     h+='</div>';
   });
   return h;
+}
+/* ---------- Medical cases: one card per child · Noted time (when added) · Follow-up times · optional photo ---------- */
+function medPanel(pl,doc,editable){
+  const list=(doc&&doc.med)||[];const did=docId(pl.id,'dp',S.date);
+  let h=`<div class="med"><h5>🩺 Medical cases today (${list.length})</h5>`;
+  list.forEach(m=>{
+    const k='med-'+m.id+'__x';const ph=(doc.rem&&doc.rem[k]&&doc.rem[k].ph)||[];
+    h+=`<div class="mc"><div class="mt"><div><div class="mn">${esc(m.name)}${m.sec?' · '+esc(m.sec):''}</div>${m.x?`<div class="mx">${esc(m.x)}</div>`:''}</div>`+
+      (editable?`<button class="mini" data-act="meddel" data-pl="${pl.id}" data-id="${m.id}">Delete</button>`:'')+`</div>`+
+      `<div class="tms"><span class="tmc ack">✓ Noted ${m.ack?fmtT(m.ack.at):''}${m.ack&&m.ack.by?' · '+esc(m.ack.by.split(' ')[0]):''}</span>`+
+      (m.fu||[]).map((f,i)=>`<span class="tmc fu">Follow-up ${i+1} · ${fmtT(f.at)}</span>`).join('')+`</div>`+
+      `<div class="acts">`+(editable?`<button class="btn2 fu sm" data-act="medfu" data-pl="${pl.id}" data-id="${m.id}">+ Follow-up taken</button>${m.fu&&m.fu.length?`<button class="mini" data-act="medunfu" data-pl="${pl.id}" data-id="${m.id}">↶ Undo</button>`:''}`:'')+
+      `<div class="phs">${phThumbs(ph,did,'med-'+m.id+'__x',editable,`data-pl="${pl.id}" data-row="med-${m.id}" data-sec="x"`,2)}</div></div></div>`;
+  });
+  if(!list.length)h+=`<div class="muted" style="margin-bottom:6px">No medical case logged today.</div>`;
+  if(editable)h+=`<div class="medf"><input class="medin" id="mn_${pl.id}" placeholder="Child's name" autocomplete="off"><select class="medin" id="ms_${pl.id}">${pl.sections.map(x=>`<option>${esc(x)}</option>`).join('')}</select>`+
+    `<input class="medin full" id="mx_${pl.id}" placeholder="What happened / care given (optional)" autocomplete="off"><button class="btn2 full" data-act="medadd" data-pl="${pl.id}">+ Add child · marks Noted now</button></div>`;
+  return h+`</div>`;
+}
+function medAdd(plId){
+  if(!canAct(plId))return;
+  const nm=document.getElementById('mn_'+plId),sc=document.getElementById('ms_'+plId),nx=document.getElementById('mx_'+plId);
+  const name=(nm.value||'').trim();if(!name){showMsg("Type the child's name.");nm.focus();return}
+  medOp(plId,{op:'add',id:rid(),name:name.slice(0,60),sec:sc.value,x:(nx.value||'').trim().slice(0,300)});
+}
+function medOp(plId,m){
+  if(!canAct(plId))return;
+  const id=docId(plId,'dp',S.date);const doc=ensureDoc(id,plId,'dp',S.date);
+  doc.med=applyMed(doc.med,m,whoName());persist(id,{med:[m]});render(true);
+}
+function confirmDel(t){if(t.dataset.arm)return true;t.dataset.arm=1;t.textContent='Tap again to delete';setTimeout(()=>{delete t.dataset.arm;t.textContent='Delete'},3000);return false}
+
+/* ---------- Class Timeline: pick a section, then each half hour: activity · Observed (time) · remark ---------- */
+const fmtM=m=>{const h=Math.floor(m/60),mm=m%60;return (h%12||12)+':'+pad(mm)};
+function timelineHTML(pl,doc,editable){
+  const sec=pl.sections.indexOf(S.tlSec)>=0?S.tlSec:pl.sections[0];
+  const today=S.date===todayStr();const nm=nowMin();
+  let filled=0,obs=0;pl.sections.forEach(x=>TLSLOTS.forEach(t=>{const e=doc&&doc.rem[t.key+'__'+x];const c=doc&&doc.cells[t.key+'__'+x];if(e&&(String(e.a||'').trim()||String(e.x||'').trim()))filled++;if(c&&c.obs&&c.obs.length)obs++}));
+  let h=`<div class="blk"><div class="bh"><span class="bn">Class Timeline<small>every half hour · ${fmt12('08:00')} – ${fmt12('14:30')}</small></span><span class="bpc">${obs} observed · ${filled} noted</span></div>`;
+  h+=`<div class="tlsecs">Section:`+pl.sections.map(x=>`<button data-act="tlsec" data-v="${x}" class="${x===sec?'on':''}">${esc(x)}</button>`).join('')+`</div>`;
+  TLSLOTS.forEach(t=>{
+    const key=t.key+'__'+sec;const e=(doc&&doc.rem[key])||{};const c=doc&&doc.cells[key];const o=c&&c.obs&&c.obs.length?c.obs[0]:0;
+    const isNow=today&&nm>=t.from&&nm<t.to,past=today&&nm>=t.to;
+    h+=`<div class="tlr ${isNow?'now':''} ${past?'past':''}"><div class="tlt">${fmtM(t.from)} – ${fmtM(t.to)}${isNow?'<small>NOW</small>':''}</div><div class="tlb">`+
+      `<input class="remin" data-f="a" data-pl="${pl.id}" data-row="${t.key}" data-sec="${sec}" placeholder="Activity / subject (e.g. Maths test)" value="${esc(e.a||'')}" ${editable?'':'readonly'}>`+
+      `<div class="tlo"><button class="obsbtn ${o?'d':''}" data-act="obsadd" data-pl="${pl.id}" data-row="${t.key}" data-sec="${sec}" ${editable?'':'disabled'}>${o?'👁 Observed '+fmtT(o):'👁 Mark observed'}</button>${o&&editable?`<button class="mini" data-act="obsundo" data-pl="${pl.id}" data-row="${t.key}" data-sec="${sec}">↶</button>`:''}${e.by&&(e.a||e.x)?`<span class="muted" style="font-size:10px">${esc(e.by.split(' ')[0])} · ${e.at?fmtT(e.at):''}</span>`:''}</div>`+
+      `<textarea class="remin" rows="1" data-f="x" data-pl="${pl.id}" data-row="${t.key}" data-sec="${sec}" placeholder="Remark" ${editable?'':'readonly'}>${esc(e.x||'')}</textarea></div></div>`;
+  });
+  return h+`</div>`;
+}
+/* ---------- Day Summary (built from the timeline, remarks and medical log) ---------- */
+function daySummary(list){
+  let h=`<div class="card"><h3>Day Summary · ${parseD(S.date).toLocaleDateString('en',{weekday:'short',day:'numeric',month:'short'})}</h3>`;let any=false;
+  list.forEach(pl=>{
+    const doc=getDoc(pl,'dp',S.date);const rows=[];
+    pl.sections.forEach(x=>TLSLOTS.forEach(t=>{const k=t.key+'__'+x;const e=(doc&&doc.rem[k])||{};const c=doc&&doc.cells[k];const o=c&&c.obs&&c.obs.length?c.obs[0]:0;
+      if(String(e.a||'').trim()||String(e.x||'').trim()||o)rows.push({x,t,a:e.a||'',r:e.x||'',o})}));
+    const med=(doc&&doc.med)||[];
+    const st=stats(doc,pl,'dp');
+    if(list.length>1)h+=`<div style="margin:8px 0 4px"><b>${esc(pl.name)}</b> <span class="muted">· ${pl.cls}</span></div>`;
+    h+=`<div class="counts"><div class="cnt d"><b>${st.pct}%</b><span>Day Plan done</span></div><div class="cnt"><b>${rows.filter(r=>r.o).length}</b><span>Periods observed</span></div><div class="cnt"><b>${rows.filter(r=>r.a||r.r).length}</b><span>Periods noted</span></div><div class="cnt n"><b>${med.length}</b><span>Medical cases</span></div></div>`;
+    if(rows.length){any=true;
+      h+=`<table class="sumt"><tr><th>Sec</th><th>Time</th><th>Activity</th><th>Observed</th><th>Remark</th></tr>`+rows.map(r=>`<tr><td>${esc(r.x)}</td><td>${fmtM(r.t.from)}–${fmtM(r.t.to)}</td><td>${esc(r.a)}</td><td>${r.o?fmtT(r.o):'–'}</td><td>${esc(r.r)}</td></tr>`).join('')+`</table>`}
+    if(med.length){any=true;
+      h+=`<table class="sumt" style="margin-top:6px"><tr><th>Child</th><th>Noted</th><th>Follow-ups</th></tr>`+med.map(m=>`<tr><td>${esc(m.name)}${m.sec?' · '+esc(m.sec):''}${m.x?`<br><span class="muted">${esc(m.x)}</span>`:''}</td><td>${m.ack?fmtT(m.ack.at):''}</td><td>${(m.fu||[]).length?(m.fu||[]).map(f=>fmtT(f.at)).join(', '):'<span style="color:var(--red)">none yet</span>'}</td></tr>`).join('')+`</table>`}
+  });
+  if(!any)h+=`<div class="muted" style="margin-top:6px">Nothing in the Class Timeline or the medical log yet. Fill them through the day — this summary builds itself.</div>`;
+  return h+`</div>`;
 }
 function weeklyCard(pl,mode){
   const rows=wkRowsFor(mode);const blk=rows[0].block;
@@ -711,7 +825,7 @@ function remarksCard(list,mode){mode=mode||'dp';
     Object.keys(doc.cells||{}).forEach(k=>{const c=doc.cells[k];const r=ROWMAP[k.split('__')[0]];
       if(r&&r.kind==='num'&&c.n!==''&&c.n!=null){ents[k]=Object.assign(ents[k]||{x:''},{n:c.n,by:c.by,at:c.at})}});
     Object.keys(ents).forEach(k=>{
-      const e=ents[k];const p=k.split('__');const r=ROWMAP[p[0]];if(!r)return;
+      const e=ents[k];const p=k.split('__');const r=ROWMAP[p[0]];if(!r||r.tl)return;
       const hasN=e.n!==''&&e.n!=null&&!isNaN(+e.n);
       const cat=(r.block.name==='Student Welfare'?'Welfare › ':'')+(r.sub?r.item.name+' › '+r.label:r.label);
       const c=cats[cat]=cats[cat]||{tot:0,hasNum:false,list:[],ord:ROWS[mode].indexOf(r)};
@@ -771,6 +885,7 @@ function plPage(pl){
   h+=`<div class="card"><h3>This week</h3>${weekChart(pl)}</div>`;
   h+=`<div class="card"><h3>Section-wise completion</h3>${sectionBoxes(pl,doc,mode)}</div>`;
   h+=`<div class="card"><h3>Not Done</h3><div class="nd">${notDone(pl,doc,mode)}</div></div>`;
+  if(mode==='dp')h+=daySummary([pl]);
   h+=remarksCard([pl],mode);
   h+=blocksHTML(pl,doc,editable);
   h+=weeklyCard(pl,mode);
@@ -794,34 +909,69 @@ function dashboard(){
       if(d>today)return '<td class="c">🔒</td>';const c=stats(getDoc(pl,mode,d),pl,mode);const any=c.D+c.A+c.N>0;
       return `<td class="c ${c.N?'r':(c.pct===100?'g':'')}">${any?c.pct+'%':'–'}</td>`}).join('')+'</tr>').join('')+`</table></div>`;
   h+=`<div class="card"><h3>Not Done by PM</h3>`+PLS.map(pl=>`<div style="margin-bottom:8px"><b>${esc(pl.name)}</b><div class="nd">${notDone(pl,getDoc(pl,mode,S.date),mode)}</div></div>`).join('')+`</div>`;
+  if(mode==='dp')h+=daySummary(PLS);
   h+=remarksCard(PLS,mode);
   return h;
 }
 
-/* ================= PHOTOS ================= */
-const PHOTOS={};const phLoading={};
+/* ================= PHOTOS =================
+   Fast path: the photo is shrunk on the phone (≈30 KB), shown at once, and sent in the background.
+   If the network drops it retries by itself (same photo id, so no duplicates). Thumbnails load in batches
+   and are cached on the phone, so they don't download again on every refresh. */
+const PHOTOS={};const phLoading={};const PHPEND={};   // PHPEND[tmpId]={doc,key,data,state:'up'|'fail',tries}
+const PHC='pmplan_ph_v1';
+try{const c=JSON.parse(localStorage.getItem(PHC)||'{}');Object.assign(PHOTOS,c)}catch(e){}
+function cachePhoto(id,data){PHOTOS[id]=data;try{const c=JSON.parse(localStorage.getItem(PHC)||'{}');c[id]=data;const ks=Object.keys(c);while(ks.length>40)delete c[ks.shift()];localStorage.setItem(PHC,JSON.stringify(c))}catch(e){}}
+let phBatchBusy=false,phOld=false;
 function loadPhotos(){
-  document.querySelectorAll('img[data-pid]').forEach(img=>{const id=img.dataset.pid;if(PHOTOS[id]||phLoading[id])return;phLoading[id]=1;
-    api('pmPhotoGet',[id]).then(v=>{PHOTOS[id]=v.data;document.querySelectorAll(`img[data-pid="${id}"]`).forEach(x=>x.src=v.data)}).catch(()=>{}).finally(()=>{delete phLoading[id]})});
+  if(phBatchBusy)return;
+  const need=[];document.querySelectorAll('img[data-pid]').forEach(img=>{const id=img.dataset.pid;if(!PHOTOS[id]&&!phLoading[id]&&need.indexOf(id)<0)need.push(id)});
+  if(!need.length)return;
+  const ids=need.slice(0,12);ids.forEach(id=>phLoading[id]=1);phBatchBusy=true;
+  const done=list=>{(list||[]).forEach(v=>{cachePhoto(v.id,v.data);document.querySelectorAll(`img[data-pid="${v.id}"]`).forEach(x=>x.src=v.data)})};
+  const p=phOld?Promise.all(ids.map(id=>api('pmPhotoGet',[id]).catch(()=>null))).then(l=>l.filter(Boolean))
+    :api('pmPhotos',[ids]).catch(e=>{if(/Unknown request/.test(e.message)){phOld=true;return Promise.all(ids.map(id=>api('pmPhotoGet',[id]).catch(()=>null))).then(l=>l.filter(Boolean))}throw e});
+  p.then(done).catch(()=>{}).finally(()=>{ids.forEach(id=>delete phLoading[id]);phBatchBusy=false;setTimeout(loadPhotos,50)});
 }
 function shrink(file){
   return new Promise((res,rej)=>{const img=new Image();const u=URL.createObjectURL(file);
-    img.onload=()=>{let w=720,q=0.62,out='';
-      for(let t=0;t<6;t++){const sc=Math.min(1,w/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.round(img.width*sc);c.height=Math.round(img.height*sc);
-        c.getContext('2d').drawImage(img,0,0,c.width,c.height);out=c.toDataURL('image/jpeg',q);if(out.length<=46000)break;w=Math.round(w*0.8);q=Math.max(0.4,q-0.06)}
+    img.onload=()=>{let w=640,q=0.6,out='';
+      for(let t=0;t<7;t++){const sc=Math.min(1,w/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.round(img.width*sc);c.height=Math.round(img.height*sc);
+        c.getContext('2d').drawImage(img,0,0,c.width,c.height);out=c.toDataURL('image/jpeg',q);if(out.length<=34000)break;w=Math.round(w*0.82);q=Math.max(0.38,q-0.06)}
       URL.revokeObjectURL(u);out.length<=46000?res(out):rej(new Error('Photo is too large.'))};
     img.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('Could not read that photo.'))};img.src=u});
 }
+const rid=()=>Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4);
+const pendFor=(doc,key)=>Object.keys(PHPEND).filter(t=>PHPEND[t].doc===doc&&PHPEND[t].key===key);
 async function uploadPhoto(el){
   const plId=el.dataset.pl,rk=el.dataset.row,sec=el.dataset.sec,f=el.files&&el.files[0];el.value='';
   if(!f||!canAct(plId))return;
-  const mode=ROWMAP[rk].mode,id=docId(plId,mode,S.date);
-  showOk('Uploading photo…');
-  try{const data=await shrink(f);flushAll();
-    const doc=await api('pmPhoto',[id,rk+'__'+sec,data]);
-    const ph=doc.rem[rk+'__'+sec].ph;PHOTOS[ph[ph.length-1].id]=data;
-    S.docs[id]=overlay(id,doc);saveLocal();render(true);showOk('Photo saved.');
-  }catch(e){showMsg(e.message==='offline'?"Can't reach the server — photo not saved.":e.message)}
+  const mode=(ROWMAP[rk]&&ROWMAP[rk].mode)||'dp',id=docId(plId,mode,S.date),key=rk+'__'+sec;
+  let data;try{data=await shrink(f)}catch(e){showMsg(e.message);return}
+  const tmp=rid();PHPEND[tmp]={doc:id,key,data,state:'up',tries:0};render(true);
+  sendPhoto(tmp);
+}
+function sendPhoto(tmp){
+  const p=PHPEND[tmp];if(!p)return;p.state='up';render(true);
+  flushAll();
+  enqueue(p.doc,async()=>{                                   // after any pending ticks for the same record
+    try{
+      const doc=await api('pmPhoto',[p.doc,p.key,p.data,tmp]);
+      const ph=(doc.rem[p.key]&&doc.rem[p.key].ph)||[];const got=ph.find(x=>x.id===tmp)||ph[ph.length-1];
+      if(got)cachePhoto(got.id,p.data);
+      delete PHPEND[tmp];S.docs[p.doc]=overlay(p.doc,doc);setConn('live');saveLocal();render(true);
+    }catch(e){
+      if(e.server&&!/lock|timed out|Service invoked too many|try again/i.test(e.message)){delete PHPEND[tmp];showMsg(e.message);render(true);return}
+      p.tries++;if(p.tries<4){setTimeout(()=>sendPhoto(tmp),1500*p.tries)}else{p.state='fail';render(true)}
+    }
+  });
+}
+function retryPhoto(tmp){const p=PHPEND[tmp];if(p){p.tries=0;sendPhoto(tmp)}}
+function phThumbs(ph,docIdv,key,editable,addAttrs,max){
+  max=max||5;const pend=pendFor(docIdv,key);
+  return ph.map(p=>`<button class="ph" data-act="photo" data-id="${p.id}"><img alt="Photo" data-pid="${p.id}" src="${PHOTOS[p.id]||''}"><span>${fmtT(p.at)}</span></button>`).join('')+
+    pend.map(t=>{const q=PHPEND[t];return q.state==='fail'?`<button class="ph fail" data-act="phretry" data-tmp="${t}"><img alt="Photo" src="${q.data}"><span>⟳ Retry</span></button>`:`<span class="ph up"><img alt="Photo" src="${q.data}"><span>Saving…</span></span>`}).join('')+
+    (editable&&ph.length+pend.length<max?`<label class="phadd">📷 Add<input type="file" accept="image/*" capture="environment" data-act="phup" ${addAttrs}></label>`:'');
 }
 function showPhoto(id){
   const src=PHOTOS[id];if(!src)return;
@@ -851,6 +1001,13 @@ document.addEventListener('click',ev=>{
   else if(a==='tick')doTick(t.dataset.pl,t.dataset.row,t.dataset.sec,!!t.dataset.wk);
   else if(a==='obsadd')doObs(t.dataset.pl,t.dataset.row,t.dataset.sec,'add');
   else if(a==='obsundo')doObs(t.dataset.pl,t.dataset.row,t.dataset.sec,'pop');
+  else if(a==='obsna')doObs(t.dataset.pl,t.dataset.row,t.dataset.sec,'na');
+  else if(a==='medadd')medAdd(t.dataset.pl);
+  else if(a==='medfu')medOp(t.dataset.pl,{op:'fu',id:t.dataset.id});
+  else if(a==='medunfu')medOp(t.dataset.pl,{op:'unfu',id:t.dataset.id});
+  else if(a==='meddel'){if(confirmDel(t))medOp(t.dataset.pl,{op:'del',id:t.dataset.id})}
+  else if(a==='tlsec'){S.tlSec=t.dataset.v;render(true)}
+  else if(a==='phretry')retryPhoto(t.dataset.tmp);
   else if(a==='allrow'){const p=plOf(t.dataset.pl);setCells(p.id,secsOf(p,ROWMAP[t.dataset.row]).map(s=>[t.dataset.row,s,'D']))}
   else if(a==='allitem'){const p=plOf(t.dataset.pl);const list=[];ROWS[S.mode].filter(r=>r.item.id===t.dataset.item).forEach(r=>secsOf(p,r).forEach(s=>list.push([r.key,s,'D'])));setCells(p.id,list)}
   else if(a==='rem'){const k=t.dataset.pl+'|'+t.dataset.row;S.openRem[k]=!S.openRem[k];render(true)}

@@ -73,12 +73,40 @@ function pmMe_(token){
   const me=me_(token);
     return me;
 }
+/* ---------- Fast lookups (TextFinder on column A — never reads the whole sheet, so saves stay quick as the sheets grow) ---------- */
+function findRowNo_(sh,id){
+  if(sh.getLastRow()<2)return 0;
+  const c=sh.getRange(2,1,sh.getLastRow()-1,1).createTextFinder(String(id)).matchEntireCell(true).matchCase(true).findNext();
+  return c?c.getRow():0;
+}
+function readDoc_(id){
+  const sh=sheet_("PM Plan");const rn=findRowNo_(sh,id);
+  const j=rn?parse_(sh.getRange(rn,6).getValue()):{};j.cells=j.cells||{};j.rem=j.rem||{};j.med=j.med||[];
+  return {sh,rn,j};
+}
+function writeDoc_(d,c0,now){
+  const wk=c0.mode==="wk"?c0.date:wkOf_(c0.date);
+  const row=[c0.id,c0.pl,c0.mode,"'"+c0.date,"'"+wk,JSON.stringify(d.j),new Date(now)];
+  if(d.rn)d.sh.getRange(d.rn,1,1,row.length).setValues([row]);else d.sh.appendRow(row);
+  return wk;
+}
+const out_=(c0,wk,j)=>({pl:c0.pl,mode:c0.mode,date:c0.date,wk,cells:j.cells,rem:j.rem,med:j.med});
+function log_(name,id,what){sheet_("Log").appendRow([Utilities.formatDate(new Date(),TZ,"yyyy-MM-dd HH:mm"),name,"PM "+id,what])}
+
 function pmState_(token,wk){
   const me=pmMe_(token);
   if(!isoDate(wk))fail("Bad week.");
-  const docs={};
-  rows_("PM Plan").forEach(r=>{const p=String(r[0]).split("_");
-    if(p.length===3&&isoDate(p[2])&&String(r[4]).replace(/^'/,"")===wk&&(me.role!=="pm"||p[0]===me.id)){const j=parse_(r[5]);docs[r[0]]={pl:p[0],mode:p[1],date:p[2],wk:wk,cells:j.cells||{},rem:j.rem||{}}}});
+  const docs={};const sh=sheet_("PM Plan");const n=sh.getLastRow();
+  if(n>=2){
+    const keys=sh.getRange(2,1,n-1,5).getValues();           // small columns only
+    const hit=[];keys.forEach((r,i)=>{const p=String(r[0]).split("_");
+      if(p.length===3&&isoDate(p[2])&&String(r[4]).replace(/^'/,"")===wk&&(me.role!=="pm"||p[0]===me.id))hit.push(i)});
+    if(hit.length){
+      const lo=hit[0],hi=hit[hit.length-1];const js=sh.getRange(lo+2,6,hi-lo+1,1).getValues();
+      hit.forEach(i=>{const r=keys[i];const p=String(r[0]).split("_");const j=parse_(js[i-lo][0]);
+        docs[r[0]]={pl:p[0],mode:p[1],date:p[2],wk:wk,cells:j.cells||{},rem:j.rem||{},med:j.med||[]}});
+    }
+  }
   const c=rows_("Config").find(x=>x[0]==="pmtimes");
   return {today:today_(),docs,times:c?parse_(c[1]):{},me:pub_(me)};
 }
@@ -88,40 +116,47 @@ function pmCheck_(me,id){
   if(mode!=="wk"&&date!==today_())fail("Only today's plan can be updated.");
   if(mode==="wk"&&date!==wkOf_(today_()))fail("Only this week's items can be changed.");
   if(me.role==="pm"&&me.id!==pl)fail("You can update only your own plan.");
-  return {pl,mode,date};
+  return {id:String(id),pl,mode,date};
 }
+const str_=(v,n)=>String(v==null?"":v).slice(0,n);
 function pmSave_(token,id,patch){
   const me=pmMe_(token);const name=me.name;
-  const c0=pmCheck_(me,id);const pl=c0.pl,mode=c0.mode,date=c0.date;
-  const wk=mode==="wk"?date:wkOf_(date);
-  const sh=sheet_("PM Plan");const all=rows_("PM Plan");
-  const idx=all.findIndex(r=>r[0]===id);
-  const j=idx>=0?parse_(all[idx][5]):{};j.cells=j.cells||{};j.rem=j.rem||{};
+  const c0=pmCheck_(me,id);const d=readDoc_(id);const j=d.j;
   const now=Date.now();let n=0;
   Object.keys((patch&&patch.cells)||{}).forEach(k=>{
-    const c=patch.cells[k]||{};const key=String(k).slice(0,80);
-    if(Array.isArray(c.ops)){                        // timed checks: the server stamps each one
-      const obs=((j.cells[key]&&j.cells[key].obs)||[]).slice();
-      c.ops.slice(0,20).forEach(o=>{if(o==="add"&&obs.length<10)obs.push(now);else if(o==="pop")obs.pop()});
-      j.cells[key]={s:obs.length?"D":"",by:name,at:now,l:0,obs:obs};n++;return;
+    const c=patch.cells[k]||{};const key=str_(k,80);
+    if(Array.isArray(c.ops)){                        // timed checks: the server stamps each one; "na" toggles NA
+      const old=j.cells[key]||{};const obs=(old.obs||[]).slice();let na=!!old.na;
+      c.ops.slice(0,20).forEach(o=>{if(o==="add"&&obs.length<10){na=false;obs.push(now)}else if(o==="pop")obs.pop();else if(o==="na"){na=!na;if(na)obs.length=0}});
+      j.cells[key]={s:na?"A":(obs.length?"D":""),by:name,at:now,l:0,obs:obs};if(na)j.cells[key].na=1;n++;return;
     }
     const s=["","D","N","A"].indexOf(c.s)>=0?c.s:"";
     const o={s:s,by:name,at:now,l:c.l?1:0};
     if(c.n!==undefined){o.n=(c.n===""||c.n==null||isNaN(Number(c.n)))?"":String(Number(c.n))}
-    j.cells[String(k).slice(0,80)]=o;n++;
+    j.cells[key]=o;n++;
   });
   Object.keys((patch&&patch.rem)||{}).forEach(k=>{
     const e=patch.rem[k]||{};
-    const key=String(k).slice(0,80);const old=j.rem[key]||{};
-    const o={x:String(e.x||"").slice(0,500),by:name,at:now};
+    const key=str_(k,80);const old=j.rem[key]||{};
+    const o={x:str_(e.x,500),by:name,at:now};
+    if(e.a!==undefined)o.a=str_(e.a,120);           // activity name (Class Timeline)
     if(e.n!==undefined)o.n=(e.n===""||e.n==null||isNaN(Number(e.n)))?"":Number(e.n);
     if(old.ph)o.ph=old.ph;
     j.rem[key]=o;n++;
   });
-  const row=[id,pl,mode,"'"+date,"'"+wk,JSON.stringify(j),new Date(now)];
-  if(idx>=0)sh.getRange(idx+2,1,1,row.length).setValues([row]);else sh.appendRow(row);
-  sheet_("Log").appendRow([Utilities.formatDate(new Date(now),TZ,"yyyy-MM-dd HH:mm"),name,"PM "+id,n+" change(s)"]);
-  return {pl,mode,date,wk,cells:j.cells,rem:j.rem};
+  (Array.isArray(patch&&patch.med)?patch.med:[]).slice(0,30).forEach(m=>{   // medical cases, one entry per child
+    const mid=str_(m&&m.id,20);if(!/^[a-z0-9]{4,20}$/.test(mid))return;
+    const e=j.med.find(x=>x.id===mid);
+    if(m.op==="add"&&!e&&j.med.length<60){j.med.push({id:mid,name:str_(m.name,60),sec:str_(m.sec,4),x:str_(m.x,300),ack:{at:now,by:name},fu:[]});n++}
+    else if(!e)return;
+    else if(m.op==="fu"&&e.fu.length<10){e.fu.push({at:now,by:name});n++}
+    else if(m.op==="unfu"){e.fu.pop();n++}
+    else if(m.op==="note"){e.x=str_(m.x,300);n++}
+    else if(m.op==="del"){j.med=j.med.filter(x=>x.id!==mid);n++}
+  });
+  const wk=writeDoc_(d,c0,now);
+  log_(name,id,n+" change(s)");
+  return out_(c0,wk,j);
 }
 function pmSetTime_(token,b,v){
   const me=pmMe_(token);
@@ -134,30 +169,41 @@ function pmSetTime_(token,b,v){
   if(idx>=0)sh.getRange(idx+2,1,1,4).setValues([row]);else sh.appendRow(row);
   return t;
 }
-/* Image log: a small JPEG (resized in the browser) is kept in the Photos tab; the record keeps its id. */
-function pmPhoto_(token,id,key,data){
+/* Image log: a small JPEG (resized in the browser) is kept in the Photos tab; the record keeps its id.
+   The photo row is written before the lock is taken, so uploads never wait behind other saves. */
+function pmPhotoCheck_(token,id,key,data){
   const me=pmMe_(token);const c0=pmCheck_(me,id);
-  key=String(key||"").slice(0,80);data=String(data||"");
+  key=str_(key,80);data=String(data||"");
   if(!/^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(data))fail("Bad photo.");
   if(data.length>48000)fail("Photo is too large.");
-  const sh=sheet_("PM Plan");const all=rows_("PM Plan");const idx=all.findIndex(r=>r[0]===id);
-  const j=idx>=0?parse_(all[idx][5]):{};j.cells=j.cells||{};j.rem=j.rem||{};
-  const e=j.rem[key]||{x:""};e.ph=e.ph||[];if(e.ph.length>=5)fail("Up to 5 photos per section.");
-  const now=Date.now();const pid=Utilities.getUuid().replace(/-/g,"").slice(0,16);
-  sheet_("Photos").appendRow([pid,id,key,me.name,new Date(now),data]);
-  e.ph.push({id:pid,at:now,by:me.name});j.rem[key]=e;
-  j.cells[key]={s:"D",by:me.name,at:now,l:0};
-  const wk=c0.mode==="wk"?c0.date:wkOf_(c0.date);
-  const row=[id,c0.pl,c0.mode,"'"+c0.date,"'"+wk,JSON.stringify(j),new Date(now)];
-  if(idx>=0)sh.getRange(idx+2,1,1,row.length).setValues([row]);else sh.appendRow(row);
-  sheet_("Log").appendRow([Utilities.formatDate(new Date(now),TZ,"yyyy-MM-dd HH:mm"),me.name,"PM "+id,"photo "+key]);
-  return {pl:c0.pl,mode:c0.mode,date:c0.date,wk,cells:j.cells,rem:j.rem};
+  return {me,c0,key,data};
 }
-function pmPhotoGet_(token,pid){
-  const me=pmMe_(token);
-  const r=rows_("Photos").find(x=>x[0]===String(pid));if(!r)fail("Photo not found.");
-  if(me.role==="pm"&&String(r[1]).split("_")[0]!==me.id)fail("Not your photo.");
-  return {id:r[0],by:r[3],data:r[5]};
+function pmPhotoStore_(p,cid){
+  const pid=/^[a-z0-9]{8,20}$/.test(String(cid||""))?String(cid):Utilities.getUuid().replace(/-/g,"").slice(0,16);
+  const sh=sheet_("Photos");
+  if(!findRowNo_(sh,pid))sh.appendRow([pid,p.c0.id,p.key,p.me.name,new Date(),p.data]);
+  return pid;
+}
+function pmPhotoLink_(p,pid){
+  const d=readDoc_(p.c0.id);const j=d.j;const now=Date.now();
+  const e=j.rem[p.key]||{x:""};e.ph=e.ph||[];
+  if(!e.ph.some(x=>x.id===pid)){if(e.ph.length>=5)fail("Up to 5 photos per section.");e.ph.push({id:pid,at:now,by:p.me.name})}
+  j.rem[p.key]=e;
+  if(!/^med-/.test(p.key))j.cells[p.key]={s:"D",by:p.me.name,at:now,l:0};
+  const wk=writeDoc_(d,p.c0,now);
+  log_(p.me.name,p.c0.id,"photo "+p.key);
+  return out_(p.c0,wk,j);
+}
+function pmPhotoGet_(token,pid){const v=pmPhotos_(token,[pid]);if(!v.length)fail("Photo not found.");return v[0]}
+function pmPhotos_(token,ids){
+  const me=pmMe_(token);const sh=sheet_("Photos");const out=[];
+  (Array.isArray(ids)?ids:[]).slice(0,12).forEach(pid=>{
+    const rn=findRowNo_(sh,str_(pid,20));if(!rn)return;
+    const r=sh.getRange(rn,1,1,6).getValues()[0];
+    if(me.role==="pm"&&String(r[1]).split("_")[0]!==me.id)return;
+    out.push({id:r[0],by:r[3],data:r[5]});
+  });
+  return out;
 }
 /* Run from the Apps Script editor only: gives EVERY login a new password (logs everyone out) and prints them in the Execution log. */
 function resetAllLogins(){
@@ -197,11 +243,15 @@ function doPost(e){
     if(req.fn==="login")v=login_(a[0],a[1]);
     else if(req.fn==="pmState")v=pmState_(tk,a[0]);
     else if(req.fn==="pmPhotoGet")v=pmPhotoGet_(tk,a[0]);
+    else if(req.fn==="pmPhotos")v=pmPhotos_(tk,a[0]);
+    else if(req.fn==="pmPhoto"){
+      const p=pmPhotoCheck_(tk,a[0],a[1],a[2]);const pid=pmPhotoStore_(p,a[3]);  // heavy write, no lock needed
+      lock.waitLock(25000);v=pmPhotoLink_(p,pid);
+    }
     else{
-      lock.waitLock(20000);
+      lock.waitLock(25000);
       if(req.fn==="pmSave")v=pmSave_(tk,a[0],a[1]);
       else if(req.fn==="pmSetTime")v=pmSetTime_(tk,a[0],a[1]);
-      else if(req.fn==="pmPhoto")v=pmPhoto_(tk,a[0],a[1],a[2]);
       else if(req.fn==="changePw")v=changePw_(tk,a[0],a[1]);
       else if(req.fn==="listUsers")v=listUsers_(tk);
       else fail("Unknown request.");

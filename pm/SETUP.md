@@ -14,3 +14,9 @@ PM entries made before 5 Nov 2026 stay in the old PL Plan Data sheet ("PM Plan" 
 
 ## After changing `pm/Code.gs`
 Paste it into the PM Plan Live API project, save, then **Deploy → Manage deployments → ✏️ Edit → Version: New version → Deploy**. The URL stays the same.
+
+## Update 20 Nov 2026 — faster saves & photos, medical cases, Class Timeline
+Paste the new `pm/Code.gs` and redeploy (**Deploy → Manage deployments → ✏️ Edit → Version: New version → Deploy**; the URL stays the same).
+- Saves and photos now find their row with a TextFinder instead of reading whole sheets, so they stay fast as the Photos tab grows.
+- Photos are written before the lock is taken and carry a phone-side id, so automatic retries never create duplicates. New `pmPhotos` call loads up to 12 thumbnails at once.
+- New: per-child medical log (`med` in each Day Plan record: Noted + Follow-up times), Washroom NA, Class Timeline activity field (`a`).

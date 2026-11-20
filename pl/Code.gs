@@ -85,7 +85,12 @@ function state_(token,wk){
   const me=notPm_(me_(token));
   if(!isoDate(wk))fail("Bad week.");
   const docs={};
-  rows_("Plan").forEach(r=>{const p=String(r[0]).split("_");if(p.length!==3||!isoDate(p[2])||wkOf_(p[2])!==wk)return;
+  const psh=sheet_("Plan");const pn=psh.getLastRow();let pr=[];
+  if(pn>=2){const keys=psh.getRange(2,1,pn-1,1).getValues();const hit=[];
+    keys.forEach((r,i)=>{const p=String(r[0]).split("_");if(p.length===3&&isoDate(p[2])&&wkOf_(p[2])===wk)hit.push(i)});
+    if(hit.length){const lo=hit[0],hi=hit[hit.length-1];const js=psh.getRange(lo+2,6,hi-lo+1,1).getValues();
+      pr=hit.map(i=>[keys[i][0],0,0,0,0,js[i-lo][0]])}}
+  pr.forEach(r=>{const p=String(r[0]).split("_");if(p.length!==3||!isoDate(p[2])||wkOf_(p[2])!==wk)return;
     const pl=PL_ALIAS[p[0]]||p[0];if(me.role==="pl"&&pl!==me.id)return;
     const id=pl+"_"+p[1]+"_"+p[2];if(PL_ALIAS[p[0]]&&docs[id])return;
     const j=parse_(r[5]);const cells=j.cells||{},rem=j.rem||{};
@@ -102,11 +107,13 @@ function save_(token,id,patch){
   if(date!==today_())fail("Only today's plan can be updated.");
   if(me.role==="pl"&&me.id!==pl)fail("You can update only your own plan.");
   const wk=wkOf_(date);
-  const sh=sheet_("Plan");const all=rows_("Plan");
-  let idx=all.findIndex(r=>r[0]===id);
+  const sh=sheet_("Plan");const nr=sh.getLastRow();
+  const ids=nr>=2?sh.getRange(2,1,nr-1,1).getValues().map(r=>r[0]):[];   // id column only — fast as the sheet grows
+  const jsonAt=i=>parse_(sh.getRange(i+2,6).getValue());
+  let idx=ids.indexOf(id);
   let seed={};
-  if(idx<0){const old=Object.keys(PL_ALIAS).find(k=>PL_ALIAS[k]===pl);const oi=old?all.findIndex(r=>r[0]===old+"_"+mode+"_"+date):-1;if(oi>=0)seed=parse_(all[oi][5])}
-  const j=idx>=0?parse_(all[idx][5]):seed;j.cells=j.cells||{};j.rem=j.rem||{};
+  if(idx<0){const old=Object.keys(PL_ALIAS).find(k=>PL_ALIAS[k]===pl);const oi=old?ids.indexOf(old+"_"+mode+"_"+date):-1;if(oi>=0)seed=jsonAt(oi)}
+  const j=idx>=0?jsonAt(idx):seed;j.cells=j.cells||{};j.rem=j.rem||{};
   const now=Date.now();let n=0;
   Object.keys((patch&&patch.cells)||{}).forEach(k=>{
     const c=patch.cells[k]||{};const key=String(k).slice(0,80);
