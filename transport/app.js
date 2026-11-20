@@ -121,7 +121,7 @@ const GAS=(()=>{
 })();
 
 /* ---------- state ---------- */
-const S={date:todayStr(),view:(v=>['duty','sb','dep','dash','school','alloc'].includes(v)?v:'school')(LS.get('view','duty')),veh:{},gate:{},sb:{},alloc:{},sbReg:{},walkReg:{},out:{},derr:{},sbSeg:LS.get('sbSeg','sb'),managers:[],privVan:{},lateAfter:'07:45',openVeh:null,depVeh:null};
+const S={date:todayStr(),view:(v=>['ss','duty','late','unif','early','sb','day','dep','dash','school','alloc'].includes(v)?v:'school')(LS.get('view','duty')),veh:{},gate:{},sb:{},alloc:{},sbReg:{},walkReg:{},out:{},derr:{},sbSeg:LS.get('sbSeg','sb'),ss:{},ssList:{},managers:[],privVan:{},lateAfter:'07:45',openVeh:null,depVeh:null};
 let unsubs=[];
 function subscribeDate(){
   unsubs.forEach(u=>u&&u());unsubs=[];
@@ -131,6 +131,7 @@ function subscribeDate(){
   unsubs.push(store.subCol('att/'+d+'/sb',o=>{S.sb=o;render()}));
   unsubs.push(store.subCol('att/'+d+'/out',o=>{S.out=o;render()}));
   unsubs.push(store.subCol('att/'+d+'/derr',o=>{S.derr=o;render()}));
+  unsubs.push(store.subCol('att/'+d+'/ss',o=>{S.ss=o;render()}));
 }
 function subscribeConfig(){
   store.subDoc('config/alloc',o=>{S.alloc=(o&&o.map)||{};render()});
@@ -139,6 +140,7 @@ function subscribeConfig(){
   store.subDoc('config/settings',o=>{S.settings=o||{};S.lateAfter=(o&&o.lateAfter)||'08:00';S.lateAfterPP=(o&&o.lateAfterPP)||'09:00';
     const nl=(o&&o.left)?o.left:LEFT_DEFAULT;const back=Object.keys(LEFT).some(id=>!nl[id]);LEFT=Object.assign({},nl);applyLeft(LEFT);
     if(back)toast('A student was restored – close and reopen the app to see them');render()});
+  store.subCol('config',o=>{const m={};Object.keys(o).forEach(k=>{if(k.startsWith('ss-'))m[k.slice(3)]=o[k]});S.ssList=m;render()});
   store.subDoc('config/privateVan',o=>{S.privVan=(o&&o.kids)||{};render()});
   store.subDoc('config/managers',o=>{S.managers=(o&&o.names)||[];fillStaffSelects();fillSbBy();render()});
 }
@@ -181,11 +183,11 @@ function cpHas(key,cls){const a=cpGet(key);return !a.length||a.includes(cls)}
 function cpList(key){const a=cpGet(key);return a.length?a:CLASSES}
 const cpNorm=x=>String(x).toLowerCase().replace(/[\s.\-–]/g,'');
 function cpSecs(key){const a=new Set(cpGet(key));const q=cpNorm((S.cpQ||{})[key]||'');
-  const list=CLASSES.filter(c=>!q||cpNorm(secLbl(c)).includes(q)||cpNorm(clsName(c)).includes(q));
+  const list=(key==='ss'?SS_CLS():CLASSES).filter(c=>!q||cpNorm(secLbl(c)).includes(q)||cpNorm(clsName(c)).includes(q));
   return list.length?list.map(c=>'<button class="cpc sm'+(a.has(c)?' on':'')+'" data-cps="'+key+'|'+esc(c)+'">'+esc(secLbl(c))+'</button>').join(''):'<span class="muted">No class found.</span>'}
-function cpHtml(key){const a=new Set(cpGet(key));const open=(S.cpOpen||{})[key];
+function cpHtml(key,gl){const a=new Set(cpGet(key));const open=(S.cpOpen||{})[key];
   return '<div class="cpk"><label class="f">Classes'+(a.size?' · '+a.size+' selected':' · all')+'</label><div class="cprow"><button class="cpc'+(a.size?'':' on')+'" data-cpall="'+key+'">All classes</button>'+
-    GRADES.map(g=>{const secs=CLASSES.filter(c=>c.split(' - ')[0]===g);const n=secs.filter(c=>a.has(c)).length;return '<button class="cpc'+(n===secs.length?' on':n?' half':'')+'" data-cpg="'+key+'|'+esc(g)+'">'+esc(ORD[g]||g)+'</button>'}).join('')+'</div>'+
+    (gl||GRADES).map(g=>{const secs=CLASSES.filter(c=>c.split(' - ')[0]===g);const n=secs.filter(c=>a.has(c)).length;return '<button class="cpc'+(n===secs.length?' on':n?' half':'')+'" data-cpg="'+key+'|'+esc(g)+'">'+esc(ORD[g]||g)+'</button>'}).join('')+'</div>'+
     '<details class="cpsec"'+(open?' open':'')+' data-cpd="'+key+'"><summary>Search / choose sections</summary><input type="search" class="cpq" data-cpq="'+key+'" placeholder="Search class – e.g. 4, LKG, 7B" value="'+esc((S.cpQ||{})[key]||'')+'" autocomplete="off"><div class="cprow" data-cpbox="'+key+'">'+cpSecs(key)+'</div></details></div>'}
 function cpRender(elId,key){const el=$(elId);const ae=document.activeElement;if(ae&&el.contains(ae)&&ae.classList.contains('cpq'))return;el.innerHTML=cpHtml(key)}
 function catHead(title,n,c){return '<div class="cathead c-'+(c||'')+'"><span>'+esc(title)+'</span><b>'+n+'</b></div>'}
@@ -195,7 +197,7 @@ function strips(rows,rowFn,opt){opt=opt||{};const by={};rows.forEach(r=>(by[r.k.
   return cl.map(c=>'<div class="cstrip"><span>'+esc(clsName(c))+'</span><small>'+by[c].length+'</small></div>'+by[c].sort(opt.sort||((a,b)=>a.k.name.localeCompare(b.k.name))).map((r,i)=>'<div class="nrow"'+(opt.attr?opt.attr(r):'')+'><span class="no">'+(i+1)+'</span>'+rowFn(r)+'</div>').join('')).join('')}
 const dots=a=>a.filter(Boolean).join(' · ');
 /* ---------- per-kid computation ---------- */
-function sbOf(id){const fo=((S.gate[id]||{}).out||{}).type;if(fo==='SB')return true;if(fo==='VEH'||fo==='EARLY'||fo==='GOWALK'||fo==='HOME')return false;const c=KID[id].cls;const day=S.sb[seg(c)];const ov=day&&day.kids?day.kids[id]:undefined;return ov===undefined?!!S.sbReg[id]:(ov===true||ov==='D')}
+function sbOf(id){const fo=((S.gate[id]||{}).out||{}).type;if(fo==='SB')return true;if(fo==='VEH'||fo==='EARLY'||fo==='GOWALK'||fo==='HOME')return false;const c=KID[id].cls;if((((S.ss||{})[seg(c)]||{}).kids||{})[id]==='P')return true;const day=S.sb[seg(c)];const ov=day&&day.kids?day.kids[id]:undefined;return ov===undefined?!!S.sbReg[id]:(ov===true||ov==='D')}
 // Doubt case: kept back from the vehicle until Front Office confirms with the parent
 function sbDoubt(id){if(((S.gate[id]||{}).out||{}).type)return false;const day=S.sb[seg(KID[id].cls)];return !!(day&&day.kids&&day.kids[id]==='D')}
 function sbState(id){return sbDoubt(id)?'D':sbOf(id)}
@@ -240,12 +242,13 @@ function vehStats(v){
 
 /* ---------- views ---------- */
 function setView(v){S.view=v;LS.set('view',v);document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
-  ['duty','late','unif','early','sb','day','dep','dash','school','alloc'].forEach(x=>$('v-'+x).classList.toggle('hide',x!==v));
+  ['ss','duty','late','unif','early','sb','day','dep','dash','school','alloc'].forEach(x=>$('v-'+x).classList.toggle('hide',x!==v));
 render()}
 
 function render(){
   if(S.view==='duty')renderDuty();
   if(S.view==='sb')renderSB();
+  if(S.view==='ss')renderSS();
   if(S.view==='late')renderLate();
   if(S.view==='early')renderEarly();
   if(S.view==='day')renderDay();
@@ -324,9 +327,13 @@ function renderFO(){const _lh=gatePick?lateHist(gatePick):[];window._lateRec=_lh
     (k.walk?'<div class="row" style="margin-top:10px"><span class="muted">Entry-Exit Mode: <b>'+modeOf(k)+'</b></span><button class="btn ghost sm" data-pvan="'+k.id+'">'+(S.privVan[k.id]?'Change to By Walk':'Change to Private Van')+'</button></div>':'')+
     (k.walk?'':'<div class="row" style="margin-top:10px"><span class="muted">'+(S.walkReg[k.id]?'Special list – arrives by vehicle, parent pick-up daily':'Not on the special list')+'</span><button class="btn ghost sm" data-wreg="'+k.id+'">'+(S.walkReg[k.id]?'Remove from Special List':'Add to Special List')+'</button></div>')+
     '<div class="row" style="margin-top:10px"><input type="text" id="gRem" placeholder="Remark (optional)" value="'+esc(gDraft&&gDraft.rem!==undefined?gDraft.rem:(g.rem||''))+'" style="flex:1"><button class="btn" id="gSave">Save</button></div>'+
+    '<h3>Report an Error</h3>'+((g.errs||[]).length?(g.errs||[]).map((e,i)=>'<div class="nrow"><span class="no">'+(i+1)+'</span>'+nrow(esc(e.type),dots([esc(e.ph),esc(e.time),e.rem?'<b>'+esc(e.rem)+'</b>':'','by '+esc(byShort(e.by))]),'<button class="btn ghost sm" data-gerrdel="'+i+'">×</button>')+'</div>').join(''):'')+
+    '<div class="row"><select id="gErrPh"><option>Arrival</option><option'+(new Date().getHours()>=12?' selected':'')+'>Departure</option></select><select id="gErrT" style="flex:1;min-width:180px">'+FO_ERR.map(t=>'<option>'+esc(t)+'</option>').join('')+'</select></div>'+
+    '<div class="row" style="margin-top:8px"><input type="text" id="gErrRem" placeholder="What was the case? (remark)" style="flex:1"><button class="btn ghost" id="gErrAdd">Add Error</button></div>'+
     (window._lateRec||'')+'<p class="muted" style="margin:8px 0 0">Saving as: <b>'+esc(foBy||$('gateBy').value)+'</b>'+(g.by?' · last marked by '+esc(g.by):'')+'</p></div></div>';
 }
 let gDraft=null;let foBy=null;
+const FO_ERR=['Wrong marking in vehicle','Marked present – child absent','Marked absent – child present','Came with parent – not marked','Left with parent – not informed','Sent in wrong vehicle','Stay back marked wrongly','Late entry not marked','Other'];
 const fv=(k,d)=>gDraft&&gDraft[k]!==undefined?gDraft[k]:d;
 function opt(side,type,t,sub,g){const cur=(gDraft?gDraft[side]:(g[side]&&g[side].type))===type;return '<button class="opt t-'+type+(cur?' sel':'')+'" data-gopt="'+side+':'+type+'">'+t+'<small>'+sub+'</small></button>'}
 
@@ -374,15 +381,15 @@ function sbDay(id){return ((S.sb[seg(KID[id].cls)]||{}).kids||{})[id]}
 function sbVal(id){const dv=sbDraftOf(id);return dv!==undefined?dv:sbDay(id)}
 function sbCands(c){return Object.values(KID).filter(k=>k.cls===c&&(S.sbReg[k.id]||sbDay(k.id)!==undefined||sbDraftOf(k.id)!==undefined||((S.gate[k.id]||{}).out||{}).type==='SB')).sort(byName)}
 function sbHow(k){const st=kidStatus(k.id);const g=st.g||{};const o=g.out&&g.out.type;
+  if(sbDay(k.id)==='D')return '<span class="tag t-LATE">Doubt – kept back, Front Office to confirm</span>';
   if(st.IN==='A')return '<span class="tag t-A">Absent today</span>';
   if(o==='EARLY')return '<span class="tag t-EARLY">Left early '+esc(g.out.time||'')+'</span>';
   if(o==='GOWALK')return '<span class="tag t-GOWALK">Parent pick-up</span>';
   if(o==='VEH')return '<span class="tag t-VEH">Went by '+esc(VBY[k.v].l)+'</span>';
   if(o==='HOME')return '<span class="tag t-U">Went home – '+esc(modeOf(k))+'</span>';
   if(o==='SB')return '<span class="tag t-SB">Stay back – Front Office</span>';
-  if(sbDay(k.id)==='D')return '<span class="tag t-LATE">Doubt – kept back, Front Office to confirm</span>';
   return ''}
-const SBV={true:['Staying','SB'],false:['Not staying','U'],A:['Absent','A'],D:['Doubt – FO to confirm','LATE']};
+const SBV={true:['Staying','SB'],false:['Not staying','U'],A:['Absent','A'],D:['Doubt','LATE']};
 function sbRow(k){const dv=sbDraftOf(k.id),v=sbVal(k.id);const b=(val,code,lbl,c)=>'<button class="sbo'+(v===val?' on '+c:'')+'" data-sbv="'+k.id+'|'+code+'">'+lbl+'</button>';
   return nrow(esc(k.name),dots([esc(modeLabel(k)),S.sbReg[k.id]?'Regular list':'Today only',sbHow(k),dv!==undefined?'<b style="color:var(--late)">not saved</b>':''])+
     '<div class="sbopts">'+b(true,'S','Staying','s')+b(false,'N','Not staying','n')+b('A','A','Absent','a')+b('D','D','Doubt','d')+'</div>',
@@ -394,7 +401,7 @@ function renderSB(){
   if(mode==='reg'){const cls=cpGet('sb');$('sbHint').textContent='Regular stay back list – applies to every date. Choose the classes, then tap a student to add or remove.';
     $('sbList').innerHTML=cls.length?catHead('Regular Stay Back List',Object.values(KID).filter(k=>cls.includes(k.cls)&&S.sbReg[k.id]).length,'SB')+strips(Object.values(KID).filter(k=>cls.includes(k.cls)).map(k=>({k})),r=>nrow(esc(r.k.name),esc(modeLabel(r.k)),'<button class="tg '+(S.sbReg[r.k.id]?'SB':'noSB')+'" data-sbreg="'+r.k.id+'">'+(S.sbReg[r.k.id]?'Regular':'—')+'</button>')):'<p class="muted empty">Choose one or more classes above to edit the regular list.</p>';
     renderSBSum();return}
-  $('sbHint').innerHTML=view?'Viewing all entries. Choose your name in <b>Marked by</b> to mark.':'Mark each student yourself – <b>Staying</b>, <b>Not staying</b>, <b>Absent</b> or <b>Doubt</b> – then press Save for the class. <b>Doubt</b> keeps the child back from the vehicle and goes to Front Office (FO Entry-Exit) to confirm with the parent as Staying or Not staying. A grey dash means not marked yet.';
+  $('sbHint').innerHTML=view?'Viewing all entries. Choose your name in <b>Marked by</b> to mark.':'Mark each student yourself – <b>Staying</b>, <b>Not staying</b>, <b>Absent</b> or <b>Doubt</b> (Front Office confirms with the parent) – then press Save for the class. A grey dash means not marked yet.';
   const list=cpList('sb');let tot=0,h='';
   list.forEach(c=>{const ks=sbCands(c);if(!ks.length)return;tot+=ks.length;const sg=seg(c);const d=S.sb[sg];const dn=Object.keys((S.sbDraft||{})[sg]||{}).length;
     const n=x=>ks.filter(k=>sbVal(k.id)===x).length;const um=ks.filter(k=>sbVal(k.id)===undefined).length;
@@ -410,14 +417,92 @@ function renderSB(){
 function renderSBSum(){
   const list=cpList('sb');let T={s:0,d:0,n:0,a:0,u:0},h='';
   list.forEach(c=>{const ks=sbCands(c);if(!ks.length)return;const g={s:[],d:[],n:[],a:[],u:[]};
-    ks.forEach(k=>{const v=sbDay(k.id);const fo=((S.gate[k.id]||{}).out||{}).type==='SB';(sbDoubt(k.id)?g.d:v===true||v==='D'||(v===undefined&&fo)?g.s:v===false?g.n:v==='A'?g.a:g.u).push(k)});
+    ks.forEach(k=>{const v=sbDay(k.id);const fo=((S.gate[k.id]||{}).out||{}).type==='SB';(v==='D'&&!fo?g.d:v===true||(v===undefined&&fo)?g.s:v===false?g.n:v==='A'?g.a:g.u).push(k)});
     Object.keys(T).forEach(x=>T[x]+=g[x].length);const d=S.sb[seg(c)];
     const ln=(arr,t,cc)=>arr.length?'<div class="sumline"><span class="tag t-'+cc+'">'+t+' · '+arr.length+'</span><ol>'+arr.map(k=>'<li><b>'+esc(k.name)+'</b><i>'+dots([esc(modeLabel(k)),sbHow(k)])+'</i></li>').join('')+'</ol></div>':'';
-    h+='<div class="cstrip"><span>'+esc(clsName(c))+'</span><small>'+g.s.length+' staying</small></div>'+ln(g.s,'Staying','SB')+ln(g.d,'Doubt – Front Office to confirm','LATE')+ln(g.n,'Not staying','U')+ln(g.a,'Absent','A')+ln(g.u,'Not marked','U')+(d&&d.by?'<p class="muted" style="margin:6px 6px 0">Marked by '+esc(byShort(d.by))+' '+esc(d.time||'')+'</p>':'')});
-  $('sbSumH').innerHTML=catHead('Stay Back Summary',T.s,'SB')+'<div class="sbcount"><span class="tag t-SB">Staying '+T.s+'</span><span class="tag t-U">Not staying '+T.n+'</span><span class="tag t-A">Absent '+T.a+'</span><span class="tag t-LATE">Doubt '+T.d+'</span><span class="tag t-U">– Not marked '+T.u+'</span></div>';
+    h+='<div class="cstrip"><span>'+esc(clsName(c))+'</span><small>'+g.s.length+' staying</small></div>'+ln(g.s,'Staying','SB')+ln(g.d,'Doubt – confirm with parent','LATE')+ln(g.n,'Not staying','U')+ln(g.a,'Absent','A')+ln(g.u,'Not marked','U')+(d&&d.by?'<p class="muted" style="margin:6px 6px 0">Marked by '+esc(byShort(d.by))+' '+esc(d.time||'')+'</p>':'')});
+  $('sbSumH').innerHTML=catHead('Stay Back Summary',T.s,'SB')+'<div class="sbcount"><span class="tag t-SB">Staying '+T.s+'</span><span class="tag t-LATE">Doubt '+T.d+'</span><span class="tag t-U">Not staying '+T.n+'</span><span class="tag t-A">Absent '+T.a+'</span><span class="tag t-U">– Not marked '+T.u+'</span></div>';
   $('sbSum').innerHTML=h||'<p class="muted empty">Nothing to show.</p>';
 }
 
+/* ===== SMART STUDY SESSION ===== */
+const SS_GRADES=()=>GRADES.filter(g=>/^\d+$/.test(String(ORD[g]))&&+ORD[g]>=1&&+ORD[g]<=10);
+const SS_CLS=()=>CLASSES.filter(c=>SS_GRADES().includes(c.split(' - ')[0]));
+function ssDoc(c){return S.ssList[seg(c)]||{}}
+function ssEntry(id){return (ssDoc(KID[id].cls).kids||{})[id]}
+function ssMembers(c){const kd=ssDoc(c).kids||{};return Object.keys(kd).filter(id=>KID[id]&&!kd[id].rm).map(id=>Object.assign({k:KID[id]},kd[id])).sort((a,b)=>a.k.name.localeCompare(b.k.name))}
+function ssDayVal(id){return ((S.ss[seg(KID[id].cls)]||{}).kids||{})[id]}
+function ssDraftOf(id){const d=(S.ssDraft||{})[seg(KID[id].cls)]||{};return id in d?d[id]:undefined}
+function ssVal(id){const d=ssDraftOf(id);return d!==undefined?d:ssDayVal(id)}
+const SSV={P:['Staying','SB'],N:['Not staying','U'],A:['Absent','A']};
+function ssWhy(m){return m.src==='poor'?(m.pp===false?'<span class="tag t-U">Improved – not in latest poor list</span>':'<span class="tag t-A">Poor performer'+(m.run?' · '+m.run+' low in a row':'')+'</span>'):'<span class="tag t-GOWALK">Added by '+esc(byShort(m.by||'PL'))+'</span>'}
+function renderSS(){
+  if(document.activeElement!==$('ssBy'))$('ssBy').innerHTML=byOpts(LS.get('ssBy',ALLBY),[['PL – Classes 6 to 11',PL_NAMES],['PM – Classes 1 to 5',PM_NAMES],['Managers',mgrNames()]]);
+  const ae=document.activeElement;if(!(ae&&$('ssCp').contains(ae)&&ae.classList.contains('cpq')))$('ssCp').innerHTML=cpHtml('ss',SS_GRADES());
+  const mode=$('ssMode').value,view=$('ssBy').value===ALLBY;const P=S.ssPull||{};const meta=S.ssList._meta||{};
+  $('ssPull').innerHTML='<div class="row" style="align-items:flex-end"><div><label class="f">Poor performer = below 60% in</label><select id="ssRun">'+[2,3,4].map(n=>'<option value="'+n+'"'+(n===(meta.run||2)?' selected':'')+'>'+n+'+ tests in a row</option>').join('')+'</select></div>'+
+    (P.needPw?'<div style="flex:1;min-width:180px"><label class="f">FIS Reports password</label><input type="password" id="ssPw" autocomplete="current-password" style="width:100%"></div>':'')+
+    '<button class="btn" id="ssPullBtn"'+(P.busy?' disabled':'')+'>'+(P.busy?'Updating…':'Update list from Poor Performers')+'</button></div>'+
+    '<p class="muted" style="margin:8px 0 0">'+(meta.asOf?'Last updated from FIS Reports (data as of '+esc(meta.asOf)+') by '+esc(byShort(meta.by||''))+' '+esc(meta.time||'')+'. ':'Not updated from FIS Reports yet. ')+'New poor performers are added; names a PL removed stay removed; frozen names stay frozen.</p>'+
+    (P.msg?'<p class="muted" style="margin:6px 0 0;color:var(--navy)">'+P.msg+'</p>':'')+(P.unmatched&&P.unmatched.length?'<details class="allst"><summary>'+P.unmatched.length+' names not found in the school list – add them by hand</summary><p class="muted" style="margin:8px 6px">'+P.unmatched.map(esc).join(' · ')+'</p></details>':'');
+  const list=cpList('ss').filter(c=>SS_CLS().includes(c));let h='',T={P:0,N:0,A:0,u:0,f:0,all:0};
+  list.forEach(c=>{const ms=ssMembers(c);const act=ms.filter(m=>!m.frz),frz=ms.filter(m=>m.frz);const sg=seg(c);
+    if(mode==='att'&&!ms.length)return;if(mode==='edit'&&!ms.length&&cpGet('ss').length===0)return;
+    const n=x=>act.filter(m=>ssVal(m.k.id)===x).length;const um=act.filter(m=>ssVal(m.k.id)===undefined).length;T.P+=n('P');T.N+=n('N');T.A+=n('A');T.u+=um;T.f+=frz.length;T.all+=ms.length;
+    const d=S.ss[sg];const dn=Object.keys((S.ssDraft||{})[sg]||{}).length;
+    h+='<div class="cstrip"><span>'+esc(clsName(c))+'</span><small>'+act.length+(frz.length?' + '+frz.length+' frozen':'')+'</small></div>';
+    if(mode==='att'){
+      h+='<div class="sbcount"><span class="tag t-SB">Staying '+n('P')+'</span><span class="tag t-U">Not staying '+n('N')+'</span><span class="tag t-A">Absent '+n('A')+'</span><span class="tag t-U">– Not marked '+um+'</span>'+(d&&d.by?'<em>Marked by '+esc(byShort(d.by))+' '+esc(d.time||'')+'</em>':'')+'</div>'+
+        act.map((m,i)=>{const v=ssVal(m.k.id);const b=(code,lbl,cc)=>'<button class="sbo'+(v===code?' on '+cc:'')+'" data-ssv="'+m.k.id+'|'+code+'">'+lbl+'</button>';
+          return '<div class="nrow'+(ssDraftOf(m.k.id)!==undefined?' drf':'')+'"><span class="no">'+(i+1)+'</span>'+nrow(esc(m.k.name),dots([ssWhy(m),esc(modeLabel(m.k)),sbHow(m.k),ssDraftOf(m.k.id)!==undefined?'<b style="color:var(--late)">not saved</b>':''])+'<div class="sbopts c3">'+b('P','Staying','s')+b('N','Not staying','n')+b('A','Absent','a')+'</div>',
+            v===undefined?'<span class="sbdash">–</span>':'<span class="tag t-'+SSV[v][1]+'">'+SSV[v][0]+'</span>')+'</div>'}).join('')+
+        (frz.length?'<div class="sumline frz"><span class="tag t-U">Frozen – not staying · '+frz.length+'</span><ol>'+frz.map(m=>'<li><b>'+esc(m.k.name)+'</b><i>'+dots([esc(m.why||'Parents not allowing'),esc(modeLabel(m.k))])+'</i></li>').join('')+'</ol></div>':'')+
+        (view?'':'<div class="row sbact">'+(um?'<button class="btn ghost sm" data-ssall="'+esc(c)+'">Mark remaining '+um+' as Staying</button>':'')+(dn?'<button class="btn" data-sssave="'+esc(sg)+'" style="flex:1">Save '+esc(clsName(c))+' ('+dn+')</button><button class="btn ghost" data-sscancel="'+esc(sg)+'">Cancel</button>':'')+'</div>');
+    }else{
+      const kd=ssDoc(c).kids||{};const rm=Object.keys(kd).filter(id=>KID[id]&&kd[id].rm);
+      h+=ms.map((m,i)=>'<div class="nrow"><span class="no">'+(i+1)+'</span>'+nrow(esc(m.k.name),dots([ssWhy(m),m.frz?'<span class="tag t-U">Frozen'+(m.why?' – '+esc(m.why):'')+'</span>':'',esc(modeLabel(m.k))])+(view?'':'<div class="sbopts c2"><button class="sbo" data-ssfrz="'+m.k.id+'">'+(m.frz?'Unfreeze':'Freeze (not staying)')+'</button><button class="sbo" data-ssrm="'+m.k.id+'">Remove</button></div>'),'')+'</div>').join('')||'<p class="muted empty">No students in the list.</p>';
+      if(rm.length)h+='<div class="sumline"><span class="tag t-U">Removed · '+rm.length+'</span><ol>'+rm.map(id=>'<li><b>'+esc(KID[id].name)+'</b>'+(view?'':' <button class="btn ghost sm" data-ssback="'+id+'">Add back</button>')+'</li>').join('')+'</ol></div>';
+      if(!view){const opts=Object.values(KID).filter(k=>k.cls===c&&!(kd[k.id]&&!kd[k.id].rm)).sort(byName);h+='<div class="row" style="margin:10px 0 4px"><select data-ssadd="'+esc(c)+'" style="flex:1"><option value="">Add a student to '+esc(clsName(c))+'…</option>'+opts.map(k=>'<option value="'+k.id+'">'+esc(k.name)+' ('+esc(modeLabel(k))+')</option>').join('')+'</select></div>'}
+    }});
+  $('ssHint').innerHTML=view?'Viewing only. Choose your name in <b>Marked by</b> to mark or edit.':mode==='att'?'Mark each student <b>Staying</b>, <b>Not staying</b> or <b>Absent</b>, then press Save. A grey dash means not marked yet. Frozen students are not staying.':'Freeze students whose parents do not allow them to stay, remove names, or add students. Changes save straight away.';
+  $('ssList').innerHTML=catHead('Smart Study Session – '+fmtDL(S.date),T.all,'SB')+(mode==='att'?'<div class="sbcount"><span class="tag t-SB">Staying '+T.P+'</span><span class="tag t-U">Not staying '+T.N+'</span><span class="tag t-A">Absent '+T.A+'</span><span class="tag t-U">– Not marked '+T.u+'</span><span class="tag t-U">Frozen '+T.f+'</span></div>':'')+(h||'<p class="muted empty">'+(mode==='att'?'No Smart Study students in the selected classes. Use "Update list from Poor Performers" or switch to Edit list to add students.':'Choose classes above.')+'</p>');
+}
+async function ssWriteList(c,fn){const sg=seg(c);const cur=S.ssList[sg]||{cls:c,kids:{}};const kids=JSON.parse(JSON.stringify(cur.kids||{}));fn(kids);
+  await store.set('config/ss-'+sg,Object.assign({},cur,{cls:c,kids,by:$('ssBy').value,time:nowHM(),ts:Date.now()}))}
+async function ssSave(sg){const dr=(S.ssDraft||{})[sg];if(!dr)return;const ids=Object.keys(dr);if(!ids.length)return;const c=KID[ids[0]].cls;const cur=S.ss[sg]||{};const kids=Object.assign({},cur.kids||{});ids.forEach(id=>kids[id]=dr[id]);
+  await store.set('att/'+S.date+'/ss/'+sg,{cls:c,kids,by:$('ssBy').value,time:nowHM(),ts:Date.now()});delete S.ssDraft[sg];toast(clsName(c)+' Smart Study saved');render()}
+/* poor performers from FIS Reports (same site, staff password) */
+const ssNorm=s=>String(s||'').toLowerCase().replace(/[^a-z ]/g,' ').replace(/\s+/g,' ').trim();
+function ssMatch(nm,cls){const ks=Object.values(KID).filter(k=>k.cls===cls);const n=ssNorm(nm);let m=ks.filter(k=>ssNorm(k.name)===n);if(m.length===1)return m[0];
+  const t=n.split(' ');const f=t[0],l=t[t.length-1];m=ks.filter(k=>{const u=ssNorm(k.name).split(' ');return u[0]===f&&(t.length<2||u[u.length-1]===l)});if(m.length===1)return m[0];
+  m=ks.filter(k=>ssNorm(k.name).split(' ')[0]===f);return m.length===1?m[0]:null}
+function ssPoor(tests,run){const bySec={};tests.forEach(t=>(bySec[t.sec]=bySec[t.sec]||[]).push(t));const out={};
+  Object.keys(bySec).forEach(sec=>{const ts=bySec[sec].slice().sort((a,b)=>(a.date||'').localeCompare(b.date||''));const names=[...new Set(ts.flatMap(t=>Object.keys(t.marks)))];
+    names.forEach(nm=>{let r=0,best=0;ts.forEach(t=>{const v=t.marks[nm];if(v==='A'||v==='NG'||v===''||v===undefined)return;if(typeof v==='number'&&t.max&&v/t.max*100<60){r++;best=Math.max(best,r)}else r=0});if(best>=run)(out[sec]=out[sec]||[]).push({nm,best})})});return out}
+function ssClsOf(sec){const m=/^(\d+)\s*-?\s*([A-Za-z])$/.exec(String(sec).trim());if(!m)return null;const g=GRADES.find(g=>String(ORD[g])===m[1]);return g&&CLASSES.find(c=>c===g+' - '+m[2].toUpperCase())}
+async function ssPull(){if(needBy('ssBy'))return;S.ssPull={busy:true};render();
+  const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));const hex=h=>Uint8Array.from(h.match(/../g).map(x=>parseInt(x,16)));const base='../reports/';
+  try{const lock=await (await fetch(base+'lock.json',{cache:'no-cache'})).json();let key=null;
+    const pwEl=$('ssPw');const pw=pwEl&&pwEl.value.trim();
+    if(pw){const bk=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveBits']);const bits=await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:hex(lock.salt),iterations:lock.iter},bk,256);
+      key=await crypto.subtle.importKey('raw',bits,'AES-GCM',false,['decrypt']);try{const u=hex(lock.check);await crypto.subtle.decrypt({name:'AES-GCM',iv:u.slice(0,12)},key,u.slice(12))}catch(e){S.ssPull={needPw:true,msg:'Wrong Reports password. Please try again.'};render();return}
+      try{localStorage.setItem('fisReportsKey',JSON.stringify({salt:lock.salt,k:btoa(String.fromCharCode(...new Uint8Array(bits)))}))}catch(e){}}
+    else{let sv=null;try{sv=JSON.parse(localStorage.getItem('fisReportsKey')||'null')}catch(e){}if(sv&&sv.salt===lock.salt)key=await crypto.subtle.importKey('raw',b64(sv.k),'AES-GCM',false,['decrypt'])}
+    if(!key){S.ssPull={needPw:true,msg:'Enter the FIS Reports password once on this phone, then press Update.'};render();return}
+    const buf=new Uint8Array(await (await fetch(base+'data.bin',{cache:'no-cache'})).arrayBuffer());
+    const data=JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},key,buf.slice(12))));
+    const tests=(data.tests||[]).map(([sec,subj,lesson,date,max,marks])=>({sec,subj,date,max,marks})).filter(t=>/[A-Za-z]/.test(t.subj)&&t.max);
+    const run=+($('ssRun')||{}).value||2;const poor=ssPoor(tests,run);const un=[];let added=0,total=0;const by=$('ssBy').value;
+    for(const c of SS_CLS()){const secKey=Object.keys(poor).find(s=>ssClsOf(s)===c);const found={};
+      (secKey?poor[secKey]:[]).forEach(p=>{const k=ssMatch(p.nm,c);if(k)found[k.id]=p.best;else un.push(secLbl(c)+': '+p.nm)});
+      const cur=(S.ssList[seg(c)]||{}).kids||{};const kids=JSON.parse(JSON.stringify(cur));let ch=false;
+      Object.keys(found).forEach(id=>{total++;if(!kids[id]){kids[id]={src:'poor',run:found[id],by,since:S.date};added++;ch=true}else if(kids[id].src==='poor'&&(kids[id].run!==found[id]||kids[id].pp===false)){kids[id].run=found[id];delete kids[id].pp;ch=true}});
+      Object.keys(kids).forEach(id=>{if(kids[id].src==='poor'&&!found[id]&&kids[id].pp!==false){kids[id].pp=false;ch=true}});
+      if(ch)await store.set('config/ss-'+seg(c),Object.assign({},S.ssList[seg(c)]||{},{cls:c,kids,by,time:nowHM(),ts:Date.now()}))}
+    await store.set('config/ss-_meta',{asOf:data.asOf||'',run,by,time:fmtD(S.date)+' '+nowHM(),ts:Date.now()});
+    S.ssPull={msg:'Done: '+total+' poor performers found in Classes 1–10, '+added+' newly added.',unmatched:un}}
+  catch(e){S.ssPull={msg:'Could not read FIS Reports here ('+esc(e.message||e)+'). Open the app from the FIS hub and try again.'}}
+  render()}
 /* MORNING ATTENDANCE – names & numbers */
 function morningNames(list){
   const vk=new Set(list.map(v=>v.k));const all=Object.values(KID).filter(k=>k.walk||vk.has(k.v));
@@ -504,7 +589,7 @@ async function loadWeek(){
   for(const d of dates){data[d]={};for(const c of ['veh','gate','sb','out','derr']){data[d][c]=await store.getCol('att/'+d+'/'+c)}}
   WK.data=data;WK.loading=false;if(S.view==='dash')renderDash();
 }
-function withDate(dd,fn){const keep={veh:S.veh,gate:S.gate,sb:S.sb,out:S.out,derr:S.derr};Object.assign(S,dd);try{return fn()}finally{Object.assign(S,keep)}}
+function withDate(dd,fn){const keep={veh:S.veh,gate:S.gate,sb:S.sb,out:S.out,derr:S.derr,ss:S.ss};Object.assign(S,dd);try{return fn()}finally{Object.assign(S,keep)}}
 function fmtD(d){return new Date(d+'T00:00').toLocaleDateString('en-IN',{weekday:'short',day:'2-digit',month:'short'})}
 function renderDashDep(list){
   let T={go:0,b:0,early:0,sb:0,walk:0,err:0,du:0,cu:0,dep:0};
@@ -651,7 +736,7 @@ function lateMonthlyText(){const mon=new Date(S.date+'T00:00').toLocaleDateStrin
   return '*Late Defaulters – '+mon+'*\n'+lateMonthlyRows().map((r,i)=>(i+1)+'. '+r.k.name+' '+shortCls(r.k.cls)+' - '+vehShort(r.k)+' - '+r.a.length+' time'+(r.a.length>1?'s':'')+' late').join('\n')}
 
 /* STUDENT RECORDS (Dashboard) */
-const REC_SEGS=[['LATE','Late Comers'],['EARLY','Early Leavers'],['SB','Stay Back'],['UNIF','Uniform Defaulters'],['MISSSB','Missed Stay Back'],['MISS','Missed Bus'],['PARENT','Parent Pick-up']];
+const REC_SEGS=[['ERR','Errors of the Day'],['EARLY','Early Leavers'],['LATE','Late Comers'],['UNIF','Uniform Defaulters'],['STAFFU','Staff Uniform Defaulters'],['ABS','Absentees'],['MISSSB','Stay Back Defaulters'],['SB','Stay Back Records'],['DOUBT','Stay Back Doubt'],['SS','Smart Study'],['MISS','Missed Bus'],['PARENT','Parent Pick-up']];
 const RG={key:'',data:{},loading:false};
 function ymd(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function periodDates(p){
@@ -664,12 +749,15 @@ function periodDates(p){
 async function loadRange(dates){const key=dates.join(',')+'#'+(S.recTick||0);if(RG.key===key||RG.loading)return;
   RG.loading=true;RG.key=key;const data={};
   await store.prefetch(dates);
-  await Promise.all(dates.map(async d=>{data[d]={};for(const c of ['veh','gate','sb']){data[d][c]=await store.getCol('att/'+d+'/'+c)}}));
+  await Promise.all(dates.map(async d=>{data[d]={};for(const c of ['veh','gate','sb','ss','derr']){data[d][c]=await store.getCol('att/'+d+'/'+c)}}));
   RG.data=data;RG.loading=false;if(S.view==='dash')renderDash();}
 function dayEvents(date){const ev=[];
   Object.values(KID).forEach(k=>{const id=k.id;const st=kidStatus(id);const g=st.g||{};
     if(g.in&&g.in.type==='LATE')ev.push({date,id,seg:'LATE',time:g.in.time,rem:g.rem,by:g.by,extra:outPlan(k,g).t});
     if(g.unif&&(g.unif.items||[]).length)ev.push({date,id,seg:'UNIF',extra:unifTxt(g.unif),rem:g.unif.rem,by:g.unif.by});
+    if(st.IN==='A'){const fo=g.in&&g.in.type==='ABS';ev.push({date,id,seg:'ABS',extra:fo?'Marked absent by Front Office':k.walk?'':'Absent in '+VBY[k.v].l,rem:fo?g.rem:'',by:fo?g.by:((S.veh[k.v]||{}).by||'')})}
+    if(sbDoubt(id)){const d=S.sb[seg(k.cls)]||{};ev.push({date,id,seg:'DOUBT',extra:'Stay back doubt',by:d.by})}
+    {const sv=((S.ss||{})[seg(k.cls)]||{});const v=(sv.kids||{})[id];if(v)ev.push({date,id,seg:'SS',extra:{P:'Staying',N:'Not staying',A:'Absent'}[v],by:sv.by})}
     if(st.OUT==='EARLY')ev.push({date,id,seg:'EARLY',time:g.out&&g.out.time,rem:g.rem,by:g.by});
     if(st.OUT==='SB')ev.push({date,id,seg:'SB',rem:g.out&&g.out.type==='SB'?g.rem:'',by:g.out&&g.out.type==='SB'?g.by:(S.sbReg[id]?'Regular SB':'PL')});
     if(S.sbReg[id]&&st.present&&st.OUT!=='SB'){const why={EARLY:'Left early',GOWALK:'Went with parent / by walk',VEH:'Went by regular transport',HOME:'Went home'}[st.OUT]||'Not kept in stayback';
@@ -678,8 +766,27 @@ function dayEvents(date){const ev=[];
     if(!k.walk&&st.OUT==='GOWALK')ev.push({date,id,seg:'PARENT',time:g.out&&g.out.time,rem:g.rem,by:g.out&&g.out.type==='GOWALK'?g.by:'Special by-walk list'});
   });return ev;}
 function collectEvents(dates){
-  if(dates.length===1&&dates[0]===S.date)return (Object.keys(S.veh).length||Object.keys(S.gate).length)?dayEvents(S.date):[];
-  const ev=[];dates.forEach(d=>{const dd=RG.data[d];if(!dd||!(Object.keys(dd.veh||{}).length||Object.keys(dd.gate||{}).length))return;withDate(Object.assign({out:{},derr:{}},dd),()=>{ev.push(...dayEvents(d))})});return ev;}
+  if(dates.length===1&&dates[0]===S.date)return (Object.keys(S.veh).length||Object.keys(S.gate).length||Object.keys(S.sb).length||Object.keys(S.ss||{}).length)?dayEvents(S.date):[];
+  const ev=[];dates.forEach(d=>{const dd=RG.data[d];if(!dd||!(Object.keys(dd.veh||{}).length||Object.keys(dd.gate||{}).length||Object.keys(dd.sb||{}).length||Object.keys(dd.ss||{}).length))return;withDate(Object.assign({out:{},derr:{},ss:{}},dd),()=>{ev.push(...dayEvents(d))})});return ev;}
+function staffURows(dates){const rows=[];dates.forEach(d=>{const dd=d===S.date?{veh:S.veh,derr:S.derr}:(RG.data[d]||{});
+  VEH.forEach(v=>{const vd=(dd.veh||{})[v.k]||{};const de=(dd.derr||{})[v.k]||{};const ch=de.checks||{};
+    const dr=[];if(hasDrvU(v.k)){if(vd.driverU==='NOT')dr.push('Morning');if(ch.driver==='NOT'||(de.items||[]).some(it=>it.type==='Driver uniform'))dr.push('Departure')}
+    const cr=[];if(hasConU(v.k)){if(vd.condU==='NOT')cr.push('Morning');if(ch.conductor==='NOT'||(de.items||[]).some(it=>it.type==='Conductor uniform'))cr.push('Departure')}
+    if(dr.length)rows.push({d,v,role:'Driver',when:dr.join(' & ')});if(cr.length)rows.push({d,v,role:'Conductor',when:cr.join(' & ')})})});return rows}
+function staffUHtml(rows,per,range){const by={};rows.forEach(r=>(by[r.v.k]=by[r.v.k]||[]).push(r));const vs=VEH.filter(v=>by[v.k]);
+  let h=catHead('Staff Uniform Defaulters – '+range,rows.length,'A')+'<div class="sbcount"><span class="tag t-A">Driver '+rows.filter(r=>r.role==='Driver').length+'</span><span class="tag t-A">Conductor '+rows.filter(r=>r.role==='Conductor').length+'</span><span class="tag t-U">'+vs.length+' vehicles</span></div>';
+  if(!vs.length)return h+'<p class="muted empty">No driver or conductor uniform defaults in this period.</p>';
+  return h+vs.map(v=>'<div class="cstrip"><span>'+esc(v.l)+'</span><small>'+by[v.k].length+'</small></div>'+by[v.k].map((r,i)=>'<div class="nrow"><span class="no">'+(i+1)+'</span>'+nrow(r.role+' not in uniform',dots([per!=='day'?'<b>'+esc(fmtD(r.d))+'</b>':'',esc(r.when)]),'<span class="tag t-A">'+esc(r.role)+'</span>')+'</div>').join('')).join('')}
+const tmin=t=>{const m=/(\d{1,2}):(\d\d)\s*([ap]m)?/i.exec(t||'');if(!m)return 9999;let h=+m[1];if(m[3]){const pm=/p/i.test(m[3]);if(pm&&h<12)h+=12;if(!pm&&h===12)h=0}return h*60+(+m[2])};
+function errRows(dates){const rows=[];dates.forEach(d=>{const dd=d===S.date?{gate:S.gate,derr:S.derr}:(RG.data[d]||{});
+  Object.entries(dd.gate||{}).forEach(([id,g])=>{(g.errs||[]).forEach(e=>{if(KID[id]&&cpHas('rep',KID[id].cls))rows.push({d,k:KID[id],ph:e.ph,type:e.type,rem:e.rem,by:e.by,time:e.time,ts:e.ts||0,src:'FO Entry-Exit'})})});
+  Object.entries(dd.derr||{}).forEach(([vk,de])=>{(de.items||[]).forEach(it=>{const k=KID[it.kid];if(k&&!cpHas('rep',k.cls))return;rows.push({d,k,v:VBY[vk],ph:'Departure',type:it.type,rem:it.rem,by:it.by,time:it.time,ts:it.ts||0,src:'Departure – '+((VBY[vk]||{}).l||vk)})})})});
+  return rows.sort((a,b)=>a.d.localeCompare(b.d)||(tmin(a.time)-tmin(b.time))||(a.ts-b.ts))}
+function errHtml(rows,per,range){const ph=x=>rows.filter(r=>r.ph===x).length;
+  let h=catHead(range,rows.length,'A')+'<div class="sbcount"><span class="tag t-LATE">Arrival '+ph('Arrival')+'</span><span class="tag t-EARLY">Departure '+ph('Departure')+'</span></div>';
+  if(!rows.length)return h+'<p class="muted empty">No errors reported in this period.</p>';
+  let last='';return h+rows.map((r,i)=>{let s='';if(per!=='day'&&r.d!==last){last=r.d;s='<div class="cstrip"><span>'+esc(fmtDL(r.d))+'</span><small>'+rows.filter(x=>x.d===r.d).length+'</small></div>'}
+    return s+'<div class="nrow"><span class="no">'+(i+1)+'</span>'+nrow(esc(r.type),(r.k?'<b>'+esc(r.k.name)+'</b> · '+esc(clsName(r.k.cls))+' · '+esc(modeLabel(r.k))+'<br>':'')+(r.rem?'Case: <b>'+esc(r.rem)+'</b><br>':'')+dots([esc(r.src),'Reported by '+esc(byShort(r.by||'—'))]),'<span class="tag t-'+(r.ph==='Arrival'?'LATE':'EARLY')+'">'+esc(r.ph)+'</span><span class="tag t-U">'+esc(r.time||'')+'</span>')+'</div>'}).join('')}
 function renderDashRecords(){
   const per=S.recPer||'day',sg=S.recSeg||'LATE';
   const dates=periodDates(per);
@@ -688,13 +795,18 @@ function renderDashRecords(){
   if(!(dates.length===1&&dates[0]===S.date)){loadRange(dates);if(RG.loading||!dates.every(d=>RG.data[d])){$('dashExtra').innerHTML=recControls(per,sg,{})+'<p class="muted empty">Loading '+dates.length+' days…</p>';return}}
   const all=collectEvents(dates).filter(e=>KID[e.id]&&cpHas('rep',KID[e.id].cls));
   const cnt={};REC_SEGS.forEach(s=>cnt[s[0]]=all.filter(e=>e.seg===s[0]).length);
+  const sur=staffURows(dates);cnt.STAFFU=sur.length;const er=errRows(dates);cnt.ERR=er.length;
+  if(sg==='ERR'){const range=dates.length===1?fmtDL(dates[0]):fmtD(dates[0])+' – '+fmtD(dates[dates.length-1]);$('dashExtra').innerHTML=recControls(per,sg,cnt)+errHtml(er,per,'Errors – '+range)+'<div class="row" style="margin-top:16px"><button class="btn ghost sm" id="recCopy">Copy List (WhatsApp)</button></div>';
+    S.recLast={errs:er,range,per};return}
+  if(sg==='STAFFU'){const range=dates.length===1?fmtDL(dates[0]):fmtD(dates[0])+' – '+fmtD(dates[dates.length-1]);$('dashExtra').innerHTML=recControls(per,sg,cnt)+staffUHtml(sur,per,range)+'<div class="row" style="margin-top:16px"><button class="btn ghost sm" id="recCopy">Copy List (WhatsApp)</button></div>';
+    S.recLast={staff:sur,label:'Staff Uniform Defaulters',range,per};return}
   const rep2=per!=='day'&&S.recRep;
   let ev=all.filter(e=>e.seg===sg);
   const byKid={};ev.forEach(e=>{(byKid[e.id]=byKid[e.id]||[]).push(e)});
   if(rep2){Object.keys(byKid).forEach(id=>{if(byKid[id].length<2)delete byKid[id]});ev=ev.filter(e=>byKid[e.id]);}
   const byCls={};Object.keys(byKid).forEach(id=>{(byCls[KID[id].cls]=byCls[KID[id].cls]||[]).push(id)});
   const clsList=CLASSES.filter(c=>byCls[c]);
-  const label=REC_SEGS.find(s=>s[0]===sg)[1];const tc=sg==='MISS'||sg==='MISSSB'||sg==='UNIF'?'A':sg==='PARENT'?'GOWALK':sg;
+  const label=REC_SEGS.find(s=>s[0]===sg)[1];const tc=sg==='MISS'||sg==='MISSSB'||sg==='UNIF'||sg==='ABS'?'A':sg==='PARENT'?'GOWALK':sg==='DOUBT'?'LATE':sg==='SS'?'SB':sg;
   const range=dates.length===1?fmtDL(dates[0]):fmtD(dates[0])+' – '+fmtD(dates[dates.length-1]);
   const nK=Object.keys(byKid).length;
   let h=recControls(per,sg,cnt)+catHead(label+' – '+range,nK,tc)+(per!=='day'?'<div class="sbcount"><span class="tag t-U">'+ev.length+' entries</span><span class="tag t-U">'+dates.filter(d=>{const dd=RG.data[d];return dd&&(Object.keys(dd.veh||{}).length||Object.keys(dd.gate||{}).length)}).length+' school days with data</span></div>':'');
@@ -724,9 +836,9 @@ function recControls(per,sg,cnt){
   return '<div class="row" style="justify-content:space-between"><h2 style="margin:0">School Report</h2><div class="row">'+
     [['day','Daily'],['week','Weekly'],['month','Monthly']].map(p=>'<button class="btn '+(per===p[0]?'':'ghost')+' sm" data-recper="'+p[0]+'">'+p[1]+'</button>').join('')+'</div></div>'+
     '<div class="recseg">'+REC_SEGS.map(s=>'<button class="'+(sg===s[0]?'on':'')+'" data-recseg="'+s[0]+'"><b>'+(cnt[s[0]]!==undefined?cnt[s[0]]:'–')+'</b>'+s[1]+'</button>').join('')+'</div>'+
-    '<div style="margin-top:12px">'+cpHtml('rep')+'</div>'+(per!=='day'?'<div class="row" style="margin-top:10px"><label class="seck"><input type="checkbox" id="recRep"'+(S.recRep?' checked':'')+'> Repeat only (2+ times)</label></div>':'')+'<p class="muted" style="margin:10px 0 0">Whole school · the date in the top bar sets the day, week or month.</p>';
+    (sg==='STAFFU'?'':'<div style="margin-top:12px">'+cpHtml('rep')+'</div>')+(per!=='day'?'<div class="row" style="margin-top:10px"><label class="seck"><input type="checkbox" id="recRep"'+(S.recRep?' checked':'')+'> Repeat only (2+ times)</label></div>':'')+'<p class="muted" style="margin:10px 0 0">Whole school · the date in the top bar sets the day, week or month.</p>';
 }
-function recText(){const r=S.recLast;if(!r)return '';let t='*FIS '+r.label+' – '+r.range+'*\n';
+function recText(){const r=S.recLast;if(!r)return '';if(r.errs){let t='*FIS Errors – '+r.range+'*\n';r.errs.forEach((x,i)=>{t+='\n'+(i+1)+'. '+(r.per!=='day'?fmtD(x.d)+' ':'')+(x.time||'')+' – '+x.ph+' – *'+x.type+'*'+(x.k?'\n   '+x.k.name+' ('+secLbl(x.k.cls)+')':'')+(x.rem?'\n   Case: '+x.rem:'')+'\n   By: '+byShort(x.by||'')+' · '+x.src});return t+'\n\nTotal: '+r.errs.length}if(r.staff){let t='*FIS Staff Uniform Defaulters – '+r.range+'*\n';r.staff.forEach((x,i)=>{t+=(i+1)+'. '+x.v.l+' – '+x.role+(r.per!=='day'?' – '+fmtD(x.d):'')+' ('+x.when+')\n'});return t+'\nTotal: '+r.staff.length}let t='*FIS '+r.label+' – '+r.range+'*\n';
   r.clsList.forEach(c=>{t+='\n*'+clsName(c)+'* ('+r.byCls[c].length+')\n';r.byCls[c].forEach((id,i)=>{t+=(i+1)+'. '+KID[id].name+' ('+modeLabel(KID[id])+')'+(r.per!=='day'?' – '+r.byKid[id].length+'×':'')+(r.per==='day'&&r.byKid[id][0].time?' – '+r.byKid[id][0].time:'')+'\n'})});
   return t+'\nTotal students: '+Object.keys(r.byKid).length}
 
@@ -884,7 +996,7 @@ function renderSchool(){
     return '<div class="kid"><div class="nm"><div>'+esc(k.name)+'</div><span>'+esc(clsName(k.cls))+' · '+esc(modeLabel(k))+(d.by?' · marked by '+esc(d.by)+' '+esc(d.time||''):'')+'</span></div><div style="display:flex;gap:6px"><button class="tg SB" data-dclr="'+k.id+'|1">Staying</button><button class="tg noSB" data-dclr="'+k.id+'|0">Not Staying</button></div></div>'}).join(''):'';
   const rows=schoolRows();const by={};rows.forEach(r=>(by[r.k.cls]=by[r.k.cls]||[]).push(r));
   const cls=CLASSES.filter(c=>by[c]);const sum=$('gateBy').value===ALLBY&&!$('schSt').value&&!$('schQ').value.trim();
-  const CATS=[['Absent','A',r=>r.st.IN==='A'],['Late arrival','LATE',r=>r.st.IN==='LATE',r=>r.st.g.in&&r.st.g.in.time],['Early leavers','EARLY',r=>r.st.OUT==='EARLY',r=>r.st.g.out&&r.st.g.out.time],['Stay back','SB',r=>r.st.OUT==='SB'],['Parent pick-up','GOWALK',r=>r.st.OUT==='GOWALK']];
+  const CATS=[['Absent','A',r=>r.st.IN==='A'],['Late arrival','LATE',r=>r.st.IN==='LATE',r=>r.st.g.in&&r.st.g.in.time],['Early leavers','EARLY',r=>r.st.OUT==='EARLY',r=>r.st.g.out&&r.st.g.out.time],['Stay back','SB',r=>r.st.OUT==='SB'],['Parent pick-up','GOWALK',r=>r.st.OUT==='GOWALK'],['Stay back doubt – confirm with parent','LATE',r=>sbDoubt(r.k.id)],['Smart Study – staying','SB',r=>ssDayVal(r.k.id)==='P'],['Errors reported','A',r=>((r.st.g||{}).errs||[]).length,r=>((r.st.g||{}).errs||[]).map(e=>e.type+(e.rem?' – '+e.rem:'')).join('; ')]];
   $('schList').innerHTML=cls.length?cls.map(c=>{const rs=by[c].sort((a,b)=>a.k.name.localeCompare(b.k.name));
     const cs=sum?CATS.map(ct=>{const a=rs.filter(ct[2]);return a.length?'<div class="sumline"><span class="tag t-'+ct[1]+'">'+ct[0]+' · '+a.length+'</span><ol>'+a.map(r=>'<li><b>'+esc(r.k.name)+'</b><i>'+dots([esc(modeLabel(r.k)),ct[3]?esc(ct[3](r)||''):'',esc(r.rem)])+'</i></li>').join('')+'</ol></div>':''}).join(''):'';
     return '<div class="cstrip"><span>'+esc(clsName(c))+'</span><small>'+rs.length+'</small></div>'+(sum?(cs||'<p class="muted" style="margin:6px">No absent, late, early or stay back entry.</p>')+'<details class="allst"><summary>All '+rs.length+' students</summary>':'')+
@@ -895,15 +1007,18 @@ function renderSchool(){
 /* DAY SUMMARY */
 function dayData(){const ks=Object.values(KID).filter(k=>cpHas('day',k.cls));const G=k=>S.gate[k.id]||{};
   return {late:ks.filter(k=>G(k).in&&G(k).in.type==='LATE').map(k=>({k,g:G(k)})),early:ks.filter(k=>G(k).out&&G(k).out.type==='EARLY').map(k=>({k,g:G(k)})),
-    sb:ks.filter(k=>{const s=kidStatus(k.id);return s.present&&s.OUT==='SB'}).map(k=>({k,g:G(k)})),unif:ks.filter(k=>G(k).unif&&(G(k).unif.items||[]).length).map(k=>({k,g:G(k)}))}}
+    sb:ks.filter(k=>{const s=kidStatus(k.id);return s.present&&s.OUT==='SB'&&!sbDoubt(k.id)}).map(k=>({k,g:G(k)})),doubt:ks.filter(k=>sbDoubt(k.id)).map(k=>({k,g:G(k)})),ss:ks.filter(k=>ssDayVal(k.id)==='P').map(k=>({k,g:G(k)})),unif:ks.filter(k=>G(k).unif&&(G(k).unif.items||[]).length).map(k=>({k,g:G(k)}))}}
 function sbSrc(k){const v=sbDay(k.id);const d=S.sb[seg(k.cls)]||{};if(((S.gate[k.id]||{}).out||{}).type==='SB')return 'Front Office';if(v===true)return 'Marked by '+byShort(d.by||'PL');if(v==='D')return 'Doubt – to confirm';return 'Regular list – not marked yet'}
 function renderDay(){
   $('dayH').textContent='Day Summary – '+fmtDL(S.date);cpRender('dayCp','day');const D=dayData();
-  const kp=[['Late Comers',D.late.length,'LATE'],['Early Leavers',D.early.length,'EARLY'],['Stay Back',D.sb.length,'SB'],['Uniform Defaulters',D.unif.length,'A']];
+  const kp=[['Late Comers',D.late.length,'LATE'],['Early Leavers',D.early.length,'EARLY'],['Stay Back',D.sb.length,'SB'],['Stay Back Doubt',D.doubt.length,'LATE'],['Smart Study',D.ss.length,'SB'],['Errors',errRows([S.date]).length,'A'],['Uniform Defaulters',D.unif.length,'A']];
   $('dayBody').innerHTML='<div class="daykp">'+kp.map(x=>'<div class="c-'+x[2]+'"><b>'+x[1]+'</b><span>'+x[0]+'</span></div>').join('')+'</div>'+
     '<div class="card">'+catHead('Late Comers',D.late.length,'LATE')+strips(D.late,r=>nrow(esc(r.k.name),dots([esc(modeLabel(r.k)),esc(r.g.rem),r.g.by?'by '+esc(byShort(r.g.by)):'']),'<span class="tag t-LATE">'+esc(r.g.in.time||'')+'</span>'),{empty:'No late comers.'})+'</div>'+
     '<div class="card">'+catHead('Early Leavers',D.early.length,'EARLY')+strips(D.early,r=>nrow(esc(r.k.name),dots(['Regular: '+esc(modeLabel(r.k)),r.g.rem?'<b>'+esc(r.g.rem)+'</b>':'',r.g.by?'by '+esc(byShort(r.g.by)):'']),'<span class="tag t-EARLY">Left '+esc(r.g.out.time||'')+'</span>'),{empty:'No early leavers.'})+'</div>'+
     '<div class="card">'+catHead('Stay Back',D.sb.length,'SB')+strips(D.sb,r=>nrow(esc(r.k.name),dots([esc(modeLabel(r.k)),esc(sbSrc(r.k))]),''),{empty:'No stay back students.'})+'</div>'+
+    '<div class="card">'+errHtml(errRows([S.date]).filter(r=>!r.k||cpHas('day',r.k.cls)),'day','Errors of the Day')+'</div>'+
+    '<div class="card">'+catHead('Stay Back Doubt – confirm with parent',D.doubt.length,'LATE')+strips(D.doubt,r=>nrow(esc(r.k.name),dots([esc(modeLabel(r.k)),'Marked by '+esc(byShort((S.sb[seg(r.k.cls)]||{}).by||''))]),''),{empty:'No doubt cases.'})+'</div>'+
+    '<div class="card">'+catHead('Smart Study Session',D.ss.length,'SB')+strips(D.ss,r=>nrow(esc(r.k.name),dots([esc(modeLabel(r.k)),'Marked by '+esc(byShort((S.ss[seg(r.k.cls)]||{}).by||''))]),''),{empty:'No Smart Study attendance marked.'})+'</div>'+
     '<div class="card">'+catHead('Uniform Defaulters',D.unif.length,'A')+strips(D.unif,r=>nrow(esc(r.k.name),'<span class="tag t-A" style="white-space:normal">'+esc(unifTxt(r.g.unif))+'</span><br>'+dots([esc(modeLabel(r.k)),esc(r.g.unif.rem),r.g.unif.by?'by '+esc(byShort(r.g.unif.by)):'']),''),{empty:'No uniform defaulters.'})+'</div>';
 }
 function dayText(){const D=dayData();const a=cpGet('day');let t='*FIS Day Summary – '+fmtDL(S.date)+'*'+(a.length?'\nClasses: '+a.map(secLbl).join(', '):'')+'\n';
@@ -912,6 +1027,8 @@ function dayText(){const D=dayData();const a=cpGet('day');let t='*FIS Day Summar
   blk('Late Comers',D.late,r=>' – '+(r.g.in.time||'')+' ('+modeLabel(r.k)+')');
   blk('Early Leavers',D.early,r=>' – '+(r.g.out.time||'')+(r.g.rem?' – '+r.g.rem:'')+' ('+modeLabel(r.k)+')');
   blk('Stay Back',D.sb,r=>' ('+modeLabel(r.k)+')');
+  blk('Stay Back Doubt',D.doubt,r=>' ('+modeLabel(r.k)+')');
+  blk('Smart Study Session',D.ss,r=>' ('+modeLabel(r.k)+')');
   blk('Uniform Defaulters',D.unif,r=>' – '+unifTxt(r.g.unif));
   return t}
 function schoolText(){const rows=schoolRows();const d=new Date(S.date+'T00:00');
@@ -996,6 +1113,10 @@ document.addEventListener('click',async e=>{
   if(t.dataset.gopt){const [side,type]=t.dataset.gopt.split(':');const g=S.gate[gatePick]||{};
     if(!gDraft)gDraft={in:g.in&&g.in.type||null,out:g.out&&g.out.type||null};
     gDraft.rem=$('gRem').value;gDraft.inT=$('gInT').value;gDraft.outT=$('gOutT').value;gDraft[side]=gDraft[side]===type?null:type;renderFO();return}
+  if(t.id==='gErrAdd'){const by=foBy||$('gateBy').value;if(by===ALLBY){toast('Choose your name in "Marked by" first');return}const rem=$('gErrRem').value.trim();if($('gErrT').value==='Other'&&!rem){toast('Write what happened');return}
+    const g=S.gate[gatePick]||{};const errs=(g.errs||[]).concat([{ph:$('gErrPh').value,type:$('gErrT').value,rem,by,time:nowT(),ts:Date.now()}]);
+    await store.set('att/'+S.date+'/gate/'+gatePick,Object.assign({},g,{errs,ts:Date.now()}));toast('Error recorded');renderFO();return}
+  if(t.dataset.gerrdel!==undefined){const g=S.gate[gatePick]||{};const errs=(g.errs||[]).slice();errs.splice(+t.dataset.gerrdel,1);await store.set('att/'+S.date+'/gate/'+gatePick,Object.assign({},g,{errs,ts:Date.now()}));toast('Error removed');renderFO();return}
   if(t.id==='gSave'){const g=S.gate[gatePick]||{};const d=gDraft||{in:g.in&&g.in.type||null,out:g.out&&g.out.type||null};
     const path='att/'+S.date+'/gate/'+gatePick;
     if(!d.in&&!d.out){if(g.unif)await store.set(path,{unif:g.unif,ts:Date.now()});else await store.del(path)}
@@ -1012,6 +1133,17 @@ document.addEventListener('click',async e=>{
   if(t.dataset.sbv){if(needBy('sbBy'))return;const [id,code]=t.dataset.sbv.split('|');const v=code==='S'?true:code==='N'?false:code==='D'?'D':'A';const sg=seg(KID[id].cls);S.sbDraft=S.sbDraft||{};const d=S.sbDraft[sg]=S.sbDraft[sg]||{};
     if(d[id]===v||(!(id in d)&&sbDay(id)===v))delete d[id];else if(sbDay(id)===v)delete d[id];else d[id]=v;if(!Object.keys(d).length)delete S.sbDraft[sg];render();return}
   if(t.dataset.sball){if(needBy('sbBy'))return;const c=t.dataset.sball,sg=seg(c);S.sbDraft=S.sbDraft||{};const d=S.sbDraft[sg]=S.sbDraft[sg]||{};sbCands(c).forEach(k=>{if(sbVal(k.id)===undefined)d[k.id]=true});if(!Object.keys(d).length)delete S.sbDraft[sg];render();return}
+  if(t.id==='ssPullBtn'){await ssPull();return}
+  if(t.dataset.ssv){if(needBy('ssBy'))return;const [id,v]=t.dataset.ssv.split('|');const sg=seg(KID[id].cls);S.ssDraft=S.ssDraft||{};const d=S.ssDraft[sg]=S.ssDraft[sg]||{};
+    if(d[id]===v||ssDayVal(id)===v)delete d[id];else d[id]=v;if(!Object.keys(d).length)delete S.ssDraft[sg];render();return}
+  if(t.dataset.ssall){if(needBy('ssBy'))return;const c=t.dataset.ssall,sg=seg(c);S.ssDraft=S.ssDraft||{};const d=S.ssDraft[sg]=S.ssDraft[sg]||{};ssMembers(c).filter(m=>!m.frz&&ssVal(m.k.id)===undefined).forEach(m=>d[m.k.id]='P');if(!Object.keys(d).length)delete S.ssDraft[sg];render();return}
+  if(t.dataset.sssave){if(needBy('ssBy'))return;await ssSave(t.dataset.sssave);return}
+  if(t.dataset.sscancel){delete S.ssDraft[t.dataset.sscancel];render();return}
+  if(t.dataset.ssfrz){if(needBy('ssBy'))return;const id=t.dataset.ssfrz;const e=ssEntry(id)||{};let why='';
+    if(!e.frz){why=prompt('Reason for freezing '+KID[id].name+' (optional)','Parents not allowing');if(why===null)return}
+    await ssWriteList(KID[id].cls,kids=>{const x=kids[id]=kids[id]||{src:'add'};if(x.frz){delete x.frz;delete x.why}else{x.frz=true;x.why=why||'Parents not allowing'}});toast(KID[id].name+(e.frz?' unfrozen':' frozen – not staying'));return}
+  if(t.dataset.ssrm){if(needBy('ssBy'))return;const id=t.dataset.ssrm;await ssWriteList(KID[id].cls,kids=>{kids[id]=Object.assign(kids[id]||{src:'add'},{rm:true})});toast(KID[id].name+' removed from Smart Study');return}
+  if(t.dataset.ssback){if(needBy('ssBy'))return;const id=t.dataset.ssback;await ssWriteList(KID[id].cls,kids=>{if(kids[id])delete kids[id].rm});toast(KID[id].name+' added back');return}
   if(t.id==='dayCopy'){await copyTxt(dayText());return}
   if(t.dataset.sbsave){if(needBy('sbBy'))return;await saveSBClass(t.dataset.sbsave);render();return}
   if(t.dataset.sbcancel){delete (S.sbDraft||{})[t.dataset.sbcancel];render();return}
@@ -1044,6 +1176,9 @@ document.addEventListener('change',async e=>{
   if(t.id==='sbBy'){LS.set('sbBy',t.value);render()}
   if(t.id==='lateBy'){LS.set('lateBy',t.value)}
   if(t.id==='earlyBy'){LS.set('earlyBy',t.value)}
+  if(t.id==='ssBy'){LS.set('ssBy',t.value);render()}
+  if(t.id==='ssMode'){render()}
+  if(t.dataset&&t.dataset.ssadd&&t.value){if(needBy('ssBy')){t.value='';return}const id=t.value;await ssWriteList(t.dataset.ssadd,kids=>{kids[id]={src:'add',by:$('ssBy').value,since:S.date}});toast(KID[id].name+' added to Smart Study');return}
   if(t.id==='unifBy'){LS.set('unifBy',t.value)}
   if(t.id==='unifItem'){S.unifItem=t.value;renderDash();return}
   if(t.id==='berrType'){S.berrType=t.value;renderDash();return}

@@ -183,9 +183,9 @@ tr.tot td{background:#F8F6F1}
 .nr{flex:none;display:flex;flex-direction:column;gap:5px;align-items:flex-end;max-width:46%}.nr .tag{white-space:normal;text-align:right}
 .goes{color:var(--navy)}
 .empty{padding:14px 6px;margin:0}
-.sbopts{display:grid;grid-template-columns:1fr 1.25fr 1fr 1fr;gap:6px;margin-top:9px;max-width:460px}@media (max-width:420px){.sbopts{gap:4px}.sbo{font-size:11px!important;padding:10px 0!important}}
+.sbopts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:9px;max-width:380px}
 .sbo{font:inherit;font-size:12px;white-space:nowrap;font-weight:700;border:1px solid var(--line);background:#fff;color:var(--mute);border-radius:10px;padding:10px 2px;cursor:pointer}
-.sbo.on.s{background:var(--sb);border-color:var(--sb);color:#fff}.sbo.on.n{background:#6B7280;border-color:#6B7280;color:#fff}.sbo.on.a{background:var(--a);border-color:var(--a);color:#fff}.sbo.on.d{background:var(--late);border-color:var(--late);color:#fff}
+.sbo.on.s{background:var(--sb);border-color:var(--sb);color:#fff}.sbo.on.n{background:#6B7280;border-color:#6B7280;color:#fff}.sbo.on.a{background:var(--a);border-color:var(--a);color:#fff}
 .sbdash{display:inline-block;min-width:34px;text-align:center;font-weight:800;font-size:16px;color:var(--un);background:var(--unbg);border-radius:8px;padding:1px 8px}
 .sbcount{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 4px 2px}.sbcount em{font-style:normal;font-size:12px;color:var(--mute)}
 .sbact{margin:10px 0 4px;gap:8px}
@@ -205,6 +205,9 @@ details.allst{margin:8px 0 0}details.allst>summary{cursor:pointer;font-weight:70
 .recseg button b{display:block;font-family:var(--head);font-size:21px;color:var(--navy)}
 .recseg button.on{background:var(--navy);border-color:var(--navy);color:#fff}.recseg button.on b{color:var(--gold)}
 table.cnum td,table.cnum th{padding:10px 8px;font-size:14px}table.cnum td.tt{font-weight:800;color:var(--navy);background:#F8F6F1}
+.sbopts{grid-template-columns:repeat(2,minmax(0,1fr));max-width:420px}@media (min-width:480px){.sbopts{grid-template-columns:repeat(4,minmax(0,1fr))}}.sbopts.c3{grid-template-columns:repeat(3,minmax(0,1fr))}.sbopts.c2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.sbo.on.d{background:var(--late);border-color:var(--late);color:#fff}
+.sumline.frz{background:#F4F4F5;border-radius:10px;margin-top:6px}
 </style>
 </head>
 <body>
@@ -216,14 +219,15 @@ table.cnum td,table.cnum th{padding:10px 8px;font-size:14px}table.cnum td.tt{fon
     <span class="sync" id="sync">Connecting…</span>
   </div>
   <nav id="nav">
-    <button data-v="duty" class="on"><b>1</b>Transport Attendance</button>
-    <button data-v="school"><b>2</b>FO Entry-Exit</button>
-    <button data-v="late"><b>3</b>Late Comers</button>
-    <button data-v="unif"><b>4</b>Uniform</button>
-    <button data-v="early"><b>5</b>Early Leavers</button>
-    <button data-v="sb"><b>6</b>Stay Back</button>
-    <button data-v="day"><b>7</b>Day Summary</button>
-    <button data-v="dep"><b>8</b>Departure</button>
+    <button data-v="ss"><b>1</b>Smart Study Session</button>
+    <button data-v="duty" class="on"><b>2</b>Transport Attendance</button>
+    <button data-v="school"><b>3</b>FO Entry-Exit</button>
+    <button data-v="late"><b>4</b>Late Comers</button>
+    <button data-v="unif"><b>5</b>Uniform</button>
+    <button data-v="early"><b>6</b>Early Leavers</button>
+    <button data-v="sb"><b>7</b>Stay Back</button>
+    <button data-v="day"><b>8</b>Day Summary</button>
+    <button data-v="dep"><b>9</b>Departure</button>
     <button data-v="dash">Reports</button>
     <button data-v="alloc">Settings</button>
   </nav>
@@ -281,6 +285,19 @@ table.cnum td,table.cnum th{padding:10px 8px;font-size:14px}table.cnum td.tt{fon
   <section id="v-day" class="hide">
     <div class="card"><h2 id="dayH">Day Summary</h2><div id="dayCp"></div><div class="row" style="margin-top:12px"><button class="btn ghost sm" id="dayCopy">Copy Summary (WhatsApp)</button></div></div>
     <div id="dayBody"></div>
+  </section>
+  <section id="v-ss" class="hide">
+    <div class="card">
+      <h2>Smart Study Session</h2>
+      <div class="row">
+        <div><label class="f">Marked by</label><select id="ssBy" style="min-width:210px"></select></div>
+        <div><label class="f">Mode</label><select id="ssMode"><option value="att">Mark attendance</option><option value="edit">Edit list – add, remove, freeze</option></select></div>
+      </div>
+      <div id="ssCp" style="margin-top:12px"></div>
+      <p class="muted" id="ssHint" style="margin:10px 0 0"></p>
+    </div>
+    <div class="card" id="ssPull"></div>
+    <div class="card" id="ssList"></div>
   </section>
   <section id="v-sb" class="hide">
     <div class="card">
@@ -394,7 +411,7 @@ table.cnum td,table.cnum th{padding:10px 8px;font-size:14px}table.cnum td.tt{fon
   };
   window.FIS_LOGOUT=function(){['token','me','roster','gcache','grev','goutbox'].forEach(k=>localStorage.removeItem(K(k)));location.reload()};
   const $=id=>document.getElementById(id);
-  function startApp(r){window.FIS_R=r;window.FIS_ME=get('me')||'';const s=document.createElement('script');s.src='app.js?v=202611201300';s.onload=()=>$('fisBoot').remove();document.body.appendChild(s)}
+  function startApp(r){window.FIS_R=r;window.FIS_ME=get('me')||'';const s=document.createElement('script');s.src='app.js?v=202611201036';s.onload=()=>$('fisBoot').remove();document.body.appendChild(s)}
   function showLogin(msg){$('fisBoot').classList.add('hide');$('fisLogin').classList.remove('hide');$('fisLE').textContent=msg||'';if(!API_URL)$('fisLE').textContent='This app is being set up. Please try again later.'}
   $('fisLoginF').addEventListener('submit',async e=>{e.preventDefault();const n=$('fisLN').value.trim(),p=$('fisLP').value;
     if(n.length<3||!p){$('fisLE').textContent='Type your full name and the password.';return}
