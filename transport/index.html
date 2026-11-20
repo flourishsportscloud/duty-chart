@@ -264,7 +264,7 @@ table.cnum td,table.cnum th{padding:10px 8px;font-size:14px}table.cnum td.tt{fon
     <div class="card">
       <h2>Uniform Defaulters</h2>
       <div class="row"><div><label class="f">Marked by</label><select id="unifBy" style="min-width:220px"></select></div></div>
-      <p class="muted" style="margin:8px 0 0">Search the student, tick every defect (more than one allowed) and save. Past record of this month is shown with each student.</p>
+      <p class="muted" style="margin:8px 0 0">Anyone can log a uniform defaulter – Teacher, CM, PL or PM. Your name is chosen in <b>Marked by</b> (teachers: your login name) and is saved with every entry. Search the student, tick every defect (more than one allowed) and save. Past record of this month is shown with each student.</p>
       <div class="row" style="margin-top:10px"><input type="search" id="unifQ" placeholder="Search student name…" style="flex:1" autocomplete="off"></div>
       <div id="unifRes"></div>
     </div>
@@ -411,7 +411,7 @@ table.cnum td,table.cnum th{padding:10px 8px;font-size:14px}table.cnum td.tt{fon
   };
   window.FIS_LOGOUT=function(){['token','me','roster','gcache','grev','goutbox'].forEach(k=>localStorage.removeItem(K(k)));location.reload()};
   const $=id=>document.getElementById(id);
-  function startApp(r){window.FIS_R=r;window.FIS_ME=get('me')||'';const s=document.createElement('script');s.src='app.js?v=202611201036';s.onload=()=>$('fisBoot').remove();document.body.appendChild(s)}
+  function startApp(r){window.FIS_R=r;window.FIS_ME=get('me')||'';const s=document.createElement('script');s.src='app.js?v=202611201930';s.onload=()=>$('fisBoot').remove();document.body.appendChild(s)}
   function showLogin(msg){$('fisBoot').classList.add('hide');$('fisLogin').classList.remove('hide');$('fisLE').textContent=msg||'';if(!API_URL)$('fisLE').textContent='This app is being set up. Please try again later.'}
   $('fisLoginF').addEventListener('submit',async e=>{e.preventDefault();const n=$('fisLN').value.trim(),p=$('fisLP').value;
     if(n.length<3||!p){$('fisLE').textContent='Type your full name and the password.';return}

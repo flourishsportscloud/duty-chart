@@ -156,6 +156,8 @@ function modeOf(k){if(k.walk)return S.privVan[k.id]?'Private Van':'By Walk';cons
 function modeLabel(k){return k.walk?modeOf(k):VBY[k.v].l}
 const PL_NAMES=["Poonam Ma'am (PL)","Garima Ma'am (PL)","Renu Harsh Ma'am (PL)"];
 const PM_NAMES=["Sanjana Ma'am (PM)","Neetu Ma'am (PM)","Divyanshi Ma'am (PM)","Diksha Ma'am (PM)"];
+const CM_NAMES=["Mansi Ma'am (CM)","Rashami Ma'am (CM)","Pooja Ma'am (CM)","Upendra Sir (CM)","Saba Ma'am (CM)"];
+function meTeacher(){const n=(window.FIS_ME||'').trim();return n?n+' (Teacher)':''}
 function fillSbBy(){$('sbBy').innerHTML=byOpts(LS.get('sbBy',ALLBY),[['PL – Classes 6 to 11',PL_NAMES],['PM – Classes 1 to 5',PM_NAMES],['Front Office',FO_NAMES],['Managers',mgrNames()]])}
 function fillStaffSelects(){
   const opts=(cur)=>'<option'+(cur===ALL_V?' selected':'')+'>'+ALL_V+'</option><optgroup label="Vehicle duty staff">'+STAFF.map(s=>'<option'+(s===cur?' selected':'')+'>'+esc(s)+'</option>').join('')+'</optgroup>'+
@@ -966,8 +968,8 @@ function renderEarly(){
 }
 function unifTxt(u){return (u.items||[]).map(i=>UNIFL[i]||i).join(', ')}
 function renderUnif(){
-  const cur=LS.get('unifBy',ALLBY);
-  if(document.activeElement!==$('unifBy'))$('unifBy').innerHTML=byOpts(cur,[['Gate',LATE_NAMES],['PL – Classes 6 to 11',PL_NAMES],['PM – Classes 1 to 5',PM_NAMES],['Front Office',FO_NAMES],['Managers',mgrNames()]]);
+  const me=meTeacher();let cur=LS.get('unifBy',null);if(!cur)cur=me||ALLBY;
+  if(document.activeElement!==$('unifBy'))$('unifBy').innerHTML=byOpts(cur,[['Teacher (you – logged in)',me?[me]:[]],['PL – Classes 6 to 11',PL_NAMES],['PM – Classes 1 to 5',PM_NAMES],['CM – Class Managers',CM_NAMES],['Gate',LATE_NAMES],['Front Office',FO_NAMES],['Managers',mgrNames()]]);
   const q=($('unifQ').value||'').trim().toLowerCase();
   const hl=h=>h.length?'<span class="hl">'+h.map(x=>esc(fmtD(x.d).replace(/^\w+, /,''))+': '+esc(unifTxt(x.u))).join(' · ')+'</span>':'';
   $('unifRes').innerHTML=findRes(q,k=>{const h=unifHist(k.id);return '<div class="kid" data-unif="'+k.id+'" style="cursor:pointer"><div class="nm"><div>'+esc(k.name)+'</div><span>'+esc(clsName(k.cls))+' · '+esc(modeLabel(k))+'</span>'+(h.length?'<span style="font-size:12px;color:var(--late)">'+h.map(x=>esc(fmtD(x.d).replace(/^\w+, /,''))+': '+esc(unifTxt(x.u))).join(' · ')+'</span>':'')+'</div><div>'+histTag(h.length,'defaulter')+'</div></div>'});
@@ -975,7 +977,7 @@ function renderUnif(){
   const rows=gateRows('unif',g=>g.unif&&(g.unif.items||[]).length);
   const cnt={};rows.forEach(r=>r.g.unif.items.forEach(i=>cnt[i]=(cnt[i]||0)+1));
   $('unifToday').innerHTML=catHead('Uniform Defaulters – '+fmtDL(S.date),rows.length,'A')+(rows.length?'<div class="sbcount">'+UNIF.filter(u=>cnt[u[0]]).map(u=>'<span class="tag t-LATE">'+u[1]+' '+cnt[u[0]]+'</span>').join('')+'</div>':'')+
-    strips(rows,r=>{const u=r.g.unif;return nrow(esc(r.k.name),'<span class="tag t-A" style="white-space:normal">'+esc(unifTxt(u))+'</span><br>'+dots([esc(modeLabel(r.k)),esc(u.rem),u.by?'by '+esc(byShort(u.by)):'']),histTag(unifHist(r.k.id).length,'defaulter'))},{attr:r=>' data-unif="'+r.k.id+'"',empty:'No uniform defaulters in the selected classes.'});
+    strips(rows,r=>{const u=r.g.unif;return nrow(esc(r.k.name),'<span class="tag t-A" style="white-space:normal">'+esc(unifTxt(u))+'</span><br>'+dots([esc(modeLabel(r.k)),esc(u.rem),u.by?'<b>Logged by '+esc(u.by)+'</b>'+(u.time?' '+esc(u.time):'')+(u.login&&u.by.indexOf(u.login)<0?' (login: '+esc(u.login)+')':''):'']),histTag(unifHist(r.k.id).length,'defaulter'))},{attr:r=>' data-unif="'+r.k.id+'"',empty:'No uniform defaulters in the selected classes.'});
 }
 let unifPick=null,unifDraft=null;
 function renderUnifPop(){const k=KID[unifPick];const g=S.gate[unifPick]||{};const u=g.unif||{};if(!unifDraft)unifDraft=new Set(u.items||[]);const h=unifHist(unifPick).filter(x=>x.d!==S.date);
@@ -986,7 +988,7 @@ function renderUnifPop(){const k=KID[unifPick];const g=S.gate[unifPick]||{};cons
     '<div class="row" style="margin-top:12px"><button class="btn" id="unifSave" style="flex:1">Save</button>'+(u.items&&u.items.length?'<button class="btn ghost" id="unifClear">Remove record</button>':'')+'</div>'+
     '<p class="muted" style="margin:8px 0 0">Saving as: <b>'+esc($('unifBy').value)+'</b>'+(u.by?' · last marked by '+esc(u.by)+' '+esc(u.time||''):'')+'</p></div></div>';}
 async function saveUnif(items){const path='att/'+S.date+'/gate/'+unifPick;const g=Object.assign({},S.gate[unifPick]||{});
-  if(items.length)g.unif={items,by:$('unifBy').value,time:nowT(),rem:($('unifRem')||{}).value||''};else delete g.unif;g.ts=Date.now();
+  if(items.length)g.unif={items,by:$('unifBy').value,login:window.FIS_ME||'',time:nowT(),rem:($('unifRem')||{}).value||''};else delete g.unif;g.ts=Date.now();
   if(!g.in&&!g.out&&!g.unif)await store.del(path);else await store.set(path,g);
   toast(KID[unifPick].name+(items.length?' – uniform defaulter saved':' – record removed'));unifPick=null;unifDraft=null;$('modalRoot').innerHTML='';render()}
 function renderSchool(){
@@ -1019,7 +1021,7 @@ function renderDay(){
     '<div class="card">'+errHtml(errRows([S.date]).filter(r=>!r.k||cpHas('day',r.k.cls)),'day','Errors of the Day')+'</div>'+
     '<div class="card">'+catHead('Stay Back Doubt – confirm with parent',D.doubt.length,'LATE')+strips(D.doubt,r=>nrow(esc(r.k.name),dots([esc(modeLabel(r.k)),'Marked by '+esc(byShort((S.sb[seg(r.k.cls)]||{}).by||''))]),''),{empty:'No doubt cases.'})+'</div>'+
     '<div class="card">'+catHead('Smart Study Session',D.ss.length,'SB')+strips(D.ss,r=>nrow(esc(r.k.name),dots([esc(modeLabel(r.k)),'Marked by '+esc(byShort((S.ss[seg(r.k.cls)]||{}).by||''))]),''),{empty:'No Smart Study attendance marked.'})+'</div>'+
-    '<div class="card">'+catHead('Uniform Defaulters',D.unif.length,'A')+strips(D.unif,r=>nrow(esc(r.k.name),'<span class="tag t-A" style="white-space:normal">'+esc(unifTxt(r.g.unif))+'</span><br>'+dots([esc(modeLabel(r.k)),esc(r.g.unif.rem),r.g.unif.by?'by '+esc(byShort(r.g.unif.by)):'']),''),{empty:'No uniform defaulters.'})+'</div>';
+    '<div class="card">'+catHead('Uniform Defaulters',D.unif.length,'A')+strips(D.unif,r=>nrow(esc(r.k.name),'<span class="tag t-A" style="white-space:normal">'+esc(unifTxt(r.g.unif))+'</span><br>'+dots([esc(modeLabel(r.k)),esc(r.g.unif.rem),r.g.unif.by?'Logged by '+esc(r.g.unif.by)+(r.g.unif.time?' '+esc(r.g.unif.time):''):'']),''),{empty:'No uniform defaulters.'})+'</div>';
 }
 function dayText(){const D=dayData();const a=cpGet('day');let t='*FIS Day Summary – '+fmtDL(S.date)+'*'+(a.length?'\nClasses: '+a.map(secLbl).join(', '):'')+'\n';
   const blk=(title,rows,fn)=>{t+='\n*'+title+' ('+rows.length+')*\n';if(!rows.length){t+='None\n';return}const by={};rows.forEach(r=>(by[r.k.cls]=by[r.k.cls]||[]).push(r));
