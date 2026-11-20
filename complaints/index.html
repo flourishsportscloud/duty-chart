@@ -66,6 +66,36 @@ input[type=search]{flex:1;min-width:160px}
 .ed{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-top:8px;padding:10px;background:var(--bg);border-radius:8px}
 .ed label{font-size:11.5px;font-weight:600;color:var(--mute);display:flex;flex-direction:column;gap:3px}
 .tw{overflow-x:auto}
+/* compact rows like Arrivals & Departures */
+.kid{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid var(--line);cursor:pointer;width:100%;background:none;border-left:0;border-right:0;border-top:0;font:inherit;color:inherit;text-align:left}
+.kid:last-child{border-bottom:0}.kid:hover{background:var(--bg)}.kid.on{background:var(--brand2)}
+.kid .n{width:24px;color:var(--mute);font-size:12px;text-align:right;flex:none;font-variant-numeric:tabular-nums}
+.kid .bar4{width:4px;align-self:stretch;border-radius:2px;flex:none;background:var(--un)}
+.kid .bar4.High{background:var(--hi)}.kid .bar4.Medium{background:var(--amb)}.kid .bar4.Low{background:var(--lo)}.kid .bar4.rq{background:var(--pur)}.kid .bar4.chg{background:var(--lo)}
+.kid .nm{flex:1;min-width:0}
+.kid .nm div{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kid .nm div small{font-weight:500;color:var(--mute);margin-left:4px}
+.kid .nm span{display:block;font-size:12px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kid .nm span.rm{color:var(--ink)}
+.tag{font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap;flex:none}
+.det{background:var(--bg);border-radius:10px;padding:12px;margin:2px 0 10px}
+.det .et{margin-top:0}
+.tg{min-width:96px;font:inherit;font-weight:700;font-size:13px;border-radius:9px;border:0;padding:9px 8px;cursor:pointer;background:var(--unbg);color:var(--un)}
+.tg.on.s-Open{background:var(--hi);color:#fff}.tg.on.s-Action{background:var(--md);color:#fff}.tg.on.s-Closed,.tg.on.s-Approved{background:var(--ok);color:#fff}.tg.on.s-Denied{background:var(--ink);color:#fff}
+.rems{margin:10px 0 0;display:flex;flex-direction:column;gap:6px}
+.rem{background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 10px;font-size:13.5px;line-height:1.4}
+.rem small{display:block;color:var(--mute);font-size:11.5px;margin-top:2px}
+.radd{display:flex;gap:8px;margin-top:8px}.radd input{flex:1}
+.counts{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}
+.counts button{background:var(--bg);border-radius:9px;padding:6px 12px;font:inherit;font-size:12px;color:var(--mute);border:1.5px solid transparent;cursor:pointer;text-align:left}
+.counts button.on{border-color:var(--brand);background:#fff}
+.counts b{display:block;font-size:18px;color:var(--ink);font-variant-numeric:tabular-nums}
+.counts .red b{color:var(--hi)}.counts .amb b{color:var(--md)}.counts .grn b{color:var(--ok)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.vcard{border:1px solid var(--line);border-radius:12px;padding:12px;cursor:pointer;background:#fff;text-align:left;font:inherit;color:inherit}
+.vcard:hover,.vcard.on{border-color:var(--brand)}.vcard.on{box-shadow:0 0 0 2px var(--brand2)}
+.vcard b{font-size:16px;display:block}.vcard .st{font-size:12px;margin-top:4px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vcard .ps{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
 table{border-collapse:collapse;width:100%;font-size:13.5px;font-variant-numeric:tabular-nums}
 th,td{padding:8px 9px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
 th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--mute)}
@@ -147,22 +177,33 @@ function filterBar(extra){
 function sel(id,val,opts,lab){return `<select id="${id}" aria-label="${lab}">${opts.map(([v,l])=>`<option value="${v}" ${v===val?'selected':''}>${l}</option>`).join('')}</select>`}
 function vchips(e){const v=vehsOf(e),o=ov(e.id);if(!v.length)return '<span class="vc q">Vehicle ?</span>';
   return v.map(x=>`<span class="vc ${!o.veh&&e.vsrc==='roster?'?'q':''}" title="${o.veh?'Set by hand':e.vsrc==='text'?'Written in the entry':e.vsrc==='change'?'From the change':'From the transport roster'}">${esc(x)}</span>`).join(' ')}
-function card(e){const st=statusOf(e),dr=driverOf(e),o=ov(e.id);
-  return `<div class="e k-${e.kind.replace(' ','.')}">
-   <div class="eh"><span class="d">${fmt(e.d)}</span><span class="nm">${esc(e.name)}</span><span>${esc(e.cls)}</span>
-    <span class="pill">${esc(e.kind==='Change'?e.cat+' · change':e.kind)}</span>${e.pri?`<span class="pill p-${e.pri}">${e.pri}</span>`:''}
-    <span class="pill s-${stKey(st)}">${esc(st)}</span>${vchips(e)}${dr?`<span class="ea">· ${esc(dr)}</span>`:''}</div>
+function remsOf(e){const o=ov(e.id),r=Array.isArray(o.rem)?o.rem.slice():[];if(o.note&&!r.length)r.push({t:o.note,by:o.by||'',at:0});return r}
+const ago=t=>t?new Date(t).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):'';
+const ST={Open:'Open','Action logged':'Action logged',Closed:'Closed'};
+function card(e,i){const st=statusOf(e),dr=driverOf(e),o=ov(e.id),R=remsOf(e),open=S.open===e.id,v=vehsOf(e);
+  const kc=e.kind==='Change'?'chg':isReq(e)?'rq':(e.pri||'Low');
+  const sub=[fmt(e.d),v.length?v.join(', '):'Vehicle ?',dr].filter(Boolean).join(' · ');
+  const last=R[R.length-1];
+  const row=`<button class="kid ${open?'on':''}" data-open="${e.id}" aria-expanded="${open}"><span class="n">${i+1}</span><i class="bar4 ${kc}"></i>
+    <span class="nm"><div>${esc(e.name)}<small>${esc(e.cls)}</small></div><span>${esc(sub)}</span>
+    <span class="${last?'rm':''}">${last?'💬 '+esc(last.t):esc((e.kind==='Change'?e.cat+' · ':'')+e.text)}</span></span>
+    ${e.pri&&isComp(e)?`<span class="tag p-${e.pri}">${e.pri}</span>`:''}<span class="tag s-${stKey(st)}">${esc(st)}</span></button>`;
+  if(!open)return row;
+  return row+`<div class="det">
+   <div class="eh"><span class="pill">${esc(e.kind==='Change'?e.cat+' · change':e.kind)}</span>${vchips(e)}${dr?`<span class="ea">Driver: ${esc(dr)}</span>`:''}</div>
    <div class="et">${esc(e.text)}</div>
-   <div class="ea">${e.action?`<b>Action:</b> ${esc(e.action)} `:''}${e.mode?`· ${esc(e.mode)}`:''}${e.by?` · called by ${esc(e.by)}`:''}${e.kind==='Change'?` · Fee: ${esc(e.fee)}`:''}${o.note?`<br><b>Follow-up:</b> ${esc(o.note)} <i>(${esc(o.by||'')})</i>`:''}</div>
-   <div class="ef">${e.kind!=='Change'?['Open','Action logged','Closed'].map(s=>`<button class="chip ${st===s?'on':''}" data-st="${e.id}|${s}">${s}</button>`).join(''):''}
-    <button class="btn ghost sm" data-ed="${e.id}">${S.edit===e.id?'Close':'Bus / driver / note'}</button></div>
-   ${S.edit===e.id?`<div class="ed"><label>Vehicle<input id="ed-veh" list="vlist" value="${esc(o.veh||vehsOf(e)[0]||'')}" placeholder="Bus 5, Van 27, Auto 4"></label>
+   <div class="ea">${e.action?`<b>Action (Daily FO):</b> ${esc(e.action)} `:''}${e.mode?`· ${esc(e.mode)}`:''}${e.by?` · called by ${esc(e.by)}`:''}${e.kind==='Change'?` · Fee: ${esc(e.fee)}`:''}</div>
+   <div class="ef">${e.kind!=='Change'?Object.keys(ST).map(x=>`<button class="tg s-${stKey(x)} ${st===x?'on':''}" data-st="${e.id}|${x}">${x}</button>`).join(''):''}</div>
+   <div class="rems"><b style="font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.05em">Remarks ${R.length?'('+R.length+')':''}</b>
+    ${R.map(r=>`<div class="rem">${esc(r.t)}<small>${esc(r.by||'')}${r.at?' · '+ago(r.at):''}</small></div>`).join('')||'<div class="ea">No remarks yet.</div>'}</div>
+   <div class="radd"><input id="rem-${e.id}" placeholder="Add remark — called parent, spoke to driver…" aria-label="New remark"><button class="btn sm" data-rem="${e.id}">Save</button></div>
+   <div class="ef"><button class="btn ghost sm" data-ed="${e.id}">${S.edit===e.id?'Close':'Change bus / driver'}</button></div>
+   ${S.edit===e.id?`<div class="ed"><label>Vehicle<input id="ed-veh" list="vlist" value="${esc(o.veh||v[0]||'')}" placeholder="Bus 5, Van 27, Auto 4"></label>
      <label>Driver (only if not the regular one)<input id="ed-drv" list="dlist" value="${esc(o.driver||'')}" placeholder="${esc(dr||'Driver')}"></label>
-     <label style="grid-column:1/-1">Follow-up note<input id="ed-note" value="${esc(o.note||'')}" placeholder="Called parent, spoke to driver…"></label>
      <div><button class="btn sm" data-save="${e.id}">Save</button></div></div>`:''}
   </div>`}
 function cards(L,max){if(!L.length)return '<div class="empty">Nothing in this range.</div>';
-  const n=max||60;return L.slice(0,n).map(card).join('')+(L.length>n?`<div class="empty">${L.length-n} more — narrow the dates or search.</div>`:'')}
+  const n=max||60;return L.slice(0,n).map((e,i)=>card(e,i)).join('')+(L.length>n?`<div class="empty">${L.length-n} more — narrow the dates or search.</div>`:'')}
 function hbars(rows,key,lim){ // rows: [{k,hi,md,lo,rq}]
   const mx=Math.max(1,...rows.map(r=>r.hi+r.md+r.lo+(r.rq||0)));
   return `<div class="hb">${rows.slice(0,lim||10).map(r=>{const t=r.hi+r.md+r.lo+(r.rq||0);
@@ -206,8 +247,10 @@ function listTab(L,pred,title,sub){
   if(S.f.kind)X=X.filter(e=>e.kind===S.f.kind);
   const stOpts=pred===TAB_PRED.chg?[['','All status'],['Approved','Approved'],['Denied','Denied'],['Not entered','Not entered']]:[['','All status'],['Open','Open'],['Action logged','Action logged'],['Closed','Closed']];
   const extra=(pred===TAB_PRED.comp?sel('f-pri',S.f.pri,[['','All priority'],['High','High'],['Medium','Medium'],['Low','Low / not marked']],'Priority'):'')+
-    (pred===TAB_PRED.req?sel('f-kind',S.f.kind,[['','Requests, queries & not marked'],['Request','Requests'],['Query','Queries'],['Not marked','Not marked'],['Call','In-house calls']],'Type'):'')+sel('f-st',S.f.st,stOpts,'Status');
-  return `${filterBar(extra)}<div class="card"><div class="secthead"><i></i><span>${title}</span><small>${X.length} ${sub}</small></div>${cards(X,80)}</div>`}
+    (pred===TAB_PRED.req?sel('f-kind',S.f.kind,[['','Requests, queries & not marked'],['Request','Requests'],['Query','Queries'],['Not marked','Not marked'],['Call','In-house calls']],'Type'):'');
+  const Y=L.filter(pred),cs=pred===TAB_PRED.chg?[['','All','',Y.length],['Approved','Approved','grn'],['Denied','Denied',''],['Not entered','No status','amb']]:[['','All','',Y.length],['Open','Open','red'],['Action logged','Action logged','amb'],['Closed','Closed','grn']];
+  const cnt=`<div class="counts">${cs.map(([k,l,c,n])=>`<button class="${c} ${S.f.st===k?'on':''}" data-fst="${k}"><b>${n!=null?n:Y.filter(e=>statusOf(e)===k).length}</b>${l}</button>`).join('')}</div>`;
+  return `${filterBar(extra)}${cnt}<div class="card"><div class="secthead"><i></i><span>${title}</span><small>${X.length} ${sub} · tap a row to update</small></div>${cards(X,80)}</div>`}
 const TAB_PRED={comp:isComp,req:e=>isReq(e)||e.kind==='Not marked'||e.kind==='Call',chg:e=>e.kind==='Change'};
 function wiseTab(L,key,title,keyFn,cols,note){
   const G=[...group(L,keyFn).entries()].map(([k,es])=>Object.assign({k,es},tally(es))).sort((a,b)=>(/not known|No driver/.test(a.k)-/not known|No driver/.test(b.k))||(b.comp-a.comp)||(b.rq-a.rq)||(b.chg-a.chg));
@@ -219,10 +262,17 @@ const num=(v,cls)=>v?`<b${cls?` style="color:var(--${cls})"`:''}>${v}</b>`:'<spa
 function stuTab(L){return wiseTab(L,'stu','Student-wise',studentKey,[
   ['Student',r=>esc(r.es[0].name)],['Class',r=>esc(r.es[0].cls)],['Vehicle',r=>[...new Set(r.es.flatMap(vehsOf))].map(v=>`<span class="vc">${esc(v)}</span>`).join(' ')||'<span class="vc q">?</span>'],
   ['Complaints',r=>num(r.comp,'hi'),'n'],['High',r=>num(r.hi,'hi'),'n'],['Requests',r=>num(r.rq),'n'],['Changes',r=>num(r.chg),'n'],['Last',r=>fmt(r.last)]])}
-function busTab(L){return wiseTab(L,'bus','Bus-wise',e=>vehsOf(e).length?vehsOf(e):['Vehicle not known'],[
+function busTabOld(L){return wiseTab(L,'bus','Bus-wise',e=>vehsOf(e).length?vehsOf(e):['Vehicle not known'],[
   ['Vehicle',r=>`<span class="vc ${r.k==='Vehicle not known'?'q':''}">${esc(r.k)}</span>`],['Driver',r=>esc(drivers()[r.k]||'')],
   ['Complaints',r=>num(r.comp,'hi'),'n'],['High',r=>num(r.hi,'hi'),'n'],['Open',r=>num(r.open,'hi'),'n'],['Requests',r=>num(r.rq),'n'],['Changes in/out',r=>num(r.chg),'n'],['Students',r=>new Set(r.es.map(studentKey)).size,'n'],['Last',r=>fmt(r.last)]],
   'A child is linked to a vehicle from the bus/van number written in the Daily FO entry, otherwise from the transport roster (Student Entry Exit Report). Amber chips mean the roster lists the child on more than one vehicle — check and set the right one with <b>Bus / driver / note</b>.')}
+function busTab(L){const G=[...group(L,e=>vehsOf(e).length?vehsOf(e):['Vehicle not known']).entries()].map(([k,es])=>Object.assign({k,es},tally(es)))
+   .sort((a,b)=>(/not known/.test(a.k)-/not known/.test(b.k))||(b.comp-a.comp)||(b.rq-a.rq));
+  const sel=G.find(r=>S.openRow==='bus|'+r.k);
+  return `${filterBar()}<div class="card"><div class="secthead"><i></i><span>Bus-wise</span><small>${G.length} vehicles · tap a vehicle</small></div>
+   <div class="grid">${G.map(r=>`<button class="vcard ${sel===r?'on':''}" data-row="bus|${esc(r.k)}"><b>${esc(r.k)}</b><div class="st">${esc(drivers()[r.k]||'—')}</div>
+    <div class="ps">${r.comp?`<span class="pill p-High">${r.comp} complaint${r.comp>1?'s':''}</span>`:''}${r.open?`<span class="pill s-Open">${r.open} open</span>`:''}${r.rq?`<span class="pill">${r.rq} request${r.rq>1?'s':''}</span>`:''}${r.chg?`<span class="pill p-Low">${r.chg} change${r.chg>1?'s':''}</span>`:''}</div></button>`).join('')||'<div class="empty">Nothing in this range.</div>'}</div></div>
+   ${sel?`<div class="card"><div class="secthead"><i></i><span>${esc(sel.k)}</span><small>${esc(drivers()[sel.k]||'')} · ${sel.es.length} entries</small></div>${cards(sel.es,80)}</div>`:''}`}
 function drvTab(L){return wiseTab(L.filter(e=>e.kind!=='Change'),'drv','Driver-wise',e=>driverOf(e)||(vehsOf(e)[0]?'No driver set · '+vehsOf(e)[0]:'Vehicle not known'),[
   ['Driver',r=>esc(r.k)],['Vehicles',r=>[...new Set(r.es.flatMap(vehsOf))].map(v=>`<span class="vc">${esc(v)}</span>`).join(' ')],
   ['Complaints',r=>num(r.comp,'hi'),'n'],['High',r=>num(r.hi,'hi'),'n'],['Open',r=>num(r.open,'hi'),'n'],['Requests',r=>num(r.rq),'n'],['Last',r=>fmt(r.last)]],
@@ -238,7 +288,7 @@ function loginView(){return `<div class="card login"><div class="secthead"><i></
   <label for="ln">Full name</label><input id="ln" autocomplete="name" value="${esc(S.name||'')}">
   <label for="lp">Password</label><input id="lp" type="password" autocomplete="current-password">
   <div style="margin-top:12px"><button class="btn" id="lgo">Log in</button></div><div class="err" id="lerr"></div></div>`}
-function render(){
+function render(){if(document.activeElement&&document.activeElement.id&&document.activeElement.id.startsWith('rem-')&&document.activeElement.value&&!render.force){return}render.force=false;
   if(!API_URL){$('nav').innerHTML='';$('main').innerHTML='<div class="card login"><div class="secthead"><i></i><span>Not connected yet</span></div><p class="ea">This app needs its Google Apps Script link. See complaints/SETUP.md.</p></div>';$('sync').textContent='Setup';return}
   if(!S.token){$('nav').innerHTML='';$('main').innerHTML=loginView();return}
   const L=list();nav(L);let h='';
@@ -251,7 +301,7 @@ function render(){
 }
 async function saveOv(id,patch){const cur=Object.assign({},ov(id),patch);S.docs['ov/'+id]=cur;render();
   try{await call('cr_set',[S.token,'ov/'+id,cur]);toast('Saved')}catch(e){toast(e.message==='LOGIN'?'Log in again':'Not saved: '+e.message)}}
-document.addEventListener('click',async ev=>{const t=ev.target.closest('button,tr.click');if(!t)return;const d=t.dataset;
+document.addEventListener('click',async ev=>{const t=ev.target.closest('button,tr.click');if(!t)return;const d=t.dataset;render.force=true;
   if(t.id==='sync'){if(S.token)load(true);return}
   if(t.id==='lgo'){const n=$('ln').value,p=$('lp').value;$('lerr').textContent='Checking…';
     try{const v=await call('login',[n,p]);S.token=v.token;S.name=v.name;LS.set('token',v.token);LS.set('name',v.name);render();load(false)}catch(e){$('lerr').textContent=e.message==='SETUP'?'Not connected.':e.message}return}
@@ -259,9 +309,13 @@ document.addEventListener('click',async ev=>{const t=ev.target.closest('button,t
   if(d.range){S.range=d.range;LS.set('range',d.range);render();return}
   if(d.jump){const[k,v]=d.jump.split('|');S.tab=k==='stu'?'stu':k;S.openRow=k==='stu'?'stu|'+(S.entries.find(e=>e.name+' · '+e.cls===v)?studentKey(S.entries.find(e=>e.name+' · '+e.cls===v)):v):k+'|'+v;render();return}
   if(d.row){S.openRow=S.openRow===d.row?null:d.row;render();return}
+  if(d.open){S.open=S.open===d.open?null:d.open;S.edit=null;render();return}
+  if(d.fst!=null){S.f.st=d.fst;render();return}
+  if(d.rem){const id=d.rem,i=$('rem-'+id),t=(i&&i.value||'').trim();if(!t){toast('Type the remark first');return}
+    const R=remsOf(S.entries.find(e=>e.id===id)||{id});R.push({t,by:S.name||'',at:Date.now()});saveOv(id,{rem:R});return}
   if(d.st){const[id,s]=d.st.split('|');saveOv(id,{st:s});return}
   if(d.ed){S.edit=S.edit===d.ed?null:d.ed;render();return}
-  if(d.save){const id=d.save;saveOv(id,{veh:$('ed-veh').value.trim(),driver:$('ed-drv').value.trim(),note:$('ed-note').value.trim()});S.edit=null;return}
+  if(d.save){const id=d.save;saveOv(id,{veh:$('ed-veh').value.trim(),driver:$('ed-drv').value.trim()});S.edit=null;return}
   if(t.id==='dmap-save'){const m={};document.querySelectorAll('[data-dmap]').forEach(i=>{if(i.value.trim())m[i.dataset.dmap]=i.value.trim()});
     S.docs['config/drivers']={map:m};try{await call('cr_set',[S.token,'config/drivers',{map:m}]);toast('Drivers list saved')}catch(e){toast('Not saved: '+e.message)}render();return}
 });
@@ -272,7 +326,7 @@ document.addEventListener('change',ev=>{const t=ev.target;
   if(t.id==='f-from'){S.from=t.value;render()}if(t.id==='f-to'){S.to=t.value;render()}
   if(t.id==='f-pri'){S.f.pri=t.value;render()}if(t.id==='f-st'){S.f.st=t.value;render()}if(t.id==='f-kind'){S.f.kind=t.value;render()}
 });
-document.addEventListener('keydown',ev=>{if(ev.key==='Enter'&&(ev.target.id==='lp'||ev.target.id==='ln'))$('lgo').click()});
+document.addEventListener('keydown',ev=>{if(ev.key==='Enter'&&(ev.target.id==='lp'||ev.target.id==='ln'))$('lgo').click();if(ev.key==='Enter'&&ev.target.id&&ev.target.id.startsWith('rem-')){const b=document.querySelector(`[data-rem="${ev.target.id.slice(4)}"]`);if(b)b.click()}});
 const c=LS.get('cache');if(c&&S.token){S.entries=c.entries||[];S.docs=c.docs||{};S.at=c.at||''}
 render();if(S.token&&API_URL)load(false);
 setInterval(()=>{if(S.token&&API_URL&&!document.hidden)load(false)},5*60e3);
