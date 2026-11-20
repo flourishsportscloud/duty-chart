@@ -208,6 +208,12 @@ table.cnum td,table.cnum th{padding:10px 8px;font-size:14px}table.cnum td.tt{fon
 .sbopts{grid-template-columns:repeat(2,minmax(0,1fr));max-width:420px}@media (min-width:480px){.sbopts{grid-template-columns:repeat(4,minmax(0,1fr))}}.sbopts.c3{grid-template-columns:repeat(3,minmax(0,1fr))}.sbopts.c2{grid-template-columns:repeat(2,minmax(0,1fr))}
 .sbo.on.d{background:var(--late);border-color:var(--late);color:#fff}
 .sumline.frz{background:#F4F4F5;border-radius:10px;margin-top:6px}
+.sbo.on.g{background:#2E7D5B;border-color:#2E7D5B;color:#fff}.sbo.on.r{background:var(--a);border-color:var(--a);color:#fff}
+table.sst td{vertical-align:top;white-space:normal;padding:10px 6px}table.sst td:first-child{width:34px;text-align:center}.sstw{max-height:none}
+.ssb{display:flex;flex-direction:column;gap:6px;width:104px}.ssb .sbo{padding:9px 4px;white-space:normal;font-size:11.5px;line-height:1.2}table.sst td:last-child{width:112px}table.sst{table-layout:fixed;width:100%}table.sst th{white-space:normal}table.sst th:first-child{width:34px}table.sst th:last-child{width:112px}.mk{white-space:normal}
+.mk{display:inline-block;font-size:11.5px;font-weight:600;border-radius:6px;padding:2px 7px;margin:4px 4px 0 0;background:#EEF0F4;color:#555;white-space:nowrap}.mk.g{background:#E6F1EA;color:#1F6B47}.mk.r{background:#F8E6EA;color:#A42A47}.mk b.low{color:#A42A47}
+table.ssg th.cur{background:var(--gold);color:var(--navy2)}table.ssg th[data-ssdate]:hover{background:#FBF1DC}
+.sc{display:inline-block;min-width:24px;border-radius:6px;font-weight:800;font-size:12px;padding:2px 4px;text-align:center}.sc.P{background:#2E7D5B;color:#fff}.sc.N{background:var(--a);color:#fff}.sc.A{background:#E5E7EB;color:#555}
 </style>
 </head>
 <body>
@@ -219,14 +225,14 @@ table.cnum td,table.cnum th{padding:10px 8px;font-size:14px}table.cnum td.tt{fon
     <span class="sync" id="sync">Connecting…</span>
   </div>
   <nav id="nav">
-    <button data-v="ss"><b>1</b>Smart Study Session</button>
-    <button data-v="duty" class="on"><b>2</b>Transport Attendance</button>
-    <button data-v="school"><b>3</b>FO Entry-Exit</button>
-    <button data-v="late"><b>4</b>Late Comers</button>
-    <button data-v="unif"><b>5</b>Uniform</button>
-    <button data-v="early"><b>6</b>Early Leavers</button>
-    <button data-v="sb"><b>7</b>Stay Back</button>
-    <button data-v="day"><b>8</b>Day Summary</button>
+    <button data-v="duty" class="on"><b>1</b>Transport Attendance</button>
+    <button data-v="school"><b>2</b>FO Entry-Exit</button>
+    <button data-v="late"><b>3</b>Late Comers</button>
+    <button data-v="unif"><b>4</b>Uniform</button>
+    <button data-v="early"><b>5</b>Early Leavers</button>
+    <button data-v="sb"><b>6</b>Stay Back</button>
+    <button data-v="day"><b>7</b>Day Summary</button>
+    <button data-v="ss"><b>8</b>Smart Study Session</button>
     <button data-v="dep"><b>9</b>Departure</button>
     <button data-v="dash">Reports</button>
     <button data-v="alloc">Settings</button>
@@ -298,6 +304,7 @@ table.cnum td,table.cnum th{padding:10px 8px;font-size:14px}table.cnum td.tt{fon
     </div>
     <div class="card" id="ssPull"></div>
     <div class="card" id="ssList"></div>
+    <div class="card" id="ssRec"></div>
   </section>
   <section id="v-sb" class="hide">
     <div class="card">
@@ -411,7 +418,7 @@ table.cnum td,table.cnum th{padding:10px 8px;font-size:14px}table.cnum td.tt{fon
   };
   window.FIS_LOGOUT=function(){['token','me','roster','gcache','grev','goutbox'].forEach(k=>localStorage.removeItem(K(k)));location.reload()};
   const $=id=>document.getElementById(id);
-  function startApp(r){window.FIS_R=r;window.FIS_ME=get('me')||'';const s=document.createElement('script');s.src='app.js?v=202611201930';s.onload=()=>$('fisBoot').remove();document.body.appendChild(s)}
+  function startApp(r){window.FIS_R=r;window.FIS_ME=get('me')||'';const s=document.createElement('script');s.src='app.js?v=202611202130';s.onload=()=>$('fisBoot').remove();document.body.appendChild(s)}
   function showLogin(msg){$('fisBoot').classList.add('hide');$('fisLogin').classList.remove('hide');$('fisLE').textContent=msg||'';if(!API_URL)$('fisLE').textContent='This app is being set up. Please try again later.'}
   $('fisLoginF').addEventListener('submit',async e=>{e.preventDefault();const n=$('fisLN').value.trim(),p=$('fisLP').value;
     if(n.length<3||!p){$('fisLE').textContent='Type your full name and the password.';return}
