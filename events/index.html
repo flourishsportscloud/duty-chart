@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>FIS Events &amp; Operations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#F6F3EC;--card:#FFFFFF;--ink:#14213D;--muted:#5E6577;--line:#E2DCCD;
+  --gold:#9C7A33;--gold-bg:#F3EAD3;--navy:#14213D;--on-navy:#F6F3EC;
+  --bad:#A32A2A;--bad-bg:#F8E4E2;--warn:#8A5A00;--warn-bg:#FBEFD2;--good:#2D6B3F;--good-bg:#E3F0E5;--work:#1F4E8C;--work-bg:#E1EAF6;
+  --serif:"Cormorant Garamond",Georgia,"Times New Roman",serif;
+  --sans:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0E1424;--card:#161E33;--ink:#EDE8DB;--muted:#9CA3B8;--line:#28324D;
+  --gold:#D4B16A;--gold-bg:#2B2616;--navy:#EDE8DB;--on-navy:#0E1424;
+  --bad:#FF9D94;--bad-bg:#3A1E24;--warn:#F2C060;--warn-bg:#35290F;--good:#8FD5A0;--good-bg:#17301F;--work:#9DC1F2;--work-bg:#172A47;
+  color-scheme:dark}}
+*{box-sizing:border-box}
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--sans);-webkit-text-size-adjust:100%}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+h1,h2,h3,p{margin:0}
+[hidden]{display:none!important}
+.wrap{max-width:980px;margin:0 auto;padding:22px max(16px,env(safe-area-inset-left,0px)) 90px max(16px,env(safe-area-inset-right,0px));display:grid;gap:16px}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding-bottom:14px;border-bottom:2px solid var(--ink);flex-wrap:wrap}
+.ov{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-weight:600;margin-bottom:4px}
+header h1{font:700 38px/1 var(--serif);letter-spacing:.01em}
+.hr{display:grid;gap:6px;justify-items:end;font-size:13px;color:var(--muted)}
+.hr b{color:var(--ink);font-weight:600}
+.me{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:5px 12px 5px 6px;min-height:40px;font-weight:600;font-size:14px}
+.av{width:28px;height:28px;border-radius:50%;background:var(--navy);color:var(--on-navy);display:inline-grid;place-items:center;font:700 13px var(--sans);flex:none}
+.av.sm{width:22px;height:22px;font-size:11px}
+nav.seg{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--card)}
+nav.seg button{border:0;background:none;padding:12px 6px;font-weight:600;font-size:14px;color:var(--muted);min-height:46px;border-right:1px solid var(--line)}
+nav.seg button:last-child{border-right:0}
+nav.seg button[aria-selected=true]{background:var(--navy);color:var(--on-navy)}
+.banner{padding:10px 12px;border-radius:8px;background:var(--warn-bg);color:var(--warn);font-size:13px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:10px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.stat b{display:block;font:700 28px/1 var(--serif);font-variant-numeric:tabular-nums}
+.stat span{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.stat.today b{color:var(--gold)}.stat.over b{color:var(--bad)}.stat.work b{color:var(--work)}.stat.done b{color:var(--good)}
+.bar{height:7px;background:var(--line);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--gold)}
+.bar.g i{background:var(--good)}
+.toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.toolbar h2,.sech{font:700 24px var(--serif)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 14px;min-height:36px;font-size:13px;font-weight:600;color:var(--muted)}
+.chip[aria-pressed=true]{background:var(--navy);color:var(--on-navy);border-color:var(--navy)}
+.btn{min-height:44px;padding:8px 18px;border:1px solid var(--line);border-radius:8px;background:var(--card);font-weight:600;font-size:14px}
+.btn.pri{background:var(--navy);color:var(--on-navy);border-color:var(--navy)}
+.btn.gold{background:var(--gold);color:#fff;border-color:var(--gold)}
+.btn.sm{min-height:36px;padding:5px 12px;font-size:13px}
+.btn.bad{color:var(--bad);border-color:var(--bad)}
+.btn.ghost{background:transparent}
+.btn:disabled{opacity:.55;cursor:default}
+.grp{display:grid;gap:10px}
+.gh{display:flex;align-items:baseline;gap:10px;margin-top:6px}
+.gh h3{font:700 20px var(--serif)}
+.gh span{font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.gh.bad h3{color:var(--bad)}
+.cards{display:grid;gap:10px}
+.tk{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;gap:7px}
+.tk.s-working{border-left-color:var(--work)}.tk.s-done{border-left-color:var(--good)}.tk.over{border-left-color:var(--bad)}
+.tk.s-done h3{text-decoration:line-through;text-decoration-color:var(--muted);color:var(--muted)}
+.tk h3{font:600 17px/1.25 var(--sans)}
+.tk .top{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.tag{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;padding:3px 9px;border-radius:99px;background:var(--gold-bg);color:var(--gold)}
+.tag.ops{background:var(--work-bg);color:var(--work)}
+.pill{font-size:12px;font-weight:600;padding:3px 10px;border-radius:99px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-variant-numeric:tabular-nums}
+.pill.bad{background:var(--bad-bg);color:var(--bad);border-color:transparent}.pill.warn{background:var(--warn-bg);color:var(--warn);border-color:transparent}.pill.ok{background:var(--good-bg);color:var(--good);border-color:transparent}.pill.work{background:var(--work-bg);color:var(--work);border-color:transparent}
+.meta{font-size:13px;color:var(--muted)}
+.meta b{color:var(--ink);font-weight:600}
+.note{font-size:14px;color:var(--ink)}
+.lr{font-size:13px;background:var(--bg);border-radius:8px;padding:7px 10px;border:1px solid var(--line)}
+.lr.prob{background:var(--bad-bg);border-color:transparent;color:var(--bad)}
+.lr small{color:var(--muted)}
+.acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.ecard{background:var(--card);border:1px solid var(--line);border-top:3px solid var(--gold);border-radius:10px;padding:14px;display:grid;gap:9px;text-align:left;width:100%}
+.ecard h3{font:700 22px var(--serif)}
+.egrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
+.avs{display:flex;gap:-4px;flex-wrap:wrap;gap:4px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;gap:10px}
+.panel.gold{border-top:3px solid var(--gold)}
+.tblw{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:560px}
+th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;padding:10px 12px;border-bottom:2px solid var(--ink);white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+tr.clk{cursor:pointer}tr.clk:hover td{background:var(--bg)}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+td.bad{color:var(--bad);font-weight:600}td.good{color:var(--good);font-weight:600}
+.empty{padding:26px;text-align:center;color:var(--muted);background:var(--card);border:1px dashed var(--line);border-radius:10px}
+.datenav{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+input[type=text],input[type=date],input[type=time],textarea,select{width:100%;min-height:44px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-size:16px}
+textarea{resize:vertical}
+.datenav input{width:auto}
+label{display:block;font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.f{display:grid;gap:12px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.err{color:var(--bad);font-size:13px;min-height:1.2em}
+.back{border:0;background:none;color:var(--muted);font-weight:600;padding:6px 0;min-height:36px}
+/* sheet */
+#ov{position:fixed;inset:0;background:rgba(10,15,30,.55);z-index:50;display:flex;align-items:flex-end;justify-content:center}
+#sheet{background:var(--bg);width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:16px 16px 0 0;padding:18px 16px calc(22px + env(safe-area-inset-bottom,0px));border-top:3px solid var(--gold)}
+@media(min-width:700px){#ov{align-items:center}#sheet{border-radius:16px}}
+#sheet h2{font:700 24px var(--serif);margin-bottom:12px}
+.sx{float:right;border:0;background:none;font-size:22px;line-height:1;color:var(--muted);min-height:36px;min-width:36px}
+.bub{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 11px;font-size:14px}
+.bub.prob{background:var(--bad-bg);border-color:transparent}
+.bub small{display:block;color:var(--muted);font-size:12px;margin-bottom:2px}
+.mlist{display:grid;gap:8px}
+.mrow{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.mrow .nm{flex:1;font-weight:600}
+#toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--navy);color:var(--on-navy);padding:10px 18px;border-radius:99px;font-size:14px;z-index:99;max-width:90vw}
+@media(max-width:560px){header h1{font-size:30px}.row{grid-template-columns:1fr}}
+</style></head>
+<body>
+<div class="wrap" id="app"><div class="empty">Loading…</div></div>
+<div id="ov" hidden><div id="sheet" role="dialog" aria-modal="true"></div></div>
+<div id="toast" hidden></div>
+<script>
+(function(){
+var API_URL='';/* paste the Web app URL (ends in /exec) between the quotes, or open the page once with ?api=URL */
+var S={can:true,admin:false,tok:'',loaded:false,err:'',tasks:[],people:[],events:[],P:{},E:{},me:'',view:'my',ev:'',opDate:'',mf:'all',rpPerson:'',rpPeriod:'week',rpBy:'person',confirm:null,redraw:null};
+var $=function(s,r){return (r||document).querySelector(s)};
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function pad(n){return n<10?'0'+n:''+n}
+function ymd(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function today(){return ymd(new Date())}
+function pdate(s){var a=String(s).split('-');return new Date(+a[0],+a[1]-1,+a[2])}
+var DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function fdate(s){if(!s)return 'No date';var d=pdate(s);return DOW[d.getDay()]+', '+d.getDate()+' '+MON[d.getMonth()]}
+function ftime(t){if(!t)return '';var a=t.split(':'),h=+a[0],m=a[1];return (h%12||12)+':'+m+' '+(h<12?'AM':'PM')}
+function fstamp(ms){if(!ms)return '';var d=new Date(ms);return d.getDate()+' '+MON[d.getMonth()]+', '+ftime(pad(d.getHours())+':'+pad(d.getMinutes()))}
+function addDays(s,n){var d=pdate(s);d.setDate(d.getDate()+n);return ymd(d)}
+function toast(m){var t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(function(){t.hidden=true},2600)}
+function ini(n){return esc((n||'?').trim().charAt(0).toUpperCase())}
+function nm(id){return S.P[id]?S.P[id].name:'—'}
+function has(t,p){return (t.assignees||[]).indexOf(p)>=0}
+function dueMs(t){if(!t.date)return null;var d=pdate(t.date);if(t.time){var a=t.time.split(':');d.setHours(+a[0],+a[1],0,0)}else d.setHours(23,59,59,0);return d.getTime()}
+function isOver(t){var d=dueMs(t);return t.status!=='done'&&d!=null&&d<Date.now()}
+function span(ms){var m=Math.max(1,Math.round(ms/60000));if(m<60)return m+' min';var h=Math.floor(m/60);if(h<48){var r=m%60;return h+'h'+(r?' '+r+'m':'')}return Math.floor(h/24)+' days'}
+function dueInfo(t){
+  if(t.status==='done')return {c:'ok',x:'Done '+fstamp(t.doneAt)};
+  var d=dueMs(t);if(d==null)return {c:'',x:'No deadline'};
+  var diff=d-Date.now();
+  if(diff<0)return {c:'bad',x:'Overdue by '+span(-diff)};
+  return {c:diff<3*3600e3?'warn':'',x:'Due in '+span(diff)};
+}
+function statusLabel(s){return s==='done'?'Done':s==='working'?'Working':'Pending'}
+function evName(t){return t.kind==='event'&&S.E[t.event]?S.E[t.event].title:''}
+function sortDue(a,b){var x=dueMs(a),y=dueMs(b);if(x==null)x=9e15;if(y==null)y=9e15;return x-y}
+function lastRem(t){var r=t.remarks||[];return r.length?r[r.length-1]:null}
+
+/* ---------- cards ---------- */
+function taskCard(t,o){
+  o=o||{};var di=dueInfo(t),over=isOver(t),en=evName(t);
+  var h='<article class="tk s-'+esc(t.status||'pending')+(over?' over':'')+'">';
+  h+='<div class="top"><span class="tag'+(t.kind==='ops'?' ops':'')+'">'+(t.kind==='ops'?'Regular operation':esc(en||'Event task'))+'</span><span class="pill '+di.c+'">'+esc(di.x)+'</span></div>';
+  h+='<h3>'+esc(t.title)+'</h3>';
+  if(t.note)h+='<p class="note">'+esc(t.note)+'</p>';
+  h+='<p class="meta"><b>'+esc(fdate(t.date))+'</b>'+(t.time?' · <b>'+esc(ftime(t.time))+'</b>':'')+' · '+statusLabel(t.status)+(t.by?' · Assigned by <b>'+esc(nm(t.by))+'</b>':'')+(o.noWho?'':' · To <b>'+esc((t.assignees||[]).map(nm).join(', ')||'—')+'</b>')+'</p>';
+  var lr=lastRem(t);
+  if(lr)h+='<div class="lr'+(lr.problem?' prob':'')+'"><small>'+esc(nm(lr.by))+' · '+esc(fstamp(lr.at))+(lr.problem?' · Problem flagged':'')+'</small><br>'+esc(lr.text||('Status set to '+statusLabel(lr.status)))+'</div>';
+  if(S.can){
+    h+='<div class="acts">';
+    if(t.status==='done')h+='<button class="btn sm" data-act="st" data-id="'+t.id+'" data-v="pending">Reopen</button>';
+    else{
+      if(t.status!=='working')h+='<button class="btn sm" data-act="st" data-id="'+t.id+'" data-v="working">Start working</button>';
+      h+='<button class="btn sm pri" data-act="st" data-id="'+t.id+'" data-v="done">Mark done</button>';
+    }
+    h+='<button class="btn sm" data-act="upd" data-id="'+t.id+'">Update / Remark'+((t.remarks||[]).length?' ('+t.remarks.length+')':'')+'</button>';
+    if(S.admin||t.createdBy===S.me)h+='<button class="btn sm ghost" data-act="tedit" data-id="'+t.id+'">Edit</button>';
+    if(S.admin||t.createdBy===S.me)h+='<button class="btn sm ghost'+(S.confirm==='t'+t.id?' bad':'')+'" data-act="tdel" data-id="'+t.id+'">'+(S.confirm==='t'+t.id?'Tap again to delete':'Delete')+'</button>';
+    h+='</div>';
+  }
+  return h+'</article>';
+}
+function statsHtml(list){
+  var td=today(),n=list.length,done=0,work=0,over=0,pend=0,dt=0;
+  list.forEach(function(t){if(t.status==='done')done++;else{if(t.status==='working')work++;else pend++;if(isOver(t))over++;if(t.date===td)dt++}});
+  return '<div class="stats"><div class="stat today"><b>'+dt+'</b><span>Due today</span></div><div class="stat"><b>'+pend+'</b><span>Pending</span></div><div class="stat work"><b>'+work+'</b><span>Working</span></div><div class="stat over"><b>'+over+'</b><span>Overdue</span></div><div class="stat done"><b>'+done+'</b><span>Completed</span></div></div>';
+}
+function group(title,list,cls,o){
+  if(!list.length)return '';
+  return '<section class="grp"><div class="gh '+(cls||'')+'"><h3>'+title+'</h3><span>'+list.length+' task'+(list.length>1?'s':'')+'</span></div><div class="cards">'+list.map(function(t){return taskCard(t,o)}).join('')+'</div></section>';
+}
+
+/* ---------- views ---------- */
+function myHtml(){
+  var all=S.tasks.filter(function(t){return has(t,S.me)});
+  var list=all.filter(function(t){return S.mf==='all'||t.kind===S.mf});
+  var td=today(),open=list.filter(function(t){return t.status!=='done'}).sort(sortDue);
+  var od=open.filter(isOver),dt=open.filter(function(t){return !isOver(t)&&t.date===td}),up=open.filter(function(t){return !isOver(t)&&t.date!==td});
+  var dn=list.filter(function(t){return t.status==='done'}).sort(function(a,b){return (b.doneAt||0)-(a.doneAt||0)}).slice(0,15);
+  var h='<div class="toolbar"><h2>'+esc(nm(S.me))+'’s tasks</h2><div class="chips">'+[['all','All'],['event','Events'],['ops','Regular']].map(function(x){return '<button class="chip" data-act="mf" data-v="'+x[0]+'" aria-pressed="'+(S.mf===x[0])+'">'+x[1]+'</button>'}).join('')+'</div></div>';
+  h+=statsHtml(list);
+  if(!list.length)h+='<div class="empty">Nothing allocated yet. Tasks given to '+esc(nm(S.me))+' from any event or daily operation appear here automatically.</div>';
+  h+=group('Overdue',od,'bad',{noWho:0})+group('Due today',dt)+group('Upcoming',up)+group('Recently completed',dn);
+  return h;
+}
+function evStats(e){
+  var l=S.tasks.filter(function(t){return t.event===e.id}),d=l.filter(function(t){return t.status==='done'}).length,o=l.filter(isOver).length;
+  var ppl={};l.forEach(function(t){(t.assignees||[]).forEach(function(p){ppl[p]=1})});
+  return {n:l.length,d:d,o:o,ppl:Object.keys(ppl)};
+}
+function eventsHtml(){
+  if(S.ev&&S.E[S.ev])return eventDetail(S.E[S.ev]);
+  var h='<div class="toolbar"><h2>Events</h2>'+(S.admin?'<button class="btn pri" data-act="enew">+ New event</button>':'')+'</div>';
+  var ev=S.events.slice().sort(function(a,b){return (a.date||'9')<(b.date||'9')?-1:1});
+  if(!ev.length)return h+'<div class="empty">No events yet.'+(S.admin?' Create an event such as a celebration, then add tasks and allocate them to members.':' The Director creates events and allocates tasks.')+'</div>';
+  h+='<div class="egrid">'+ev.map(function(e){
+    var s=evStats(e),pc=s.n?Math.round(s.d*100/s.n):0;
+    return '<button class="ecard" data-act="eopen" data-id="'+e.id+'"><div class="meta"><b>'+esc(fdate(e.date))+'</b></div><h3>'+esc(e.title)+'</h3>'+(e.note?'<p class="meta">'+esc(e.note)+'</p>':'')+'<div class="bar g"><i style="width:'+pc+'%"></i></div><div class="meta"><b>'+s.d+'/'+s.n+'</b> tasks done'+(s.o?' · <b style="color:var(--bad)">'+s.o+' overdue</b>':'')+'</div><div class="avs">'+s.ppl.map(function(p){return '<span class="av sm" title="'+esc(nm(p))+'">'+ini(nm(p))+'</span>'}).join('')+'</div></button>';
+  }).join('')+'</div>';
+  return h;
+}
+function eventDetail(e){
+  var l=S.tasks.filter(function(t){return t.event===e.id}).sort(sortDue),s=evStats(e),pc=s.n?Math.round(s.d*100/s.n):0;
+  var h='<button class="back" data-act="eback">← All events</button>';
+  h+='<div class="panel gold"><div class="toolbar"><div><div class="meta"><b>'+esc(fdate(e.date))+'</b></div><h2 class="sech">'+esc(e.title)+'</h2></div>'+(S.admin?'<div class="acts"><button class="btn sm" data-act="eedit" data-id="'+e.id+'">Edit event</button><button class="btn sm '+(S.confirm==='e'+e.id?'bad':'ghost')+'" data-act="edel" data-id="'+e.id+'">'+(S.confirm==='e'+e.id?'Tap again to delete event and tasks':'Delete event')+'</button></div>':'')+'</div>'+(e.note?'<p class="note">'+esc(e.note)+'</p>':'')+'<div class="bar g"><i style="width:'+pc+'%"></i></div><div class="meta"><b>'+s.d+'/'+s.n+'</b> tasks done'+(s.o?' · <b style="color:var(--bad)">'+s.o+' overdue</b>':'')+'</div></div>';
+  h+='<div class="toolbar"><h2>Tasks</h2>'+(S.can?'<button class="btn pri" data-act="tnew" data-kind="event" data-ev="'+e.id+'">+ Add task</button>':'')+'</div>';
+  h+=l.length?'<div class="cards">'+l.map(function(t){return taskCard(t)}).join('')+'</div>':'<div class="empty">No tasks yet. Add a task and allocate it to one or more members. It appears in their My Tasks automatically.</div>';
+  return h;
+}
+function opsHtml(){
+  if(!S.opDate)S.opDate=today();
+  var d=S.opDate;
+  var h='<div class="toolbar"><h2>Regular operations</h2>'+(S.can?'<button class="btn pri" data-act="tnew" data-kind="ops">+ Add operation</button>':'')+'</div>';
+  h+='<div class="datenav"><button class="btn sm" data-act="dnav" data-v="-1">‹ Prev</button><input type="date" id="opd" value="'+d+'" aria-label="Date"><button class="btn sm" data-act="dnav" data-v="1">Next ›</button><button class="btn sm" data-act="dnav" data-v="0">Today</button><span class="meta"><b>'+esc(fdate(d))+'</b></span></div>';
+  var l=S.tasks.filter(function(t){return t.kind==='ops'&&t.date===d});
+  h+=statsHtml(l);
+  if(!l.length)return h+'<div class="empty">No regular operations on this date. Add one and allocate it to the member responsible.</div>';
+  var by={};l.forEach(function(t){(t.assignees&&t.assignees.length?t.assignees:['_']).forEach(function(p){(by[p]=by[p]||[]).push(t)})});
+  S.people.map(function(p){return p.id}).concat(['_']).forEach(function(p){
+    if(!by[p])return;
+    h+=group(p==='_'?'Unassigned':esc(nm(p)),by[p].sort(sortDue),'',{noWho:1});
+  });
+  return h;
+}
+function inPeriod(t){
+  var p=S.rpPeriod;if(p==='all')return true;if(!t.date)return false;var td=today();
+  if(p==='today')return t.date===td;
+  if(p==='month')return t.date.slice(0,7)===td.slice(0,7);
+  var d=pdate(td),dow=(d.getDay()+6)%7,mon=addDays(td,-dow),sun=addDays(mon,6);
+  return t.date>=mon&&t.date<=sun;
+}
+function pstat(list){
+  var r={n:list.length,done:0,work:0,pend:0,over:0,ontime:0};
+  list.forEach(function(t){
+    if(t.status==='done'){r.done++;var d=dueMs(t);if(d==null||(t.doneAt&&t.doneAt<=d))r.ontime++}
+    else{if(t.status==='working')r.work++;else r.pend++;if(isOver(t))r.over++}
+  });
+  r.pct=r.done?Math.round(r.ontime*100/r.done):null;return r;
+}
+function reportsHtml(){
+  var periods=[['today','Today'],['week','This week'],['month','This month'],['all','All time']];
+  var h='<div class="toolbar"><h2>Reports</h2><div class="chips">'+periods.map(function(x){return '<button class="chip" data-act="rp" data-v="'+x[0]+'" aria-pressed="'+(S.rpPeriod===x[0])+'">'+x[1]+'</button>'}).join('')+'</div></div>';
+  if(S.admin)h+='<div class="chips"><button class="chip" data-act="rb" data-v="person" aria-pressed="'+(S.rpBy==='person')+'">By member</button><button class="chip" data-act="rb" data-v="event" aria-pressed="'+(S.rpBy==='event')+'">By event</button></div>';
+  var list=S.tasks.filter(inPeriod);
+  if(!S.admin)return h+personReport(S.me,list,true);
+  if(S.rpBy==='event'){
+    var rows=S.events.map(function(e){var l=list.filter(function(t){return t.event===e.id});return {e:e,s:pstat(l)}}).filter(function(r){return r.s.n});
+    h+='<div class="tblw"><table><thead><tr><th>Event</th><th>Event date</th><th class="n">Tasks</th><th class="n">Done</th><th class="n">Working</th><th class="n">Pending</th><th class="n">Overdue</th><th>Progress</th></tr></thead><tbody>';
+    h+=rows.length?rows.map(function(r){var pc=Math.round(r.s.done*100/r.s.n);return '<tr class="clk" data-act="eopen" data-id="'+r.e.id+'" data-go="1"><td><b>'+esc(r.e.title)+'</b></td><td>'+esc(fdate(r.e.date))+'</td><td class="n">'+r.s.n+'</td><td class="n good">'+r.s.done+'</td><td class="n">'+r.s.work+'</td><td class="n">'+r.s.pend+'</td><td class="n'+(r.s.over?' bad':'')+'">'+r.s.over+'</td><td style="min-width:120px"><div class="bar g"><i style="width:'+pc+'%"></i></div><small class="meta">'+pc+'%</small></td></tr>'}).join(''):'<tr><td colspan="8" class="meta">No event tasks in this period.</td></tr>';
+    return h+'</tbody></table></div>';
+  }
+  if(S.rpPerson&&S.P[S.rpPerson])return h+personReport(S.rpPerson,list);
+  h+='<div class="tblw"><table><thead><tr><th>Member</th><th class="n">Assigned</th><th class="n">Done</th><th class="n">Working</th><th class="n">Pending</th><th class="n">Overdue</th><th class="n">On-time</th><th>Completion</th></tr></thead><tbody>';
+  h+=S.people.length?S.people.map(function(p){
+    var s=pstat(list.filter(function(t){return has(t,p.id)})),pc=s.n?Math.round(s.done*100/s.n):0;
+    return '<tr class="clk" data-act="rperson" data-id="'+p.id+'"><td><b>'+esc(p.name)+'</b></td><td class="n">'+s.n+'</td><td class="n good">'+s.done+'</td><td class="n">'+s.work+'</td><td class="n">'+s.pend+'</td><td class="n'+(s.over?' bad':'')+'">'+s.over+'</td><td class="n">'+(s.pct==null?'—':s.pct+'%')+'</td><td style="min-width:120px"><div class="bar g"><i style="width:'+pc+'%"></i></div><small class="meta">'+pc+'%</small></td></tr>';
+  }).join(''):'<tr><td colspan="8" class="meta">No members yet.</td></tr>';
+  h+='</tbody></table></div><p class="meta">Tap a member to see every task, its status, deadline, completion time and latest remark. On-time means completed on or before the deadline.</p>';
+  return h;
+}
+function personReport(pid,list,noBack){
+  var l=list.filter(function(t){return has(t,pid)}).sort(sortDue),s=pstat(l);
+  var h=(noBack?'':'<button class="back" data-act="rback">← All members</button>')+'<div class="toolbar"><h2>'+esc(nm(pid))+'</h2><button class="btn sm" data-act="rcopy" data-id="'+pid+'">Copy as table</button></div>'+statsHtml(l);
+  h+='<div class="tblw"><table><thead><tr><th>Task</th><th>Type</th><th>Deadline</th><th>Status</th><th>Completed</th><th>Latest remark</th></tr></thead><tbody>';
+  h+=l.length?l.map(function(t){
+    var lr=lastRem(t),ov=isOver(t);
+    return '<tr><td><b>'+esc(t.title)+'</b>'+(t.by?'<br><small class="meta">by '+esc(nm(t.by))+'</small>':'')+'</td><td>'+esc(t.kind==='ops'?'Regular':(evName(t)||'Event'))+'</td><td>'+esc(fdate(t.date))+(t.time?'<br><small class="meta">'+esc(ftime(t.time))+'</small>':'')+'</td><td class="'+(t.status==='done'?'good':ov?'bad':'')+'">'+(ov?'Overdue':statusLabel(t.status))+'</td><td>'+(t.doneAt?esc(fstamp(t.doneAt)):'—')+'</td><td>'+(lr?esc(lr.text||'')+(lr.problem?' <b style="color:var(--bad)">(problem)</b>':''):'—')+'</td></tr>';
+  }).join(''):'<tr><td colspan="6" class="meta">No tasks in this period.</td></tr>';
+  return h+'</tbody></table></div>';
+}
+
+/* ---------- paint ---------- */
+function paint(){
+  if(!S.tok){authView();return}
+  var a=document.activeElement;if(a&&a.tagName==='SELECT'&&!$('#ov').hidden)return;
+  var app=$('#app'),td=new Date();
+  var h='<header><div><div class="ov">Flourish International School</div><h1>Events &amp; Operations</h1></div><div class="hr"><span><b>'+DOW[td.getDay()]+', '+td.getDate()+' '+MON[td.getMonth()]+' '+td.getFullYear()+'</b></span><button class="me" data-act="members"><span class="av">'+(S.P[S.me]?ini(S.P[S.me].name):'?')+'</span>'+(S.P[S.me]?esc(S.P[S.me].name):'Choose who you are')+' ▾</button></div></header>';
+  h+='<nav class="seg">'+[['my','My Tasks'],['events','Events'],['ops','Operations'],['rep',S.admin?'Reports':'My Report']].map(function(x){return '<button data-act="nav" data-v="'+x[0]+'" aria-selected="'+(S.view===x[0])+'">'+x[1]+'</button>'}).join('')+'</nav>';
+  if(S.err)h+='<div class="banner">'+esc(S.err)+'</div>';
+  if(S.loaded){
+    h+=S.view==='my'?myHtml():S.view==='events'?eventsHtml():S.view==='ops'?opsHtml():reportsHtml();
+  }else h+='<div class="empty">Loading…</div>';
+  app.innerHTML=h;
+}
+function render(){paint();if(S.redraw)S.redraw()}
+
+/* ---------- sheet ---------- */
+function openSheet(html,redraw){var s=$('#sheet');s.innerHTML='<button class="sx" data-act="sx" aria-label="Close">×</button>'+html;$('#ov').hidden=false;S.redraw=redraw||null}
+function closeSheet(){$('#ov').hidden=true;$('#sheet').innerHTML='';S.redraw=null}
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('#ov').hidden)closeSheet()});
+$('#ov').addEventListener('mousedown',function(e){if(e.target===this)closeSheet()});
+
+function chips(sel){return S.people.map(function(p){return '<button type="button" class="chip" data-p="'+p.id+'" aria-pressed="'+sel.has(p.id)+'">'+esc(p.name)+'</button>'}).join('')||'<span class="meta">Add members first.</span>'}
+function peopleOpts(v){return '<option value="">—</option>'+S.people.map(function(p){return '<option value="'+p.id+'"'+(p.id===v?' selected':'')+'>'+esc(p.name)+'</option>'}).join('')}
+function nextDates(start,n){var out=[],d=start,g=0;while(out.length<n&&g<400){if(pdate(d).getDay()!==0)out.push(d);d=addDays(d,1);g++}return out}
+
+function taskForm(o){
+  var t=o.task,kind=t?t.kind:o.kind,evId=t?t.event:(o.ev||''),sel=new Set(t?(t.assignees||[]):[]);
+  var date=t?t.date:(kind==='ops'?(S.opDate||today()):''),time=t?t.time:'';
+  var h='<h2>'+(t?'Edit task':kind==='ops'?'New regular operation':'New task'+(S.E[evId]?' · '+esc(S.E[evId].title):''))+'</h2><form class="f" id="tf" autocomplete="off">';
+  h+='<div><label for="f-t">Task</label><input type="text" id="f-t" value="'+esc(t?t.title:'')+'" placeholder="e.g. Book the tent and sound system"></div>';
+  h+='<div><label for="f-n">Details (optional)</label><textarea id="f-n" rows="2">'+esc(t?t.note:'')+'</textarea></div>';
+  h+='<div class="row"><div><label for="f-d">Date</label><input type="date" id="f-d" value="'+esc(date)+'"></div><div><label for="f-tm">Time</label><input type="time" id="f-tm" value="'+esc(time)+'"></div></div>';
+  h+='<div><label>Allocate to</label><div class="chips" id="f-p">'+chips(sel)+'</div></div>';
+  h+='<div><label for="f-by">Assigned by</label><select id="f-by">'+peopleOpts(t?t.by:S.me)+'</select></div>';
+  if(!t&&kind==='ops')h+='<div><label for="f-rep">Repeat</label><select id="f-rep"><option value="1">Once</option><option value="6">Every day (Mon–Sat) for 6 days</option><option value="12">Every day (Mon–Sat) for 12 days</option><option value="26">Every day (Mon–Sat) for 26 days</option></select></div>';
+  h+='<div class="err" id="f-e"></div><div class="acts" style="justify-content:flex-end"><button type="button" class="btn" data-act="sx">Cancel</button><button type="submit" class="btn pri" id="f-s">'+(t?'Save changes':'Add task')+'</button></div></form>';
+  openSheet(h);
+  $('#f-p').onclick=function(e){var c=e.target.closest('[data-p]');if(!c)return;var id=c.dataset.p;if(sel.has(id))sel.delete(id);else sel.add(id);c.setAttribute('aria-pressed',sel.has(id))};
+  $('#tf').onsubmit=async function(e){
+    e.preventDefault();var err=$('#f-e'),title=$('#f-t').value.trim(),d=$('#f-d').value;
+    if(!title){err.textContent='Please enter the task.';return}
+    if(!d){err.textContent='Please choose a date.';return}
+    if(!sel.size){err.textContent='Choose at least one member to allocate to.';return}
+    var base={title:title,note:$('#f-n').value.trim(),time:$('#f-tm').value,by:$('#f-by').value||'',assignees:Array.from(sel)};
+    $('#f-s').disabled=true;
+    try{
+      if(t){await patchTask(t.id,Object.assign({date:d},base),null);toast('Task updated')}
+      else{
+        var rep=$('#f-rep')?+$('#f-rep').value:1,ds=rep>1?nextDates(d,rep):[d];
+        await Promise.all(ds.map(function(dd){return put('tasks',uid(),Object.assign({kind:kind,event:evId||'',date:dd},base))}));
+        toast(ds.length>1?ds.length+' tasks added':'Task added and sent to '+Array.from(sel).map(nm).join(', '));
+      }
+      closeSheet();
+    }catch(x){$('#f-s').disabled=false;err.textContent='Could not save. Please try again.'}
+  };
+  setTimeout(function(){var i=$('#f-t');if(i)i.focus()},50);
+}
+function eventForm(e){
+  var h='<h2>'+(e?'Edit event':'New event')+'</h2><form class="f" id="ef" autocomplete="off"><div><label for="v-t">Event title</label><input type="text" id="v-t" value="'+esc(e?e.title:'')+'" placeholder="e.g. Annual Day Celebration"></div><div><label for="v-d">Event date</label><input type="date" id="v-d" value="'+esc(e?e.date:'')+'"></div><div><label for="v-n">Notes (optional)</label><textarea id="v-n" rows="2">'+esc(e?e.note:'')+'</textarea></div><div class="err" id="v-e"></div><div class="acts" style="justify-content:flex-end"><button type="button" class="btn" data-act="sx">Cancel</button><button type="submit" class="btn pri" id="v-s">'+(e?'Save':'Create event')+'</button></div></form>';
+  openSheet(h);
+  $('#ef').onsubmit=async function(ev){
+    ev.preventDefault();var title=$('#v-t').value.trim(),d=$('#v-d').value;
+    if(!title){$('#v-e').textContent='Please enter the event title.';return}
+    if(!d){$('#v-e').textContent='Please choose the event date.';return}
+    $('#v-s').disabled=true;
+    try{
+      var data={title:title,date:d,note:$('#v-n').value.trim()};
+      if(e){await put('events',e.id,data)}
+      else{var nid=uid();await put('events',nid,data);S.ev=nid}
+      closeSheet();toast(e?'Event updated':'Event created. Add tasks and allocate them.');
+    }catch(x){$('#v-s').disabled=false;$('#v-e').textContent='Could not save. Please try again.'}
+  };
+  setTimeout(function(){var i=$('#v-t');if(i)i.focus()},50);
+}
+function updateSheet(id){
+  function draw(){
+    var t=S.tasks.filter(function(x){return x.id===id})[0];if(!t){closeSheet();return}
+    var log=(t.remarks||[]).map(function(r){return '<div class="bub'+(r.problem?' prob':'')+'"><small>'+esc(nm(r.by))+' · '+esc(fstamp(r.at))+(r.status?' · '+statusLabel(r.status):'')+(r.problem?' · Problem':'')+'</small>'+esc(r.text||'')+'</div>'}).join('')||'<p class="meta">No remarks yet.</p>';
+    var keep=$('#u-t')?$('#u-t').value:'',ks=$('#u-s')?$('#u-s').value:(t.status||'pending'),kp=$('#u-p')?$('#u-p').checked:false;
+    $('#sheet').innerHTML='<button class="sx" data-act="sx" aria-label="Close">×</button><h2>'+esc(t.title)+'</h2><p class="meta"><b>'+esc(fdate(t.date))+'</b>'+(t.time?' · <b>'+esc(ftime(t.time))+'</b>':'')+' · To <b>'+esc((t.assignees||[]).map(nm).join(', '))+'</b></p><div class="mlist" style="margin:12px 0;max-height:34vh;overflow:auto">'+log+'</div><form class="f" id="uf"><div><label for="u-s">Status</label><select id="u-s"><option value="pending">Pending</option><option value="working">Working</option><option value="done">Done</option></select></div><div><label for="u-t">Remark</label><textarea id="u-t" rows="3" placeholder="Progress, vendor, booking details, problem…"></textarea></div><label style="display:flex;gap:8px;align-items:center;text-transform:none;letter-spacing:0;font-size:14px"><input type="checkbox" id="u-p" style="width:20px;height:20px"> Flag a problem</label><div class="err" id="u-e"></div><div class="acts" style="justify-content:flex-end"><button type="button" class="btn" data-act="sx">Close</button><button type="submit" class="btn pri" id="u-b">Save update</button></div></form>';
+    $('#u-s').value=ks;$('#u-t').value=keep;$('#u-p').checked=kp;
+    $('#uf').onsubmit=async function(e){
+      e.preventDefault();var fresh=S.tasks.filter(function(x){return x.id===id})[0];if(!fresh)return;
+      var text=$('#u-t').value.trim(),st=$('#u-s').value,prob=$('#u-p').checked;
+      if(!text&&st===fresh.status&&!prob){$('#u-e').textContent='Add a remark or change the status.';return}
+      $('#u-b').disabled=true;
+      try{await patchTask(id,{status:st},{text:text,problem:prob});$('#u-t').value='';$('#u-p').checked=false;toast('Update saved');closeSheet()}catch(x){$('#u-b').disabled=false;$('#u-e').textContent='Could not save. Please try again.'}
+    };
+  }
+  openSheet('',draw);draw();
+}
+function membersSheet(){
+  function save(list,msg){return api('ev_members',[list]).then(function(l){S.people=l;S.P={};l.forEach(function(x){S.P[x.id]=x});toast(msg);render()},function(e){toast(e.message||'Could not save')})}
+  function draw(){
+    var h='<h2>Members</h2><p class="meta" style="margin-bottom:10px">Signed in as <b>'+esc(nm(S.me))+'</b>'+(S.admin?' · Director / admin':'')+'. Only the people listed here can open this app.</p><div class="mlist">'+S.people.map(function(p){
+      return '<div class="mrow"><span class="av">'+ini(p.name)+'</span><span class="nm">'+esc(p.name)+'</span>'+(p.admin?'<span class="pill ok">Admin</span>':'')+(S.admin&&p.id!==S.me?'<button class="btn sm" data-act="madm" data-id="'+p.id+'">'+(p.admin?'Remove admin':'Make admin')+'</button><button class="btn sm ghost'+(S.confirm==='p'+p.id?' bad':'')+'" data-act="mrm" data-id="'+p.id+'">'+(S.confirm==='p'+p.id?'Tap to confirm':'Remove')+'</button>':'')+'</div>';
+    }).join('')+'</div>';
+    if(S.admin)h+='<form class="f" id="pf" style="margin-top:14px"><div><label for="p-n">Add a member (the name they will log in with)</label><div style="display:flex;gap:8px"><input type="text" id="p-n" placeholder="Full name" autocomplete="off"><button type="submit" class="btn pri">Add</button></div></div><p class="meta">Password = first name + the common staff suffix, same as the other FIS apps.</p></form>';
+    if(S.admin)h+='<div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm ghost" data-act="sampleon">Load sample data</button><button class="btn sm '+(S.confirm==='sample'?'bad':'ghost')+'" data-act="sampleoff">'+(S.confirm==='sample'?'Tap again to remove all sample data':'Remove sample data')+'</button></div>';
+    h+='<div style="margin-top:16px"><button class="btn sm" data-act="logout">Sign out</button></div>';
+    var keep=$('#p-n')?$('#p-n').value:'';
+    $('#sheet').innerHTML='<button class="sx" data-act="sx" aria-label="Close">×</button>'+h;
+    if($('#p-n'))$('#p-n').value=keep;
+    if($('#pf'))$('#pf').onsubmit=function(e){
+      e.preventDefault();var v=$('#p-n').value.trim().replace(/\s+/g,' ');if(v.length<2)return;
+      if(S.people.some(function(p){return p.name.toLowerCase()===v.toLowerCase()})){toast('That member already exists');return}
+      $('#p-n').value='';save(S.people.concat([{id:'',name:v,admin:false}]),v+' added');
+    };
+    S.membersAct=function(act,id){
+      if(act==='madm')save(S.people.map(function(p){return p.id===id?{id:p.id,name:p.name,admin:!p.admin,sample:p.sample}:p}),'Updated');
+      if(act==='mrm'){if(S.confirm==='p'+id){S.confirm=null;save(S.people.filter(function(p){return p.id!==id}),'Member removed')}else arm('p'+id)}
+    };
+  }
+  openSheet('',draw);draw();
+}
+function arm(k){S.confirm=k;paint();if(S.redraw)S.redraw();clearTimeout(arm.t);arm.t=setTimeout(function(){S.confirm=null;paint();if(S.redraw)S.redraw()},3500)}
+function copyReport(pid){
+  var l=S.tasks.filter(inPeriod).filter(function(t){return has(t,pid)}).sort(sortDue);
+  var rows=[['Task','Type','Deadline','Status','Completed','Latest remark']].concat(l.map(function(t){var lr=lastRem(t);return [t.title,t.kind==='ops'?'Regular':(evName(t)||'Event'),fdate(t.date)+(t.time?' '+ftime(t.time):''),isOver(t)?'Overdue':statusLabel(t.status),t.doneAt?fstamp(t.doneAt):'',lr?(lr.text||''):'']}));
+  var txt=nm(pid)+'\n'+rows.map(function(r){return r.join('\t')}).join('\n');
+  try{navigator.clipboard.writeText(txt).then(function(){toast('Copied. Paste into Excel or WhatsApp.')},function(){toast('Copy is not available here')})}catch(e){toast('Copy is not available here')}
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click',function(e){
+  var a=e.target.closest('[data-act]');if(!a)return;var act=a.dataset.act,id=a.dataset.id,v=a.dataset.v;
+  if(act==='sx'){closeSheet();return}
+  if(act==='nav'){S.view=v;if(v!=='events')S.ev='';if(v!=='rep')S.rpPerson='';paint();return}
+  if(act==='mf'){S.mf=v;paint();return}
+  if(act==='members'){membersSheet();return}
+  if(act==='enew'){eventForm();return}
+  if(act==='eedit'){eventForm(S.E[id]);return}
+  if(act==='eopen'){S.ev=id;S.view='events';paint();window.scrollTo(0,0);return}
+  if(act==='eback'){S.ev='';paint();return}
+  if(act==='edel'){
+    if(S.confirm==='e'+id){S.confirm=null;var ts=S.tasks.filter(function(t){return t.event===id});
+      Promise.all(ts.map(function(t){return del('tasks',t.id)}).concat([del('events',id)])).then(function(){S.ev='';toast('Event deleted')},function(){toast('Could not delete')})}
+    else arm('e'+id);return}
+  if(act==='tnew'){taskForm({kind:a.dataset.kind,ev:a.dataset.ev});return}
+  if(act==='tedit'){taskForm({task:S.tasks.filter(function(t){return t.id===id})[0]});return}
+  if(act==='tdel'){
+    if(S.confirm==='t'+id){S.confirm=null;del('tasks',id).then(function(){toast('Task deleted')},function(){toast('Could not delete')})}
+    else arm('t'+id);return}
+  if(act==='upd'){updateSheet(id);return}
+  if(act==='st'){
+    patchTask(id,{status:v},null).then(function(){toast(v==='done'?'Marked done':v==='working'?'Marked as working':'Moved back to pending')},function(e){toast(e.message||'Could not update')});return}
+  if(act==='dnav'){S.opDate=v==='0'?today():addDays(S.opDate||today(),+v);paint();return}
+  if(act==='rp'){S.rpPeriod=v;paint();return}
+  if(act==='rb'){S.rpBy=v;S.rpPerson='';paint();return}
+  if(act==='rperson'){S.rpPerson=id;paint();window.scrollTo(0,0);return}
+  if(act==='rback'){S.rpPerson='';paint();return}
+  if(act==='rcopy'){copyReport(id);return}
+  if(act==='madm'||act==='mrm'){if(S.membersAct)S.membersAct(act,id);return}
+  if(act==='sampleon'){api('ev_sample',[true]).then(function(){toast('Sample data loaded');return load()},function(e){toast(e.message||'Could not load')});return}
+  if(act==='sampleoff'){if(S.confirm==='sample'){S.confirm=null;api('ev_sample',[false]).then(function(){toast('Sample data removed');return load()},function(e){toast(e.message||'Could not remove')})}else arm('sample');return}
+  if(act==='logout'){logout();return}
+});
+document.addEventListener('change',function(e){if(e.target.id==='opd'&&e.target.value){S.opDate=e.target.value;paint()}});
+
+/* ---------- backend, login, init ---------- */
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
+function api(fn,args){
+  return fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:fn,args:args||[],token:S.tok})})
+    .then(function(r){return r.json()}).then(function(j){
+      if(!j.ok){if(j.login){logout(true)}throw new Error(j.err||'Something went wrong')}
+      return j.v});
+}
+function applyData(v){
+  S.tasks=v.tasks||[];S.events=v.events||[];S.people=v.members||[];
+  S.P={};S.people.forEach(function(p){S.P[p.id]=p});S.E={};S.events.forEach(function(x){S.E[x.id]=x});
+  S.me=v.me.id;S.admin=!!v.me.admin;if(S.ev&&!S.E[S.ev])S.ev='';
+  if(!S.admin)S.rpBy='person';
+  S.loaded=true;S.err='';
+}
+function load(){return api('ev_data',[]).then(function(v){applyData(v);render()},function(e){if(S.tok){S.err='Could not reach the server ('+(e.message||'offline')+'). Showing the last data.';paint()}})}
+function put(coll,id,obj){return api('ev_set',[coll+'/'+id,obj]).then(function(doc){var arr=coll==='tasks'?S.tasks:S.events,i=arr.findIndex(function(x){return x.id===id});if(i>=0)arr[i]=doc;else arr.push(doc);if(coll==='events')S.E[id]=doc;render()})}
+function del(coll,id){return api('ev_del',[coll+'/'+id]).then(function(){if(coll==='tasks')S.tasks=S.tasks.filter(function(x){return x.id!==id});else{S.events=S.events.filter(function(x){return x.id!==id});delete S.E[id]}render()})}
+function patchTask(id,fields,remark){return api('ev_task',[id,fields,remark]).then(function(doc){var i=S.tasks.findIndex(function(x){return x.id===id});if(i>=0)S.tasks[i]=doc;render()})}
+function logout(quiet){
+  S.tok='';S.loaded=false;S.tasks=[];S.people=[];S.events=[];S.me='';S.admin=false;
+  try{localStorage.removeItem('fisEvTok')}catch(e){}
+  closeSheet();paint();if(quiet===true)setTimeout(function(){var e=$('#au-e');if(e)e.textContent='Please sign in again.'},0);
+}
+function authView(){
+  var saved='';try{saved=localStorage.getItem('fisEvName')||''}catch(e){}
+  var head='<header><div><div class="ov">Flourish International School</div><h1>Events &amp; Operations</h1></div></header>';
+  if(!API_URL){$('#app').innerHTML=head+'<div class="panel gold"><h2 class="sech">Setting up</h2><p class="note">This app is not connected to its data sheet yet. The Director needs to finish the one-time setup, then it opens for staff.</p></div>';return}
+  $('#app').innerHTML=head+'<form class="panel gold" id="af" autocomplete="on"><h2 class="sech">Staff login</h2><p class="meta">Only members on the access list can open this app.</p><div><label for="au-n">Your name</label><input type="text" id="au-n" autocomplete="username" value="'+esc(saved)+'"></div><div><label for="au-p">Password</label><input type="password" id="au-p" autocomplete="current-password" style="width:100%;min-height:44px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-size:16px"></div><div class="err" id="au-e"></div><button class="btn pri" type="submit" id="au-b">Open</button></form>';
+  $('#af').onsubmit=function(e){
+    e.preventDefault();var n=$('#au-n').value.trim(),p=$('#au-p').value;
+    if(!n||!p){$('#au-e').textContent='Type your name and password.';return}
+    $('#au-b').disabled=true;$('#au-e').textContent='';
+    api('login',[n,p]).then(function(r){S.tok=r.token;try{localStorage.setItem('fisEvTok',r.token);localStorage.setItem('fisEvName',r.name)}catch(x){}paint();return load()},
+      function(er){var b=$('#au-b');if(b){b.disabled=false;$('#au-e').textContent=er.message||'Could not sign in'}});
+  };
+  setTimeout(function(){var i=$(saved?'#au-p':'#au-n');if(i)i.focus()},50);
+}
+function init(){
+  try{var q=new URLSearchParams(location.search).get('api');if(q){localStorage.setItem('fisEvApi',q)}API_URL=API_URL||localStorage.getItem('fisEvApi')||'';S.tok=localStorage.getItem('fisEvTok')||''}catch(e){}
+  paint();
+  if(S.tok&&API_URL)load();
+  setInterval(function(){if(S.tok&&S.loaded)load()},25000);
+  setInterval(function(){if(S.tok&&$('#ov').hidden)paint()},30000);
+}
+init();
+})();
+</script>
+</body></html>
