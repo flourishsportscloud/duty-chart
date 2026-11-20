@@ -16,7 +16,7 @@ The page (`mentor/index.html`) is hosted on GitHub Pages and opens from the FIS 
 
 ## Who is who
 - Class teachers (1A–5C) and Hindi teachers (A / B / C across Classes 1–5) are set in the app under **Setup → Teachers**. The Director (and anyone listed as admin there) can edit Setup.
-- Lessons: **Setup → Lessons** accepts pasted rows `Class, Subject, Lesson no, Title` from the academic planner. Teachers can also just type a lesson.
+- Lessons: the 12–21 Nov weekly plans (Classes 6–10) and the 16 Nov–4 Dec planner (Classes 1–5) are built in, so teachers pick the lesson from a list per class and subject. **Setup → Lessons** accepts pasted rows `Class, Subject, Lesson, Title` to add more; teachers can also just type a lesson.
 
 ## How it works
 - **Docs** tab: `e/<date>/<section>/<id>` = a checking entry (book / notebook / assignment / test notebook), `t/<date>/<section>/<id>` = a performance test, `config/...` = settings.
