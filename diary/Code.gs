@@ -5,7 +5,8 @@
    - the first admin is approved automatically; every other login needs one approval from an admin
    - action and SMS times are stamped by the server, so nobody can back-date them
 */
-const ROLES=["cm","teacher","pl","admin"];
+const ROLES=["cm","cmh","tp","ts","teacher","pm","pl","admin"];
+function roleHasClass_(role,cls){return (role==="tp"||role==="pm")?cls<=5:role==="ts"?cls>=6:true}
 const CATS=["rem","def","nb","eng","sig","beh","tv","study","play"];
 const TOKEN_DAYS=120;
 const WINDOW_DAYS=35;       // state() sends this many days back from the date being viewed
@@ -32,8 +33,8 @@ function readToken(H,secret,DB,token,now){
 }
 function needUser(ctx,token){const u=readToken(ctx.H,ctx.secret,ctx.DB,token,ctx.now);if(!u)fail("Please log in again.");return u}
 function needAdmin(ctx,token){const u=needUser(ctx,token);if(u.role!=="admin")fail("Only the admin can do this.");return u}
-function needMarker(ctx,token){const u=needUser(ctx,token);if(u.role!=="cm"&&u.role!=="teacher"&&u.role!=="admin")fail("Only a Class Manager, teacher or the admin can mark the diary.");return u}
-function needPL(ctx,token){const u=needUser(ctx,token);if(u.role!=="pl"&&u.role!=="admin")fail("Only a class incharge (PL) or the admin can log an action.");return u}
+function needMarker(ctx,token){return needUser(ctx,token)}   // every role can mark; classes are checked in saveMarks
+function needPL(ctx,token){const u=needUser(ctx,token);if(u.role!=="pl"&&u.role!=="pm"&&u.role!=="admin")fail("Only a PL, PM or the admin can log an action.");return u}
 
 function cleanMark(x,me){
   if(!x||typeof x!=="object")return null;
@@ -125,6 +126,7 @@ const API={
     if(!isoDate(date)||date>ctx.today)fail("Pick a valid date, not in the future.");
     if(date<addDays(ctx.today,-BACKDATE_DAYS))fail("Marks can be changed only for the last "+BACKDATE_DAYS+" days.");
     cls=Number(cls);if(!(cls>=1&&cls<=11))fail("Unknown class.");
+    if(!roleHasClass_(me.role,cls))fail("Class "+cls+" is not in your classes.");
     const id=date+"_"+cls,row=findRow_("Marks",id);
     let m={};if(row){try{m=JSON.parse(row.json)}catch(e){}}
     Object.keys(set||{}).forEach(k=>{

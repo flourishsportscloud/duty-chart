@@ -307,10 +307,15 @@ const svg = k => '<svg viewBox="0 0 24 24" aria-hidden="true">' + ICON[k] + '</s
 const API_URL = new URLSearchParams(location.search).get("api") || "https://script.google.com/macros/s/AKfycbyvWTDOKOQ8F0vD-oy9vchmq04GdhfZfgtpomgWg73rIa13gmkrFkpZsvQl9ISZKrSFQw/exec";
 let token = ""; try { token = localStorage.getItem("diary-token") || ""; } catch(e){}
 let me = null, ready = false, authMode = "login", users = [], refreshing = false;
-const ROLE_LABEL = {cm:"CM · Class Manager", teacher:"Teacher", pl:"PL · Class incharge", admin:"FO · Front Office"};
-const ROLE_SHORT = {cm:"CM", teacher:"TR", pl:"PL", admin:"FO"};
-const canMark = () => !!me && (me.role === "cm" || me.role === "teacher" || me.role === "admin");
-const canPL = () => !!me && (me.role === "pl" || me.role === "admin");
+const ROLE_LABEL = {cm:"CM · Class Manager", cmh:"CMH · CM Head", tp:"Teacher · Primary (1–5)", ts:"Teacher · Classes 6–11", teacher:"Teacher · All classes", pm:"PM · Primary Manager (1–5)", pl:"PL · Class incharge", admin:"FO · Front Office"};
+const SIGNUP_ROLES = ["cm","cmh","tp","ts","pm","pl","admin"], ALL_ROLES = ["cm","cmh","tp","ts","teacher","pm","pl","admin"];
+// which classes each role works with: primary staff see 1–5, senior teachers 6–11, everyone else the whole school
+function myClasses(){ const r = me && me.role; const a = []; for (let c = 1; c <= 11; c++) if ((r === "tp" || r === "pm") ? c <= 5 : r === "ts" ? c >= 6 : true) a.push(c); return a; }
+const myCls = c => myClasses().includes(Number(c));
+const limited = () => myClasses().length < 11;
+const ROLE_SHORT = {cm:"CM", cmh:"CMH", tp:"TR", ts:"TR", teacher:"TR", pm:"PM", pl:"PL", admin:"FO"};
+const canMark = () => !!me;   // the CM (marking) tab is open to every role, limited to the role's classes
+const canPL = () => !!me && (me.role === "pl" || me.role === "pm" || me.role === "admin");
 const canAdmin = () => !!me && me.role === "admin";
 function setToken(t){ token = t || ""; try { if (token) localStorage.setItem("diary-token", token); else localStorage.removeItem("diary-token"); } catch(e){} }
 async function api(fn, args){
@@ -378,10 +383,12 @@ function setStatus(t){ statusText = t; const s = $("cmStatus"); if (s) s.textCon
 function applyState(s){
   if (!s) return;
   me = s.me || null; users = s.users || [];
+  if (me && !myCls(cls)) { cls = myClasses()[0]; sec = sections(cls)[0]; }
   if (!me) { if (token) { setToken(""); banner("Please log in again.", true); } ready = true; render(); return; }
   if (s.roster) {
     const r = EMPTY_ROSTER(); Object.keys(s.roster).forEach(c => { if (r[c]) r[c] = s.roster[c]; });
     ROSTER = r; rosterVer = s.rosterVer || "";
+    if (!myCls(cls)) cls = myClasses()[0]; if (!myCls(pcls)) pcls = myClasses()[0];
     if (!ROSTER[cls][sec]) sec = sections(cls)[0]; if (!ROSTER[pcls][psec]) psec = sections(pcls)[0];
   }
   Object.keys(s.docs || {}).forEach(id => {
@@ -479,12 +486,12 @@ const DEF_ACTS = ["Counselled","Called parent","Warned","Informed"];
 /* ================= CM · marking ================= */
 function classChips(cur, onPick, dotFn){
   const box = el("div","chips"); box.setAttribute("role","group"); box.setAttribute("aria-label","Class");
-  for (let c = 1; c <= 11; c++){
+  myClasses().forEach(c => {
     const b = btn("chip" + (c === cur ? " on" : ""), String(c), () => onPick(c), "Class " + c);
     b.setAttribute("aria-pressed", String(c === cur));
     if (dotFn && dotFn(c)) b.appendChild(el("i"));
     box.appendChild(b);
-  }
+  });
   return box;
 }
 function secSeg(c, cur, onPick, labelFn){
@@ -647,7 +654,7 @@ function reportFor(c, withNames){
 let scope = "class";
 function buildReport(){
   const wn = $("sNames").checked, head = "*Diary Remarks*- " + dmy(date) + "\n\n";
-  let body; if (scope === "class") body = reportFor(cls, wn); else { const p = []; for (let c = 1; c <= 11; c++) p.push(reportFor(c, wn)); body = p.join("\n\n"); }
+  let body; if (scope === "class") body = reportFor(cls, wn); else { const p = []; myClasses().forEach(c => p.push(reportFor(c, wn))); body = p.join("\n\n"); }
   $("sText").value = head + body;
 }
 $("bReport").onclick = () => { buildReport(); $("sheet").hidden = false; };
@@ -933,19 +940,19 @@ async function markSms(it, sent, remark){
 /* ================= scope picker: whole school, any classes, any sections ================= */
 let view = "cm", pcls = 1, psec = "A";
 function mkScope(){ return {cls: new Set(), secs: new Set()}; }     // empty = all
-function inScope(sc, c, s){ return (!sc.cls.size || sc.cls.has(c)) && (!sc.secs.size || sc.secs.has(s)); }
+function inScope(sc, c, s){ return myCls(c) && (!sc.cls.size || sc.cls.has(c)) && (!sc.secs.size || sc.secs.has(s)); }
 function scopeLabel(sc){
-  const c = sc.cls.size ? "Class " + Array.from(sc.cls).sort((a,b) => a - b).join(", ") : "Whole school";
+  const c = sc.cls.size ? "Class " + Array.from(sc.cls).sort((a,b) => a - b).join(", ") : limited() ? "Classes " + myClasses()[0] + "–" + myClasses().slice(-1)[0] : "Whole school";
   const s = sc.secs.size ? " · Section " + Array.from(sc.secs).sort().join(" + ") : sc.cls.size ? " · all sections" : "";
   return c + s;
 }
 function scopePicker(sc){
   const wrap = el("div"); wrap.style.display = "grid"; wrap.style.gap = "8px";
   const cc = el("div","chips"); cc.setAttribute("aria-label","Classes");
-  cc.appendChild(btn("chip sm" + (!sc.cls.size ? " on" : ""), "All classes", () => { sc.cls.clear(); render(true); }));
-  for (let c = 1; c <= 11; c++) { const b = btn("chip sm" + (sc.cls.has(c) ? " on" : ""), String(c), () => { if (sc.cls.has(c)) sc.cls.delete(c); else sc.cls.add(c); render(true); }, "Class " + c); b.setAttribute("aria-pressed", String(sc.cls.has(c))); cc.appendChild(b); }
+  cc.appendChild(btn("chip sm" + (!sc.cls.size ? " on" : ""), limited() ? "All my classes" : "All classes", () => { sc.cls.clear(); render(true); }));
+  myClasses().forEach(c => { const b = btn("chip sm" + (sc.cls.has(c) ? " on" : ""), String(c), () => { if (sc.cls.has(c)) sc.cls.delete(c); else sc.cls.add(c); render(true); }, "Class " + c); b.setAttribute("aria-pressed", String(sc.cls.has(c))); cc.appendChild(b); });
   wrap.appendChild(cc);
-  const avail = new Set(); for (let c = 1; c <= 11; c++) if (!sc.cls.size || sc.cls.has(c)) sections(c).forEach(x => avail.add(x));
+  const avail = new Set(); for (const c of myClasses()) if (!sc.cls.size || sc.cls.has(c)) sections(c).forEach(x => avail.add(x));
   Array.from(sc.secs).forEach(x => { if (!avail.has(x)) sc.secs.delete(x); });
   const sg = el("div","seg");
   sg.appendChild(btn(!sc.secs.size ? "on" : "", avail.size > 1 ? "All sections" : "Section " + Array.from(avail).join(""), () => { sc.secs.clear(); render(true); }));
@@ -1116,7 +1123,7 @@ function buildReports(){
 let kq = "", kid = null, kper = 30;
 function kidMatches(q){
   const out = []; if (q.length < 2) return out;
-  for (let c = 1; c <= 11; c++) sections(c).forEach(s => (ROSTER[c][s] || []).forEach((n, i) => { if (n.toLowerCase().includes(q)) out.push({c, s, i, n}); }));
+  for (const c of myClasses()) sections(c).forEach(s => (ROSTER[c][s] || []).forEach((n, i) => { if (n.toLowerCase().includes(q)) out.push({c, s, i, n}); }));
   return out.slice(0, 30);
 }
 const CELL = {
@@ -1251,7 +1258,7 @@ function renderSet(){
   box.appendChild(rosterCard());
   if (rosterReady()) box.appendChild(moveCard());
   const pend = users.filter(u => u.status === "pending"), act = users.filter(u => u.status !== "pending");
-  const roleSel = cur => { const s = el("select"); ["cm","teacher","pl","admin"].forEach(r => { const o = el("option", null, ROLE_LABEL[r]); o.value = r; if (r === cur) o.selected = true; s.appendChild(o); }); return s; };
+  const roleSel = cur => { const s = el("select"); ALL_ROLES.forEach(r => { const o = el("option", null, ROLE_LABEL[r]); o.value = r; if (r === cur) o.selected = true; s.appendChild(o); }); return s; };
   const row = u => {
     const c = el("div","urow"); const n = el("div","un", u.name);
     n.appendChild(el("small", null, ROLE_LABEL[u.role] + " · " + (u.status === "active" ? "active" : u.status === "reset" ? "password reset, waiting for a new password" : "waiting for approval")));
@@ -1330,7 +1337,7 @@ function renderAuth(){
   const f = el("form","pad"); f.id = "loginForm"; f.noValidate = true;
   const fld = (lab, inp) => { const d = el("div","field"); const l = el("label", null, lab); l.htmlFor = inp.id; d.appendChild(l); d.appendChild(inp); return d; };
   const name = el("input"); name.type = "text"; name.id = "lgName"; name.maxLength = 40; name.autocomplete = "username"; name.placeholder = "e.g. Anita Sharma";
-  const role = el("select"); role.id = "lgRole"; ["cm","teacher","pl","admin"].forEach(r => { const o = el("option", null, ROLE_LABEL[r]); o.value = r; role.appendChild(o); });
+  const role = el("select"); role.id = "lgRole"; SIGNUP_ROLES.forEach(r => { const o = el("option", null, ROLE_LABEL[r]); o.value = r; role.appendChild(o); });
   const pw = el("input"); pw.type = "password"; pw.id = "lgPw"; pw.autocomplete = setup ? "new-password" : "current-password"; pw.placeholder = setup ? "Set a password (6+ characters)" : "Password";
   f.appendChild(fld("Your name", name)); if (setup) f.appendChild(fld("I am", role)); f.appendChild(fld("Password", pw));
   const go = el("button","btn", setup ? "Create login" : "Log in"); go.type = "submit"; go.style.width = "100%"; go.style.padding = "13px";
@@ -1381,8 +1388,8 @@ function render(force){
 }
 function badges(){
   const set = (v, n) => { const b = document.querySelector('#nav [data-v="' + v + '"]'); if (!b) return; let e = b.querySelector("em"); if (!n) { if (e) e.remove(); return; } if (!e) { e = el("em"); b.appendChild(e); } e.textContent = String(n); };
-  set("rem", dayItems(date, 0, "all", "rem").filter(x => x.st.k === "pend").length);
-  set("def", dayItems(date, 0, "all", "def").filter(x => x.st.k === "pend").length + (canAdmin() ? smsDue().filter(x => !x.sent).length : 0));
+  set("rem", dayItems(date, 0, "all", "rem").filter(x => x.st.k === "pend" && myCls(x.c)).length);
+  set("def", dayItems(date, 0, "all", "def").filter(x => x.st.k === "pend" && myCls(x.c)).length + (canAdmin() ? smsDue().filter(x => !x.sent).length : 0));
 }
 function setView(v){
   view = v; history.replaceState(null, "", "#" + v);
@@ -1413,7 +1420,7 @@ setInterval(() => { if (document.visibilityState === "visible" && me && view !==
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && me) { retryDirty(); refresh(); } });
 
 /* ---------- auto-update: if a newer page is published, reload into it ---------- */
-const BUILD = "202611200544";
+const BUILD = "202611201122";
 (function(){
   const run = () => fetch(location.pathname + "?v=" + Date.now(), {cache:"no-store"}).then(r => r.text()).then(t => {
     const m = t.match(/const BUILD = "(\d+)"/);
