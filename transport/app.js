@@ -140,7 +140,7 @@ function subscribeConfig(){
   store.subDoc('config/settings',o=>{S.settings=o||{};S.lateAfter=(o&&o.lateAfter)||'08:00';S.lateAfterPP=(o&&o.lateAfterPP)||'09:00';
     const nl=(o&&o.left)?o.left:LEFT_DEFAULT;const back=Object.keys(LEFT).some(id=>!nl[id]);LEFT=Object.assign({},nl);applyLeft(LEFT);
     if(back)toast('A student was restored – close and reopen the app to see them');render()});
-  store.subCol('config',o=>{const m={};Object.keys(o).forEach(k=>{if(k.startsWith('ss-'))m[k.slice(3)]=o[k]});S.ssList=m;render()});
+  store.subCol('config',o=>{const m={};Object.keys(o).forEach(k=>{if(k.startsWith('ss-'))m[k.slice(3)]=o[k]});S.ssList=m;S.ssListLoaded=true;render();if(SSR.st==='ok')ssAutoSync()});
   store.subDoc('config/privateVan',o=>{S.privVan=(o&&o.kids)||{};render()});
   store.subDoc('config/managers',o=>{S.managers=(o&&o.names)||[];fillStaffSelects();fillSbBy();render()});
 }
@@ -432,7 +432,17 @@ const SS_GRADES=()=>GRADES.filter(g=>/^\d+$/.test(String(ORD[g]))&&+ORD[g]>=1&&+
 const SS_CLS=()=>CLASSES.filter(c=>SS_GRADES().includes(c.split(' - ')[0]));
 function ssDoc(c){return S.ssList[seg(c)]||{}}
 function ssEntry(id){return (ssDoc(KID[id].cls).kids||{})[id]}
-function ssMembers(c){const kd=ssDoc(c).kids||{};return Object.keys(kd).filter(id=>KID[id]&&!kd[id].rm).map(id=>Object.assign({k:KID[id]},kd[id])).sort((a,b)=>a.k.name.localeCompare(b.k.name))}
+function ssMembers(c){const kd=ssDoc(c).kids||{};const lv=ssLive(c);const ids=new Set(Object.keys(kd).concat(Object.keys(lv)));
+  return [...ids].filter(id=>KID[id]&&!(kd[id]&&kd[id].rm)).map(id=>{const e=Object.assign({src:'poor'},kd[id]||{});if(SSR.st==='ok'&&e.src==='poor'){if(lv[id]){e.run=lv[id];delete e.pp}else e.pp=false}return Object.assign({k:KID[id]},e)}).sort((a,b)=>a.k.name.localeCompare(b.k.name))}
+function ssRunN(){return +((S.ssList._meta||{}).run)||2}
+function ssLive(c){if(SSR.st!=='ok')return {};if(SSR.runUsed!==ssRunN())ssComputePoor();return SSR.poorBy[c]||{}}
+function ssComputePoor(){const run=ssRunN();const poor=ssPoor(SSR.raw||[],run);const by={},un=[];
+  SS_CLS().forEach(c=>{const sk=Object.keys(poor).find(x=>ssClsOf(x)===c);const o={};(sk?poor[sk]:[]).forEach(p=>{const k=ssMatch(p.nm,c);if(k)o[k.id]=p.best;else un.push(secLbl(c)+': '+p.nm)});by[c]=o});
+  SSR.poorBy=by;SSR.unm=un;SSR.runUsed=run}
+async function ssAutoSync(){if(SSR.st!=='ok'||!S.ssListLoaded)return;const key=(SSR.asOf||'')+'#'+ssRunN()+'#'+S.date;if(S.ssSynced===key)return;S.ssSynced=key;const by='FIS Reports (auto)';
+  for(const c of SS_CLS()){const lv=ssLive(c);const cur=(S.ssList[seg(c)]||{}).kids||{};const kids=JSON.parse(JSON.stringify(cur));let ch=false;
+    Object.keys(lv).forEach(id=>{if(!kids[id]){kids[id]={src:'poor',run:lv[id],by,since:todayStr()};ch=true}else if(kids[id].src==='poor'&&kids[id].run!==lv[id]&&!kids[id].rm){kids[id].run=lv[id];delete kids[id].pp;ch=true}});
+    if(ch){try{await store.set('config/ss-'+seg(c),Object.assign({},S.ssList[seg(c)]||{},{cls:c,kids,by,time:nowHM(),ts:Date.now()}))}catch(e){}}}}
 function ssDayVal(id){return ((S.ss[seg(KID[id].cls)]||{}).kids||{})[id]}
 function ssDraftOf(id){const d=(S.ssDraft||{})[seg(KID[id].cls)]||{};return id in d?d[id]:undefined}
 function ssVal(id){const d=ssDraftOf(id);return d!==undefined?d:ssDayVal(id)}
@@ -442,7 +452,13 @@ function renderSS(){
   if(document.activeElement!==$('ssBy'))$('ssBy').innerHTML=byOpts(LS.get('ssBy',ALLBY),[['PL – Classes 6 to 11',PL_NAMES],['PM – Classes 1 to 5',PM_NAMES],['Managers',mgrNames()]]);
   const ae=document.activeElement;if(!(ae&&$('ssCp').contains(ae)&&ae.classList.contains('cpq')))$('ssCp').innerHTML=cpHtml('ss',SS_GRADES());
   const mode=$('ssMode').value,view=$('ssBy').value===ALLBY;const P=S.ssPull||{};const meta=S.ssList._meta||{};
-  $('ssPull').innerHTML='<div class="row" style="align-items:flex-end"><div><label class="f">Poor performer = below 60% in</label><select id="ssRun">'+[2,3,4].map(n=>'<option value="'+n+'"'+(n===(meta.run||2)?' selected':'')+'>'+n+'+ tests in a row</option>').join('')+'</select></div>'+
+  ssLoadTests();const rs=SSR.st;const un=SSR.unm||[];
+  $('ssPull').innerHTML='<div class="secthead" style="margin:0 0 8px"><i></i><span>FIS Reports – Poor Performers</span><small>'+(rs==='ok'?'connected ✓':rs==='loading'?'connecting…':'not connected')+'</small></div>'+
+    (rs==='ok'?'<p class="muted" style="margin:0 0 10px">Names come automatically from FIS Reports (data as of <b>'+esc(SSR.asOf||'—')+'</b>). Rule as in FIS Reports: below 60% in the chosen number of tests in a row. Marks shown are the latest tests.</p>':
+     rs==='loading'?'<p class="muted">Reading FIS Reports…</p>':
+     '<p style="margin:0 0 8px;color:var(--a);font-weight:600">'+(rs==='badpw'?'Wrong FIS Reports password – try again.':rs==='err'?'Could not read FIS Reports ('+esc(SSR.err||'')+'). Check the network and press Connect again.':'Connect FIS Reports once on this phone to bring the poor performers and their marks here automatically.')+'</p><div class="row" style="align-items:flex-end"><div style="flex:1;min-width:180px"><label class="f">FIS Reports password</label><input type="password" id="ssPw" autocomplete="current-password" style="width:100%"></div><button class="btn" id="ssConnect">Connect</button></div>')+
+    '<div class="row" style="align-items:flex-end;margin-top:10px"><div><label class="f">Poor performer = below 60% in</label><select id="ssRun">'+[2,3,4].map(n=>'<option value="'+n+'"'+(n===ssRunN()?' selected':'')+'>'+n+'+ tests in a row</option>').join('')+'</select></div>'+(rs==='ok'?'<button class="btn ghost" id="ssRefresh">Refresh from FIS Reports</button>':'')+'</div>'+
+    (rs==='ok'&&un.length?'<details class="allst"><summary>'+un.length+' poor performers not found in the school list – add them by hand</summary><p class="muted" style="margin:8px 6px">'+un.map(esc).join(' · ')+'</p></details>':'');
     (P.needPw?'<div style="flex:1;min-width:180px"><label class="f">FIS Reports password</label><input type="password" id="ssPw" autocomplete="current-password" style="width:100%"></div>':'')+
     '<button class="btn" id="ssPullBtn"'+(P.busy?' disabled':'')+'>'+(P.busy?'Updating…':'Update list from Poor Performers')+'</button></div>'+
     '<p class="muted" style="margin:8px 0 0">'+(meta.asOf?'Last updated from FIS Reports (data as of '+esc(meta.asOf)+') by '+esc(byShort(meta.by||''))+' '+esc(meta.time||'')+'. ':'Not updated from FIS Reports yet. ')+'New poor performers are added; names a PL removed stay removed; frozen names stay frozen.</p>'+
@@ -465,8 +481,9 @@ function renderSS(){
       if(rm.length)h+='<div class="sumline"><span class="tag t-U">Removed · '+rm.length+'</span><ol>'+rm.map(id=>'<li><b>'+esc(KID[id].name)+'</b>'+(view?'':' <button class="btn ghost sm" data-ssback="'+id+'">Add back</button>')+'</li>').join('')+'</ol></div>';
       if(!view){const opts=Object.values(KID).filter(k=>k.cls===c&&!(kd[k.id]&&!kd[k.id].rm)).sort(byName);h+='<div class="row" style="margin:10px 0 4px"><select data-ssadd="'+esc(c)+'" style="flex:1"><option value="">Add a student to '+esc(clsName(c))+'…</option>'+opts.map(k=>'<option value="'+k.id+'">'+esc(k.name)+' ('+esc(modeLabel(k))+')</option>').join('')+'</select></div>'}
     }});
-  $('ssHint').innerHTML=view?'Viewing only. Choose your name in <b>Marked by</b> to mark or edit.':mode==='att'?'Tap <b>Attended</b> (green) or <b>Not attended</b> (red) for each student, then press Save. <b>Absent</b> = absent from school. The recent test marks from FIS Reports show under each name: <b>green</b> = he attended Smart Study in the 7 days before that test, <b>red</b> = he did not. The date-wise record is below. Frozen students are not staying.':'Freeze students whose parents do not allow them to stay, remove names, or add students. Changes save straight away.';
-  ssLoadTests();$('ssList').innerHTML=catHead('Smart Study Session – '+fmtDL(S.date),T.all,'SB')+(mode==='att'?'<div class="sbcount"><span class="tag t-P">Attended '+T.P+'</span><span class="tag t-A">Not attended '+T.N+'</span><span class="tag t-U">Absent '+T.A+'</span><span class="tag t-U">– Not marked '+T.u+'</span><span class="tag t-U">Frozen '+T.f+'</span></div>':'')+(h||'<p class="muted empty">'+(mode==='att'?'No Smart Study students in the selected classes. Use "Update list from Poor Performers" or switch to Edit list to add students.':'Choose classes above.')+'</p>');
+  $('ssHint').innerHTML=view?'Viewing only. Choose your name in <b>Marked by</b> to mark or edit.':mode==='att'?'Tap <b>Attended</b> (green) if the child sat in Smart Study, <b>Not attended</b> (red) if he did not stay, or <b>Absent</b> if absent from school – then press Save. The grey tags under each name are his latest test marks from FIS Reports (e.g. 4/10 English Lesson 5). The date-wise record with marks is at the bottom.':'Freeze students whose parents do not allow them to stay, remove names, or add students. Changes save straight away.';
+  const fun=list.map(c=>{const ms=ssMembers(c);if(!ms.length&&!Object.keys(ssLive(c)).length)return '';const act=ms.filter(m=>!m.frz);const n=x=>act.filter(m=>ssVal(m.k.id)===x).length;return '<tr><td class="l"><b>'+esc(secLbl(c))+'</b></td><td>'+(SSR.st==='ok'?Object.keys(ssLive(c)).length:'–')+'</td><td><b>'+act.length+'</b></td><td>'+ms.filter(m=>m.frz).length+'</td><td style="color:#1F6B47"><b>'+n('P')+'</b></td><td style="color:#A42A47"><b>'+n('N')+'</b></td><td>'+n('A')+'</td><td>'+act.filter(m=>ssVal(m.k.id)===undefined).length+'</td></tr>'}).join('');
+  $('ssList').innerHTML=catHead('Smart Study Session – '+fmtDL(S.date),T.all,'SB')+(mode==='att'&&fun?'<h3>Class-wise</h3><div class="tw" style="max-height:none;margin-bottom:6px"><table class="cnum"><tr><th class="l">Class</th><th>Should join<br>(poor perf.)</th><th>Enrolled</th><th>Frozen</th><th>Attended</th><th>Not att.</th><th>Absent</th><th>Not marked</th></tr>'+fun+'</table></div>':'')+(mode==='att'?'<div class="sbcount"><span class="tag t-P">Attended '+T.P+'</span><span class="tag t-A">Not attended '+T.N+'</span><span class="tag t-U">Absent '+T.A+'</span><span class="tag t-U">– Not marked '+T.u+'</span><span class="tag t-U">Frozen '+T.f+'</span></div>':'')+(h||'<p class="muted empty">'+(mode==='att'?'No Smart Study students in the selected classes. Use "Update list from Poor Performers" or switch to Edit list to add students.':'Choose classes above.')+'</p>');
   if(mode==='att')renderSSRec(list);else if($('ssRec'))$('ssRec').innerHTML='';
 }
 /* Smart Study – test marks from FIS Reports + date-wise record */
@@ -481,16 +498,18 @@ async function ssReadReports(pw){const b64=s=>Uint8Array.from(atob(s),c=>c.charC
   const buf=new Uint8Array(await (await fetch(base+'data.bin',{cache:'no-cache'})).arrayBuffer());
   return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},key,buf.slice(12))))}
 function ssSetTests(data){const T={};const mm={};
-  (data.tests||[]).forEach(([sec,subj,lesson,date,max,marks])=>{if(!/[A-Za-z]/.test(subj||'')||!max)return;const c=ssClsOf(sec);if(!c||!SS_CLS().includes(c))return;
+  (data.tests||[]).forEach(([sec,subj,lesson,date,max,marks])=>{lesson=ssLes(lesson);if(!/[A-Za-z]/.test(subj||'')||!max)return;const c=ssClsOf(sec);if(!c||!SS_CLS().includes(c))return;
     Object.keys(marks||{}).forEach(nm=>{const key=c+'|'+nm;if(!(key in mm)){const k=ssMatch(nm,c);mm[key]=k?k.id:null}const id=mm[key];if(!id)return;(T[id]=T[id]||[]).push({subj,lesson,date:date||'',max,v:marks[nm]})})});
-  Object.values(T).forEach(a=>a.sort((x,y)=>y.date.localeCompare(x.date)));SSR.tests=T;SSR.asOf=data.asOf||'';SSR.st='ok'}
-async function ssLoadTests(){if(SSR.st)return;SSR.st='loading';try{const d=await ssReadReports();if(!d){SSR.st='nokey';return}ssSetTests(d)}catch(e){SSR.st='err'}if(S.view==='ss')render()}
+  Object.values(T).forEach(a=>a.sort((x,y)=>y.date.localeCompare(x.date)));SSR.tests=T;SSR.asOf=data.asOf||'';SSR.raw=(data.tests||[]).map(([sec,subj,lesson,date,max,marks])=>({sec,subj,date,max,marks})).filter(t=>/[A-Za-z]/.test(t.subj||'')&&t.max);SSR.runUsed=null;SSR.st='ok'}
+async function ssLoadTests(pw){if(SSR.st==='loading')return;if(!pw&&SSR.st)return;SSR.st='loading';if(pw&&S.view==='ss')render();
+  try{const d=await ssReadReports(pw);if(!d)SSR.st='nokey';else{ssSetTests(d);ssAutoSync()}}catch(e){SSR.st=pw?'badpw':'err';SSR.err=String(e&&e.message||e)}if(S.view==='ss')render()}
+function ssLes(l){const m=/^([A-Za-z]+)\s*-?\s*(\d.*)$/.exec(String(l||'').trim());return m?(/^l(esson)?$/i.test(m[1])?'Lesson '+m[2]:m[1]+'-'+m[2]):String(l||'').trim()}
 function ssAddDays(d,n){const x=new Date(d+'T00:00');x.setDate(x.getDate()+n);return ymd(x)}
 function ssTestTone(id,t){if(!t.date)return '';const from=ssAddDays(t.date,-7);let a=false,n=false;Object.keys(SSH.data).concat([S.date]).forEach(d=>{if(d<from||d>=t.date)return;const v=((ssH(d)[seg(KID[id].cls)]||{}).kids||{})[id];if(v==='P')a=true;else if(v==='N')n=true});return a?'g':n?'r':''}
-function ssMarks(id,max){if(SSR.st!=='ok')return SSR.st==='loading'?'<span class="mk">Loading marks…</span>':'';const ts=(SSR.tests[id]||[]).slice(0,max||4);if(!ts.length)return '<span class="mk">No test marks found</span>';return ssChips(id,ts)}
-function ssChips(id,ts){
-  return ts.map(t=>{const num=typeof t.v==='number';const pc=num?Math.round(t.v/t.max*100):null;const tone=ssTestTone(id,t);
-    return '<span class="mk '+tone+'" title="'+esc(t.subj+' '+(t.lesson||''))+'">'+esc(t.subj)+(t.lesson?' '+esc(String(t.lesson)).slice(0,14):'')+' · <b class="'+(pc!==null&&pc<60?'low':'')+'">'+(num?t.v+'/'+t.max:esc(String(t.v||'–')))+'</b>'+(t.date?' · '+esc(fmtD(t.date).replace(/^\w+, /,'')):'')+(tone==='g'?' ✓':tone==='r'?' ✗':'')+'</span>'}).join('')}
+function ssMarks(id,max){if(SSR.st!=='ok')return SSR.st==='loading'?'<span class="mk">Loading marks…</span>':'';const ts=(SSR.tests[id]||[]).slice(0,max||4);if(!ts.length)return '<span class="mk">No test marks found</span>';return ssChips(id,ts,false)}
+function ssChips(id,ts,toned){
+  return ts.map(t=>{const num=typeof t.v==='number';const pc=num?Math.round(t.v/t.max*100):null;const tone=toned===false?'':ssTestTone(id,t);
+    return '<span class="mk '+tone+'" title="'+esc(t.subj+' '+(t.lesson||''))+'"><b class="'+(pc!==null&&pc<60?'low':'')+'">'+(num?t.v+'/'+t.max:t.v==='A'?'Ab':esc(String(t.v||'–')))+'</b> '+esc(t.subj)+(t.lesson?' '+esc(String(t.lesson)).slice(0,16):'')+(t.date?' · '+esc(fmtD(t.date).replace(/^\w+, /,'')):'')+(tone==='g'?' ✓':tone==='r'?' ✗':'')+'</span>'}).join('')}
 const SSH={key:'',data:{},loading:false};
 function ssH(d){return d===S.date?(S.ss||{}):(SSH.data[d]||{})}
 function ssDays(from,to){const out=[];let d=from;let g=0;while(d<=to&&g++<400){if(new Date(d+'T00:00').getDay()!==0)out.push(d);d=ssAddDays(d,1)}return out.slice(-62)}
@@ -1180,6 +1199,8 @@ document.addEventListener('click',async e=>{
     if(d[id]===v||(!(id in d)&&sbDay(id)===v))delete d[id];else if(sbDay(id)===v)delete d[id];else d[id]=v;if(!Object.keys(d).length)delete S.sbDraft[sg];render();return}
   if(t.dataset.sball){if(needBy('sbBy'))return;const c=t.dataset.sball,sg=seg(c);S.sbDraft=S.sbDraft||{};const d=S.sbDraft[sg]=S.sbDraft[sg]||{};sbCands(c).forEach(k=>{if(sbVal(k.id)===undefined)d[k.id]=true});if(!Object.keys(d).length)delete S.sbDraft[sg];render();return}
   if(t.id==='ssPullBtn'){await ssPull();return}
+  if(t.id==='ssConnect'){const pw=(($('ssPw')||{}).value||'').trim();if(!pw){toast('Enter the FIS Reports password');return}SSR.st='';await ssLoadTests(pw);if(SSR.st==='ok')toast('FIS Reports connected');return}
+  if(t.id==='ssRefresh'){SSR.st='';S.ssSynced='';await ssLoadTests();toast('Updated from FIS Reports');return}
   if(t.dataset.ssdate){const d=t.dataset.ssdate;$('date').value=d;$('date').dispatchEvent(new Event('change',{bubbles:true}));window.scrollTo({top:0,behavior:'smooth'});return}
   if(t.dataset.ssv){if(needBy('ssBy'))return;const [id,v]=t.dataset.ssv.split('|');const sg=seg(KID[id].cls);S.ssDraft=S.ssDraft||{};const d=S.ssDraft[sg]=S.ssDraft[sg]||{};
     if(d[id]===v||ssDayVal(id)===v)delete d[id];else d[id]=v;if(!Object.keys(d).length)delete S.ssDraft[sg];render();return}
@@ -1225,6 +1246,7 @@ document.addEventListener('change',async e=>{
   if(t.id==='earlyBy'){LS.set('earlyBy',t.value)}
   if(t.id==='ssBy'){LS.set('ssBy',t.value);render()}
   if(t.id==='ssMode'){render()}
+  if(t.id==='ssRun'){const run=+t.value||2;await store.set('config/ss-_meta',Object.assign({},S.ssList._meta||{},{run,by:$('ssBy').value,ts:Date.now()}));SSR.runUsed=null;S.ssSynced='';render();ssAutoSync();return}
   if(t.id==='ssFromIn'){LS.set('ssFrom',t.value||'');SSH.key='';render()}
   if(t.dataset&&t.dataset.ssadd&&t.value){if(needBy('ssBy')){t.value='';return}const id=t.value;await ssWriteList(t.dataset.ssadd,kids=>{kids[id]={src:'add',by:$('ssBy').value,since:S.date}});toast(KID[id].name+' added to Smart Study');return}
   if(t.id==='unifBy'){LS.set('unifBy',t.value)}
