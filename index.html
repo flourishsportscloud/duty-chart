@@ -219,6 +219,14 @@ tr.cov td{background:color-mix(in srgb,var(--sports) 10%,transparent)}
 .padj{border:0;background:var(--navy,#1F2D5A);color:#fff}
 .pna{border:1px solid var(--line);background:var(--chip);color:var(--muted)}
 .pendt{font-size:.78rem;font-weight:700;color:var(--gate)}
+#qaSheet[data-simple="1"] .m-nosimple{display:none}
+.pendr.pcv td{background:transparent}
+.pbtns.sm .padj,.pbtns.sm .pna{font-size:.7rem;padding:3px 9px}
+.pbtns.sm .padj{background:transparent;color:var(--navy,#1F2D5A);border:1px solid var(--line)}
+@media (prefers-color-scheme:dark){.pbtns.sm .padj{color:var(--gold,#E3A94F)}}
+.pendt.sm{font-size:.7rem;font-weight:600;color:var(--muted)}
+.pendc.sm{color:var(--muted);background:var(--chip)}
+.dlist{display:block;font-size:.7rem;color:var(--muted);line-height:1.3}
 .pendc{font-family:var(--body);font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;font-weight:700;color:var(--gate);background:color-mix(in srgb,var(--gate) 12%,transparent);border-radius:999px;padding:1px 8px}
 .natag{font:inherit;font-size:.68rem;font-weight:600;letter-spacing:.02em;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:6px;padding:2px 7px;line-height:1.4;white-space:nowrap;cursor:pointer}
 .nar td{color:var(--muted)}
@@ -422,7 +430,7 @@ Saturday Adjustment - 26/09
     <div class="ptabs"><button type="button" class="ptab" data-qmode="adj">Class adjustment</button><button type="button" class="ptab" data-qmode="act">Activity adjustment</button><button type="button" class="ptab" data-qmode="cover">Duty cover</button></div>
     <section>
       <label class="fl m-act">Activity<select id="qA"></select></label>
-      <label class="fl m-cls">Class / group<input id="qC" list="classes" placeholder="e.g. 7A" autocomplete="off"></label>
+      <label class="fl m-cls m-adjonly m-nosimple">Class / group <small style="font-weight:500;color:var(--muted)">(optional)</small><input id="qC" list="classes" placeholder="e.g. 7A – leave blank for a subject teacher" autocomplete="off"></label>
       <label class="fl m-cover">Duty<input id="qD" list="duties" placeholder="e.g. Bus Duty (Morning)" autocomplete="off"></label>
       <label class="fl">Absent / late teacher<input id="qF" list="staffnames" placeholder="Name (optional for class)" autocomplete="off"></label>
       <div class="frow">
@@ -433,12 +441,12 @@ Saturday Adjustment - 26/09
       <label class="fl"><span class="m-cls qbl1">Adjusted by</span><span class="m-cover">Covering</span><input id="qB" list="staffnames" placeholder="Replacement name" autocomplete="off"></label>
       <div class="sugh">Suggestions – tap to pick</div>
       <div class="sug" id="qSug"></div>
-      <label class="fl m-cls">Time / period<input id="qT" placeholder="e.g. 7:30–8:00, Period 2, Lunch" autocomplete="off"></label>
-      <div class="frow m-cls">
+      <label class="fl m-cls m-nosimple">Time / period<input id="qT" placeholder="e.g. 7:30–8:00, Period 2, Lunch" autocomplete="off"></label>
+      <div class="frow m-cls m-nosimple">
         <label class="fl"><span class="qbl2">2nd teacher (optional)</span><input id="qB2" list="staffnames" placeholder="Second replacement" autocomplete="off"></label>
         <label class="fl"><span class="qtl2">2nd time / period</span><input id="qT2" placeholder="e.g. Period 5" autocomplete="off"></label>
       </div>
-      <div class="frow m-cls m-adjonly">
+      <div class="frow m-cls m-adjonly m-nosimple">
         <label class="fl">Cover as Subject Teacher 2<input id="qB3" list="staffnames" placeholder="Another subject teacher" autocomplete="off"></label>
         <label class="fl">Subject period(s)<input id="qT3" placeholder="e.g. Period 6" autocomplete="off"></label>
       </div>
@@ -525,7 +533,7 @@ Saturday Adjustment - 26/09
     <div class="ptabs"><button type="button" class="ptab" data-qmode="adj">Class adjustment</button><button type="button" class="ptab" data-qmode="act">Activity adjustment</button><button type="button" class="ptab" data-qmode="cover">Duty cover</button></div>
     <section>
       <label class="fl m-act">Activity<select id="qA"></select></label>
-      <label class="fl m-cls">Class / group<input id="qC" list="classes" placeholder="e.g. 7A" autocomplete="off"></label>
+      <label class="fl m-cls m-adjonly m-nosimple">Class / group <small style="font-weight:500;color:var(--muted)">(optional)</small><input id="qC" list="classes" placeholder="e.g. 7A – leave blank for a subject teacher" autocomplete="off"></label>
       <label class="fl m-cover">Duty<input id="qD" list="duties" placeholder="e.g. Bus Duty (Morning)" autocomplete="off"></label>
       <label class="fl">Absent / late teacher<input id="qF" list="staffnames" placeholder="Name (optional for class)" autocomplete="off"></label>
       <div class="frow">
@@ -536,12 +544,12 @@ Saturday Adjustment - 26/09
       <label class="fl"><span class="m-cls qbl1">Adjusted by</span><span class="m-cover">Covering</span><input id="qB" list="staffnames" placeholder="Replacement name" autocomplete="off"></label>
       <div class="sugh">Suggestions – tap to pick</div>
       <div class="sug" id="qSug"></div>
-      <label class="fl m-cls">Time / period<input id="qT" placeholder="e.g. 7:30–8:00, Period 2, Lunch" autocomplete="off"></label>
-      <div class="frow m-cls">
+      <label class="fl m-cls m-nosimple">Time / period<input id="qT" placeholder="e.g. 7:30–8:00, Period 2, Lunch" autocomplete="off"></label>
+      <div class="frow m-cls m-nosimple">
         <label class="fl"><span class="qbl2">2nd teacher (optional)</span><input id="qB2" list="staffnames" placeholder="Second replacement" autocomplete="off"></label>
         <label class="fl"><span class="qtl2">2nd time / period</span><input id="qT2" placeholder="e.g. Period 5" autocomplete="off"></label>
       </div>
-      <div class="frow m-cls m-adjonly">
+      <div class="frow m-cls m-adjonly m-nosimple">
         <label class="fl">Cover as Subject Teacher 2<input id="qB3" list="staffnames" placeholder="Another subject teacher" autocomplete="off"></label>
         <label class="fl">Subject period(s)<input id="qT3" placeholder="e.g. Period 6" autocomplete="off"></label>
       </div>
@@ -783,7 +791,7 @@ function changesFor(n, d){
   (d.adj || []).forEach(a => {
     const lv = a.f ? (d.leave || []).find(l => same1(l.n, a.f)) : null, why = a.f ? ' for ' + a.f + (lv && stKey(lv) ? ' (' + stLabel(lv) + ')' : '') : '';
     const what = a.a ? a.a + (a.c ? ' (' + a.c + ')' : '') : a.c;
-    [[a.b, a.t, a.a ? '' : 'Class Teacher'], [a.b2, a.t2, a.a ? '' : 'Subject Teacher'], [a.b3, a.t3, 'Subject Teacher']].forEach(([b, t, r]) => {
+    [[a.b, a.t, a.a || !a.c ? '' : 'Class Teacher'], [a.b2, a.t2, a.a ? '' : 'Subject Teacher'], [a.b3, a.t3, 'Subject Teacher']].forEach(([b, t, r]) => {
       if (!same1(b, n)) return; const how = [r, t].filter(Boolean).join(', ');
       out.push({me: `${what}${why}${how ? ' · ' + how : ''}`, wa: `You are covering *${what}*${why}${how ? ' – *' + how + '*' : ''}`}); });
   });
@@ -883,9 +891,18 @@ function render(tabId){
 
 /* ---------- today's leave panel ---------- */
 let NMIN = false; try { NMIN = localStorage.getItem('dutyNoticeMin') === '1'; } catch(e){}
+/* duties a person holds on the chart (Morning, Departure, Stayback & Sports) – only these people need a Duty Cover */
+function dutiesOf(n){
+  const out = [];
+  TABS.forEach(t => { if (t.extra || t.checkin) return; (t.cards || []).forEach(cd => (cd.p || []).forEach(p => {
+    if (typeof p !== 'string') return; let a = p.split('|').map(x => x.trim()); if (/^\d+\s*-\s*\d+$/.test(a[0])) a = a.slice(1);
+    if (a[0] && (key(a[0]) === key(n) || sameName(a[0], n)) && !out.includes(cd.t)) out.push(cd.t); })); });
+  return out;
+}
+const needsCover = l => dutiesOf(l.n).length > 0;
 function nSummary(){
   const d = dayData(), lv = d.leave||[], adj = d.adj||[], cv = d.cover||[];
-  const pa = lv.filter(l => !l.na && !adj.some(a => same1(a.f, l.n))).length, pc = lv.filter(l => !l.cna && !cv.some(c => same1(c.f, l.n))).length;
+  const pa = lv.filter(l => !l.na && !adj.some(a => same1(a.f, l.n))).length, pc = lv.filter(l => needsCover(l) && !l.cna && !cv.some(c => same1(c.f, l.n))).length;
   return `${lv.length} on leave · Adjustment ${pa ? pa + ' pending' : 'done'} · Cover ${pc ? pc + ' pending' : 'done'}`;
 }
 function renderNotice(){
@@ -905,14 +922,14 @@ function renderNotice(){
     const by = (n, t) => `<b class="by">${esc(n)}</b>${t?`<small class="tm">${esc(t)}</small>`:''}`;
     const by2 = a => by(a.b, a.t) + (a.b2 ? `<div class="by2">${by(a.b2, a.t2)}</div>` : '');
     const rt = t => `<span class="rtag">${t}</span>`;
-    const byCls = a => [a.b ? [a.b, a.t, 'Class Teacher'] : null, a.b2 ? [a.b2, a.t2, 'Subject Teacher'] : null, a.b3 ? [a.b3, a.t3, 'Subject Teacher'] : null].filter(Boolean)
-      .map(([n, t, r], k) => `<div class="${k ? 'by2' : ''}">${by(n, t)}${rt(r)}</div>`).join('');
+    const byCls = a => [a.b ? [a.b, a.t, a.c ? 'Class Teacher' : ''] : null, a.b2 ? [a.b2, a.t2, 'Subject Teacher'] : null, a.b3 ? [a.b3, a.t3, 'Subject Teacher'] : null].filter(Boolean)
+      .map(([n, t, r], k) => `<div class="${k ? 'by2' : ''}">${by(n, t)}${r ? rt(r) : ''}</div>`).join('');
     const ab = n => n ? `<span class="nw">${esc(n)}</span>` : '';
     const stt = l => stKey(l) ? `<small class="tm">${esc(stLabel(l))}</small>` : '';
     const absCell = l => `<span class="nw">${esc(l.n)}</span>${stt(l)}`;
     const grpOf = k => GRP.find(g => g[2].includes(k)) || GRP[0];
-    const sub = (g, n) => `<tr class="gsub"><td colspan="3">${g[1]}${n ? ` <span class="pendc">${n} pending</span>` : ''}</td></tr>`;
-    const adjBtns = (l, mode) => CAN_UI() ? `<div class="pbtns"><button type="button" class="padj" data-padj="${esc(l.n)}" data-pc="${esc(clsOf(l.n))}" data-pm="${mode}">+ ${mode === 'cover' ? 'Cover' : 'Adjust'}</button><button type="button" class="pna" data-na="${esc(l.n)}" data-nk="${mode === 'cover' ? 'cna' : 'na'}">NA</button></div>` : '<span class="pendt">Pending</span>';
+    const sub = (g, n, kind) => `<tr class="gsub"><td colspan="3">${g[1]}${n ? ` <span class="pendc${kind === 'cover' ? ' sm' : ''}">${n} pending</span>` : ''}</td></tr>`;
+    const adjBtns = (l, mode) => CAN_UI() ? `<div class="pbtns${mode === 'cover' ? ' sm' : ''}"><button type="button" class="padj" data-padj="${esc(l.n)}" data-pc="${mode === 'adj' ? esc(clsOf(l.n)) : ''}" data-pm="${mode}">+ ${mode === 'cover' ? 'Cover' : 'Adjust'}</button><button type="button" class="pna" data-na="${esc(l.n)}" data-nk="${mode === 'cover' ? 'cna' : 'na'}">NA</button></div>` : `<span class="pendt${mode === 'cover' ? ' sm' : ''}">Pending</span>`;
     const naCell = (l, k) => CAN_UI() ? `<button type="button" class="natag" data-unna="${esc(l.n)}" data-nk="${k}" title="Tap to undo">Not applicable</button>` : '<span class="natag">Not applicable</span>';
     const adjRow = ([a,i]) => a.a
       ? `<tr${ed('adj',i)}><td>${esc(a.a)}${a.c?`<small class="tm">${esc(a.c)}</small>`:''}</td><td>${ab(a.f)}</td><td>${by2(a)}</td></tr>`
@@ -922,23 +939,24 @@ function renderNotice(){
     const section = (title, items, kind, head3) => {
       const used = new Set(); let html = '', pend = 0;
       GRP.forEach(g => {
-        const ls = lv.filter(l => grpOf(lcat(l)) === g).slice().sort((x, y) => x.n.localeCompare(y.n));
+        const ls = lv.filter(l => grpOf(lcat(l)) === g && (kind !== 'cover' || needsCover(l) || items.some(x => same1(x.f, l.n)))).slice().sort((x, y) => x.n.localeCompare(y.n));
         const rows = []; let gp = 0;
+        const clsCell = l => kind !== 'cover' && g === GRP[0] && clsOf(l.n) ? esc(clsOf(l.n)) : kind === 'cover' ? `<small class="dlist">${esc(dutiesOf(l.n).join(', '))}</small>` : '';
         ls.forEach(l => {
           const mine = items.map((x,i) => [x,i]).filter(([x], k) => !used.has(k) && same1(x.f, l.n));
           mine.forEach(([,i]) => used.add(i));
           if (mine.length) rows.push(...mine.map(kind === 'cover' ? covRow : adjRow));
-          else if (l[kind === 'cover' ? 'cna' : 'na']) rows.push(`<tr class="nar"><td>${kind !== 'cover' && clsOf(l.n) ? esc(clsOf(l.n)) : ''}</td><td>${absCell(l)}</td><td>${naCell(l, kind === 'cover' ? 'cna' : 'na')}</td></tr>`);
-          else { gp++; rows.push(`<tr class="pendr"><td>${kind !== 'cover' && clsOf(l.n) ? esc(clsOf(l.n)) : ''}</td><td>${absCell(l)}</td><td>${adjBtns(l, kind === 'cover' ? 'cover' : lcat(l) === 'Activity' ? 'act' : 'adj')}</td></tr>`); }
+          else if (l[kind === 'cover' ? 'cna' : 'na']) rows.push(`<tr class="nar"><td>${clsCell(l)}</td><td>${absCell(l)}</td><td>${naCell(l, kind === 'cover' ? 'cna' : 'na')}</td></tr>`);
+          else { gp++; rows.push(`<tr class="pendr${kind === 'cover' ? ' pcv' : ''}"><td>${clsCell(l)}</td><td>${absCell(l)}</td><td>${adjBtns(l, kind === 'cover' ? 'cover' : lcat(l) === 'Activity' ? 'act' : g === GRP[1] ? 'ops' : 'adj')}</td></tr>`); }
         });
         /* entries whose absent person is not on the leave list */
-        const orphan = items.map((x,i) => [x,i]).filter(([x], k) => !used.has(k) && (kind === 'cover' ? g === GRP[1] : x.a ? g === GRP[2] : g === GRP[0]));
+        const orphan = items.map((x,i) => [x,i]).filter(([x], k) => !used.has(k) && !lv.some(l => same1(x.f, l.n)) && (kind === 'cover' ? g === GRP[1] : x.a ? g === GRP[2] : g === GRP[0]));
         orphan.forEach(([,i]) => used.add(i));
         rows.push(...orphan.map(kind === 'cover' ? covRow : adjRow));
-        if (rows.length){ pend += gp; html += sub(g, gp) + rows.join(''); }
+        if (rows.length){ pend += gp; html += sub(g, gp, kind) + rows.join(''); }
       });
       if (!html) return '';
-      return `<h3>${title} <span class="cnt ${head3}">${items.length}</span>${pend ? ` <span class="pendc">${pend} pending</span>` : ''}</h3><table class="adjt"><thead><tr><th>${kind === 'cover' ? 'Duty' : 'Class / Activity'}</th><th>Absent</th><th>${kind === 'cover' ? 'Covered by' : 'Adjusted by'}</th></tr></thead><tbody>${html}</tbody></table>`;
+      return `<h3>${title} <span class="cnt ${head3}">${items.length}</span>${pend ? ` <span class="pendc${kind === 'cover' ? ' sm' : ''}">${pend} pending</span>` : ''}</h3><table class="adjt"><thead><tr><th>${kind === 'cover' ? 'Duty' : 'Class / Activity'}</th><th>Absent</th><th>${kind === 'cover' ? 'Covered by' : 'Adjusted by'}</th></tr></thead><tbody>${html}</tbody></table>`;
     };
     body += section('Adjustment', adj, 'adj', 'k2');
     body += section('Duty Cover', cv, 'cover', 'k4');
@@ -969,7 +987,7 @@ function renderNotice(){
   $('#copyWa').onclick = copyWa;
   $('#openEd').onclick = () => openEditor(DAY);
   const cil = $('#notice').querySelector('[data-goci]'); if (cil) cil.onclick = () => { render('checkin'); window.scrollTo({top:0}); };
-  $('#notice').querySelectorAll('[data-padj]').forEach(b => b.onclick = e => { e.stopPropagation(); if (CAN_UI()) openQA({mode: b.dataset.pm, ...(b.dataset.pc && b.dataset.pm === 'adj' ? {c: b.dataset.pc} : {}), f: b.dataset.padj}); });
+  $('#notice').querySelectorAll('[data-padj]').forEach(b => b.onclick = e => { e.stopPropagation(); if (CAN_UI()) openQA({mode: b.dataset.pm === 'ops' ? 'adj' : b.dataset.pm, simple: b.dataset.pm === 'ops', ...(b.dataset.pc && b.dataset.pm === 'adj' ? {c: b.dataset.pc} : {}), f: b.dataset.padj}); });
   const setNA = (n, on, k) => { if (!ART){ toast('Enter the edit PIN to save'); return; } const next = JSON.parse(JSON.stringify(DAILY)); const dd = next[DAY] || {};
     const l = (dd.leave || []).find(x => same1(x.n, n)); if (!l) return; if (on) l[k] = true; else delete l[k]; save(next, DAY); };
   $('#notice').querySelectorAll('[data-na]').forEach(b => b.onclick = e => { e.stopPropagation(); setNA(b.dataset.na, true, b.dataset.nk || 'na'); });
@@ -989,19 +1007,20 @@ function waText(){
   const grpOf = k => GRP.find(g => g[2].includes(k)) || GRP[0];
   const aTxt = a => a.a
     ? `${a.a}${a.c?' ('+a.c+')':''} - ${a.f?a.f+' - ':''}${a.b}${a.t?' ('+a.t+')':''}${a.b2?' + '+a.b2+(a.t2?' ('+a.t2+')':''):''}`
+    : !a.c ? `${a.f ? a.f+' - ' : ''}${[a.b, a.b2, a.b3].filter(Boolean).join(' + ')}${a.t ? ' ('+a.t+')' : ''}`
     : `${a.c} - ${a.f ? a.f+' - ' : ctOf(a.c) ? ctOf(a.c)+' (CT) - ' : ''}${[a.b ? a.b+' (Class Teacher'+(a.t?', '+a.t:'')+')' : '', a.b2 ? a.b2+' (Subject Teacher'+(a.t2?', '+a.t2:'')+')' : '', a.b3 ? a.b3+' (Subject Teacher'+(a.t3?', '+a.t3:'')+')' : ''].filter(Boolean).join(' + ')}`;
   const cTxt = c => `${c.n} for ${c.f}${c.d?' – '+c.d:''}`;
   const sect = (title, items, txt, naKey) => {
     const used = new Set(); let out = '';
     GRP.forEach(g => {
       const lines = [];
-      lv.filter(l => grpOf(lcat(l)) === g).slice().sort((x, y) => x.n.localeCompare(y.n)).forEach(l => {
+      lv.filter(l => grpOf(lcat(l)) === g && (naKey !== 'cna' || needsCover(l) || items.some(x => same1(x.f, l.n)))).slice().sort((x, y) => x.n.localeCompare(y.n)).forEach(l => {
         const mine = items.map((x,i) => [x,i]).filter(([x], k) => !used.has(k) && same1(x.f, l.n));
         mine.forEach(([,i]) => used.add(i));
         if (mine.length) lines.push(...mine.map(([x]) => '* ' + txt(x)));
-        else lines.push(`* ${naKey === 'na' && clsOf(l.n) ? clsOf(l.n)+' - ' : ''}${l.n} - ${l[naKey] ? 'NA (Not applicable)' : 'Pending'}`);
+        else lines.push(`* ${naKey === 'na' && g === GRP[0] && clsOf(l.n) ? clsOf(l.n)+' - ' : ''}${l.n} - ${l[naKey] ? 'NA (Not applicable)' : 'Pending'}`);
       });
-      const orphan = items.map((x,i) => [x,i]).filter(([x], k) => !used.has(k) && (naKey === 'cna' ? g === GRP[1] : x.a ? g === GRP[2] : g === GRP[0]));
+      const orphan = items.map((x,i) => [x,i]).filter(([x], k) => !used.has(k) && !lv.some(l => same1(x.f, l.n)) && (naKey === 'cna' ? g === GRP[1] : x.a ? g === GRP[2] : g === GRP[0]));
       orphan.forEach(([,i]) => used.add(i)); lines.push(...orphan.map(([x]) => '* ' + txt(x)));
       if (lines.length) out += `_${g[1]}_\n` + lines.join('\n') + '\n';
     });
@@ -1146,7 +1165,7 @@ function relevant(F, shift, act){
 }
 function openQA(o){
   const d = dayData();
-  QA = {mode: o.mode || 'adj', idx: o.idx ?? -1, shift: o.shift || ''};
+  QA = {mode: o.mode || 'adj', idx: o.idx ?? -1, shift: o.shift || '', simple: !!o.simple};
   const cur = QA.idx >= 0 ? (QA.mode === 'adj' ? d.adj[QA.idx] : d.cover[QA.idx]) : null;
   const f = cur ? (cur.f || '') : (o.f || '');
   $('#qC').value = (QA.mode === 'adj' || QA.mode === 'act') && cur ? cur.c || '' : (o.c || '');
@@ -1163,19 +1182,20 @@ function openQA(o){
   const ai = cur && cur.a ? ACTS.findIndex(x => x.a === cur.a) : -1;
   $('#qA').value = ai >= 0 ? String(ai) : '';
   if (QA.mode === 'adj' && cur && cur.a) QA.mode = 'act';
+  if (QA.mode === 'adj' && f && GRP[1][2].includes(catOfName(f)) && !(cur && cur.c)) QA.simple = true;
   if (QA.mode === 'act' && cur) QA.actSet = $('#qA').value;
   $('#qDel').hidden = QA.idx < 0;
   $('#qaTitle').textContent = (QA.idx >= 0 ? 'Change ' : 'Add ') + (QA.mode === 'adj' ? 'class adjustment' : QA.mode === 'act' ? 'activity adjustment' : 'duty cover') + ' · ' + nice(DAY);
   $('#qSave').textContent = CAN_EDIT ? 'Save' : 'Send on WhatsApp ➤';
   drawQA();
   $('#qa').hidden = false; document.body.style.overflow = 'hidden';
-  setTimeout(() => { if (QA) (QA.mode === 'adj' && !$('#qC').value ? $('#qC') : !$('#qF').value ? $('#qF') : $('#qB')).focus(); }, 50);
+  setTimeout(() => { if (QA) (QA.mode === 'adj' && !QA.simple && !$('#qC').value ? $('#qC') : !$('#qF').value ? $('#qF') : $('#qB')).focus(); }, 50);
 }
 function drawQA(){
   if (!QA) return;
-  $('#qaSheet').dataset.m = QA.mode;
+  $('#qaSheet').dataset.m = QA.mode; $('#qaSheet').dataset.simple = QA.mode === 'adj' && QA.simple ? '1' : '';
   { const c = QA.mode === 'adj'; const L = (sel, t) => document.querySelectorAll(sel).forEach(e => e.textContent = t);
-    L('.qbl1', c ? 'Cover as Class Teacher' : 'Adjusted by'); L('.qbl2', c ? 'Cover as Subject Teacher 1' : '2nd teacher (optional)'); L('.qtl2', c ? 'Subject period(s)' : '2nd time / period'); }
+    L('.qbl1', c && QA.simple ? 'Who looks after the duties' : c ? 'Adjusted by (class teacher if a class is given)' : 'Adjusted by'); L('.qbl2', c ? 'Cover as Subject Teacher 1' : '2nd teacher (optional)'); L('.qtl2', c ? 'Subject period(s)' : '2nd time / period'); }
   document.querySelectorAll('[data-qmode]').forEach(b => b.setAttribute('aria-selected', b.dataset.qmode === QA.mode));
   $('#qLtWrap').hidden = $('#qSt').value !== 'late';
   { const v = $('#qSt').value, h = halfOf(v); $('#qHtWrap').hidden = !h; $('#qHt').placeholder = HALF_T[h] || 'e.g. 7:30 – 11:15'; }
@@ -1211,7 +1231,8 @@ function qaApply(del){
       const C = $('#qC').value.trim(), T = $('#qT').value.trim(), A = QA.mode === 'act' ? ACTS[+$('#qA').value] : null;
       if (QA.mode === 'act' && !A){ toast('Pick the activity'); return null; }
       const B2 = $('#qB2').value.trim(), T2 = $('#qT2').value.trim(), B3 = A ? '' : $('#qB3').value.trim(), T3 = $('#qT3').value.trim();
-      if ((!C && !A) || !(B || (!A && (B2 || B3)))){ toast(A ? 'Pick who is replacing' : 'Enter the class and who covers it (class teacher and/or subject teacher)'); return null; }
+      if (!A && !C && !F){ toast('Enter who is absent'); return null; }
+      if (!(B || (!A && (B2 || B3)))){ toast(A ? 'Pick who is replacing' : QA.simple ? 'Enter who looks after the duties' : 'Enter who covers (class teacher and/or subject teacher)'); return null; }
       const it = {c: C ? (preLabel(C) || C.toUpperCase().replace(/\s+/g,'')) : '', ...(A?{a:A.a}:{}), b: B ? canon(B) : '', ...(T?{t:T}:{}), ...(B2?{b2:canon(B2)}:{}), ...(B2&&T2?{t2:T2}:{}), ...(B3?{b3:canon(B3)}:{}), ...(B3&&T3?{t3:T3}:{}), ...(F?{f:canon(F)}:{})};
       if (QA.idx >= 0) arr[QA.idx] = it; else arr.push(it);
     } else {
@@ -1492,7 +1513,8 @@ function parseNote(txt){
     }
     if (sec === 'adj'){
       const m = line.match(/^[\s*•·]*([0-9]{1,2}\s*[a-z]?\b[^\-–:]*?)\s*[\-–:]\s*(.+)$/i);
-      if (!m) return;
+      if (!m){ const q = line.replace(/^[\s*•·]+/, '').replace(/\s*\((.*?)\)\s*$/, '').split(/\s+[\-–]\s+/).map(x => x.trim()).filter(Boolean);
+        if (q.length === 2 && !/pending|not applicable/i.test(q[1])) out.adj.push({c:'', f:canon(q[0]), b:canon(q[1].split(' + ')[0])}); return; }
       let cls = m[1].replace(/\s+/g,'').toUpperCase(), rest = m[2], time = '';
       const tm = rest.match(/\((.*?)\)/); if (tm){ time = tm[1].replace(/\s*&\s*/g,' & ').replace(/(\d)\s*-\s*(\d)/g,'$1–$2').trim(); rest = rest.replace(tm[0],''); }
       const parts = rest.split(/\s+[\-–]\s+|\s*→\s*/).map(s => s.trim()).filter(Boolean);
@@ -1553,7 +1575,7 @@ function drawEditor(){
   const actSel = a => `<select data-f="a">${SEGS.map(([seg, list]) => `<optgroup label="${esc(seg)}">` + list.map(([x]) => `<option${x===a.a?' selected':''}>${esc(x)}</option>`).join('') + '</optgroup>').join('')}</select>`;
   $('#edAct').innerHTML = ED.adj.map((a,i) => a.a ? row('adj', i, actSel(a) + inp('b', a.b, 'Adjusted by', 'staffnames') + inp('c', a.c, 'Class / group') + inp('t', a.t, 'Time') + inp('b2', a.b2, '2nd teacher (optional)', 'staffnames') + inp('t2', a.t2, '2nd time') + inp('f', a.f, 'For (optional)', 'staffnames')) : '').join('') || '<p class="none">No activity adjustments yet.</p>';
   $('#edAdj').innerHTML = ED.adj.map((a,i) => a.a ? '' : row('adj', i,
-    inp('c', a.c, 'Class') + inp('b', a.b, 'Cover as Class Teacher', 'staffnames') + inp('t', a.t, 'Time') + inp('b2', a.b2, 'Cover as Subject Teacher 1', 'staffnames') + inp('t2', a.t2, 'Subject period(s)') + inp('b3', a.b3, 'Cover as Subject Teacher 2', 'staffnames') + inp('t3', a.t3, 'Subject period(s)') + inp('f', a.f, 'For (optional)', 'staffnames'))).join('') || '<p class="none">No class adjustments yet.</p>';
+    inp('c', a.c, 'Class (optional)') + inp('b', a.b, 'Adjusted by', 'staffnames') + inp('t', a.t, 'Time') + inp('b2', a.b2, 'Cover as Subject Teacher 1', 'staffnames') + inp('t2', a.t2, 'Subject period(s)') + inp('b3', a.b3, 'Cover as Subject Teacher 2', 'staffnames') + inp('t3', a.t3, 'Subject period(s)') + inp('f', a.f, 'For (optional)', 'staffnames'))).join('') || '<p class="none">No class adjustments yet.</p>';
 }
 function readEditor(){
   ED.date = $('#edDate').value || ED.date;
