@@ -5,7 +5,7 @@
    - the first admin is approved automatically; every other login needs one approval from an admin
    - action and SMS times are stamped by the server, so nobody can back-date them
 */
-const ROLES=["cm","pl","admin"];
+const ROLES=["cm","teacher","pl","admin"];
 const CATS=["rem","def","nb","eng","sig","beh","tv","study","play"];
 const TOKEN_DAYS=120;
 const WINDOW_DAYS=35;       // state() sends this many days back from the date being viewed
@@ -32,7 +32,7 @@ function readToken(H,secret,DB,token,now){
 }
 function needUser(ctx,token){const u=readToken(ctx.H,ctx.secret,ctx.DB,token,ctx.now);if(!u)fail("Please log in again.");return u}
 function needAdmin(ctx,token){const u=needUser(ctx,token);if(u.role!=="admin")fail("Only the admin can do this.");return u}
-function needMarker(ctx,token){const u=needUser(ctx,token);if(u.role!=="cm"&&u.role!=="admin")fail("Only a Class Manager or the admin can mark the diary.");return u}
+function needMarker(ctx,token){const u=needUser(ctx,token);if(u.role!=="cm"&&u.role!=="teacher"&&u.role!=="admin")fail("Only a Class Manager, teacher or the admin can mark the diary.");return u}
 function needPL(ctx,token){const u=needUser(ctx,token);if(u.role!=="pl"&&u.role!=="admin")fail("Only a class incharge (PL) or the admin can log an action.");return u}
 
 function cleanMark(x,me){

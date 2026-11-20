@@ -307,9 +307,9 @@ const svg = k => '<svg viewBox="0 0 24 24" aria-hidden="true">' + ICON[k] + '</s
 const API_URL = new URLSearchParams(location.search).get("api") || "https://script.google.com/macros/s/AKfycbyvWTDOKOQ8F0vD-oy9vchmq04GdhfZfgtpomgWg73rIa13gmkrFkpZsvQl9ISZKrSFQw/exec";
 let token = ""; try { token = localStorage.getItem("diary-token") || ""; } catch(e){}
 let me = null, ready = false, authMode = "login", users = [], refreshing = false;
-const ROLE_LABEL = {cm:"CM · Class Manager", pl:"PL · Class incharge", admin:"FO · Front Office"};
-const ROLE_SHORT = {cm:"CM", pl:"PL", admin:"FO"};
-const canMark = () => !!me && (me.role === "cm" || me.role === "admin");
+const ROLE_LABEL = {cm:"CM · Class Manager", teacher:"Teacher", pl:"PL · Class incharge", admin:"FO · Front Office"};
+const ROLE_SHORT = {cm:"CM", teacher:"TR", pl:"PL", admin:"FO"};
+const canMark = () => !!me && (me.role === "cm" || me.role === "teacher" || me.role === "admin");
 const canPL = () => !!me && (me.role === "pl" || me.role === "admin");
 const canAdmin = () => !!me && me.role === "admin";
 function setToken(t){ token = t || ""; try { if (token) localStorage.setItem("diary-token", token); else localStorage.removeItem("diary-token"); } catch(e){} }
@@ -1251,7 +1251,7 @@ function renderSet(){
   box.appendChild(rosterCard());
   if (rosterReady()) box.appendChild(moveCard());
   const pend = users.filter(u => u.status === "pending"), act = users.filter(u => u.status !== "pending");
-  const roleSel = cur => { const s = el("select"); ["cm","pl","admin"].forEach(r => { const o = el("option", null, ROLE_LABEL[r]); o.value = r; if (r === cur) o.selected = true; s.appendChild(o); }); return s; };
+  const roleSel = cur => { const s = el("select"); ["cm","teacher","pl","admin"].forEach(r => { const o = el("option", null, ROLE_LABEL[r]); o.value = r; if (r === cur) o.selected = true; s.appendChild(o); }); return s; };
   const row = u => {
     const c = el("div","urow"); const n = el("div","un", u.name);
     n.appendChild(el("small", null, ROLE_LABEL[u.role] + " · " + (u.status === "active" ? "active" : u.status === "reset" ? "password reset, waiting for a new password" : "waiting for approval")));
@@ -1330,7 +1330,7 @@ function renderAuth(){
   const f = el("form","pad"); f.id = "loginForm"; f.noValidate = true;
   const fld = (lab, inp) => { const d = el("div","field"); const l = el("label", null, lab); l.htmlFor = inp.id; d.appendChild(l); d.appendChild(inp); return d; };
   const name = el("input"); name.type = "text"; name.id = "lgName"; name.maxLength = 40; name.autocomplete = "username"; name.placeholder = "e.g. Anita Sharma";
-  const role = el("select"); role.id = "lgRole"; ["cm","pl","admin"].forEach(r => { const o = el("option", null, ROLE_LABEL[r]); o.value = r; role.appendChild(o); });
+  const role = el("select"); role.id = "lgRole"; ["cm","teacher","pl","admin"].forEach(r => { const o = el("option", null, ROLE_LABEL[r]); o.value = r; role.appendChild(o); });
   const pw = el("input"); pw.type = "password"; pw.id = "lgPw"; pw.autocomplete = setup ? "new-password" : "current-password"; pw.placeholder = setup ? "Set a password (6+ characters)" : "Password";
   f.appendChild(fld("Your name", name)); if (setup) f.appendChild(fld("I am", role)); f.appendChild(fld("Password", pw));
   const go = el("button","btn", setup ? "Create login" : "Log in"); go.type = "submit"; go.style.width = "100%"; go.style.padding = "13px";
@@ -1413,7 +1413,7 @@ setInterval(() => { if (document.visibilityState === "visible" && me && view !==
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && me) { retryDirty(); refresh(); } });
 
 /* ---------- auto-update: if a newer page is published, reload into it ---------- */
-const BUILD = "202611191819";
+const BUILD = "202611200544";
 (function(){
   const run = () => fetch(location.pathname + "?v=" + Date.now(), {cache:"no-store"}).then(r => r.text()).then(t => {
     const m = t.match(/const BUILD = "(\d+)"/);
