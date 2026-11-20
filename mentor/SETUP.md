@@ -7,7 +7,7 @@ The page (`mentor/index.html`) is hosted on GitHub Pages and opens from the FIS 
 ## 1. Create the Google Sheet and script (about 10 minutes)
 
 1. Create a new Google Sheet named **Mentor Student Record Data**.
-2. **Import the student list:** File → Import → Upload → choose **FIS_Class_Lists_1-5.csv** (sent by Claude, not in this repo; columns Class, Section, Name in roll order) → Import location: **Insert new sheet(s)** → Import data. Rename the new tab to **Roster** (529 students, 15 sections).
+2. **Import the student list:** File → Import → Upload → choose **FIS_Class_Lists_1-11.csv** (sent by Claude, not in this repo; columns Class, Section, Name in roll order) → Import location: **Insert new sheet(s)** → Import data. Rename the new tab to **Roster** (931 students, Classes 1–11).
 3. **Extensions → Apps Script.** Replace everything with `mentor/Code.gs`. Save.
 4. ⚙️ **Project Settings → Script Properties → Add**: `STAFF_SUFFIX` = the common FIS staff code (the same one the other FIS apps use). Staff log in with *full name + (first name + code)*.
 5. Choose **setupSheets** in the function list and **Run** (allow permissions).

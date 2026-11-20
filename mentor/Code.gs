@@ -110,6 +110,14 @@ function doPost(e){
 }
 function doGet(){ return ContentService.createTextOutput('FIS Mentor Student Record API is running.'); }
 /* Run once after pasting: creates the tabs. */
-function setupSheets(){ sheet_('Docs'); sheet_('Log'); secret_(); if(!sheet_('Roster')) Logger.log('Now import FIS_Class_Lists_1-5.csv as a new sheet named Roster.'); }
+function setupSheets(){
+  const ss = ss_();
+  if(!ss.getSheetByName('Roster')){ // the imported student list may still carry the default tab name
+    const f = ss.getSheets()[0];
+    if(f && String(f.getRange(1,1).getValue()) === 'Class' && String(f.getRange(1,3).getValue()) === 'Name') f.setName('Roster');
+  }
+  sheet_('Docs'); sheet_('Log'); secret_();
+  if(!ss.getSheetByName('Roster')) Logger.log('Now import FIS_Class_Lists_1-11.csv as a sheet named Roster.');
+}
 /* Run to sign everyone out (e.g. after changing STAFF_SUFFIX). */
 function signOutEveryone(){ const p = props_(); p.setProperty('TOKEN_VER', String(Number(p.getProperty('TOKEN_VER') || 1) + 1)); }
