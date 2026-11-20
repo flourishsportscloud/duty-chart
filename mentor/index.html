@@ -52,7 +52,7 @@ main{padding:14px 0}
 .srow{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:8px 10px;margin-bottom:6px}
 .srow.ok{background:var(--ok-bg);border-color:#BFE3CD}.srow.ic{background:var(--ic-bg);border-color:#F2D9A3}.srow.ns{background:var(--ns-bg);border-color:#F4C2BC}.srow.ab{background:var(--ab-bg)}.srow.late{box-shadow:inset 4px 0 0 var(--ic)}
 .sline{display:flex;gap:8px;align-items:center;justify-content:space-between}.sno{width:26px;color:var(--muted);font-weight:700;font-size:12px}.sname{flex:1;font-weight:600;color:var(--ink);min-width:0}
-.cb{display:flex;gap:4px}.cb button{all:unset;cursor:pointer;min-width:42px;text-align:center;padding:7px 4px;border-radius:9px;border:1px solid var(--line);background:#fff;font-weight:700;font-size:12.5px;color:var(--muted)}
+.sline.pk{cursor:pointer;min-height:34px}.cb.opt{margin-top:8px}.cb.opt button{flex:1}.cb{display:flex;gap:4px}.cb button{all:unset;cursor:pointer;min-width:42px;text-align:center;padding:7px 4px;border-radius:9px;border:1px solid var(--line);background:#fff;font-weight:700;font-size:12.5px;color:var(--muted)}
 .cb button.on.C{background:var(--ok);color:#fff;border-color:var(--ok)}.cb button.on.I{background:#E0A030;color:#fff;border-color:#E0A030}.cb button.on.N{background:var(--ns);color:#fff;border-color:var(--ns)}.cb button.on.A{background:#6B7280;color:#fff;border-color:#6B7280}
 .rem{margin-top:7px;display:grid;gap:6px}.rem input{border:1px solid var(--line);border-radius:9px;padding:8px 10px;width:100%;background:#fff}
 .qr{display:flex;gap:5px;flex-wrap:wrap}.qr button{all:unset;cursor:pointer;font-size:11.5px;padding:3px 9px;border-radius:999px;background:#fff;border:1px solid var(--line);color:var(--ink);font-weight:600}
@@ -272,8 +272,9 @@ function viewEntry(e){
 }
 function rowEntry(e,s){
   const c=e.m[s],k=c?CODES[c].k:'',late=(c==='I'||c==='N')&&(Date.now()-sinceOf(e,s))>2*864e5;
-  let h='<div class="srow '+k+(late?' late':'')+'" id="r'+s+'"><div class="sline"><span class="sno">'+s+'</span><span class="sname">'+esc(nameOf(e.sec,s))+'</span><div class="cb">';
-  h+=['C','I','N','A'].map(x=>'<button data-act="mark" data-s="'+s+'" data-c="'+x+'" class="'+x+(c===x?' on':'')+'">'+CODES[x].t+'</button>').join('')+'</div></div>';
+  const op=U.ro===s;
+  let h='<div class="srow '+k+(late?' late':'')+'" id="r'+s+'"><div class="sline pk" data-act="pk" data-s="'+s+'"><span class="sname">'+esc(nameOf(e.sec,s))+'</span>'+(c?'<span class="badge '+k+'">'+CODES[c].t+'</span>':'')+'</div>';
+  if(op)h+='<div class="cb opt">'+['C','I','N','A'].map(x=>'<button data-act="mark" data-s="'+s+'" data-c="'+x+'" class="'+x+(c===x?' on':'')+'">'+CODES[x].t+'</button>').join('')+'</div>';
   if(c&&c!=='C'||(e.lg||[]).some(l=>l[0]==s)){
     const tl=timeline(e,s);
     h+='<div class="rem">'+(tl?'<div class="tl">'+tl+(late?' <span class="flag">pending '+Math.floor((Date.now()-sinceOf(e,s))/864e5)+' days</span>':'')+'</div>':'');
@@ -302,7 +303,7 @@ function viewTest(t){
   let h='<div class="row" style="margin-bottom:8px"><button class="btn ghost sm" data-act="back">‹ Back</button>'+((t.by===ME||isAdmin())?'<button class="btn ghost sm" data-act="delentry">Delete</button>':'')+'</div>';
   h+='<div class="stick"><div class="eh"><b style="font:600 17px var(--f-head);color:var(--ink)">'+esc(t.subj)+' · '+esc(lessonLabel(t))+'</b><span class="badge g">'+fD(t.date)+'</span></div><div class="small muted">'+esc(t.sec)+' · out of <b>'+t.max+'</b> · below 60% (under '+(t.max*.6).toFixed(1)+') shows red</div><div id="testBar"></div></div>';
   for(let s=1;s<=n;s++){const v=t.m[s];const p=pctOf(t,s);
-    h+='<div class="srow" id="r'+s+'"><div class="sline"><span class="sno">'+s+'</span><span class="sname">'+esc(nameOf(t.sec,s))+'<span id="fl'+s+'"></span></span><span class="pc'+(p!=null&&p<60?' low':'')+'" id="pc'+s+'">'+(p!=null?p.toFixed(0)+'%':(v==='A'||v==='NG'?v:''))+'</span><input class="mk'+(p!=null&&p<60?' low':'')+'" inputmode="decimal" data-act="mk" data-s="'+s+'" value="'+(typeof v==='number'?v:'')+'" placeholder="–"><div class="cb"><button data-act="mkx" data-s="'+s+'" data-c="A" class="A'+(v==='A'?' on':'')+'">A</button><button data-act="mkx" data-s="'+s+'" data-c="NG" class="A'+(v==='NG'?' on':'')+'">NG</button></div></div></div>'}
+    h+='<div class="srow" id="r'+s+'"><div class="sline"><span class="sname">'+esc(nameOf(t.sec,s))+'<span id="fl'+s+'"></span></span><span class="pc'+(p!=null&&p<60?' low':'')+'" id="pc'+s+'">'+(p!=null?p.toFixed(0)+'%':(v==='A'||v==='NG'?v:''))+'</span><input class="mk'+(p!=null&&p<60?' low':'')+'" inputmode="decimal" data-act="mk" data-s="'+s+'" value="'+(typeof v==='number'?v:'')+'" placeholder="–"><div class="cb"><button data-act="mkx" data-s="'+s+'" data-c="A" class="A'+(v==='A'?' on':'')+'">A</button><button data-act="mkx" data-s="'+s+'" data-c="NG" class="A'+(v==='NG'?' on':'')+'">NG</button></div></div></div>'}
   h+='<div class="poorbox" id="poorBox"></div>';
   setTimeout(()=>refreshTest(t),0);
   return h;
@@ -475,9 +476,10 @@ document.addEventListener('click',ev=>{
       if(f.k==='e')d={p:'e/'+f.date+'/'+sec+'/'+id,k:'e',sec,date:f.date,subj:U.subj,item:f.item,ls,lt:(f.lt||'').trim(),by:ME,ts:Date.now(),m:{},lg:[],rm:{}};
       else{const mx=parseFloat(f.max);if(!(mx>0)){toast('Enter the maximum marks');break}d={p:'t/'+f.date+'/'+sec+'/'+id,k:'t',sec,date:f.date,subj:U.subj,ls,lt:(f.lt||'').trim(),max:mx,by:ME,ts:Date.now(),m:{}}}
       putDoc(d);U.open={k:f.k,p:d.p};U.form=null;render();window.scrollTo(0,0);break}
-    case'open':case'gofix':if(a==='gofix'){U.tab='check';const e=DB[D.p];U.cls=+e.sec.slice(0,-1);U.sec=e.sec.slice(-1);U.subj=e.subj;U.seg=U.cls<=5?'P':'S'}U.open={k:D.k,p:D.p};render();window.scrollTo(0,0);break;
-    case'back':U.open=null;render();break;
-    case'mark':{const e=cur;if(!e)break;const s=+D.s;setMark(e,s,e.m[s]===D.c?null:D.c);rowRefresh(e,s);break}
+    case'open':case'gofix':U.ro=null;if(a==='gofix'){U.tab='check';const e=DB[D.p];U.cls=+e.sec.slice(0,-1);U.sec=e.sec.slice(-1);U.subj=e.subj;U.seg=U.cls<=5?'P':'S'}U.open={k:D.k,p:D.p};render();window.scrollTo(0,0);break;
+    case'back':U.open=null;U.ro=null;render();break;
+    case'pk':{const e=cur;if(!e)break;const s=+D.s,o=U.ro;U.ro=(o===s?null:s);if(o&&o!==s)rowRefresh(e,o);rowRefresh(e,s);break}
+    case'mark':{const e=cur;if(!e)break;const s=+D.s;setMark(e,s,e.m[s]===D.c?null:D.c);U.ro=null;rowRefresh(e,s);break}
     case'allok':{const e=cur;let k=0;for(let s=1;s<=nOf(e.sec);s++)if(!e.m[s]){e.m[s]='C';k++}putDoc(e);render();toast(k+' marked ✓');break}
     case'quick':{const e=cur;(e.rm=e.rm||{})[D.s]=D.q;putDoc(e);rowRefresh(e,+D.s);break}
     case'mkx':{const t=cur;const s=+D.s;if(t.m[s]===D.c)delete t.m[s];else t.m[s]=D.c;putDoc(t);const r=$('r'+s);const tmp=document.createElement('div');tmp.innerHTML=viewTestRow(t,s);r.replaceWith(tmp.firstChild);refreshTest(t);break}
@@ -499,7 +501,7 @@ document.addEventListener('click',ev=>{
     case'admsave':CFG.admins=$('adm').value.split(',').map(x=>x.trim()).filter(Boolean);saveCfg();toast('Saved');break;
   }
 });
-function viewTestRow(t,s){const v=t.m[s],p=pctOf(t,s);return '<div class="srow" id="r'+s+'"><div class="sline"><span class="sno">'+s+'</span><span class="sname">'+esc(nameOf(t.sec,s))+'<span id="fl'+s+'"></span></span><span class="pc'+(p!=null&&p<60?' low':'')+'" id="pc'+s+'">'+(p!=null?p.toFixed(0)+'%':(v==='A'||v==='NG'?v:''))+'</span><input class="mk'+(p!=null&&p<60?' low':'')+'" inputmode="decimal" data-act="mk" data-s="'+s+'" value="'+(typeof v==='number'?v:'')+'" placeholder="–"><div class="cb"><button data-act="mkx" data-s="'+s+'" data-c="A" class="A'+(v==='A'?' on':'')+'">A</button><button data-act="mkx" data-s="'+s+'" data-c="NG" class="A'+(v==='NG'?' on':'')+'">NG</button></div></div></div>'}
+function viewTestRow(t,s){const v=t.m[s],p=pctOf(t,s);return '<div class="srow" id="r'+s+'"><div class="sline"><span class="sname">'+esc(nameOf(t.sec,s))+'<span id="fl'+s+'"></span></span><span class="pc'+(p!=null&&p<60?' low':'')+'" id="pc'+s+'">'+(p!=null?p.toFixed(0)+'%':(v==='A'||v==='NG'?v:''))+'</span><input class="mk'+(p!=null&&p<60?' low':'')+'" inputmode="decimal" data-act="mk" data-s="'+s+'" value="'+(typeof v==='number'?v:'')+'" placeholder="–"><div class="cb"><button data-act="mkx" data-s="'+s+'" data-c="A" class="A'+(v==='A'?' on':'')+'">A</button><button data-act="mkx" data-s="'+s+'" data-c="NG" class="A'+(v==='NG'?' on':'')+'">NG</button></div></div></div>'}
 document.addEventListener('input',ev=>{
   const el=ev.target,a=el.dataset&&el.dataset.act;
   if(a==='mk'){const t=U.open&&DB[U.open.p];if(!t)return;const s=+el.dataset.s;const raw=el.value.trim();
