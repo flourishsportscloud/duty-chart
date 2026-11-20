@@ -463,7 +463,7 @@ function slotOf(r,e){ if(r.kind==='prep') return ELEMS.find(x=>x[1]===e.name)[0]
   if(CH_SLOT[e.name]) return CH_SLOT[e.name]; const used=r.els.map(x=>CH_SLOT[x.name]).filter(Boolean), rest=r.els.filter(x=>!CH_SLOT[x.name]);
   return FREE.filter(f=>used.indexOf(f)<0)[rest.indexOf(e)]||'obs'; }
 const pushStatus=(r,e,v)=>{ push(r.dp,{[slotOf(r,e)]:v==='I'?'X':v},'Saved'); trail(r.id,v,e.name); };
-function pushNote(r,o,msg){ trail(r.id,o.rm?'R':'C',''); const n=Object.assign({},r.added?noteOf(r.dp):{},o); push(r.dp,{note:JSON.stringify(n)},msg); }
+function pushNote(r,o,msg){ trail(r.id,o.rm?'R':'C',''); const n=Object.assign({},noteOf(r.dp)||{},o); if(JSON.stringify(n).length>198){ toast('Please tick fewer items.',1); return; } push(r.dp,{note:JSON.stringify(n)},msg); }
 const cut=(x,n)=>String(x||'').trim().slice(0,n);
 function pushAdd(a){ const n={k:a.kind,d:a.d,c:a.cs,s:cut(a.s,24),l:cut(a.l,40),t:cut(a.t,30),g:cut(a.g,24),w:wing}; push('status/'+PFX+'a.'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),{note:JSON.stringify(n)},'Lesson added'); }
 const pushSub=(k,w,rm)=>push('status/'+PFX+'s.'+h36(w+'|'+k),{note:JSON.stringify({k:cut(k,24),w,rm:rm?1:0})},rm?'Removed':'Added');
@@ -483,7 +483,7 @@ function records(){
   return out
   .sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:(+a.c)-(+b.c)||(a.cs<b.cs?-1:1)); }
 const hash=s=>{let h=7;for(const ch of s)h=(h*31+ch.charCodeAt(0))>>>0;return h};
-function getSt(e,r){ const j=DOCS[r.dp], v=j&&j[slotOf(r,e)]; if(v) return v==='X'?'I':v; if(r.added) return 'P';
+function getSt(e,r){ const j=DOCS[r.dp], v=j&&j[slotOf(r,e)]; if(v) return v==='X'?'I':v; if(r.added||e.fresh) return 'P';
   if(r.kind==='check') return PEND[e.id]?'P':(r.d<=LIST_DAY?'D':'P'); return r.d<=LIST_DAY?'D':'P'; }
 const NAME={P:'Pending',I:'In progress',D:'Done',N:'Not applicable'}, ICON={P:'○',I:'◐',D:'✓',N:'—'};
 const isOpen=v=>v==='P'||v==='I';
@@ -529,7 +529,7 @@ function render(){
   if(!canDash()){ const own=staff.filter(isMe); teacher=own[0]||'\u2014'; $('teachers').replaceChildren(...own.map(n=>tab(n,n))); } else $('teachers').replaceChildren(tab('All','All'),...staff.map(n=>tab(n,n))); centre($('teachers'));
 
   $('grades').replaceChildren(...[['All','All classes']].concat(GRADES[wing].map(g=>[g,g])).map(([v,l])=>el('button',{type:'button','aria-pressed':String(grade===v),onclick:()=>{grade=v;render()}},l)));
-  $('leftOnly').setAttribute('aria-pressed',String(leftOnly)); if(!canDash()) manage=false; $('manage').hidden=!canDash(); $('manage').setAttribute('aria-pressed',String(manage));
+  $('leftOnly').setAttribute('aria-pressed',String(leftOnly)); const canEd=canDash()||seg==='check'; if(!canEd) manage=false; $('manage').hidden=!canEd; $('manage').setAttribute('aria-pressed',String(manage));
 
   let rows=mine.filter(r=>(grade==='All'||r.c===grade)&&(teacher==='All'||r.t===teacher));
   const secs=[...new Set(rows.map(r=>r.cs))];
@@ -616,9 +616,10 @@ function editBox(r,all){
   const sW=el('select',{id:'ed-wing'},el('option',{value:'mid',selected:r.wing==='mid'?'':null},'Middle grades (6–8)'),el('option',{value:'sen',selected:r.wing==='sen'?'':null},'Senior grades (9–11)'));
   const ck='rm|'+r.id;
   return el('div',{class:'editbox'},el('b',{text:'Change '+r.cs+' · '+r.s+' '+r.l+(r.kind==='prep'?' (preparation)':' (checking)')}),
-    el('div',{class:'form'},el('label',{},'Assign to',sT),el('label',{},'Deadline',sE),el('label',{},'Or a new staff name',sNew),el('label',{},'Group',sG)),
+    canDash()?el('div',{class:'form'},el('label',{},'Assign to',sT),el('label',{},'Deadline',sE),el('label',{},'Or a new staff name',sNew),el('label',{},'Group',sG)):el('div',{class:'form'},el('label',{},'Deadline',sE)),
+    ...(r.kind==='check'?[el('b',{text:'Items (tick to keep, untick to remove)'}),tickRow('ed-items',[...new Set(CHK_OPTS.concat(r.els.map(e=>e.name)))].map(x=>[x,x]),v=>r.els.some(e=>e.name===v))]:[]),
     el('div',{class:'toolr'},
-      el('button',{type:'button',class:'btn',onclick:()=>{editing=null;pushNote(r,{e:sE.value,t:cut(sNew.value,30)||sT.value,g:sG.value,w:r.wing},'Change saved')}},'Save change'),
+      el('button',{type:'button',class:'btn',onclick:()=>{editing=null;pushNote(r,{i:edItems(r),e:sE.value,t:cut(sNew.value,30)||sT.value,g:sG.value,w:r.wing},'Change saved')}},'Save change'),
       el('button',{type:'button',class:'btn warn',onclick:()=>{ if(confirmKey===ck){pushNote(r,{rm:1},'Removed from list');confirmKey=editing=null;}else confirmKey=ck; render()}},confirmKey===ck?'Confirm: remove from list':'Remove from list'),
       el('button',{type:'button',class:'btn ghost',onclick:()=>{editing=confirmKey=null;render()}},'Cancel')));
 }
@@ -785,7 +786,8 @@ function renderDocs(){
 /* ===== v2: own-work view for teachers, remarks, change history, quick add, dashboard with WhatsApp ===== */
 const firstOf=n=>String(n||'').trim().toLowerCase().split(/\s+/)[0].replace(/[^a-z]/g,'');
 const isMe=n=>!!ME&&(firstOf(n)===firstOf(ME)||String(n).trim().toLowerCase()===ME.trim().toLowerCase());
-function applyNote(r,n){ if(!n||(!n.t&&!n.e)) return r; const c=Object.assign({},r); if(n.t){c.t=n.t;c.g=n.g||r.g;c.wing=n.w||r.wing} if(n.e){c.due=n.e;c.els=r.els.map(e=>Object.assign({},e,{due:n.e}))} return c; }
+function applyNote(r,n){ if(!n||(!n.t&&!n.e&&!n.i)) return r; const c=Object.assign({},r); if(n.t){c.t=n.t;c.g=n.g||r.g;c.wing=n.w||r.wing} if(n.i&&r.kind==='check'){ c.els=String(n.i).split('|').filter(Boolean).map(nm=>r.els.find(e=>e.name===nm)||{id:r.id+'|'+nm,name:nm,due:r.due,fresh:1}); } if(n.e){c.due=n.e;c.els=c.els.map(e=>Object.assign({},e,{due:n.e}))} return c; }
+function edItems(r){ if(r.kind!=='check') return undefined; const t=ticks('ed-items'); return (t.length?t:r.els.map(e=>e.name)).join('|'); }
 function stamp(ms){ const d=new Date(ms); let h=d.getHours(); const ap=h<12?'AM':'PM'; h=h%12||12; return d.getDate()+' '+MO[d.getMonth()]+', '+h+':'+String(d.getMinutes()).padStart(2,'0')+' '+ap; }
 /* change history: last few changes per item, with time and name */
 const tPath=key=>'status/'+PFX+'h.'+h36(key), kPath=key=>'status/'+PFX+'k.'+h36(key);
@@ -811,13 +813,13 @@ const ticks=id=>[...document.querySelectorAll('#'+id+' input:checked')].map(c=>c
 function renderManage2(all){
   const box=$('managePanel'); box.hidden=!manage; if(!manage) return;
   const prep=seg==='prep', kindWord=prep?'preparation':'checking', ck='sub|'+wing+'|'+subj;
-  const subjOpts=[...new Set(all.filter(r=>r.g===subj).map(r=>r.s))];
+  const subjOpts=[...new Set(all.filter(r=>r.g===subj&&r.wing===wing).map(r=>r.s))];
   const fS=el('input',{id:'qa-subj',type:'text',maxlength:'22',value:subjOpts[0]||'',placeholder:'e.g. English I',list:'qa-subj-list'}), dl=el('datalist',{id:'qa-subj-list'},...subjOpts.map(s=>el('option',{value:s})));
   const fL=el('input',{id:'qa-les',type:'text',maxlength:'30',placeholder:'e.g. L-10'});
   const fD=el('input',{id:'qa-date',type:'date',value:TODAY}), fE=el('input',{id:'qa-due',type:'date',value:prep?addWork(TODAY,-1):addWork(TODAY,2)});
   fD.addEventListener('change',()=>{ if(fD.value) fE.value=prep?addWork(fD.value,-1):addWork(fD.value,2); });
   const fO=el('input',{id:'qa-other',type:'text',maxlength:'18',placeholder:'Any other item'});
-  const fT=el('select',{id:'qa-staff'},el('option',{value:''},'Automatic (teacher of each section)'),...allStaff(all).map(p=>el('option',{value:p.n},p.n)));
+  const myName=(allStaff(all).find(p=>isMe(p.n))||{n:ME}).n; const fT=canDash()?el('select',{id:'qa-staff'},el('option',{value:''},'Automatic (teacher of each section)'),...allStaff(all).map(p=>el('option',{value:p.n},p.n))):el('select',{id:'qa-staff'},el('option',{value:myName},myName+' (myself)'));
   const fSub=el('input',{id:'ad-sub',type:'text',placeholder:'e.g. Art'});
   const secs=SECTIONS[wing].filter(cs=>grade==='All'||cs.replace(/[A-C]$/,'')===grade);
   box.replaceChildren(
@@ -834,11 +836,12 @@ function renderManage2(all){
       if(JSON.stringify(Object.assign({c:'10A'},base)).length>198){toast('Please shorten the lesson name or tick fewer items.',1);return}
       ss.forEach((cs,i)=>push('status/'+PFX+'a.'+Date.now().toString(36)+i+Math.random().toString(36).slice(2,5),{note:JSON.stringify(Object.assign({c:cs},base))},i===ss.length-1?'Added for '+ss.join(', '):''));
       fL.value=''; }},'Add')),
-    el('p',{class:'note',text:'To change the teacher or deadline of an existing item, or to remove it, select "Change" on it in the list.'}),
+    el('p',{class:'note',text:'To change the items, teacher or deadline of an existing task, or to remove it, select "Change" on it in the list.'}),
     el('b',{text:'Groups'}),
     el('div',{class:'form'},el('label',{},'New name',fSub),
       el('button',{type:'button',class:'btn',onclick:()=>{const k=cut(fSub.value,24); if(!k){fSub.focus();return} subj=k;teacher='All';pushSub(k,wing,0)}},'Add'),
       el('button',{type:'button',class:'btn warn',onclick:()=>{ if(confirmKey===ck){pushSub(subj,wing,1);confirmKey=null;}else confirmKey=ck; render()}},confirmKey===ck?'Confirm: remove '+subj:'Remove '+subj)));
+  if(!canDash()){ box.lastChild.remove(); box.lastChild.remove(); }
 }
 /* ---- dashboard: Preparation / Checking / Mentor tasks -> department -> staff, with WhatsApp ---- */
 let dDept='All', dMk='d', dSel={}, dDue={o:1,t:1,n:1,l:0}, dCls={}, dItems={};
