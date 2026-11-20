@@ -152,6 +152,21 @@ h1{font-family:var(--serif);font-weight:600;font-size:1.8rem;line-height:1.1;mar
 .ck small{margin-left:auto;color:var(--muted);font-weight:500;font-size:.74rem}
 .ck:has(input:checked){background:color-mix(in srgb,var(--purple) 13%,var(--surface))}
 [hidden]{display:none !important}
+.att{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.pdfchip{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:12px;background:var(--s1);color:var(--crimson);font-weight:600;font-size:.86rem;max-width:100%}
+.pdfchip span{color:var(--ink);overflow:hidden;text-overflow:ellipsis}
+.pdfchip small{display:block;color:var(--muted);font-weight:500;font-size:.72rem}
+.pdfopen{display:flex;align-items:center;gap:12px;width:100%;margin-top:12px;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--crimson);cursor:pointer;text-align:left}
+.pdfopen span{min-width:0}
+.pdfopen b{display:block;color:var(--ink);font-size:.92rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pdfopen small{display:block;color:var(--muted);font-size:.75rem}
+.pdfv{position:fixed;inset:0;z-index:70;background:#2B2F3A;display:flex;flex-direction:column}
+.pdfbar{display:flex;align-items:center;gap:10px;padding:calc(env(safe-area-inset-top,0px) + 10px) 12px 10px;background:#152952;color:#fff}
+.pdfbar b{flex:1;min-width:0;font-size:.88rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pdfbar .mini{text-decoration:none}
+.pdfpages{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:8px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.pdfpages canvas{background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.35);max-width:100%}
+.pdfmsg{color:#fff;text-align:center;margin:12px}
 .rip{position:absolute;border-radius:50%;transform:scale(0);background:currentColor;opacity:.16;animation:rip .55s ease-out forwards;pointer-events:none}
 @keyframes rip{to{transform:scale(4);opacity:0}}
 .skel{height:92px;border-radius:18px;margin-top:10px;background:linear-gradient(90deg,var(--s1),var(--s2),var(--s1));background-size:200% 100%;animation:sk 1.2s linear infinite}
@@ -351,7 +366,8 @@ function card(a){
   const aud = (a.aud && a.aud.length ? a.aud : ['All staff']);
   let inner = '';
   if (open){
-    inner += `<div class="cb"><p class="body">${esc(a.body)}</p>`;
+    inner += `<div class="cb">${a.body ? `<p class="body">${esc(a.body)}</p>` : ''}`;
+    if (a.file) inner += `<button type="button" class="pdfopen" data-pdf="${a.id}">${PDFI}<span><b>${esc(a.file.name)}</b><small>PDF · ${esc(kb(a.file.size))} · tap to open</small></span></button>`;
     if (a.due) inner += `<div class="due"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Complete by ${new Date(a.due + 'T00:00').toLocaleDateString('en-IN', {weekday:'long', day:'numeric', month:'long'})}</div>`;
     if (a.ack || a.act) inner += steps(a, m);
     if (a.type === 'SMS') inner += `<div class="acts"><button class="btn tn" data-copy="${a.id}">Copy SMS text</button></div>`;
@@ -363,7 +379,7 @@ function card(a){
     <button type="button" class="ch" data-open="${a.id}" aria-expanded="${open}">
       <span class="ic">${ICON[a.type] || ICON.Notice}</span>
       <span class="cm"><span class="ty">${esc(a.type === 'SMS' ? 'Parent SMS' : a.type)}</span><b>${esc(a.title)}</b>
-        <small>${esc(a.by || '')} · ${esc(ago(a.at))}${a.sample ? ' · sample' : ''}</small>
+        <small>${esc(a.by || '')} · ${esc(ago(a.at))}${a.sample ? ' · sample' : ''}${a.file ? ' · 📎 PDF' : ''}</small>
         <span class="aud">${aud.map(x => `<span>${esc(x)}</span>`).join('')}</span></span>
       ${ME && forMe(a) ? `<span class="st ${sk}">${sl}</span>` : ''}
     </button>${PIN ? `<div class="adrow"><button type="button" class="mini" data-edit="${a.id}">Edit</button><button type="button" class="mini rd" data-del="${a.id}">Remove</button></div>` : ''}${inner}</article>`;
@@ -426,6 +442,7 @@ function bind(){
     copy(`*${a.title}*\n${what} (${names.length}):\n${names.join('\n')}\n\nPlease open Announcements in the FIS Staff Hub and complete it.`, 'Names copied');
   });
   document.querySelectorAll('[data-act]').forEach(b => b.onclick = () => mark(b.dataset.act, 'x', b));
+  document.querySelectorAll('[data-pdf]').forEach(b => b.onclick = () => openPdf(LIST.find(a => a.id === b.dataset.pdf)));
 }
 function copy(t, ok){ (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => toast(ok)).catch(() => { const x = document.createElement('textarea'); x.value = t; document.body.appendChild(x); x.select(); document.execCommand('copy'); x.remove(); toast(ok); }); }
 function toggle(id){
@@ -442,6 +459,53 @@ async function del(id, btn){
   if (btn.dataset.sure !== '1'){ btn.dataset.sure = '1'; btn.textContent = 'Tap again to remove'; return; }
   btn.disabled = true;
   try { await call('annDel', [PIN, id]); OPEN = ''; toast('Removed'); load(); } catch(e){ toast(e.message); btn.disabled = false; }
+}
+const PDFI = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M8.5 15.5h1.2a1.2 1.2 0 0 0 0-2.4H8.5v4M13 13.1v3.9h1a1.9 1.9 0 0 0 0-3.9zM17.5 13.1h-1.6V17M15.9 15h1.4"/></svg>';
+const kb = n => !n ? '' : n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB';
+/* PDFs are stored in the Google Sheet in pieces; upload in parts so a phone on mobile data can manage */
+async function upload(file, prog){
+  const b64 = await new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1] || ''); r.onerror = () => no(new Error('Could not read the PDF')); r.readAsDataURL(file); });
+  const fid = 'f' + Date.now().toString(36), PART = 450000, n = Math.ceil(b64.length / PART);
+  for (let i = 0; i < n; i++){ await call('annFilePut', [PIN, fid, i, b64.slice(i * PART, (i + 1) * PART)]); prog(Math.round((i + 1) / n * 100)); }
+  return {id: fid, name: file.name, size: file.size};
+}
+const FILES = {};
+async function getPdf(f){
+  if (!FILES[f.id]){ const b64 = await call('annFileGet', [f.id]); const bin = atob(b64), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); FILES[f.id] = u; }
+  return FILES[f.id];
+}
+let PDFJS = null;
+function loadPdfJs(){
+  if (PDFJS) return PDFJS;
+  PDFJS = new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    sc.onload = () => { window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; ok(window.pdfjsLib); };
+    sc.onerror = () => { PDFJS = null; no(new Error('Could not load the PDF viewer')); }; document.head.appendChild(sc); });
+  return PDFJS;
+}
+async function openPdf(a){
+  const f = a.file, v = document.createElement('div'); v.className = 'pdfv';
+  v.innerHTML = `<div class="pdfbar"><button type="button" class="mini" data-x>✕ Close</button><b>${esc(f.name)}</b><a class="mini" id="pdl" hidden>Download</a></div><div class="pdfpages"><div class="skel" style="height:60vh"></div><p class="pdfmsg">Opening PDF…</p></div>`;
+  document.body.appendChild(v); document.body.style.overflow = 'hidden';
+  const close = () => { v.remove(); document.body.style.overflow = ''; };
+  v.querySelector('[data-x]').onclick = close;
+  if (ME && !(MINE[a.id] || {}).s) mark(a.id, 's');
+  let url = '';
+  try {
+    const u = await getPdf(f);
+    url = URL.createObjectURL(new Blob([u], {type: 'application/pdf'})); const dl = v.querySelector('#pdl'); dl.href = url; dl.download = f.name; dl.hidden = false;
+    const lib = await loadPdfJs();
+    const doc = await lib.getDocument({data: u.slice()}).promise, box = v.querySelector('.pdfpages'); box.innerHTML = '';
+    const w = Math.min(box.clientWidth - 16, 900), dpr = Math.min(window.devicePixelRatio || 1, 2);
+    for (let i = 1; i <= doc.numPages; i++){
+      if (!document.body.contains(v)) return;
+      const pg = await doc.getPage(i), vp0 = pg.getViewport({scale: 1}), sc = w / vp0.width, vp = pg.getViewport({scale: sc * dpr});
+      const c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height; c.style.width = (vp.width / dpr) + 'px'; c.style.height = (vp.height / dpr) + 'px';
+      box.appendChild(c); await pg.render({canvasContext: c.getContext('2d'), viewport: vp}).promise;
+    }
+  } catch(e){
+    /* viewer could not load: fall back to the phone's own PDF viewer */
+    v.querySelector('.pdfpages').innerHTML = url ? `<iframe src="${url}" title="${esc(f.name)}" style="width:100%;flex:1;min-height:70vh;border:0;background:#fff"></iframe><a class="btn" href="${url}" target="_blank" rel="noopener" style="text-decoration:none">Open PDF in browser</a>` : `<p class="pdfmsg">${esc(e.message)}</p>`;
+  }
 }
 function sheet(html){ const d = document.createElement('div'); d.className = 'sheet'; d.innerHTML = `<div class="pn" role="dialog" aria-modal="true"><div class="grab"></div>${html}</div>`; d.onclick = e => { if (e.target === d) d.remove(); }; document.body.appendChild(d); return d; }
 function askPin(){
@@ -467,6 +531,9 @@ function form(a){
     <label class="fl">Type</label><div class="seg" id="fty">${['Notice','Circular','SMS'].map(t => `<button type="button" data-v="${t}" aria-pressed="${a.type===t}">${t === 'SMS' ? 'Parent SMS' : t}</button>`).join('')}</div>
     <label class="fl" for="ftitle">Title</label><input type="text" id="ftitle" maxlength="160" value="${esc(a.title || '')}" placeholder="e.g. Sports Day duty briefing">
     <label class="fl" for="fbody">Message</label><textarea id="fbody" maxlength="6000" placeholder="Write the full notice here">${esc(a.body || '')}</textarea>
+    <label class="fl">Attach PDF (optional)</label>
+    <div class="att" id="fatt">${a.file ? `<span class="pdfchip">${PDFI}<span>${esc(a.file.name)}<small>${esc(kb(a.file.size))}</small></span></span><button type="button" class="mini rd" id="frmf">Remove</button>` : ''}
+      <label class="mini" style="cursor:pointer">${a.file ? 'Replace' : 'Choose PDF'}<input type="file" id="ffile" accept="application/pdf,.pdf" hidden></label></div>
     <label class="fl">Applicable to</label><div class="cl" id="faud">${AUDS.map(x => `<label class="ck"><input type="checkbox" value="${esc(x)}" ${(a.aud || []).includes(x) ? 'checked' : ''}><span>${esc(x)}</span><small>${expected({aud:[x]}).length} staff</small></label>`).join('')}</div>
     <label class="sw"><span>Staff must acknowledge<small>Step 2 · "I have read and noted this"</small></span><input type="checkbox" id="fack" ${a.ack || a.act ? 'checked' : ''}></label>
     <label class="sw"><span>Staff must confirm an action<small>Step 3 · for example "Announced in class"</small></span><input type="checkbox" id="fact" ${a.act ? 'checked' : ''}></label>
@@ -478,6 +545,16 @@ function form(a){
     <div class="err" id="ferr"></div>
     <div class="acts"><button class="btn tn" data-x>Cancel</button><button class="btn" id="fok">${a.id ? 'Save changes' : 'Post'}</button></div>`);
   d.querySelector('[data-x]').onclick = () => d.remove();
+  let FILE = a.file || null, NEWF = null;
+  const drawAtt = () => { d.querySelector('#fatt').firstElementChild && d.querySelector('#fatt').querySelectorAll('.pdfchip,#frmf').forEach(x => x.remove());
+    const f = NEWF ? {name: NEWF.name, size: NEWF.size} : FILE;
+    if (f) d.querySelector('#fatt').insertAdjacentHTML('afterbegin', `<span class="pdfchip">${PDFI}<span>${esc(f.name)}<small>${esc(kb(f.size))}${NEWF ? ' · will upload' : ''}</small></span></span><button type="button" class="mini rd" id="frmf">Remove</button>`);
+    const rm = d.querySelector('#frmf'); if (rm) rm.onclick = () => { NEWF = null; FILE = null; d.querySelector('#ffile').value = ''; drawAtt(); }; };
+  drawAtt();
+  d.querySelector('#ffile').onchange = e => { const f = e.target.files[0]; if (!f) return;
+    if (!/pdf$/i.test(f.type) && !/\.pdf$/i.test(f.name)){ d.querySelector('#ferr').textContent = 'Please choose a PDF file.'; return; }
+    if (f.size > 8 * 1024 * 1024){ d.querySelector('#ferr').textContent = 'PDF is too big (max 8 MB). Please compress it.'; return; }
+    d.querySelector('#ferr').textContent = ''; NEWF = f; drawAtt(); };
   d.querySelectorAll('#fty button').forEach(b => b.onclick = () => { d.querySelectorAll('#fty button').forEach(x => x.setAttribute('aria-pressed', x === b)); if (b.dataset.v === 'SMS') d.querySelector('#fack').checked = false; });
   d.querySelectorAll('#faud input').forEach(b => b.onchange = () => {
     if (b.checked && b.value === 'All staff') d.querySelectorAll('#faud input').forEach(x => { if (x !== b) x.checked = false; });
@@ -492,8 +569,11 @@ function form(a){
     if (!o.aud.length){ d.querySelector('#ferr').textContent = 'Tick at least one group under Applicable to.'; return; }
     store.set('fisAnnBy', o.by);
     const btn = d.querySelector('#fok'); btn.disabled = true;
-    try { const s = await call('annSave', [PIN, o]); d.remove(); OPEN = s.id; toast(a.id ? 'Saved' : 'Posted'); load(); }
-    catch(e){ d.querySelector('#ferr').textContent = e.message; btn.disabled = false; }
+    try {
+      if (NEWF){ o.file = await upload(NEWF, p => btn.textContent = 'Uploading PDF ' + p + '%'); btn.textContent = 'Saving…'; }
+      else o.file = FILE;
+      const s = await call('annSave', [PIN, o]); d.remove(); OPEN = s.id; toast(a.id ? 'Saved' : 'Posted'); load(); }
+    catch(e){ d.querySelector('#ferr').textContent = e.message; btn.disabled = false; btn.textContent = a.id ? 'Save changes' : 'Post'; }
   };
 }
 

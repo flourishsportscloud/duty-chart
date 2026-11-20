@@ -52,7 +52,7 @@ function boot() {
            settings: { Title: s['Title'] || '', Month: s['Month'] || '' } };
 }
 function api_(req) {
-  const fns = { boot: boot, getAll: getAll, getVer: getVer, checkPin: checkPin, saveAll: saveAll, savePatch: savePatch, getPhones: getPhones, annList: annList, annMark: annMark, annSave: annSave, annDel: annDel, annReport: annReport };
+  const fns = { boot: boot, getAll: getAll, getVer: getVer, checkPin: checkPin, saveAll: saveAll, savePatch: savePatch, getPhones: getPhones, annList: annList, annMark: annMark, annSave: annSave, annDel: annDel, annReport: annReport, annFilePut: annFilePut, annFileGet: annFileGet };
   try {
     ensure_();
     const f = fns[req && req.fn];
@@ -430,7 +430,7 @@ function annSave(pin, a) {
   a = a || {}; const s = annSheets_();
   const types = ['Notice', 'Circular', 'SMS'];
   const o = { type: types.indexOf(a.type) >= 0 ? a.type : 'Notice', title: clean_(a.title).slice(0, 160), body: String(a.body || '').slice(0, 6000),
-    aud: (a.aud || []).map(clean_).filter(Boolean).slice(0, 8), ack: !!a.ack || !!a.act, act: !!a.act, actl: clean_(a.actl).slice(0, 60) || 'Action taken', hi: !!a.hi, due: clean_(a.due).slice(0, 16), by: clean_(a.by).slice(0, 80) || 'Admin' };
+    aud: (a.aud || []).map(clean_).filter(Boolean).slice(0, 8), ack: !!a.ack || !!a.act, act: !!a.act, actl: clean_(a.actl).slice(0, 60) || 'Action taken', hi: !!a.hi, file: a.file && a.file.id ? { id: clean_(a.file.id).slice(0, 40), name: clean_(a.file.name).slice(0, 120) || 'Attachment.pdf', size: Number(a.file.size) || 0 } : null, due: clean_(a.due).slice(0, 16), by: clean_(a.by).slice(0, 80) || 'Admin' };
   if (!o.title) throw new Error('Add a title.');
   if (!o.aud.length) o.aud = ['All staff'];
   const lock = LockService.getScriptLock(); lock.waitLock(20000);
@@ -451,3 +451,28 @@ function annDel(pin, id) {
   return true;
 }
 function annReport(pin) { if (!checkPin(pin)) throw new Error('Wrong PIN'); return annLog_(); }
+
+/* PDF attachments for announcements: stored as text pieces in the "Announcement Files" tab (no Drive access needed) */
+const T_ANNF = 'Announcement Files';
+function annFileSheet_() {
+  const ss = ss_(); let f = ss.getSheetByName(T_ANNF);
+  if (!f) { f = ss.insertSheet(T_ANNF); header_(f, ['File ID', 'Part', 'Data (do not edit)'], [150, 70, 400]); f.getRange('C:C').setNumberFormat('@'); }
+  return f;
+}
+function annFilePut(pin, fid, part, data) {
+  if (!checkPin(pin)) throw new Error('Wrong PIN');
+  fid = clean_(fid); if (!/^f[a-z0-9]{4,20}$/.test(fid)) throw new Error('Bad file id');
+  data = String(data || ''); if (!/^[A-Za-z0-9+\/=]*$/.test(data)) throw new Error('Bad file data');
+  const rows = []; for (let i = 0; i < data.length; i += 45000) rows.push([fid, Number(part) * 1000 + rows.length, data.slice(i, i + 45000)]);
+  if (!rows.length) return 0;
+  const f = annFileSheet_(), lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try { const r = f.getLastRow() + 1; f.getRange(r, 3, rows.length, 1).setNumberFormat('@'); f.getRange(r, 1, rows.length, 3).setValues(rows); }
+  finally { lock.releaseLock(); }
+  return rows.length;
+}
+function annFileGet(fid) {
+  fid = clean_(fid); const f = annFileSheet_(), n = f.getLastRow(); if (n < 2) throw new Error('File not found');
+  const v = f.getRange(2, 1, n - 1, 3).getValues().filter(function (r) { return clean_(r[0]) === fid; }).sort(function (a, b) { return a[1] - b[1]; });
+  if (!v.length) throw new Error('File not found');
+  return v.map(function (r) { return String(r[2]); }).join('');
+}
