@@ -401,7 +401,7 @@ function annRows_() {
 }
 function annLog_() {
   const s = annSheets_(), n = s.l.getLastRow();
-  return n > 1 ? s.l.getRange(2, 1, n - 1, 4).getValues().map(function (r) { return { id: clean_(r[0]), n: clean_(r[1]), k: clean_(r[2]) === 'Acknowledged' ? 'a' : 's', t: r[3] instanceof Date ? r[3].getTime() : Number(new Date(r[3])) || 0 }; }) : [];
+  return n > 1 ? s.l.getRange(2, 1, n - 1, 4).getValues().map(function (r) { return { id: clean_(r[0]), n: clean_(r[1]), k: ({ 'Acknowledged': 'a', 'Action taken': 'x' })[clean_(r[2])] || 's', t: r[3] instanceof Date ? r[3].getTime() : Number(new Date(r[3])) || 0 }; }) : [];
 }
 function annList(name) {
   const list = annRows_().sort(function (x, y) { return (y.at || 0) - (x.at || 0); });
@@ -412,14 +412,15 @@ function annList(name) {
 function annMark(id, name, kind) {
   id = clean_(id); name = clean_(name).slice(0, 80); if (!id || !name) throw new Error('Choose your name first.');
   const a = annRows_().filter(function (x) { return x.id === id; })[0]; if (!a) throw new Error('This announcement was removed.');
-  const k = kind === 'a' ? 'a' : 's';
+  const k = kind === 'x' ? 'x' : kind === 'a' ? 'a' : 's';
   const lock = LockService.getScriptLock(); lock.waitLock(20000);
   try {
     const log = annLog_(), lo = name.toLowerCase(), have = {};
     log.forEach(function (r) { if (r.id === id && r.n.toLowerCase() === lo) have[r.k] = r.t; });
     const now = new Date(), add = [];
     if (!have.s) { add.push([id, name, 'Seen', now, a.title]); have.s = now.getTime(); }
-    if (k === 'a' && !have.a) { add.push([id, name, 'Acknowledged', now, a.title]); have.a = now.getTime(); }
+    if ((k === 'a' || k === 'x') && !have.a) { add.push([id, name, 'Acknowledged', now, a.title]); have.a = now.getTime(); }
+    if (k === 'x' && !have.x) { add.push([id, name, 'Action taken', now, a.title]); have.x = now.getTime(); }
     if (add.length) { const l = annSheets_().l; l.getRange(l.getLastRow() + 1, 1, add.length, 5).setValues(add); }
     return have;
   } finally { lock.releaseLock(); }
@@ -429,7 +430,7 @@ function annSave(pin, a) {
   a = a || {}; const s = annSheets_();
   const types = ['Notice', 'Circular', 'SMS'];
   const o = { type: types.indexOf(a.type) >= 0 ? a.type : 'Notice', title: clean_(a.title).slice(0, 160), body: String(a.body || '').slice(0, 6000),
-    aud: (a.aud || []).map(clean_).filter(Boolean).slice(0, 8), ack: !!a.ack, hi: !!a.hi, due: clean_(a.due).slice(0, 16), by: clean_(a.by).slice(0, 80) || 'Admin' };
+    aud: (a.aud || []).map(clean_).filter(Boolean).slice(0, 8), ack: !!a.ack || !!a.act, act: !!a.act, actl: clean_(a.actl).slice(0, 60) || 'Action taken', hi: !!a.hi, due: clean_(a.due).slice(0, 16), by: clean_(a.by).slice(0, 80) || 'Admin' };
   if (!o.title) throw new Error('Add a title.');
   if (!o.aud.length) o.aud = ['All staff'];
   const lock = LockService.getScriptLock(); lock.waitLock(20000);

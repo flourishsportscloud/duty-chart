@@ -129,6 +129,29 @@ h1{font-family:var(--serif);font-weight:600;font-size:1.8rem;line-height:1.1;mar
 .trail span::before{content:"";display:inline-block;width:7px;height:7px;clip-path:var(--hex);background:var(--c,var(--muted));margin-right:6px;vertical-align:1px}
 .empty{color:var(--muted);text-align:center;padding:40px 0}
 .empty .hx{width:64px;height:64px;margin:0 auto 12px;clip-path:var(--hex);background:linear-gradient(135deg,#D33E64,#5F3685 45%,#72B7E1 75%,#E7AE55);opacity:.3}
+.steps{list-style:none;margin:14px 0 0;padding:0;position:relative}
+.steps li{position:relative;display:flex;gap:12px;padding:0 0 14px}
+.steps li:not(:last-child)::before{content:"";position:absolute;left:17px;top:36px;bottom:2px;width:2px;background:var(--line)}
+.steps li.on:not(:last-child)::before{background:var(--green)}
+.steps .n{width:36px;height:36px;flex:0 0 auto;clip-path:var(--hex);display:grid;place-items:center;font-weight:800;font-size:.85rem;background:var(--s2);color:var(--muted)}
+.steps li.on .n{background:var(--green);color:#fff}
+.steps li.cur .n{background:var(--crimson);color:#fff}
+.steps li>div{flex:1;min-width:0;padding-top:7px}
+.steps b{display:block;font-size:.92rem}
+.steps small{display:block;color:var(--muted);font-size:.78rem;margin-top:2px}
+.steps li.on small{color:var(--green);font-weight:600}
+.steps .btn{margin-top:8px}
+.btn.gold{background:linear-gradient(90deg,#C98A2B,#E7AE55);color:#1A2340}
+.adrow{display:flex;gap:8px;justify-content:flex-end;padding:0 14px 10px}
+.mini{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 14px;font-size:.78rem;font-weight:700;cursor:pointer}
+.mini.rd{color:var(--crimson)}
+.cl{display:grid;grid-template-columns:1fr;gap:6px}
+@media (min-width:480px){.cl{grid-template-columns:1fr 1fr}}
+.ck{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:12px;background:var(--s1);cursor:pointer;font-size:.92rem;font-weight:600}
+.ck input{width:20px;height:20px;accent-color:var(--purple);margin:0;flex:0 0 auto}
+.ck small{margin-left:auto;color:var(--muted);font-weight:500;font-size:.74rem}
+.ck:has(input:checked){background:color-mix(in srgb,var(--purple) 13%,var(--surface))}
+[hidden]{display:none !important}
 .rip{position:absolute;border-radius:50%;transform:scale(0);background:currentColor;opacity:.16;animation:rip .55s ease-out forwards;pointer-events:none}
 @keyframes rip{to{transform:scale(4);opacity:0}}
 .skel{height:92px;border-radius:18px;margin-top:10px;background:linear-gradient(90deg,var(--s1),var(--s2),var(--s1));background-size:200% 100%;animation:sk 1.2s linear infinite}
@@ -270,16 +293,21 @@ function forMe(a){
   if (!ME) return true; const s = STAFF.find(x => x.n.toLowerCase() === ME.toLowerCase());
   return !s || expected(a).includes(s);
 }
+const need = a => a.act ? 'x' : a.ack ? 'a' : 's';
 function status(a){
-  const m = MINE[a.id] || {};
-  if (a.ack) return m.a ? ['ok','Acknowledged'] : m.s ? ['pend','Acknowledge'] : ['new','New'];
-  return m.s ? ['seen','Seen'] : ['new','New'];
+  const m = MINE[a.id] || {}, k = need(a);
+  if (m[k]) return k === 's' ? ['seen','Seen'] : ['ok', a.act ? 'Done' : 'Acknowledged'];
+  if (!m.s) return ['new','New'];
+  return a.act && m.a ? ['pend','Action pending'] : ['pend','Acknowledge'];
 }
+const todo = a => need(a) !== 's' && !(MINE[a.id] || {})[need(a)];
 
 async function load(){
   try {
     const v = await call('annList', [ME]);
-    LIST = v.list || []; MINE = v.me || {};
+    LIST = v.list || []; const old = MINE; MINE = v.me || {};
+    /* keep marks made on this phone while the list was loading */
+    Object.keys(old).forEach(id => Object.keys(old[id]).forEach(k => { const m = MINE[id] || (MINE[id] = {}); if (!m[k]) m[k] = old[id][k]; }));
     if (PIN) LOG = await call('annReport', [PIN]).catch(() => { PIN = ''; try { sessionStorage.removeItem('fisAnnPin'); } catch(e){} return null; });
     draw();
     const id = new URLSearchParams(location.search).get('id'); if (id && !OPEN && LIST.some(a => a.id === id)) toggle(id);
@@ -301,16 +329,16 @@ function drawTicker(){
 }
 function drawStats(){
   const mine = LIST.filter(forMe);
-  const nw = mine.filter(a => status(a)[0] === 'new').length, pend = mine.filter(a => a.ack && !(MINE[a.id] || {}).a).length, done = mine.filter(a => ['ok','seen'].includes(status(a)[0])).length;
+  const nw = mine.filter(a => status(a)[0] === 'new').length, pend = mine.filter(todo).length, done = mine.filter(a => ['ok','seen'].includes(status(a)[0])).length;
   $('#stats').hidden = !ME;
-  $('#stats').innerHTML = [['new','New',nw,'var(--crimson)'],['pend','To acknowledge',pend,'var(--purple)'],['done','Done',done,'var(--green)']]
+  $('#stats').innerHTML = [['new','New',nw,'var(--crimson)'],['pend','To do',pend,'var(--purple)'],['done','Done',done,'var(--green)']]
     .map(([k,l,n,c]) => `<button type="button" class="stat" data-sf="${k}" aria-pressed="${SF===k}" style="--c:${c}"><b>${n}</b><span>${l}</span></button>`).join('');
   document.querySelectorAll('[data-sf]').forEach(b => b.onclick = () => { SF = SF === b.dataset.sf ? '' : b.dataset.sf; draw(); });
 }
 function draw(){
   drawFilters(); drawTicker(); drawStats();
   $('#adm').classList.toggle('on', !!PIN); $('#adm').querySelector('span').textContent = PIN ? 'Admin on' : 'Admin'; $('#newBtn').hidden = !PIN;
-  const sOk = a => (SF === 'new' && status(a)[0] === 'new') || (SF === 'pend' && a.ack && !(MINE[a.id] || {}).a) || (SF === 'done' && ['ok','seen'].includes(status(a)[0]));
+  const sOk = a => (SF === 'new' && status(a)[0] === 'new') || (SF === 'pend' && todo(a)) || (SF === 'done' && ['ok','seen'].includes(status(a)[0]));
   const vis = LIST.filter(a => (TF === 'all' || a.type === TF) && (AF === 'all' || (a.aud || ['All staff']).includes(AF) || (a.aud || []).includes('All staff')) && (!SF || (forMe(a) && sOk(a))));
   if (!vis.length){ $('#list').innerHTML = '<div class="empty"><div class="hx"></div>Nothing here right now.</div>'; return; }
   let last = '', html = '';
@@ -324,14 +352,10 @@ function card(a){
   let inner = '';
   if (open){
     inner += `<div class="cb"><p class="body">${esc(a.body)}</p>`;
-    if (a.due) inner += `<div class="due"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Acknowledge by ${new Date(a.due + 'T00:00').toLocaleDateString('en-IN', {weekday:'long', day:'numeric', month:'long'})}</div>`;
-    if (a.ack && m.a) inner += `<div class="done"><span class="hx">${CHECK}</span><span>Acknowledged<br><small style="font-weight:500">${esc(fmt(m.a))}</small></span></div>`;
-    inner += `<div class="acts">`;
-    if (a.ack && !m.a) inner += `<button class="btn big" data-ack="${a.id}">${CHECK}I have read and noted this</button>`;
-    if (a.type === 'SMS') inner += `<button class="btn tn" data-copy="${a.id}">Copy SMS text</button>`;
-    if (PIN) inner += `<button class="btn tn" data-edit="${a.id}">Edit</button><button class="btn out" data-del="${a.id}">Remove</button>`;
-    inner += `</div>`;
-    if (m.s) inner += `<div class="trail"><span style="--c:var(--sky)">Seen ${esc(fmt(m.s))}</span>${m.a ? `<span style="--c:var(--green)">Acknowledged ${esc(fmt(m.a))}</span>` : ''}</div>`;
+    if (a.due) inner += `<div class="due"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Complete by ${new Date(a.due + 'T00:00').toLocaleDateString('en-IN', {weekday:'long', day:'numeric', month:'long'})}</div>`;
+    if (a.ack || a.act) inner += steps(a, m);
+    if (a.type === 'SMS') inner += `<div class="acts"><button class="btn tn" data-copy="${a.id}">Copy SMS text</button></div>`;
+    if (!a.ack && !a.act && m.s) inner += `<div class="trail"><span style="--c:var(--sky)">Read ${esc(fmt(m.s))}</span></div>`;
     if (PIN && LOG) inner += report(a);
     inner += `</div>`;
   }
@@ -342,31 +366,46 @@ function card(a){
         <small>${esc(a.by || '')} · ${esc(ago(a.at))}${a.sample ? ' · sample' : ''}</small>
         <span class="aud">${aud.map(x => `<span>${esc(x)}</span>`).join('')}</span></span>
       ${ME && forMe(a) ? `<span class="st ${sk}">${sl}</span>` : ''}
-    </button>${inner}</article>`;
+    </button>${PIN ? `<div class="adrow"><button type="button" class="mini" data-edit="${a.id}">Edit</button><button type="button" class="mini rd" data-del="${a.id}">Remove</button></div>` : ''}${inner}</article>`;
+}
+/* the three steps for staff: read → acknowledge → action taken, each with its own time */
+function steps(a, m){
+  const S = [['s', 'Read', m.s, ''],
+             ['a', 'Acknowledged', m.a, `<button class="btn big" data-ack="${a.id}">${CHECK}I have read and noted this</button>`]];
+  if (a.act) S.push(['x', a.actl || 'Action taken', m.x, `<button class="btn big gold" data-act="${a.id}">${CHECK}${esc(a.actl || 'Action taken')} · mark done</button>`]);
+  const cur = S.findIndex(x => !x[2]);
+  if (!ME) return `<div class="due" style="color:var(--muted)">Type your name at the top to acknowledge this.</div>`;
+  return `<ol class="steps">` + S.map(([k, l, t, btn], i) => `<li class="${t ? 'on' : i === cur ? 'cur' : ''}"><span class="n">${t ? CHECK : i + 1}</span><div><b>${esc(l)}</b>${t ? `<small>${esc(fmt(t))}</small>` : i === cur ? btn : '<small>After the step above</small>'}</div></li>`).join('') + `</ol>`
+    + (cur < 0 ? `<div class="done"><span class="hx">${CHECK}</span><span>All done · thank you</span></div>` : '');
 }
 /* admin view: who has acknowledged, who has only seen, who has not opened it */
 function report(a){
   const exp = expected(a), rows = LOG.filter(r => r.id === a.id), by = {};
   rows.forEach(r => { const k = r.n.toLowerCase(); const o = by[k] || (by[k] = {n: r.n}); if (!o[r.k] || r.t < o[r.k]) o[r.k] = r.t; });
-  const ack = Object.values(by).filter(o => o.a).sort((x, y) => x.a - y.a);
-  const seen = Object.values(by).filter(o => o.s && !o.a).sort((x, y) => x.s - y.s);
+  const full = need(a), P = Object.values(by);
+  const done = P.filter(o => o[full]).sort((x, y) => x[full] - y[full]);
+  const ackOnly = a.act ? P.filter(o => o.a && !o.x).sort((x, y) => x.a - y.a) : [];
+  const seenOnly = full === 's' ? [] : P.filter(o => o.s && !o.a && !o.x).sort((x, y) => x.s - y.s);
   const not = exp.filter(s => !by[s.n.toLowerCase()]);
   const tot = Math.max(exp.length, 1), end = dueEnd(a);
-  const A = Math.min(a.ack ? ack.length : ack.length + seen.length, tot), S = a.ack ? Math.min(seen.length, tot - A) : 0;
-  const views = a.ack ? [['ack','Acknowledged',ack.length,'var(--green)'],['seen','Seen only',seen.length,'var(--gold)'],['not','Not seen',not.length,'var(--crimson)']]
-                      : [['seen','Seen',ack.length + seen.length,'var(--green)'],['not','Not seen',not.length,'var(--crimson)']];
+  const A = Math.min(done.length, tot), S = Math.min(ackOnly.length + seenOnly.length, tot - A);
+  const views = [['done', a.act ? (a.actl || 'Action taken') : a.ack ? 'Acknowledged' : 'Read', done.length, 'var(--green)']];
+  if (a.act) views.push(['ack', 'Acknowledged only', ackOnly.length, 'var(--purple)']);
+  if (full !== 's') views.push(['seen', 'Read only', seenOnly.length, 'var(--gold)']);
+  views.push(['not', 'Not opened', not.length, 'var(--crimson)']);
   const v = REPV[a.id] || 'not';
   const li = (n, right, cls) => `<li><span class="av" style="background:${avc(n)}">${esc(initials(n))}</span><span>${esc(n)}</span><span class="${cls || ''}">${right}</span></li>`;
   let items = '';
-  if (v === 'ack') items = ack.map(o => li(o.n, esc(fmt(o.a)) + (end && o.a > end ? ' · late' : ''), end && o.a > end ? 'late' : '')).join('');
-  if (v === 'seen') items = (a.ack ? seen : ack.concat(seen)).map(o => li(o.n, esc(fmt(o.s)))).join('');
+  if (v === 'done') items = done.map(o => { const late = end && o[full] > end; return li(o.n, esc(fmt(o[full])) + (late ? ' · late' : ''), late ? 'late' : ''); }).join('');
+  if (v === 'ack') items = ackOnly.map(o => li(o.n, esc(fmt(o.a)))).join('');
+  if (v === 'seen') items = seenOnly.map(o => li(o.n, esc(fmt(o.s)))).join('');
   if (v === 'not') items = not.map(s => li(s.n, esc(s.d))).join('');
   const pct = Math.round(A / tot * 100);
   return `<div class="rep"><div class="rh">
-      <div class="ring" style="--a:${A / tot * 100}%;--b:${(A + S) / tot * 100}%"><div><span><b>${pct}%</b><small>${a.ack ? 'DONE' : 'SEEN'}</small></span></div></div>
-      <div class="leg">${views.map(([k,l,n,c]) => `<button type="button" class="lg2" data-rv="${a.id}" data-k="${k}" aria-pressed="${v===k}" style="--c:${c}"><i></i>${l}<b>${n} / ${exp.length}</b></button>`).join('')}</div></div>
+      <div class="ring" style="--a:${A / tot * 100}%;--b:${(A + S) / tot * 100}%"><div><span><b>${pct}%</b><small>DONE</small></span></div></div>
+      <div class="leg">${views.map(([k,l,n,c]) => `<button type="button" class="lg2" data-rv="${a.id}" data-k="${k}" aria-pressed="${v===k}" style="--c:${c}"><i></i>${esc(l)}<b>${n} / ${exp.length}</b></button>`).join('')}</div></div>
     <ul class="rl">${items || '<li>No one</li>'}</ul>
-    ${v === 'not' && not.length ? `<div class="acts"><button class="btn tn" data-cpnot="${a.id}">Copy names for WhatsApp</button></div>` : ''}</div>`;
+    ${v !== 'done' && items ? `<div class="acts"><button class="btn tn" data-cpv="${a.id}" data-k="${v}">Copy these names for WhatsApp</button></div>` : ''}</div>`;
 }
 function ripple(e){
   const b = e.currentTarget, r = b.getBoundingClientRect(), s = Math.max(r.width, r.height), d = document.createElement('span');
@@ -381,11 +420,12 @@ function bind(){
   document.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => form(LIST.find(a => a.id === b.dataset.edit)));
   document.querySelectorAll('[data-del]').forEach(b => b.onclick = () => del(b.dataset.del, b));
   document.querySelectorAll('[data-rv]').forEach(b => b.onclick = () => { REPV[b.dataset.rv] = b.dataset.k; draw(); });
-  document.querySelectorAll('[data-cpnot]').forEach(b => b.onclick = () => {
-    const a = LIST.find(x => x.id === b.dataset.cpnot), got = new Set(LOG.filter(r => r.id === a.id).map(r => r.n.toLowerCase()));
-    const names = expected(a).filter(s => !got.has(s.n.toLowerCase())).map(s => '• ' + s.n);
-    copy(`*${a.title}*\nNot yet seen (${names.length}):\n${names.join('\n')}\n\nPlease open Announcements in the FIS Staff Hub and acknowledge.`, 'Names copied');
+  document.querySelectorAll('[data-cpv]').forEach(b => b.onclick = () => {
+    const a = LIST.find(x => x.id === b.dataset.cpv), names = [...b.closest('.rep').querySelectorAll('.rl li')].map(li => '• ' + li.children[1].textContent);
+    const what = {not: 'Not opened yet', seen: 'Read but not acknowledged', ack: 'Acknowledged, action not marked'}[b.dataset.k] || 'Pending';
+    copy(`*${a.title}*\n${what} (${names.length}):\n${names.join('\n')}\n\nPlease open Announcements in the FIS Staff Hub and complete it.`, 'Names copied');
   });
+  document.querySelectorAll('[data-act]').forEach(b => b.onclick = () => mark(b.dataset.act, 'x', b));
 }
 function copy(t, ok){ (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => toast(ok)).catch(() => { const x = document.createElement('textarea'); x.value = t; document.body.appendChild(x); x.select(); document.execCommand('copy'); x.remove(); toast(ok); }); }
 function toggle(id){
@@ -395,7 +435,7 @@ function toggle(id){
 async function mark(id, k, btn){
   if (!ME){ toast('Type your name at the top first'); $('#me').focus(); return; }
   if (btn) btn.disabled = true;
-  try { MINE[id] = await call('annMark', [id, ME, k]); if (PIN) LOG = await call('annReport', [PIN]); draw(); if (k === 'a') toast('Acknowledged · thank you'); }
+  try { MINE[id] = await call('annMark', [id, ME, k]); if (PIN) LOG = await call('annReport', [PIN]); draw(); if (k !== 's') toast(k === 'x' ? 'Marked done · thank you' : 'Acknowledged · thank you'); }
   catch(e){ toast(e.message); if (btn) btn.disabled = false; }
 }
 async function del(id, btn){
@@ -422,29 +462,34 @@ function adminMenu(){
   d.querySelector('#lock').onclick = () => { PIN = ''; LOG = null; try { sessionStorage.removeItem('fisAnnPin'); } catch(e){} d.remove(); draw(); toast('Admin locked'); };
 }
 function form(a){
-  a = a || {type:'Notice', aud:['All staff'], ack:true, hi:false};
+  a = a || {type:'Notice', aud:['All staff'], ack:true, act:false, actl:'Announced in class', hi:false};
   const d = sheet(`<h2>${a.id ? 'Edit announcement' : 'New announcement'}</h2>
     <label class="fl">Type</label><div class="seg" id="fty">${['Notice','Circular','SMS'].map(t => `<button type="button" data-v="${t}" aria-pressed="${a.type===t}">${t === 'SMS' ? 'Parent SMS' : t}</button>`).join('')}</div>
     <label class="fl" for="ftitle">Title</label><input type="text" id="ftitle" maxlength="160" value="${esc(a.title || '')}" placeholder="e.g. Sports Day duty briefing">
     <label class="fl" for="fbody">Message</label><textarea id="fbody" maxlength="6000" placeholder="Write the full notice here">${esc(a.body || '')}</textarea>
-    <label class="fl">For</label><div class="chips" id="faud" style="flex-wrap:wrap">${AUDS.map(x => `<button type="button" class="chip" data-v="${esc(x)}" aria-pressed="${(a.aud || []).includes(x)}">${esc(x)}</button>`).join('')}</div>
-    <label class="sw"><span>Staff must acknowledge<small>Shows the "I have read and noted this" button</small></span><input type="checkbox" id="fack" ${a.ack ? 'checked' : ''}></label>
-    <label class="fl" for="fdue">Acknowledge by (optional)</label><input type="date" id="fdue" value="${esc(a.due || '')}">
+    <label class="fl">Applicable to</label><div class="cl" id="faud">${AUDS.map(x => `<label class="ck"><input type="checkbox" value="${esc(x)}" ${(a.aud || []).includes(x) ? 'checked' : ''}><span>${esc(x)}</span><small>${expected({aud:[x]}).length} staff</small></label>`).join('')}</div>
+    <label class="sw"><span>Staff must acknowledge<small>Step 2 · "I have read and noted this"</small></span><input type="checkbox" id="fack" ${a.ack || a.act ? 'checked' : ''}></label>
+    <label class="sw"><span>Staff must confirm an action<small>Step 3 · for example "Announced in class"</small></span><input type="checkbox" id="fact" ${a.act ? 'checked' : ''}></label>
+    <div id="factw" ${a.act ? '' : 'hidden'}><label class="fl" for="factl">Action to confirm</label><input type="text" id="factl" maxlength="60" value="${esc(a.actl || 'Announced in class')}" list="actls">
+      <datalist id="actls"><option value="Announced in class"><option value="Done in class"><option value="SMS sent to parents"><option value="Diary note given"><option value="Shared with students"></datalist></div>
+    <label class="fl" for="fdue">Complete by (optional)</label><input type="date" id="fdue" value="${esc(a.due || '')}">
     <label class="sw"><span>Show in the moving highlights<small>Also scrolls on the Staff Hub</small></span><input type="checkbox" id="fhi" ${a.hi ? 'checked' : ''}></label>
     <label class="fl" for="fby">Posted by</label><input type="text" id="fby" maxlength="80" value="${esc(a.by || store.get('fisAnnBy') || 'Director')}">
     <div class="err" id="ferr"></div>
     <div class="acts"><button class="btn tn" data-x>Cancel</button><button class="btn" id="fok">${a.id ? 'Save changes' : 'Post'}</button></div>`);
   d.querySelector('[data-x]').onclick = () => d.remove();
   d.querySelectorAll('#fty button').forEach(b => b.onclick = () => { d.querySelectorAll('#fty button').forEach(x => x.setAttribute('aria-pressed', x === b)); if (b.dataset.v === 'SMS') d.querySelector('#fack').checked = false; });
-  d.querySelectorAll('#faud .chip').forEach(b => b.onclick = () => {
-    const on = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', on);
-    if (on && b.dataset.v === 'All staff') d.querySelectorAll('#faud .chip').forEach(x => { if (x !== b) x.setAttribute('aria-pressed', false); });
-    if (on && b.dataset.v !== 'All staff') d.querySelector('#faud [data-v="All staff"]').setAttribute('aria-pressed', false);
+  d.querySelectorAll('#faud input').forEach(b => b.onchange = () => {
+    if (b.checked && b.value === 'All staff') d.querySelectorAll('#faud input').forEach(x => { if (x !== b) x.checked = false; });
+    if (b.checked && b.value !== 'All staff') d.querySelector('#faud input[value="All staff"]').checked = false;
   });
+  d.querySelector('#fact').onchange = e => { d.querySelector('#factw').hidden = !e.target.checked; if (e.target.checked) d.querySelector('#fack').checked = true; };
+  d.querySelector('#fack').onchange = e => { if (!e.target.checked){ d.querySelector('#fact').checked = false; d.querySelector('#factw').hidden = true; } };
   d.querySelector('#fok').onclick = async () => {
     const o = { id: a.id, type: d.querySelector('#fty [aria-pressed="true"]').dataset.v, title: d.querySelector('#ftitle').value.trim(), body: d.querySelector('#fbody').value.trim(),
-      aud: [...d.querySelectorAll('#faud [aria-pressed="true"]')].map(b => b.dataset.v), ack: d.querySelector('#fack').checked, due: d.querySelector('#fdue').value, hi: d.querySelector('#fhi').checked, by: d.querySelector('#fby').value.trim() };
+      aud: [...d.querySelectorAll('#faud input:checked')].map(b => b.value), ack: d.querySelector('#fack').checked, act: d.querySelector('#fact').checked, actl: d.querySelector('#factl').value.trim() || 'Action taken', due: d.querySelector('#fdue').value, hi: d.querySelector('#fhi').checked, by: d.querySelector('#fby').value.trim() };
     if (!o.title){ d.querySelector('#ferr').textContent = 'Add a title.'; return; }
+    if (!o.aud.length){ d.querySelector('#ferr').textContent = 'Tick at least one group under Applicable to.'; return; }
     store.set('fisAnnBy', o.by);
     const btn = d.querySelector('#fok'); btn.disabled = true;
     try { const s = await call('annSave', [PIN, o]); d.remove(); OPEN = s.id; toast(a.id ? 'Saved' : 'Posted'); load(); }
@@ -455,7 +500,7 @@ function form(a){
 $('#me').value = ME;
 $('#me').onchange = () => {
   const v = $('#me').value.trim(), s = STAFF.find(x => x.n.toLowerCase() === v.toLowerCase());
-  ME = s ? s.n : v; $('#me').value = ME; store.set('fisAnnName', ME); load();
+  const nm = s ? s.n : v; if (nm === ME) return; ME = nm; MINE = {}; $('#me').value = ME; store.set('fisAnnName', ME); load();
 };
 $('#adm').onclick = () => PIN ? adminMenu() : askPin();
 $('#newBtn').onclick = () => form();
