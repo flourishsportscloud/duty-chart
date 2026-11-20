@@ -11,8 +11,33 @@
 /* Hosted-mode bridge: gives the page the same db/user/assets calls it uses inside Claude, backed by the Google Apps Script web app in Code.gs. */
 (function(){
 var API=(new URLSearchParams(location.search).get('api'))||"";
-var CODE='';try{CODE=localStorage.getItem('cd_code')||''}catch(e){}
+var CODE='';try{CODE=localStorage.getItem('cd_tok')||''}catch(e){}
+var PREVIEW=!API;
+var L={ver:2,docs:{},ph:{}};
+function seed(){
+  var n=new Date(),p=function(x){return(x<10?'0':'')+x},iso=n.getFullYear()+'-'+p(n.getMonth()+1)+'-'+p(n.getDate()),m=n.getHours()*60+n.getMinutes();
+  var hm=function(t){t=Math.max(0,Math.min(1439,t));return p(Math.floor(t/60))+':'+p(t%60)};
+  function sl(o,i){return Object.assign({order:i,kind:'check',cm:'pending',rv:'pending',by:'CM',sections:'',subject:'',lesson:'',bundle:0,from:'',to:'',note:''},o)}
+  L.docs['days/'+iso+'__P5']={date:iso,unit:'P5',slots:{
+    a1:sl({title:'Diary checking',material:'Diary',by:'CM',bundle:34,from:hm(m-150),to:hm(m-60),cm:'checked',rv:'yes',errors:0},1),
+    a2:sl({title:'Science notebook',material:'Notebook',subject:'Science',lesson:'L-8',sections:'A',by:'CM',bundle:36,from:hm(m-30),to:hm(m+75)},2),
+    a3:sl({title:'Maths notebook',material:'Notebook',subject:'Maths',sections:'B',by:'CM',bundle:35,from:hm(m+90),to:hm(m+150)},3),
+    a4:sl({title:'English book',material:'Book',subject:'English',sections:'C',by:'CM',bundle:33,note:'Collected after written work'},4)
+  }};
+  L.docs['days/'+iso+'__S6']={date:iso,unit:'S6',slots:{
+    b1:sl({title:'Diary checking',material:'Diary',by:'CM',bundle:40,from:hm(m-200),to:hm(m-110),cm:'due',due:3},1),
+    b2:sl({title:'S.St book',material:'Book',subject:'S.St',sections:'A',by:'CM',bundle:41,from:hm(m+20),to:hm(m+80)},2)
+  }};
+}
+function local(fn,a){
+  if(fn==='ping')return true;
+  if(fn==='sync'){var d={ver:L.ver,days:{},docs:{}};Object.keys(L.docs).forEach(function(k){if(k.indexOf('config/')===0)d.docs[k]=L.docs[k];else if(a[1].indexOf(L.docs[k].date)>=0)d.days[k.slice(5)]=L.docs[k]});return d}
+  if(fn==='set'||fn==='update'){L.docs[a[0]]=fn==='set'?a[1]:merge(L.docs[a[0]],a[1]);L.ver++;return true}
+  if(fn==='putPhoto'){L.ph[a[0]]=a[1];return true}
+  if(fn==='getPhoto')return L.ph[a[0]];
+}
 function call(fn,args){
+  if(PREVIEW)return Promise.resolve(local(fn,args||[]));
   return fetch(API,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:fn,code:CODE,args:args||[]})})
     .then(function(r){return r.json()}).then(function(j){if(!j.ok){var e=new Error(j.error||'error');e.auth=!!j.auth;throw e}return j.data});
 }
@@ -21,6 +46,7 @@ function merge(a,b){
   var o=(a&&typeof a==='object'&&!Array.isArray(a))?JSON.parse(JSON.stringify(a)):{};
   Object.keys(b).forEach(function(k){o[k]=merge(o[k],b[k])});return o;
 }
+if(PREVIEW)seed();
 var cache={days:{},docs:{}},ver=-1,dates=[],qL=[],dL=[],busy=false,again=false,failed=0;
 function snapDays(){var ids=Object.keys(cache.days);return{docs:ids.map(function(id){return{id:id,data:function(){return cache.days[id]}}}),metadata:{fromCache:false}}}
 function snapDoc(p){var v=cache.docs[p];return{exists:!!v,data:function(){return v}}}
@@ -33,7 +59,7 @@ function poll(force){
   call('sync',[ver,dates]).then(function(d){
     failed=0;
     if(!d.same){ver=d.ver;cache.days=d.days||{};cache.docs=d.docs||{};notify()}
-  }).catch(function(e){failed++;if(e.auth){try{localStorage.removeItem('cd_code')}catch(x){}location.reload();return}if(failed>1)fail(e)})
+  }).catch(function(e){failed++;if(e.auth){try{localStorage.removeItem('cd_tok')}catch(x){}location.reload();return}if(failed>1)fail(e)})
   .then(function(){busy=false;if(again){again=false;poll(false)}});
 }
 setInterval(function(){if(!document.hidden)poll(false)},12000);
@@ -77,23 +103,24 @@ function fix(img){
   pend[id].then(function(u){var a=document.querySelectorAll('img[data-pid="'+id+'"]');for(var i=0;i<a.length;i++)a[i].src=u}).catch(function(){delete pend[id]});
 }
 new MutationObserver(function(ms){ms.forEach(function(m){m.addedNodes.forEach(function(n){if(n.nodeType!==1)return;if(n.tagName==='IMG')fix(n);else if(n.querySelectorAll)n.querySelectorAll('img').forEach(fix)})})}).observe(document.documentElement,{childList:true,subtree:true});
-/* sign-in gate: the common staff code */
-var ready=new Promise(function(resolve,reject){
+/* sign-in gate: same name and password as the Diary app */
+var ready=new Promise(function(resolve){
   function gate(msg){
     var d=document.createElement('div');
     d.style.cssText='position:fixed;inset:0;z-index:99999;background:#1F2D5A;display:flex;align-items:center;justify-content:center;padding:20px;font-family:Inter,system-ui,sans-serif';
-    d.innerHTML='<form style="background:#fff;border-radius:14px;padding:26px;max-width:340px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.35)"><div style="font-family:Lora,Georgia,serif;font-size:22px;font-weight:700;color:#1F2D5A">Checking Desk</div><div style="height:3px;width:44px;background:#E3A94F;margin:8px 0 14px"></div><div style="color:#646B80;font-size:13.5px;margin-bottom:12px">Flourish International School · enter the staff code shared by the school.</div><input id="cd-code" type="password" autocomplete="off" placeholder="Staff code" style="width:100%;padding:11px 12px;border:1px solid #E6E2D8;border-radius:9px;font-size:15px"><div id="cd-err" style="color:#A42A47;font-size:13px;min-height:18px;margin:8px 0">'+(msg||'')+'</div><button type="submit" style="width:100%;padding:11px;border:0;border-radius:9px;background:#1F2D5A;color:#fff;font-weight:700;font-size:15px">Open</button></form>';
+    var f='width:100%;padding:11px 12px;border:1px solid #E6E2D8;border-radius:9px;font-size:15px;margin-bottom:9px';
+    d.innerHTML='<form style="background:#fff;border-radius:14px;padding:26px;max-width:340px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.35)"><div style="font-family:Lora,Georgia,serif;font-size:22px;font-weight:700;color:#1F2D5A">Checking Desk</div><div style="height:3px;width:44px;background:#E3A94F;margin:8px 0 14px"></div><div style="color:#646B80;font-size:13.5px;margin-bottom:12px">Flourish International School · log in with the same name and password as the Diary app.</div><input id="cd-n" type="text" autocomplete="username" placeholder="Your name" style="'+f+'"><input id="cd-p" type="password" autocomplete="current-password" placeholder="Password" style="'+f+'"><div id="cd-err" style="color:#A42A47;font-size:13px;min-height:18px;margin:2px 0 8px">'+(msg||'')+'</div><button type="submit" style="width:100%;padding:11px;border:0;border-radius:9px;background:#1F2D5A;color:#fff;font-weight:700;font-size:15px">Log in</button></form>';
     document.body.appendChild(d);
     d.querySelector('form').onsubmit=function(ev){
-      ev.preventDefault();CODE=d.querySelector('#cd-code').value.trim();
-      if(!CODE)return;
-      call('ping').then(function(){try{localStorage.setItem('cd_code',CODE)}catch(e){}d.remove();resolve()}).catch(function(e){CODE='';d.querySelector('#cd-err').textContent=e.auth?'That code is not right.':'Could not reach the server. Check the connection.'});
+      ev.preventDefault();var n=d.querySelector('#cd-n').value.trim(),pw=d.querySelector('#cd-p').value;
+      if(!n||!pw)return;CODE='';
+      call('login',[n,pw]).then(function(r){CODE=r.token;try{localStorage.setItem('cd_tok',CODE);localStorage.setItem('cd_name',r.name)}catch(e){}d.remove();resolve()}).catch(function(e){d.querySelector('#cd-err').textContent=e.auth||/password|login|approv/i.test(e.message)?e.message:'Could not reach the server. Check the connection.'});
     };
   }
   function start(){
-    if(!API){gate('This desk is not connected to its server yet.');return}
+    if(PREVIEW){var b=document.createElement('div');b.textContent='PREVIEW · sample data only, nothing is saved. The live desk opens once it is connected.';b.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:9999;background:#E3A94F;color:#1B2340;font:600 12.5px Inter,system-ui,sans-serif;text-align:center;padding:6px 10px';document.body.appendChild(b);resolve();return}
     if(!CODE){gate();return}
-    call('ping').then(resolve).catch(function(e){if(e.auth){CODE='';try{localStorage.removeItem('cd_code')}catch(x){}gate()}else resolve()});
+    call('ping').then(resolve).catch(function(e){if(e.auth){CODE='';try{localStorage.removeItem('cd_tok')}catch(x){}gate()}else resolve()});
   }
   if(document.body)start();else document.addEventListener('DOMContentLoaded',start);
 });
@@ -435,7 +462,7 @@ function queue(key,fn){
 }
 function errText(e){
   const c=e&&e.code;
-  if(c==='invalid_argument')return 'You can view this page but not change it. Ask the owner for Contributor access.';
+  if(c==='invalid_argument')return 'You can view this page but not change it.';
   if(c==='quota_exceeded')return 'The database is full. Delete old days before adding more.';
   return 'Could not save. Check the connection and try again.';
 }
@@ -507,7 +534,7 @@ function render(){
   if(S.dbMissing)h+='<div class="banner bad">Could not reach the shared plan. Check the connection and reload.</div>';
   else if(S.slow&&!S.loaded)h+='<div class="banner">Saved plans cannot be reached yet. This page keeps trying and will fill in when the connection returns.</div>';
   else if(S.slow)h+='<div class="banner">The connection dropped. What you see may be out of date.</div>';
-  if(!S.canWrite&&!S.dbMissing)h+='<div class="banner">You have view-only access.</div>';
+  if(!S.canWrite&&!S.dbMissing)h+='<div class="banner">You have view-only access. Ask the owner for Contributor access to update the plan.</div>';
   if(S.tab==='board')h+=renderBoard();
   else if(S.tab==='overview')h+=renderOverview();
   else if(S.tab==='next')h+=renderNext();
