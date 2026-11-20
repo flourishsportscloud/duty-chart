@@ -3,334 +3,593 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Transport Complaints &amp; Requests</title>
-<link rel="icon" href="../fis/fis-icon-192.png">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<title>Transport Helpdesk · FIS</title>
+<link rel="icon" href="../fis/fis-logo-192.png">
+<link rel="apple-touch-icon" href="../fis/fis-logo-180.png">
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#f3f5f9;--card:#fff;--ink:#17233d;--mute:#5f6b80;--line:#e1e6ee;
-  --brand:#1c3461;--brand2:#e9eef7;--mag:#e5256a;--amb:#f2a93b;
-  --hi:#c8323c;--hibg:#fbe7e8;--md:#a8670a;--mdbg:#fdf1dc;--lo:#1b74ab;--lobg:#e3f2fb;
-  --ok:#1f8a5b;--okbg:#e4f4ec;--un:#8a94a6;--unbg:#eef1f5;--pur:#6a3a92;--purbg:#f1eaf8;
+  --navy:#1F2D5A;--navy2:#16214A;--gold:#E3A94F;--goldInk:#8A5B12;--goldSoft:#FBF1DC;
+  --bg:#F5F3EE;--card:#fff;--ink:#1B2340;--mute:#646B80;--line:#E6E2D8;--cream:#F3F0E8;--cream2:#F8F6F1;
+  --red:#A42A47;--redbg:#F8E6EA;--amb:#8A5B12;--ambbg:#FBF1DC;--grn:#1F6B47;--grnbg:#E6F1EA;--blu:#1B5E8A;--blubg:#E3EFF7;
+  --pur:#5F3585;--purbg:#EFE7F5;--gry:#8A90A2;--grybg:#EEF0F4;
+  --head:'Lora',Georgia,'Times New Roman',serif;
 }
 *{box-sizing:border-box}
-body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:15px}
-header{background:var(--brand);color:#fff;padding:10px max(14px,env(safe-area-inset-right)) 0 max(14px,env(safe-area-inset-left));position:sticky;top:0;z-index:20;box-shadow:0 2px 10px rgba(16,30,60,.25);border-top:4px solid var(--mag)}
-.hrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.logo{width:40px;height:40px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none}
-.logo img{width:32px}
-h1{font-size:16px;margin:0;font-weight:700;flex:1;min-width:170px;line-height:1.25}
-h1 small{display:block;font-weight:500;font-size:11.5px;opacity:.8;letter-spacing:.3px;text-transform:uppercase}
-.sync{font-size:11px;padding:4px 9px;border-radius:20px;background:rgba(255,255,255,.18);border:0;color:#fff;font:inherit;font-size:11.5px;cursor:pointer}
-nav{display:flex;gap:2px;overflow-x:auto;margin-top:8px;scrollbar-width:none}nav::-webkit-scrollbar{display:none}
-nav button{background:none;border:0;color:#c9d4ea;font:inherit;font-weight:600;font-size:13.5px;padding:11px 12px;border-bottom:3px solid transparent;white-space:nowrap;cursor:pointer}
-nav button.on{color:#fff;border-color:var(--amb)}
-nav button b{display:inline-block;min-width:18px;height:18px;line-height:18px;border-radius:9px;background:rgba(255,255,255,.16);font-size:11px;margin-left:6px;text-align:center;padding:0 5px}
-main{padding:12px max(12px,env(safe-area-inset-right)) 40px max(12px,env(safe-area-inset-left));max-width:1150px;margin:0 auto}
-.card{background:var(--card);border-radius:12px;padding:14px;border:1px solid var(--line);margin-bottom:12px;box-shadow:0 1px 2px rgba(20,33,61,.05)}
-.secthead{display:flex;align-items:center;gap:8px;margin:2px 0 12px;flex-wrap:wrap}.secthead i{width:4px;height:22px;border-radius:2px;background:var(--mag)}.secthead span{font-size:17px;font-weight:700;color:var(--brand)}.secthead small{color:var(--mute);font-size:12px}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit}
+header{background:var(--navy);color:#fff;padding:12px max(16px,env(safe-area-inset-right)) 0 max(16px,env(safe-area-inset-left));position:sticky;top:0;z-index:20;border-bottom:3px solid var(--gold);box-shadow:0 4px 18px rgba(15,22,50,.28)}
+.hrow{display:flex;align-items:center;gap:12px}
+.logo{width:46px;height:46px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.logo img{width:40px;height:40px;object-fit:contain}
+h1{font-family:var(--head);font-size:19px;margin:0;font-weight:600;flex:1;min-width:0;line-height:1.2}
+h1 small{display:block;font-family:Inter,sans-serif;color:var(--gold);font-weight:600;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:2px}
+.sync{flex:none;background:rgba(227,169,79,.18);color:#F4D9A6;border:1px solid rgba(227,169,79,.4);font-weight:600;letter-spacing:.03em;font-size:11px;padding:5px 10px;border-radius:20px;cursor:pointer;white-space:nowrap}
+nav{display:flex;gap:6px;overflow-x:auto;padding:12px 0;scrollbar-width:none}nav::-webkit-scrollbar{display:none}
+nav button{flex:none;font-family:var(--head);font-weight:600;font-size:14px;color:#DCE1F0;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:8px 13px;cursor:pointer;white-space:nowrap}
+nav button.on{background:var(--gold);color:var(--navy2);border-color:var(--gold)}
+nav button b{font-family:Inter,sans-serif;display:inline-block;min-width:19px;height:19px;line-height:19px;border-radius:10px;background:#C2385B;color:#fff;font-size:11px;margin-left:6px;text-align:center;padding:0 5px}
+main{padding:14px max(14px,env(safe-area-inset-right)) 60px max(14px,env(safe-area-inset-left));max-width:1120px;margin:0 auto}
+.card{background:var(--card);border-radius:16px;border:1px solid var(--line);border-top:4px solid var(--navy);box-shadow:0 1px 2px rgba(20,25,60,.05),0 6px 20px rgba(20,25,60,.04);padding:16px;margin-bottom:14px}
+.card.gold{border-top-color:var(--gold)}
+.sh{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:0 0 12px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.sh span{font-family:var(--head);font-weight:600;font-size:19px;color:var(--navy)}
+.sh small{color:var(--mute);font-size:12.5px}
+.sh .r{margin-left:auto}
+.lbl{font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+/* period control */
+.period{display:flex;background:#fff;border:1px solid var(--line);border-radius:12px;padding:3px;gap:2px;overflow-x:auto;scrollbar-width:none;margin-bottom:10px}
+.period::-webkit-scrollbar{display:none}
+.period button{flex:1 0 auto;border:0;background:none;border-radius:9px;padding:8px 12px;font-weight:600;font-size:13px;color:var(--mute);cursor:pointer;white-space:nowrap}
+.period button.on{background:var(--navy);color:#fff}
+.prange{font-size:12px;color:var(--mute);margin:-4px 2px 12px}
+.dates{display:flex;gap:8px;margin:0 0 12px}.dates input{flex:1}
 .bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
-.chip{font:inherit;font-size:12.5px;font-weight:600;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:16px;padding:6px 11px;cursor:pointer}
-.chip.on{background:var(--brand);color:#fff;border-color:var(--brand)}
-input,select,textarea{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);min-width:0}
-input[type=search]{flex:1;min-width:160px}
-.btn{font:inherit;font-weight:600;border:0;border-radius:9px;padding:8px 13px;cursor:pointer;background:var(--brand);color:#fff}
-.btn.ghost{background:var(--brand2);color:var(--brand)}.btn.sm{padding:5px 10px;font-size:12.5px}
-.btn:focus-visible,.chip:focus-visible,nav button:focus-visible{outline:2px solid var(--amb);outline-offset:2px}
-.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
-.tile{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px}
-.tile b{display:block;font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--brand)}
-.tile span{font-size:12.5px;color:var(--mute);font-weight:600}
-.tile small{display:block;font-size:11.5px;color:var(--mute);margin-top:4px}
-.tile.red b{color:var(--hi)}.tile.amb b{color:var(--md)}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media (max-width:760px){.two{grid-template-columns:1fr}}
-.hb{display:flex;flex-direction:column;gap:6px}
-.hr{display:grid;grid-template-columns:minmax(0,130px) 1fr 34px;gap:8px;align-items:center;font-size:13px;cursor:pointer;border:0;background:none;font:inherit;text-align:left;padding:0;color:var(--ink)}
-.hr span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
-.hr .tr{height:14px;background:var(--bg);border-radius:4px;overflow:hidden;display:flex}
-.hr .tr i{display:block;height:100%}.i-hi{background:var(--hi)}.i-md{background:var(--amb)}.i-lo{background:var(--lo)}.i-rq{background:var(--pur)}
-.hr b{text-align:right;font-variant-numeric:tabular-nums}
-.lg{font-size:11.5px;color:var(--mute);display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}.lg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
-.e{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:#fff}
-.e.k-Complaint{border-left:4px solid var(--hi)}.e.k-Request,.e.k-Query{border-left:4px solid var(--pur)}.e.k-Change{border-left:4px solid var(--lo)}.e.k-Call,.e.k-Not.marked{border-left:4px solid var(--un)}
-.eh{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:13px}
-.eh .nm{font-weight:700;font-size:14px}.eh .d{color:var(--mute);font-variant-numeric:tabular-nums}
-.pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--unbg);color:var(--mute);white-space:nowrap}
-.p-High{background:var(--hibg);color:var(--hi)}.p-Medium{background:var(--mdbg);color:var(--md)}.p-Low{background:var(--lobg);color:var(--lo)}
-.s-Open{background:var(--hibg);color:var(--hi)}.s-Closed,.s-Approved{background:var(--okbg);color:var(--ok)}.s-Action{background:var(--mdbg);color:var(--md)}.s-Denied{background:var(--unbg);color:var(--ink)}.s-Not{background:var(--mdbg);color:var(--md)}
-.vc{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:6px;background:var(--brand2);color:var(--brand)}
-.vc.q{background:var(--mdbg);color:var(--md)}
-.et{margin:6px 0 4px;font-size:14px;line-height:1.45}
-.ea{font-size:13px;color:var(--mute)}.ea b{color:var(--ink);font-weight:600}
-.ef{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px}
-.ed{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-top:8px;padding:10px;background:var(--bg);border-radius:8px}
-.ed label{font-size:11.5px;font-weight:600;color:var(--mute);display:flex;flex-direction:column;gap:3px}
-.tw{overflow-x:auto}
-/* compact rows like Arrivals & Departures */
-.kid{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid var(--line);cursor:pointer;width:100%;background:none;border-left:0;border-right:0;border-top:0;font:inherit;color:inherit;text-align:left}
-.kid:last-child{border-bottom:0}.kid:hover{background:var(--bg)}.kid.on{background:var(--brand2)}
-.kid .n{width:24px;color:var(--mute);font-size:12px;text-align:right;flex:none;font-variant-numeric:tabular-nums}
-.kid .bar4{width:4px;align-self:stretch;border-radius:2px;flex:none;background:var(--un)}
-.kid .bar4.High{background:var(--hi)}.kid .bar4.Medium{background:var(--amb)}.kid .bar4.Low{background:var(--lo)}.kid .bar4.rq{background:var(--pur)}.kid .bar4.chg{background:var(--lo)}
-.kid .nm{flex:1;min-width:0}
-.kid .nm div{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.kid .nm div small{font-weight:500;color:var(--mute);margin-left:4px}
-.kid .nm span{display:block;font-size:12px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.kid .nm span.rm{color:var(--ink)}
-.tag{font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap;flex:none}
-.det{background:var(--bg);border-radius:10px;padding:12px;margin:2px 0 10px}
-.det .et{margin-top:0}
-.tg{min-width:96px;font:inherit;font-weight:700;font-size:13px;border-radius:9px;border:0;padding:9px 8px;cursor:pointer;background:var(--unbg);color:var(--un)}
-.tg.on.s-Open{background:var(--hi);color:#fff}.tg.on.s-Action{background:var(--md);color:#fff}.tg.on.s-Closed,.tg.on.s-Approved{background:var(--ok);color:#fff}.tg.on.s-Denied{background:var(--ink);color:#fff}
-.rems{margin:10px 0 0;display:flex;flex-direction:column;gap:6px}
-.rem{background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 10px;font-size:13.5px;line-height:1.4}
-.rem small{display:block;color:var(--mute);font-size:11.5px;margin-top:2px}
-.radd{display:flex;gap:8px;margin-top:8px}.radd input{flex:1}
-.counts{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}
-.counts button{background:var(--bg);border-radius:9px;padding:6px 12px;font:inherit;font-size:12px;color:var(--mute);border:1.5px solid transparent;cursor:pointer;text-align:left}
-.counts button.on{border-color:var(--brand);background:#fff}
-.counts b{display:block;font-size:18px;color:var(--ink);font-variant-numeric:tabular-nums}
-.counts .red b{color:var(--hi)}.counts .amb b{color:var(--md)}.counts .grn b{color:var(--ok)}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
-.vcard{border:1px solid var(--line);border-radius:12px;padding:12px;cursor:pointer;background:#fff;text-align:left;font:inherit;color:inherit}
-.vcard:hover,.vcard.on{border-color:var(--brand)}.vcard.on{box-shadow:0 0 0 2px var(--brand2)}
-.vcard b{font-size:16px;display:block}.vcard .st{font-size:12px;margin-top:4px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.vcard .ps{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
-table{border-collapse:collapse;width:100%;font-size:13.5px;font-variant-numeric:tabular-nums}
-th,td{padding:8px 9px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
-th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--mute)}
+input,select,textarea{font:inherit;font-size:15px;padding:9px 11px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);min-width:0}
+input:focus,select:focus,textarea:focus{outline:0;border-color:var(--gold);box-shadow:0 0 0 3px rgba(227,169,79,.3)}
+input[type=search]{flex:1;min-width:180px}
+textarea{width:100%;min-height:70px;resize:vertical}
+.btn{font-weight:600;border:0;border-radius:11px;padding:10px 15px;cursor:pointer;background:var(--navy);color:#fff;white-space:nowrap}
+.btn.gold{background:var(--gold);color:var(--navy2)}
+.btn.ghost{background:var(--cream);color:var(--navy);border:1px solid var(--line)}
+.btn.red{background:var(--red)}.btn.grn{background:var(--grn)}
+.btn.sm{padding:6px 11px;font-size:13px;border-radius:9px}
+.btn:disabled{opacity:.45;cursor:default}
+.seg{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.seg button{border:1px solid var(--line);background:#fff;border-radius:11px;padding:7px 12px;font-weight:600;font-size:13px;cursor:pointer;color:var(--ink)}
+.seg button b{margin-left:6px;font-variant-numeric:tabular-nums;color:var(--mute)}
+.seg button.on{background:var(--navy);border-color:var(--navy);color:#fff}.seg button.on b{color:var(--gold)}
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:#fff;border:1px solid var(--line);border-top:3px solid var(--gold);border-radius:14px;padding:12px 14px;cursor:pointer;text-align:left}
+.kpi.red{border-top-color:var(--red)}.kpi.navy{border-top-color:var(--navy)}.kpi.grn{border-top-color:var(--grn)}.kpi.pur{border-top-color:var(--pur)}
+.kpi span{display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:700}
+.kpi b{display:block;font-family:var(--head);font-size:30px;font-weight:700;color:var(--navy2);line-height:1.15;margin-top:4px;font-variant-numeric:tabular-nums}
+.kpi.red b{color:var(--red)}
+.kpi small{display:block;font-size:12px;color:var(--mute);margin-top:3px}
+.kpi small em{font-style:normal;font-weight:700;color:var(--ink)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media (max-width:820px){.two{grid-template-columns:1fr}}
+.two>.card{margin-bottom:0}.two{margin-bottom:14px}
+/* ranked list */
+.rk{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid var(--line);cursor:pointer;width:100%;background:none;border-left:0;border-right:0;border-top:0;text-align:left}
+.rk:last-child{border-bottom:0}.rk:hover{background:var(--cream2)}
+.rk .no{width:26px;height:26px;border-radius:8px;background:var(--cream);color:var(--navy);font-weight:700;font-size:12px;display:grid;place-items:center;flex:none}
+.rk .nm{flex:1;min-width:0}.rk .nm div{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rk .nm span{font-size:12px;color:var(--mute)}
+.rk .ct{font-family:var(--head);font-weight:700;font-size:20px;color:var(--navy2);min-width:28px;text-align:right;font-variant-numeric:tabular-nums}
+.rk .bars{width:70px;height:6px;border-radius:3px;background:var(--cream);overflow:hidden;flex:none}.rk .bars i{display:block;height:100%;background:var(--red)}
+/* case rows */
+.case{display:flex;gap:12px;padding:12px 2px;border-bottom:1px solid var(--line);cursor:pointer;width:100%;background:none;border-left:0;border-right:0;border-top:0;text-align:left;align-items:flex-start}
+.case:last-child{border-bottom:0}.case:hover{background:var(--cream2)}
+.dt{flex:none;width:46px;text-align:center;border-radius:10px;background:var(--cream);padding:5px 0;border:1px solid var(--line)}
+.dt b{display:block;font-family:var(--head);font-size:19px;color:var(--navy2);line-height:1.1}
+.dt span{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);font-weight:700}
+.case .bd{flex:1;min-width:0}
+.case .t1{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.case .t1 strong{font-size:15.5px;font-weight:700}
+.case .t1 em{font-style:normal;color:var(--mute);font-size:13px}
+.case .t2{font-size:12.5px;color:var(--mute);margin-top:3px}
+.case .t3{font-size:13.5px;margin-top:5px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.case .t4{font-size:12.5px;margin-top:5px;color:var(--navy);background:var(--cream2);border-left:3px solid var(--gold);padding:4px 8px;border-radius:0 6px 6px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:3px 8px;border-radius:7px;white-space:nowrap;background:var(--grybg);color:var(--gry);letter-spacing:.02em}
+.t-red{background:var(--redbg);color:var(--red)}.t-amb{background:var(--ambbg);color:var(--amb)}.t-grn{background:var(--grnbg);color:var(--grn)}.t-blu{background:var(--blubg);color:var(--blu)}.t-pur{background:var(--purbg);color:var(--pur)}.t-navy{background:var(--navy);color:#fff}
+.empty{padding:26px 10px;text-align:center;color:var(--mute)}
+.note{font-size:12.5px;color:#6B4A0E;background:var(--goldSoft);border:1px solid #F0DDB3;border-radius:10px;padding:9px 12px;margin-bottom:12px;line-height:1.45}
+/* tables */
+.tw{overflow-x:auto;border-radius:12px;border:1px solid var(--line)}
+table{border-collapse:collapse;width:100%;font-size:13.5px;font-variant-numeric:tabular-nums;background:#fff}
+th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{background:var(--cream);font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--mute);white-space:nowrap}
 td.n,th.n{text-align:right}
-tr.click{cursor:pointer}tr.click:hover td{background:var(--brand2)}tr.open td{background:var(--brand2)}
-td.sub .subw{position:sticky;left:0;width:min(100%,calc(100vw - 52px))}
-td.sub{padding:8px 4px 4px;background:var(--bg);white-space:normal}
-.empty{padding:20px;text-align:center;color:var(--mute)}
-.note{font-size:12.5px;color:var(--mute);background:var(--brand2);border-radius:8px;padding:8px 10px;margin-bottom:12px;line-height:1.45}
-.login{max-width:380px;margin:40px auto}
-.login label{display:block;font-size:12px;font-weight:600;color:var(--mute);margin:10px 0 4px}.login input{width:100%}
-.err{color:var(--hi);font-size:13px;margin-top:8px;min-height:1.2em}
-.toast{position:fixed;left:50%;bottom:max(18px,env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 14px;border-radius:9px;font-size:13px;z-index:50}
-@media (max-width:560px){main{padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}.card{padding:12px}.tile b{font-size:22px}}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+tr:last-child td{border-bottom:0}
+/* profile */
+.prof{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.prof .av{width:52px;height:52px;border-radius:14px;background:var(--navy);color:var(--gold);display:grid;place-items:center;font-family:var(--head);font-weight:700;font-size:22px;flex:none}
+.prof .pn{flex:1;min-width:0}.prof .pn b{display:block;font-family:var(--head);font-size:21px;color:var(--navy2)}.prof .pn span{font-size:13px;color:var(--mute)}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.stats div{background:var(--cream2);border:1px solid var(--line);border-radius:10px;padding:6px 12px;min-width:76px}
+.stats span{display:block;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:700}
+.stats b{font-family:var(--head);font-size:19px;color:var(--navy2)}
+.back{background:none;border:0;color:var(--navy);font-weight:600;cursor:pointer;padding:4px 0;margin-bottom:8px}
+/* history cards inside profiles */
+.hc{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;background:#fff;cursor:pointer}
+.hc:hover{border-color:var(--gold)}
+.hc .kv{display:grid;grid-template-columns:96px 1fr;gap:4px 10px;font-size:13.5px;margin-top:8px}
+.hc .kv dt{color:var(--mute);font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;padding-top:2px}
+.hc .kv dd{margin:0}
+.hc .top{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.hc .top strong{font-family:var(--head);font-size:16px;color:var(--navy2)}
+/* vehicle grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:10px}
+.vc{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:16px;padding:14px 13px 12px;background:#fff;cursor:pointer;text-align:left;box-shadow:0 1px 2px rgba(20,25,60,.05)}
+.vc::before{content:"";position:absolute;left:0;top:0;right:0;height:4px;background:linear-gradient(90deg,var(--navy),#5F3585 55%,var(--gold))}
+.vc:hover{border-color:var(--gold)}
+.vc>b{font-family:var(--head);font-weight:700;font-size:19px;color:var(--navy);display:block}
+.vc .st{font-size:12.5px;color:var(--mute);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vc .ns{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:9px;text-align:center}
+.vc .ns div{border-radius:9px;padding:4px 2px;background:var(--cream)}
+.vc .ns span{display:block;font-size:9px;letter-spacing:.12em;font-weight:700;color:var(--mute)}
+.vc .ns strong{font-family:var(--head);font-size:16px;color:var(--navy2)}
+.vc .ns .r{background:var(--redbg)}.vc .ns .r strong{color:var(--red)}
+/* sheet (case view) */
+.sheet{position:fixed;inset:0;z-index:40;background:rgba(16,22,48,.55);display:flex;justify-content:center;align-items:flex-end}
+.sheet .in{background:var(--bg);width:100%;max-width:720px;max-height:94vh;overflow-y:auto;border-radius:20px 20px 0 0;box-shadow:0 -10px 40px rgba(0,0,0,.25);-webkit-overflow-scrolling:touch}
+@media (min-width:760px){.sheet{align-items:center}.sheet .in{border-radius:20px;max-height:90vh}}
+.sh-top{position:sticky;top:0;z-index:2;background:var(--navy);color:#fff;padding:14px 16px;display:flex;gap:10px;align-items:center;border-bottom:3px solid var(--gold)}
+.sh-top .tt{flex:1;min-width:0}
+.sh-top .tt small{display:block;color:var(--gold);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;font-weight:700}
+.sh-top .tt b{font-family:var(--head);font-size:20px;font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.x{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:10px;width:38px;height:38px;font-size:18px;cursor:pointer;flex:none}
+.sb{padding:14px 14px 30px}
+.blk{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.blk>.lbl{display:block;margin-bottom:8px}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
+.facts div span{display:block;font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--mute);font-weight:700}
+.facts div b{font-weight:600;font-size:14.5px}
+.facts a{color:var(--blu);font-weight:600;text-decoration:none}
+.quote{font-size:16px;line-height:1.55;color:var(--ink);background:var(--cream2);border-left:4px solid var(--navy);border-radius:0 10px 10px 0;padding:12px 14px;white-space:pre-wrap}
+.tl{display:flex;flex-direction:column;gap:10px}
+.tli{display:flex;gap:10px}
+.tli i{flex:none;width:10px;height:10px;border-radius:50%;background:var(--gold);margin-top:6px;box-shadow:0 0 0 3px var(--goldSoft)}
+.tli .c{flex:1;min-width:0}
+.tli .c .m{font-size:12px;color:var(--mute);display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.tli .c p{margin:3px 0 0;font-size:14.5px;line-height:1.45;white-space:pre-wrap}
+.role{font-size:10.5px;font-weight:700;letter-spacing:.06em;padding:2px 7px;border-radius:6px;background:var(--navy);color:var(--gold)}
+.role.FO{background:var(--blubg);color:var(--blu)}.role.HM{background:var(--purbg);color:var(--pur)}.role.TM{background:var(--grnbg);color:var(--grn)}.role.AD{background:var(--navy);color:var(--gold)}
+.addr{display:grid;grid-template-columns:1fr;gap:8px;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)}
+.addr .row{display:flex;gap:8px}.addr .row select{flex:1}
+.stbtns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stbtns button{border:1.5px solid var(--line);background:#fff;border-radius:11px;padding:10px 4px;font-weight:700;font-size:13px;cursor:pointer;color:var(--mute)}
+.stbtns button.on.Open{background:var(--red);border-color:var(--red);color:#fff}
+.stbtns button.on.Action{background:#B7791F;border-color:#B7791F;color:#fff}
+.stbtns button.on.Closed{background:var(--grn);border-color:var(--grn);color:#fff}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form label{display:flex;flex-direction:column;gap:4px;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);font-weight:700}
+.form label.full{grid-column:1/-1}
+@media (max-width:480px){.form{grid-template-columns:1fr}.facts{grid-template-columns:1fr 1fr}}
+.steps{display:flex;flex-direction:column;gap:0}
+.step{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line)}
+.step:last-child{border-bottom:0}
+.step .ck{flex:none;width:30px;height:30px;border-radius:50%;border:2px solid var(--line);background:#fff;display:grid;place-items:center;font-weight:700;color:var(--mute);cursor:pointer;font-size:13px}
+.step.done .ck{background:var(--grn);border-color:var(--grn);color:#fff}
+.step .sx{flex:1;min-width:0}.step .sx b{display:block;font-size:14.5px}.step .sx span{font-size:12px;color:var(--mute)}
+.fu{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.fu input{flex:1;min-width:130px}
+.sw{display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:600}
+.sw input{width:20px;height:20px;accent-color:var(--navy)}
+.login{max-width:400px;margin:40px auto}
+.login label{display:block;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--mute);margin:12px 0 5px}.login input{width:100%}
+.err{color:var(--red);font-size:13px;margin-top:8px;min-height:1.2em}
+.toast{position:fixed;left:50%;bottom:max(18px,env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--navy);border-bottom:2px solid var(--gold);color:#fff;padding:10px 16px;border-radius:10px;font-size:13.5px;z-index:60;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+@media (max-width:560px){main{padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}.card{padding:13px}.kpi b{font-size:26px}h1{font-size:17px}}
 </style>
 </head>
 <body>
 <header>
   <div class="hrow">
-    <div class="logo"><img src="../fis/fis-icon-192.png" alt=""></div>
-    <h1><small>FIS · Transport · from Daily FO</small>Complaints &amp; Requests</h1>
+    <div class="logo"><img src="../fis/fis-logo-192.png" alt="FIS"></div>
+    <h1><small>FIS · Transport</small>Transport Helpdesk</h1>
     <button class="sync" id="sync" title="Read the Daily FO again">Loading…</button>
   </div>
   <nav id="nav"></nav>
 </header>
 <main id="main"><div class="empty">Loading…</div></main>
+<div id="sheet"></div>
 <div class="toast" id="toast" hidden></div>
 <script>
-const API_URL=new URLSearchParams(location.search).get('api')||'https://script.google.com/macros/s/AKfycbxkeXNT1rwMcFD8Wpp-jCWDa8Fchaeq-ZKbYnCcBFxdB3ByQ9ZcQkdbHdLocv5S3ZVx5Q/exec';
+const APP_V="202611201930";
+const QS=new URLSearchParams(location.search);
+const API_URL=QS.get('api')||'https://script.google.com/macros/s/AKfycbxkeXNT1rwMcFD8Wpp-jCWDa8Fchaeq-ZKbYnCcBFxdB3ByQ9ZcQkdbHdLocv5S3ZVx5Q/exec';
+const TD_URL=QS.get('tdapi')||QS.get('api')||'https://script.google.com/macros/s/AKfycbzIeMjvNueZiTlS6m-j8VNKJxLAbWVITVYkvdj7COAUJMhAsxe2BvPmPD7K3czI6oqWfw/exec';
 const LS={get(k){try{return JSON.parse(localStorage.getItem('tcr_'+k))}catch(e){return null}},set(k,v){try{localStorage.setItem('tcr_'+k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem('tcr_'+k)}catch(e){}}};
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const fmt=d=>d?d.slice(8,10)+'/'+d.slice(5,7)+'/'+d.slice(2,4):'–';
-const today=()=>new Date(Date.now()+330*6e4).toISOString().slice(0,10);
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const fmt=d=>d?(+d.slice(8,10))+' '+MON[+d.slice(5,7)-1]+' '+d.slice(0,4):'–';
+const fmtS=d=>d?(+d.slice(8,10))+' '+MON[+d.slice(5,7)-1]:'–';
+const nowIST=()=>new Date(Date.now()+330*6e4);
+const today=()=>nowIST().toISOString().slice(0,10);
 const addDays=(d,n)=>{const t=new Date(d+'T00:00:00Z');t.setUTCDate(t.getUTCDate()+n);return t.toISOString().slice(0,10)};
+const weekStart=d=>addDays(d,-((new Date(d+'T00:00:00Z').getUTCDay()+6)%7));
+const stamp=t=>{if(!t)return'';const d=new Date(+t+330*6e4),h=d.getUTCHours(),m=d.getUTCMinutes();return d.getUTCDate()+' '+MON[d.getUTCMonth()]+' '+d.getUTCFullYear()+', '+((h%12)||12)+':'+String(m).padStart(2,'0')+(h<12?' am':' pm')};
+const dtLabel=s=>{if(!s)return'';const[d,t]=s.split('T');if(!t)return fmt(d);const[h,m]=t.split(':').map(Number);return fmt(d)+', '+((h%12)||12)+':'+String(m).padStart(2,'0')+(h<12?' am':' pm')};
+const nowLocal=()=>nowIST().toISOString().slice(0,16);
 function toast(m){const t=$('toast');t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,2600)}
 
-let S={token:LS.get('token'),name:LS.get('name'),entries:[],docs:{},at:'',tab:LS.get('tab')||'dash',range:LS.get('range')||'sep',from:'',to:'',q:'',f:{pri:'',st:'',kind:''},openRow:null,edit:null,busy:false};
+let S={token:LS.get('token'),name:LS.get('name'),entries:[],docs:{},at:'',td:null,
+  tab:LS.get('tab2')||'dash',per:LS.get('per')||'month',from:'',to:'',q:'',
+  cf:{st:'',cat:''},rf:'New',rview:'list',ff:'',sel:null,open:null,busy:false,role:LS.get('role')||'FO'};
 
-async function call(fn,args){
+async function call(fn,args,url){
   if(!API_URL)throw new Error('SETUP');
-  const r=await fetch(API_URL,{method:'POST',body:JSON.stringify({fn,args:args||[],token:S.token})});
+  const r=await fetch(url||API_URL,{method:'POST',body:JSON.stringify({fn,args:args||[],token:S.token})});
   const j=await r.json();
-  if(!j.ok){if(j.login){LS.del('token');S.token=null;render();}throw new Error(j.err||'Error')}
+  if(!j.ok){if(j.login&&!url){LS.del('token');S.token=null;render();}throw new Error(j.err||'Error')}
   return j.v;
 }
 async function load(fresh){
   if(S.busy)return;S.busy=true;$('sync').textContent='Reading Daily FO…';
-  try{const v=await call('cr_data',[!!fresh]);S.entries=v.entries;S.docs=v.docs;S.at=v.at;LS.set('cache',{entries:v.entries,docs:v.docs,at:v.at});$('sync').textContent='Updated '+v.at.split(', ')[1]+' · Refresh'}
+  try{const v=await call('cr_data',[!!fresh]);S.entries=v.entries;S.docs=v.docs;S.at=v.at;LS.set('cache',{entries:v.entries,docs:v.docs,at:v.at});$('sync').textContent='Updated '+(v.at.split(', ')[1]||'')}
   catch(e){$('sync').textContent=e.message==='SETUP'?'Not connected':'Offline · Retry';if(e.message!=='SETUP'&&e.message!=='LOGIN')toast(e.message)}
-  S.busy=false;render();
+  S.busy=false;render();loadTD();
 }
-/* ---------- derived data ---------- */
-const drivers=()=>((S.docs['config/drivers']||{}).map)||{};
-const ov=id=>S.docs['ov/'+id]||{};
-function vehsOf(e){const o=ov(e.id);return o.veh?[o.veh]:e.vehs||[]}
-function driverOf(e){const o=ov(e.id);if(o.driver)return o.driver;const v=vehsOf(e)[0];return v?drivers()[v]||'':''}
-function statusOf(e){const o=ov(e.id);if(o.st)return o.st;if(e.kind==='Change')return e.status||'Not entered';
-  if(e.kind==='Complaint')return e.action?'Action logged':'Open';return e.action?'Closed':'Open'}
-const isComp=e=>e.kind==='Complaint';const isReq=e=>e.kind==='Request'||e.kind==='Query';
-function range(){const t=today();
-  if(S.range==='7')return[addDays(t,-6),t];if(S.range==='30')return[addDays(t,-29),t];
-  if(S.range==='month')return[t.slice(0,8)+'01',t];if(S.range==='sep')return['2026-09-01',t];
-  if(S.range==='custom')return[S.from||'2026-01-01',S.to||t];return['2000-01-01','2999-12-31']}
-function list(){const[a,b]=range(),q=S.q.trim().toLowerCase();
-  return S.entries.filter(e=>e.d>=a&&e.d<=b).filter(e=>!q||(e.name+' '+e.cls+' '+e.text+' '+(e.action||'')+' '+vehsOf(e).join(' ')+' '+driverOf(e)).toLowerCase().includes(q))
-    .sort((x,y)=>y.d<x.d?-1:y.d>x.d?1:0)}
-const stKey=s=>String(s).split(' ')[0];
-/* ---------- rendering ---------- */
-const TABS=[['dash','Dashboard'],['comp','Complaints'],['req','Requests'],['chg','Changes'],['stu','Student-wise'],['bus','Bus-wise'],['drv','Driver-wise'],['map','Drivers list']];
-function nav(L){const c={comp:L.filter(isComp).filter(e=>statusOf(e)==='Open').length,req:L.filter(isReq).filter(e=>statusOf(e)==='Open').length,chg:L.filter(e=>e.kind==='Change'&&statusOf(e)==='Not entered').length};
-  $('nav').innerHTML=TABS.map(([k,l])=>`<button class="${S.tab===k?'on':''}" data-tab="${k}">${l}${c[k]?`<b>${c[k]}</b>`:''}</button>`).join('')}
-function filterBar(extra){
-  const R=[['7','Last 7 days'],['30','Last 30 days'],['month','This month'],['sep','Since 1 Sep'],['all','All'],['custom','Dates…']];
-  return `<div class="bar">${R.map(([k,l])=>`<button class="chip ${S.range===k?'on':''}" data-range="${k}">${l}</button>`).join('')}
-   ${S.range==='custom'?`<input type="date" id="f-from" value="${S.from}" aria-label="From"><input type="date" id="f-to" value="${S.to}" aria-label="To">`:''}</div>
-   <div class="bar"><input type="search" id="f-q" placeholder="Search name, class, bus, driver, words…" value="${esc(S.q)}">${extra||''}</div>`}
-function sel(id,val,opts,lab){return `<select id="${id}" aria-label="${lab}">${opts.map(([v,l])=>`<option value="${v}" ${v===val?'selected':''}>${l}</option>`).join('')}</select>`}
-function vchips(e){const v=vehsOf(e),o=ov(e.id);if(!v.length)return '<span class="vc q">Vehicle ?</span>';
-  return v.map(x=>`<span class="vc ${!o.veh&&e.vsrc==='roster?'?'q':''}" title="${o.veh?'Set by hand':e.vsrc==='text'?'Written in the entry':e.vsrc==='change'?'From the change':'From the transport roster'}">${esc(x)}</span>`).join(' ')}
-function remsOf(e){const o=ov(e.id),r=Array.isArray(o.rem)?o.rem.slice():[];if(o.note&&!r.length)r.push({t:o.note,by:o.by||'',at:0});return r}
-const ago=t=>t?new Date(t).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):'';
-const ST={Open:'Open','Action logged':'Action logged',Closed:'Closed'};
-function card(e,i){const st=statusOf(e),dr=driverOf(e),o=ov(e.id),R=remsOf(e),open=S.open===e.id,v=vehsOf(e);
-  const kc=e.kind==='Change'?'chg':isReq(e)?'rq':(e.pri||'Low');
-  const sub=[fmt(e.d),v.length?v.join(', '):'Vehicle ?',dr].filter(Boolean).join(' · ');
-  const last=R[R.length-1];
-  const row=`<button class="kid ${open?'on':''}" data-open="${e.id}" aria-expanded="${open}"><span class="n">${i+1}</span><i class="bar4 ${kc}"></i>
-    <span class="nm"><div>${esc(e.name)}<small>${esc(e.cls)}</small></div><span>${esc(sub)}</span>
-    <span class="${last?'rm':''}">${last?'💬 '+esc(last.t):esc((e.kind==='Change'?e.cat+' · ':'')+e.text)}</span></span>
-    ${e.pri&&isComp(e)?`<span class="tag p-${e.pri}">${e.pri}</span>`:''}<span class="tag s-${stKey(st)}">${esc(st)}</span></button>`;
-  if(!open)return row;
-  return row+`<div class="det">
-   <div class="eh"><span class="pill">${esc(e.kind==='Change'?e.cat+' · change':e.kind)}</span>${vchips(e)}${dr?`<span class="ea">Driver: ${esc(dr)}</span>`:''}</div>
-   <div class="et">${esc(e.text)}</div>
-   <div class="ea">${e.action?`<b>Action (Daily FO):</b> ${esc(e.action)} `:''}${e.mode?`· ${esc(e.mode)}`:''}${e.by?` · called by ${esc(e.by)}`:''}${e.kind==='Change'?` · Fee: ${esc(e.fee)}`:''}</div>
-   <div class="ef">${e.kind!=='Change'?Object.keys(ST).map(x=>`<button class="tg s-${stKey(x)} ${st===x?'on':''}" data-st="${e.id}|${x}">${x}</button>`).join(''):''}</div>
-   <div class="rems"><b style="font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.05em">Remarks ${R.length?'('+R.length+')':''}</b>
-    ${R.map(r=>`<div class="rem">${esc(r.t)}<small>${esc(r.by||'')}${r.at?' · '+ago(r.at):''}</small></div>`).join('')||'<div class="ea">No remarks yet.</div>'}</div>
-   <div class="radd"><input id="rem-${e.id}" placeholder="Add remark — called parent, spoke to driver…" aria-label="New remark"><button class="btn sm" data-rem="${e.id}">Save</button></div>
-   <div class="ef"><button class="btn ghost sm" data-ed="${e.id}">${S.edit===e.id?'Close':'Change bus / driver'}</button></div>
-   ${S.edit===e.id?`<div class="ed"><label>Vehicle<input id="ed-veh" list="vlist" value="${esc(o.veh||v[0]||'')}" placeholder="Bus 5, Van 27, Auto 4"></label>
-     <label>Driver (only if not the regular one)<input id="ed-drv" list="dlist" value="${esc(o.driver||'')}" placeholder="${esc(dr||'Driver')}"></label>
-     <div><button class="btn sm" data-save="${e.id}">Save</button></div></div>`:''}
-  </div>`}
-function cards(L,max){if(!L.length)return '<div class="empty">Nothing in this range.</div>';
-  const n=max||60;return L.slice(0,n).map((e,i)=>card(e,i)).join('')+(L.length>n?`<div class="empty">${L.length-n} more — narrow the dates or search.</div>`:'')}
-function hbars(rows,key,lim){ // rows: [{k,hi,md,lo,rq}]
-  const mx=Math.max(1,...rows.map(r=>r.hi+r.md+r.lo+(r.rq||0)));
-  return `<div class="hb">${rows.slice(0,lim||10).map(r=>{const t=r.hi+r.md+r.lo+(r.rq||0);
-   return `<button class="hr" data-jump="${key}|${esc(r.k)}"><span title="${esc(r.k)}">${esc(r.k)}</span><span class="tr"><i class="i-hi" style="width:${r.hi/mx*100}%"></i><i class="i-md" style="width:${r.md/mx*100}%"></i><i class="i-lo" style="width:${r.lo/mx*100}%"></i>${r.rq?`<i class="i-rq" style="width:${r.rq/mx*100}%"></i>`:''}</span><b>${t}</b></button>`}).join('')||'<div class="empty">None</div>'}</div>`}
-function group(L,keyFn){const m=new Map();L.forEach(e=>{[].concat(keyFn(e)).forEach(k=>{if(!k)return;if(!m.has(k))m.set(k,[]);m.get(k).push(e)})});return m}
-function tally(es){const c=es.filter(isComp);return{hi:c.filter(e=>e.pri==='High').length,md:c.filter(e=>e.pri==='Medium').length,lo:c.filter(e=>e.pri!=='High'&&e.pri!=='Medium').length,
-  comp:c.length,open:c.filter(e=>statusOf(e)==='Open').length,rq:es.filter(isReq).length,chg:es.filter(e=>e.kind==='Change').length,last:es.reduce((a,e)=>e.d>a?e.d:a,'')}}
-const studentKey=e=>e.name.toLowerCase().replace(/[^a-z ]/g,'').trim()+' · '+e.cls;
-const LEG='<div class="lg"><span><i class="i-hi"></i>High</span><span><i class="i-md"></i>Medium</span><span><i class="i-lo"></i>Low / not marked</span><span><i class="i-rq"></i>Requests &amp; queries</span></div>';
+async function loadTD(){ // drivers on duty from Transport Operations (same login)
+  if(!S.token)return;try{const v=await call('td_since',[S.token,0],TD_URL);S.td=v.docs||{};LS.set('td',{docs:pickTD(S.td)});render()}catch(e){}
+}
+function pickTD(d){const o={};Object.keys(d||{}).forEach(k=>{if(k==='roster/main'||/^reports\/\d{4}-\d\d-\d\d$/.test(k)){const x=d[k]||{};o[k]=k==='roster/main'?x:{att:x.att||{},cover:x.cover||{}}}});return o}
 
-function dash(L){const C=L.filter(isComp),R=L.filter(isReq),G=L.filter(e=>e.kind==='Change'),t=today(),wk=addDays(t,-6);
-  const bv=[...group(C.concat(R),e=>vehsOf(e)).entries()].filter(([k])=>!/walk/i.test(k)).map(([k,es])=>Object.assign({k},tally(es))).map(r=>(r.rq=r.rq,r)).sort((a,b)=>(b.comp-a.comp)||(b.rq-a.rq));
-  const bd=[...group(C,e=>driverOf(e)).entries()].map(([k,es])=>Object.assign({k},tally(es))).sort((a,b)=>b.comp-a.comp);
-  const bs=[...group(L.filter(e=>isComp(e)||isReq(e)),e=>studentKey(e)).entries()].map(([k,es])=>Object.assign({k:es[0].name+' · '+es[0].cls,key:k},tally(es))).filter(r=>r.comp+r.rq>1).sort((a,b)=>(b.comp-a.comp)||(b.rq-a.rq));
-  const noV=L.filter(e=>(isComp(e)||isReq(e))&&!vehsOf(e).length).length;
-  const weeks={};C.forEach(e=>{const d=new Date(e.d+'T00:00:00Z');d.setUTCDate(d.getUTCDate()-((d.getUTCDay()+6)%7));const k=d.toISOString().slice(0,10);weeks[k]=(weeks[k]||0)+1});
-  const wk8=Object.keys(weeks).sort().slice(-10),wm=Math.max(1,...wk8.map(k=>weeks[k]));
-  return `${filterBar()}
-  <div class="tiles">
-   <div class="tile red"><span>Complaints</span><b>${C.length}</b><small>High ${C.filter(e=>e.pri==='High').length} · Medium ${C.filter(e=>e.pri==='Medium').length} · new this week ${C.filter(e=>e.d>=wk).length}</small></div>
-   <div class="tile red"><span>Complaints still open</span><b>${C.filter(e=>statusOf(e)==='Open').length}</b><small>no action written in Daily FO, not closed here</small></div>
-   <div class="tile"><span>Requests &amp; queries</span><b>${R.length}</b><small>open ${R.filter(e=>statusOf(e)==='Open').length} · new this week ${R.filter(e=>e.d>=wk).length}</small></div>
-   <div class="tile"><span>Transport changes</span><b>${G.length}</b><small>Approved ${G.filter(e=>statusOf(e)==='Approved').length} · Denied ${G.filter(e=>statusOf(e)==='Denied').length} · no status ${G.filter(e=>statusOf(e)==='Not entered').length}</small></div>
-   <div class="tile amb"><span>Fee to verify</span><b>${G.filter(e=>e.fee!=='✓'&&e.fee!=='NA'&&statusOf(e)==='Approved').length}</b><small>approved changes without fee tick</small></div>
-   <div class="tile amb"><span>Vehicle not known</span><b>${noV}</b><small>complaints/requests to tag by hand</small></div>
+/* ---------- fleet & drivers (from Transport Operations) ---------- */
+const ROUTES=[[1,1],[2,1],[3,1],[4,1],[5,1],[6,0],[7,0],[8,1],[9,1],[10,1],[11,0],[12,0],[13,0],[14,1],[15,1],[16,0],[34,0]];
+const FLEET=ROUTES.map(([n,b])=>({id:'p'+n,label:(b?'Bus ':'Van ')+n,bus:!!b}));
+const RESV=['r1','r2','r3','r4'];
+function canon(v){const m=String(v||'').match(/^(Bus|Van)\s*(\d+)$/i);if(m){const f=FLEET.find(x=>x.id==='p'+(+m[2]));if(f)return f.label}return v}
+const roster=()=>((S.td||{})['roster/main'])||{name:{},phone:{}};
+const tdRep=d=>((S.td||{})['reports/'+d])||null;
+const cfgMap=()=>((S.docs['config/drivers']||{}).map)||{};
+const cfgPh=()=>((S.docs['config/drivers']||{}).phone)||{};
+function crewOn(veh,d){ // {driver,dphone,cond,cphone,cover}
+  const f=FLEET.find(x=>x.label===canon(veh)),R=roster();
+  const pm=String(veh||'').match(/^Bus\s*([A-H])$/i),pre=pm&&(R.pre||[]).find(x=>String(x.code).toUpperCase()===pm[1].toUpperCase());
+  if(pre)return{driver:pre.driver||'',dphone:pre.dphone||'',cond:pre.cond||'',cphone:pre.cphone||'',src:'Pre-primary run'};
+  if(!f){const n=cfgMap()[veh]||'';return{driver:n,dphone:cfgPh()[veh]||'',cond:'',cphone:'',src:n?'Drivers list':''}}
+  const one=slot=>{const base=(R.name||{})[slot]||'',ph=(R.phone||{})[slot]||'';const rep=d&&tdRep(d);
+    if(rep&&rep.att&&rep.att[slot]==='A'){const r=RESV.find(x=>(rep.cover||{})[x]===slot&&rep.att[x]!=='A');
+      if(r)return{n:(R.name||{})[r]||'Reserve',p:(R.phone||{})[r]||'',cover:base}; return{n:'',p:'',cover:base,abs:1}}
+    return{n:base,p:ph}};
+  const dr=one(f.id+'d'),co=f.bus?one(f.id+'c'):{n:'',p:''};
+  return{driver:dr.n||cfgMap()[veh]||'',dphone:dr.p,cond:co.n,cphone:co.p,cover:dr.cover,ccover:co.cover,src:S.td?'Transport Operations':'Drivers list'}
+}
+
+/* ---------- entries ---------- */
+const ov=id=>S.docs['ov/'+id]||{};
+const kindOf=e=>ov(e.id).kind||e.kind;
+const isComp=e=>kindOf(e)==='Complaint';
+const isReq=e=>['Request','Query','Not marked','Call'].includes(kindOf(e));
+const isChg=e=>e.kind==='Change';
+const old=e=>e.d&&e.d<addDays(today(),-30);
+function vehsOf(e){const o=ov(e.id);return (o.veh?[o.veh]:e.vehs||[]).map(canon)}
+function crewOf(e){const o=ov(e.id),v=vehsOf(e)[0],c=v?crewOn(v,e.d):{driver:'',dphone:'',cond:'',cphone:''};
+  return Object.assign({},c,o.driver?{driver:o.driver,dphone:o.dphone||'',src:'Set on this case'}:{},o.cond?{cond:o.cond}:{})}
+function fuOf(e){const f=ov(e.id).fu;return f&&f.on?f:null}
+function fuState(f){if(!f)return'';if(f.done)return'done';const n=nowLocal(),t=today();if(f.due&&f.due<n)return'over';if(f.due&&f.due.slice(0,10)===t)return'today';return'up'}
+function statusOf(e){const o=ov(e.id);if(o.st)return o.st;if(isChg(e))return e.status||'Not entered';
+  if(old(e)&&!fuOf(e))return 'Closed';return e.action?'Action logged':'Open'}
+const autoClosed=e=>!ov(e.id).st&&!isChg(e)&&old(e)&&!fuOf(e);
+const STAGES=['New','Acknowledged','Awaiting','Approved','Completed','Denied','Closed'];
+function stageOf(e){const o=ov(e.id),r=o.rq||{};
+  if(r.dec==='Denied')return'Denied';if(r.dec==='Awaiting')return'Awaiting';
+  if(r.dec==='Approved')return (r.steps||{}).board?'Completed':'Approved';
+  if(o.st==='Closed')return'Closed';if(r.ack)return'Acknowledged';if(old(e)&&!fuOf(e))return'Closed';return'New'}
+const CATS=['Driver behaviour','Conductor / attendant behaviour','Late or early arrival','Child missed / left behind','Rash driving / safety','Seating / overcrowding','Vehicle condition / cleanliness','Route or stop issue','Student behaviour in vehicle','Communication with parent','Other'];
+function guessCat(t){t=(t||'').toLowerCase();
+  if(/left behind|did not wait|didn.t wait|missed|not pick|without (the )?child|forgot/.test(t))return'Child missed / left behind';
+  if(/late|early|delay|time|wait(ed|ing)? for/.test(t))return'Late or early arrival';
+  if(/rash|speed|fast|accident|unsafe|safety|seat ?belt/.test(t))return'Rash driving / safety';
+  if(/seat|crowd|space|standing|rod/.test(t))return'Seating / overcrowding';
+  if(/conductor|didi|attendant|maid|lady/.test(t))return'Conductor / attendant behaviour';
+  if(/driver|rude|shout|behav|misbehav|abus/.test(t))return/student|kids|children|child.*(fight|hit)|bully/.test(t)&&!/driver/.test(t)?'Student behaviour in vehicle':'Driver behaviour';
+  if(/fight|hit|bully|tease|push/.test(t))return'Student behaviour in vehicle';
+  if(/dirty|clean|ac\b|fan|window|broken|smell|condition/.test(t))return'Vehicle condition / cleanliness';
+  if(/route|stop|point|location|colony/.test(t))return'Route or stop issue';
+  if(/call|inform|message|phone|communicat/.test(t))return'Communication with parent';return'Other'}
+const catOf=e=>ov(e.id).cat||guessCat(e.text);
+const RQT=['New transport facility','Change of pick-up vehicle','Change of drop vehicle','Change of pick-up / drop point','Change of both pick-up and drop','Discontinue transport','One-day / temporary change','Query / information','Other'];
+function guessRqt(t){t=(t||'').toLowerCase();if(/discontinu|stop (the )?transport|not (use|avail)|withdraw/.test(t))return'Discontinue transport';
+  if(/today|tomorrow|one day|temporar/.test(t))return'One-day / temporary change';if(/requested for|new|start|avail|facility|bus transportation/.test(t))return'New transport facility';
+  if(/pick/.test(t)&&/drop/.test(t))return'Change of both pick-up and drop';if(/drop/.test(t))return'Change of drop vehicle';if(/pick/.test(t))return'Change of pick-up vehicle';if(/point|stop|address|shift/.test(t))return'Change of pick-up / drop point';return'Other'}
+const rqOf=e=>ov(e.id).rq||{};
+const ROLES={FO:'Front Office',HM:'House Manager',TM:'Transport Manager',AD:'Director / Admin'};
+function remsOf(e){const o=ov(e.id),r=Array.isArray(o.rem)?o.rem.slice():[];if(o.note&&!r.length)r.push({t:o.note,by:o.by||'',role:'',at:0});return r}
+const stTag=s=>({'Open':'t-red','Action logged':'t-amb','Closed':'t-grn','Approved':'t-grn','Denied':'t-navy','Not entered':'t-amb'}[s]||'');
+const sgTag=s=>({New:'t-red',Acknowledged:'t-blu',Awaiting:'t-amb',Approved:'t-pur',Completed:'t-grn',Denied:'t-navy',Closed:''}[s]||'');
+const priTag=p=>p==='High'?'t-red':p==='Medium'?'t-amb':p==='Low'?'t-blu':'';
+const studentKey=e=>e.name.toLowerCase().replace(/[^a-z ]/g,'').trim()+' · '+e.cls;
+
+/* ---------- period ---------- */
+const PER=[['today','Today'],['week','This week'],['month','This month'],['last30','Last 30 days'],['all','All'],['custom','Dates']];
+function range(){const t=today();switch(S.per){case'today':return[t,t];case'week':return[weekStart(t),t];case'month':return[t.slice(0,8)+'01',t];
+  case'last30':return[addDays(t,-29),t];case'custom':return[S.from||t.slice(0,8)+'01',S.to||t];default:return['2000-01-01','2999-12-31']}}
+const inR=(e,R)=>e.d>=R[0]&&e.d<=R[1];
+function periodBar(){const R=range();
+  return `<div class="period">${PER.map(([k,l])=>`<button class="${S.per===k?'on':''}" data-per="${k}">${l}</button>`).join('')}</div>
+  ${S.per==='custom'?`<div class="dates"><input type="date" id="f-from" value="${S.from||R[0]}" aria-label="From"><input type="date" id="f-to" value="${S.to||R[1]}" aria-label="To"></div>`:''}
+  <div class="prange">${S.per==='all'?'All records':R[0]===R[1]?fmt(R[0]):fmt(R[0])+' – '+fmt(R[1])}</div>`}
+function search(L){const q=S.q.trim().toLowerCase();if(!q)return L;
+  return L.filter(e=>{const c=crewOf(e),r=rqOf(e);return(e.name+' '+e.cls+' '+e.text+' '+(e.action||'')+' '+vehsOf(e).join(' ')+' '+c.driver+' '+c.cond+' '+catOf(e)+' '+(r.area||'')).toLowerCase().includes(q)})}
+const byDate=(a,b)=>a.d<b.d?1:a.d>b.d?-1:0;
+
+/* ---------- shared pieces ---------- */
+function caseRow(e){const c=crewOf(e),R=remsOf(e),last=R[R.length-1],f=fuOf(e),fs=fuState(f),rq=isReq(e);
+  const st=rq?stageOf(e):statusOf(e),v=vehsOf(e);
+  const meta=[rq?(rqOf(e).type||guessRqt(e.text)):catOf(e),v.length?v.join(', '):'Vehicle not known',c.driver].filter(Boolean).join(' · ');
+  return `<button class="case" data-case="${e.id}"><div class="dt"><b>${+e.d.slice(8,10)}</b><span>${MON[+e.d.slice(5,7)-1]}</span></div>
+   <div class="bd"><div class="t1"><strong>${esc(e.name)}</strong><em>${esc(e.cls)}</em>
+    <span class="tag ${rq?sgTag(st):stTag(st)}">${esc(st)}</span>${!rq&&e.pri?`<span class="tag ${priTag(e.pri)}">${e.pri}</span>`:''}
+    ${fs&&fs!=='done'?`<span class="tag ${fs==='over'?'t-red':fs==='today'?'t-amb':'t-blu'}">Follow-up ${fs==='over'?'overdue':fs==='today'?'today':fmtS(f.due.slice(0,10))}</span>`:''}</div>
+    <div class="t2">${esc(meta)}${rq&&rqOf(e).area?' · '+esc(rqOf(e).area):''}</div>
+    <div class="t3">${esc(e.text)}</div>
+    ${last?`<div class="t4">${esc(ROLES[last.role]||last.by||'Remark')}: ${esc(last.t)}</div>`:e.action?`<div class="t4">Daily FO: ${esc(e.action)}</div>`:''}</div></button>`}
+function caseList(L,max){if(!L.length)return'<div class="empty">No entries for this period.</div>';const n=max||100;
+  return L.slice(0,n).map(caseRow).join('')+(L.length>n?`<div class="empty">${L.length-n} more — choose a shorter period or search.</div>`:'')}
+function rank(rows,key,lim){const mx=Math.max(1,...rows.map(r=>r.n));
+  return rows.slice(0,lim||8).map((r,i)=>`<button class="rk" data-go="${key}|${esc(r.k)}"><span class="no">${i+1}</span><span class="nm"><div>${esc(r.k)}</div><span>${esc(r.sub||'')}</span></span><span class="bars"><i style="width:${r.n/mx*100}%"></i></span><span class="ct">${r.n}</span></button>`).join('')||'<div class="empty">None in this period.</div>'}
+function groupBy(L,fn){const m=new Map();L.forEach(e=>[].concat(fn(e)).forEach(k=>{if(!k)return;if(!m.has(k))m.set(k,[]);m.get(k).push(e)}));return m}
+
+/* ---------- tabs ---------- */
+const TABS=[['dash','Dashboard'],['comp','Complaints & Concerns'],['req','Transport Requests'],['fu','Follow-ups'],['drv','Driver-wise'],['bus','Vehicle-wise'],['stu','Student-wise'],['chg','Change Tracker'],['fleet','Fleet & Drivers']];
+function nav(){const E=S.entries,open=E.filter(e=>isComp(e)&&statusOf(e)==='Open').length,nw=E.filter(e=>isReq(e)&&stageOf(e)==='New').length,
+  fu=E.filter(e=>['over','today'].includes(fuState(fuOf(e)))).length;const c={comp:open,req:nw,fu};
+  $('nav').innerHTML=TABS.map(([k,l])=>`<button class="${S.tab===k?'on':''}" data-tab="${k}">${l}${c[k]?`<b>${c[k]}</b>`:''}</button>`).join('')}
+
+function dash(){const E=S.entries,R=range(),t=today(),wk=weekStart(t),mo=t.slice(0,8)+'01';
+  const C=E.filter(isComp),Q=E.filter(isReq),CP=C.filter(e=>inR(e,R)),QP=Q.filter(e=>inR(e,R));
+  const cnt=(L,a)=>L.filter(e=>e.d>=a&&e.d<=t).length;
+  const fus=E.filter(e=>fuOf(e)&&!fuOf(e).done),over=fus.filter(e=>fuState(fuOf(e))==='over').length,tod=fus.filter(e=>fuState(fuOf(e))==='today').length;
+  const sg=s=>Q.filter(e=>stageOf(e)===s).length;
+  const drv=[...groupBy(CP,e=>crewOf(e).driver||'').entries()].map(([k,L])=>({k,n:L.length,sub:[...new Set(L.flatMap(vehsOf))].join(', ')+' · '+L.filter(e=>statusOf(e)==='Open').length+' open'})).sort((a,b)=>b.n-a.n);
+  const veh=[...groupBy(CP,e=>vehsOf(e)).entries()].map(([k,L])=>({k,n:L.length,sub:(crewOn(k,t).driver||'Driver not set')+' · '+L.filter(e=>statusOf(e)==='Open').length+' open'})).sort((a,b)=>b.n-a.n);
+  const con=[...groupBy(CP.filter(e=>catOf(e)==='Conductor / attendant behaviour'||crewOf(e).cond),e=>crewOf(e).cond||'').entries()].map(([k,L])=>({k,n:L.length,sub:[...new Set(L.flatMap(vehsOf))].join(', ')})).sort((a,b)=>b.n-a.n);
+  const cat=[...groupBy(CP,catOf).entries()].map(([k,L])=>({k,n:L.length,sub:L.filter(e=>statusOf(e)==='Open').length+' open'})).sort((a,b)=>b.n-a.n);
+  return `${periodBar()}
+  <div class="kpis">
+   <button class="kpi red" data-tab="comp"><span>Complaints · period</span><b>${CP.length}</b><small>Today <em>${cnt(C,t)}</em> · Week <em>${cnt(C,wk)}</em> · Month <em>${cnt(C,mo)}</em></small></button>
+   <button class="kpi red" data-tab="comp" data-cst="Open"><span>Open complaints</span><b>${C.filter(e=>statusOf(e)==='Open').length}</b><small>Action logged <em>${C.filter(e=>statusOf(e)==='Action logged').length}</em> · older than 1 month close automatically</small></button>
+   <button class="kpi" data-tab="fu"><span>Follow-ups due</span><b>${over+tod}</b><small>Overdue <em>${over}</em> · Today <em>${tod}</em> · Upcoming <em>${fus.length-over-tod}</em></small></button>
+   <button class="kpi navy" data-tab="req" data-rst="New"><span>Transport requests · period</span><b>${QP.length}</b><small>New <em>${sg('New')}</em> · Acknowledged <em>${sg('Acknowledged')}</em></small></button>
+   <button class="kpi pur" data-tab="req" data-rst="Approved"><span>Onboarding in progress</span><b>${sg('Approved')}</b><small>Completed <em>${sg('Completed')}</em></small></button>
+   <button class="kpi" data-tab="req" data-rst="Awaiting"><span>Awaiting / denied</span><b>${sg('Awaiting')} / ${sg('Denied')}</b><small>Colony-wise list inside</small></button>
   </div>
   <div class="two">
-   <div class="card"><div class="secthead"><i></i><span>Bus-wise</span><small>complaints and requests per vehicle · tap to open</small></div>${hbars(bv,'bus',10)}${LEG}</div>
-   <div class="card"><div class="secthead"><i></i><span>Driver-wise</span><small>complaints on each driver's route · tap to open</small></div>${hbars(bd,'drv',10)}${LEG.replace(/<span><i class="i-rq"><\/i>[^<]*<\/span>/,'')}</div>
+   <div class="card"><div class="sh"><span>Complaints by driver</span><small>driver on duty that day</small></div>${rank(drv.filter(r=>r.k),'drv',8)}</div>
+   <div class="card"><div class="sh"><span>Complaints by vehicle</span><small>bus and van number</small></div>${rank(veh,'bus',8)}</div>
   </div>
   <div class="two">
-   <div class="card"><div class="secthead"><i></i><span>Repeat students</span><small>2 or more complaints / requests</small></div>${hbars(bs.map(r=>Object.assign({},r,{k:r.k})),'stu',10)}</div>
-   <div class="card"><div class="secthead"><i></i><span>Complaints by week</span><small>week starting Monday</small></div>
-    <div class="hb">${wk8.map(k=>`<div class="hr" style="cursor:default"><span>${fmt(k)}</span><span class="tr"><i class="i-hi" style="width:${weeks[k]/wm*100}%"></i></span><b>${weeks[k]}</b></div>`).join('')||'<div class="empty">None</div>'}</div></div>
+   <div class="card"><div class="sh"><span>Complaints by category</span></div>${rank(cat,'cat',11)}</div>
+   <div class="card"><div class="sh"><span>Conductor complaints</span><small>buses with a conductor</small></div>${rank(con.filter(r=>r.k),'con',8)}</div>
   </div>
-  <div class="card"><div class="secthead"><i></i><span>Latest complaints</span><small>newest first</small></div>${cards(C,8)}</div>`}
-function listTab(L,pred,title,sub){
-  let X=L.filter(pred);
-  if(S.f.pri)X=X.filter(e=>(S.f.pri==='Low'?(e.pri!=='High'&&e.pri!=='Medium'):e.pri===S.f.pri));
-  if(S.f.st)X=X.filter(e=>statusOf(e)===S.f.st);
-  if(S.f.kind)X=X.filter(e=>e.kind===S.f.kind);
-  const stOpts=pred===TAB_PRED.chg?[['','All status'],['Approved','Approved'],['Denied','Denied'],['Not entered','Not entered']]:[['','All status'],['Open','Open'],['Action logged','Action logged'],['Closed','Closed']];
-  const extra=(pred===TAB_PRED.comp?sel('f-pri',S.f.pri,[['','All priority'],['High','High'],['Medium','Medium'],['Low','Low / not marked']],'Priority'):'')+
-    (pred===TAB_PRED.req?sel('f-kind',S.f.kind,[['','Requests, queries & not marked'],['Request','Requests'],['Query','Queries'],['Not marked','Not marked'],['Call','In-house calls']],'Type'):'');
-  const Y=L.filter(pred),cs=pred===TAB_PRED.chg?[['','All','',Y.length],['Approved','Approved','grn'],['Denied','Denied',''],['Not entered','No status','amb']]:[['','All','',Y.length],['Open','Open','red'],['Action logged','Action logged','amb'],['Closed','Closed','grn']];
-  const cnt=`<div class="counts">${cs.map(([k,l,c,n])=>`<button class="${c} ${S.f.st===k?'on':''}" data-fst="${k}"><b>${n!=null?n:Y.filter(e=>statusOf(e)===k).length}</b>${l}</button>`).join('')}</div>`;
-  return `${filterBar(extra)}${cnt}<div class="card"><div class="secthead"><i></i><span>${title}</span><small>${X.length} ${sub} · tap a row to update</small></div>${cards(X,80)}</div>`}
-const TAB_PRED={comp:isComp,req:e=>isReq(e)||e.kind==='Not marked'||e.kind==='Call',chg:e=>e.kind==='Change'};
-function wiseTab(L,key,title,keyFn,cols,note){
-  const G=[...group(L,keyFn).entries()].map(([k,es])=>Object.assign({k,es},tally(es))).sort((a,b)=>(/not known|No driver/.test(a.k)-/not known|No driver/.test(b.k))||(b.comp-a.comp)||(b.rq-a.rq)||(b.chg-a.chg));
-  const row=r=>{const open=S.openRow===key+'|'+r.k;
-    return `<tr class="click ${open?'open':''}" data-row="${key}|${esc(r.k)}">${cols.map(c=>`<td class="${c[2]||''}">${c[1](r)}</td>`).join('')}</tr>${open?`<tr><td class="sub" colspan="${cols.length}"><div class="subw">${cards(r.es,50)}</div></td></tr>`:''}`};
-  return `${filterBar()}${note?`<div class="note">${note}</div>`:''}<div class="card"><div class="secthead"><i></i><span>${title}</span><small>${G.length} · tap a row to see every entry</small></div>
-   <div class="tw"><table><thead><tr>${cols.map(c=>`<th class="${c[2]||''}">${c[0]}</th>`).join('')}</tr></thead><tbody>${G.map(row).join('')||`<tr><td colspan="${cols.length}" class="empty">Nothing in this range.</td></tr>`}</tbody></table></div></div>`}
-const num=(v,cls)=>v?`<b${cls?` style="color:var(--${cls})"`:''}>${v}</b>`:'<span style="color:var(--un)">–</span>';
-function stuTab(L){return wiseTab(L,'stu','Student-wise',studentKey,[
-  ['Student',r=>esc(r.es[0].name)],['Class',r=>esc(r.es[0].cls)],['Vehicle',r=>[...new Set(r.es.flatMap(vehsOf))].map(v=>`<span class="vc">${esc(v)}</span>`).join(' ')||'<span class="vc q">?</span>'],
-  ['Complaints',r=>num(r.comp,'hi'),'n'],['High',r=>num(r.hi,'hi'),'n'],['Requests',r=>num(r.rq),'n'],['Changes',r=>num(r.chg),'n'],['Last',r=>fmt(r.last)]])}
-function busTabOld(L){return wiseTab(L,'bus','Bus-wise',e=>vehsOf(e).length?vehsOf(e):['Vehicle not known'],[
-  ['Vehicle',r=>`<span class="vc ${r.k==='Vehicle not known'?'q':''}">${esc(r.k)}</span>`],['Driver',r=>esc(drivers()[r.k]||'')],
-  ['Complaints',r=>num(r.comp,'hi'),'n'],['High',r=>num(r.hi,'hi'),'n'],['Open',r=>num(r.open,'hi'),'n'],['Requests',r=>num(r.rq),'n'],['Changes in/out',r=>num(r.chg),'n'],['Students',r=>new Set(r.es.map(studentKey)).size,'n'],['Last',r=>fmt(r.last)]],
-  'A child is linked to a vehicle from the bus/van number written in the Daily FO entry, otherwise from the transport roster (Student Entry Exit Report). Amber chips mean the roster lists the child on more than one vehicle — check and set the right one with <b>Bus / driver / note</b>.')}
-function busTab(L){const G=[...group(L,e=>vehsOf(e).length?vehsOf(e):['Vehicle not known']).entries()].map(([k,es])=>Object.assign({k,es},tally(es)))
-   .sort((a,b)=>(/not known/.test(a.k)-/not known/.test(b.k))||(b.comp-a.comp)||(b.rq-a.rq));
-  const sel=G.find(r=>S.openRow==='bus|'+r.k);
-  return `${filterBar()}<div class="card"><div class="secthead"><i></i><span>Bus-wise</span><small>${G.length} vehicles · tap a vehicle</small></div>
-   <div class="grid">${G.map(r=>`<button class="vcard ${sel===r?'on':''}" data-row="bus|${esc(r.k)}"><b>${esc(r.k)}</b><div class="st">${esc(drivers()[r.k]||'—')}</div>
-    <div class="ps">${r.comp?`<span class="pill p-High">${r.comp} complaint${r.comp>1?'s':''}</span>`:''}${r.open?`<span class="pill s-Open">${r.open} open</span>`:''}${r.rq?`<span class="pill">${r.rq} request${r.rq>1?'s':''}</span>`:''}${r.chg?`<span class="pill p-Low">${r.chg} change${r.chg>1?'s':''}</span>`:''}</div></button>`).join('')||'<div class="empty">Nothing in this range.</div>'}</div></div>
-   ${sel?`<div class="card"><div class="secthead"><i></i><span>${esc(sel.k)}</span><small>${esc(drivers()[sel.k]||'')} · ${sel.es.length} entries</small></div>${cards(sel.es,80)}</div>`:''}`}
-function drvTab(L){return wiseTab(L.filter(e=>e.kind!=='Change'),'drv','Driver-wise',e=>driverOf(e)||(vehsOf(e)[0]?'No driver set · '+vehsOf(e)[0]:'Vehicle not known'),[
-  ['Driver',r=>esc(r.k)],['Vehicles',r=>[...new Set(r.es.flatMap(vehsOf))].map(v=>`<span class="vc">${esc(v)}</span>`).join(' ')],
-  ['Complaints',r=>num(r.comp,'hi'),'n'],['High',r=>num(r.hi,'hi'),'n'],['Open',r=>num(r.open,'hi'),'n'],['Requests',r=>num(r.rq),'n'],['Last',r=>fmt(r.last)]],
-  'Counts show complaints logged on that driver\'s vehicle, using the regular driver in the <b>Drivers list</b>. Many are about children\'s behaviour, the van or the route, not the driver — read the entries before acting. If a replacement driver was on duty that day, set it on the entry.')}
-function mapTab(){const d=drivers(),vs=[...new Set(Object.keys(d).concat(S.entries.flatMap(e=>vehsOf(e))))].filter(v=>!/walk|not known/i.test(v))
-  .sort((a,b)=>{const p=s=>{const m=s.match(/^(\w+) (\w+)$/)||[];return[{Bus:0,Van:1,Auto:2}[m[1]]??3,isNaN(m[2])?100+String(m[2]).charCodeAt(0):Number(m[2])]};const x=p(a),y=p(b);return x[0]-y[0]||x[1]-y[1]});
-  return `<div class="note">The regular driver of each vehicle, used for Driver-wise. Private vans and autos are empty until you fill them. Saved for everyone.</div>
-   <div class="card"><div class="tw"><table><thead><tr><th>Vehicle</th><th>Regular driver</th></tr></thead><tbody>
-   ${vs.map(v=>`<tr><td><span class="vc">${esc(v)}</span></td><td><input data-dmap="${esc(v)}" value="${esc(d[v]||'')}" placeholder="Driver name" style="width:100%;min-width:180px"></td></tr>`).join('')}</tbody></table></div>
-   <div class="bar" style="margin-top:12px"><button class="btn" id="dmap-save">Save drivers list</button></div></div>`}
-function loginView(){return `<div class="card login"><div class="secthead"><i></i><span>Staff login</span></div>
-  <p class="ea">Complaints &amp; requests read live from the Daily FO. Same password as the other FIS apps.</p>
+  <div class="card gold"><div class="sh"><span>Latest complaints</span><small>${CP.length} in this period</small><button class="btn ghost sm r" data-tab="comp">View all</button></div>${caseList(CP.sort(byDate),6)}</div>`}
+
+function compTab(){const R=range(),B=search(S.entries.filter(e=>isComp(e)&&inR(e,R))).sort(byDate);
+  let L=B;if(S.cf.st)L=L.filter(e=>statusOf(e)===S.cf.st);if(S.cf.cat)L=L.filter(e=>catOf(e)===S.cf.cat);
+  const n=s=>B.filter(e=>statusOf(e)===s).length;
+  return `${periodBar()}
+  <div class="seg">${[['','All',B.length],['Open','Open',n('Open')],['Action logged','Action logged',n('Action logged')],['Closed','Closed',n('Closed')]].map(([k,l,c])=>`<button class="${S.cf.st===k?'on':''}" data-cst="${k}">${l}<b>${c}</b></button>`).join('')}</div>
+  <div class="bar"><input type="search" id="f-q" placeholder="Search student, bus, driver, words" value="${esc(S.q)}">
+   <select id="f-cat" aria-label="Category"><option value="">All categories</option>${CATS.map(c=>`<option ${S.cf.cat===c?'selected':''}>${c}</option>`).join('')}</select></div>
+  <div class="card"><div class="sh"><span>Complaints &amp; Concerns</span><small>${L.length} · tap a complaint to open the case</small></div>${caseList(L)}</div>`}
+
+function colonyView(L,title){const G=[...groupBy(L,e=>rqOf(e).area||'Colony not entered').entries()].sort((a,b)=>(a[0]==='Colony not entered')-(b[0]==='Colony not entered')||b[1].length-a[1].length);
+  return `<div class="card"><div class="sh"><span>${title} · colony-wise</span><small>${L.length} students in ${G.length} colonies</small></div>
+  ${G.map(([k,es])=>`<div class="hc" style="cursor:default"><div class="top"><strong>${esc(k)}</strong><span class="tag t-navy">${es.length} student${es.length>1?'s':''}</span></div>
+   ${es.sort(byDate).map(e=>`<div class="case" data-case="${e.id}" style="padding:9px 0"><div class="bd"><div class="t1"><strong>${esc(e.name)}</strong><em>Class ${esc(e.cls)}</em></div>
+    <div class="t2">Requested ${fmt(e.d)} · ${esc(rqOf(e).type||guessRqt(e.text))}${rqOf(e).decAt>1?' · '+esc(rqOf(e).dec)+' '+stamp(rqOf(e).decAt):''}</div>${rqOf(e).reason?`<div class="t4">Reason: ${esc(rqOf(e).reason)}</div>`:''}</div></div>`).join('')}</div>`).join('')||'<div class="empty">None.</div>'}</div>`}
+function reqTab(){const R=range(),all=S.entries.filter(isReq);
+  const listed=['Awaiting','Denied','Approved'].includes(S.rf)?all:all.filter(e=>inR(e,R));
+  const B=search(listed),L=B.filter(e=>!S.rf||stageOf(e)===S.rf).sort(byDate);
+  const n=s=>B.filter(e=>stageOf(e)===s).length;
+  return `${['Awaiting','Denied','Approved'].includes(S.rf)?'<div class="prange">Showing every '+S.rf.toLowerCase()+' request, whatever the date</div>':periodBar()}
+  <div class="seg">${STAGES.map(s=>`<button class="${S.rf===s?'on':''}" data-rst="${s}">${s==='Approved'?'Approved · onboarding':s}<b>${n(s)}</b></button>`).join('')}<button class="${!S.rf?'on':''}" data-rst="">All<b>${B.length}</b></button></div>
+  <div class="bar"><input type="search" id="f-q" placeholder="Search student, class, colony, bus" value="${esc(S.q)}">
+   ${['Awaiting','Denied'].includes(S.rf)?`<div class="seg" style="margin:0"><button class="${S.rview==='list'?'on':''}" data-rview="list">List</button><button class="${S.rview==='col'?'on':''}" data-rview="col">Colony-wise</button></div>`:''}</div>
+  ${['Awaiting','Denied'].includes(S.rf)&&S.rview==='col'?colonyView(L,S.rf==='Denied'?'Denied requests':'Awaiting list')
+   :`<div class="card"><div class="sh"><span>Transport Requests</span><small>${L.length} · ${S.rf||'all stages'} · tap to open</small></div>${caseList(L)}</div>`}`}
+
+function fuTab(){const E=S.entries.filter(e=>fuOf(e)),grp={over:[],today:[],up:[],done:[]};E.forEach(e=>grp[fuState(fuOf(e))].push(e));
+  ['over','today','up'].forEach(k=>grp[k].sort((a,b)=>(fuOf(a).due||'')<(fuOf(b).due||'')?-1:1));grp.done.sort((a,b)=>(fuOf(b).doneAt||0)-(fuOf(a).doneAt||0));
+  const T={over:'Overdue',today:'Due today',up:'Upcoming',done:'Completed'};
+  if(!T[S.ff])S.ff=grp.over.length?'over':grp.today.length?'today':'up';
+  const row=e=>{const f=fuOf(e);return `<button class="case" data-case="${e.id}"><div class="dt"><b>${f.due?+f.due.slice(8,10):'–'}</b><span>${f.due?MON[+f.due.slice(5,7)-1]:''}</span></div><div class="bd">
+    <div class="t1"><strong>${esc(e.name)}</strong><em>${esc(e.cls)}</em><span class="tag ${S.ff==='over'?'t-red':S.ff==='today'?'t-amb':S.ff==='done'?'t-grn':'t-blu'}">${f.due?dtLabel(f.due):'No time set'}</span><span class="tag">${isComp(e)?'Complaint':'Request'}</span></div>
+    <div class="t2">${esc(vehsOf(e).join(', ')||'Vehicle not known')} · ${esc(crewOf(e).driver||'')}</div><div class="t3">${esc(f.note||e.text)}</div>${f.done?`<div class="t4">Done by ${esc(f.doneBy||'')} · ${stamp(f.doneAt)}</div>`:''}</div></button>`};
+  return `<div class="seg">${Object.keys(T).map(k=>`<button class="${S.ff===k?'on':''}" data-ff="${k}">${T[k]}<b>${grp[k].length}</b></button>`).join('')}</div>
+  <div class="card"><div class="sh"><span>Follow-up cases · ${T[S.ff]}</span><small>set a follow-up date and time inside any complaint or request</small></div>${grp[S.ff].map(row).join('')||'<div class="empty">Nothing here.</div>'}</div>`}
+
+function histCard(e){const c=crewOf(e),R=remsOf(e),last=R[R.length-1],rq=isReq(e),st=rq?stageOf(e):statusOf(e);
+  return `<div class="hc" data-case="${e.id}"><div class="top"><strong>${fmt(e.d)}</strong><span class="tag ${rq?sgTag(st):stTag(st)}">${esc(st)}</span>${!rq&&e.pri?`<span class="tag ${priTag(e.pri)}">${e.pri}</span>`:''}<span class="tag">${esc(rq?'Request':catOf(e))}</span></div>
+  <dl class="kv"><dt>Student</dt><dd><b>${esc(e.name)}</b> · ${esc(e.cls)}</dd><dt>Vehicle</dt><dd>${esc(vehsOf(e).join(', ')||'Not known')}</dd><dt>Driver</dt><dd>${esc(c.driver||'—')}${c.cond?' · Conductor '+esc(c.cond):''}</dd>
+  <dt>Complaint</dt><dd>${esc(e.text)}</dd><dt>What happened</dt><dd>${last?esc(last.t)+` <span style="color:var(--mute);font-size:12px">— ${esc(ROLES[last.role]||'')} ${esc(last.by||'')}</span>`:esc(e.action||'No action recorded yet')}</dd></dl></div>`}
+function profile(title,sub,init,L,stats){const C=L.filter(isComp);
+  return `<button class="back" data-back>← All</button><div class="card gold"><div class="prof"><div class="av">${esc(init)}</div><div class="pn"><b>${esc(title)}</b><span>${sub}</span></div></div>
+   <div class="stats"><div><span>Complaints</span><b>${C.length}</b></div><div><span>Open</span><b style="color:var(--red)">${C.filter(e=>statusOf(e)==='Open').length}</b></div><div><span>High</span><b>${C.filter(e=>e.pri==='High').length}</b></div><div><span>Requests</span><b>${L.filter(isReq).length}</b></div>${stats||''}</div></div>
+   <div class="card"><div class="sh"><span>Case history</span><small>newest first · tap to open</small></div>${L.sort(byDate).map(histCard).join('')||'<div class="empty">No entries for this period.</div>'}</div>`}
+function drvTab(){const R=range(),L=search(S.entries.filter(e=>(isComp(e)||isReq(e))&&inR(e,R)));const t=today();
+  const known=new Set();FLEET.forEach(f=>{const c=crewOn(f.label,t);if(c.driver)known.add(c.driver)});
+  const G=groupBy(L,e=>crewOf(e).driver||'');[...known].forEach(k=>{if(!G.has(k))G.set(k,[])});
+  if(S.sel&&S.sel.t==='drv'){const es=G.get(S.sel.k)||[];const vs=[...new Set(es.flatMap(vehsOf))],ph=es.map(e=>crewOf(e).dphone).find(Boolean)||phoneOf(S.sel.k);
+    return periodBar()+profile(S.sel.k,`Driver · ${vs.join(', ')||'—'}${ph?` · <a href="tel:${esc(ph)}">${esc(ph)}</a>`:''}`,S.sel.k[0]||'?',es)}
+  const rows=[...G.entries()].filter(([k])=>k).map(([k,es])=>({k,es,c:es.filter(isComp).length,o:es.filter(e=>isComp(e)&&statusOf(e)==='Open').length,v:[...new Set(es.flatMap(vehsOf))]})).sort((a,b)=>b.c-a.c||a.k.localeCompare(b.k));
+  const today_=k=>FLEET.find(f=>crewOn(f.label,t).driver===k);
+  return `${periodBar()}<div class="bar"><input type="search" id="f-q" placeholder="Search driver" value="${esc(S.q)}"></div>
+  <div class="card"><div class="sh"><span>Driver-wise</span><small>complaints are counted on the driver on duty that day · tap a driver</small></div>
+  <div class="grid">${rows.map(r=>`<button class="vc" data-go="drv|${esc(r.k)}"><b>${esc(r.k)}</b><div class="st">${esc(r.v.join(', ')||(today_(r.k)||{}).label||'—')}</div>
+   <div class="ns"><div class="r"><span>COMPL.</span><strong>${r.c}</strong></div><div><span>OPEN</span><strong>${r.o}</strong></div><div><span>REQ.</span><strong>${r.es.filter(isReq).length}</strong></div></div></button>`).join('')||'<div class="empty">No drivers yet.</div>'}</div></div>`}
+function phoneOf(name){const R=roster();for(const id in (R.name||{}))if(R.name[id]===name)return(R.phone||{})[id]||'';return''}
+function busTab(){const R=range(),L=search(S.entries.filter(e=>(isComp(e)||isReq(e)||isChg(e))&&inR(e,R))),t=today();
+  const G=groupBy(L,e=>vehsOf(e).length?vehsOf(e):['Vehicle not known']);FLEET.forEach(f=>{if(!G.has(f.label))G.set(f.label,[])});
+  if(S.sel&&S.sel.t==='bus'){const es=G.get(S.sel.k)||[],c=crewOn(S.sel.k,t);
+    return periodBar()+profile(S.sel.k,`Today: driver ${esc(c.driver||'—')}${c.dphone?` · <a href="tel:${esc(c.dphone)}">${esc(c.dphone)}</a>`:''}${c.cond?' · conductor '+esc(c.cond):''}`,S.sel.k.split(' ')[1]||'?',es.filter(e=>!isChg(e)),`<div><span>Changes</span><b>${es.filter(isChg).length}</b></div>`)}
+  const ord=k=>{const m=k.match(/^(Bus|Van|Auto) (\w+)/);return m?[{Bus:0,Van:1,Auto:2}[m[1]],isNaN(m[2])?100+m[2].charCodeAt(0):+m[2]]:[9,0]};
+  const rows=[...G.entries()].sort((a,b)=>{const x=ord(a[0]),y=ord(b[0]);return x[0]-y[0]||x[1]-y[1]});
+  return `${periodBar()}<div class="card"><div class="sh"><span>Vehicle-wise</span><small>use this when drivers change · tap a vehicle</small></div>
+  <div class="grid">${rows.map(([k,es])=>{const c=crewOn(k,t),C=es.filter(isComp);return `<button class="vc" data-go="bus|${esc(k)}"><b>${esc(k)}</b><div class="st">${esc(c.driver||'—')}</div>
+   <div class="ns"><div class="r"><span>COMPL.</span><strong>${C.length}</strong></div><div><span>OPEN</span><strong>${C.filter(e=>statusOf(e)==='Open').length}</strong></div><div><span>REQ.</span><strong>${es.filter(isReq).length}</strong></div></div></button>`}).join('')}</div></div>`}
+function stuTab(){const R=range(),L=search(S.entries.filter(e=>!isChg(e)&&inR(e,R)));const G=groupBy(L,studentKey);
+  if(S.sel&&S.sel.t==='stu'){const es=G.get(S.sel.k)||S.entries.filter(e=>studentKey(e)===S.sel.k);const e0=es[0]||{name:'',cls:''};
+    return periodBar()+profile(e0.name,`Class ${esc(e0.cls)} · ${esc([...new Set(es.flatMap(vehsOf))].join(', ')||'vehicle not known')}`,(e0.name||'?')[0],es)}
+  const rows=[...G.entries()].map(([k,es])=>({k,es,c:es.filter(isComp).length,r:es.filter(isReq).length})).sort((a,b)=>b.c-a.c||b.r-a.r||(b.es.length-a.es.length));
+  return `${periodBar()}<div class="bar"><input type="search" id="f-q" placeholder="Search student or class" value="${esc(S.q)}"></div>
+  <div class="card"><div class="sh"><span>Student-wise</span><small>${rows.length} students · tap a name</small></div><div class="tw"><table><thead><tr><th>Student</th><th>Class</th><th>Vehicle</th><th class="n">Complaints</th><th class="n">Requests</th><th>Last</th></tr></thead><tbody>
+  ${rows.slice(0,200).map(r=>`<tr data-go="stu|${esc(r.k)}" style="cursor:pointer"><td><b>${esc(r.es[0].name)}</b></td><td>${esc(r.es[0].cls)}</td><td>${esc([...new Set(r.es.flatMap(vehsOf))].join(', '))}</td><td class="n">${r.c||'–'}</td><td class="n">${r.r||'–'}</td><td>${fmtS(r.es.sort(byDate)[0].d)}</td></tr>`).join('')||'<tr><td colspan="6" class="empty">None</td></tr>'}</tbody></table></div></div>`}
+function chgTab(){const R=range(),L=search(S.entries.filter(e=>isChg(e)&&inR(e,R))).sort(byDate);const n=s=>L.filter(e=>statusOf(e)===s).length;
+  return `${periodBar()}<div class="bar"><input type="search" id="f-q" placeholder="Search student, vehicle" value="${esc(S.q)}"></div>
+  <div class="kpis"><div class="kpi grn"><span>Approved</span><b>${n('Approved')}</b></div><div class="kpi navy"><span>Denied</span><b>${n('Denied')}</b></div><div class="kpi"><span>No status</span><b>${n('Not entered')}</b></div><div class="kpi red"><span>Fee not ticked</span><b>${L.filter(e=>statusOf(e)==='Approved'&&e.fee!=='✓'&&e.fee!=='NA').length}</b></div></div>
+  <div class="card"><div class="sh"><span>Change Tracker</span><small>changes entered in the Daily FO system</small></div><div class="tw"><table><thead><tr><th>Date</th><th>Student</th><th>Change</th><th>From → To</th><th>Status</th><th>Fee</th></tr></thead><tbody>
+  ${L.map(e=>`<tr><td>${fmtS(e.d)}</td><td><b>${esc(e.name)}</b><br><span style="color:var(--mute);font-size:12px">${esc(e.cls)}</span></td><td>${esc(e.cat)}</td><td>${esc(e.from||'-')} → ${esc(e.to||'-')}</td><td><span class="tag ${stTag(statusOf(e))}">${esc(statusOf(e))}</span></td><td>${esc(e.fee)}</td></tr>`).join('')||'<tr><td colspan="6" class="empty">No changes in this period.</td></tr>'}</tbody></table></div></div>`}
+function fleetTab(){const t=today(),rep=tdRep(t),m=cfgMap(),ph=cfgPh();
+  const priv=[...new Set(Object.keys(m).concat(S.entries.flatMap(e=>e.vehs||[])).map(canon))].filter(v=>!FLEET.find(f=>f.label===v)&&!/walk|not known|^Bus [A-H]$/i.test(v)).sort((a,b)=>{const p=s=>{const x=s.match(/^(\w+) (\w+)$/)||[];return[{Bus:0,Van:1,Auto:2}[x[1]]??3,isNaN(x[2])?100+String(x[2]).charCodeAt(0):+x[2]]};const x=p(a),y=p(b);return x[0]-y[0]||x[1]-y[1]});
+  return `<div class="note">School vehicles come straight from <b>Transport Operations</b> — the staff list and today's attendance, so a reserve covering an absent driver shows here automatically.${S.td?'':' <b>Could not read Transport Operations</b> — open it once, then refresh.'}</div>
+  <div class="card"><div class="sh"><span>School fleet · ${fmt(t)}</span><small>${rep?'attendance marked':'attendance not marked yet — regular crew shown'}</small></div><div class="tw"><table><thead><tr><th>Vehicle</th><th>Driver</th><th>Phone</th><th>Conductor</th><th>Phone</th></tr></thead><tbody>
+  ${FLEET.map(f=>{const c=crewOn(f.label,t);return `<tr><td><b>${f.label}</b></td><td>${esc(c.driver||'—')}${c.cover?`<br><span class="tag t-amb">for ${esc(c.cover)} (absent)</span>`:''}</td><td>${c.dphone?`<a href="tel:${esc(c.dphone)}">${esc(c.dphone)}</a>`:''}</td><td>${f.bus?esc(c.cond||'—')+(c.ccover?`<br><span class="tag t-amb">for ${esc(c.ccover)}</span>`:''):'<span style="color:var(--mute)">No conductor</span>'}</td><td>${c.cphone?`<a href="tel:${esc(c.cphone)}">${esc(c.cphone)}</a>`:''}</td></tr>`}).join('')}</tbody></table></div></div>
+  ${(roster().pre||[]).length?`<div class="card"><div class="sh"><span>Pre-primary run · 7:30</span><small>from Transport Operations</small></div><div class="tw"><table><thead><tr><th>Bus</th><th>Driver</th><th>Phone</th><th>Conductor</th></tr></thead><tbody>
+  ${roster().pre.filter(x=>x.code).map(x=>`<tr><td><b>Bus ${esc(x.code)}</b></td><td>${esc(x.driver||'—')}</td><td>${x.dphone?`<a href="tel:${esc(x.dphone)}">${esc(x.dphone)}</a>`:''}</td><td>${esc(x.cond||'—')}</td></tr>`).join('')}</tbody></table></div></div>`:''}
+  <div class="card"><div class="sh"><span>Private vans &amp; autos</span><small>type the regular driver · saved for everyone</small></div><div class="tw"><table><thead><tr><th>Vehicle</th><th>Driver</th><th>Phone</th></tr></thead><tbody>
+  ${priv.map(v=>`<tr><td><b>${esc(v)}</b></td><td><input data-dmap="${esc(v)}" value="${esc(m[v]||'')}" placeholder="Driver name" style="width:100%;min-width:150px"></td><td><input data-dph="${esc(v)}" value="${esc(ph[v]||'')}" inputmode="tel" placeholder="Mobile" style="width:100%;min-width:120px"></td></tr>`).join('')}</tbody></table></div>
+  <div class="bar" style="margin:12px 0 0"><button class="btn" id="dmap-save">Save private drivers</button></div></div>`}
+
+/* ---------- case sheet ---------- */
+function sheet(){const e=S.entries.find(x=>x.id===S.open);if(!e){$('sheet').innerHTML='';document.body.style.overflow='';return}
+  document.body.style.overflow='hidden';
+  const o=ov(e.id),c=crewOf(e),R=remsOf(e),rq=isReq(e),chg=isChg(e),st=rq?stageOf(e):statusOf(e),f=o.fu||{},r=o.rq||{},stp=r.steps||{},v=vehsOf(e);
+  const fs=fuState(f.on?f:null);
+  const tel=p=>p?`<a href="tel:${esc(p)}">${esc(p)}</a>`:'';
+  const steps=[['visit','House visit','Transport manager visits the home / pick-up point'],['fee','Fee update','Transport fee updated in accounts'],['db','Database update','Studybase / transport roster updated'],['group','Communication in school group','Parent and route group informed'],['board','Child on board','First day: transport manager checks the child boarded and reached school / home on the new vehicle']];
+  const tline=[{t:e.text,role:'',by:'Parent ('+(e.mode||'Daily FO')+')',d:e.d,parent:1}];
+  $('sheet').innerHTML=`<div class="sheet" data-sheetbg><div class="in" role="dialog" aria-modal="true" aria-label="Case">
+  <div class="sh-top"><div class="tt"><small>${rq?'Transport request':chg?'Change':'Complaint'} · logged ${fmt(e.d)}</small><b>${esc(e.name)} · ${esc(e.cls)}</b></div>
+   <span class="tag ${rq?sgTag(st):stTag(st)}">${esc(st)}</span><button class="x" data-close aria-label="Close">✕</button></div>
+  <div class="sb">
+   <div class="blk"><span class="lbl">Case details</span><div class="facts">
+    <div><span>Student</span><b>${esc(e.name)}</b></div><div><span>Class</span><b>${esc(e.cls)}</b></div>
+    <div><span>Logged on</span><b>${fmt(e.d)}</b></div><div><span>Source</span><b>Daily FO · ${esc(e.mode||e.src||'')}</b></div>
+    <div><span>Vehicle</span><b>${esc(v.join(', ')||'Not known')}</b></div><div><span>Driver that day</span><b>${esc(c.driver||'—')}</b>${c.dphone?'<br>'+tel(c.dphone):''}${c.cover?`<br><span class="tag t-amb">covering for ${esc(c.cover)}</span>`:''}</div>
+    ${c.cond||(FLEET.find(x=>x.label===v[0])||{}).bus?`<div><span>Conductor</span><b>${esc(c.cond||'—')}</b>${c.cphone?'<br>'+tel(c.cphone):''}</div>`:''}
+    ${!rq&&!chg?`<div><span>Priority</span><b>${esc(e.pri||'Not marked')}</b></div>`:''}
+   </div>
+   <details style="margin-top:10px"><summary style="cursor:pointer;color:var(--navy);font-weight:600;font-size:13px">Change vehicle / driver for this case</summary>
+    <div class="form" style="margin-top:10px"><label>Vehicle<input id="ed-veh" list="vlist" value="${esc(o.veh||v[0]||'')}" placeholder="Bus 5, Van 27"></label>
+    <label>Driver (if someone else drove)<input id="ed-drv" value="${esc(o.driver||'')}" placeholder="${esc(c.driver||'Driver')}"></label>
+    <label>Driver phone<input id="ed-dph" value="${esc(o.dphone||'')}" inputmode="tel"></label><label>&nbsp;<button class="btn sm" data-savecrew="${e.id}">Save</button></label></div></details></div>
+
+   <div class="blk"><span class="lbl">${rq?'Request':'What the parent said'}</span><div class="quote">${esc(e.text)}</div>
+    ${e.need?`<div style="margin-top:8px;font-size:13px;color:var(--mute)">Action required: <b style="color:var(--ink)">${esc(e.need)}</b></div>`:''}</div>
+
+   ${!chg?`<div class="blk"><span class="lbl">Type &amp; category</span><div class="form">
+    <label>Type<select data-kind="${e.id}">${['Complaint','Request','Query','Not marked','Call'].map(k=>`<option ${kindOf(e)===k?'selected':''}>${k}</option>`).join('')}</select></label>
+    ${rq?`<label>Request for<select data-rqf="${e.id}|type">${RQT.map(k=>`<option ${(r.type||guessRqt(e.text))===k?'selected':''}>${k}</option>`).join('')}</select></label>`
+     :`<label>Category<select data-cat="${e.id}">${CATS.map(k=>`<option ${catOf(e)===k?'selected':''}>${k}</option>`).join('')}</select></label>`}
+    ${rq?`<label>Colony / area<input data-rqf="${e.id}|area" list="colist" value="${esc(r.area||'')}" placeholder="e.g. JNV Colony"></label>
+     <label>Vehicle asked for<input data-rqf="${e.id}|want" list="vlist" value="${esc(r.want||'')}" placeholder="Bus / van / any"></label>
+     <label>Pick-up / drop<select data-rqf="${e.id}|pd">${['','Pick-up and drop','Pick-up only','Drop only'].map(k=>`<option ${r.pd===k?'selected':''}>${k}</option>`).join('')}</select></label>
+     <label>From date<input type="date" data-rqf="${e.id}|from" value="${esc(r.from||'')}"></label>`:''}
+   </div></div>`:''}
+
+   ${rq?`<div class="blk"><span class="lbl">Request workflow</span><div class="steps">
+     <div class="step ${r.ack?'done':''}"><button class="ck" data-ack="${e.id}">${r.ack?'✓':'1'}</button><div class="sx"><b>Acknowledged</b><span>${r.ack?`${esc(r.ack.by)} · ${stamp(r.ack.at)}`:'Tap when the request has been seen and the parent informed'}</span></div></div>
+     <div class="step ${r.dec?'done':''}"><span class="ck">${r.dec?'✓':'2'}</span><div class="sx"><b>Decision</b><span>${r.dec?`${esc(r.dec)} by ${esc(r.decBy||'')} · ${stamp(r.decAt)}`:'Approve, keep awaiting (no seat / route yet) or deny'}</span>
+      <div class="stbtns" style="margin-top:8px"><button class="${r.dec==='Approved'?'on Closed':''}" data-dec="${e.id}|Approved">Approve</button><button class="${r.dec==='Awaiting'?'on Action':''}" data-dec="${e.id}|Awaiting">Awaiting</button><button class="${r.dec==='Denied'?'on Open':''}" data-dec="${e.id}|Denied">Deny</button></div>
+      ${r.dec==='Denied'||r.dec==='Awaiting'?`<input style="margin-top:8px;width:100%" data-rqf="${e.id}|reason" value="${esc(r.reason||'')}" placeholder="Reason — no seat, route not covered, …">`:''}</div></div>
+     ${r.dec==='Approved'?steps.map(([k,l,h],i)=>`<div class="step ${stp[k]?'done':''}"><button class="ck" data-step="${e.id}|${k}">${stp[k]?'✓':i+3}</button><div class="sx"><b>${l}</b><span>${stp[k]?`${esc(stp[k].by)} · ${stamp(stp[k].at)}`:h}</span></div></div>`).join(''):''}
+   </div></div>`:''}
+
+   ${!rq&&!chg?`<div class="blk"><span class="lbl">Status</span><div class="stbtns">${['Open','Action logged','Closed'].map(s=>`<button class="${st===s?'on '+s.split(' ')[0]:''}" data-st="${e.id}|${s}">${s}</button>`).join('')}</div>
+    ${autoClosed(e)?'<div style="margin-top:8px;font-size:12.5px;color:var(--mute)">Closed automatically — older than one month. The record is kept.</div>':''}</div>`:''}
+
+   ${!chg?`<div class="blk"><span class="lbl">Follow-up</span>
+    <label class="sw"><input type="checkbox" data-fuon="${e.id}" ${f.on?'checked':''}> Needs follow-up</label>
+    ${f.on?`<div class="fu" style="margin-top:10px"><input type="datetime-local" data-fu="${e.id}|due" value="${esc(f.due||'')}" aria-label="Follow-up date and time"><input data-fu="${e.id}|note" value="${esc(f.note||'')}" placeholder="What to check"></div>
+     <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">${fs?`<span class="tag ${fs==='over'?'t-red':fs==='today'?'t-amb':fs==='done'?'t-grn':'t-blu'}">${fs==='over'?'Overdue':fs==='today'?'Due today':fs==='done'?'Done':'Upcoming'}${f.due?' · '+dtLabel(f.due):''}</span>`:''}
+     ${f.done?`<span style="font-size:12.5px;color:var(--mute)">by ${esc(f.doneBy||'')} · ${stamp(f.doneAt)}</span><button class="btn ghost sm" data-fudone="${e.id}|0">Reopen</button>`:`<button class="btn grn sm" data-fudone="${e.id}|1">Mark follow-up done</button>`}</div>`:''}</div>`:''}
+
+   <div class="blk"><span class="lbl">Remarks &amp; timeline</span><div class="tl">
+    ${e.action||e.by?`<div class="tli"><i></i><div class="c"><div class="m"><span class="role FO">Front Office</span><span>Daily FO · ${fmt(e.d)}</span></div><p>${esc(e.action||'')}${e.by?' (called by '+esc(e.by)+')':''}</p></div></div>`:''}
+    ${R.map(x=>`<div class="tli"><i></i><div class="c"><div class="m">${x.role?`<span class="role ${x.role}">${esc(ROLES[x.role]||x.role)}</span>`:''}<b style="color:var(--ink)">${esc(x.by||'')}</b><span>${x.at?stamp(x.at):''}</span></div><p>${esc(x.t)}</p></div></div>`).join('')}
+    ${!R.length&&!e.action?'<div style="color:var(--mute);font-size:13.5px">No remarks yet.</div>':''}</div>
+    <div class="addr"><div class="row"><select id="rem-role" aria-label="Remark by">${Object.entries(ROLES).map(([k,l])=>`<option value="${k}" ${S.role===k?'selected':''}>${l}</option>`).join('')}</select></div>
+     <textarea id="rem-text" placeholder="Write the remark — what was done, who was spoken to"></textarea><button class="btn gold" data-rem="${e.id}">Add remark</button></div></div>
+  </div></div></div>
+  <datalist id="colist">${[...new Set(S.entries.map(x=>rqOf(x).area).filter(Boolean))].sort().map(x=>`<option value="${esc(x)}">`).join('')}</datalist>`}
+
+/* ---------- main render ---------- */
+function loginView(){return `<div class="card gold login"><div class="sh"><span>Staff login</span></div>
+  <p style="color:var(--mute);font-size:14px;margin-top:0">Complaints and transport requests come live from the Daily FO. Same password as the other FIS apps.</p>
   <label for="ln">Full name</label><input id="ln" autocomplete="name" value="${esc(S.name||'')}">
   <label for="lp">Password</label><input id="lp" type="password" autocomplete="current-password">
-  <div style="margin-top:12px"><button class="btn" id="lgo">Log in</button></div><div class="err" id="lerr"></div></div>`}
-function render(){if(document.activeElement&&document.activeElement.id&&document.activeElement.id.startsWith('rem-')&&document.activeElement.value&&!render.force){return}render.force=false;
-  if(!API_URL){$('nav').innerHTML='';$('main').innerHTML='<div class="card login"><div class="secthead"><i></i><span>Not connected yet</span></div><p class="ea">This app needs its Google Apps Script link. See complaints/SETUP.md.</p></div>';$('sync').textContent='Setup';return}
-  if(!S.token){$('nav').innerHTML='';$('main').innerHTML=loginView();return}
-  const L=list();nav(L);let h='';
-  if(S.tab==='dash')h=dash(L);else if(S.tab==='comp')h=listTab(L,TAB_PRED.comp,'Complaints & concerns','entries');
-  else if(S.tab==='req')h=listTab(L,TAB_PRED.req,'Requests & queries','entries');else if(S.tab==='chg')h=listTab(L,TAB_PRED.chg,'Change Tracker · Transport','changes');
-  else if(S.tab==='stu')h=stuTab(L);else if(S.tab==='bus')h=busTab(L);else if(S.tab==='drv')h=drvTab(L);else h=mapTab();
-  const fa=document.activeElement,fid=fa&&fa.id,pos=fa&&fa.selectionStart;
-  $('main').innerHTML=h+`<datalist id="vlist">${[...new Set(S.entries.flatMap(e=>e.vehs||[]).concat(Object.keys(drivers())))].sort().map(v=>`<option value="${esc(v)}">`).join('')}</datalist><datalist id="dlist">${[...new Set(Object.values(drivers()))].sort().map(v=>`<option value="${esc(v)}">`).join('')}</datalist>`;
-  if(fid&&$(fid)){$(fid).focus();try{if(pos!=null)$(fid).setSelectionRange(pos,pos)}catch(e){}}
+  <div style="margin-top:14px"><button class="btn" id="lgo">Log in</button></div><div class="err" id="lerr"></div></div>`}
+function render(){
+  if(!S.token){$('nav').innerHTML='';$('main').innerHTML=loginView();$('sync').textContent='Log in';return}
+  const a=document.activeElement;if(a&&a.closest&&a.closest('#sheet')&&!render.force){nav();return}
+  if(a&&a.id==='rem-text'&&a.value&&!render.force)return;render.force=false;
+  nav();let h;
+  switch(S.tab){case'comp':h=compTab();break;case'req':h=reqTab();break;case'fu':h=fuTab();break;case'drv':h=drvTab();break;case'bus':h=busTab();break;
+    case'stu':h=stuTab();break;case'chg':h=chgTab();break;case'fleet':h=fleetTab();break;default:h=dash()}
+  const fid=a&&a.id,pos=a&&a.selectionStart,keep=S.open&&$('rem-text')?$('rem-text').value:'',sc=document.querySelector('.sheet .in')?.scrollTop||0;
+  $('main').innerHTML=h+`<datalist id="vlist">${[...new Set(FLEET.map(f=>f.label).concat(S.entries.flatMap(e=>e.vehs||[]),Object.keys(cfgMap())))].sort().map(v=>`<option value="${esc(v)}">`).join('')}</datalist>`;
+  sheet();if(keep&&$('rem-text'))$('rem-text').value=keep;const si=document.querySelector('.sheet .in');if(si)si.scrollTop=sc;
+  if(fid&&$(fid)&&!fid.startsWith('rem')){$(fid).focus();try{if(pos!=null)$(fid).setSelectionRange(pos,pos)}catch(e){}}
 }
-async function saveOv(id,patch){const cur=Object.assign({},ov(id),patch);S.docs['ov/'+id]=cur;render();
+async function saveOv(id,patch){const cur=Object.assign({},ov(id),patch);S.docs['ov/'+id]=cur;render.force=true;render();
   try{await call('cr_set',[S.token,'ov/'+id,cur]);toast('Saved')}catch(e){toast(e.message==='LOGIN'?'Log in again':'Not saved: '+e.message)}}
-document.addEventListener('click',async ev=>{const t=ev.target.closest('button,tr.click');if(!t)return;const d=t.dataset;render.force=true;
+const me=()=>S.name||'Staff';
+function setTab(k){S.tab=k;S.sel=null;LS.set('tab2',k);scrollTo(0,0)}
+document.addEventListener('click',async ev=>{const t=ev.target.closest('button,[data-case],[data-go],[data-sheetbg]');if(!t)return;const d=t.dataset;render.force=true;
+  if(d.sheetbg!=null){if(ev.target===t){S.open=null;render()}return}
   if(t.id==='sync'){if(S.token)load(true);return}
   if(t.id==='lgo'){const n=$('ln').value,p=$('lp').value;$('lerr').textContent='Checking…';
     try{const v=await call('login',[n,p]);S.token=v.token;S.name=v.name;LS.set('token',v.token);LS.set('name',v.name);render();load(false)}catch(e){$('lerr').textContent=e.message==='SETUP'?'Not connected.':e.message}return}
-  if(d.tab){S.tab=d.tab;S.f={pri:'',st:'',kind:''};LS.set('tab',d.tab);S.openRow=null;S.edit=null;scrollTo(0,0);render();return}
-  if(d.range){S.range=d.range;LS.set('range',d.range);render();return}
-  if(d.jump){const[k,v]=d.jump.split('|');S.tab=k==='stu'?'stu':k;S.openRow=k==='stu'?'stu|'+(S.entries.find(e=>e.name+' · '+e.cls===v)?studentKey(S.entries.find(e=>e.name+' · '+e.cls===v)):v):k+'|'+v;render();return}
-  if(d.row){S.openRow=S.openRow===d.row?null:d.row;render();return}
-  if(d.open){S.open=S.open===d.open?null:d.open;S.edit=null;render();return}
-  if(d.fst!=null){S.f.st=d.fst;render();return}
-  if(d.rem){const id=d.rem,i=$('rem-'+id),t=(i&&i.value||'').trim();if(!t){toast('Type the remark first');return}
-    const R=remsOf(S.entries.find(e=>e.id===id)||{id});R.push({t,by:S.name||'',at:Date.now()});saveOv(id,{rem:R});return}
+  if(d.close!=null){S.open=null;render();return}
+  if(d.tab){setTab(d.tab);if(d.cst!=null)S.cf.st=d.cst;if(d.rst!=null){S.rf=d.rst;S.rview='list'}render();return}
+  if(d.per){S.per=d.per;LS.set('per',d.per);render();return}
+  if(d.cst!=null){S.cf.st=d.cst;render();return}
+  if(d.rst!=null){S.rf=d.rst;render();return}
+  if(d.rview){S.rview=d.rview;render();return}
+  if(d.ff){S.ff=d.ff;render();return}
+  if(d.back!=null){S.sel=null;render();return}
+  if(d.go){const i=d.go.indexOf('|'),k=d.go.slice(0,i),v=d.go.slice(i+1);
+    if(k==='cat'){setTab('comp');S.cf.cat=v;S.cf.st='';render();return}
+    if(k==='con'){setTab('comp');S.q=v;render();return}
+    if(S.tab!==k)setTab(k);S.sel={t:k,k:v};scrollTo(0,0);render();return}
+  if(d.case){S.open=d.case;render();return}
   if(d.st){const[id,s]=d.st.split('|');saveOv(id,{st:s});return}
-  if(d.ed){S.edit=S.edit===d.ed?null:d.ed;render();return}
-  if(d.save){const id=d.save;saveOv(id,{veh:$('ed-veh').value.trim(),driver:$('ed-drv').value.trim()});S.edit=null;return}
-  if(t.id==='dmap-save'){const m={};document.querySelectorAll('[data-dmap]').forEach(i=>{if(i.value.trim())m[i.dataset.dmap]=i.value.trim()});
-    S.docs['config/drivers']={map:m};try{await call('cr_set',[S.token,'config/drivers',{map:m}]);toast('Drivers list saved')}catch(e){toast('Not saved: '+e.message)}render();return}
+  if(d.rem){const id=d.rem,tx=($('rem-text').value||'').trim();if(!tx){toast('Write the remark first');return}
+    const role=$('rem-role').value;S.role=role;LS.set('role',role);const e=S.entries.find(x=>x.id===id);const R=remsOf(e);R.push({t:tx,by:me(),role,at:Date.now()});$('rem-text').value='';
+    const p={rem:R};if(isComp(e)&&statusOf(e)==='Open')p.st='Action logged';saveOv(id,p);return}
+  if(d.ack){const e=S.entries.find(x=>x.id===d.ack),r=Object.assign({},rqOf(e));r.ack=r.ack?null:{by:me(),at:Date.now()};if(!r.type)r.type=guessRqt(e.text);saveOv(d.ack,{rq:r});return}
+  if(d.dec){const[id,v]=d.dec.split('|'),e=S.entries.find(x=>x.id===id),r=Object.assign({},rqOf(e));if(r.dec===v){r.dec='';}else{r.dec=v;r.decBy=me();r.decAt=Date.now()}
+    if(!r.ack)r.ack={by:me(),at:Date.now()};if(!r.type)r.type=guessRqt(e.text);saveOv(id,{rq:r});return}
+  if(d.step){const[id,k]=d.step.split('|'),e=S.entries.find(x=>x.id===id),r=Object.assign({},rqOf(e)),s=Object.assign({},r.steps||{});s[k]=s[k]?null:{by:me(),at:Date.now()};r.steps=s;saveOv(id,{rq:r});return}
+  if(d.fudone){const[id,v]=d.fudone.split('|'),f=Object.assign({},ov(id).fu||{});f.done=v==='1';f.doneBy=f.done?me():'';f.doneAt=f.done?Date.now():0;saveOv(id,{fu:f});return}
+  if(d.savecrew){saveOv(d.savecrew,{veh:$('ed-veh').value.trim(),driver:$('ed-drv').value.trim(),dphone:$('ed-dph').value.trim()});return}
+  if(t.id==='dmap-save'){const m={},p={};document.querySelectorAll('[data-dmap]').forEach(i=>{if(i.value.trim())m[i.dataset.dmap]=i.value.trim()});document.querySelectorAll('[data-dph]').forEach(i=>{if(i.value.trim())p[i.dataset.dph]=i.value.trim()});
+    S.docs['config/drivers']={map:m,phone:p};try{await call('cr_set',[S.token,'config/drivers',{map:m,phone:p}]);toast('Drivers saved')}catch(e){toast('Not saved: '+e.message)}render();return}
 });
-document.addEventListener('input',ev=>{const t=ev.target;
-  if(t.id==='f-q'){S.q=t.value;render()}
+document.addEventListener('input',ev=>{const t=ev.target;if(t.id==='f-q'){S.q=t.value;render.force=true;render()}});
+document.addEventListener('change',ev=>{const t=ev.target,d=t.dataset;render.force=true;
+  if(t.id==='f-from'){S.from=t.value;render()}if(t.id==='f-to'){S.to=t.value;render()}if(t.id==='f-cat'){S.cf.cat=t.value;render()}
+  if(d.kind){saveOv(d.kind,{kind:t.value})}
+  if(d.cat){saveOv(d.cat,{cat:t.value})}
+  if(d.rqf){const[id,k]=d.rqf.split('|'),r=Object.assign({},ov(id).rq||{});r[k]=t.value.trim();saveOv(id,{rq:r})}
+  if(d.fuon){const f=Object.assign({},ov(d.fuon).fu||{});f.on=t.checked;if(t.checked&&!f.due){const n=nowIST();n.setUTCDate(n.getUTCDate()+1);f.due=n.toISOString().slice(0,10)+'T10:00'}f.done=false;saveOv(d.fuon,{fu:f})}
+  if(d.fu){const[id,k]=d.fu.split('|'),f=Object.assign({},ov(id).fu||{});f[k]=t.value;saveOv(id,{fu:f})}
 });
-document.addEventListener('change',ev=>{const t=ev.target;
-  if(t.id==='f-from'){S.from=t.value;render()}if(t.id==='f-to'){S.to=t.value;render()}
-  if(t.id==='f-pri'){S.f.pri=t.value;render()}if(t.id==='f-st'){S.f.st=t.value;render()}if(t.id==='f-kind'){S.f.kind=t.value;render()}
-});
-document.addEventListener('keydown',ev=>{if(ev.key==='Enter'&&(ev.target.id==='lp'||ev.target.id==='ln'))$('lgo').click();if(ev.key==='Enter'&&ev.target.id&&ev.target.id.startsWith('rem-')){const b=document.querySelector(`[data-rem="${ev.target.id.slice(4)}"]`);if(b)b.click()}});
+document.addEventListener('keydown',ev=>{if(ev.key==='Enter'&&(ev.target.id==='lp'||ev.target.id==='ln'))$('lgo').click();if(ev.key==='Escape'&&S.open){S.open=null;render.force=true;render()}});
+/* self-update */
+(function(){async function chk(){if(location.protocol==='file:')return;try{const t=await (await fetch(location.pathname+'?nc='+Date.now(),{cache:'no-store'})).text(),m=t.match(/const APP_V="(\d+)"/);if(m&&m[1]!==APP_V){const u=new URL(location.href);u.searchParams.set('v',m[1]);location.replace(u.toString())}}catch(e){}}
+  chk();document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()})})();
 const c=LS.get('cache');if(c&&S.token){S.entries=c.entries||[];S.docs=c.docs||{};S.at=c.at||''}
+const ct=LS.get('td');if(ct&&ct.docs)S.td=ct.docs;
 render();if(S.token&&API_URL)load(false);
-setInterval(()=>{if(S.token&&API_URL&&!document.hidden)load(false)},5*60e3);
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.token&&API_URL)load(false)});
+setInterval(()=>{if(S.token&&!document.hidden)load(false)},5*60e3);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.token)load(false)});
 </script>
 </body>
 </html>
