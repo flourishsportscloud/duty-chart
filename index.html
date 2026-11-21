@@ -1822,11 +1822,15 @@ async function gsEnable(){
     if (changed){ Q.ops.push(...diffOps(DAILY, next)); qSave(); }
   }
   /* One-time leave entries sent by the Director (added once by the first editor who opens the app; later edits are kept) */
-  { const SEEDS = [{id: 's261121', day: '2026-11-21', half: 'first', names: ['Pooja Sharma','Shobha Sharma','Sunita Nirban','Suman Bishnoi','Priyanshi Bhojak','Shikha Sharma','Sarita Saini','Nisha','Shivika Ranjan']}];
+  { const N21 = ['Pooja Sharma','Shobha Sharma','Sunita Nirban','Suman Bishnoi','Priyanshi Bhojak','Shikha Sharma','Sarita Saini','Nisha','Shivika Ranjan'];
+    const H21 = {'Pooja Sharma': 'first'};   /* correction 21 Nov: only Pooja Sharma first half, the rest full day */
+    const SEEDS = [{id: 's261121', day: '2026-11-21', names: N21, half: H21}, {id: 's261121b', day: '2026-11-21', names: N21, half: H21, fix: true}];
     const next = JSON.parse(JSON.stringify(DAILY)); let changed = false;
     SEEDS.forEach(sd => { const d = next[sd.day] = next[sd.day] || blank(); ['leave','cover','adj'].forEach(k => d[k] = d[k] || []);
       d.seeds = d.seeds || []; if (d.seeds.includes(sd.id)) return; d.seeds.push(sd.id); changed = true;
-      sd.names.forEach(n => { if (!d.leave.some(l => key(l.n) === key(n))) d.leave.push({n, k: catOfName(n), ...(sd.half ? {half: sd.half} : {})}); }); });
+      sd.names.forEach(n => { const h = sd.half[n], l = d.leave.find(x => key(x.n) === key(n));
+        if (l){ if (sd.fix){ delete l.ht; delete l.late; if (h) l.half = h; else delete l.half; } }
+        else if (!sd.fix) d.leave.push({n, k: catOfName(n), ...(h ? {half: h} : {})}); }); });
     if (changed){ Q.ops.push(...diffOps(DAILY, next)); qSave(); }
   }
   if (Q.ops.length){ const v = applyOps(DAILY, ROSTER, Q.ops); DAILY = v.daily; ROSTER = v.roster; setDay(DAY); flush(); }
