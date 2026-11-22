@@ -1434,7 +1434,7 @@ async function loadDemo(){
           if(!cands.length)break;const [roll,it,c]=pick(cands);const sid=sidOf(r,roll);const was=cdesc(c,'coll');const who=pick([[T,'Class Teacher'],[A1,'Assistant Teacher'],[CM,'Class Manager'],['Harsh Yadav','Director']]);
           const when=r.cs[it.cd].at+(25+Math.floor(R()*200))*60000;if(when>now+864e5*2)continue;
           setCell(r,sid,it.id,{c:'R'});L(when,who[0],who[1],nm(sid)+' · '+it.n+': '+was+' → Received',{ph:'coll',post:1,s:sid})}
-        if(df.i===2&&R()<.25){const [roll]=pick(ro);const it=pick(its);const sid=sidOf(r,roll);const c=cell(r,sid,it.id);if(c.d!=='N'){const was=cdesc(c,'dist');setCell(r,sid,it.id,{d:'N',dr:'Other'});L(df.dAt+40*60000,T,'Class Teacher',nm(sid)+' · '+it.n+': '+was+' → Not issued · Out of stock',{ph:'dist',post:1,s:sid});r.edit={['d']:1}}}}
+        if(df.i===2&&R()<.25){const [roll]=pick(ro);const it=pick(its);const sid=sidOf(r,roll);const c=cell(r,sid,it.id);if(c.d!=='N'){const was=cdesc(c,'dist');setCell(r,sid,it.id,{d:'N',dr:'Other'});L(df.dAt+40*60000,T,'Class Teacher',nm(sid)+' · '+it.n+': '+was+' → Not given',{ph:'dist',post:1,s:sid});r.edit={['d']:1}}}}
       r.log.sort((a,b)=>a.at-b.at);
       S.rounds[r.id]=r}
     /* defaulter register realism: closures, early returns, remarks */
