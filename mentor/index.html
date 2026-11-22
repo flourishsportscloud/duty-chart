@@ -133,11 +133,15 @@ const subjectsFor=c=>SUBJ.filter(s=>c>=s.c[0]&&c<=s.c[1]);
 const subjDef=(c,n)=>subjectsFor(c).find(s=>s.n===n);
 function itemsFor(c,n){const o=CFG.items&&CFG.items[c+'|'+n];if(o&&o.length)return o;const d=subjDef(c,n);return d?d.i(c):NB3}
 /* ---------- teachers (same maps as the Teacher Prep & Checking apps) ---------- */
-const CT={'1A':'Sunita','1B':'Priyanshi Bhojak','1C':'Kanika','2A':'Deepmala','2B':'Deepali','2C':'Chhavi','3A':'Tina','3B':'Vaneshwari','3C':'Saroj','4A':'Pooja','4B':'Priya Shekhawat','4C':'Gauri','5A':'Anuradha','5B':'Reema','5C':'Divyanshi'};
+const CT={'1A':'Sunita','1B':'Priyanshi Bhojak','1C':'Kanika','2A':'Deepmala','2B':'Deepali','2C':'Chhavi','3A':'Tina','3B':'Vahnisvari','3C':'Saroj','4A':'Pooja','4B':'Priya Shekhawat','4C':'Gauri','5A':'Anuradha','5B':'Reema','5C':'Devanshi'};
 const HT={A:'Geeta',B:'Preeti',C:'Anita'};
 const BY={'English':{A:'Swati',B:'Yavnika',C:'Jyotshna'},'Hindi':{A:'Tripti',B:'Ajita',C:'Bharti'},'Sanskrit':{A:'Tripti',B:'Ajita',C:'Bharti'},'S.St.':{A:'Shailesh',B:'Ishita',C:'Monika'},'Science':{A:'Pallavi',B:'Shreya',C:'Ritika'}};
-const MATHS={'6A':'Amit','6B':'Madhu','6C':'Neha J','7A':'Vipul','7B':'Madhu','7C':'Neha J','8A':'Vipul','8B':'Amit','8C':'Neha J','9A':'Amit','9B':'Vipul','10A':'Vipul','10B':'Amit'};
+const MATHS={'6A':'Amit','6B':'Madhu','6C':'Neha Kumari','7A':'Vipul','7B':'Madhu','7C':'Neha Kumari','8A':'Vipul','8B':'Amit','8C':'Neha Kumari','9A':'Amit','9B':'Vipul','10A':'Vipul','10B':'Amit'};
 const ADMIN_DEF=['Harsh Yadav'];
+const secL=(cl,lt)=>{const o=[];cl.forEach(c=>[...lt].forEach(l=>o.push(c+l)));return o};
+const PLDEF=[{n:'Sanjana',t:'Program Manager',s:secL([1,2],'ABC')},{n:'Neetu',t:'Program Manager',s:secL([3],'ABC')},{n:'Divyanshi',t:'Program Manager',s:secL([4],'ABC')},{n:'Diksha',t:'Program Manager',s:secL([5],'ABC')},
+ {n:'Poonam',t:'Program Leader',s:secL([6,7],'ABC')},{n:'Garima',t:'Program Leader',s:['8A','8B','8C','9A','9B']},{n:'Sarita',t:'Program Leader',s:['10A','10B','11A']}];
+function plSet(){const f=first(ME),set=new Set();PLDEF.forEach(p=>{if(first(p.n)===f)p.s.forEach(x=>set.add(x))});return set}
 function teacherDef(sec,subj){
   const c=+sec.slice(0,-1),l=sec.slice(-1),d=(subjDef(c,subj)||{}).d||subj;
   if(c<=5){if(d==='Hindi'||d==='Sanskrit')return HT[l];if(subj==='Computer'&&c>=3)return 'Himanshi';return CT[sec]||''}
@@ -325,12 +329,13 @@ function refreshTest(t){
   const pb=$('poorBox');if(pb)pb.innerHTML='<h4 style="color:var(--ns)">Below 60% · '+poor.length+'</h4>'+(poor.length?poor.map(x=>'<div>'+x[0]+'. <b>'+esc(nameOf(t.sec,x[0]))+'</b> — '+x[1].toFixed(0)+'%'+(x[2]>=2?' <span class="flag">again low · '+x[2]+' in a row</span>':'')+'</div>').join(''):'<div class="muted">No one below 60% so far.</div>');
 }
 /* ---------- DASHBOARD ---------- */
-function scopeOpts(){const o=[];if(mineSet().size)o.push(['mine','My classes']);o.push(['sec','Section '+curSec()]);o.push(['seg',U.seg==='P'?'All Primary':'All Secondary']);if(isAdmin())o.push(['all','Whole school']);return o}
-function scopeNow(){const o=scopeOpts().map(x=>x[0]);if(!U.scope||!o.includes(U.scope))U.scope=mineSet().size?'mine':(isAdmin()?'seg':'sec');return U.scope}
+function scopeOpts(){const o=[];if(plSet().size)o.push(['pl','My PL classes']);if(mineSet().size)o.push(['mine','My classes']);o.push(['sec','Section '+curSec()]);o.push(['seg',U.seg==='P'?'All Primary':'All Secondary']);if(isAdmin())o.push(['all','Whole school']);return o}
+function scopeNow(){const o=scopeOpts().map(x=>x[0]);if(!U.scope||!o.includes(U.scope))U.scope=plSet().size?'pl':mineSet().size?'mine':(isAdmin()?'seg':'sec');return U.scope}
 function cutoff(){if(U.per==='all')return '';const d=new Date();d.setDate(d.getDate()-(+U.per));return isoD(d)}
 function inScope(r,ignorePer){
   const sc=scopeNow();
-  if(sc==='mine'){if(!mineSet().has(r.sec+'|'+r.subj))return false}
+  if(sc==='pl'){if(!plSet().has(r.sec))return false}
+  else if(sc==='mine'){if(!mineSet().has(r.sec+'|'+r.subj))return false}
   else if(sc==='sec'){if(r.sec!==curSec())return false}
   else if(sc==='seg'){if(segOf(r.sec)!==U.seg)return false}
   if(U.dept){const d=(subjDef(+r.sec.slice(0,-1),r.subj)||{}).d;if(d!==U.dept)return false}
@@ -472,6 +477,8 @@ function viewProfile(sec,s){
 /* ---------- SETUP ---------- */
 function viewSet(){
   let h='<div class="card"><h3>'+esc(ME||'Not signed in')+'</h3><div class="small muted">'+(API_URL?'Connected to the FIS server · '+Object.keys(OUT).length+' change(s) waiting to upload':'Trial mode — records stay on this phone only until the server is connected.')+'</div><div class="row" style="margin-top:10px"><button class="btn ghost sm" data-act="signout">Sign out</button></div></div>';
+  if(!API_URL){const ts=new Set();Object.keys(ROSTER).forEach(sc=>subjectsFor(+sc.slice(0,-1)).forEach(x=>{const t=teacherOf(sc,x.n);if(t)ts.add(t)}));
+    h+='<div class="card"><h3>Preview as</h3><div class="small muted" style="margin-bottom:8px">Trial mode: see the app the way each person will. You are now: <b>'+esc(ME||'—')+'</b></div><div class="lab" style="margin:6px 0 4px">Director</div><div class="row"><button class="chip sm" data-act="viewas" data-n="Harsh Yadav" aria-pressed="'+(first(ME)==='harsh')+'">Director</button></div><div class="lab" style="margin:8px 0 4px">Program Leader / Manager</div><div class="row">'+PLDEF.map(p=>'<button class="chip sm" data-act="viewas" data-n="'+esc(p.n)+'" aria-pressed="'+(first(ME)===first(p.n))+'">'+esc(p.n)+' · '+esc(p.s[0].replace(/[A-C]$/,'')+(p.s.length>3?'+':''))+'</button>').join('')+'</div><div class="lab" style="margin:8px 0 4px">Teacher</div><select id="vasel" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:10px"><option value="">— choose a teacher —</option>'+[...ts].sort().map(t=>'<option'+(first(ME)===first(t)?' selected':'')+'>'+esc(t)+'</option>').join('')+'</select></div>';}
   if(!API_URL)h+='<div class="card"><h3>Sample data</h3><div class="small muted" style="margin-bottom:8px">Fills several classes and subjects with example checks and tests so you can see the dashboards and reports. Sample records are marked and can be removed.</div><div class="row"><button class="btn sm" data-act="seed">Load sample data</button><button class="btn ghost sm" data-act="unseed">Remove sample data</button></div></div>';
   const mine=[...mineSet()];
   if(mine.length)h+='<div class="card"><h4>Your classes</h4><div class="small">'+mine.map(x=>{const p=x.split('|');return p[0]+' '+esc(p[1])}).join(' · ')+'</div></div>';
@@ -485,10 +492,11 @@ function viewSet(){
 /* ---------- sample data (trial mode) ---------- */
 function seedSample(){
   let sd=7;const rnd=()=>(sd=(sd*9301+49297)%233280)/233280;
-  const secs=['1A','3B','5A','6A','7B','8A','9A','10A'].filter(x=>ROSTER[x]);
+  Object.keys(DB).forEach(k=>{if(DB[k]&&DB[k].sm)delete DB[k]});
+  const secs=Object.keys(ROSTER).sort((a,b)=>parseInt(a)-parseInt(b)||a.localeCompare(b));
   const dayN=n=>{const d=new Date();d.setDate(d.getDate()-n);return isoD(d)};
   secs.forEach(sec=>{const c=+sec.slice(0,-1),n=nOf(sec);
-    subjectsFor(c).slice(0,7).forEach((sb,si)=>{
+    subjectsFor(c).forEach((sb,si)=>{
       const its=itemsFor(c,sb.n),by=teacherOf(sec,sb.n)||'Teacher';
       its.slice(0,2).forEach((it,ii)=>{
         const dt=dayN(1+si%5+ii*2),id='s'+sec+si+ii,m={},lg=[],rm={};
@@ -503,9 +511,9 @@ function seedSample(){
       });
     });
   });
-  persist();lsPut('seeded',1);
+  persist();lsPut('seeded2',1);
 }
-if(!API_URL&&!Object.keys(DB).length&&!lsGet('seeded',0)){try{seedSample()}catch(e){}}
+if(!API_URL&&!Object.keys(DB).length&&!lsGet('seeded2',0)){try{seedSample()}catch(e){}}
 /* ---------- render / events ---------- */
 function render(){
   chrome();const v=$('view');
@@ -538,8 +546,9 @@ document.addEventListener('click',ev=>{
       d.edited=ME+' · '+Date.now();
       if(nd!==d.date){const old=d.p;d.date=nd;d.p=d.k+'/'+nd+'/'+d.sec+'/'+old.split('/').pop();delDoc(old);U.open={k:d.k,p:d.p}}
       putDoc(d);U.edit=false;render();toast('Details updated');break}
+    case'viewas':ME=D.n;lsPut('me',ME);U.scope='';{const f=[...plSet()][0];if(f){U.cls=+f.slice(0,-1);U.sec=f.slice(-1);U.seg=U.cls<=5?'P':'S'}}U.tab='dash';U.dsub='chk';render();toast('Viewing as '+ME);break;
     case'seed':seedSample();render();toast('Sample data loaded');break;
-    case'unseed':if(sure('unseed')){Object.keys(DB).forEach(k=>{if(DB[k].sm)delete DB[k]});persist();lsPut('seeded',1);render();toast('Sample data removed')}break;
+    case'unseed':if(sure('unseed')){Object.keys(DB).forEach(k=>{if(DB[k].sm)delete DB[k]});persist();lsPut('seeded2',1);render();toast('Sample data removed')}break;
     case'fitem':readForm();U.form.item=D.v;render();break;
     case'fmore':readForm();U.form.more=true;render();break;
     case'fcancel':U.form=null;render();break;
@@ -588,6 +597,7 @@ document.addEventListener('input',ev=>{
 document.addEventListener('change',ev=>{
   const el=ev.target,a=el.dataset&&el.dataset.act;
   if(a==='note'){const e=U.open&&DB[U.open.p];if(e){(e.rm=e.rm||{})[el.dataset.s]=el.value.trim();putDoc(e)}}
+  if(el.id==='vasel'&&el.value){ME=el.value;lsPut('me',ME);U.scope='';U.tab='dash';U.dsub='chk';render();toast('Viewing as '+ME)}
   if(a==='teach'){CFG.teach=CFG.teach||{};const v=el.value.trim();if(v)CFG.teach[el.dataset.k]=v;else delete CFG.teach[el.dataset.k];saveCfg();toast('Saved')}
   if(el.id==='fls'&&el.tagName==='SELECT'){if(el.value==='*'){readForm();render()}else{const o=el.options[el.selectedIndex],lt=$('flt');if(lt&&!lt.value&&o&&o.dataset.t)lt.value=o.dataset.t}}
 });
