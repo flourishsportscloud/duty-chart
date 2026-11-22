@@ -459,6 +459,11 @@ main { padding-block: 12px 150px; gap: 11px; }
 .filters { gap: 8px; }
 .filters input[type="search"], .filters select { background: #fff; border-radius: 10px; }
 .card { border-radius: 12px; }
+.pd-pics { display: flex; gap: 6px; margin: 8px 0; flex-wrap: wrap; }
+.pd-pics img { width: 72px; height: 72px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); cursor: zoom-in; }
+.lc.pd.done { opacity: .85; }
+.lc-sub.ok { color: var(--green); margin-top: 6px; }
+.tab[hidden] { display: none !important; }
 </style>
 
 </head>
@@ -469,12 +474,15 @@ main { padding-block: 12px 150px; gap: 11px; }
     <label class="who">You<input id="me" type="text" readonly tabindex="-1" aria-label="Logged in as"></label>
     <button type="button" class="outbtn" id="outbtn" hidden>Log out</button>
     <button type="button" class="outbtn" id="teambtn" hidden>Team logins</button>
+    <button type="button" class="outbtn" id="deptbtn" hidden>Departments</button>
   </div>
   <nav class="tabs" id="tabs" role="tablist" aria-label="Views">
+    <button class="tab" role="tab" data-tab="mine"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>My requests</span></button>
     <button class="tab" role="tab" data-tab="overview"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg><span>Overview</span></button>
     <button class="tab" role="tab" data-tab="sboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8l9-5 9 5v8l-9 5-9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg><span>Stock Room</span></button>
     <button class="tab" role="tab" data-tab="pboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.4 11h10.2L20 7H6"/><circle cx="9" cy="19" r="1.3"/><circle cx="17" cy="19" r="1.3"/></svg><span>Purchase</span></button>
     <button class="tab" role="tab" data-tab="accounts"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/></svg><span>Accounts</span></button>
+    <button class="tab" role="tab" data-tab="pickdrop"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v13H4z"/><path d="M9 7V4h6v3M8 13h8M12 9v8"/></svg><span>Collect &amp; Deposit</span></button>
     <button class="tab" role="tab" data-tab="tilldate"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>History</span></button>
   </nav>
 </header>
@@ -525,6 +533,7 @@ main { padding-block: 12px 150px; gap: 11px; }
 
 <datalist id="dl-staff"></datalist>
 <datalist id="dl-items"></datalist>
+<datalist id="dl-places"><option value="Staff room"></option><option value="Store room"></option><option value="Stock Room 1"></option><option value="Reception"></option><option value="Principal office"></option><option value="Library"></option></datalist>
 <datalist id="dl-dept"></datalist>
 <datalist id="dl-units">
   <option value="pcs"></option><option value="packs"></option><option value="boxes"></option><option value="reams"></option>
@@ -549,12 +558,12 @@ main { padding-block: 12px 150px; gap: 11px; }
   var isBought = function (it) { return it.state === 'purchased'; };
   function stText(r) { return r.kind === 'stock' && r.status === 'bought' ? 'Ready to hand over' : (STATUS[r.status] || r.status); }
   function itemTag(state) { return '<span class="ist i-' + esc(state) + '">' + esc(ISTATE[state] || state) + '</span>'; }
-  var HASH = { overview: 'overview', today: 'today', pending: 'pending', sboard: 'stock-board', pboard: 'purchase-board', accounts: 'accounts', itemlog: 'item-log', deadlines: 'deadlines', datewise: 'datewise', tilldate: 'till-date' };
+  var HASH = { mine: 'my-requests', pickdrop: 'collect-deposit', overview: 'overview', today: 'today', pending: 'pending', sboard: 'stock-board', pboard: 'purchase-board', accounts: 'accounts', itemlog: 'item-log', deadlines: 'deadlines', datewise: 'datewise', tilldate: 'till-date' };
 
   var assets = true;
   var canWrite = true, canDelete = false;
   var TOKEN = '', ME = null, USERS = [], lastRev = '', pollTimer = null;
-  var S = { items: [], dept: '', resp: 'all', itemIdx: null, preResp: '', ready: false, loaded: false, tab: 'overview', bf: { stock: 'pending', purchase: 'due' }, rngs: { overview: 'all', sboard: 'all', pboard: 'all', accounts: 'month' }, kind: 'all', q: '', stat: 'all', from: '', to: '', sel: null, mode: 'view', busy: false };
+  var S = { pd: [], pdf: 'open', items: [], dept: '', resp: 'all', itemIdx: null, preResp: '', ready: false, loaded: false, tab: 'overview', bf: { stock: 'pending', purchase: 'due' }, rngs: { overview: 'all', sboard: 'all', pboard: 'all', accounts: 'month' }, kind: 'all', q: '', stat: 'all', from: '', to: '', sel: null, mode: 'view', busy: false };
   var lastFocus = null, toastTimer = null;
 
   function lsGet(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
@@ -596,6 +605,20 @@ main { padding-block: 12px 150px; gap: 11px; }
     return (a.qty == null ? '' : a.qty) + (a.unit ? ' ' + a.unit : '');
   };
   var me = function () { return ME ? ME.name : ''; };
+  var ROLE_LBL = { staff: 'Staff / Teacher', incharge: 'Store room incharge', purchase: 'Purchase', accounts: 'Accounts', manager: 'Manager / Department head', admin: 'Admin' };
+  var role = function () { return ME ? ME.role : 'staff'; };
+  var isStaff = function () { return role() === 'staff'; };
+  var canManage = function () { return ['incharge', 'manager', 'admin'].indexOf(role()) >= 0; };
+  var TABS_FOR = {
+    staff: ['mine', 'pickdrop'],
+    incharge: ['mine', 'sboard', 'pickdrop', 'overview', 'tilldate'],
+    purchase: ['mine', 'pboard', 'pickdrop', 'overview', 'tilldate'],
+    accounts: ['mine', 'accounts', 'pickdrop', 'tilldate'],
+    manager: ['overview', 'mine', 'sboard', 'pboard', 'accounts', 'pickdrop', 'tilldate'],
+    admin: ['overview', 'mine', 'sboard', 'pboard', 'accounts', 'pickdrop', 'tilldate']
+  };
+  var tabsFor = function () { return TABS_FOR[role()] || TABS_FOR.staff; };
+  var mineOf = function (r) { return r.staff === me() || r.loggedBy === me(); };
   var cur = function () { return S.items.find(function (x) { return x.id === S.sel; }) || null; };
   var lastRemark = function (r) {
     for (var i = (r.log || []).length - 1; i >= 0; i--) { if (r.log[i].kind === 'remark') return r.log[i]; }
@@ -701,17 +724,24 @@ main { padding-block: 12px 150px; gap: 11px; }
       keys.map(function (k) { return '<tr><td>' + esc(k) + '</td><td>' + m[k].n + '</td><td>' + m[k].open + '</td><td>' + esc(money(m[k].spent)) + '</td></tr>'; }).join('') + '</tbody></table></div>';
   }
   function renderTabs() {
-    document.querySelectorAll('.tab').forEach(function (b) { b.setAttribute('aria-selected', b.dataset.tab === S.tab ? 'true' : 'false'); });
+    var allowed = tabsFor();
+    if (ME && allowed.indexOf(S.tab) < 0) S.tab = allowed[0];
+    document.querySelectorAll('.tab').forEach(function (b) { b.hidden = !!ME && allowed.indexOf(b.dataset.tab) < 0; b.setAttribute('aria-selected', b.dataset.tab === S.tab ? 'true' : 'false'); });
+    var own = S.tab === 'mine' || S.tab === 'pickdrop';
+    document.querySelector('.filters').hidden = S.tab === 'pickdrop';
+    $('#newbtn').textContent = S.tab === 'pickdrop' ? 'Log an item' : 'New request';
     document.querySelectorAll('#kindseg button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.kind === S.kind ? 'true' : 'false'); });
     document.querySelectorAll('#statseg button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.stat === S.stat ? 'true' : 'false'); });
     document.querySelectorAll('#respseg button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.resp === S.resp ? 'true' : 'false'); });
-    var isBoard = S.tab === 'sboard' || S.tab === 'pboard' || S.tab === 'accounts' || S.tab === 'overview';
+    var isBoard = own || S.tab === 'sboard' || S.tab === 'pboard' || S.tab === 'accounts' || S.tab === 'overview';
     $('#extra').hidden = S.tab !== 'tilldate';
     $('#statseg').hidden = S.tab !== 'tilldate';
     $('#kindseg').hidden = isBoard;
     $('#sum').hidden = isBoard;
     $('#extra2').hidden = S.tab !== 'itemlog';
     var H = {
+      mine: 'Your own requests: what you asked for, its status, the deadline and the latest remark. Tap one to see every step.',
+      pickdrop: 'Items kept somewhere to be collected, or deposited for someone. Log the item with its place and a photo; tap Mark collected when you pick it up.',
       today: 'Requests logged today, and older requests that were closed today.',
       pending: 'Cases that are still open, with the nearest deadline first.',
       deadlines: 'Open cases grouped by how close the deadline is.',
@@ -759,7 +789,11 @@ main { padding-block: 12px 150px; gap: 11px; }
     var base = S.items.filter(function (r) { return (S.kind === 'all' || r.kind === S.kind) && (!S.dept || r.department === S.dept) && matchQ(r); });
     var out = '';
     var t = todayStr();
-    if (S.tab === 'overview') {
+    if (S.tab === 'mine') {
+      out = mineView();
+    } else if (S.tab === 'pickdrop') {
+      out = pdView();
+    } else if (S.tab === 'overview') {
       out = overview();
     } else if (S.tab === 'today') {
       var logged = base.filter(function (r) { return ymd(new Date(r.createdAt)) === t; }).sort(byCreatedDesc);
@@ -828,8 +862,97 @@ main { padding-block: 12px 150px; gap: 11px; }
           deptTable(rows) + '<div class="grp" style="margin-top:12px">' + rows.map(card).join('') + '</div>';
       }
     }
-    el.classList.toggle('board', S.tab === 'sboard' || S.tab === 'pboard' || S.tab === 'accounts' || S.tab === 'overview');
+    el.classList.toggle('board', S.tab === 'mine' || S.tab === 'pickdrop' || S.tab === 'sboard' || S.tab === 'pboard' || S.tab === 'accounts' || S.tab === 'overview');
     el.innerHTML = out || emptyMsg();
+  }
+
+  /* ---------- my requests (every person sees their own) ---------- */
+  function mineCard(r) {
+    var due = dueInfo(r), last = lastRemark(r), open = isOpen(r);
+    return '<div class="lc' + (open && due.cls === 'due-over' ? ' over' : '') + '" role="button" tabindex="0" data-id="' + esc(r.id) + '">' +
+      '<div class="lc-top"><div class="lc-title">' + (r.items.length > 1 ? esc(plural(r.items.length, 'item')) + ': ' : '') + esc(r.items.map(function (x) { return x.item; }).join(', ')) + '</div><span class="pill s-' + esc(r.status) + '">' + esc(stText(r)) + '</span></div>' +
+      '<div class="lc-sub"><b>' + esc(r.staff || '-') + '</b>' + (r.cls ? ' · Class ' + esc(r.cls) : '') + (r.department ? ' · ' + esc(r.department) : '') + ' · ' + (r.kind === 'stock' ? 'Stock room' : 'Purchase') + ' · ' + esc(fmtDTs(r.createdAt)) + '</div>' +
+      '<div class="lc-foot">' + (hasDl(r) ? '<span class="due ' + due.cls + '">' + esc(due.text) + '</span>' : '') + (open && !r.approvedBy ? '<span class="pill s-warnapp">Needs approval</span>' : '') + '</div>' +
+      (last ? '<div class="lc-note"><b>Remark:</b> ' + esc(last.text) + ' <span class="muted">– ' + esc(last.by) + ', ' + esc(fmtDTs(last.at)) + '</span></div>' : '') + '</div>';
+  }
+  function mineView() {
+    var rows = S.items.filter(function (r) { return mineOf(r) && matchQ(r); }).sort(byCreatedDesc);
+    var open = rows.filter(isOpen), done = rows.filter(function (r) { return !isOpen(r); });
+    var over = open.filter(function (r) { return hasDl(r) && daysTo(r.deadline) < 0; }).length;
+    var h = '<div class="kpis m" style="grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:12px"><div class="kpi warn"><b>' + open.length + '</b><span>Open</span></div><div class="kpi ' + (over ? 'bad' : 'ok') + '"><b>' + over + '</b><span>Overdue</span></div><div class="kpi ok"><b>' + done.length + '</b><span>Closed</span></div></div>';
+    if (!rows.length) return h + '<p class="empty">You have not asked for anything yet. Tap <b>New request</b> to ask the store room or purchase.</p>';
+    if (open.length) h += '<h3 class="sh">Open (' + open.length + ')</h3>' + open.map(mineCard).join('');
+    if (done.length) h += '<h3 class="sh">Closed (' + done.length + ')</h3>' + done.slice(0, 40).map(mineCard).join('');
+    return h;
+  }
+
+  /* ---------- Collect & Deposit: items kept somewhere for someone ---------- */
+  var PD_TYPE = { deposit: 'Deposited – kept here', collect: 'Please collect from here' };
+  function pdCard(x) {
+    var open = x.status !== 'collected', mins = Math.round((Date.now() - new Date(x.createdAt)) / 60000);
+    var age = mins < 60 ? mins + ' min ago' : mins < 1440 ? Math.floor(mins / 60) + ' h ago' : Math.floor(mins / 1440) + ' days ago';
+    return '<div class="lc pd ' + (open ? '' : 'done') + '" data-pd="' + esc(x.id) + '" role="button" tabindex="0">' +
+      '<div class="lc-top"><div class="lc-title">' + esc(x.item) + (x.qty ? ' <span class="q">' + esc(x.qty) + '</span>' : '') + '</div><span class="pill ' + (open ? (x.type === 'collect' ? 's-pending' : 's-bought') : 's-handed') + '">' + (open ? esc(PD_TYPE[x.type] || 'Kept') : 'Collected') + '</span></div>' +
+      '<div class="lc-note"><b>Kept at:</b> ' + esc(x.place || '-') + (x.forWhom ? '<br><b>For:</b> ' + esc(x.forWhom) : '') + (x.note ? '<br>' + esc(x.note) : '') + '</div>' +
+      ((x.pics || []).length ? '<div class="pd-pics">' + x.pics.slice(0, 4).map(function (id) { return '<img class="ilog-img" data-pid="' + esc(id) + '" data-blob alt="Photo of the item">'; }).join('') + '</div>' : '') +
+      '<div class="lc-sub">By <b>' + esc(x.staff || x.loggedBy || '-') + '</b> · ' + esc(fmtDTs(x.createdAt)) + (open ? ' · ' + age : '') + '</div>' +
+      (open ? '<div class="row" style="margin-top:8px"><button class="btn small primary" type="button" data-pdc="' + esc(x.id) + '">Mark collected</button></div>'
+        : '<div class="lc-sub ok">Collected by <b>' + esc(x.collectedBy || '-') + '</b> · ' + esc(x.collectedAt ? fmtDTs(x.collectedAt) : '') + (x.collectNote ? ' · ' + esc(x.collectNote) : '') + '</div>') + '</div>';
+  }
+  function pdView() {
+    var all = S.pd.slice().sort(function (a, b) { return String(b.createdAt).localeCompare(String(a.createdAt)); });
+    var open = all.filter(function (x) { return x.status !== 'collected'; }), mine = all.filter(function (x) { return x.staff === me() || x.loggedBy === me() || x.collectedBy === me(); });
+    var f = S.pdf, rows = f === 'open' ? open : f === 'done' ? all.filter(function (x) { return x.status === 'collected'; }) : f === 'mine' ? mine : all;
+    var h = '<div class="kpis m" style="grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:12px"><div class="kpi warn"><b>' + open.length + '</b><span>Waiting to be collected</span></div><div class="kpi ok"><b>' + (all.length - open.length) + '</b><span>Collected</span></div><div class="kpi"><b>' + mine.length + '</b><span>Mine</span></div></div>' +
+      '<div class="fchips" role="group">' + [['open', 'Waiting'], ['done', 'Collected'], ['mine', 'Mine'], ['all', 'All']].map(function (o) { return '<button type="button" data-pdf="' + o[0] + '" aria-pressed="' + (f === o[0]) + '">' + o[1] + '</button>'; }).join('') + '</div>';
+    return h + (rows.map(pdCard).join('') || '<p class="empty">Nothing here. Tap <b>Log an item</b> when you keep something for someone, or want someone to collect it.</p>');
+  }
+  function pdForm() {
+    return '<div class="p-head"><h2 class="p-title">Log an item</h2><button class="x" type="button" data-close>Close</button></div>' +
+      '<form data-act="pdnew" autocomplete="off"><div class="field"><span class="lbl">What is this?</span><div class="segopts">' +
+      '<label class="segopt"><input type="radio" name="pt" value="deposit" checked><span>Deposit<small>I have kept it here for someone</small></span></label>' +
+      '<label class="segopt"><input type="radio" name="pt" value="collect"><span>Collect<small>Please collect it from here</small></span></label></div></div>' +
+      '<div class="two">' + field('Item(s)', '<input id="f-pitem" type="text" required placeholder="e.g. Chocolates, Class 5 books, dustbins">') + field('Quantity', '<input id="f-pqty" type="text" placeholder="Optional, e.g. 2 boxes">') + '</div>' +
+      field('Kept at (place)', '<input id="f-pplace" type="text" required list="dl-places" placeholder="e.g. Staff room, cupboard 2 / Store room shelf 4">') +
+      field('For whom', '<input id="f-pfor" type="text" list="dl-staff" placeholder="Person, class or department – optional">') +
+      field('Note', '<input id="f-pnote" type="text" placeholder="How it is kept, by when to collect – optional">') +
+      '<div class="field"><span class="lbl">Photos (at least one)</span><div class="photo-row"><label class="btn small" for="f-ppics">Add photos</label><input class="sr" id="f-ppics" type="file" accept="image/*" multiple><span class="hint" id="f-ppics-n">No photo chosen</span></div></div>' +
+      '<p class="hint">Your name and the time are recorded automatically.</p>' +
+      '<div class="row"><button class="btn primary" type="submit">Save</button><button class="btn" type="button" data-close>Cancel</button></div></form>';
+  }
+  function pdCollectForm(x) {
+    return '<div class="p-head"><h2 class="p-title">Mark collected</h2><button class="x" type="button" data-close>Close</button></div>' +
+      '<div class="lc-note"><b>' + esc(x.item) + '</b>' + (x.qty ? ' · ' + esc(x.qty) : '') + '<br>Kept at ' + esc(x.place) + '</div>' +
+      '<form data-act="pdcollect">' + field('Note', '<input id="f-cnote" type="text" placeholder="Optional – e.g. took 1 box, rest still there">') +
+      '<div class="field"><span class="lbl">Photo (optional)</span><div class="photo-row"><label class="btn small" for="f-cpics">Add photo</label><input class="sr" id="f-cpics" type="file" accept="image/*" multiple><span class="hint" id="f-cpics-n">No photo chosen</span></div></div>' +
+      '<div class="row"><button class="btn primary" type="submit">I have collected it</button><button class="btn" type="button" data-close>Cancel</button></div></form>';
+  }
+  async function uploadMany(form, id) {
+    var inp = form.querySelector('#' + id), out = [];
+    var files = inp && inp.files ? Array.prototype.slice.call(inp.files, 0, 6) : [];
+    for (var i = 0; i < files.length; i++) {
+      var f = files[i], blob = await compress(f), url = await blobToDataUrl(blob);
+      if (url.length > 320000) { blob = await compress(f, 1000, 0.7); url = await blobToDataUrl(blob); }
+      if (url.length > 320000) { blob = await compress(f, 760, 0.6); url = await blobToDataUrl(blob); }
+      var pid = await tcall('putPhoto', [url]); PH[pid] = url; out.push(pid);
+    }
+    return out;
+  }
+
+  /* ---------- departments: editable list in groups ---------- */
+  function deptSheet() {
+    var w = $('#authwrap'); w.hidden = false;
+    w.innerHTML = '<div class="authbox"><h2>Departments</h2><p>One group per box. First line is the group name, then one name per line. Anyone can still type a new name when logging a request.</p>' +
+      DEPT_GROUPS.map(function (g, i) { return '<textarea class="dg" rows="6" style="width:100%;margin-bottom:8px">' + esc([g[0]].concat(g[1]).join('\n')) + '</textarea>'; }).join('') +
+      '<textarea class="dg" rows="3" style="width:100%;margin-bottom:8px" placeholder="New group: first line is its name"></textarea>' +
+      '<p class="err" id="dg-e" role="alert"></p><div class="row"><button type="button" class="btn primary" id="dg-save">Save departments</button><button type="button" class="btn" id="dg-close">Close</button></div></div>';
+    $('#dg-close').addEventListener('click', function () { w.hidden = true; });
+    $('#dg-save').addEventListener('click', function () {
+      var groups = Array.prototype.map.call(w.querySelectorAll('.dg'), function (t) { var l = t.value.split('\n').map(function (x) { return x.trim(); }).filter(Boolean); return [l[0] || '', l.slice(1)]; }).filter(function (g) { return g[0] && g[1].length; });
+      if (!groups.length) { $('#dg-e').textContent = 'Keep at least one group.'; return; }
+      this.disabled = true;
+      tcall('setDepts', [groups]).then(function (st) { applyState(st); w.hidden = true; toast('Departments saved'); }, function (err) { $('#dg-e').textContent = err.message; });
+    });
   }
   function renderDatalists() {
     var staff = {}, items = {};
@@ -854,24 +977,31 @@ main { padding-block: 12px 150px; gap: 11px; }
   }
   function renderSample() {
     var el = $('#samplebar'), n = S.items.filter(function (r) { return r.sample; }).length;
-    if (!n || !canDelete || !canWrite) { el.hidden = true; return; }
+    if (!n || !canDelete || !canWrite || isStaff()) { el.hidden = true; return; }
     el.hidden = false;
     el.innerHTML = S.clearAsk
       ? 'Remove all ' + n + ' example requests for good? <button class="btn small danger" type="button" data-clear-yes>Yes, remove</button> <button class="btn small" type="button" data-clear-no>Keep</button>'
       : n + ' example requests are loaded so staff can see every case. <button class="btn small" type="button" data-clear-ask>Remove examples</button>';
   }
-  var DEPT_GROUPS = [
-    ['Pre-school and classes', ['Nursery', 'LKG', 'UKG', 'Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5', 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10', 'Class 11']],
-    ['Departments', ['Front Office', 'Back Office', 'Operations', 'Events', 'Music', 'Dance', 'Arts', 'Sports', 'Fitness', 'Skill Courses', 'Administration']]
+  var DEPT_DEFAULT = [
+    ['Wings', ['Pre-Primary', 'Primary', 'Middle Grade', 'Senior Grade']],
+    ['Departments', ['Administration', 'Accounts', 'Front Office', 'Co-curricular', 'Sports', 'Music', 'Dance', 'Arts', 'Skill Courses', 'Library', 'Science Lab', 'Computer Lab', 'Transport', 'Housekeeping', 'Maintenance', 'Kitchen and Canteen', 'IT']],
+    ['Rooms and stores', ['Stock Room 1', 'Stock Room 2', 'Staff Room', 'Principal Office', 'Reception']],
+    ['Floors and areas', ['LG Floor', 'Ground Floor', 'First Floor', 'Second Floor', 'Third Floor', 'Admin Block', 'Playground', 'Auditorium']],
+    ['Events', ['Annual Day', 'Sports Day', 'Legacy League', "Children's Day", 'Exams']]
   ];
-  var DEPT_ALL = DEPT_GROUPS.reduce(function (a, g) { return a.concat(g[1]); }, []);
+  var DEPT_GROUPS = DEPT_DEFAULT, DEPT_ALL = [];
+  function setDeptGroups(g) { DEPT_GROUPS = Array.isArray(g) && g.length ? g : DEPT_DEFAULT; DEPT_ALL = DEPT_GROUPS.reduce(function (a, x) { return a.concat(x[1]); }, []); }
+  setDeptGroups(null);
   function deptOptions(sel, withAll, seenExtra) {
     var h = withAll ? '<option value="">All departments</option>' : '<option value="">Choose department</option>';
     DEPT_GROUPS.forEach(function (g) { h += '<optgroup label="' + g[0] + '">' + g[1].map(function (n) { return '<option value="' + esc(n) + '"' + (n === sel ? ' selected' : '') + '>' + esc(n) + '</option>'; }).join('') + '</optgroup>'; });
     var ex = Object.keys(seenExtra || {}).filter(function (n) { return DEPT_ALL.indexOf(n) < 0; }).sort();
-    if (ex.length) h += '<optgroup label="Other (older entries)">' + ex.map(function (n) { return '<option value="' + esc(n) + '"' + (n === sel ? ' selected' : '') + '>' + esc(n) + '</option>'; }).join('') + '</optgroup>';
+    if (ex.length) h += '<optgroup label="Other (typed earlier)">' + ex.map(function (n) { return '<option value="' + esc(n) + '"' + (n === sel ? ' selected' : '') + '>' + esc(n) + '</option>'; }).join('') + '</optgroup>';
+    if (!withAll) h += '<option value="__other">Other – type a new name…</option>';
     return h;
   }
+  function seenDepts() { var seen = {}; S.items.forEach(function (r) { if (r.department) seen[r.department] = 1; }); return seen; }
   function renderDept() {
     var el = $('#dept'), seen = {};
     S.items.forEach(function (r) { if (r.department) seen[r.department] = 1; });
@@ -986,7 +1116,7 @@ main { padding-block: 12px 150px; gap: 11px; }
   }
   function itemCards(r, readonly) {
     if (r.kind !== 'purchase' && r.items.length < 2 && r.status !== 'pending') return itemsTable(r);
-    var its = r.items, editable = !readonly && canWrite && (r.status === 'pending' || r.status === 'bought');
+    var its = r.items, editable = !readonly && canWrite && !isStaff() && (r.status === 'pending' || r.status === 'bought');
     var nBought = its.filter(function (x) { return r.kind === 'stock' ? isGot(x) : isBought(x); }).length, nWait = its.filter(function (x) { return x.state === 'pending'; }).length;
     var cards = its.map(function (it, i) {
       var q = esc(it.qty + (it.unit ? ' ' + it.unit : '')), detail = '';
@@ -1375,6 +1505,7 @@ main { padding-block: 12px 150px; gap: 11px; }
     var row = function (a, k, v) { if (v) a.push('<dt>' + k + '</dt><dd>' + v + '</dd>'); };
     row(req, 'Person', esc(r.staff));
     row(req, 'Department', esc(r.department || ''));
+    if (r.cls) row(req, 'Class / section', esc(r.cls));
     row(req, 'Logged on', esc(fmtDT(r.createdAt)));
     row(req, 'Deadline', hasDl(r) ? esc(fmtDY(r.deadline)) : '');
     row(req, 'Approval', r.approvedBy ? 'Approved by ' + esc(r.approvedBy) + (r.approvedAt ? ' on ' + esc(fmtDT(r.approvedAt)) : '') : '<span class="muted">Not approved yet</span>');
@@ -1415,6 +1546,10 @@ main { padding-block: 12px 150px; gap: 11px; }
   }
   function viewActions(r) {
     if (!canWrite) return '';
+    if (isStaff()) {
+      if (!isOpen(r) || !mineOf(r)) return '';
+      return '<div class="actions"><div class="sec-h" style="margin-bottom:8px">You can</div><div class="a-more"><button class="btn" type="button" data-mode="deadline">Change deadline</button><button class="btn danger" type="button" data-mode="cancel">Cancel request</button></div></div>';
+    }
     var open = isOpen(r), main = [], more = [];
     var btn = function (m, t, cls) { return '<button class="btn ' + (cls || '') + '" type="button" data-mode="' + m + '">' + t + '</button>'; };
     if (r.status === 'pending' && r.kind === 'stock' && r.items.length < 2) main.push(btn('handover', 'Hand over to staff', 'primary'));
@@ -1484,8 +1619,9 @@ main { padding-block: 12px 150px; gap: 11px; }
       '<div class="field"><span class="lbl">Type</span><div class="segopts">' +
       '<label class="segopt"><input type="radio" name="k" value="stock"' + (k === 'stock' ? ' checked' : '') + '><span>Stock order<small>Taken from the store room</small></span></label>' +
       '<label class="segopt"><input type="radio" name="k" value="purchase"' + (k === 'purchase' ? ' checked' : '') + '><span>Purchase<small>Needs to be bought</small></span></label></div></div>' +
-      '<div class="two">' + field('Department', '<select id="f-dept" required>' + deptOptions('', false, null) + '</select>') +
-      field('Person', '<input id="f-staff" type="text" required list="dl-staff" value="' + esc(me()) + '">', 'Who needs these items') + '</div>' +
+      '<div class="two">' + field('Department / for what', '<select id="f-dept" required>' + deptOptions('', false, seenDepts()) + '</select><input id="f-dept2" type="text" placeholder="Type the department, event or area" hidden style="margin-top:6px">') +
+      field('Teacher / person', '<input id="f-staff" type="text" required list="dl-staff" value="' + esc(me()) + '"' + (isStaff() ? ' readonly' : '') + '>', 'Who needs these items') + '</div>' +
+      field('Class / section', '<input id="f-cls" type="text" placeholder="e.g. 6B, Nursery A – optional">') +
       '<div class="field"><span class="lbl">Items in this order</span><div id="item-rows" class="irows">' + itemRow() + '</div>' +
       '<div><button class="btn add-item" type="button" data-add-row>+ Add another item</button></div><p class="hint">Add up to 10 items. Each item has its own quantity, and the store manager or buyer answers every item separately: issue or buy some, reject others.</p></div>' +
       field('Deadline', '<input id="f-date" type="date" required min="' + todayStr() + '">') +
@@ -1496,6 +1632,8 @@ main { padding-block: 12px 150px; gap: 11px; }
   }
   function renderSheet() {
     if (S.mode === 'new') { panel.innerHTML = newForm(); return; }
+    if (S.mode === 'pdnew') { panel.innerHTML = pdForm(); return; }
+    if (S.mode === 'pdcollect') { var px = S.pd.find(function (x) { return x.id === S.sel; }); if (!px) { closeSheet(); return; } panel.innerHTML = pdCollectForm(px); return; }
     var r = cur();
     if (!r) { closeSheet(); return; }
     var due = dueInfo(r), pur = r.kind === 'purchase';
@@ -1595,9 +1733,30 @@ main { padding-block: 12px 150px; gap: 11px; }
     var done = function (msg) { S.mode = 'view'; renderSheet(); toast(msg); };
     var r = cur();
 
+    if (act === 'pdnew') {
+      var ptype = f.querySelector('input[name="pt"]:checked').value, pitem = v('f-pitem'), pplace = v('f-pplace');
+      var pin = f.querySelector('#f-ppics');
+      if (!pitem || !pplace) { toast('Write the item and where it is kept.'); return; }
+      if (!pin.files || !pin.files.length) { toast('Add at least one photo so people can find it.'); return; }
+      run(f, async function () {
+        var pics = await uploadMany(f, 'f-ppics'), now = new Date().toISOString();
+        await db.collection('requests').doc('pd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)).set({ kind: 'pickdrop', type: ptype, item: pitem, qty: v('f-pqty'), place: pplace, forWhom: v('f-pfor'), note: v('f-pnote'), pics: pics, status: 'open', staff: me(), log: [{ at: now, by: me(), kind: 'event', text: (ptype === 'deposit' ? 'Deposited at ' : 'To collect from ') + pplace }] });
+        closeSheet(); toast('Saved – everyone can see it now');
+      });
+      return;
+    }
+    if (act === 'pdcollect') {
+      var px = S.pd.find(function (x) { return x.id === S.sel; }); if (!px) return;
+      run(f, async function () {
+        var cp = await uploadMany(f, 'f-cpics'), now = new Date().toISOString();
+        await db.doc('requests/' + px.id).update({ status: 'collected', collectedBy: me(), collectedAt: now, collectNote: v('f-cnote'), collectPics: cp, log: (px.log || []).concat([{ at: now, by: me(), kind: 'event', text: 'Collected' }]) });
+        closeSheet(); toast('Marked collected');
+      });
+      return;
+    }
     if (act === 'new') {
       var kind = f.querySelector('input[name="k"]:checked').value;
-      var staff = v('f-staff'), dept = v('f-dept'), date = v('f-date');
+      var staff = v('f-staff'), dept = v('f-dept') === '__other' ? v('f-dept2') : v('f-dept'), date = v('f-date'), cls = v('f-cls');
       var lines = [], badRow = false;
       f.querySelectorAll('[data-row]').forEach(function (row) {
         var nm = row.querySelector('.i-item').value.trim(), q = row.querySelector('.i-qty').value, un = row.querySelector('.i-unit').value.trim(), es = row.querySelector('.i-est').value;
@@ -1612,7 +1771,7 @@ main { padding-block: 12px 150px; gap: 11px; }
         var refImg = await uploadPhoto(f, 'f-ref');
         var now = new Date().toISOString(), appr = v('f-appr');
         await db.collection('requests').doc().set({
-          kind: kind, origKind: kind, createdAt: now, department: dept, staff: staff, item: title, items: lines,
+          kind: kind, origKind: kind, createdAt: now, department: dept, cls: cls, staff: staff, item: title, items: lines,
           qty: lines[0].qty, unit: lines[0].unit, deadline: date, refImg: refImg, approvedBy: appr, approvedAt: appr ? now : null,
           estPrice: lines.length === 1 ? lines[0].est : null, status: 'pending',
           log: [{ at: now, by: staff, kind: 'event', text: (kind === 'stock' ? 'Stock order logged' : 'Purchase request logged') + (lines.length > 1 ? ' (' + lines.length + ' items)' : '') }]
@@ -1818,6 +1977,10 @@ main { padding-block: 12px 150px; gap: 11px; }
     var t = $('#f-total');
     if (t) t.textContent = money(round2(total));
   }
+  panel.addEventListener('change', function (e) {
+    if (e.target.id === 'f-ppics' || e.target.id === 'f-cpics') { var n = e.target.files.length, h = panel.querySelector('#' + e.target.id + '-n'); if (h) h.textContent = n ? n + (n === 1 ? ' photo chosen' : ' photos chosen') : 'No photo chosen'; }
+    if (e.target.id === 'f-dept') { var o = panel.querySelector('#f-dept2'); if (o) { o.hidden = e.target.value !== '__other'; if (!o.hidden) o.focus(); } }
+  });
   panel.addEventListener('input', function (e) {
     if (e.target.classList && e.target.classList.contains('b-price')) calcBuy();
     if (e.target.id === 'f-iprice') syncItemForm();
@@ -1845,8 +2008,10 @@ main { padding-block: 12px 150px; gap: 11px; }
   $('#q').addEventListener('input', function (e) { S.q = e.target.value.trim(); renderList(); });
   $('#from').addEventListener('change', function (e) { S.from = e.target.value; renderList(); });
   $('#to').addEventListener('change', function (e) { S.to = e.target.value; renderList(); });
-  $('#newbtn').addEventListener('click', function () { if (ME && canWrite) openSheet(null, 'new'); });
+  $('#newbtn').addEventListener('click', function () { if (ME && canWrite) openSheet(null, S.tab === 'pickdrop' ? 'pdnew' : 'new'); });
   $('#list').addEventListener('click', function (e) {
+    var pdc = e.target.closest('[data-pdc]'); if (pdc) { openSheet(pdc.dataset.pdc, 'pdcollect'); return; }
+    var pdf = e.target.closest('[data-pdf]'); if (pdf) { S.pdf = pdf.dataset.pdf; renderList(); return; }
     var pic = e.target.closest('img.ilog-img');
     if (pic) { $('#lb-img').src = pic.src; $('#lightbox').hidden = false; return; }
     var go = e.target.closest('[data-go]'); if (go) { setTab(go.dataset.go); return; }
@@ -1855,6 +2020,7 @@ main { padding-block: 12px 150px; gap: 11px; }
     var rg = e.target.closest('[data-rng]'); if (rg) { S.rngs[S.tab] = rg.dataset.rng; renderList(); return; }
     var tr = e.target.closest('tr[data-id]');
     if (tr) { openSheet(tr.dataset.id, 'view'); return; }
+    if (e.target.closest('[data-pd]')) return;
     var c = e.target.closest('.card, .lc'); if (c) openSheet(c.dataset.id, 'view');
   });
   $('#list').addEventListener('keydown', function (e) {
@@ -1900,7 +2066,9 @@ main { padding-block: 12px 150px; gap: 11px; }
 
   /* ---------- data ---------- */
   function onData(snap) {
-    S.items = snap.docs.map(function (d) { return norm(d.id, d.data()); }).filter(function (r) { return r.item; });
+    var all = snap.docs.map(function (d) { return { id: d.id, d: d.data() }; });
+    S.pd = all.filter(function (x) { return x.d.kind === 'pickdrop'; }).map(function (x) { return Object.assign({}, x.d, { id: x.id }); });
+    S.items = all.filter(function (x) { return x.d.kind !== 'pickdrop'; }).map(function (x) { return norm(x.id, x.d); }).filter(function (r) { return r.item; });
     S.loaded = true;
     render();
     if (!sheet.hidden && S.mode !== 'new') {
@@ -1947,8 +2115,10 @@ main { padding-block: 12px 150px; gap: 11px; }
   function applyState(st) {
     if (!st || !st.me) { logout(true); return; }
     ME = st.me; USERS = st.users || []; lastRev = st.rev || '';
-    canWrite = true; canDelete = ME.role !== 'staff';
-    $('#me').value = ME.name; $('#outbtn').hidden = false; $('#outbtn').textContent = ME.role === 'staff' ? 'Change name' : 'Log out'; $('#teambtn').hidden = ME.role !== 'admin';
+    canWrite = true; canDelete = canManage();
+    if (st.cfg) setDeptGroups(st.cfg.depts);
+    $('#deptbtn').hidden = !canManage();
+    $('#me').value = ME.name + ' · ' + (ROLE_LBL[ME.role] || ME.role); $('#outbtn').hidden = false; $('#outbtn').textContent = ME.role === 'staff' ? 'Change name' : 'Log out'; $('#teambtn').hidden = ME.role !== 'admin';
     $('#teambtn').textContent = 'Team logins' + (USERS.some(function (u) { return u.status === 'pending'; }) ? ' (new)' : '');
     $('#authwrap').hidden = true;
     if (st.items) onData({ docs: st.items.map(function (r) { return { id: r.id, data: function () { return r; } }; }) });
@@ -2002,9 +2172,9 @@ main { padding-block: 12px 150px; gap: 11px; }
       fld('au-n', open ? 'Your full name' : 'Your name', '<input type="text" id="au-n" maxlength="40" autocomplete="' + (open ? 'name' : 'username') + '" value="' + esc(lsGet('fis-sp-name') || '') + '">') +
       (open ? '<p>Your name is stamped on everything you log, buy or hand over. Use your full name.</p>'
         : fld('au-p', first ? 'Choose a password (6 or more characters)' : 'Password', '<input type="password" id="au-p" maxlength="60" autocomplete="' + (first ? 'new-password' : 'current-password') + '">')) +
-      (first ? fld('au-r', 'I am', '<select id="au-r"><option value="incharge">Incharge (manager)</option><option value="admin">Admin</option><option value="staff">Staff</option></select>') + '<p>The admin approves every new password login. The first admin is approved automatically.</p>' : '') +
+      (first ? fld('au-r', 'I am', '<select id="au-r"><option value="incharge">Store room incharge</option><option value="purchase">Purchase</option><option value="accounts">Accounts</option><option value="manager">Manager / Department head</option><option value="admin">Admin</option></select>') + '<p>The admin approves every new password login. The first admin is approved automatically.</p>' : '') +
       '<p class="err" id="au-e" role="alert">' + esc(msg || '') + '</p><button type="submit" class="btn primary" id="au-go">' + (open ? 'Start' : (first ? 'Create login' : 'Log in')) + '</button>' +
-      (open ? '<button type="button" class="btn" data-sw="login">Incharge / admin login</button>'
+      (open ? '<button type="button" class="btn" data-sw="login">Store, purchase, accounts, manager or admin login</button>'
         : '<button type="button" class="btn" data-sw="' + (first ? 'login' : 'setup') + '">' + (first ? 'I already have a login' : 'First time? Set password') + '</button><button type="button" class="btn" data-sw="open">Staff: open with my name</button>') + '</form></div>';
     $('#af').addEventListener('click', function (e) { var b = e.target.closest('[data-sw]'); if (b) renderAuth(b.getAttribute('data-sw'), ''); });
     $('#af').addEventListener('submit', function (e) {
@@ -2027,7 +2197,7 @@ main { padding-block: 12px 150px; gap: 11px; }
     var rows = USERS.slice().sort(function (a, b) { return (a.status === 'pending' ? 0 : 1) - (b.status === 'pending' ? 0 : 1) || a.name.localeCompare(b.name); }).map(function (u) {
       var idx = USERS.indexOf(u), st = u.status === 'active' ? 'Active' : u.status === 'pending' ? 'Waiting for approval' : 'Password reset';
       return '<div class="team-row"><strong>' + esc(u.name) + '</strong><span>' + st + '</span>' +
-        '<select id="tr-' + idx + '" aria-label="Role">' + [['staff', 'Staff'], ['incharge', 'Incharge (manager)'], ['admin', 'Admin']].map(function (o) { return '<option value="' + o[0] + '"' + (o[0] === u.role ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select>' +
+        '<select id="tr-' + idx + '" aria-label="Role">' + [['staff', 'Staff / Teacher'], ['incharge', 'Store room incharge'], ['purchase', 'Purchase'], ['accounts', 'Accounts'], ['manager', 'Manager / Dept head'], ['admin', 'Admin']].map(function (o) { return '<option value="' + o[0] + '"' + (o[0] === u.role ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select>' +
         '<div class="row">' + (u.status === 'pending' ? '<button type="button" class="btn small primary" data-u="approve" data-i="' + idx + '">Approve</button>' : '<button type="button" class="btn small" data-u="role" data-i="' + idx + '">Save role</button>') +
         (u.name !== ME.name ? '<button type="button" class="btn small" data-u="reset" data-i="' + idx + '">Reset password</button><button type="button" class="btn small danger" data-u="remove" data-i="' + idx + '">Remove</button>' : '') + '</div></div>';
     }).join('');
@@ -2046,9 +2216,10 @@ main { padding-block: 12px 150px; gap: 11px; }
   }
   $('#outbtn').addEventListener('click', function () { logout(false); });
   $('#teambtn').addEventListener('click', teamSheet);
+  $('#deptbtn').addEventListener('click', deptSheet);
 
   async function init() {
-    S.tab = tabFromHash() || 'overview';
+    S.tab = tabFromHash() || 'mine';
     render();
     S.ready = true;
     if (!API_URL) {

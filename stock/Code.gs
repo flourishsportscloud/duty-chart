@@ -1,14 +1,17 @@
 /* ===== Stock and Purchase Desk — server logic (runs inside Google Apps Script) =====
    Rules are enforced here, on Google's side, not in the browser:
    - passwords are stored only as salted hashes in the Users sheet
-   - roles: staff (log requests, buy, hand over, remarks), incharge (same, plus delete a wrong request),
-     admin (also: approve logins, reset and remove logins, delete requests)
+   - roles: staff (log and follow their own requests, Collect & Deposit), incharge (store room), purchase, accounts,
+     manager (department head / budget), admin (also: approve logins, reset and remove logins)
+   - staff receive only their own requests; the other roles receive every request
    - the first admin is approved automatically; every other login needs one approval from an admin
    - every time and name in the history of a request (the "log") is stamped by the server,
      so nobody can back-date or sign as someone else
    - photos are kept in the Photos sheet and are sent only to a logged-in person
 */
-const ROLES=["staff","incharge","admin"];
+const ROLES=["staff","incharge","purchase","accounts","manager","admin"];
+/* staff (teachers and other staff) see only their own requests; every role sees Collect & Deposit */
+const SEE_ALL=["incharge","purchase","accounts","manager","admin"];
 const OPEN=false;  // false = staff open with their name, incharge and admin use a personal password. true = nobody needs a password.
 const TOKEN_DAYS=120;
 const TZ="Asia/Kolkata";
@@ -21,7 +24,7 @@ const PHOTO_KEYS=["refImg","billImg","handImg","arrImg","refundImg"];
 
 function fail(m){throw new Error(m)}
 function str(v,max){return String(v==null?"":v).trim().slice(0,max)}
-function isMgr(u){return u.role==="incharge"||u.role==="admin"}
+function isMgr(u){return u.role==="incharge"||u.role==="manager"||u.role==="admin"}
 function addDays(iso,n){const d=new Date(iso+"T00:00:00Z");d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10)}
 
 function hashPw(H,salt,pw){let h=salt+"|"+pw;for(let i=0;i<500;i++)h=H.sha(h+"|"+salt);return h}
@@ -43,7 +46,7 @@ function readToken(H,secret,DB,token,now){
 }
 function needUser(ctx,token){const u=readToken(ctx.H,ctx.secret,ctx.DB,token,ctx.now);if(!u)fail("Please log in again.");return u}
 function needAdmin(ctx,token){const u=needUser(ctx,token);if(u.role!=="admin")fail("Only the admin can do this.");return u}
-function needMgr(u,what){if(!isMgr(u))fail("Only an incharge can "+what+".")}
+function needMgr(u,what){if(!isMgr(u))fail("Only the store incharge, a manager or the admin can "+what+".")}
 
 function parse_(json){try{return JSON.parse(json)}catch(e){return {}}}
 function requests_(){return readAll_("Requests").map(r=>Object.assign(parse_(r.json),{id:r.id}))}
@@ -57,10 +60,12 @@ function publicState(ctx,me,since){
   if(since&&since===rev)return Object.assign(base,{same:true});
   return Object.assign(base,{
     users:me.role==="admin"?ctx.DB.Users.map(u=>({name:u.name,role:u.role,status:u.status,requestedAt:u.requestedAt||"",approvedAt:u.approvedAt||""})):[],
-    items:requests_()
+    items:requests_().filter(r=>SEE_ALL.includes(me.role)||r.kind==="pickdrop"||r.staff===me.name||r.loggedBy===me.name),
+    cfg:{depts:config_("depts")}
   });
 }
 
+function config_(key){const r=findRow_("Config",key);return r?parse_(r.json):null}
 /* a photo data URL goes into the Photos sheet in chunks; the record keeps only its id */
 function storePhoto_(ctx,v){
   if(typeof v!=="string"||!v)return "";
@@ -85,7 +90,7 @@ function applyOp_(ctx,me,op){
   const row=findRow_("Requests",id),cur=row?parse_(row.json):null;
   const nowIso=new Date(ctx.now).toISOString();
   if(kind==="delete"){
-    if(me.role==="staff")fail("Only an incharge or the admin can delete a request.");
+    if(!isMgr(me))fail("Only the store incharge, a manager or the admin can delete a request.");
     if(row){deleteRow_("Requests",id);ctx.log(me.name,"delete request",id,String(cur.item||""))}
     return;
   }
@@ -93,6 +98,7 @@ function applyOp_(ctx,me,op){
   if(kind==="set"&&row)fail("This request already exists.");
   if(kind==="update"&&!row)fail("Request not found.");
   if(kind!=="set"&&kind!=="update")fail("Unknown action.");
+  if(kind==="update"&&!SEE_ALL.includes(me.role)&&cur.kind!=="pickdrop"&&cur.staff!==me.name&&cur.loggedBy!==me.name)fail("You can only change your own requests.");
   const doc=kind==="set"?{}:cur;
   // remove fields the page asked to delete
   Object.keys(data).forEach(k=>{if(data[k]&&typeof data[k]==="object"&&!Array.isArray(data[k])&&data[k].__delete__){delete doc[k];delete data[k]}});
@@ -214,6 +220,15 @@ const API={
     return publicState(ctx,me);
   },
 
+  // the department list (groups of names) – store incharge, manager or admin
+  setDepts(ctx,token,groups){
+    const me=needUser(ctx,token);needMgr(me,"change the departments");
+    if(!Array.isArray(groups))fail("Nothing to save.");
+    const clean=groups.slice(0,12).map(g=>[str(g&&g[0],40),(Array.isArray(g&&g[1])?g[1]:[]).map(x=>str(x,50)).filter(Boolean).slice(0,80)]).filter(g=>g[0]&&g[1].length);
+    upsert_("Config",{key:"depts",json:JSON.stringify(clean)});bump_();ctx.log(me.name,"change departments","",String(clean.length));
+    return publicState(ctx,me);
+  },
+
   approve(ctx,token,name,role){
     const me=needAdmin(ctx,token);const u=ctx.DB.Users.find(x=>x.name===name);if(!u)fail("Request not found.");
     if(u.name===me.name&&role!=="admin")fail("You can't change your own role.");
@@ -262,6 +277,7 @@ const COLS={
   Requests:["id","json","updated"],
   Photos:["id","n","chunk"],
   Log:["time","who","action","item","detail"],
+  Config:["key","json"],
 };
 function sheet_(name){
   const ss=SpreadsheetApp.getActiveSpreadsheet();
@@ -292,7 +308,7 @@ function findRows_(name,id){
 }
 function upsert_(name,obj){
   const sh=sheet_(name),cols=COLS[name];
-  const row=rowIndex_(sh,String(obj.id))||Math.max(sh.getLastRow(),1)+1;
+  const row=rowIndex_(sh,String(obj[cols[0]]))||Math.max(sh.getLastRow(),1)+1;
   sh.getRange(row,1,1,cols.length).setNumberFormat("@").setValues([cols.map(c=>obj[c]==null?"":obj[c])]);
 }
 function appendRows_(name,rows){
