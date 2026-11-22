@@ -297,6 +297,28 @@ table.t tbody tr:hover td,.dr:hover{background:#F8FAFD}
   .charts{grid-template-columns:1fr}
 }
 @media (max-width:760px){.tb .tt b{font-size:17px}.sync{display:none}}
+
+.calwrap{display:grid;grid-template-columns:minmax(300px,360px) 1fr;gap:14px;margin-top:14px;align-items:start}
+.calh{display:flex;align-items:center;gap:8px;margin-bottom:10px}.calh b{font-size:14.5px;color:var(--navy)}
+.calg{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.calg small{text-align:center;font-size:10.5px;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.5px;padding-bottom:3px}
+.cd{position:relative;border:1px solid var(--line);background:#fff;border-radius:10px;min-height:54px;padding:4px 3px 3px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.cd:hover{background:#F8FAFD}.cd.tod{border-color:var(--sky);box-shadow:inset 0 0 0 1px var(--sky)}
+.cd.sel{background:var(--navy);border-color:var(--navy);color:#fff}.cd b{font-size:13px}
+.dots{display:flex;gap:2px;flex-wrap:wrap;justify-content:center}
+.dd,.dc{font-style:normal;font-size:9.5px;font-weight:700;border-radius:999px;padding:0 5px;line-height:15px;display:inline-block}
+.dd{background:var(--pur-t);color:var(--pur)}.dc{background:var(--sky-t);color:var(--lv)}
+.cd.sel .dd,.cd.sel .dc{background:rgba(255,255,255,.18);color:#fff}
+.cd em{position:absolute;top:4px;right:4px;width:7px;height:7px;border-radius:50%;background:var(--no)}
+.wgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.wh{display:flex;align-items:center;gap:8px;padding-bottom:6px;border-bottom:1px solid var(--line);color:var(--navy)}
+.wl{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.wla{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.wli{margin-top:3px}
+.acts{padding:4px 16px}
+.arow{display:grid;grid-template-columns:150px 150px 1fr;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px;align-items:start}
+.arow:last-child{border:0}.arow.post{background:linear-gradient(90deg,var(--amb-t),transparent 60%);margin:0 -16px;padding-left:16px;padding-right:16px}
+.arow .at{color:var(--ink2);font-size:12px}.arow .aw b{display:block}.arow .aw small{color:var(--ink2);font-size:11px}
+@media (max-width:980px){.calwrap{grid-template-columns:1fr}.wgrid{grid-template-columns:1fr}.arow{grid-template-columns:1fr;gap:2px}.arow.post{margin:0 -16px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -509,7 +531,14 @@ function applyEntries(led,r,phase,fresh,its){
   Object.keys(led.entries).forEach(ek=>{const e=led.entries[ek];if(e.r===r.id&&e.ph===ph&&e.st==='open'&&ids.has(e.i))delete led.entries[ek]});
   Object.keys(fresh).forEach(ek=>{if(!led.entries[ek])led.entries[ek]=fresh[ek]})}
 function stamp(){const m=S.real||S.me;return{n:m?m.n:'Unknown',r:m?m.r:''}}
-function logAdd(r,act){r.log=(r.log||[]);r.log.push({at:Date.now(),by:stamp().n,act});if(r.log.length>40)r.log.splice(0,r.log.length-40)}
+function logAdd(r,act,x){r.log=(r.log||[]);r.log.push(Object.assign({at:Date.now(),by:stamp().n,role:stamp().r,act},x||{}));if(r.log.length>250)r.log.splice(0,r.log.length-250)}
+function cdesc(c,ph){if(c.d==='N')return 'Not issued'+(c.dr?' · '+c.dr:'');if(ph==='dist')return 'Given';
+  return c.c==='M'?'Not submitted'+(c.cr?' · '+c.cr:''):c.c==='IC'?'Incomplete':c.c==='LV'?'On leave':c.c==='RT'?'Retained':'Received'}
+function stuName(r,sid){const x=roster(r).find(z=>sidOf(r,z[0])===sid);return x?x[1]+' #'+x[0]:sid}
+function logEdit(r,ph,post,sid,it,b,a){if(!it)return;const f=cdesc(b,ph),t=cdesc(a,ph);if(f===t&&b.n===a.n)return;
+  logAdd(r,stuName(r,sid)+' · '+it.n+': '+f+' → '+t+(a.n&&a.n!==b.n?' · “'+a.n+'”':''),{ph,post:post?1:0,s:sid})}
+function logBulk(r,ph,post,label,bb,aa){let n=0;bb.forEach((x,i)=>{if(x!==aa[i])n++});if(!n)return;
+  logAdd(r,label+': '+n+' changed → '+[...new Set(aa)].join(', '),{ph,post:post?1:0,bulk:1})}
 function submitPhase(rid,phase,gd){
   const by=stamp();const r0=S.rounds[rid];const at=Date.now();const its=phase==='dist'?r0.items:itemsFor(r0,gd);
   mutR(rid,r=>{
@@ -559,10 +588,11 @@ const NAVICO={dash:'<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height=
  rounds:'<svg viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12"/><path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>',
  fu:'<svg viewBox="0 0 24 24"><path d="M12 3 2.5 20h19L12 3Z"/><path d="M12 10v4.5M12 17.5h.01"/></svg>',
  sec:'<svg viewBox="0 0 24 24"><path d="M3 20V10M9 20V4M15 20v-7M21 20V8"/></svg>',
- leave:'<svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>'};
-const TABT={dash:'Dashboard',rounds:'Rounds',fu:'Defaulter register',sec:'Section analysis',leave:'Leave desk'};
+ leave:'<svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>',
+ act:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>'};
+const TABT={dash:'Dashboard',rounds:'Rounds',fu:'Defaulter register',sec:'Section analysis',leave:'Leave desk',act:'Activity'};
 function header(){
-  const tabs=[['dash','Dashboard'],['rounds','Rounds'],['fu','Defaulters'],['sec','Sections'],['leave','Leave desk']];
+  const tabs=[['dash','Dashboard'],['rounds','Rounds'],['fu','Defaulters'],['sec','Sections'],['leave','Leave desk'],['act','Activity']];
   const open=S.tab==='round'?'rounds':S.tab;
   let nOpen=0;try{if(S.me)nOpen=openEntries().length}catch(e){}
   const sc=S.me?SC():null;
@@ -576,7 +606,7 @@ function header(){
   return `<div class="shell">${side}<div class="col">${top}`}
 function viewBar(){const sc=SC();return `<div class="vbar"><div class="in"><span>Signed in as <b>${esc((S.real||S.me).n)}</b>${(S.real||S.me).r?' · '+esc((S.real||S.me).r):''}</span><span>·</span><span>View: <b>${esc(sc.kind)}</b> — ${esc(sc.label)}</span><span class="sp"></span>${canSwitch()?'<button class="btn sm" data-act="who">'+(LIVE?'View as another role':'Switch user / demo views')+'</button>':''}</div></div>`}
 function mainView(){
-  switch(S.tab){case 'dash':return dashView();case 'rounds':return roundsView();case 'round':return roundView();case 'fu':return fuView();case 'sec':return secView();case 'leave':return leaveView()}
+  switch(S.tab){case 'dash':return dashView();case 'rounds':return roundsView();case 'round':return roundView();case 'fu':return fuView();case 'sec':return secView();case 'leave':return leaveView();case 'act':return actView()}
   return ''}
 function stickyBar(){
   if(S.tab!=='round')return '';const r=S.rounds[S.openRound];if(!r||r.kind==='leave')return '';
@@ -588,6 +618,30 @@ function stickyBar(){
   <button class="btn ${sub&&!edited?'':'ok'}" data-act="submit">${sub?(edited?'Re-submit changes':'Submitted ✓ · submit again'):'Submit '+(ph==='dist'?'distribution':'collection')}</button></div></div>`}
 
 /* ---- dashboard ---- */
+function dayMap(R){const m={};const g=d=>m[d]=m[d]||{d:0,c:0,dp:0,cp:0};
+  R.forEach(r=>{const a=g(r.date);a.d++;if(!r.dsub)a.dp++;groupsOf(r).forEach(x=>{const b=g(x);b.c++;if(!csubFor(r,x))b.cp++})});return m}
+function calendarCard(R,D0){
+  const t=todayISO();const base=S.calM||D0.slice(0,7);const [Y,Mo]=base.split('-').map(Number);const first=new Date(Y,Mo-1,1);
+  const dm=dayMap(R);const lead=(first.getDay()+6)%7;const dim=new Date(Y,Mo,0).getDate();
+  const MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  let cells='';for(let i=0;i<lead;i++)cells+='<span class="cd0"></span>';
+  for(let d=1;d<=dim;d++){const iso=Y+'-'+pad(Mo)+'-'+pad(d);const x=dm[iso];const late=x&&iso<t&&(x.dp||x.cp);
+    cells+=`<button class="cd${iso===D0?' sel':''}${iso===t?' tod':''}" data-act="calpick" data-v="${iso}" aria-label="${esc(fd(iso))}${x?': '+x.d+' to distribute, '+x.c+' to collect':''}"><b class="num">${d}</b>${x?`<span class="dots">${x.d?`<i class="dd">D${x.d}</i>`:''}${x.c?`<i class="dc">C${x.c}</i>`:''}</span>${late?'<em></em>':''}`:''}</button>`}
+  return `<div class="card calc"><div class="calh"><button class="btn sm" data-act="calmon" data-v="-1" aria-label="Previous month">‹</button><b>${MN[Mo-1]} ${Y}</b><button class="btn sm" data-act="calmon" data-v="1" aria-label="Next month">›</button><span class="sp"></span><button class="btn sm" data-act="datetoday">Today</button></div>
+  <div class="calg">${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(x=>`<small>${x}</small>`).join('')}${cells}</div>
+  <div class="tiny muted" style="margin-top:8px"><i class="dd">D</i> distribute · <i class="dc">C</i> collect · red dot = something overdue</div></div>`}
+function dayWorklist(R,D0){
+  const t=todayISO();const dist=R.filter(r=>r.date===D0);const coll=R.filter(r=>groupsOf(r).includes(D0));
+  const open=openEntries().filter(e=>e.k==='LEAVE'&&e.due===D0);
+  const row=(r,kind)=>{const g=kind==='c'?D0:null;const done=kind==='d'?r.dsub:csubFor(r,D0);const its=kind==='d'?r.items:itemsFor(r,D0);
+    const late=!done&&D0<t;const blocked=kind==='c'&&!r.dsub;
+    const pill=done?`<span class="pill p-ok">Done · ${esc(done.by)} · ${esc(ft(done.at))}</span>`:blocked?`<span class="pill p-na">Not distributed yet</span>`:`<span class="pill ${late?'p-no':'p-ic'}">${late?'Overdue':'Pending'}</span>`;
+    return `<div class="wl"><div><b>${esc(secLabel(r.cls,r.sec))}</b> <span class="muted tiny">${esc(classTeacher(r.key)||'')}</span><div class="wli">${its.map(itemChip).join('')}</div></div><div class="wla">${pill}<button class="btn sm ${done?'':'pri'}" data-act="open" data-id="${r.id}" data-ph="${kind==='d'?'dist':'coll'}"${kind==='c'?` data-g="${D0}"`:''}>${done?'View':'Open'}</button></div></div>`};
+  const col=(title,rows,kind,empty)=>`<div class="wcol"><div class="wh"><b>${title}</b><span class="pill p-gold num">${rows.length}</span></div>${rows.length?rows.map(r=>row(r,kind)).join(''):`<div class="muted tiny" style="padding:10px 0">${empty}</div>`}</div>`;
+  return `<div class="card"><div class="calh" style="margin-bottom:6px"><b>${esc(fdl(D0))}</b><span class="sp"></span><span class="muted tiny">${D0===t?'Today':D0<t?'Past date':'Upcoming'}</span></div>
+  <div class="wgrid">${col('To distribute',dist,'d','Nothing to distribute on this date.')}${col('To collect',coll,'c','Nothing to collect on this date.')}</div>
+  ${open.length?`<div class="banner info" style="margin-top:10px">${open.length} leave set${open.length>1?'s':''} due back this day · <a href="#" data-act="tab" data-v="leave">open Leave desk</a></div>`:''}</div>`}
+
 function dashCharts(R,D0){
   const days=[];for(let i=6;i>=0;i--)days.push(addDays(D0,-i));
   const data=days.map(d=>{let due=0,sub=0,miss=0;const perC={};
@@ -637,6 +691,7 @@ function dashView(){
   const none=Object.keys(S.rounds).length===0;
   const title=sc.all?(sc.kind==='Director'?'Director’s overview':'School overview'):sc.kind+' · '+(sc.keys.size<=3?sc.label:sc.label);
   let h=`<div class="datebar"><h1>${esc(fdl(D0))}</h1><button class="btn sm" data-act="dateshift" data-v="-1" aria-label="Previous day">‹</button><input type="date" id="dbdate" value="${D0}" data-chg="date" aria-label="Pick date"><button class="btn sm" data-act="dateshift" data-v="1" aria-label="Next day">›</button><button class="btn sm" data-act="datetoday">Today</button></div><div class="muted tiny" style="margin-top:4px">${esc(title)}</div>`;
+  h+=`<div class="calwrap">${calendarCard(R,D0)}${dayWorklist(R,D0)}</div>`;
   if(none)h+=`<div class="card empty" style="margin-top:14px"><h3>No rounds yet</h3><p>Create the first round with <b>+ New round</b>, or load sample data to see how every view works.</p><button class="btn gold" data-act="demo">Load sample data</button></div>`;
   h+=`<div class="kpis">
    <div class="kpi gold"><div class="v num">${dDone}/${dist.length}</div><div class="l">Sections distributed</div></div>
@@ -729,8 +784,30 @@ function roundView(){
   h+=`<div class="legend" style="margin:13px 0 7px">${ph==='dist'?`<span class="pill p-ok">✓ Given</span><span class="pill p-no">✗ Not received</span><span class="pill p-abs">A Absent</span>`:`<span class="pill p-ok">✓ Received</span><span class="pill p-no">✗ Not submitted</span><span class="pill p-abs">A Absent</span><span class="pill p-ic">IC Incomplete</span><span class="pill p-lv">L On leave</span><span class="pill p-rt">RT Retained</span><span class="pill p-na">– Not issued</span>`}<span class="muted tiny" style="align-self:center">Everyone starts as ${ph==='dist'?'given':'received'}. Tap only the exceptions. Tap a name for the whole row, an item heading for the whole column.</span></div>`;
   h+=gridTable(r,ph,its);
   h+=reportView(r,ph,its,gd);
-  if((r.log||[]).length)h+=`<details class="ex" style="margin-top:13px"><summary>Activity log</summary><div class="in">${r.log.slice().reverse().map(l=>`<div class="tiny"><b>${esc(l.by)}</b> · ${esc(l.act)} · <span class="muted">${fdt(l.at)}</span></div>`).join('')}</div></details>`;
+  h+=activityCard(r);
+  if(false)h+=`<details class="ex" style="margin-top:13px"><summary>Activity log</summary><div class="in">${r.log.slice().reverse().map(l=>`<div class="tiny"><b>${esc(l.by)}</b> · ${esc(l.act)} · <span class="muted">${fdt(l.at)}</span></div>`).join('')}</div></details>`;
   return h}
+function actRow(l,sec){
+  return `<div class="arow${l.post?' post':''}"><div class="at num">${esc(fdt(l.at))}</div><div class="aw"><b>${esc(l.by||'')}</b>${l.role?`<small>${esc(l.role)}</small>`:''}</div><div class="ax">${sec?`<span class="muted">${esc(sec)} · </span>`:''}${esc(l.act)}${l.post?' <span class="pill p-ic">Edited after submit</span>':''}</div></div>`}
+function activityCard(r){
+  const L=(r.log||[]).slice().reverse();
+  let h=`<div class="sec-h"><h2>Activity</h2><small>Every change with the person's name and time · edits after submit are flagged</small></div>`;
+  if(!L.length)return h+`<div class="card muted">No changes recorded yet.</div>`;
+  return h+`<div class="card acts">${L.slice(0,60).map(l=>actRow(l)).join('')}${L.length>60?`<div class="tiny muted" style="padding:8px 0">Showing the latest 60 of ${L.length}.</div>`:''}</div>`}
+function allActivity(){
+  const out=[];
+  sRounds().forEach(r=>(r.log||[]).forEach(l=>out.push(Object.assign({},l,{sec:secLabel(r.cls,r.sec)+' · '+fd(r.date),rid:r.id}))));
+  sEntries().forEach(e=>(e.h||[]).forEach(l=>out.push({at:l.at,by:l.by,act:(SECMAP[e.lk]?SECMAP[e.lk].label:e.lk)+' · '+e.sn+' · '+e.in+': '+l.act+(l.t?' · “'+l.t+'”':''),sec:'Defaulter register',reg:1})));
+  return out.sort((a,b)=>b.at-a.at)}
+function actView(){
+  const all=allActivity();const who=[...new Set(all.map(x=>x.by).filter(Boolean))].sort();
+  const f=S.actf||'';const rows=all.filter(x=>!f||x.by===f);const post=all.filter(x=>x.post).length;
+  let h=`<div class="sec-h nb" style="margin-top:2px"><h1>Activity</h1><small>Who did what and when across distribution, collection and the defaulter register</small></div>
+  <div class="kpis" style="margin-bottom:12px"><div class="kpi"><div class="l">Changes recorded</div><div class="v num">${all.length}</div></div><div class="kpi ic"><div class="l">Edits after submit</div><div class="v num">${post}</div></div><div class="kpi"><div class="l">People who edited</div><div class="v num">${who.length}</div></div></div>
+  <div class="fbar" style="margin-bottom:10px"><label class="field">Person<select data-chg="actf"><option value="">Everyone</option>${who.map(n=>`<option ${n===f?'selected':''}>${esc(n)}</option>`).join('')}</select></label></div>`;
+  if(!rows.length)return h+`<div class="card empty"><h3>No activity yet</h3><p>Marks, submissions and register actions will appear here with the person and time.</p></div>`;
+  return h+`<div class="card acts">${rows.slice(0,200).map(l=>actRow(l,l.sec)).join('')}</div>`}
+
 function gridTable(r,ph,its){
   const ro=roster(r);
   let h=`<div class="tblwrap"><table class="grid2"><thead><tr><th class="stk"><span class="tiny muted">STUDENT (${ro.length})</span></th>`+its.map(it=>`<th><span class="ty t-${it.t}">${it.t}</span><span class="nm" data-act="colsheet" data-i="${it.id}">${esc(short(it.n))}</span>${ph==='dist'&&groupsOf(r).length>1?`<span class="dd">due ${esc(fd(icd(r,it)))}</span>`:''}</th>`).join('')+`</tr></thead><tbody>`;
@@ -884,10 +961,10 @@ function curSubmitted(r){const ph=S.phase;return ph==='dist'?r.dsub:csubFor(r,cu
 function applyCell(sid,iid,v){
   const rid=S.openRound;const ph=S.phase;const note=($('#cnote')||{}).value||'';const ret=($('#cret')||{}).value||'';
   const [a,b]=v.split(':');const gd=curGroup(S.rounds[rid]);const ek=editKey(ph,gd);
-  mutR(rid,r=>{
+  mutR(rid,r=>{const b0=cell(r,sid,iid);const post=!!(ph==='dist'?r.dsub:csubFor(r,gd));
     if(ph==='dist'){setCell(r,sid,iid,a==='G'?{d:'G',n:note}:{d:'N',dr:b||'Other',n:note})}
     else{if(a==='R')setCell(r,sid,iid,{c:'R',n:note});else if(a==='M')setCell(r,sid,iid,{c:'M',cr:b||'Other',n:note});else if(a==='LV')setCell(r,sid,iid,{c:'LV',ret:ret||addDays(todayISO(),7),n:note});else setCell(r,sid,iid,{c:a,n:note})}
-    r.edit=r.edit||{};if(ph==='dist'?r.dsub:csubFor(r,gd))r.edit[ek]=1});
+    logEdit(r,ph,post,sid,r.items.find(i=>i.id===iid),b0,cell(r,sid,iid));r.edit=r.edit||{};if(ph==='dist'?r.dsub:csubFor(r,gd))r.edit[ek]=1});
   closeSheet()}
 function openStu(sid){
   const r=S.rounds[S.openRound];const ph=S.phase;const gd=curGroup(r);const its=ph==='coll'?itemsFor(r,gd):r.items;const x=roster(r).find(z=>sidOf(r,z[0])===sid);SH={sid};
@@ -904,10 +981,10 @@ function openStu(sid){
   <div class="tiny" style="font-weight:800;margin:8px 0 3px;letter-spacing:.6px">THIS ROUND · ${esc(r.dsub?'issued '+fd(r.date)+' by '+r.dsub.by:'not distributed yet')}</div><table class="t"><tbody>${st}</tbody></table>${holdingRows(r.key,sid,r.id)}`)}
 function applyBulkStu(sid,v){
   const rid=S.openRound;const ph=S.phase;const ret=($('#sret')||{}).value||addDays(todayISO(),7);const gd=curGroup(S.rounds[rid]);const ek=editKey(ph,gd);
-  mutR(rid,r=>{(ph==='coll'?itemsFor(r,gd):r.items).forEach(it=>{const c=cell(r,sid,it.id);
+  mutR(rid,r=>{const its0=(ph==='coll'?itemsFor(r,gd):r.items);const bb=its0.map(it=>cdesc(cell(r,sid,it.id),ph));const post=!!(ph==='dist'?r.dsub:csubFor(r,gd));(ph==='coll'?itemsFor(r,gd):r.items).forEach(it=>{const c=cell(r,sid,it.id);
     if(ph==='dist'){if(v==='G')setCell(r,sid,it.id,{d:'G'});else if(v==='absent')setCell(r,sid,it.id,{d:'N',dr:'Absent'});else if(v==='leave')setCell(r,sid,it.id,{d:'G',c:'LV',ret})}
     else{if(c.d==='N')return;if(v==='R')setCell(r,sid,it.id,{c:'R'});else if(v==='absent')setCell(r,sid,it.id,{c:'M',cr:'Absent'});else if(v==='forgot')setCell(r,sid,it.id,{c:'M',cr:'Forgot'});else if(v==='leave')setCell(r,sid,it.id,{c:'LV',ret})}});
-    r.edit=r.edit||{};if(ph==='dist'?r.dsub:csubFor(r,gd))r.edit[ek]=1});closeSheet()}
+    logBulk(r,ph,post,stuName(r,sid)+' · whole row',bb,its0.map(it=>cdesc(cell(r,sid,it.id),ph)));r.edit=r.edit||{};if(ph==='dist'?r.dsub:csubFor(r,gd))r.edit[ek]=1});closeSheet()}
 function openCol(iid){
   const r=S.rounds[S.openRound];const ph=S.phase;const it=r.items.find(i=>i.id===iid);SH={iid};
   const B=(v,g,gc,t,sm)=>`<button class="opt" data-act="bulkcol" data-v="${v}"><span class="g p-${gc}">${g}</span><span>${t}${sm?`<small>${sm}</small>`:''}</span></button>`;
@@ -915,9 +992,9 @@ function openCol(iid){
   sheet(`<button class="x" data-act="close" aria-label="Close">×</button><h2>${itemChip(it)}</h2><div class="muted tiny">Applies to every student for this item. Students not issued stay as they are.</div><div class="opts">${opts}</div>`)}
 function applyBulkCol(iid,v){
   const rid=S.openRound,ph=S.phase;const gd=curGroup(S.rounds[rid]);const ek=editKey(ph,gd);
-  mutR(rid,r=>{roster(r).forEach(([roll])=>{const sid=sidOf(r,roll);const c=cell(r,sid,iid);
+  mutR(rid,r=>{const ro=roster(r);const bb=ro.map(([roll])=>cdesc(cell(r,sidOf(r,roll),iid),ph));const post=!!(ph==='dist'?r.dsub:csubFor(r,gd));roster(r).forEach(([roll])=>{const sid=sidOf(r,roll);const c=cell(r,sid,iid);
     if(ph==='dist'){setCell(r,sid,iid,v==='G'?{d:'G'}:{d:'N',dr:'Out of stock'})}else{if(c.d==='N')return;setCell(r,sid,iid,v==='R'?{c:'R'}:{c:'M',cr:'Forgot'})}});
-    r.edit=r.edit||{};if(ph==='dist'?r.dsub:csubFor(r,gd))r.edit[ek]=1});closeSheet()}
+    logBulk(r,ph,post,((r.items.find(i=>i.id===iid)||{}).n||'Item')+' · whole column',bb,ro.map(([roll])=>cdesc(cell(r,sidOf(r,roll),iid),ph)));r.edit=r.edit||{};if(ph==='dist'?r.dsub:csubFor(r,gd))r.edit[ek]=1});closeSheet()}
 function openSubmit(){
   const r=S.rounds[S.openRound];const ph=S.phase;const gd=curGroup(r);const its=ph==='coll'?itemsFor(r,gd):r.items;const s=stats(r,its);
   SH='submit';sheet(`<button class="x" data-act="close" aria-label="Close">×</button><h2>Submit ${ph==='dist'?'distribution':'collection'}</h2><p>${esc(secLabel(r.cls,r.sec))} · ${fdl(ph==='dist'?r.date:gd)}${ph==='coll'?'<br><span class="muted tiny">'+its.length+' item'+(its.length>1?'s':'')+' due this date: '+esc(its.map(i=>i.n+' '+TYPE[i.t]).join(', '))+'</span>':''}</p>
@@ -1101,7 +1178,7 @@ const ACT={
   newround:()=>{if(!S.me){openWho(true);return}openNewRound()},
   open:(el,ev)=>{if(ev)ev.preventDefault();const r=S.rounds[el.dataset.id];if(!r)return;S.openRound=r.id;S.phase=el.dataset.ph||(r.dsub?'coll':'dist');S.grp=el.dataset.g||null;S.tab='round';window.scrollTo(0,0);render()},
   phase:el=>{S.phase=el.dataset.v;render()},grp:el=>{S.grp=el.dataset.v;render()},
-  dateshift:el=>{S.date=addDays(S.date,Number(el.dataset.v));render()},datetoday:()=>{S.date=todayISO();render()},
+  calpick:el=>{S.date=el.dataset.v;S.calM=S.date.slice(0,7);render()},calmon:el=>{const b=(S.calM||S.date.slice(0,7)).split('-').map(Number);const d=new Date(b[0],b[1]-1+Number(el.dataset.v),1);S.calM=d.getFullYear()+'-'+pad(d.getMonth()+1);render()},dateshift:el=>{S.date=addDays(S.date,Number(el.dataset.v));render()},datetoday:()=>{S.date=todayISO();S.calM=S.date.slice(0,7);render()},
   cell:el=>openCell(el.dataset.s,el.dataset.i),setcell:el=>applyCell(SH.sid,SH.iid,el.dataset.v),
   stusheet:el=>openStu(el.dataset.s),bulkstu:el=>applyBulkStu(SH.sid,el.dataset.v),
   colsheet:el=>openCol(el.dataset.i),bulkcol:el=>applyBulkCol(SH.iid,el.dataset.v),
@@ -1149,7 +1226,7 @@ document.addEventListener('click',ev=>{
 document.addEventListener('change',ev=>{
   const el=ev.target.closest('[data-chg]');if(!el)return;const k=el.dataset.chg,v=el.type==='checkbox'?el.checked:el.value;
   switch(k){
-    case 'date':if(v)S.date=v;render();break;
+    case 'date':if(v){S.date=v;S.calM=v.slice(0,7)}render();break;case 'actf':S.actf=v;render();break;
     case 'rf-cls':S.rf.cls=v;render();break;case 'rf-scope':S.rf.scope=v;render();break;
     case 'fu-cls':S.fu.cls=v;S.fu.sec='';render();break;case 'fu-sec':S.fu.sec=v;render();break;case 'fu-t':S.fu.t=v;render();break;case 'fu-od':S.fu.od=v;render();break;case 'fu-res':S.fu.res=v;render();break;
     case 'sa-cls':{const f=SECS.find(s=>s.ck===v&&inScope(s.k));if(f)S.sa.key=f.k;render();break}
