@@ -182,6 +182,26 @@ tr:last-child td{border-bottom:0}
 .err{color:var(--red);font-size:13px;margin-top:8px;min-height:1.2em}
 .toast{position:fixed;left:50%;bottom:max(18px,env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--navy);border-bottom:2px solid var(--gold);color:#fff;padding:10px 16px;border-radius:10px;font-size:13.5px;z-index:60;box-shadow:0 6px 20px rgba(0,0,0,.25)}
 @media (max-width:560px){main{padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}.card{padding:13px}.kpi b{font-size:26px}h1{font-size:17px}}
+
+nav{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;overflow:visible!important}
+nav button{white-space:normal!important;line-height:1.15;font-size:13px!important;padding:8px 4px!important;text-align:center;position:relative}
+nav button b{position:absolute;top:-6px;right:-4px;margin:0!important}
+@media (min-width:900px){nav{grid-template-columns:repeat(7,minmax(0,1fr))}}
+.case .t3.full{-webkit-line-clamp:unset;display:block}
+.inl{margin-top:6px;display:flex;flex-direction:column;gap:4px}
+.inl div{font-size:12.5px;line-height:1.4;background:var(--cream2);border-left:3px solid var(--gold);padding:4px 8px;border-radius:0 6px 6px 0}
+.inl div.fo{border-left-color:var(--blu)}.inl div b{color:var(--navy)}.inl div small{color:var(--mute)}
+.chips3{display:flex;gap:4px;flex-wrap:wrap;margin-top:7px}
+.chips3 span{font-size:10.5px;font-weight:700;padding:3px 7px;border-radius:6px;background:var(--grybg);color:var(--gry)}
+.chips3 span.ok{background:var(--grnbg);color:var(--grn)}.chips3 span.no{background:var(--redbg);color:var(--red)}.chips3 span.wait{background:var(--ambbg);color:var(--amb)}
+.flt{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}.flt input,.flt select{width:100%}
+@media (min-width:700px){.flt{grid-template-columns:2fr 1fr 1fr 1fr 1fr}}
+.wl{border:1px solid var(--line);border-radius:12px;padding:11px 12px;margin-bottom:8px;background:#fff;cursor:pointer}
+.wl .r1{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.wl .r1 strong{font-size:15px}
+.wl .r2{font-size:13px;color:var(--mute);margin-top:3px}.wl .r3{font-size:13.5px;margin-top:5px}
+.fuh{display:flex;flex-direction:column;gap:6px;margin:8px 0}
+.fuh div{background:var(--cream2);border:1px solid var(--line);border-radius:10px;padding:7px 10px;font-size:13.5px}
+.fuh div small{display:block;color:var(--mute);font-size:11.5px;margin-bottom:2px}
 </style>
 </head>
 <body>
@@ -197,7 +217,7 @@ tr:last-child td{border-bottom:0}
 <div id="sheet"></div>
 <div class="toast" id="toast" hidden></div>
 <script>
-const APP_V="202611201930";
+const APP_V="202611222000";
 const QS=new URLSearchParams(location.search);
 const API_URL=QS.get('api')||'https://script.google.com/macros/s/AKfycbxkeXNT1rwMcFD8Wpp-jCWDa8Fchaeq-ZKbYnCcBFxdB3ByQ9ZcQkdbHdLocv5S3ZVx5Q/exec';
 const TD_URL=QS.get('tdapi')||QS.get('api')||'https://script.google.com/macros/s/AKfycbzIeMjvNueZiTlS6m-j8VNKJxLAbWVITVYkvdj7COAUJMhAsxe2BvPmPD7K3czI6oqWfw/exec';
@@ -218,7 +238,7 @@ function toast(m){const t=$('toast');t.textContent=m;t.hidden=false;clearTimeout
 
 let S={token:LS.get('token'),name:LS.get('name'),entries:[],docs:{},at:'',td:null,
   tab:LS.get('tab2')||'dash',per:LS.get('per')||'month',from:'',to:'',q:'',
-  cf:{st:'',cat:''},rf:'New',rview:'list',ff:'',sel:null,open:null,busy:false,role:LS.get('role')||'FO'};
+  cf:{st:'',cat:''},rf:'New',rview:'list',ff:'',wf:{st:'',q:'',cls:'',area:'',from:'',to:''},dview:'drv',denyFor:null,denyKind:'',sel:null,open:null,busy:false,role:LS.get('role')||'FO'};
 
 async function call(fn,args,url){
   if(!API_URL)throw new Error('SETUP');
@@ -270,7 +290,8 @@ const old=e=>e.d&&e.d<addDays(today(),-30);
 function vehsOf(e){const o=ov(e.id);return (o.veh?[o.veh]:e.vehs||[]).map(canon)}
 function crewOf(e){const o=ov(e.id),v=vehsOf(e)[0],c=v?crewOn(v,e.d):{driver:'',dphone:'',cond:'',cphone:''};
   return Object.assign({},c,o.driver?{driver:o.driver,dphone:o.dphone||'',src:'Set on this case'}:{},o.cond?{cond:o.cond}:{})}
-function fuOf(e){const f=ov(e.id).fu;return f&&f.on?f:null}
+function fuOf(e){if(!isComp(e))return null;const f=ov(e.id).fu;return f&&f.on?f:null}
+const fuLog=e=>Array.isArray(ov(e.id).fl)?ov(e.id).fl:[];
 function fuState(f){if(!f)return'';if(f.done)return'done';const n=nowLocal(),t=today();if(f.due&&f.due<n)return'over';if(f.due&&f.due.slice(0,10)===t)return'today';return'up'}
 function statusOf(e){const o=ov(e.id);if(o.st)return o.st;if(isChg(e))return e.status||'Not entered';
   if(old(e)&&!fuOf(e))return 'Closed';return e.action?'Action logged':'Open'}
@@ -310,7 +331,7 @@ const PER=[['today','Today'],['week','This week'],['month','This month'],['last3
 function range(){const t=today();switch(S.per){case'today':return[t,t];case'week':return[weekStart(t),t];case'month':return[t.slice(0,8)+'01',t];
   case'last30':return[addDays(t,-29),t];case'custom':return[S.from||t.slice(0,8)+'01',S.to||t];default:return['2000-01-01','2999-12-31']}}
 const inR=(e,R)=>e.d>=R[0]&&e.d<=R[1];
-function periodBar(){const R=range();
+function periodBar(){if(S.noPB)return'';const R=range();
   return `<div class="period">${PER.map(([k,l])=>`<button class="${S.per===k?'on':''}" data-per="${k}">${l}</button>`).join('')}</div>
   ${S.per==='custom'?`<div class="dates"><input type="date" id="f-from" value="${S.from||R[0]}" aria-label="From"><input type="date" id="f-to" value="${S.to||R[1]}" aria-label="To"></div>`:''}
   <div class="prange">${S.per==='all'?'All records':R[0]===R[1]?fmt(R[0]):fmt(R[0])+' – '+fmt(R[1])}</div>`}
@@ -319,16 +340,22 @@ function search(L){const q=S.q.trim().toLowerCase();if(!q)return L;
 const byDate=(a,b)=>a.d<b.d?1:a.d>b.d?-1:0;
 
 /* ---------- shared pieces ---------- */
-function caseRow(e){const c=crewOf(e),R=remsOf(e),last=R[R.length-1],f=fuOf(e),fs=fuState(f),rq=isReq(e);
-  const st=rq?stageOf(e):statusOf(e),v=vehsOf(e);
-  const meta=[rq?(rqOf(e).type||guessRqt(e.text)):catOf(e),v.length?v.join(', '):'Vehicle not known',c.driver].filter(Boolean).join(' · ');
+function stepChips(e){const r=rqOf(e),s=r.steps||{},st=stageOf(e);
+  const c=(ok,l,cls)=>`<span class="${ok?'ok':cls||''}">${ok?'✓ ':''}${l}</span>`;
+  if(r.dec==='Denied')return `<div class="chips3">${c(r.ack,'Acknowledged')}<span class="no">✗ Denied${r.reason?' — '+esc(r.reason):''}</span></div>`;
+  if(r.dec==='Awaiting')return `<div class="chips3">${c(r.ack,'Acknowledged')}<span class="wait">⏳ Awaiting${r.reason?' — '+esc(r.reason):''}</span></div>`;
+  return `<div class="chips3">${c(r.ack,'Acknowledged',st==='New'?'no':'')}${c(r.dec==='Approved','Approved')}${r.dec==='Approved'?[['visit','House visit'],['fee','Fee'],['db','Database'],['group','Group message'],['board','On board']].map(([k,l])=>c(s[k],l,'no')).join(''):''}</div>`}
+function caseRow(e){const c=crewOf(e),R=remsOf(e),f=fuOf(e),fs=fuState(f),rq=isReq(e),fl=fuLog(e);
+  const st=rq?stageOf(e):statusOf(e),v=vehsOf(e),r=rqOf(e);
+  const meta=[rq?(r.type||guessRqt(e.text)):catOf(e),rq?(r.area||'colony not entered'):(v.length?v.join(', '):'Vehicle not known'),rq?'':c.driver].filter(Boolean).join(' · ');
   return `<button class="case" data-case="${e.id}"><div class="dt"><b>${+e.d.slice(8,10)}</b><span>${MON[+e.d.slice(5,7)-1]}</span></div>
    <div class="bd"><div class="t1"><strong>${esc(e.name)}</strong><em>${esc(e.cls)}</em>
     <span class="tag ${rq?sgTag(st):stTag(st)}">${esc(st)}</span>${!rq&&e.pri?`<span class="tag ${priTag(e.pri)}">${e.pri}</span>`:''}
-    ${fs&&fs!=='done'?`<span class="tag ${fs==='over'?'t-red':fs==='today'?'t-amb':'t-blu'}">Follow-up ${fs==='over'?'overdue':fs==='today'?'today':fmtS(f.due.slice(0,10))}</span>`:''}</div>
-    <div class="t2">${esc(meta)}${rq&&rqOf(e).area?' · '+esc(rqOf(e).area):''}</div>
-    <div class="t3">${esc(e.text)}</div>
-    ${last?`<div class="t4">${esc(ROLES[last.role]||last.by||'Remark')}: ${esc(last.t)}</div>`:e.action?`<div class="t4">Daily FO: ${esc(e.action)}</div>`:''}</div></button>`}
+    ${fl.length?`<span class="tag t-blu">${fl.length} follow-up${fl.length>1?'s':''}</span>`:''}${fs&&fs!=='done'?`<span class="tag ${fs==='over'?'t-red':fs==='today'?'t-amb':'t-blu'}">Next ${fs==='over'?'overdue':dtLabel(f.due)}</span>`:''}</div>
+    <div class="t2">${esc(meta)}</div>
+    <div class="t3 full">${esc(e.text)}</div>
+    <div class="inl">${e.action?`<div class="fo"><b>Action (Daily FO):</b> ${esc(e.action)}</div>`:''}${R.slice(-2).map(x=>`<div><b>${esc(ROLES[x.role]||x.by||'Remark')}:</b> ${esc(x.t)} <small>${x.at?'· '+stamp(x.at):''}</small></div>`).join('')}${!e.action&&!R.length&&!rq?'<div style="border-left-color:var(--red)"><b>No action recorded yet</b></div>':''}</div>
+    ${rq?stepChips(e):''}</div></button>`}
 function caseList(L,max){if(!L.length)return'<div class="empty">No entries for this period.</div>';const n=max||100;
   return L.slice(0,n).map(caseRow).join('')+(L.length>n?`<div class="empty">${L.length-n} more — choose a shorter period or search.</div>`:'')}
 function rank(rows,key,lim){const mx=Math.max(1,...rows.map(r=>r.n));
@@ -336,12 +363,14 @@ function rank(rows,key,lim){const mx=Math.max(1,...rows.map(r=>r.n));
 function groupBy(L,fn){const m=new Map();L.forEach(e=>[].concat(fn(e)).forEach(k=>{if(!k)return;if(!m.has(k))m.set(k,[]);m.get(k).push(e)}));return m}
 
 /* ---------- tabs ---------- */
-const TABS=[['dash','Dashboard'],['comp','Complaints & Concerns'],['req','Transport Requests'],['fu','Follow-ups'],['drv','Driver-wise'],['bus','Vehicle-wise'],['stu','Student-wise'],['chg','Change Tracker'],['fleet','Fleet & Drivers']];
+const TABS=[['dash','Dashboard'],['comp','Complaints'],['req','Transport Requests'],['wait','Waiting list'],['fu','Follow-ups'],['chg','Change Tracker'],['fleet','Drivers']];
 function nav(){const E=S.entries,open=E.filter(e=>isComp(e)&&statusOf(e)==='Open').length,nw=E.filter(e=>isReq(e)&&stageOf(e)==='New').length,
-  fu=E.filter(e=>['over','today'].includes(fuState(fuOf(e)))).length;const c={comp:open,req:nw,fu};
+  fu=E.filter(e=>['over','today'].includes(fuState(fuOf(e)))).length;const c={comp:open,req:nw,fu,wait:E.filter(e=>isReq(e)&&stageOf(e)==='Awaiting').length};
   $('nav').innerHTML=TABS.map(([k,l])=>`<button class="${S.tab===k?'on':''}" data-tab="${k}">${l}${c[k]?`<b>${c[k]}</b>`:''}</button>`).join('')}
 
-function dash(){const E=S.entries,R=range(),t=today(),wk=weekStart(t),mo=t.slice(0,8)+'01';
+function lookups(){S.noPB=true;let h;try{h=S.dview==='bus'?busTab():S.dview==='stu'?stuTab():drvTab()}finally{S.noPB=false}return h}
+function dash(){if(S.sel&&['drv','bus','stu'].includes(S.sel.t)){S.dview=S.sel.t;return periodBar()+lookups()}
+  const E=S.entries,R=range(),t=today(),wk=weekStart(t),mo=t.slice(0,8)+'01';
   const C=E.filter(isComp),Q=E.filter(isReq),CP=C.filter(e=>inR(e,R)),QP=Q.filter(e=>inR(e,R));
   const cnt=(L,a)=>L.filter(e=>e.d>=a&&e.d<=t).length;
   const fus=E.filter(e=>fuOf(e)&&!fuOf(e).done),over=fus.filter(e=>fuState(fuOf(e))==='over').length,tod=fus.filter(e=>fuState(fuOf(e))==='today').length;
@@ -357,7 +386,7 @@ function dash(){const E=S.entries,R=range(),t=today(),wk=weekStart(t),mo=t.slice
    <button class="kpi" data-tab="fu"><span>Follow-ups due</span><b>${over+tod}</b><small>Overdue <em>${over}</em> · Today <em>${tod}</em> · Upcoming <em>${fus.length-over-tod}</em></small></button>
    <button class="kpi navy" data-tab="req" data-rst="New"><span>Transport requests · period</span><b>${QP.length}</b><small>New <em>${sg('New')}</em> · Acknowledged <em>${sg('Acknowledged')}</em></small></button>
    <button class="kpi pur" data-tab="req" data-rst="Approved"><span>Onboarding in progress</span><b>${sg('Approved')}</b><small>Completed <em>${sg('Completed')}</em></small></button>
-   <button class="kpi" data-tab="req" data-rst="Awaiting"><span>Awaiting / denied</span><b>${sg('Awaiting')} / ${sg('Denied')}</b><small>Colony-wise list inside</small></button>
+   <button class="kpi" data-tab="wait"><span>Awaiting / denied</span><b>${sg('Awaiting')} / ${sg('Denied')}</b><small>Colony-wise list inside</small></button>
   </div>
   <div class="two">
    <div class="card"><div class="sh"><span>Complaints by driver</span><small>driver on duty that day</small></div>${rank(drv.filter(r=>r.k),'drv',8)}</div>
@@ -367,7 +396,9 @@ function dash(){const E=S.entries,R=range(),t=today(),wk=weekStart(t),mo=t.slice
    <div class="card"><div class="sh"><span>Complaints by category</span></div>${rank(cat,'cat',11)}</div>
    <div class="card"><div class="sh"><span>Conductor complaints</span><small>buses with a conductor</small></div>${rank(con.filter(r=>r.k),'con',8)}</div>
   </div>
-  <div class="card gold"><div class="sh"><span>Latest complaints</span><small>${CP.length} in this period</small><button class="btn ghost sm r" data-tab="comp">View all</button></div>${caseList(CP.sort(byDate),6)}</div>`}
+  <div class="card gold"><div class="sh"><span>Latest complaints</span><small>${CP.length} in this period</small><button class="btn ghost sm r" data-tab="comp">View all</button></div>${caseList(CP.sort(byDate),6)}</div>
+  <div class="card gold"><div class="sh"><span>Look up</span><small>by driver, vehicle or student — tap a card for the full history</small></div>
+   <div class="seg">${[['drv','By driver'],['bus','By vehicle'],['stu','By student']].map(([k,l])=>`<button class="${S.dview===k?'on':''}" data-dv="${k}">${l}</button>`).join('')}</div>${lookups()}</div>`}
 
 function compTab(){const R=range(),B=search(S.entries.filter(e=>isComp(e)&&inR(e,R))).sort(byDate);
   let L=B;if(S.cf.st)L=L.filter(e=>statusOf(e)===S.cf.st);if(S.cf.cat)L=L.filter(e=>catOf(e)===S.cf.cat);
@@ -384,26 +415,35 @@ function colonyView(L,title){const G=[...groupBy(L,e=>rqOf(e).area||'Colony not 
    ${es.sort(byDate).map(e=>`<div class="case" data-case="${e.id}" style="padding:9px 0"><div class="bd"><div class="t1"><strong>${esc(e.name)}</strong><em>Class ${esc(e.cls)}</em></div>
     <div class="t2">Requested ${fmt(e.d)} · ${esc(rqOf(e).type||guessRqt(e.text))}${rqOf(e).decAt>1?' · '+esc(rqOf(e).dec)+' '+stamp(rqOf(e).decAt):''}</div>${rqOf(e).reason?`<div class="t4">Reason: ${esc(rqOf(e).reason)}</div>`:''}</div></div>`).join('')}</div>`).join('')||'<div class="empty">None.</div>'}</div>`}
 function reqTab(){const R=range(),all=S.entries.filter(isReq);
-  const listed=['Awaiting','Denied','Approved'].includes(S.rf)?all:all.filter(e=>inR(e,R));
-  const B=search(listed),L=B.filter(e=>!S.rf||stageOf(e)===S.rf).sort(byDate);
+  const B=search(all.filter(e=>inR(e,R)||['Approved','Acknowledged','New'].includes(stageOf(e))&&e.d>=addDays(today(),-60))),L=B.filter(e=>!S.rf||stageOf(e)===S.rf).sort(byDate);
   const n=s=>B.filter(e=>stageOf(e)===s).length;
-  return `${['Awaiting','Denied','Approved'].includes(S.rf)?'<div class="prange">Showing every '+S.rf.toLowerCase()+' request, whatever the date</div>':periodBar()}
-  <div class="seg">${STAGES.map(s=>`<button class="${S.rf===s?'on':''}" data-rst="${s}">${s==='Approved'?'Approved · onboarding':s}<b>${n(s)}</b></button>`).join('')}<button class="${!S.rf?'on':''}" data-rst="">All<b>${B.length}</b></button></div>
-  <div class="bar"><input type="search" id="f-q" placeholder="Search student, class, colony, bus" value="${esc(S.q)}">
-   ${['Awaiting','Denied'].includes(S.rf)?`<div class="seg" style="margin:0"><button class="${S.rview==='list'?'on':''}" data-rview="list">List</button><button class="${S.rview==='col'?'on':''}" data-rview="col">Colony-wise</button></div>`:''}</div>
-  ${['Awaiting','Denied'].includes(S.rf)&&S.rview==='col'?colonyView(L,S.rf==='Denied'?'Denied requests':'Awaiting list')
-   :`<div class="card"><div class="sh"><span>Transport Requests</span><small>${L.length} · ${S.rf||'all stages'} · tap to open</small></div>${caseList(L)}</div>`}`}
-
-function fuTab(){const E=S.entries.filter(e=>fuOf(e)),grp={over:[],today:[],up:[],done:[]};E.forEach(e=>grp[fuState(fuOf(e))].push(e));
-  ['over','today','up'].forEach(k=>grp[k].sort((a,b)=>(fuOf(a).due||'')<(fuOf(b).due||'')?-1:1));grp.done.sort((a,b)=>(fuOf(b).doneAt||0)-(fuOf(a).doneAt||0));
-  const T={over:'Overdue',today:'Due today',up:'Upcoming',done:'Completed'};
-  if(!T[S.ff])S.ff=grp.over.length?'over':grp.today.length?'today':'up';
-  const row=e=>{const f=fuOf(e);return `<button class="case" data-case="${e.id}"><div class="dt"><b>${f.due?+f.due.slice(8,10):'–'}</b><span>${f.due?MON[+f.due.slice(5,7)-1]:''}</span></div><div class="bd">
-    <div class="t1"><strong>${esc(e.name)}</strong><em>${esc(e.cls)}</em><span class="tag ${S.ff==='over'?'t-red':S.ff==='today'?'t-amb':S.ff==='done'?'t-grn':'t-blu'}">${f.due?dtLabel(f.due):'No time set'}</span><span class="tag">${isComp(e)?'Complaint':'Request'}</span></div>
-    <div class="t2">${esc(vehsOf(e).join(', ')||'Vehicle not known')} · ${esc(crewOf(e).driver||'')}</div><div class="t3">${esc(f.note||e.text)}</div>${f.done?`<div class="t4">Done by ${esc(f.doneBy||'')} · ${stamp(f.doneAt)}</div>`:''}</div></button>`};
-  return `<div class="seg">${Object.keys(T).map(k=>`<button class="${S.ff===k?'on':''}" data-ff="${k}">${T[k]}<b>${grp[k].length}</b></button>`).join('')}</div>
-  <div class="card"><div class="sh"><span>Follow-up cases · ${T[S.ff]}</span><small>set a follow-up date and time inside any complaint or request</small></div>${grp[S.ff].map(row).join('')||'<div class="empty">Nothing here.</div>'}</div>`}
-
+  return `${periodBar()}
+  <div class="seg">${['New','Acknowledged','Approved','Completed','Closed'].map(s=>`<button class="${S.rf===s?'on':''}" data-rst="${s}">${s==='Approved'?'Approved · onboarding':s}<b>${n(s)}</b></button>`).join('')}<button class="${!S.rf?'on':''}" data-rst="">All<b>${B.length}</b></button></div>
+  <div class="note">Awaiting and denied requests are in the <b>Waiting list</b> tab. Green = step done · grey = not done yet.</div>
+  <div class="bar"><input type="search" id="f-q" placeholder="Search student, class, colony" value="${esc(S.q)}"></div>
+  <div class="card"><div class="sh"><span>Transport Requests</span><small>${L.length}</small></div>${caseList(L)}</div>`}
+function waitTab(){const all=S.entries.filter(e=>isReq(e)&&['Awaiting','Denied'].includes(stageOf(e)));const W=S.wf;
+  const areas=[...new Set(all.map(e=>rqOf(e).area).filter(Boolean))].sort(),classes=[...new Set(all.map(e=>e.cls))].sort();
+  let L=all.filter(e=>(!W.st||stageOf(e)===W.st)&&(!W.area||rqOf(e).area===W.area)&&(!W.cls||e.cls===W.cls)&&(!W.from||e.d>=W.from)&&(!W.to||e.d<=W.to)&&(!W.q||(e.name+' '+e.cls+' '+(rqOf(e).area||'')).toLowerCase().includes(W.q.toLowerCase()))).sort(byDate);
+  const n=s=>all.filter(e=>stageOf(e)===s).length;
+  return `<div class="seg">${[['','All',all.length],['Awaiting','Awaiting',n('Awaiting')],['Denied','Denied',n('Denied')]].map(([k,l,c])=>`<button class="${W.st===k?'on':''}" data-wst="${k}">${l}<b>${c}</b></button>`).join('')}</div>
+  <div class="flt"><input type="search" id="w-q" placeholder="Student name" value="${esc(W.q)}"><select id="w-cls"><option value="">All classes</option>${classes.map(c=>`<option ${W.cls===c?'selected':''}>${esc(c)}</option>`).join('')}</select>
+   <select id="w-area"><option value="">All colonies</option>${areas.map(c=>`<option ${W.area===c?'selected':''}>${esc(c)}</option>`).join('')}</select><input type="date" id="w-from" value="${W.from}" aria-label="From"><input type="date" id="w-to" value="${W.to}" aria-label="To"></div>
+  <div class="card"><div class="sh"><span>Transport waiting cases</span><small>${L.length} · date-wise · all dates</small></div>
+  ${L.map(e=>{const r=rqOf(e),R=remsOf(e),last=R[R.length-1];return `<div class="wl" data-case="${e.id}"><div class="r1"><strong>${esc(e.name)}</strong><em style="font-style:normal;color:var(--mute)">${esc(e.cls)}</em><span class="tag ${stageOf(e)==='Denied'?'t-navy':'t-amb'}">${stageOf(e)}</span><span class="tag">${esc(r.area||'colony not entered')}</span></div>
+    <div class="r2">Requested ${fmt(e.d)} · ${esc(r.type||guessRqt(e.text))}${r.decAt>1?` · ${esc(r.dec)} by ${esc(r.decBy||'')} on ${stamp(r.decAt)}`:''}</div>
+    <div class="r3">${esc(e.text)}</div><div class="inl">${r.reason?`<div style="border-left-color:var(--red)"><b>Reason:</b> ${esc(r.reason)}</div>`:''}${last?`<div><b>${esc(ROLES[last.role]||last.by||'Remark')}:</b> ${esc(last.t)}</div>`:''}</div></div>`}).join('')||'<div class="empty">No waiting cases with these filters.</div>'}</div>`}
+function fuTab(){const E=S.entries.filter(e=>isComp(e)&&(fuOf(e)||fuLog(e).length)),grp={due:[],up:[],done:[]};
+  E.forEach(e=>{const f=fuOf(e),s=fuState(f);grp[!f?'done':(s==='over'||s==='today')?'due':s==='done'?'done':'up'].push(e)});
+  grp.due.sort((a,b)=>(fuOf(a).due||'')<(fuOf(b).due||'')?-1:1);grp.up.sort((a,b)=>(fuOf(a).due||'')<(fuOf(b).due||'')?-1:1);
+  const T={due:'Due now',up:'Upcoming',done:'Completed'};if(!T[S.ff])S.ff=grp.due.length?'due':'up';
+  const row=e=>{const f=fuOf(e),L=fuLog(e),last=L[L.length-1];return `<button class="case" data-case="${e.id}"><div class="dt"><b>${L.length}</b><span>times</span></div><div class="bd">
+    <div class="t1"><strong>${esc(e.name)}</strong><em>${esc(e.cls)}</em><span class="tag">${esc(catOf(e))}</span>${f&&f.due&&!f.done?`<span class="tag ${fuState(f)==='over'?'t-red':fuState(f)==='today'?'t-amb':'t-blu'}">Next: ${dtLabel(f.due)}</span>`:''}</div>
+    <div class="t2">Complaint of ${fmt(e.d)} · ${esc(vehsOf(e).join(', ')||'vehicle ?')} · ${esc(crewOf(e).driver||'')}</div><div class="t3">${esc(e.text)}</div>
+    ${last?`<div class="t4">Last follow-up ${stamp(last.at)} by ${esc(last.by||'')}: ${esc(last.t)}</div>`:'<div class="t4" style="border-left-color:var(--red)">No follow-up done yet</div>'}</div></button>`};
+  return `<div class="note">Follow-ups are for complaint cases only — a child who was upset, bullied, left behind, or a concern about driver, conductor or timing. Transport requests that are waiting are in the <b>Waiting list</b>.</div>
+  <div class="seg">${Object.keys(T).map(k=>`<button class="${S.ff===k?'on':''}" data-ff="${k}">${T[k]}<b>${grp[k].length}</b></button>`).join('')}</div>
+  <div class="card"><div class="sh"><span>Follow-ups · ${T[S.ff]}</span><small>open a case to record a follow-up</small></div>${grp[S.ff].map(row).join('')||'<div class="empty">Nothing here.</div>'}</div>`}
 function histCard(e){const c=crewOf(e),R=remsOf(e),last=R[R.length-1],rq=isReq(e),st=rq?stageOf(e):statusOf(e);
   return `<div class="hc" data-case="${e.id}"><div class="top"><strong>${fmt(e.d)}</strong><span class="tag ${rq?sgTag(st):stTag(st)}">${esc(st)}</span>${!rq&&e.pri?`<span class="tag ${priTag(e.pri)}">${e.pri}</span>`:''}<span class="tag">${esc(rq?'Request':catOf(e))}</span></div>
   <dl class="kv"><dt>Student</dt><dd><b>${esc(e.name)}</b> · ${esc(e.cls)}</dd><dt>Vehicle</dt><dd>${esc(vehsOf(e).join(', ')||'Not known')}</dd><dt>Driver</dt><dd>${esc(c.driver||'—')}${c.cond?' · Conductor '+esc(c.cond):''}</dd>
@@ -497,6 +537,7 @@ function sheet(){const e=S.entries.find(x=>x.id===S.open);if(!e){$('sheet').inne
      <div class="step ${r.ack?'done':''}"><button class="ck" data-ack="${e.id}">${r.ack?'✓':'1'}</button><div class="sx"><b>Acknowledged</b><span>${r.ack?`${esc(r.ack.by)} · ${stamp(r.ack.at)}`:'Tap when the request has been seen and the parent informed'}</span></div></div>
      <div class="step ${r.dec?'done':''}"><span class="ck">${r.dec?'✓':'2'}</span><div class="sx"><b>Decision</b><span>${r.dec?`${esc(r.dec)} by ${esc(r.decBy||'')} · ${stamp(r.decAt)}`:'Approve, keep awaiting (no seat / route yet) or deny'}</span>
       <div class="stbtns" style="margin-top:8px"><button class="${r.dec==='Approved'?'on Closed':''}" data-dec="${e.id}|Approved">Approve</button><button class="${r.dec==='Awaiting'?'on Action':''}" data-dec="${e.id}|Awaiting">Awaiting</button><button class="${r.dec==='Denied'?'on Open':''}" data-dec="${e.id}|Denied">Deny</button></div>
+      ${S.denyFor===e.id?`<div class="form" style="margin-top:10px;background:var(--redbg);padding:10px;border-radius:10px"><label class="full">Colony / area (required)<input id="dn-area" list="colist" value="${esc(r.area||'')}"></label><label class="full">Reason (required)<input id="dn-reason" value="${esc(r.reason||'')}" placeholder="No seat, route not covered…"></label><label class="full"><button class="btn red" data-denyok="${e.id}|${S.denyKind}">Confirm ${S.denyKind==='Denied'?'deny':'awaiting'}</button></label></div>`:''}
       ${r.dec==='Denied'||r.dec==='Awaiting'?`<input style="margin-top:8px;width:100%" data-rqf="${e.id}|reason" value="${esc(r.reason||'')}" placeholder="Reason — no seat, route not covered, …">`:''}</div></div>
      ${r.dec==='Approved'?steps.map(([k,l,h],i)=>`<div class="step ${stp[k]?'done':''}"><button class="ck" data-step="${e.id}|${k}">${stp[k]?'✓':i+3}</button><div class="sx"><b>${l}</b><span>${stp[k]?`${esc(stp[k].by)} · ${stamp(stp[k].at)}`:h}</span></div></div>`).join(''):''}
    </div></div>`:''}
@@ -504,11 +545,14 @@ function sheet(){const e=S.entries.find(x=>x.id===S.open);if(!e){$('sheet').inne
    ${!rq&&!chg?`<div class="blk"><span class="lbl">Status</span><div class="stbtns">${['Open','Action logged','Closed'].map(s=>`<button class="${st===s?'on '+s.split(' ')[0]:''}" data-st="${e.id}|${s}">${s}</button>`).join('')}</div>
     ${autoClosed(e)?'<div style="margin-top:8px;font-size:12.5px;color:var(--mute)">Closed automatically — older than one month. The record is kept.</div>':''}</div>`:''}
 
-   ${!chg?`<div class="blk"><span class="lbl">Follow-up</span>
-    <label class="sw"><input type="checkbox" data-fuon="${e.id}" ${f.on?'checked':''}> Needs follow-up</label>
-    ${f.on?`<div class="fu" style="margin-top:10px"><input type="datetime-local" data-fu="${e.id}|due" value="${esc(f.due||'')}" aria-label="Follow-up date and time"><input data-fu="${e.id}|note" value="${esc(f.note||'')}" placeholder="What to check"></div>
-     <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">${fs?`<span class="tag ${fs==='over'?'t-red':fs==='today'?'t-amb':fs==='done'?'t-grn':'t-blu'}">${fs==='over'?'Overdue':fs==='today'?'Due today':fs==='done'?'Done':'Upcoming'}${f.due?' · '+dtLabel(f.due):''}</span>`:''}
-     ${f.done?`<span style="font-size:12.5px;color:var(--mute)">by ${esc(f.doneBy||'')} · ${stamp(f.doneAt)}</span><button class="btn ghost sm" data-fudone="${e.id}|0">Reopen</button>`:`<button class="btn grn sm" data-fudone="${e.id}|1">Mark follow-up done</button>`}</div>`:''}</div>`:''}
+   ${isComp(e)?`<div class="blk"><span class="lbl">Follow-up · ${fuLog(e).length} done</span>
+    <div class="fuh">${fuLog(e).map((x,i)=>`<div><small>#${i+1} · ${stamp(x.at)} · ${esc(x.by||'')}</small>${esc(x.t)}</div>`).join('')||'<div style="color:var(--mute)">No follow-up recorded yet.</div>'}</div>
+    <textarea id="fl-text" placeholder="What was checked — spoke to parent, child, driver…"></textarea>
+    <div class="fu" style="margin-top:8px"><input type="datetime-local" id="fl-next" aria-label="Next follow-up (optional)" value="${esc(f.due&&!f.done?f.due:'')}"><button class="btn gold" data-flog="${e.id}">Record follow-up</button></div>
+    <label class="sw" style="margin-top:10px"><input type="checkbox" data-fuon="${e.id}" ${f.on?'checked':''}> Keep this case in follow-ups</label>
+    ${f.on?`
+     <div style="margin-top:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">${fs?`<span class="tag ${fs==='over'?'t-red':fs==='today'?'t-amb':fs==='done'?'t-grn':'t-blu'}">${fs==='over'?'Overdue':fs==='today'?'Due today':fs==='done'?'Done':'Upcoming'}${f.due?' · '+dtLabel(f.due):''}</span>`:''}
+     </div>`:''}</div>`:''}
 
    <div class="blk"><span class="lbl">Remarks &amp; timeline</span><div class="tl">
     ${e.action||e.by?`<div class="tli"><i></i><div class="c"><div class="m"><span class="role FO">Front Office</span><span>Daily FO · ${fmt(e.d)}</span></div><p>${esc(e.action||'')}${e.by?' (called by '+esc(e.by)+')':''}</p></div></div>`:''}
@@ -530,7 +574,7 @@ function render(){
   const a=document.activeElement;if(a&&a.closest&&a.closest('#sheet')&&!render.force){nav();return}
   if(a&&a.id==='rem-text'&&a.value&&!render.force)return;render.force=false;
   nav();let h;
-  switch(S.tab){case'comp':h=compTab();break;case'req':h=reqTab();break;case'fu':h=fuTab();break;case'drv':h=drvTab();break;case'bus':h=busTab();break;
+  switch(S.tab){case'comp':h=compTab();break;case'req':h=reqTab();break;case'fu':h=fuTab();break;case'wait':h=waitTab();break;case'drv':h=drvTab();break;case'bus':h=busTab();break;
     case'stu':h=stuTab();break;case'chg':h=chgTab();break;case'fleet':h=fleetTab();break;default:h=dash()}
   const fid=a&&a.id,pos=a&&a.selectionStart,keep=S.open&&$('rem-text')?$('rem-text').value:'',sc=document.querySelector('.sheet .in')?.scrollTop||0;
   $('main').innerHTML=h+`<datalist id="vlist">${[...new Set(FLEET.map(f=>f.label).concat(S.entries.flatMap(e=>e.vehs||[]),Object.keys(cfgMap())))].sort().map(v=>`<option value="${esc(v)}">`).join('')}</datalist>`;
@@ -557,13 +601,20 @@ document.addEventListener('click',async ev=>{const t=ev.target.closest('button,[
   if(d.go){const i=d.go.indexOf('|'),k=d.go.slice(0,i),v=d.go.slice(i+1);
     if(k==='cat'){setTab('comp');S.cf.cat=v;S.cf.st='';render();return}
     if(k==='con'){setTab('comp');S.q=v;render();return}
-    if(S.tab!==k)setTab(k);S.sel={t:k,k:v};scrollTo(0,0);render();return}
+    if(['drv','bus','stu'].includes(k)){if(S.tab!=='dash')setTab('dash');S.dview=k}else if(S.tab!==k)setTab(k);S.sel={t:k,k:v};scrollTo(0,0);render();return}
   if(d.case){S.open=d.case;render();return}
   if(d.st){const[id,s]=d.st.split('|');saveOv(id,{st:s});return}
   if(d.rem){const id=d.rem,tx=($('rem-text').value||'').trim();if(!tx){toast('Write the remark first');return}
     const role=$('rem-role').value;S.role=role;LS.set('role',role);const e=S.entries.find(x=>x.id===id);const R=remsOf(e);R.push({t:tx,by:me(),role,at:Date.now()});$('rem-text').value='';
     const p={rem:R};if(isComp(e)&&statusOf(e)==='Open')p.st='Action logged';saveOv(id,p);return}
   if(d.ack){const e=S.entries.find(x=>x.id===d.ack),r=Object.assign({},rqOf(e));r.ack=r.ack?null:{by:me(),at:Date.now()};if(!r.type)r.type=guessRqt(e.text);saveOv(d.ack,{rq:r});return}
+  if(d.dec){const[id,v0]=d.dec.split('|');const r0=rqOf(S.entries.find(x=>x.id===id));if((v0==='Denied'||v0==='Awaiting')&&r0.dec!==v0){S.denyFor=id;S.denyKind=v0;render();return}}
+  if(d.denyok){const[id,v]=d.denyok.split('|'),a=($('dn-area').value||'').trim(),rs=($('dn-reason').value||'').trim();if(!a||!rs){toast('Enter the colony and the reason');return}
+    const e=S.entries.find(x=>x.id===id),r=Object.assign({},rqOf(e),{area:a,reason:rs,dec:v,decBy:me(),decAt:Date.now()});if(!r.ack)r.ack={by:me(),at:Date.now()};if(!r.type)r.type=guessRqt(e.text);S.denyFor=null;saveOv(id,{rq:r});return}
+  if(d.flog){const id=d.flog,tx=($('fl-text').value||'').trim();if(!tx){toast('Write what was done in the follow-up');return}const nx=$('fl-next').value,e=S.entries.find(x=>x.id===id),L=fuLog(e).slice();L.push({t:tx,by:me(),at:Date.now()});
+    const f=Object.assign({},ov(id).fu||{});if(nx){f.on=true;f.due=nx;f.done=false}else{f.on=false;f.done=true;f.doneBy=me();f.doneAt=Date.now()}saveOv(id,{fl:L,fu:f});return}
+  if(d.wst!=null){S.wf.st=d.wst;render();return}
+  if(d.dv){S.dview=d.dv;S.sel=null;render();return}
   if(d.dec){const[id,v]=d.dec.split('|'),e=S.entries.find(x=>x.id===id),r=Object.assign({},rqOf(e));if(r.dec===v){r.dec='';}else{r.dec=v;r.decBy=me();r.decAt=Date.now()}
     if(!r.ack)r.ack={by:me(),at:Date.now()};if(!r.type)r.type=guessRqt(e.text);saveOv(id,{rq:r});return}
   if(d.step){const[id,k]=d.step.split('|'),e=S.entries.find(x=>x.id===id),r=Object.assign({},rqOf(e)),s=Object.assign({},r.steps||{});s[k]=s[k]?null:{by:me(),at:Date.now()};r.steps=s;saveOv(id,{rq:r});return}
@@ -572,8 +623,9 @@ document.addEventListener('click',async ev=>{const t=ev.target.closest('button,[
   if(t.id==='dmap-save'){const m={},p={};document.querySelectorAll('[data-dmap]').forEach(i=>{if(i.value.trim())m[i.dataset.dmap]=i.value.trim()});document.querySelectorAll('[data-dph]').forEach(i=>{if(i.value.trim())p[i.dataset.dph]=i.value.trim()});
     S.docs['config/drivers']={map:m,phone:p};try{await call('cr_set',[S.token,'config/drivers',{map:m,phone:p}]);toast('Drivers saved')}catch(e){toast('Not saved: '+e.message)}render();return}
 });
-document.addEventListener('input',ev=>{const t=ev.target;if(t.id==='f-q'){S.q=t.value;render.force=true;render()}});
+document.addEventListener('input',ev=>{const t=ev.target;if(t.id==='f-q'){S.q=t.value;render.force=true;render()}if(t.id==='w-q'){S.wf.q=t.value;render.force=true;render()}});
 document.addEventListener('change',ev=>{const t=ev.target,d=t.dataset;render.force=true;
+  if(t.id==='w-cls'){S.wf.cls=t.value;render()}if(t.id==='w-area'){S.wf.area=t.value;render()}if(t.id==='w-from'){S.wf.from=t.value;render()}if(t.id==='w-to'){S.wf.to=t.value;render()}
   if(t.id==='f-from'){S.from=t.value;render()}if(t.id==='f-to'){S.to=t.value;render()}if(t.id==='f-cat'){S.cf.cat=t.value;render()}
   if(d.kind){saveOv(d.kind,{kind:t.value})}
   if(d.cat){saveOv(d.cat,{cat:t.value})}
