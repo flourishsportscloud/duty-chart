@@ -15,19 +15,19 @@
   --bg:#f1f4f8;--card:#ffffff;--ink:#14202c;--mute:#586676;--line:#dce3ec;--soft:#e8eef6;
   --acc:#1d5fd0;--accT:#ffffff;
   --ok:#11794a;--okbg:#dcf4e6;--warn:#9a5a05;--warnbg:#fcebc9;--bad:#bb2d25;--badbg:#fde0dc;
-  --gGuard:#3b4cc2;--gClean:#0c7667;--gEve:#7a45c9;--gWater:#0a76a3;--gGarden:#4a7710;
+  --gGuard:#3b4cc2;--gClean:#0c7667;--gHelp:#b03a74;--gEve:#7a45c9;--gWater:#0a76a3;--gGarden:#4a7710;
   font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#0f1721;--card:#18222e;--ink:#e8eef6;--mute:#9aa8b8;--line:#2a3745;--soft:#223040;
   --acc:#6ea1ff;--accT:#08111d;
   --ok:#59d79a;--okbg:#14382a;--warn:#f2b45a;--warnbg:#3d2c10;--bad:#ff8f86;--badbg:#431b18;
-  --gGuard:#8e9bff;--gClean:#4fd1bd;--gEve:#b79bff;--gWater:#5cc4f0;--gGarden:#9bd14d;color-scheme:dark}}
+  --gGuard:#8e9bff;--gClean:#4fd1bd;--gHelp:#f08cbf;--gEve:#b79bff;--gWater:#5cc4f0;--gGarden:#9bd14d;color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0f1721;--card:#18222e;--ink:#e8eef6;--mute:#9aa8b8;--line:#2a3745;--soft:#223040;
   --acc:#6ea1ff;--accT:#08111d;
   --ok:#59d79a;--okbg:#14382a;--warn:#f2b45a;--warnbg:#3d2c10;--bad:#ff8f86;--badbg:#431b18;
-  --gGuard:#8e9bff;--gClean:#4fd1bd;--gEve:#b79bff;--gWater:#5cc4f0;--gGarden:#9bd14d;color-scheme:dark}
+  --gGuard:#8e9bff;--gClean:#4fd1bd;--gHelp:#f08cbf;--gEve:#b79bff;--gWater:#5cc4f0;--gGarden:#9bd14d;color-scheme:dark}
 html{padding-block:env(safe-area-inset-top,0px) env(safe-area-inset-bottom,0px)}
 img{max-width:100%}[hidden]{display:none!important}
 body{margin:0}
@@ -229,13 +229,14 @@ const FISDB=(()=>{
 const G={
  guard:{label:'Guards',ico:'🛡️',c:'var(--gGuard)',every:120,tg:0,h0:7,h1:16},
  clean:{label:'Housekeeping',ico:'🧹',c:'var(--gClean)',every:30,tg:2,h0:7,h1:16},
+ helper:{label:'Floor Helpers',ico:'🧺',c:'var(--gHelp)',every:60,tg:0,h0:7,h1:16},
  eve:{label:'Evening Housekeeping',ico:'🌆',c:'var(--gEve)',every:60,tg:1,h0:14,h1:21},
  water:{label:'Waterman',ico:'💧',c:'var(--gWater)',every:60,tg:1,h0:7,h1:16},
  garden:{label:'Gardener',ico:'🌿',c:'var(--gGarden)',every:120,tg:1,h0:7,h1:16}
 };
-const GK=['guard','clean','eve','water','garden'];
+const GK=['guard','clean','helper','eve','water','garden'];
 const FLOORS=['Admin','LG','Ground','First','Second','Third','Outside','Other'];
-const PHOTO={guard:'opt',clean:'req',eve:'req',water:'req',garden:'req'};
+const PHOTO={guard:'opt',clean:'req',helper:'req',eve:'req',water:'req',garden:'req'};
 const FORMS={
  guard:[
   {k:'where',l:'Where was he found?',o:['At gate','Guard room','Patrolling','!Not at post']},
@@ -253,7 +254,7 @@ const FORMS={
   {k:'doing',l:'What was the work?',o:['Watering','Weeding','Planting','Resting','!Not found']},
   {k:'quality',l:'Work quality',o:['Good','Average','!Poor']}]
 };
-FORMS.eve=FORMS.clean;
+FORMS.eve=FORMS.clean;FORMS.helper=FORMS.clean;
 const WFL=['Admin','LG','Ground','First','Second','Third','Staff','Other'];
 const DEFW=(()=>{const a=[{id:'w_admin',name:'Admin block',floor:'Admin',cub:0},{id:'w_front',name:'Front office',floor:'Admin',cub:0}];['LG','Ground','First','Second','Third'].forEach(f=>['Left','Right'].forEach(x=>a.push({id:'w_'+f.toLowerCase()+'_'+x[0].toLowerCase(),name:f+' floor – '+x+' side',floor:f,cub:0})));a.push({id:'w_staff',name:'Staff room washrooms',floor:'Staff',cub:0});return a})();
 const WASHF=[
@@ -541,6 +542,91 @@ async function wsFlow(w){
   else list.push({id:'w'+uid(),name:r.st.name,floor:r.st.floor,cub:+r.st.cub||0});
   washrooms=list;rsoon();put('cfg','washrooms',{list});
 }
+/* ---------- floor helpers: daily floor chart (attendance, floor, washroom after departure) ---------- */
+const HFL=['LG','Ground','First','Second','Third','Admin'];
+const flName=f=>f==='Admin'?'Admin block':f+' floor';
+function chartDoc(d=S.date){
+  const id='fh_'+d,x=D.routine[id];
+  if(x&&x.rows)return clone(x);
+  const prev=Object.values(D.routine).filter(r=>r.type==='floorchart'&&r.date<d).sort((a,b)=>b.date.localeCompare(a.date))[0];
+  const doc={id,date:d,type:'floorchart',rows:{},washBy:{},fresh:true,from:prev?prev.date:''};
+  people('helper').forEach(p=>{const o=prev&&prev.rows&&prev.rows[p.id];doc.rows[p.id]={att:'',floor:o?o.floor:'',wash:o?o.wash:'Yes'}});
+  if(prev&&prev.washBy)doc.washBy=clone(prev.washBy);
+  return doc;
+}
+function hrow(doc,p){return doc.rows[p.id]||(doc.rows[p.id]={att:'',floor:'',wash:'Yes'})}
+function saveChart(doc){delete doc.fresh;doc.last=new Date().toISOString();doc.lastBy=S.me;save('routine',doc.id,doc)}
+function floorPlan(doc){
+  const ps=people('helper'),out={};
+  HFL.forEach(f=>out[f]={on:[],wash:[]});
+  ps.forEach(p=>{const r=hrow(doc,p);if(r.att!=='A'&&r.floor&&out[r.floor]){out[r.floor].on.push(p);if(r.wash==='Yes')out[r.floor].wash.push(p.name)}});
+  HFL.forEach(f=>{const o=out[f],b=doc.washBy&&doc.washBy[f];if(o.on.length&&!o.wash.length&&b)o.by=b});
+  return out;
+}
+function helperText(doc){
+  const fp=floorPlan(doc),ps=people('helper');
+  const lines=['*Floor Helpers – '+fmtD(doc.date)+'*'];
+  HFL.forEach(f=>{const o=fp[f];if(!o.on.length)return;
+    lines.push('','*'+flName(f)+'*: '+o.on.map(p=>p.name).join(', '),'Washroom after departure: '+(o.wash.length?o.wash.join(', '):o.by?o.by:'NOT ASSIGNED'))});
+  const ab=ps.filter(p=>hrow(doc,p).att==='A').map(p=>p.name),na=ps.filter(p=>{const r=hrow(doc,p);return r.att!=='A'&&!r.floor}).map(p=>p.name);
+  if(ab.length)lines.push('','Absent: '+ab.join(', '));
+  if(na.length)lines.push('','No floor given: '+na.join(', '));
+  return lines.join('\n');
+}
+function rHelperChart(doc){
+  const fp=floorPlan(doc),ps=people('helper');
+  const pres=ps.filter(p=>hrow(doc,p).att==='P').length,ab=ps.filter(p=>hrow(doc,p).att==='A'),un=ps.filter(p=>hrow(doc,p).att==='');
+  const noWash=HFL.filter(f=>fp[f].on.length&&!fp[f].wash.length&&!fp[f].by);
+  let h=`<div class="tiles"><div class="tile"><b>${pres}/${ps.length}</b><small>present</small></div><div class="tile"><b style="color:${ab.length?'var(--bad)':'var(--ok)'}">${ab.length}</b><small>absent</small></div><div class="tile"><b style="color:${noWash.length?'var(--bad)':'var(--ok)'}">${noWash.length}</b><small>washroom not assigned</small></div></div>`;
+  if(doc.fresh&&doc.from)h+=`<div class="hint" style="margin-bottom:10px">Floors are copied from ${fmtD(doc.from)}. ${sup()?'Mark attendance to confirm today’s chart.':'Not confirmed by the supervisor yet.'}</div>`;
+  h+=HFL.map(f=>{const o=fp[f];if(!o.on.length)return '';
+    const ws=o.wash.length?o.wash.map(n=>`<span class="tag ok">${esc(n)}</span>`).join(' '):o.by?`<span class="tag warn">${esc(o.by)} (covering)</span>`:'<span class="tag bad">Not assigned</span>';
+    return `<div class="wr ${o.wash.length||o.by?'ok':'bad'}"><div class="h"><b style="font-size:17px">${esc(flName(f))}</b><span class="hint">${o.on.length} helper${o.on.length>1?'s':''}</span></div>
+     <div class="tg">${o.on.map(p=>{const r=hrow(doc,p);return `<span class="tag ${r.att==='P'?'ok':''}">${esc(p.name)}${r.att==='P'?' ✓':''}</span>`}).join('')}</div>
+     <div style="margin-top:6px;font-size:14px">Washroom after departure: ${ws}</div>
+     ${sup()&&!o.wash.length?`<button class="btn sm sec" data-act="hwb" data-v="${f}" style="margin-top:8px">${o.by?'Change':'Choose'} who does the washroom</button>`:''}</div>`}).join('');
+  if(!HFL.some(f=>fp[f].on.length))h+=`<div class="card empty">No floor given yet.${sup()?' Open “Attendance & floors”.':''}</div>`;
+  if(ab.length)h+=`<div class="card"><b>Absent</b><div class="tg">${ab.map(p=>`<span class="tag bad">${esc(p.name)}</span>`).join('')}</div></div>`;
+  const nf=ps.filter(p=>{const r=hrow(doc,p);return r.att!=='A'&&!r.floor});
+  if(nf.length)h+=`<div class="card"><b>No floor given</b><div class="tg">${nf.map(p=>`<span class="tag warn">${esc(p.name)}</span>`).join('')}</div></div>`;
+  if(un.length&&!doc.fresh)h+=`<div class="hint">Attendance not marked: ${un.map(p=>esc(p.name)).join(', ')}</div>`;
+  h+=`<button class="btn sec" data-act="hcopy" style="width:100%;margin-top:10px">Copy chart for WhatsApp</button>`;
+  return h;
+}
+function rHelperEdit(doc){
+  const ps=people('helper');
+  let h=`<div class="row sp" style="margin-bottom:10px"><span class="hint">Tap to mark. Saved straight away.</span><button class="btn ok sm" data-act="hallp">All present</button></div>`;
+  h+=ps.map(p=>{const r=hrow(doc,p);
+    return `<div class="card" style="padding:12px"><div class="row sp"><b style="font-size:17px">${esc(p.name)}</b>
+      <div class="row"><button class="ch ${r.att==='P'?'on':''}" data-act="hatt" data-p="${p.id}" data-v="P">Present</button><button class="ch bad ${r.att==='A'?'on':''}" data-act="hatt" data-p="${p.id}" data-v="A">Absent</button></div></div>
+      ${r.att==='A'?'':`<div class="fl" style="margin-top:10px">Floor</div><div class="chipset">${HFL.map(f=>`<button class="ch ${r.floor===f?'on':''}" data-act="hfl" data-p="${p.id}" data-v="${f}">${esc(f)}</button>`).join('')}</div>
+      <div class="fl">Washroom after departure?</div><div class="chipset"><button class="ch ${r.wash==='Yes'?'on':''}" data-act="hws" data-p="${p.id}" data-v="Yes">Yes</button><button class="ch bad ${r.wash==='No'?'on':''}" data-act="hws" data-p="${p.id}" data-v="No">No</button></div>`}</div>`}).join('');
+  return h;
+}
+function rHelpers(){
+  const ps=people('helper');
+  if(!ps.length)return `<div class="card empty">No floor helpers added yet.<br><br>${sup()?'<button class="btn" data-act="tab" data-v="setup">Add names in Setup</button>':'The supervisor will add the names.'}</div>`;
+  const doc=chartDoc(),v=sup()?(S.view.helper||'chart'):'chart';
+  let h='';
+  if(sup())h+=`<div class="chips">${[['chart','Floor chart'],['edit','Attendance & floors']].map(x=>`<button class="${v===x[0]?'on':''}" data-act="gview" data-v="${x[0]}">${x[1]}</button>`).join('')}</div>`;
+  return h+(v==='edit'?rHelperEdit(doc):rHelperChart(doc));
+}
+function helperHome(){
+  const ps=people('helper'),doc=chartDoc(today()),fp=floorPlan(doc);
+  const pres=ps.filter(p=>hrow(doc,p).att==='P').length,nw=HFL.filter(f=>fp[f].on.length&&!fp[f].wash.length&&!fp[f].by).length,fl=HFL.filter(f=>fp[f].on.length).length;
+  return `<button class="gcard" style="--c:${G.helper.c}" data-act="grp" data-v="helper"><div class="t"><i>${G.helper.ico}</i>${G.helper.label}</div>
+   <div class="m"><span><b>${pres}/${ps.length}</b> present</span><span>Floors <b>${fl}</b></span><span>Chart <b>${doc.fresh?'not confirmed':'ready'}</b></span></div>
+   ${nw?`<div class="m"><span class="tag bad">${nw} floor washroom${nw>1?'s':''} not assigned</span></div>`:''}</button>`;
+}
+async function washByFlow(f){
+  const doc=chartDoc(),ps=people('helper').filter(p=>hrow(doc,p).att==='P');
+  const cl=people('clean').concat(people('eve')).map(p=>p.name);
+  const opts=ps.map(p=>p.name).concat(cl.filter(n=>!ps.some(p=>p.name===n)));
+  if(!opts.length){toast('Mark attendance first');return}
+  const r=await sheet({title:'Washroom – '+flName(f),sub:'Nobody on this floor is doing the washroom after departure. Who will do it?',fields:[{k:'w',l:'Choose',type:'chips',o:opts,val:doc.washBy[f]||''}],photo:'none',ok:'Save',del:!!doc.washBy[f]});
+  if(!r)return;
+  doc.washBy=doc.washBy||{};if(r.del||!r.st.w)delete doc.washBy[f];else doc.washBy[f]=r.st.w;saveChart(doc);
+}
 /* ---------- views ---------- */
 const statusOf=p=>{
   const d=activeDate(p),l=getLog(p,d);
@@ -595,6 +681,7 @@ function rHome(){
   let h=`<div class="tiles"><div class="tile"><b>${on}/${all}</b><small>on duty now</small></div><div class="tile"><b>${vis}</b><small>visits today</small></div><div class="tile"><b style="color:${due?'var(--bad)':'var(--ok)'}">${due}</b><small>need a visit</small></div></div>`;
   if(!staff.length)return h+`<div class="card empty">No staff added yet.<br><br>${sup()?'<button class="btn" data-act="tab" data-v="setup">Add staff in Setup</button>':'A supervisor will add the staff list.'}</div>`;
   h+=GK.map(g=>{
+    if(g==='helper')return people('helper').length?helperHome():'';
     const ps=people(g),inN=ps.filter(p=>{const l=getLog(p,activeDate(p));return l.in&&!l.out}).length,vs=ps.reduce((n,p)=>n+vOf(p,t).length,0),dn=ps.filter(overdue).length;
     let last='';ps.forEach(p=>vOf(p,t).forEach(v=>{if(!last||v.t>last)last=v.t}));
     return `<button class="gcard" style="--c:${G[g].c}" data-act="grp" data-v="${g}"><div class="t"><i>${G[g].ico}</i>${G[g].label}</div>
@@ -629,6 +716,7 @@ function rRoster(ps){
 function rGroup(){
   const g=S.group,ps=people(g);
   let h=dateBar();
+  if(g==='helper')return h+rHelpers();
   if(!ps.length)return h+`<div class="card empty">No ${G[g].label.toLowerCase()} staff yet.<br><br>${sup()?'<button class="btn" data-act="tab" data-v="setup">Add in Setup</button>':''}</div>`;
   const multi=(g==='clean'||g==='eve');
   const v=S.view[g]||(g==='eve'?'roster':'people');
@@ -717,7 +805,7 @@ function rDash(){
   h+=`<div class="card"><h2>Supervisor visits</h2>${ks.length?`<table style="width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums"><tr style="text-align:left;color:var(--mute)"><th>Supervisor</th><th>Visits</th><th>First</th><th>Last</th></tr>${ks.map(k=>{const t=by[k].slice().sort();return `<tr><td style="padding:6px 0"><b>${esc(k)}</b></td><td>${t.length}</td><td>${t[0]}</td><td>${t[t.length-1]}</td></tr>`}).join('')}</table>`:'<div class="empty">No visits yet.</div>'}</div>`;
   const wch=ws.filter(w=>wi.some(i=>i.wid===w.id)).length,wbad=ws.filter(w=>{const l=wi.filter(i=>i.wid===w.id).pop();return l&&washBad(l).length}).length;
   h+=`<button class="gcard" style="--c:var(--gWater)" data-act="tab" data-v="wash"><div class="t"><i>🚻</i>Washrooms</div><div class="m"><span><b>${wch}/${ws.length}</b> checked</span><span><b style="color:${wbad?'var(--bad)':'var(--ok)'}">${wbad}</b> with problems</span></div></button>`;
-  GK.forEach(g=>{const ps=people(g);if(!ps.length)return;h+=`<h2 style="margin:14px 0 8px;font-size:16px">${G[g].ico} ${G[g].label}</h2>`+(g==='eve'?floorSummary(ps):ps.map(pcard).join(''))});
+  GK.forEach(g=>{const ps=people(g);if(!ps.length)return;h+=`<h2 style="margin:14px 0 8px;font-size:16px">${G[g].ico} ${G[g].label}</h2>`+(g==='helper'?rHelperChart(chartDoc()):g==='eve'?floorSummary(ps):ps.map(pcard).join(''))});
   return h;
 }
 function rSetup(){
@@ -734,7 +822,7 @@ function render(){
   const t=S.tab;let title='Support Staff',sub='Flourish International School',back=false,body='';
   if(t==='home'){
     if(S.pid){const p=staff.find(x=>x.id===S.pid);title=p?p.name:'';sub=p?G[p.group].label:'';back=true;body=rPerson()}
-    else if(S.group){title=G[S.group].ico+' '+G[S.group].label;sub='Tap a person';back=true;body=rGroup()}
+    else if(S.group){title=G[S.group].ico+' '+G[S.group].label;sub=S.group==='helper'?'Who is on which floor today':'Tap a person';back=true;body=rGroup()}
     else{title='Support Staff';sub='Today · '+fmtD(today());body=rHome()}
   }else if(t==='wash'){title='Washrooms';sub='Inspect, photo and remark';body=rWash()}
   else if(t==='log'){title='Visit log';sub='Every supervisor visit';body=rLog()}
@@ -765,6 +853,11 @@ document.addEventListener('click',async e=>{
   else if(a==='etime'&&p)await timeFlow(p,v);
   else if(a==='att'&&p){mutLog(p,S.date,l=>{l.att=v;if(v==='A'){l.in='';l.out=''}});if(v==='A'&&sup())await transferFlow(p,true)}
   else if(a==='gview'){S.view[S.group]=v;render()}
+  else if(a==='hatt'||a==='hfl'||a==='hws'){const q=staff.find(x=>x.id===b.dataset.p);if(q){const doc=chartDoc(),r=hrow(doc,q);
+    if(a==='hatt'){r.att=r.att===v?'':v;mutLog(q,S.date,l=>{l.att=r.att;if(r.att==='A'){l.in='';l.out=''}})}else if(a==='hfl')r.floor=v;else r.wash=v;saveChart(doc)}}
+  else if(a==='hallp'){const doc=chartDoc();people('helper').forEach(q=>{const r=hrow(doc,q);if(r.att!=='A'){r.att='P'}});saveChart(doc);toast('All marked present (absent ones kept)')}
+  else if(a==='hwb')await washByFlow(v);
+  else if(a==='hcopy'){try{await navigator.clipboard.writeText(helperText(chartDoc()));toast('Copied – paste in WhatsApp')}catch(err){toast('Copy not allowed here')}}
   else if(a==='qin'){const q=staff.find(x=>x.id===v);if(q)await inFlow(q)}
   else if(a==='qout'){const q=staff.find(x=>x.id===v);if(q)await outFlow(q)}
   else if(a==='transfer'&&p)await transferFlow(p,false);
