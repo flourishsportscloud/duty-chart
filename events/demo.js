@@ -56,7 +56,7 @@ var Utilities={Charset:{UTF_8:'u'},sleep:function(){},getUuid:function(){return 
  * Only people on the access list (config/members) can log in. Admins (the Director) see the dashboard of everyone.
  */
 const TZ = 'Asia/Kolkata', TOKEN_DAYS = 120;
-const TEAM = [['jay','Jay',0],['anup','Anup',0],['harsh','Harsh Yadav',1],['saurabh','Saurabh',0],['asha','Asha',0],['sanjana','Sanjana',0],['vishali','Vishali',0],['shubhangi','Shubhangi',0],['chandan','Chandan',0]];
+const TEAM = [['jay','Jay',0],['anup','Anup',0],['rahul','Rahul Yadav',1],['harsh','Harsh Yadav',0],['saurabh','Saurabh',0],['asha','Asha',0],['sanjana','Sanjana',0],['vishali','Vishali',0],['shubhangi','Shubhangi',0],['chandan','Chandan',0],['neha','Neha',0]];
 function fail(m){ throw new Error(m); }
 function props_(){ return PropertiesService.getScriptProperties(); }
 function own_(){
@@ -310,7 +310,7 @@ const API = {
       rows_().forEach(r => { try{ if(JSON.parse(r[1]).sample) del_(r[0]); }catch(e){} });
       Object.keys(SAMPLE_IMGS).forEach(rmImg_);
       if(!on) return {ok: 1};
-      const dir = (members_().filter(m => m.admin)[0] || {id: 'harsh'}).id, now = Date.now();
+      const dir = (members_().filter(m => m.admin)[0] || {id: 'rahul'}).id, now = Date.now();
       const t0 = new Date(Utilities.formatDate(new Date(), TZ, 'yyyy/MM/dd') + ' 00:00:00');
       const D = n => Utilities.formatDate(new Date(t0.getTime() + n*864e5 + 12*3600e3), TZ, 'yyyy-MM-dd');
       Object.keys(SAMPLE_IMGS).forEach(k => writeImg_(k, SAMPLE_IMGS[k].t, SAMPLE_IMGS[k].f));
@@ -375,7 +375,7 @@ function doPost(e){
   }catch(x){ const m = String(x && x.message || x); return out({ok: false, err: m, login: m === 'LOGIN' ? 1 : 0}); }
 }
 function doGet(){ return ContentService.createTextOutput('FIS Tasks & Projects API is running.'); }
-/* Run once after pasting: creates the data sheet and puts the team on the access list (Harsh Yadav = admin). */
+/* Run once after pasting: creates the data sheet and puts the team on the access list (Rahul Yadav = Director/admin). */
 function setup(){
   secret_(); DOCS(); IMGS(); LOG();
   if(!get_('config/members')) put_('config/members', {list: TEAM.map(t => ({id: t[0], name: t[1], admin: !!t[2]}))}, 'setup');
@@ -388,7 +388,7 @@ const SAMPLE_IMGS = {"sp-img1":{"t":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
 data.props.STAFF_SUFFIX='demo';
 var fresh=!data.props.SHEET_ID;
 setup();
-if(fresh||!get_('config/members')){API.ev_sample({id:'harsh',name:'Harsh Yadav',admin:true},true)}
+if(fresh||!get_('config/members')){API.ev_sample({id:'rahul',name:'Rahul Yadav',admin:true},true)}
 save();
 window.fisDemo={post:function(body){
   var req=JSON.parse(body);

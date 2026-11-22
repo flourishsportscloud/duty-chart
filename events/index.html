@@ -639,6 +639,77 @@ function taskForm(o){
   };
   setTimeout(function(){var i=$('#f-t');if(i)i.focus()},60);
 }
+
+/* new tasks: one screen, many tasks, many people, saved together */
+function batchForm(o){
+  o=o||{};var sel=new Set(),td=today(),rows=[{t:'',d:'',tm:'',p:null,open:false},{t:'',d:'',tm:'',p:null,open:false}],imgs=[],cfg={pj:o.pj||'',d:'',tm:'',hi:false,ap:!!o.pj,rep:1,by:S.me};
+  function peopleChips(ids,attr){return S.people.map(function(p){return '<button type="button" '+attr+'="'+p.id+'" aria-pressed="'+(ids.indexOf(p.id)>=0)+'">'+av(p.id,'sm')+esc(p.name.split(' ')[0])+'</button>'}).join('')}
+  function rowsHtml(){
+    return rows.map(function(r,i){
+      var h='<div class="panel" style="padding:10px;gap:8px;box-shadow:none"><div style="display:flex;gap:8px;align-items:center"><span class="sub" style="width:18px">'+(i+1)+'</span><input type="text" data-rt="'+i+'" value="'+esc(r.t)+'" placeholder="Task '+(i+1)+'" autocomplete="off"><button type="button" class="btn sm ghost" data-ro="'+i+'" aria-label="Different date or person">'+(r.d||r.p?'● ':'')+'⚙</button>'+(rows.length>1?'<button type="button" class="btn sm ghost" data-rx="'+i+'" aria-label="Remove">×</button>':'')+'</div>';
+      if(r.open)h+='<div class="row"><div><label class="l">Deadline for this task</label><input type="date" data-rd="'+i+'" value="'+esc(r.d||cfg.d)+'"></div><div><label class="l">Time</label><input type="time" data-rm="'+i+'" value="'+esc(r.tm||cfg.tm)+'"></div></div><div><label class="l">Give this task to</label><div class="pk">'+peopleChips(r.p||Array.from(sel),'data-rp="'+i+'" data-pid')+'</div></div>';
+      return h+'</div>';
+    }).join('');
+  }
+  function draw(){
+    var keep=$('#sheet').scrollTop;
+    var h='<h2 class="t">Give tasks</h2><p class="sub" style="margin-bottom:8px">Write all the tasks for this discussion, choose the people and the deadline once, then save everything together.</p><form class="f" id="bf" autocomplete="off">';
+    h+='<div><label class="l">1. Give to (one or more)</label><div class="pk" id="b-p">'+peopleChips(Array.from(sel),'data-pid')+'</div></div>';
+    h+='<div class="row"><div><label class="l" for="b-d">2. Deadline date</label><input type="date" id="b-d" value="'+esc(cfg.d)+'"></div><div><label class="l" for="b-tm">Time</label><input type="time" id="b-tm" value="'+esc(cfg.tm)+'"></div></div><div class="chips" id="b-q">'+[['Today',0],['Tomorrow',1],['In 3 days',3],['In a week',7]].map(function(x){return '<button type="button" class="chip" data-d="'+addDays(td,x[1])+'">'+x[0]+'</button>'}).join('')+'</div>';
+    h+='<div><label class="l">3. Tasks</label><div class="cards" id="b-rows">'+rowsHtml()+'</div><button type="button" class="btn sm" id="b-add" style="margin-top:8px">+ Add another task</button><p class="sub" style="margin-top:6px">Tap ⚙ on a task for a different deadline or different people.</p></div>';
+    h+='<div><label class="l" for="b-pj">Project / event</label><select id="b-pj"><option value="">Daily task (no project)</option>'+S.projects.map(function(p){return '<option value="'+p.id+'"'+(p.id===cfg.pj?' selected':'')+'>'+esc(p.title)+'</option>'}).join('')+'</select></div>';
+    h+='<div><label class="l" for="b-rep">Repeat</label><select id="b-rep"><option value="1">Once</option><option value="3"'+(cfg.rep==3?' selected':'')+'>Every day (Mon–Sat) for 3 days</option><option value="6"'+(cfg.rep==6?' selected':'')+'>Every day (Mon–Sat) for 6 days</option><option value="12"'+(cfg.rep==12?' selected':'')+'>Every day (Mon–Sat) for 12 days</option><option value="26"'+(cfg.rep==26?' selected':'')+'>Every day (Mon–Sat) for 26 days</option></select></div>';
+    if(S.admin)h+='<div><label class="l" for="b-by">Given by</label><select id="b-by">'+S.people.map(function(p){return '<option value="'+p.id+'"'+(p.id===cfg.by?' selected':'')+'>'+esc(p.name)+'</option>'}).join('')+'</select></div>';
+    h+='<label class="sw"><input type="checkbox" id="b-hi"'+(cfg.hi?' checked':'')+'> High priority</label><label class="sw"><input type="checkbox" id="b-ap"'+(cfg.ap?' checked':'')+'> Needs my approval before it counts as done</label>';
+    h+='<div id="b-ph">'+(imgs.length?'<div class="pvs">'+imgs.map(function(p){return '<div class="pv"><img src="'+p.t+'" alt=""></div>'}).join('')+'</div>':'')+'</div><div><label class="btn sm" for="b-f" style="display:inline-flex">📷 Attach reference photos (to all)</label><input type="file" id="b-f" accept="image/*" multiple hidden></div>';
+    h+='<div class="err" id="b-e"></div><div class="chips" style="justify-content:flex-end"><button type="button" class="btn" data-act="sx">Cancel</button><button type="button" class="btn" id="b-next">Save &amp; next person</button><button type="submit" class="btn pri" id="b-s">Save all</button></div></form>';
+    $('#sheet').innerHTML='<button class="sx" data-act="sx" aria-label="Close">×</button>'+h;$('#sheet').scrollTop=keep;
+    wire();
+  }
+  function wire(){
+    var sh=$('#sheet');
+    $('#b-p').onclick=function(e){var b=e.target.closest('[data-pid]');if(!b)return;var id=b.dataset.pid;if(sel.has(id))sel.delete(id);else sel.add(id);b.setAttribute('aria-pressed',sel.has(id));$$('[data-rp]').forEach(function(x){});};
+    $('#b-q').onclick=function(e){var b=e.target.closest('[data-d]');if(b){cfg.d=b.dataset.d;$('#b-d').value=cfg.d}};
+    $('#b-d').onchange=function(){cfg.d=this.value};$('#b-tm').onchange=function(){cfg.tm=this.value};
+    $('#b-pj').onchange=function(){cfg.pj=this.value;if(this.value){cfg.ap=true;$('#b-ap').checked=true}};
+    $('#b-rep').onchange=function(){cfg.rep=+this.value};$('#b-hi').onchange=function(){cfg.hi=this.checked};$('#b-ap').onchange=function(){cfg.ap=this.checked};
+    if($('#b-by'))$('#b-by').onchange=function(){cfg.by=this.value};
+    $('#b-add').onclick=function(){rows.push({t:'',d:'',tm:'',p:null,open:false});$('#b-rows').innerHTML=rowsHtml();wireRows();var l=$$('[data-rt]');l[l.length-1].focus()};
+    $('#b-f').onchange=async function(){var fl=Array.prototype.slice.call(this.files);this.value='';for(var i=0;i<fl.length&&imgs.length<8;i++){try{imgs.push(await shrink(fl[i]))}catch(e){}}$('#b-ph').innerHTML='<div class="pvs">'+imgs.map(function(p){return '<div class="pv"><img src="'+p.t+'" alt=""></div>'}).join('')+'</div>'};
+    $('#bf').onsubmit=function(e){e.preventDefault();save(false)};$('#b-next').onclick=function(){save(true)};
+    wireRows();
+  }
+  function wireRows(){
+    $$('[data-rt]').forEach(function(i){i.oninput=function(){rows[+i.dataset.rt].t=i.value}});
+    $$('[data-ro]').forEach(function(b){b.onclick=function(){var r=rows[+b.dataset.ro];r.open=!r.open;$('#b-rows').innerHTML=rowsHtml();wireRows()}});
+    $$('[data-rx]').forEach(function(b){b.onclick=function(){rows.splice(+b.dataset.rx,1);$('#b-rows').innerHTML=rowsHtml();wireRows()}});
+    $$('[data-rd]').forEach(function(i){i.onchange=function(){rows[+i.dataset.rd].d=i.value}});
+    $$('[data-rm]').forEach(function(i){i.onchange=function(){rows[+i.dataset.rm].tm=i.value}});
+    $$('[data-rp]').forEach(function(b){b.onclick=function(){var r=rows[+b.dataset.rp];r.p=r.p||Array.from(sel);var id=b.dataset.pid,k=r.p.indexOf(id);if(k>=0)r.p.splice(k,1);else r.p.push(id);b.setAttribute('aria-pressed',k<0)}});
+  }
+  async function save(next){
+    var err=$('#b-e'),list=rows.filter(function(r){return r.t.trim()});
+    if(!list.length){err.textContent='Write at least one task.';return}
+    var jobs=[];
+    for(var i=0;i<list.length;i++){
+      var r=list[i],d=r.d||cfg.d,ppl=(r.p&&r.p.length)?r.p:Array.from(sel);
+      if(!d){err.textContent='Choose a deadline for "'+r.t.trim()+'" (top of the form, or ⚙ on that task).';return}
+      if(!ppl.length){err.textContent='Choose at least one person for "'+r.t.trim()+'".';return}
+      var dates=cfg.rep>1?nextDates(d,cfg.rep):[d];
+      dates.forEach(function(dd){jobs.push({title:r.t.trim(),project:cfg.pj,date:dd,time:r.tm||cfg.tm,assignees:ppl,priority:cfg.hi?'high':'normal',approval:cfg.ap,by:cfg.by})});
+    }
+    if(jobs.length>80){err.textContent='That is too many at once ('+jobs.length+'). Use a shorter repeat.';return}
+    $$('#bf button').forEach(function(b){b.disabled=true});err.textContent='Saving '+jobs.length+' task'+(jobs.length>1?'s':'')+'…';
+    try{
+      var ids=await uploadAll(imgs);
+      for(var k=0;k<jobs.length;k+=8)await Promise.all(jobs.slice(k,k+8).map(function(j){return api('ev_set',['tasks/'+uid(),Object.assign({},j,{imgs:ids})]).then(upsert)}));
+      toast(jobs.length+' task'+(jobs.length>1?'s':'')+' given');
+      if(next){sel.clear();rows=[{t:'',d:'',tm:'',p:null,open:false},{t:'',d:'',tm:'',p:null,open:false}];imgs=[];render();draw();var f=$('#b-p');if(f)f.scrollIntoView()}
+      else{closeSheet();render()}
+    }catch(x){$$('#bf button').forEach(function(b){b.disabled=false});err.textContent=x.message||'Could not save'}
+  }
+  openSheet('');draw();
+}
 function nextDates(start,n){var out=[],d=start,g=0;while(out.length<n&&g<400){if(pdate(d).getDay()!==0)out.push(d);d=addDays(d,1);g++}return out}
 function projectForm(p){
   openSheet('<h2 class="t">'+(p?'Edit project':'New project')+'</h2><form class="f" id="pf"><div><label class="l" for="v-t">Project or event name</label><input type="text" id="v-t" value="'+esc(p?p.title:'')+'" placeholder="e.g. Children’s Day"></div><div><label class="l" for="v-d">Date of the event</label><input type="date" id="v-d" value="'+esc(p?p.date:'')+'"></div><div><label class="l" for="v-n">Notes (optional)</label><textarea id="v-n" rows="2">'+esc(p?p.note:'')+'</textarea></div><div class="err" id="v-e"></div><div class="chips" style="justify-content:flex-end"><button type="button" class="btn" data-act="sx">Cancel</button><button type="submit" class="btn pri" id="v-s">'+(p?'Save':'Create project')+'</button></div></form>');
@@ -697,7 +768,7 @@ document.addEventListener('click',function(e){
   if(act==='dperson'){S.dp=id;paint();window.scrollTo(0,0);return}
   if(act==='dback'){S.dp='';paint();return}
   if(act==='members'){membersSheet();return}
-  if(act==='tnew'){taskForm({pj:a.dataset.pj||''});return}
+  if(act==='tnew'){batchForm({pj:a.dataset.pj||''});return}
   if(act==='tedit'){taskForm({task:S.tasks.filter(function(t){return t.id===id})[0]});return}
   if(act==='tdel'){if(S.confirm==='t'+id){S.confirm=null;api('ev_del',['tasks/'+id]).then(function(){S.tasks=S.tasks.filter(function(t){return t.id!==id});closeSheet();render();toast('Task deleted')},function(er){toast(er.message||'Could not delete')})}else arm('t'+id);return}
   if(act==='pnew'){projectForm();return}
