@@ -52,7 +52,7 @@ main{padding:14px 0}
 .srow{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:8px 10px;margin-bottom:6px}
 .srow.ok{background:var(--ok-bg);border-color:#BFE3CD}.srow.ic{background:var(--ic-bg);border-color:#F2D9A3}.srow.ns{background:var(--ns-bg);border-color:#F4C2BC}.srow.ab{background:var(--ab-bg)}.srow.late{box-shadow:inset 4px 0 0 var(--ic)}
 .sline{display:flex;gap:8px;align-items:center;justify-content:space-between}.sno{width:26px;color:var(--muted);font-weight:700;font-size:12px}.sname{flex:1;font-weight:600;color:var(--ink);min-width:0}
-.sline.pk{cursor:pointer;min-height:34px}.cb.opt{margin-top:8px}.cb.opt button{flex:1}.cb{display:flex;gap:4px}.cb button{all:unset;cursor:pointer;min-width:42px;text-align:center;padding:7px 4px;border-radius:9px;border:1px solid var(--line);background:#fff;font-weight:700;font-size:12.5px;color:var(--muted)}
+.sline.pk{cursor:pointer;min-height:34px}.cb.opt{margin-top:8px}.cb.opt button{flex:1}.btn.gold{background:var(--gold);color:var(--gold-ink);border-color:var(--gold)}.card.start .btn{margin:0 6px 6px 0}.cb{display:flex;gap:4px}.cb button{all:unset;cursor:pointer;min-width:42px;text-align:center;padding:7px 4px;border-radius:9px;border:1px solid var(--line);background:#fff;font-weight:700;font-size:12.5px;color:var(--muted)}
 .cb button.on.C{background:var(--ok);color:#fff;border-color:var(--ok)}.cb button.on.I{background:#E0A030;color:#fff;border-color:#E0A030}.cb button.on.N{background:var(--ns);color:#fff;border-color:var(--ns)}.cb button.on.A{background:#6B7280;color:#fff;border-color:#6B7280}
 .rem{margin-top:7px;display:grid;gap:6px}.rem input{border:1px solid var(--line);border-radius:9px;padding:8px 10px;width:100%;background:#fff}
 .qr{display:flex;gap:5px;flex-wrap:wrap}.qr button{all:unset;cursor:pointer;font-size:11.5px;padding:3px 9px;border-radius:999px;background:#fff;border:1px solid var(--line);color:var(--ink);font-weight:600}
@@ -256,16 +256,25 @@ function viewCheck(){
     h+='<div class="grid2"><div class="field"><label>Lesson</label>'+(lo.length&&!f.useText?'<select id="fls"><option value="">— choose —</option>'+lo.map(l=>'<option value="'+esc(l[0])+'" data-t="'+esc(l[1])+'"'+(f.ls===l[0]?' selected':'')+'>'+esc(lsTxt(l[0]))+(l[1]?' · '+esc(l[1]):'')+'</option>').join('')+'<option value="*">Other…</option></select>':'<input id="fls" value="'+esc(f.ls||'')+'" placeholder="e.g. 6">')+'</div><div class="field"><label>Date</label><input type="date" id="fdt" value="'+esc(f.date)+'"></div></div>';
     h+='<div class="field"><label>Topic / note (optional)</label><input id="flt" value="'+esc(f.lt||'')+'" placeholder="e.g. Reproduction · Poem 5"></div>';
     h+='<div class="row"><button class="btn" data-act="fcreate">Start marking</button><button class="btn ghost" data-act="fcancel">Cancel</button></div></div>';
-  }else h+='<div class="row" style="margin-bottom:10px"><button class="btn" data-act="fnew" data-k="e">＋ New check</button><span class="small muted">Section '+curSec()+' · '+nOf(curSec())+' students</span></div>';
+  }else h+='<div class="card start"><h3>Start a new check · '+curSec()+'</h3><div class="small muted" style="margin-bottom:8px">Tap what you are checking today ('+nOf(curSec())+' students)</div><div class="row">'+its.map(i=>'<button class="btn" data-act="fnew" data-k="e" data-i="'+esc(i)+'">＋ '+esc(i)+'</button>').join('')+'</div><div class="row" style="margin-top:8px"><button class="btn gold" data-act="gotest">＋ New Test (marks)</button></div></div>';
   const es=entriesFor(curSec(),U.subj);
   if(!es.length&&!U.form)h+='<div class="empty">No checks recorded yet for '+esc(U.subj)+' in '+curSec()+'.<br>Tap “New check” to start.</div>';
   es.forEach(e=>{const t=tally(e);h+='<button class="entry" data-act="open" data-k="e" data-p="'+esc(e.p)+'"><div class="eh"><b>'+esc(e.item)+' · '+esc(lessonLabel(e))+'</b><span class="badge g">'+fD(e.date)+'</span></div>'+bar(t,nOf(e.sec))+'<div class="small muted">by '+esc(e.by||'—')+(t.P?' · '+t.P+' still to mark':'')+'</div></button>'});
   return h;
 }
 const QUICK=['Will submit tomorrow','Parent informed','Reminder given','Child will come tomorrow'];
+function editForm(d){
+  const c=+d.sec.slice(0,-1),sl=subjectsFor(c),lo=(DEFAULT_LESSONS[c+'|'+d.subj]||[]).concat(LESSONS[c+'|'+d.subj]||[]);
+  let h='<div class="card"><h3>Edit details · '+esc(d.sec)+'</h3><div class="small muted" style="margin-bottom:8px">Fix the subject, lesson, topic or date if it was entered wrong. Marks already entered are kept.</div>';
+  h+='<div class="grid2"><div class="field"><label>Subject</label><select id="esb">'+sl.map(x=>'<option'+(x.n===d.subj?' selected':'')+'>'+esc(x.n)+'</option>').join('')+'</select></div><div class="field"><label>Date</label><input type="date" id="edt" value="'+esc(d.date)+'"></div></div>';
+  if(d.k==='e')h+='<div class="field"><label>Item checked</label><select id="eit">'+ITEMS.map(i=>'<option'+(i===d.item?' selected':'')+'>'+esc(i)+'</option>').join('')+'</select></div>';
+  else h+='<div class="field"><label>Maximum marks</label><input id="emx" inputmode="decimal" value="'+esc(d.max)+'"></div>';
+  h+='<div class="grid2"><div class="field"><label>Lesson no. (as per planner)</label><input id="els" list="elsl" value="'+esc(d.ls||'')+'"><datalist id="elsl">'+lo.map(l=>'<option value="'+esc(l[0])+'">'+esc(l[1])+'</option>').join('')+'</datalist></div><div class="field"><label>Topic / note</label><input id="elt" value="'+esc(d.lt||'')+'"></div></div>';
+  return h+'<div class="row"><button class="btn" data-act="esave">Save changes</button><button class="btn ghost" data-act="ecancel">Cancel</button></div></div>';
+}
 function viewEntry(e){
   const n=nOf(e.sec),t=tally(e);
-  let h='<div class="row" style="margin-bottom:8px"><button class="btn ghost sm" data-act="back">‹ Back</button><button class="btn sm" data-act="allok">Mark all unmarked ✓</button>'+((e.by===ME||isAdmin())?'<button class="btn ghost sm" data-act="delentry">Delete</button>':'')+'</div>';
+  let h='<div class="row" style="margin-bottom:8px"><button class="btn ghost sm" data-act="back">‹ Back</button><button class="btn sm" data-act="allok">Mark all unmarked ✓</button>'+'<button class="btn ghost sm" data-act="edit">✎ Edit details</button><button class="btn ghost sm" data-act="delentry">Delete</button></div>'+(U.edit?editForm(e):'');
   h+='<div class="stick"><div class="eh"><b style="font:600 17px var(--f-head);color:var(--ink)">'+esc(e.subj)+' · '+esc(e.item)+'</b><span class="badge g">'+fD(e.date)+'</span></div><div class="small muted">'+esc(e.sec)+' · '+esc(lessonLabel(e))+' · teacher '+esc(teacherOf(e.sec,e.subj)||'—')+'</div><div id="entryBar">'+bar(t,n)+'</div></div>';
   for(let s=1;s<=n;s++){h+=rowEntry(e,s)}
   return h;
@@ -291,7 +300,7 @@ function viewPerf(){
   if(U.form&&U.form.k==='t'){
     const f=U.form,lo=lessonOptions();
     h+='<div class="card"><h3>New test · '+esc(U.subj)+' · '+curSec()+'</h3><div class="grid2"><div class="field"><label>Lesson</label>'+(lo.length&&!f.useText?'<select id="fls"><option value="">— choose —</option>'+lo.map(l=>'<option value="'+esc(l[0])+'" data-t="'+esc(l[1])+'">L-'+esc(l[0])+' · '+esc(l[1])+'</option>').join('')+'<option value="*">Other…</option></select>':'<input id="fls" placeholder="e.g. 6">')+'</div><div class="field"><label>Date</label><input type="date" id="fdt" value="'+esc(f.date)+'"></div></div><div class="grid2"><div class="field"><label>Maximum marks</label><input id="fmax" inputmode="decimal" value="'+esc(f.max||'')+'" placeholder="e.g. 10, 15, 20"></div><div class="field"><label>Topic (optional)</label><input id="flt" placeholder="e.g. Poem 5"></div></div><div class="row"><button class="btn" data-act="fcreate">Start entering marks</button><button class="btn ghost" data-act="fcancel">Cancel</button></div></div>';
-  }else h+='<div class="row" style="margin-bottom:10px"><button class="btn" data-act="fnew" data-k="t">＋ New test</button><span class="small muted">Below 60% is highlighted red</span></div>';
+  }else h+='<div class="row" style="margin-bottom:10px"><button class="btn gold" data-act="fnew" data-k="t">＋ New Test</button><span class="small muted">Below 60% is highlighted red</span></div>';
   const ts=testsFor(curSec(),U.subj);
   if(!ts.length&&!U.form)h+='<div class="empty">No tests recorded yet for '+esc(U.subj)+' in '+curSec()+'.</div>';
   ts.forEach(t=>{const st=testStats(t);h+='<button class="entry" data-act="open" data-k="t" data-p="'+esc(t.p)+'"><div class="eh"><b>'+esc(lessonLabel(t))+' · out of '+t.max+'</b><span class="badge g">'+fD(t.date)+'</span></div><div class="small" style="margin-top:4px">Average <b>'+(st.avg==null?'—':st.avg.toFixed(0)+'%')+'</b> · <span class="'+(st.poor?'red':'')+'">'+st.poor+' below 60%</span> · '+st.ab+' absent · '+st.pend+' unmarked</div></button>'});
@@ -300,7 +309,7 @@ function viewPerf(){
 function testStats(t){let sum=0,k=0,poor=0,ab=0,pend=0;const n=nOf(t.sec);for(let s=1;s<=n;s++){const v=t.m[s];if(v==null||v==='')pend++;else if(v==='A'||v==='NG')ab++;else{const p=pctOf(t,s);if(p!=null){sum+=p;k++;if(p<60)poor++}}}return{avg:k?sum/k:null,poor,ab,pend,k}}
 function viewTest(t){
   const n=nOf(t.sec);
-  let h='<div class="row" style="margin-bottom:8px"><button class="btn ghost sm" data-act="back">‹ Back</button>'+((t.by===ME||isAdmin())?'<button class="btn ghost sm" data-act="delentry">Delete</button>':'')+'</div>';
+  let h='<div class="row" style="margin-bottom:8px"><button class="btn ghost sm" data-act="back">‹ Back</button>'+'<button class="btn ghost sm" data-act="edit">✎ Edit details</button><button class="btn ghost sm" data-act="delentry">Delete</button></div>'+(U.edit?editForm(t):'');
   h+='<div class="stick"><div class="eh"><b style="font:600 17px var(--f-head);color:var(--ink)">'+esc(t.subj)+' · '+esc(lessonLabel(t))+'</b><span class="badge g">'+fD(t.date)+'</span></div><div class="small muted">'+esc(t.sec)+' · out of <b>'+t.max+'</b> · below 60% (under '+(t.max*.6).toFixed(1)+') shows red</div><div id="testBar"></div></div>';
   for(let s=1;s<=n;s++){const v=t.m[s];const p=pctOf(t,s);
     h+='<div class="srow" id="r'+s+'"><div class="sline"><span class="sname">'+esc(nameOf(t.sec,s))+'<span id="fl'+s+'"></span></span><span class="pc'+(p!=null&&p<60?' low':'')+'" id="pc'+s+'">'+(p!=null?p.toFixed(0)+'%':(v==='A'||v==='NG'?v:''))+'</span><input class="mk'+(p!=null&&p<60?' low':'')+'" inputmode="decimal" data-act="mk" data-s="'+s+'" value="'+(typeof v==='number'?v:'')+'" placeholder="–"><div class="cb"><button data-act="mkx" data-s="'+s+'" data-c="A" class="A'+(v==='A'?' on':'')+'">A</button><button data-act="mkx" data-s="'+s+'" data-c="NG" class="A'+(v==='NG'?' on':'')+'">NG</button></div></div></div>'}
@@ -333,7 +342,7 @@ function dashHead(){
   let h='<div class="card" style="padding:10px"><div class="row"><span class="lab">Show</span><div class="scroll">'+scopeOpts().map(o=>'<button class="chip sm" data-act="scope" data-v="'+o[0]+'" aria-pressed="'+(scopeNow()===o[0])+'">'+esc(o[1])+'</button>').join('')+'</div></div>';
   h+='<div class="row" style="margin-top:6px"><span class="lab">Period</span><div class="scroll">'+[['7','7 days'],['30','30 days'],['90','90 days'],['all','All']].map(o=>'<button class="chip sm" data-act="per" data-v="'+o[0]+'" aria-pressed="'+(U.per===o[0])+'">'+o[1]+'</button>').join('')+'</div></div>';
   h+='<div class="row" style="margin-top:6px"><span class="lab">Dept</span><div class="scroll"><button class="chip sm" data-act="dept" data-v="" aria-pressed="'+(!U.dept)+'">All</button>'+deptList().map(d=>'<button class="chip sm" data-act="dept" data-v="'+esc(d)+'" aria-pressed="'+(U.dept===d)+'">'+esc(d)+'</button>').join('')+'</div></div></div>';
-  h+='<div class="scroll" style="margin-bottom:10px">'+[['chk','Checking'],['fup','Follow-up'],['prf','Performance']].map(o=>'<button class="chip" data-act="dsub" data-v="'+o[0]+'" aria-pressed="'+(U.dsub===o[0])+'">'+o[1]+'</button>').join('')+'</div>';
+  h+='<div class="scroll" style="margin-bottom:10px">'+[['chk','Checking'],['fup','Follow-up'],['prf','Performance'],['rep','Reports']].map(o=>'<button class="chip" data-act="dsub" data-v="'+o[0]+'" aria-pressed="'+(U.dsub===o[0])+'">'+o[1]+'</button>').join('')+'</div>';
   return h;
 }
 const addT=(a,b)=>{['C','I','N','A','P'].forEach(k=>a[k]+=b[k]);return a};
@@ -343,7 +352,7 @@ function trow(label,t,extra){return '<tr><td>'+label+'</td><td class="n">'+(extr
 const THEAD='<tr><th></th><th class="n">Checks</th><th class="n">✓</th><th class="n">IC</th><th class="n">NS</th><th class="n">A</th><th class="n">Unmkd</th><th class="n">Done</th></tr>';
 function viewDash(){
   let h=dashHead();
-  if(U.dsub==='chk')h+=dashCheck();else if(U.dsub==='fup')h+=dashFollow();else h+=dashPerf();
+  if(U.dsub==='chk')h+=dashCheck();else if(U.dsub==='fup')h+=dashFollow();else if(U.dsub==='rep')h+=dashReport();else h+=dashPerf();
   return h;
 }
 function dashCheck(){
@@ -359,6 +368,34 @@ function dashCheck(){
   const pend=es.filter(e=>tally(e).P>0).sort((a,b)=>a.date.localeCompare(b.date));
   if(pend.length)h+='<div class="card"><h4>Checks with students still unmarked · '+pend.length+'</h4>'+pend.slice(0,25).map(e=>'<button class="entry" data-act="gofix" data-k="e" data-p="'+esc(e.p)+'" style="padding:8px 10px"><div class="eh"><b>'+e.sec+' · '+esc(e.subj)+' · '+esc(e.item)+' · '+esc(lessonLabel(e))+'</b><span class="badge ic">'+tally(e).P+' left</span></div><div class="small muted">'+fD(e.date)+' · '+esc(teacherOf(e.sec,e.subj)||e.by||'')+'</div></button>').join('')+'</div>';
   return h;
+}
+function dashReport(){
+  const es=docs('e').filter(e=>inScope(e)),ts=docs('t').filter(t=>inScope(t));
+  if(!es.length&&!ts.length)return '<div class="empty">No records in this view yet. Setup → Load sample data to preview reports.</div>';
+  let h='<div class="row" style="margin-bottom:10px"><button class="btn wa sm" data-act="copyrep">Copy report text</button><span class="small muted">'+es.length+' checks · '+ts.length+' tests</span></div>';
+  if(U.rtxt)h+='<div class="card"><h4>Select all and copy</h4><textarea rows="8" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:10px" readonly>'+esc(U.rtxt)+'</textarea></div>';
+  const R=reportData(es,ts);
+  h+='<div class="card"><h3>Teacher-wise report</h3><div class="tw"><table><tr><th>Teacher</th><th class="n">Checks</th><th class="n">✓</th><th class="n">IC</th><th class="n">NS</th><th class="n">Done</th><th class="n">Tests</th><th class="n">Avg</th></tr>'+R.teach.map(r=>'<tr><td><b>'+esc(r.n)+'</b></td><td class="n">'+r.c+'</td><td class="n" style="color:var(--ok)"><b>'+r.t.C+'</b></td><td class="n" style="color:var(--ic)"><b>'+r.t.I+'</b></td><td class="n" style="color:var(--ns)"><b>'+r.t.N+'</b></td><td class="n"><b>'+pcell(r.t)+'</b></td><td class="n">'+r.tn+'</td><td class="n">'+(r.avg==null?'—':r.avg.toFixed(0)+'%')+'</td></tr>').join('')+'</table></div></div>';
+  h+='<div class="card"><h3>Class-wise report</h3><div class="tw"><table><tr><th>Section</th><th class="n">Checks</th><th class="n">✓</th><th class="n">IC</th><th class="n">NS</th><th class="n">Done</th><th class="n">Tests</th><th class="n">Avg</th><th class="n">&lt;60%</th></tr>'+R.cls.map(r=>'<tr><td><b>'+r.n+'</b></td><td class="n">'+r.c+'</td><td class="n" style="color:var(--ok)"><b>'+r.t.C+'</b></td><td class="n" style="color:var(--ic)"><b>'+r.t.I+'</b></td><td class="n" style="color:var(--ns)"><b>'+r.t.N+'</b></td><td class="n"><b>'+pcell(r.t)+'</b></td><td class="n">'+r.tn+'</td><td class="n">'+(r.avg==null?'—':r.avg.toFixed(0)+'%')+'</td><td class="n red">'+r.poor+'</td></tr>').join('')+'</table></div></div>';
+  h+='<div class="card"><h3>Date-wise report</h3><div class="tw"><table><tr><th>Date</th><th class="n">Checks</th><th class="n">✓</th><th class="n">IC</th><th class="n">NS</th><th class="n">A</th><th class="n">Tests</th></tr>'+R.date.map(r=>'<tr><td>'+fD(r.n)+'</td><td class="n">'+r.c+'</td><td class="n">'+r.t.C+'</td><td class="n">'+r.t.I+'</td><td class="n">'+r.t.N+'</td><td class="n">'+r.t.A+'</td><td class="n">'+r.tn+'</td></tr>').join('')+'</table></div></div>';
+  const rep=repeatConcerns();
+  h+='<div class="card"><h3>Students needing attention · '+rep.length+'</h3>'+(rep.length?rep.slice(0,40).map(r=>'<div style="padding:5px 0;border-bottom:1px solid var(--line)"><b>'+esc(nameOf(r.sec,r.s))+'</b> <span class="badge">'+r.sec+'</span><div class="small">'+esc(r.what)+'</div></div>').join(''):'<div class="muted small">No repeat concerns.</div>')+'</div>';
+  return h;
+}
+function reportData(es,ts){
+  const T={},C={},D={};
+  const slot=(o,k,n)=>o[k]=o[k]||{n:n||k,c:0,t:zero(),tn:0,sum:0,k:0,poor:0};
+  es.forEach(e=>{const t=tally(e);[[T,teacherOf(e.sec,e.subj)||'(not set)'],[C,e.sec],[D,e.date]].forEach(([o,k])=>{const r=slot(o,k);r.c++;addT(r.t,t)})});
+  ts.forEach(x=>{const st=testStats(x);[[T,teacherOf(x.sec,x.subj)||'(not set)'],[C,x.sec],[D,x.date]].forEach(([o,k])=>{const r=slot(o,k);r.tn++;r.poor+=st.poor;if(st.avg!=null){r.sum+=st.avg;r.k++}})});
+  const fin=o=>Object.values(o).map(r=>(r.avg=r.k?r.sum/r.k:null,r));
+  return{teach:fin(T).sort((a,b)=>a.n.localeCompare(b.n)),cls:fin(C).sort((a,b)=>parseInt(a.n)-parseInt(b.n)||a.n.localeCompare(b.n)),date:fin(D).sort((a,b)=>b.n.localeCompare(a.n))};
+}
+function waReport(){
+  const R=reportData(docs('e').filter(e=>inScope(e)),docs('t').filter(t=>inScope(t)));
+  let t='*Mentor Student Record · report · '+fD(today())+'*\n\n*Class-wise*\n';
+  R.cls.forEach(r=>{t+=r.n+' – checks '+r.c+', ✓ '+r.t.C+', IC '+r.t.I+', NS '+r.t.N+' ('+pcell(r.t)+' done)'+(r.tn?', tests '+r.tn+' avg '+(r.avg==null?'—':r.avg.toFixed(0)+'%')+', below 60%: '+r.poor:'')+'\n'});
+  t+='\n*Teacher-wise*\n';R.teach.forEach(r=>{t+=r.n+' – checks '+r.c+', IC '+r.t.I+', NS '+r.t.N+' ('+pcell(r.t)+' done)\n'});
+  return t;
 }
 function followItems(){
   const out=[];
@@ -435,6 +472,7 @@ function viewProfile(sec,s){
 /* ---------- SETUP ---------- */
 function viewSet(){
   let h='<div class="card"><h3>'+esc(ME||'Not signed in')+'</h3><div class="small muted">'+(API_URL?'Connected to the FIS server · '+Object.keys(OUT).length+' change(s) waiting to upload':'Trial mode — records stay on this phone only until the server is connected.')+'</div><div class="row" style="margin-top:10px"><button class="btn ghost sm" data-act="signout">Sign out</button></div></div>';
+  if(!API_URL)h+='<div class="card"><h3>Sample data</h3><div class="small muted" style="margin-bottom:8px">Fills several classes and subjects with example checks and tests so you can see the dashboards and reports. Sample records are marked and can be removed.</div><div class="row"><button class="btn sm" data-act="seed">Load sample data</button><button class="btn ghost sm" data-act="unseed">Remove sample data</button></div></div>';
   const mine=[...mineSet()];
   if(mine.length)h+='<div class="card"><h4>Your classes</h4><div class="small">'+mine.map(x=>{const p=x.split('|');return p[0]+' '+esc(p[1])}).join(' · ')+'</div></div>';
   if(!isAdmin())return h+'<div class="card small muted">Teacher and subject set-up can be changed by the Director.</div>';
@@ -444,6 +482,30 @@ function viewSet(){
   h+='<div class="card"><h3>Admins</h3><div class="small muted" style="margin-bottom:6px">Names that can edit this Setup (comma separated).</div><input id="adm" value="'+esc((CFG.admins&&CFG.admins.length?CFG.admins:ADMIN_DEF).join(', '))+'" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:10px"><div class="row" style="margin-top:8px"><button class="btn sm" data-act="admsave">Save</button></div></div>';
   return h;
 }
+/* ---------- sample data (trial mode) ---------- */
+function seedSample(){
+  let sd=7;const rnd=()=>(sd=(sd*9301+49297)%233280)/233280;
+  const secs=['1A','3B','5A','6A','7B','8A','9A','10A'].filter(x=>ROSTER[x]);
+  const dayN=n=>{const d=new Date();d.setDate(d.getDate()-n);return isoD(d)};
+  secs.forEach(sec=>{const c=+sec.slice(0,-1),n=nOf(sec);
+    subjectsFor(c).slice(0,7).forEach((sb,si)=>{
+      const its=itemsFor(c,sb.n),by=teacherOf(sec,sb.n)||'Teacher';
+      its.slice(0,2).forEach((it,ii)=>{
+        const dt=dayN(1+si%5+ii*2),id='s'+sec+si+ii,m={},lg=[],rm={};
+        for(let s=1;s<=n;s++){const r=rnd();if(r<.06)continue;const old=Date.now()-(1+si%4)*864e5;
+          if(r<.72)m[s]='C';else if(r<.86){m[s]='I';lg.push([s,'I',old,by,'']);rm[s]='Will submit tomorrow'}else if(r<.94){m[s]='N';lg.push([s,'N',old,by,''])}else m[s]='A'}
+        DB['e/'+dt+'/'+sec+'/'+id]={p:'e/'+dt+'/'+sec+'/'+id,k:'e',sec,date:dt,subj:sb.n,item:it,ls:String(5+si),lt:'',by,ts:Date.now()-864e5*(1+si%5),m,lg,rm,sm:1};
+      });
+      [0,1,2].forEach(ti=>{
+        const dt=dayN(2+ti*4+si%3),id='t'+sec+si+ti,max=[10,20,25][ti],m={};
+        for(let s=1;s<=n;s++){const r=rnd();if(r<.05)m[s]='A';else{const weak=(s%7===0);m[s]=Math.max(0,Math.min(max,Math.round(max*(weak?.35+rnd()*.3:.55+rnd()*.45))))}}
+        DB['t/'+dt+'/'+sec+'/'+id]={p:'t/'+dt+'/'+sec+'/'+id,k:'t',sec,date:dt,subj:sb.n,ls:String(3+ti+si%3),lt:'',max,by,ts:Date.now()-864e5*(2+ti*4),m,sm:1};
+      });
+    });
+  });
+  persist();lsPut('seeded',1);
+}
+if(!API_URL&&!Object.keys(DB).length&&!lsGet('seeded',0)){try{seedSample()}catch(e){}}
 /* ---------- render / events ---------- */
 function render(){
   chrome();const v=$('view');
@@ -465,7 +527,19 @@ document.addEventListener('click',ev=>{
     case'sec':U.sec=D.v;U.open=null;U.form=null;U.stu=null;render();break;
     case'tab':U.tab=D.v;U.open=null;U.form=null;U.stu=null;render();window.scrollTo(0,0);break;
     case'subj':U.subj=D.v;U.open=null;U.form=null;render();break;
-    case'fnew':U.form={k:D.k,date:today(),item:itemsFor(U.cls,U.subj)[0],more:false,ls:'',lt:'',max:''};render();break;
+    case'fnew':U.form={k:D.k,date:today(),item:D.i||itemsFor(U.cls,U.subj)[0],more:false,ls:'',lt:'',max:''};render();break;
+    case'gotest':U.tab='perf';U.open=null;U.form={k:'t',date:today(),ls:'',lt:'',max:''};render();window.scrollTo(0,0);break;
+    case'edit':U.edit=true;render();break;
+    case'ecancel':U.edit=false;render();break;
+    case'esave':{const d=cur;if(!d)break;const g=id=>{const e=$(id);return e?e.value.trim():''};
+      const nd=g('edt')||d.date,ls=g('els'),lt=g('elt'),subj=g('esb')||d.subj;
+      if(!ls&&!lt){toast('Enter the lesson number or topic');break}
+      d.ls=ls;d.lt=lt;d.subj=subj;if(d.k==='e'){const it=g('eit');if(it)d.item=it}else{const mx=parseFloat(g('emx'));if(!(mx>0)){toast('Enter the maximum marks');break}d.max=mx}
+      d.edited=ME+' · '+Date.now();
+      if(nd!==d.date){const old=d.p;d.date=nd;d.p=d.k+'/'+nd+'/'+d.sec+'/'+old.split('/').pop();delDoc(old);U.open={k:d.k,p:d.p}}
+      putDoc(d);U.edit=false;render();toast('Details updated');break}
+    case'seed':seedSample();render();toast('Sample data loaded');break;
+    case'unseed':if(sure('unseed')){Object.keys(DB).forEach(k=>{if(DB[k].sm)delete DB[k]});persist();lsPut('seeded',1);render();toast('Sample data removed')}break;
     case'fitem':readForm();U.form.item=D.v;render();break;
     case'fmore':readForm();U.form.more=true;render();break;
     case'fcancel':U.form=null;render();break;
@@ -476,8 +550,8 @@ document.addEventListener('click',ev=>{
       if(f.k==='e')d={p:'e/'+f.date+'/'+sec+'/'+id,k:'e',sec,date:f.date,subj:U.subj,item:f.item,ls,lt:(f.lt||'').trim(),by:ME,ts:Date.now(),m:{},lg:[],rm:{}};
       else{const mx=parseFloat(f.max);if(!(mx>0)){toast('Enter the maximum marks');break}d={p:'t/'+f.date+'/'+sec+'/'+id,k:'t',sec,date:f.date,subj:U.subj,ls,lt:(f.lt||'').trim(),max:mx,by:ME,ts:Date.now(),m:{}}}
       putDoc(d);U.open={k:f.k,p:d.p};U.form=null;render();window.scrollTo(0,0);break}
-    case'open':case'gofix':U.ro=null;if(a==='gofix'){U.tab='check';const e=DB[D.p];U.cls=+e.sec.slice(0,-1);U.sec=e.sec.slice(-1);U.subj=e.subj;U.seg=U.cls<=5?'P':'S'}U.open={k:D.k,p:D.p};render();window.scrollTo(0,0);break;
-    case'back':U.open=null;U.ro=null;render();break;
+    case'open':case'gofix':U.ro=null;U.edit=false;if(a==='gofix'){U.tab='check';const e=DB[D.p];U.cls=+e.sec.slice(0,-1);U.sec=e.sec.slice(-1);U.subj=e.subj;U.seg=U.cls<=5?'P':'S'}U.open={k:D.k,p:D.p};render();window.scrollTo(0,0);break;
+    case'back':U.open=null;U.ro=null;U.edit=false;render();break;
     case'pk':{const e=cur;if(!e)break;const s=+D.s,o=U.ro;U.ro=(o===s?null:s);if(o&&o!==s)rowRefresh(e,o);rowRefresh(e,s);break}
     case'mark':{const e=cur;if(!e)break;const s=+D.s;setMark(e,s,e.m[s]===D.c?null:D.c);U.ro=null;rowRefresh(e,s);break}
     case'allok':{const e=cur;let k=0;for(let s=1;s<=nOf(e.sec);s++)if(!e.m[s]){e.m[s]='C';k++}putDoc(e);render();toast(k+' marked ✓');break}
@@ -491,6 +565,7 @@ document.addEventListener('click',ev=>{
     case'dsub':U.dsub=D.v;render();break;
     case'pview':U.pview=D.v;render();break;
     case'overdue':U.overdue=!U.overdue;render();break;
+    case'copyrep':{const t=waReport();(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Copied · paste in WhatsApp'),()=>{U.rtxt=t;render()});break}
     case'copyfup':{const t=waFollow();(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Copied · paste in WhatsApp'),()=>{U.wa=t;render()});break}
     case'stu':U.stu={sec:D.sec,s:+D.s};render();window.scrollTo(0,0);break;
     case'stuback':U.stu=null;render();break;
