@@ -6,8 +6,13 @@
 const DIARY_API="https://script.google.com/macros/s/AKfycbyvWTDOKOQ8F0vD-oy9vchmq04GdhfZfgtpomgWg73rIa13gmkrFkpZsvQl9ISZKrSFQw/exec";
 const TOKEN_DAYS=120, CHUNK=40000, MAX_PHOTO=600000, PHOTO_ID=/^p_[a-z0-9]{6,24}$/, DATA_URL=/^data:image\/(jpeg|png);base64,[A-Za-z0-9+\/=]+$/;
 
+function SS(){
+  const sp=PropertiesService.getScriptProperties();let id=sp.getProperty("SSID");
+  if(id)return SpreadsheetApp.openById(id);
+  const ss=SpreadsheetApp.create("Checking Desk Data");sp.setProperty("SSID",ss.getId());return ss;
+}
 function setupCheckingDesk(){
-  const ss=SpreadsheetApp.getActive();
+  const ss=SS();
   if(!ss.getSheetByName("Docs"))ss.insertSheet("Docs").appendRow(["path","date","json"]);
   if(!ss.getSheetByName("Photos"))ss.insertSheet("Photos").appendRow(["id","chunks"]);
   const sp=PropertiesService.getScriptProperties();
@@ -39,14 +44,14 @@ function merge(a,b){
   const o=(a&&typeof a==="object"&&!Array.isArray(a))?a:{};
   Object.keys(b).forEach(k=>{o[k]=merge(o[k],b[k])});return o;
 }
-function sheet(n){return SpreadsheetApp.getActive().getSheetByName(n)}
+function sheet(n){return SS().getSheetByName(n)}
 function findRow(sh,key){
   if(sh.getLastRow()<2)return 0;
   const f=sh.getRange(2,1,sh.getLastRow()-1,1).createTextFinder(key).matchEntireCell(true).findNext();
   return f?f.getRow():0;
 }
 function dateOf(path){const m=/^days\/(\d{4}-\d{2}-\d{2})__/.exec(path);return m?m[1]:""}
-function okPath(p){return /^days\/\d{4}-\d{2}-\d{2}__[A-Za-z0-9]{1,6}$/.test(p)||p==="config/roster"||p==="config/theme"}
+function okPath(p){return /^days\/\d{4}-\d{2}-\d{2}__[A-Za-z0-9]{1,6}$/.test(p)||p==="config/roster"||p==="config/theme"||p==="config/staff"}
 
 function doPost(e){
   try{
