@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#1F2D5A">
 <link rel="icon" href="../fis/fis-icon-192.png">
-<title>PM Plan – Live</title>
+<title>PM Reports</title>
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{--navy:#1b2a5c;--navy2:#26397d;--bg:#eef1f7;--card:#fff;--ink:#1d2433;--mut:#6b7488;--line:#dfe4ee;--green:#1e9e5a;--red:#d64545;--grey:#8d96a8;--amber:#c97b00;--blue:#3a63c8}
@@ -369,7 +369,7 @@ input.cwin,select.cwin{font:inherit;font-size:13px;border:1px solid #c7cfe2;bord
 </head>
 <body>
 <header>
-  <div class="h1"><h1><a href="../fis/">‹ FIS</a><img class="hlogo" src="../fis/fis-logo-192.png" alt="FIS"><span>PM Plan – Live<small>Flourish International School</small></span></h1>
+  <div class="h1"><h1><a href="../fis/">‹ FIS</a><img class="hlogo" src="../fis/fis-logo-192.png" alt="FIS"><span>PM Reports<small>Flourish International School</small></span></h1>
     <div class="who" id="whobox"></div></div>
   <div class="sub"><div class="seg" id="modeseg"></div><span class="chip" id="conn"></span></div>
 </header>
@@ -609,7 +609,7 @@ async function doChangePw(target,inId,in2Id){
   }catch(e){showMsg(e.message)}
 }
 function loginHTML(){
-  return `<div class="card login"><div class="llogo"><img src="../fis/fis-logo-192.png" alt="FIS"></div><h3 style="font-size:17px">Log in</h3><div class="muted">PM Plan – Live · FIS · Classes 1–5</div>
+  return `<div class="card login"><div class="llogo"><img src="../fis/fis-logo-192.png" alt="FIS"></div><h3 style="font-size:17px">Log in</h3><div class="muted">PM Reports · FIS · Classes 1–5</div>
   <label for="lid">Your name</label><select id="lid"><option value="">— choose —</option>${PEOPLE.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select>
   <label for="lpw">Password</label><input id="lpw" type="password" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false">
   <label style="display:flex;align-items:center;gap:6px;font-weight:400;margin-top:6px"><input type="checkbox" onchange="document.getElementById('lpw').type=this.checked?'text':'password'" style="width:auto;margin:0"> Show password</label>
@@ -625,7 +625,7 @@ function pwHTML(){
 function loginsHTML(){
   if(!S.users){api('listUsers').then(u=>{S.users=u;render(true)}).catch(e=>showMsg(e.message));return '<div class="card">Loading…</div>'}
   const ids=PEOPLE.map(p=>p.id);
-  return `<div class="card"><h3>PM Plan logins</h3><div class="muted" style="margin-bottom:6px">Set a new password for anyone who forgot theirs. It logs them out on every phone; share the new password with them privately.</div>`+
+  return `<div class="card"><h3>PM Reports logins</h3><div class="muted" style="margin-bottom:6px">Set a new password for anyone who forgot theirs. It logs them out on every phone; share the new password with them privately.</div>`+
     S.users.filter(u=>ids.indexOf(u.id)>=0).map(u=>`<div class="pwrow"><div><b>${esc(u.name)}</b><br><span class="muted">${u.role==='pm'?'PM':u.role==='admin'?'Admin · dashboard':'Senior · dashboard'}${u.set?'':' · not set'}</span></div><input id="up_${u.id}" type="text" placeholder="New password" autocomplete="off"><button class="btn" data-act="setuserpw" data-u="${u.id}">Set</button></div>`).join('')+
     `<button class="btn sec" data-act="closeview">Close</button></div>`;
 }
@@ -1210,7 +1210,7 @@ function reportHTML(){
   const wd=weekDates(S.wk);const dates=kind==='week'?wd:[S.date];
   const wkLbl=(()=>{const a=parseD(wd[0]),b=parseD(wd[5]);return `${a.getDate()} ${a.toLocaleString('en',{month:'short'})} – ${b.getDate()} ${b.toLocaleString('en',{month:'short'})} ${b.getFullYear()}`})();
   const title=kind==='week'?`Weekly Report Card · Week of ${wkLbl}`:`Daily Report Card · ${parseD(S.date).toLocaleDateString('en',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}`;
-  h+=`<div class="rph"><div><div class="eyebrow">${WHO} Plan – Live · Flourish International School</div><h2>${esc(pl.name)} <span style="font-weight:600;color:var(--mut);font-size:14px">· ${pl.cls} · ${pl.sections.join(', ')}</span></h2><div class="sub2">${title}</div></div><img src="../fis/fis-logo-192.png" alt=""></div>`;
+  h+=`<div class="rph"><div><div class="eyebrow">${WHO} Reports · Flourish International School</div><h2>${esc(pl.name)} <span style="font-weight:600;color:var(--mut);font-size:14px">· ${pl.cls} · ${pl.sections.join(', ')}</span></h2><div class="sub2">${title}</div></div><img src="../fis/fis-logo-192.png" alt=""></div>`;
   let Y=0,X=0,NA=0,cells=0;const miss={};const emptyDays=[];
   if(kind==='week')dates.forEach(d=>{if(d<today&&dayEmpty(pl,d))emptyDays.push(d)});
   ['dp','de'].forEach(mode=>ROWS[mode].forEach(r=>{

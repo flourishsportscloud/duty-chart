@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>FIS Day Plan</title>
+<title>FIS Daily Class Plan</title>
 <meta name="theme-color" content="#1F2D5A">
 <link rel="icon" href="../fis/fis-logo-192.png">
 <link rel="apple-touch-icon" href="../fis/fis-logo-180.png">
@@ -319,7 +319,7 @@ function render(){
   const ed=S.me.editor;
   const tabs=[["plans","Plans"],["free","Free Staff"]].concat(ed?[["dash","Dashboard"],["staff","Staff"]]:[]);
   const minD=ed?addDays(S.d.today,-7):S.d.today, maxD=ed?addDays(S.d.today,14):addDays(S.d.today,1);
-  let h='<header><div class="h1"><div class="logo"><img src="../fis/fis-logo-192.png" alt="FIS"></div><div class="ttl"><h1>Day Plan</h1><small>Flourish International School</small></div><div class="who"><span>'+esc(S.me.name)+'</span><button data-act="logout">Log out</button></div></div>';
+  let h='<header><div class="h1"><div class="logo"><img src="../fis/fis-logo-192.png" alt="FIS"></div><div class="ttl"><h1>Daily Class Plan</h1><small>Flourish International School</small></div><div class="who"><span>'+esc(S.me.name)+'</span><button data-act="logout">Log out</button></div></div>';
   h+='<div class="datebar"><button class="ar" data-act="day" data-v="-1" '+(S.date<=minD?"disabled":"")+' aria-label="Previous day">‹</button><div class="dl">'+esc(fmtDate(S.date))+'<small>'+(S.date===S.d.today?"Today":S.date===addDays(S.d.today,1)?"Tomorrow":S.date<S.d.today?"Earlier":"Upcoming")+'</small></div><button class="ar" data-act="day" data-v="1" '+(S.date>=maxD?"disabled":"")+' aria-label="Next day">›</button></div></header>';
   h+='<main class="wrap">'+(PREVIEW?'<div class="notice info"><b>Preview mode.</b> Sample data only — nothing is saved until the server is connected (see SETUP.md). Log out and sign in as <b>Director</b> to see the editor view, or any other name to see the staff view.</div>':'')+(S.err?'<div class="notice bad">'+esc(S.err)+'</div>':'');
   if(S.tab==="plans")h+=plansHtml();else if(S.tab==="free")h+=freeHtml();else if(S.tab==="dash"&&ed)h+=dashHtml();else if(S.tab==="staff"&&ed)h+=staffHtml();else h+=plansHtml();
@@ -331,7 +331,7 @@ function render(){
   if(!S.sheet)window.scrollTo(0,keep);else{const ns=$(".sheet");if(ns)ns.scrollTop=osy}
 }
 function loginHtml(){
-  return '<div class="lg-top"><div class="login"><div class="brand"><div class="logo"><img src="../fis/fis-logo-192.png" alt="FIS"></div><h1>Day Plan</h1><small>Flourish International School</small></div></div></div>'+
+  return '<div class="lg-top"><div class="login"><div class="brand"><div class="logo"><img src="../fis/fis-logo-192.png" alt="FIS"></div><h1>Daily Class Plan</h1><small>Flourish International School</small></div></div></div>'+
   '<div class="login" style="padding-top:18px"><div class="card"><h3>Staff sign in</h3>'+(PREVIEW?'<div class="notice info">Preview mode — type any name. “Director” opens the editor view.</div>':'<div class="muted" style="font-size:12.5px;line-height:1.5">Use the same name and password as the <b>Diary</b> app.</div>')+
   (S.err?'<div class="notice bad" style="margin-top:10px">'+esc(S.err)+'</div>':'')+
   '<label class="f" for="ln">Name</label><input id="ln" type="text" autocomplete="username" autocapitalize="words" value="'+esc(S.ln!=null?S.ln:(PREVIEW?"Director":""))+'"><label class="f" for="lp">Password</label><input id="lp" type="password" autocomplete="current-password"><div style="margin-top:14px"><button class="btn big" style="width:100%" data-act="login" '+(S.busy?"disabled":"")+'>'+(S.busy?"Signing in…":"Sign in")+'</button></div></div></div>';

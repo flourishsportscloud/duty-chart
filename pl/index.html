@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#1F2D5A">
 <link rel="icon" href="../fis/fis-icon-192.png">
-<title>PL Plan – Live</title>
+<title>PL Reports</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-/* ===== PL Plan – Live · cool-neutral corporate theme ===== */
+/* ===== PL Reports · cool-neutral corporate theme ===== */
 :root{
   --bg:#f2f4f7;--card:#ffffff;--card2:#f8fafc;--ink:#0f172a;--ink2:#334155;--mut:#64748b;--faint:#94a3b8;--line:#e5e9f0;--line2:#d5dbe5;
   --head:#111827;--head2:#1f2937;--navy:#2b4c7e;--navy2:#1f2937;--accent:#2b4c7e;--accentS:#e8eef7;
@@ -412,7 +412,7 @@ input.cwin,select.cwin{font:inherit;font-size:13px;border:1px solid #c7cfe2;bord
 </head>
 <body>
 <header>
-  <div class="h1"><h1><a href="../fis/">‹ FIS</a><img class="hlogo" src="../fis/fis-logo-192.png" alt="FIS"><span>PL Plan – Live<small>Flourish International School</small></span></h1>
+  <div class="h1"><h1><a href="../fis/">‹ FIS</a><img class="hlogo" src="../fis/fis-logo-192.png" alt="FIS"><span>PL Reports<small>Flourish International School</small></span></h1>
     <div class="who" id="whobox"></div></div>
   <div class="sub"><div class="seg" id="modeseg"></div><span class="chip" id="conn"></span></div>
 </header>
@@ -601,7 +601,7 @@ async function doChangePw(target,inId,in2Id){
 }
 function showOk(t){const el=document.getElementById('msg');el.innerHTML=`<div class="notice info">${esc(t)}</div>`;clearTimeout(msgTimer);msgTimer=setTimeout(()=>showMsg(''),5000)}
 function loginHTML(){
-  return `<div class="card login"><div class="llogo"><img src="../fis/fis-logo-192.png" alt="FIS"></div><h3 style="font-size:17px">Log in</h3><div class="muted">PL Plan – Live · FIS</div>
+  return `<div class="card login"><div class="llogo"><img src="../fis/fis-logo-192.png" alt="FIS"></div><h3 style="font-size:17px">Log in</h3><div class="muted">PL Reports · FIS</div>
   <label for="lid">Your name</label><select id="lid"><option value="">— choose —</option>${PEOPLE.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select>
   <label for="lpw">Password</label><input id="lpw" type="password" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false">
   <label style="display:flex;align-items:center;gap:6px;font-weight:400;margin-top:6px"><input type="checkbox" onchange="document.getElementById('lpw').type=this.checked?'text':'password'" style="width:auto;margin:0"> Show password</label>
@@ -1119,7 +1119,7 @@ function reportHTML(){
   const wd=weekDates(S.wk);const dates=kind==='week'?wd:[S.date];
   const wkLbl=(()=>{const a=parseD(wd[0]),b=parseD(wd[5]);return `${a.getDate()} ${a.toLocaleString('en',{month:'short'})} – ${b.getDate()} ${b.toLocaleString('en',{month:'short'})} ${b.getFullYear()}`})();
   const title=kind==='week'?`Weekly Report Card · Week of ${wkLbl}`:`Daily Report Card · ${parseD(S.date).toLocaleDateString('en',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}`;
-  h+=`<div class="rph"><div><div class="eyebrow">${WHO} Plan – Live · Flourish International School</div><h2>${esc(pl.name)} <span style="font-weight:600;color:var(--mut);font-size:14px">· ${pl.cls} · ${pl.sections.join(', ')}</span></h2><div class="sub2">${title}</div></div><img src="../fis/fis-logo-192.png" alt=""></div>`;
+  h+=`<div class="rph"><div><div class="eyebrow">${WHO} Reports · Flourish International School</div><h2>${esc(pl.name)} <span style="font-weight:600;color:var(--mut);font-size:14px">· ${pl.cls} · ${pl.sections.join(', ')}</span></h2><div class="sub2">${title}</div></div><img src="../fis/fis-logo-192.png" alt=""></div>`;
   let Y=0,X=0,NA=0,cells=0;const miss={};const emptyDays=[];
   if(kind==='week')dates.forEach(d=>{if(d<today&&dayEmpty(pl,d))emptyDays.push(d)});
   ['dp','de'].forEach(mode=>ROWS[mode].forEach(r=>{
