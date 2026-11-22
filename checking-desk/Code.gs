@@ -36,8 +36,18 @@ function login(name,pw){
   if(!name||!pw)throw new Error("Type your name and password.");
   const r=UrlFetchApp.fetch(DIARY_API,{method:"post",contentType:"text/plain;charset=utf-8",payload:JSON.stringify({fn:"login",args:[name,String(pw)]}),muteHttpExceptions:true,followRedirects:true});
   let j;try{j=JSON.parse(r.getContentText())}catch(e){throw new Error("The Diary login could not be reached. Try again.")}
-  if(!j||j.ok===false||j.error){const m=String((j&&j.error)||"");throw new Error(m||"Wrong name or password.")}
-  return{token:makeToken(name),name:name};
+  if(!j||j.ok===false||j.err||j.error){const m=String((j&&(j.err||j.error))||"");throw new Error(m||"Wrong name or password.")}
+  const dt=(j&&j.v&&j.v.token)||"";
+  return{token:makeToken(name),name:name,dtoken:dt};
+}
+// Already signed in to the Diary app (or any hub app) on this phone: accept that sign-in, no password needed.
+function tokenLogin(dtoken){
+  if(!dtoken)throw new Error("Please log in again.");
+  const r=UrlFetchApp.fetch(DIARY_API,{method:"post",contentType:"text/plain;charset=utf-8",payload:JSON.stringify({fn:"state",args:[String(dtoken),"",""]}),muteHttpExceptions:true,followRedirects:true});
+  let j;try{j=JSON.parse(r.getContentText())}catch(e){throw new Error("The Diary login could not be reached. Try again.")}
+  const me=j&&j.ok&&j.v&&j.v.me;
+  if(!me||!me.name)throw new Error("Please log in again.");
+  return{token:makeToken(me.name),name:me.name};
 }
 function merge(a,b){
   if(b===null||typeof b!=="object"||Array.isArray(b))return b;
@@ -57,6 +67,7 @@ function doPost(e){
   try{
     const req=JSON.parse(e.postData.contents), a=req.args||[];
     if(req.fn==="login")return out({ok:true,data:login(a[0],a[1])});
+    if(req.fn==="tokenlogin")return out({ok:true,data:tokenLogin(a[0])});
     const who=readToken(req.code);
     if(!who)return out({ok:false,auth:true,error:"Please log in again."});
     let data=null;
@@ -71,7 +82,7 @@ function doPost(e){
     return out({ok:true,data:data});
   }catch(err){
     const m=String(err.message||err);
-    return out({ok:false,error:m,auth:/password|name|login|approv/i.test(m)});
+    return out({ok:false,error:m,auth:/password|name|log in|login|approv/i.test(m)});
   }
 }
 function sync(ver,dates){

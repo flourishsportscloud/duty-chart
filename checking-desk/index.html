@@ -210,12 +210,12 @@ var ready=new Promise(function(resolve){
     var d=document.createElement('div');
     d.style.cssText='position:fixed;inset:0;z-index:99999;background:#1F2D5A;display:flex;align-items:center;justify-content:center;padding:20px;font-family:Inter,system-ui,sans-serif';
     var f='width:100%;padding:11px 12px;border:1px solid #E6E2D8;border-radius:9px;font-size:15px;margin-bottom:9px';
-    d.innerHTML='<form style="background:#fff;border-radius:14px;padding:26px;max-width:340px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.35)"><div style="font-family:Lora,Georgia,serif;font-size:22px;font-weight:700;color:#1F2D5A">CM Checking Desk</div><div style="height:3px;width:44px;background:#E3A94F;margin:8px 0 14px"></div><div style="color:#646B80;font-size:13.5px;margin-bottom:12px">Flourish International School · log in with the same name and password as the Diary app.</div><input id="cd-n" type="text" autocomplete="username" placeholder="Your name" style="'+f+'"><input id="cd-p" type="password" autocomplete="current-password" placeholder="Password" style="'+f+'"><div id="cd-err" style="color:#A42A47;font-size:13px;min-height:18px;margin:2px 0 8px">'+(msg||'')+'</div><button type="submit" style="width:100%;padding:11px;border:0;border-radius:9px;background:#1F2D5A;color:#fff;font-weight:700;font-size:15px">Log in</button></form>';
+    d.innerHTML='<form style="background:#fff;border-radius:14px;padding:26px;max-width:340px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.35)"><img src="../fis/fis-logo-192.png" alt="FIS" style="width:64px;height:64px;border-radius:14px;display:block;margin:0 auto 10px"><div style="font-family:Lora,Georgia,serif;font-size:22px;font-weight:700;color:#1F2D5A;text-align:center">CM Checking Desk</div><div style="height:3px;width:44px;background:#E3A94F;margin:8px auto 14px"></div><div style="color:#646B80;font-size:13.5px;margin-bottom:12px">Flourish International School · use the same name and password as the Diary app.</div><input id="cd-n" type="text" autocomplete="username" placeholder="Your name" style="'+f+'"><input id="cd-p" type="password" autocomplete="current-password" placeholder="Password" style="'+f+'"><div id="cd-err" style="color:#A42A47;font-size:13px;min-height:18px;margin:2px 0 8px">'+(msg||'')+'</div><button type="submit" style="width:100%;padding:11px;border:0;border-radius:9px;background:#1F2D5A;color:#fff;font-weight:700;font-size:15px">Log in</button><div style="color:#646B80;font-size:12.5px;margin-top:12px;line-height:1.45">No password yet? Set one in the <a href="../diary/" style="color:#1F2D5A;font-weight:600">Diary app</a> first; the admin approves it once.</div></form>';
     document.body.appendChild(d);
     d.querySelector('form').onsubmit=function(ev){
       ev.preventDefault();var n=d.querySelector('#cd-n').value.trim(),pw=d.querySelector('#cd-p').value;
       if(!n||!pw)return;CODE='';
-      call('login',[n,pw]).then(function(r){CODE=r.token;try{localStorage.setItem('cd_tok',CODE);localStorage.setItem('cd_name',r.name)}catch(e){}d.remove();resolve()}).catch(function(e){d.querySelector('#cd-err').textContent=e.auth||/password|login|approv/i.test(e.message)?e.message:'Could not reach the server. Check the connection.'});
+      call('login',[n,pw]).then(function(r){CODE=r.token;try{localStorage.setItem('cd_tok',CODE);localStorage.setItem('cd_name',r.name);if(r.dtoken&&!localStorage.getItem('diary-token'))localStorage.setItem('diary-token',r.dtoken)}catch(e){}d.remove();resolve()}).catch(function(e){d.querySelector('#cd-err').textContent=e.auth||/password|login|approv/i.test(e.message)?e.message:'Could not reach the server. Check the connection.'});
     };
   }
   function start(){
@@ -224,7 +224,9 @@ var ready=new Promise(function(resolve){
       b.innerHTML='<span style="color:#F4D9A6">NOT CONNECTED YET · nothing entered here is saved</span>';
       b.addEventListener('click',function(ev){var g=ev.target.getAttribute&&ev.target.getAttribute('data-go');if(!g)return;var i=document.getElementById('datepick');if(!i){var nb=document.querySelector('nav button');if(nb)nb.click();i=document.getElementById('datepick')}if(i){i.value=g;i.dispatchEvent(new Event('change',{bubbles:true}))}});
       document.body.insertBefore(b,document.body.firstChild);resolve();return}
-    if(!CODE){gate();return}
+    if(!CODE){var dt='';try{dt=localStorage.getItem('diary-token')||''}catch(x){}
+      if(dt){call('tokenlogin',[dt]).then(function(r){CODE=r.token;try{localStorage.setItem('cd_tok',CODE);localStorage.setItem('cd_name',r.name)}catch(x){}resolve()}).catch(function(){gate()});return}
+      gate();return}
     call('ping').then(resolve).catch(function(e){if(e.auth){CODE='';try{localStorage.removeItem('cd_tok')}catch(x){}gate()}else resolve()});
   }
   if(document.body)start();else document.addEventListener('DOMContentLoaded',start);
