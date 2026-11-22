@@ -121,7 +121,7 @@ const GAS=(()=>{
 })();
 
 /* ---------- state ---------- */
-const S={date:todayStr(),view:(v=>['ss','duty','late','unif','early','sb','day','dep','dash','school','alloc'].includes(v)?v:'school')(LS.get('view','duty')),veh:{},gate:{},sb:{},alloc:{},sbReg:{},walkReg:{},out:{},derr:{},sbSeg:LS.get('sbSeg','sb'),ss:{},ssList:{},managers:[],privVan:{},lateAfter:'07:45',openVeh:null,depVeh:null};
+const S={date:todayStr(),view:(v=>['duty','late','unif','early','sb','day','dep','dash','school','alloc'].includes(v)?v:'school')(LS.get('view','duty')),veh:{},gate:{},sb:{},alloc:{},sbReg:{},walkReg:{},out:{},derr:{},sbSeg:LS.get('sbSeg','sb'),ss:{},ssList:{},managers:[],privVan:{},lateAfter:'07:45',openVeh:null,depVeh:null};
 let unsubs=[];
 function subscribeDate(){
   unsubs.forEach(u=>u&&u());unsubs=[];
@@ -799,7 +799,7 @@ function lateMonthlyText(){const mon=new Date(S.date+'T00:00').toLocaleDateStrin
   return '*Late Defaulters – '+mon+'*\n'+lateMonthlyRows().map((r,i)=>(i+1)+'. '+r.k.name+' '+shortCls(r.k.cls)+' - '+vehShort(r.k)+' - '+r.a.length+' time'+(r.a.length>1?'s':'')+' late').join('\n')}
 
 /* STUDENT RECORDS (Dashboard) */
-const REC_SEGS=[['DOUBT','Stay Back Doubt'],['SB','Stay Back'],['MISS','Missed Bus'],['DRVU','Driver Uniform Defaulters'],['CONU','Conductor Uniform Defaulters'],['UNIF','Student Uniform Defaulters'],['ERR','Error in Data'],['MISSSB','Stay Back Defaulters'],['LATE','Late Comers'],['EARLY','Early Leavers'],['ABS','Absentees'],['SS','Smart Study'],['PARENT','Parent Pick-up']];
+const REC_SEGS=[['DOUBT','Stay Back Doubt'],['SB','Stay Back'],['MISS','Missed Bus'],['DRVU','Driver Uniform Defaulters'],['CONU','Conductor Uniform Defaulters'],['UNIF','Student Uniform Defaulters'],['ERR','Error in Data'],['MISSSB','Stay Back Defaulters'],['LATE','Late Comers'],['EARLY','Early Leavers'],['ABS','Absentees'],['PARENT','Parent Pick-up']];
 const RG={key:'',data:{},loading:false};
 function vehOrd(k){const i=VEH.findIndex(v=>v.k===k.v);return i<0?999:i}
 function ymd(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
@@ -1061,7 +1061,7 @@ function renderSchool(){
     return '<div class="kid"><div class="nm"><div>'+esc(k.name)+'</div><span>'+esc(clsName(k.cls))+' · '+esc(modeLabel(k))+(d.by?' · marked by '+esc(d.by)+' '+esc(d.time||''):'')+'</span></div><div style="display:flex;gap:6px"><button class="tg SB" data-dclr="'+k.id+'|1">Staying</button><button class="tg noSB" data-dclr="'+k.id+'|0">Not Staying</button></div></div>'}).join(''):'';
   const rows=schoolRows();const by={};rows.forEach(r=>(by[r.k.cls]=by[r.k.cls]||[]).push(r));
   const cls=CLASSES.filter(c=>by[c]);const sum=$('gateBy').value===ALLBY&&!$('schSt').value&&!$('schQ').value.trim();
-  const CATS=[['Absent','A',r=>r.st.IN==='A'],['Late arrival','LATE',r=>r.st.IN==='LATE',r=>r.st.g.in&&r.st.g.in.time],['Early leavers','EARLY',r=>r.st.OUT==='EARLY',r=>r.st.g.out&&r.st.g.out.time],['Stay back','SB',r=>r.st.OUT==='SB'],['Parent pick-up','GOWALK',r=>r.st.OUT==='GOWALK'],['Stay back doubt – confirm with parent','LATE',r=>sbDoubt(r.k.id)],['Smart Study – staying','SB',r=>ssDayVal(r.k.id)==='P'],['Errors reported','A',r=>((r.st.g||{}).errs||[]).length,r=>((r.st.g||{}).errs||[]).map(e=>e.type+(e.rem?' – '+e.rem:'')).join('; ')]];
+  const CATS=[['Absent','A',r=>r.st.IN==='A'],['Late arrival','LATE',r=>r.st.IN==='LATE',r=>r.st.g.in&&r.st.g.in.time],['Early leavers','EARLY',r=>r.st.OUT==='EARLY',r=>r.st.g.out&&r.st.g.out.time],['Stay back','SB',r=>r.st.OUT==='SB'],['Parent pick-up','GOWALK',r=>r.st.OUT==='GOWALK'],['Stay back doubt – confirm with parent','LATE',r=>sbDoubt(r.k.id)],['Errors reported','A',r=>((r.st.g||{}).errs||[]).length,r=>((r.st.g||{}).errs||[]).map(e=>e.type+(e.rem?' – '+e.rem:'')).join('; ')]];
   $('schList').innerHTML=cls.length?cls.map(c=>{const rs=by[c].sort((a,b)=>a.k.name.localeCompare(b.k.name));
     const cs=sum?CATS.map(ct=>{const a=rs.filter(ct[2]);return a.length?'<div class="sumline"><span class="tag t-'+ct[1]+'">'+ct[0]+' · '+a.length+'</span><ol>'+a.map(r=>'<li><b>'+esc(r.k.name)+'</b><i>'+dots([esc(modeLabel(r.k)),ct[3]?esc(ct[3](r)||''):'',esc(r.rem)])+'</i></li>').join('')+'</ol></div>':''}).join(''):'';
     return '<div class="cstrip"><span>'+esc(clsName(c))+'</span><small>'+rs.length+'</small></div>'+(sum?(cs||'<p class="muted" style="margin:6px">No absent, late, early or stay back entry.</p>')+'<details class="allst"><summary>All '+rs.length+' students</summary>':'')+
@@ -1076,14 +1076,13 @@ function dayData(){const ks=Object.values(KID).filter(k=>cpHas('day',k.cls));con
 function sbSrc(k){const v=sbDay(k.id);const d=S.sb[seg(k.cls)]||{};if(((S.gate[k.id]||{}).out||{}).type==='SB')return 'Front Office';if(v===true)return 'Marked by '+byShort(d.by||'PL');if(v==='D')return 'Doubt – to confirm';return 'Regular list – not marked yet'}
 function renderDay(){
   $('dayH').textContent='Day Summary – '+fmtDL(S.date);cpRender('dayCp','day');const D=dayData();
-  const kp=[['Late Comers',D.late.length,'LATE'],['Early Leavers',D.early.length,'EARLY'],['Stay Back',D.sb.length,'SB'],['Stay Back Doubt',D.doubt.length,'LATE'],['Smart Study',D.ss.length,'SB'],['Errors',errRows([S.date]).length,'A'],['Uniform Defaulters',D.unif.length,'A']];
+  const kp=[['Late Comers',D.late.length,'LATE'],['Early Leavers',D.early.length,'EARLY'],['Stay Back',D.sb.length,'SB'],['Stay Back Doubt',D.doubt.length,'LATE'],['Errors',errRows([S.date]).length,'A'],['Uniform Defaulters',D.unif.length,'A']];
   $('dayBody').innerHTML='<div class="daykp">'+kp.map(x=>'<div class="c-'+x[2]+'"><b>'+x[1]+'</b><span>'+x[0]+'</span></div>').join('')+'</div>'+
     '<div class="card">'+catHead('Late Comers',D.late.length,'LATE')+strips(D.late,r=>nrow(esc(r.k.name),dots([esc(modeLabel(r.k)),esc(r.g.rem),r.g.by?'by '+esc(byShort(r.g.by)):'']),'<span class="tag t-LATE">'+esc(r.g.in.time||'')+'</span>'),{empty:'No late comers.'})+'</div>'+
     '<div class="card">'+catHead('Early Leavers',D.early.length,'EARLY')+strips(D.early,r=>nrow(esc(r.k.name),dots(['Regular: '+esc(modeLabel(r.k)),r.g.rem?'<b>'+esc(r.g.rem)+'</b>':'',r.g.by?'by '+esc(byShort(r.g.by)):'']),'<span class="tag t-EARLY">Left '+esc(r.g.out.time||'')+'</span>'),{empty:'No early leavers.'})+'</div>'+
     '<div class="card">'+catHead('Stay Back',D.sb.length,'SB')+strips(D.sb,r=>nrow(esc(r.k.name),dots([esc(modeLabel(r.k)),esc(sbSrc(r.k))]),''),{empty:'No stay back students.'})+'</div>'+
     '<div class="card">'+errHtml(errRows([S.date]).filter(r=>!r.k||cpHas('day',r.k.cls)),'day','Errors of the Day')+'</div>'+
     '<div class="card">'+catHead('Stay Back Doubt – confirm with parent',D.doubt.length,'LATE')+strips(D.doubt,r=>nrow(esc(r.k.name),dots([esc(modeLabel(r.k)),'Marked by '+esc(byShort((S.sb[seg(r.k.cls)]||{}).by||''))]),''),{empty:'No doubt cases.'})+'</div>'+
-    '<div class="card">'+catHead('Smart Study Session',D.ss.length,'SB')+strips(D.ss,r=>nrow(esc(r.k.name),dots([esc(modeLabel(r.k)),'Marked by '+esc(byShort((S.ss[seg(r.k.cls)]||{}).by||''))]),''),{empty:'No Smart Study attendance marked.'})+'</div>'+
     '<div class="card">'+catHead('Uniform Defaulters',D.unif.length,'A')+strips(D.unif,r=>nrow(esc(r.k.name),'<span class="tag t-A" style="white-space:normal">'+esc(unifTxt(r.g.unif))+'</span><br>'+dots([esc(modeLabel(r.k)),esc(r.g.unif.rem),r.g.unif.by?'Logged by '+esc(r.g.unif.by)+(r.g.unif.time?' '+esc(r.g.unif.time):''):'']),''),{empty:'No uniform defaulters.'})+'</div>';
 }
 function dayText(){const D=dayData();const a=cpGet('day');let t='*FIS Day Summary – '+fmtDL(S.date)+'*'+(a.length?'\nClasses: '+a.map(secLbl).join(', '):'')+'\n';
@@ -1093,7 +1092,6 @@ function dayText(){const D=dayData();const a=cpGet('day');let t='*FIS Day Summar
   blk('Early Leavers',D.early,r=>' – '+(r.g.out.time||'')+(r.g.rem?' – '+r.g.rem:'')+' ('+modeLabel(r.k)+')');
   blk('Stay Back',D.sb,r=>' ('+modeLabel(r.k)+')');
   blk('Stay Back Doubt',D.doubt,r=>' ('+modeLabel(r.k)+')');
-  blk('Smart Study Session',D.ss,r=>' ('+modeLabel(r.k)+')');
   blk('Uniform Defaulters',D.unif,r=>' – '+unifTxt(r.g.unif));
   return t}
 function schoolText(){const rows=schoolRows();const d=new Date(S.date+'T00:00');
