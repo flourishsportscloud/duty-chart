@@ -288,13 +288,20 @@ th{background:#F3F0E8;color:var(--mut);letter-spacing:.1em}
 .login h3{font-family:var(--serif);font-size:22px!important;color:var(--navy)}
 .login label{text-transform:uppercase;letter-spacing:.14em;font-size:10.5px!important;font-weight:700}
 textarea:focus,input:focus,select:focus{outline:0;border-color:var(--gold)!important;box-shadow:0 0 0 3px rgba(227,169,79,.3)}
-/* ---- task check (defaulters) ---- */
-.tcbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
-.tcbar button{border:1px solid var(--line2);background:#fff;border-radius:99px;padding:5px 12px;font-size:12px;font-weight:700;color:var(--ink2)}
-.tcbar button.on{background:var(--head);color:#fff;border-color:var(--head)}
+/* ---- shared: done / not-done check, care watch, report cards ---- */
+.tabs2{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none}
+.tabs2::-webkit-scrollbar{display:none}
+.tabs2 button{flex:0 0 auto;border:1px solid var(--line2);background:#fff;border-radius:99px;padding:6px 12px;font-size:12px;font-weight:700;color:var(--ink2);white-space:nowrap}
+.tabs2 button.on{background:var(--head);color:#fff;border-color:var(--head)}
+.tabs2 button.red{border-color:#e8a7b9;color:#9d1747}.tabs2 button.red.on{background:#9d1747;border-color:#9d1747;color:#fff}
+.tabs2 .bd{display:inline-block;min-width:18px;padding:0 5px;border-radius:99px;background:var(--red);color:#fff;font-size:10.5px;line-height:17px;text-align:center}
+.tabs2 .okd{color:var(--green)}.tabs2 button.on .okd{color:#a7f3c4}
+.ndl{display:block;border-left:5px solid var(--red);background:#fdeef4;border-radius:10px;padding:7px 10px;margin-bottom:5px;cursor:pointer}
+.ndt{font-weight:800;color:#9d1747;font-size:13px}
+.ndw{font-size:12.5px;color:var(--ink);margin-top:2px;line-height:1.5}.ndw .sep{color:#e3a3b7;margin:0 3px}
 .tcblk{font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin:12px 0 4px}
 .tk{border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin-bottom:6px;background:#fff}
-.tk.bad{background:#fdeef4;border-color:#f2b8cc}
+.tk.bad{background:#fdeef4;border-color:#f2b8cc;border-left:5px solid var(--red)}
 .tk.bad .tkh b{color:#9d1747}
 .tkh{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
 .tkh b{font-size:13px}.tkc{font-size:11.5px;font-weight:700;color:var(--mut);white-space:nowrap}
@@ -309,26 +316,44 @@ textarea:focus,input:focus,select:focus{outline:0;border-color:var(--gold)!impor
 .cp.M{background:#fff;color:var(--red);border-color:var(--red);border-style:dashed}
 .cp.P{background:#fff;color:var(--faint);border-color:var(--line2)}
 .tkr{margin-top:6px;font-size:12px;color:var(--ink2);border-top:1px dashed var(--line2);padding-top:5px}
-.tkr div{padding:1px 0}.tkr .ac{color:#16733f;font-weight:600}
+.tkr div{padding:1px 0}.ac{color:#16733f;font-weight:600}
 .leg{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:11px;color:var(--mut);margin:2px 0 8px}
 .leg .cp{min-width:0}
 .okline{font-size:12px;color:var(--green);line-height:1.6}
-/* ---- action field ---- */
-.rr .acin{flex-basis:100%}
-.rr input.acin{width:auto;flex:1 1 100%;border-color:#bfe3cc;background:#f6fcf8}
-/* ---- report card ---- */
+.allclear{display:flex;align-items:center;gap:10px;padding:12px;border-radius:12px;background:var(--greenS);color:var(--green);font-weight:600;font-size:13px}
+.cwtab{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:8px}.cwtab th{font-size:11px;color:var(--mut);text-align:left;padding:4px}.cwtab td{border-top:1px solid var(--line);padding:5px 4px;vertical-align:top}
+.cwtab tr.bad td{background:#fdeef4}.okc{color:var(--green)}.noc{color:var(--red)}
+/* care watch panel */
+.cw{border-top:1px dashed var(--line2);margin-top:8px;padding:8px 10px 10px}
+.cwh{font-weight:800;font-size:13px;color:var(--navy);margin-bottom:6px}
+.cwc{border:1px solid var(--line);border-radius:12px;padding:8px;margin-bottom:6px;background:#fbfcfe}
+.cwc.bad{border-left:5px solid var(--red);background:#fdeef4}.cwc.one{background:#fffaf0}
+.cwt{display:flex;justify-content:space-between;gap:6px;align-items:flex-start}
+.cwty{font-size:10.5px;font-weight:700;color:var(--mut);background:var(--greyS);border-radius:99px;padding:1px 7px;white-space:nowrap}.cwty.o{background:#fff1d6;color:#8a5a00}
+.cwc .tms{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}
+.tmc{font-size:11px;border-radius:99px;padding:2px 8px;background:#e9eefc;color:#2a3f86;font-weight:600}
+.tmc.ack{background:#fff1d6;color:#8a5a00}.tmc.fu{background:#e3f6ec;color:#16733f}.tmc.no{background:var(--red);color:#fff}
+.cwc .acts{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:6px}
+.cwk{border:1.5px solid var(--line2);background:#fff;border-radius:8px;padding:4px 8px;font-size:11.5px;font-weight:700;color:var(--ink2)}
+.cwk.D{background:var(--greenS);border-color:var(--greenL);color:var(--green)}.cwk.N{background:var(--red);border-color:var(--red);color:#fff}.cwk.A{background:var(--greyS);color:var(--grey)}
+input.cwin,select.cwin{font:inherit;font-size:13px;border:1px solid #c7cfe2;border-radius:6px;padding:6px;background:#fff;min-width:0;width:100%}
+.cwf{display:grid;grid-template-columns:1fr 70px;gap:6px;margin-top:6px}.cwf .full{grid-column:1/-1}
+.btn2{border:0;border-radius:8px;padding:8px 12px;font-weight:700;font-size:13px;background:var(--navy);color:#fff}
+.btn2.fu{background:#1e9e5a}.btn2.sm{padding:5px 9px;font-size:12px}
+/* report card */
 .repbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
 .repbar button{border:1px solid var(--line2);background:#fff;border-radius:10px;padding:7px 12px;font-size:12.5px;font-weight:700;color:var(--ink2)}
 .repbar button.on{background:var(--head);color:#fff;border-color:var(--head)}
 .repbar .go{background:var(--navy);color:#fff;border-color:var(--navy)}
 .report{background:#fff;border-radius:16px;padding:18px;box-shadow:0 2px 10px rgba(15,23,42,.06)}
+.report .eyebrow{font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
 .rph{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;border-bottom:3px solid var(--navy);padding-bottom:10px;margin-bottom:12px}
 .rph h2{margin:0;font-size:19px}.rph .sub2{color:var(--mut);font-size:12px;margin-top:2px}
 .rph img{width:44px;height:44px}
 .rtiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:12px}
 .rtile{border:1px solid var(--line);border-radius:12px;padding:8px 10px}.rtile b{display:block;font-size:22px}.rtile span{font-size:11px;color:var(--mut);font-weight:600}
 .rtile.g b{color:var(--green)}.rtile.r b{color:var(--red)}.rtile.o b{color:var(--amber)}
-.rmiss{margin:0 0 12px;padding:10px 12px;border-radius:12px;background:#fdeef4;border:1px solid #f2b8cc}
+.rmiss{margin:0 0 12px;padding:10px 12px;border-radius:12px;background:#fdeef4;border:1px solid #f2b8cc;border-left:5px solid var(--red)}
 .rmiss h4{margin:0 0 6px;color:#9d1747;font-size:13px}
 .rmiss li{font-size:12.5px;margin:3px 0}
 .rgrid{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px}
@@ -350,7 +375,6 @@ textarea:focus,input:focus,select:focus{outline:0;border-color:var(--gold)!impor
   header,nav,#msg,.noprint{display:none!important}
   body{background:#fff}.wrap{padding:0;max-width:none}
   .report{box-shadow:none;padding:0;border-radius:0}
-  .rgrid th{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .report *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .rgrid tr{break-inside:avoid}
 }
@@ -434,7 +458,7 @@ function fmt12(t){const a=t.split(':').map(Number);const ap=a[0]>=12?'PM':'AM';r
 const docId=(pl,mode,date)=>pl+'_'+mode+'_'+date;
 
 /* ================= STATE ================= */
-const S={who:'',me:null,token:'',view:null,users:null,busy:false,tab:'dash',mode:'dp',wk:null,date:null,docs:{},times:{},conn:'init',openRem:{},editTime:null,dirty:false,tcAll:false,rep:{pl:null,kind:'week'}};
+const S={who:'',me:null,token:'',view:null,users:null,busy:false,tab:'dash',mode:'dp',wk:null,date:null,docs:{},times:{},conn:'init',openRem:{},editTime:null,dirty:false,tcTab:'nd',rep:{pl:null,kind:'week'}};
 const DET={};const detOpen=(k,def)=>k in DET?DET[k]:def;
 document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.dataset&&d.dataset.k)DET[d.dataset.k]=d.open},true);
 try{S.token=localStorage.getItem('plplan_token')||'';S.me=JSON.parse(localStorage.getItem('plplan_me')||'null');if(S.me)S.who=S.me.id}catch(e){}
@@ -678,7 +702,7 @@ function paintConn(){
   const m={live:['Live · shared','live'],local:['Setting up · this device only','loc'],err:["Can't reach server · will retry",'err'],init:['Connecting…','']}[S.conn]||['',''];
   el.textContent=m[0];el.className='chip '+m[1];
 }
-function typing(){const a=document.activeElement;return !!(a&&a.classList&&a.classList.contains('remin'))}
+function typing(){const a=document.activeElement;return !!(a&&a.classList&&(a.classList.contains('remin')||a.classList.contains('cwin')))}
 function render(force){
   if(typing()&&!force){S.dirty=true;return}
   S.dirty=false;
@@ -850,6 +874,7 @@ function plPage(pl){
   h+=`<div class="card"><h3>Not Done <span class="hint">${sm.nd.length||''}</span></h3><div class="nd">${notDone(pl,doc,mode)}</div></div>`;
   h+=remarksCard([pl]);
   h+=blocksHTML(pl,doc,mode,editable);
+  if(mode==='dp'){cwCarry(pl);h+=`<div class="blk"><div class="bh"><span class="bn">Student Care Watch</span><span class="bpc">washroom · water · lunch</span></div>${cwPanel(pl,getDoc(pl,'dp',S.date),editable)}</div>`}
   return h;
 }
 function plSummary(pl,mode,date){
@@ -870,55 +895,172 @@ function statusTag(sm,date){
   if(!(c.D+c.A+c.N))return '<span class="tag idle">Not started</span>';
   return '<span class="tag ok">On track</span>';
 }
-/* ================= DEFAULTERS (task-wise) =================
-   Each section of each task is ✓ done · NA · ✗ marked Not Done · ! not marked although its time has passed
-   (past days, or today after the block's due time — blocks with no fixed time after END_DAY) · · still to come. */
+/* ================= DONE / NOT-DONE CHECK · CARE WATCH · REPORT CARDS (shared by PL and PM Plan) =================
+   Every section of every task is ✓ done · NA · ✗ marked Not Done · ! not marked although its time is over
+   (any past day, or today after the block's due time — blocks with no fixed time after END_DAY) · · still to come.
+   Care-watch children are kept in the day's record under cw-<id> keys (no server change needed); regular names
+   carry forward to the next working day. Guideline checks: a medical case and a regular care-watch child must be met
+   at least twice in the day. */
 const END_DAY='15:30';
 const SYM={D:'✓',A:'NA',N:'✗',M:'!',P:'·'};
-function isDueNow(b,date){const t=todayStr();if(date<t)return true;if(date>t)return false;return nowMin()>toMin(dueOf(b)||END_DAY)}
+const WHO='PL';
+const TC_SECS=(pl,mode,r)=>secsFor(pl,mode,r);
+const MEET_MIN=2;
+function isDueNow(b,date){const t=todayStr();if(date<t)return true;if(date>t)return false;return nowMin()>toMin((b&&dueOf(b))||END_DAY)}
 function stOf(doc,r,sec,date){const c=doc&&doc.cells&&doc.cells[r.key+'__'+sec];if(c&&c.s)return c.s;return isDueNow(r.block,date)?'M':'P'}
 const rowLabel=r=>r.sub?r.item.name+' › '+r.label:r.label;
 const shortN=pl=>pl.name.split(' ')[0];
-function dayEmpty(pl,date){return ['dp','de'].every(m=>{const d=getDoc(pl,m,date);return !d||!Object.keys(d.cells||{}).some(k=>d.cells[k]&&d.cells[k].s)})}
-function remLines(pl,doc,r){
-  const out=[];secsFor(pl,ROWMAP.dp[r.key]===r?'dp':'de',r).forEach(sec=>{
-    const e=doc&&doc.rem&&doc.rem[r.key+'__'+sec];const a=doc&&doc.rem&&doc.rem['ac-'+r.key+'__'+sec];
-    const x=e&&String(e.x||'').trim(),n=e&&e.n!==''&&e.n!=null?e.n:'',ac=a&&String(a.x||'').trim();
-    if(x||n!==''||ac)out.push({sec,x,n,ac,by:(e&&e.by)||(a&&a.by)||''});
+function dayEmpty(pl,date){return ['dp','de'].every(m=>{const d=getDoc(pl,m,date);return !d||!Object.keys(d.cells||{}).some(k=>d.cells[k]&&(d.cells[k].s||(d.cells[k].obs&&d.cells[k].obs.length)))})}
+function remLines(pl,doc,r,mode){
+  const out=[];TC_SECS(pl,mode,r).forEach(sec=>{
+    const k=r.key+'__'+sec;const e=doc&&doc.rem&&doc.rem[k];const a=doc&&doc.rem&&doc.rem['ac-'+k];const c=doc&&doc.cells&&doc.cells[k];
+    const x=e&&String(e.x||'').trim(),ac=a&&String(a.x||'').trim();
+    let n=e&&e.n!==''&&e.n!=null?e.n:'';if(n===''&&c&&c.n!==''&&c.n!=null&&c.n!==undefined)n=c.n;
+    const ph=e&&e.ph&&e.ph.length?e.ph.length:0;
+    if(x||n!==''||ac||ph)out.push({sec,x,n,ac,ph,by:(e&&e.by)||(a&&a.by)||''});
   });return out;
 }
-function taskCheck(mode,date){
-  const rows=ROWS[mode];let nBad=0,nOk=0;const okNames=[];let body='';let lastBlk=null;
-  rows.forEach(r=>{
-    let tot=0,done=0,bad=0,pend=0;const parts=[];const rems=[];
-    PLS.forEach(pl=>{
-      const doc=getDoc(pl,mode,date);const secs=secsFor(pl,mode,r);
-      const chips=secs.map(sec=>{const st=stOf(doc,r,sec,date);tot++;if(st==='D'||st==='A')done++;else if(st==='N'||st==='M')bad++;else pend++;
-        return `<span class="cp ${st}" title="${esc(pl.name)}${sec!=='x'?' · '+sec:''}">${sec!=='x'?esc(sec)+' ':''}${SYM[st]}</span>`}).join('');
-      parts.push(`<span class="tpl"><i>${esc(shortN(pl))}</i>${chips}</span>`);
-      remLines(pl,doc,r).forEach(l=>rems.push(`<div><b>${esc(shortN(pl))}${l.sec!=='x'?' · '+esc(l.sec):''}</b>${l.n!==''?' #'+esc(l.n):''}${l.x?': '+esc(l.x):''}${l.ac?` <span class="ac">→ Action: ${esc(l.ac)}</span>`:''}</div>`));
-    });
-    if(bad)nBad++;else if(!pend)nOk++;
-    const show=S.tcAll||bad||rems.length&&pend;
-    if(!bad&&!pend&&!S.tcAll){okNames.push(rowLabel(r));if(!rems.length)return}
-    if(!show&&!(rems.length))return;
-    if(r.block!==lastBlk){body+=`<div class="tcblk">${esc(r.block.name)}</div>`;lastBlk=r.block}
-    body+=`<div class="tk ${bad?'bad':''}"><div class="tkh"><b>${esc(rowLabel(r))}</b><span class="tkc">${bad?bad+' defaulter'+(bad>1?'s':'')+' · ':''}${done}/${tot} done</span></div><div class="tkp">${parts.join('')}</div>${rems.length?`<div class="tkr">${rems.join('')}</div>`:''}</div>`;
+function remLineHTML(pl,l,withName){return `<div>${withName?`<b>${esc(shortN(pl))}${l.sec!=='x'?' · '+esc(l.sec):''}</b>`:`<b>${l.sec!=='x'?esc(l.sec):''}</b>`}${l.n!==''?' #'+esc(l.n):''}${l.x?': '+esc(l.x):''}${l.ph?' 📷'+l.ph:''}${l.ac?` <span class="ac">→ Action: ${esc(l.ac)}</span>`:''}</div>`}
+
+/* ---------- Care watch (washroom / urine, water, lunch, other) ---------- */
+const CW_TYPES={wr:'🚻 Washroom / urine',wt:'💧 Water',ln:'🍱 Lunch / food',ot:'⚕ Other'};
+const CW_CHK=[['lb','Lunch box'],['fb','Fruit box'],['wb','Water bottle']];
+function careList(doc){
+  const out=[];if(!doc||!doc.rem)return out;
+  Object.keys(doc.rem).forEach(k=>{const m=/^cw-([a-z0-9]+)__x$/.exec(k);if(!m)return;let v=null;try{v=JSON.parse(doc.rem[k].x||'null')}catch(e){}
+    if(!v||!v.n)return;const id=m[1];const c=doc.cells&&doc.cells['cw-'+id+'__x'];const ac=doc.rem['cw-'+id+'-ac__x'];
+    const chk={};CW_CHK.forEach(([q])=>{const cc=doc.cells&&doc.cells['cw-'+id+'-'+q+'__x'];chk[q]=(cc&&cc.s)||''});
+    out.push({id,n:v.n,s:v.s||'',t:v.t||'ot',k:v.k||'r',at:doc.rem[k].at||0,by:doc.rem[k].by||'',met:(c&&c.obs)||[],chk,ac:ac?String(ac.x||''):''});});
+  return out.sort((a,b)=>(a.k===b.k?0:a.k==='r'?-1:1)||a.at-b.at);
+}
+const hasCareKeys=doc=>!!(doc&&doc.rem&&Object.keys(doc.rem).some(k=>/^cw-[a-z0-9]+__x$/.test(k)));
+function careBad(c,date){return c.k==='r'&&c.met.length<MEET_MIN&&isDueNow(null,date)}
+function medList(pl,date){const d=getDoc(pl,'dp',date);return ((d&&d.med)||[]).map(m=>({id:m.id,n:m.name,s:m.sec||'',x:m.x||'',met:[m.ack?m.ack.at:0].concat((m.fu||[]).map(f=>f.at)).filter(Boolean)}))}
+const medBad=(m,date)=>m.met.length<MEET_MIN&&isDueNow(null,date);
+const cwid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-3);
+function cwCell(plId,key,s){
+  const id=docId(plId,'dp',S.date);const doc=ensureDoc(id,plId,'dp',S.date);
+  const c={s:s,by:whoName(),at:Date.now(),l:0};doc.cells[key]=c;persist(id,{cells:{[key]:clone(c)}});
+}
+function cwPanel(pl,doc,editable){
+  const list=careList(doc);const date=S.date;
+  let h=`<div class="cw"><div class="cwh">👶 Care watch <span class="muted">— children to check through the day (met at least ${MEET_MIN}×)</span></div>`;
+  list.forEach(c=>{
+    const bad=careBad(c,date);
+    h+=`<div class="cwc ${bad?'bad':''} ${c.k==='o'?'one':''}"><div class="cwt"><div><b>${esc(c.n)}</b>${c.s?' · '+esc(c.s):''} <span class="cwty">${CW_TYPES[c.t]||''}</span> ${c.k==='o'?'<span class="cwty o">Today only</span>':''}</div>`+
+      (editable?`<button class="mini" data-act="cwdel" data-pl="${pl.id}" data-id="${c.id}">Remove</button>`:'')+`</div>`+
+      `<div class="tms">${c.met.map((t,i)=>`<span class="tmc fu">Met ${i+1} · ${fmtT(t)}</span>`).join('')||`<span class="tmc ${bad?'no':''}">Not met yet</span>`}${c.k==='r'?`<span class="tmc ${c.met.length>=MEET_MIN?'fu':'ack'}">${c.met.length}/${MEET_MIN}</span>`:''}</div>`+
+      `<div class="acts">${editable?`<button class="btn2 fu sm" data-act="cwmet" data-pl="${pl.id}" data-id="${c.id}">+ Met now</button>${c.met.length?`<button class="mini" data-act="cwunmet" data-pl="${pl.id}" data-id="${c.id}">↶</button>`:''}`:''}`+
+      CW_CHK.map(([q,lbl])=>{const v=c.chk[q];return `<button class="cwk ${v}" ${editable?`data-act="cwchk" data-pl="${pl.id}" data-id="${c.id}" data-q="${q}"`:'disabled'}>${lbl} ${v==='D'?'✓':v==='N'?'✗':v==='A'?'NA':''}</button>`}).join('')+`</div>`+
+      `<input class="cwin" data-pl="${pl.id}" data-id="${c.id}" placeholder="Observation / action taken (optional)" value="${esc(c.ac)}" ${editable?'':'readonly'}></div>`;
   });
-  const dk='tc|'+mode;
-  let h=`<div class="card"><h3>Task check · who has not done it <span class="hint">${nBad?nBad+' task'+(nBad>1?'s':'')+' with defaulters':'no defaulters'}</span></h3>`+
-    `<div class="tcbar noprint"><button data-act="tcall" data-v="0" class="${S.tcAll?'':'on'}">Defaulters &amp; pending</button><button data-act="tcall" data-v="1" class="${S.tcAll?'on':''}">All tasks</button><button data-act="report" data-v="">📄 Report cards</button></div>`+
-    `<div class="leg"><span><span class="cp D">✓</span> Done</span><span><span class="cp A">NA</span> Not applicable</span><span><span class="cp N">✗</span> Marked not done</span><span><span class="cp M">!</span> Not marked — time over</span><span><span class="cp P">·</span> Still due</span></div>`;
-  h+=body||`<div class="allclear">✓ Every task is done or not yet due.</div>`;
-  if(!S.tcAll&&okNames.length)h+=`<details data-k="${dk}" ${detOpen(dk,false)?'open':''} style="margin-top:8px"><summary class="okline">✓ ${okNames.length} task${okNames.length>1?'s':''} done by everyone — show</summary><div class="okline">${okNames.map(esc).join(' · ')}</div></details>`;
+  if(!list.length)h+=`<div class="muted" style="margin:4px 0 8px">No child on the care watch today.</div>`;
+  if(editable)h+=`<div class="cwf"><input class="cwin" id="cwn_${pl.id}" placeholder="Child's name" autocomplete="off"><select class="cwin" id="cws_${pl.id}">${pl.sections.map(x=>`<option>${esc(x)}</option>`).join('')}</select>`+
+    `<select class="cwin" id="cwt_${pl.id}">${Object.keys(CW_TYPES).map(k=>`<option value="${k}">${CW_TYPES[k]}</option>`).join('')}</select><select class="cwin" id="cwk_${pl.id}"><option value="r">Regular – check daily</option><option value="o">Today only (unusual case)</option></select>`+
+    `<button class="btn2 full" data-act="cwadd" data-pl="${pl.id}">+ Add child</button></div>`;
+  return h+`</div>`;
+}
+function cwAdd(plId){
+  if(!canAct(plId))return;const g=x=>document.getElementById(x+'_'+plId);
+  const n=(g('cwn').value||'').trim();if(!n){showMsg("Type the child's name.");g('cwn').focus();return}
+  const id=cwid();const key='cw-'+id+'__x';
+  const docI=docId(plId,'dp',S.date);const doc=ensureDoc(docI,plId,'dp',S.date);
+  const e={x:JSON.stringify({n:n.slice(0,60),s:g('cws').value,t:g('cwt').value,k:g('cwk').value}),by:whoName(),at:Date.now()};
+  cwRemSave(docI,doc,key,e);render(true);
+}
+function cwDel(plId,cid){const docI=docId(plId,'dp',S.date);const doc=ensureDoc(docI,plId,'dp',S.date);cwRemSave(docI,doc,'cw-'+cid+'__x',{x:'',by:whoName(),at:Date.now()});render(true)}
+function cwMet(plId,cid,op){
+  if(!canAct(plId))return;const id=docId(plId,'dp',S.date);const doc=ensureDoc(id,plId,'dp',S.date);const key='cw-'+cid+'__x';
+  if(op==='pop'&&!((doc.cells[key]&&doc.cells[key].obs)||[]).length)return;
+  doc.cells[key]=applyOps(doc.cells[key],[op],whoName());persist(id,{cells:{[key]:{ops:[op]}}});render(true);
+}
+const CYC={'':'D',D:'N',N:'A',A:''};
+function cwChk(plId,cid,q){if(!canAct(plId))return;const doc=ensureDoc(docId(plId,'dp',S.date),plId,'dp',S.date);const key='cw-'+cid+'-'+q+'__x';cwCell(plId,key,CYC[(doc.cells[key]&&doc.cells[key].s)||'']);render(true)}
+function cwAc(el){const plId=el.dataset.pl;if(!canAct(plId)||!el.dataset.id)return;const docI=docId(plId,'dp',S.date);const doc=ensureDoc(docI,plId,'dp',S.date);
+  cwRemSave(docI,doc,'cw-'+el.dataset.id+'-ac__x',{x:el.value.slice(0,300),by:whoName(),at:Date.now()},true)}
+/* Regular names carry forward: on a new day the list from the last working day is copied in once. */
+const cwDone={};let cwPrevBusy=false;
+function cwCarry(pl){
+  const date=S.date;if(date!==todayStr()||!canAct(pl.id)||cwDone[pl.id+date])return;
+  const doc=getDoc(pl,'dp',date);if(hasCareKeys(doc)){cwDone[pl.id+date]=1;return}
+  const prev=Object.keys(S.docs).filter(id=>{const d=S.docs[id];return d.pl===pl.id&&d.mode==='dp'&&d.date<date&&hasCareKeys(d)}).map(id=>S.docs[id]).sort((a,b)=>a.date<b.date?1:-1)[0];
+  if(!prev){
+    if(cwPrevBusy||cwDone['prev'+S.wk])return;cwPrevBusy=true;
+    const m=parseD(S.wk);m.setDate(m.getDate()-7);
+    api('state',[ds(m)]).then(v=>{Object.keys(v.docs||{}).forEach(id=>{if(!S.docs[id])S.docs[id]=v.docs[id]})}).catch(()=>{}).finally(()=>{cwPrevBusy=false;cwDone['prev'+S.wk]=1;render()});
+    return;
+  }
+  cwDone[pl.id+date]=1;
+  const regs=careList(prev).filter(c=>c.k==='r');if(!regs.length)return;
+  const id=docId(pl.id,'dp',date);const d=ensureDoc(id,pl.id,'dp',date);const patch={rem:{}};
+  regs.forEach(c=>{const key='cw-'+c.id+'__x';d.rem[key]={x:JSON.stringify({n:c.n,s:c.s,t:c.t,k:'r'}),by:whoName(),at:Date.now()};patch.rem[key]=clone(d.rem[key])});
+  persist(id,patch);
+}
+
+/* ---------- Dashboard: done / not-done check with category tabs ---------- */
+function rowCheck(r,mode,date){
+  let tot=0,done=0,bad=0,pend=0;const parts=[],badW=[],rems=[];
+  PLS.forEach(pl=>{
+    const doc=getDoc(pl,mode,date);const secs=TC_SECS(pl,mode,r);const bw=[];
+    const chips=secs.map(sec=>{const st=stOf(doc,r,sec,date);tot++;if(st==='D'||st==='A')done++;else if(st==='N'||st==='M'){bad++;bw.push(`${sec!=='x'?esc(sec)+' ':''}${SYM[st]}`)}else pend++;
+      return `<span class="cp ${st}" title="${esc(pl.name)}${sec!=='x'?' · '+sec:''}">${sec!=='x'?esc(sec)+' ':''}${SYM[st]}</span>`}).join('');
+    parts.push(`<span class="tpl"><i>${esc(shortN(pl))}</i>${chips}</span>`);
+    if(bw.length)badW.push(`<b>${esc(shortN(pl))}</b> ${bw.join(' ')}`);
+    remLines(pl,doc,r,mode).forEach(l=>rems.push(remLineHTML(pl,l,true)));
+  });
+  return {tot,done,bad,pend,parts,badW,rems};
+}
+function careStrip(date){
+  const out=[];PLS.forEach(pl=>{
+    if(WHO==='PM')medList(pl,date).filter(m=>medBad(m,date)).forEach(m=>out.push(`<b>${esc(shortN(pl))}</b> · 🩺 ${esc(m.n)}${m.s?' '+esc(m.s):''} met ${m.met.length}/${MEET_MIN}`));
+    careList(getDoc(pl,'dp',date)).filter(c=>careBad(c,date)).forEach(c=>out.push(`<b>${esc(shortN(pl))}</b> · 👶 ${esc(c.n)}${c.s?' '+esc(c.s):''} met ${c.met.length}/${MEET_MIN}`));
+  });return out;
+}
+function careTab(date){
+  let h=`<div class="muted" style="margin-bottom:8px">Guideline: every medical case and every regular care-watch child is met at least ${MEET_MIN} times in the day (noted + follow-up).</div>`;
+  PLS.forEach(pl=>{
+    const med=WHO==='PM'?medList(pl,date):[];const cw=careList(getDoc(pl,'dp',date));
+    h+=`<div class="tcblk">${esc(pl.name)} · ${esc(pl.cls)}</div>`;
+    if(!med.length&&!cw.length){h+=`<div class="muted" style="margin-bottom:6px">No medical case or care-watch child logged.</div>`;return}
+    h+=`<div class="tw"><table class="cwtab"><tr><th>Child</th><th>Type</th><th>Met</th><th>Checks / note</th></tr>`+
+      med.map(m=>{const b=medBad(m,date);return `<tr class="${b?'bad':''}"><td><b>${esc(m.n)}</b>${m.s?' · '+esc(m.s):''}</td><td>🩺 Medical</td><td><b class="${m.met.length>=MEET_MIN?'okc':'noc'}">${m.met.length}×</b> ${m.met.map(fmtT).join(', ')}</td><td>${esc(m.x)}</td></tr>`}).join('')+
+      cw.map(c=>{const b=careBad(c,date);return `<tr class="${b?'bad':''}"><td><b>${esc(c.n)}</b>${c.s?' · '+esc(c.s):''}${c.k==='o'?' <span class="cwty o">today</span>':''}</td><td>${CW_TYPES[c.t]||''}</td><td><b class="${c.met.length>=MEET_MIN||c.k==='o'?'okc':'noc'}">${c.met.length}×</b> ${c.met.map(fmtT).join(', ')}</td><td>${CW_CHK.map(([q,l])=>c.chk[q]?`${l} ${SYM[c.chk[q]]}`:'').filter(Boolean).join(' · ')}${c.ac?`<div class="ac">→ ${esc(c.ac)}</div>`:''}</td></tr>`}).join('')+`</table></div>`;
+  });
+  return h;
+}
+function taskCheck(mode,date){
+  const blocks=DEFS[mode];const tab=S.tcTab||'nd';
+  const per={};let nBad=0;
+  blocks.forEach(b=>{per[b.id]=0;ROWS[mode].filter(r=>r.block===b).forEach(r=>{const x=rowCheck(r,mode,date);if(x.bad){per[b.id]++;nBad++}})});
+  const cs=mode==='dp'?careStrip(date):[];
+  let h=`<div class="card tcard"><h3>Done / not-done check <span class="hint">${parseD(date).toLocaleDateString('en',{weekday:'short',day:'numeric',month:'short'})}</span></h3>`;
+  h+=`<div class="tabs2 noprint"><button data-act="tctab" data-v="nd" class="${tab==='nd'?'on':''} red">⚠ Not done <span class="bd">${nBad+cs.length}</span></button>`+
+    blocks.map(b=>`<button data-act="tctab" data-v="${b.id}" class="${tab===b.id?'on':''}">${esc(b.name)}${per[b.id]?` <span class="bd">${per[b.id]}</span>`:' <span class="okd">✓</span>'}</button>`).join('')+
+    (mode==='dp'?`<button data-act="tctab" data-v="care" class="${tab==='care'?'on':''}">${WHO==='PM'?'🩺 Medical & care':'👶 Care watch'}${cs.length?` <span class="bd">${cs.length}</span>`:''}</button>`:'')+
+    `<button data-act="report" data-v="">📄 Report cards</button></div>`;
+  h+=`<div class="leg"><span><span class="cp D">✓</span> Done</span><span><span class="cp A">NA</span> Not applicable</span><span><span class="cp N">✗</span> Marked not done</span><span><span class="cp M">!</span> Not marked – time over</span><span><span class="cp P">·</span> Still due</span></div>`;
+  if(tab==='care'&&mode==='dp')return h+careTab(date)+`</div>`;
+  if(tab==='nd'){
+    let body='',lb=null,okN=0;
+    ROWS[mode].forEach(r=>{const x=rowCheck(r,mode,date);if(!x.bad){if(!x.pend)okN++;return}
+      if(r.block!==lb){body+=`<div class="tcblk">${esc(r.block.name)}</div>`;lb=r.block}
+      body+=`<div class="ndl" data-act="tctab" data-v="${r.block.id}"><div class="ndt">${esc(rowLabel(r))}</div><div class="ndw">${x.badW.join(' <span class="sep">|</span> ')}</div></div>`});
+    if(cs.length)body+=`<div class="tcblk">${WHO==='PM'?'Medical & care watch':'Care watch'} — met fewer than ${MEET_MIN} times</div>`+cs.map(x=>`<div class="ndl" data-act="tctab" data-v="care"><div class="ndw">${x}</div></div>`).join('');
+    h+=body||`<div class="allclear">✓ Nothing marked not done and nothing overdue.</div>`;
+    if(okN)h+=`<div class="okline" style="margin-top:8px">✓ ${okN} task${okN>1?'s':''} done by everyone · tap a category above to see every section</div>`;
+    return h+`</div>`;
+  }
+  const b=blocks.find(x=>x.id===tab)||blocks[0];
+  ROWS[mode].filter(r=>r.block===b).forEach(r=>{const x=rowCheck(r,mode,date);
+    h+=`<div class="tk ${x.bad?'bad':''}"><div class="tkh"><b>${esc(rowLabel(r))}</b><span class="tkc">${x.bad?x.bad+' not done · ':''}${x.done}/${x.tot} done</span></div><div class="tkp">${x.parts.join('')}</div>${x.rems.length?`<div class="tkr">${x.rems.join('')}</div>`:''}</div>`});
   return h+`</div>`;
 }
 
-/* ================= REPORT CARD (daily / weekly, ✓ and ✗ per task) ================= */
+/* ---------- Report cards (daily / weekly, ✓ and ✗ per task) ---------- */
 function repDayCell(pl,mode,r,date){
   const today=todayStr();if(date>today)return {k:'F'};
   if(date<today&&dayEmpty(pl,date))return {k:'E'};
-  const doc=getDoc(pl,mode,date);const secs=secsFor(pl,mode,r);const st=secs.map(sec=>stOf(doc,r,sec,date));
+  const doc=getDoc(pl,mode,date);const secs=TC_SECS(pl,mode,r);const st=secs.map(sec=>stOf(doc,r,sec,date));
   const badS=secs.filter((sec,i)=>st[i]==='N'||st[i]==='M');
   if(badS.length)return {k:'X',bad:badS,tot:secs.length};
   if(st.every(x=>x==='A'))return {k:'NA'};
@@ -939,29 +1081,34 @@ function reportHTML(){
     `<span style="flex:1"></span><button data-act="repkind" data-v="day" class="${kind==='day'?'on':''}">Daily</button><button data-act="repkind" data-v="week" class="${kind==='week'?'on':''}">Weekly</button>`+
     `<button class="go" data-act="print">⬇ Save / share PDF</button><button data-act="closeview">✕ Close</button></div>`;
   h+=`<div class="report">`;
-  const dates=kind==='week'?weekDates(S.wk):[S.date];
-  const wkLbl=(()=>{const a=parseD(weekDates(S.wk)[0]),b=parseD(weekDates(S.wk)[5]);return `${a.getDate()} ${a.toLocaleString('en',{month:'short'})} – ${b.getDate()} ${b.toLocaleString('en',{month:'short'})} ${b.getFullYear()}`})();
+  const wd=weekDates(S.wk);const dates=kind==='week'?wd:[S.date];
+  const wkLbl=(()=>{const a=parseD(wd[0]),b=parseD(wd[5]);return `${a.getDate()} ${a.toLocaleString('en',{month:'short'})} – ${b.getDate()} ${b.toLocaleString('en',{month:'short'})} ${b.getFullYear()}`})();
   const title=kind==='week'?`Weekly Report Card · Week of ${wkLbl}`:`Daily Report Card · ${parseD(S.date).toLocaleDateString('en',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}`;
-  h+=`<div class="rph"><div><div class="eyebrow">PL Plan – Live · Flourish International School</div><h2>${esc(pl.name)} <span style="font-weight:600;color:var(--mut);font-size:14px">· ${pl.cls} · ${pl.sections.join(', ')}</span></h2><div class="sub2">${title}</div></div><img src="../fis/fis-logo-192.png" alt=""></div>`;
-  /* tally */
+  h+=`<div class="rph"><div><div class="eyebrow">${WHO} Plan – Live · Flourish International School</div><h2>${esc(pl.name)} <span style="font-weight:600;color:var(--mut);font-size:14px">· ${pl.cls} · ${pl.sections.join(', ')}</span></h2><div class="sub2">${title}</div></div><img src="../fis/fis-logo-192.png" alt=""></div>`;
   let Y=0,X=0,NA=0,cells=0;const miss={};const emptyDays=[];
   if(kind==='week')dates.forEach(d=>{if(d<today&&dayEmpty(pl,d))emptyDays.push(d)});
   ['dp','de'].forEach(mode=>ROWS[mode].forEach(r=>{
     if(kind==='week')dates.forEach((d,i)=>{const c=repDayCell(pl,mode,r,d);
       if(c.k==='Y')Y++;else if(c.k==='NA')NA++;else if(c.k==='X'){X++;const m=miss[mode+r.key]=miss[mode+r.key]||{r,mode,days:[],secs:{}};m.days.push(DAYN[i]);c.bad.forEach(sc=>{if(sc!=='x')m.secs[sc]=(m.secs[sc]||0)+1})}
       if(c.k!=='F'&&c.k!=='E'&&c.k!=='P')cells++});
-    else{const doc=getDoc(pl,mode,S.date);secsFor(pl,mode,r).forEach(sec=>{const st=stOf(doc,r,sec,S.date);
+    else{const doc=getDoc(pl,mode,S.date);TC_SECS(pl,mode,r).forEach(sec=>{const st=stOf(doc,r,sec,S.date);
       if(st==='D')Y++;else if(st==='A')NA++;else if(st==='N'||st==='M'){X++;const m=miss[mode+r.key]=miss[mode+r.key]||{r,mode,days:[],secs:{}};if(sec!=='x')m.secs[sec]=1}
       if(st!=='P')cells++})}
   }));
+  /* care / medical */
+  const careRows=[];dates.forEach((d,i)=>{if(d>today)return;
+    (WHO==='PM'?medList(pl,d):[]).forEach(m=>careRows.push({d:DAYN[i],n:m.n,s:m.s,t:'🩺 Medical',met:m.met,bad:medBad(m,d),note:m.x}));
+    careList(getDoc(pl,'dp',d)).forEach(c=>careRows.push({d:DAYN[i],n:c.n,s:c.s,t:(CW_TYPES[c.t]||'')+(c.k==='o'?' (today only)':''),met:c.met,bad:careBad(c,d),note:[CW_CHK.map(([q,l])=>c.chk[q]?l+' '+SYM[c.chk[q]]:'').filter(Boolean).join(' · '),c.ac].filter(Boolean).join(' — ')}))});
+  const careMiss=careRows.filter(x=>x.bad).length;
   const pct=cells?Math.round((Y+NA)/cells*100):0;
-  h+=`<div class="rtiles"><div class="rtile ${pct>=90?'g':pct>=70?'o':'r'}"><b>${pct}%</b><span>Completed on time</span></div><div class="rtile g"><b>${Y}</b><span>✓ ${kind==='week'?'Task-days':'Section ticks'} done</span></div><div class="rtile r"><b>${X}</b><span>✗ ${kind==='week'?'Task-days':'Section ticks'} missed</span></div><div class="rtile"><b>${Object.keys(miss).length}</b><span>Tasks with a miss</span></div></div>`;
-  if(emptyDays.length)h+=`<div class="notice" style="margin-bottom:10px">No entries at all on ${emptyDays.map(d=>DAYN[weekDates(S.wk).indexOf(d)]).join(', ')} — shown as “–” and not counted (holiday?).</div>`;
+  h+=`<div class="rtiles"><div class="rtile ${pct>=90?'g':pct>=70?'o':'r'}"><b>${pct}%</b><span>Completed on time</span></div><div class="rtile g"><b>${Y}</b><span>✓ ${kind==='week'?'Task-days':'Section ticks'} done</span></div><div class="rtile r"><b>${X}</b><span>✗ ${kind==='week'?'Task-days':'Section ticks'} missed</span></div><div class="rtile ${careMiss?'r':'g'}"><b>${careRows.length-careMiss}/${careRows.length}</b><span>Children met ${MEET_MIN}×</span></div></div>`;
+  if(emptyDays.length)h+=`<div class="notice" style="margin-bottom:10px">No entries at all on ${emptyDays.map(d=>DAYN[wd.indexOf(d)]).join(', ')} — shown as “–” and not counted (holiday?).</div>`;
   const ml=Object.values(miss).sort((a,b)=>b.days.length-a.days.length||Object.keys(b.secs).length-Object.keys(a.secs).length);
-  if(ml.length)h+=`<div class="rmiss"><h4>✗ Not done ${kind==='week'?'this week':'today'} — please complete before leaving</h4><ul style="margin:0;padding-left:18px">`+ml.slice(0,kind==='week'?12:40).map(m=>{
-      const secs=Object.keys(m.secs);return `<li><b>${esc(rowLabel(m.r))}</b> <span style="color:var(--mut)">(${m.mode==='dp'?'Day Plan':'Day End'})</span>${kind==='week'?` — missed <b>${m.days.length} time${m.days.length>1?'s':''}</b> (${m.days.join(', ')})`:''}${secs.length?` · ${kind==='week'?secs.map(x=>x+(m.secs[x]>1?' ×'+m.secs[x]:'')).join(', '):secs.join(', ')}`:''}</li>`}).join('')+(ml.length>12&&kind==='week'?`<li>+ ${ml.length-12} more in the grid below</li>`:'')+`</ul></div>`;
+  if(ml.length||careMiss)h+=`<div class="rmiss"><h4>✗ Not done ${kind==='week'?'this week':'today'} — please complete before leaving</h4><ul style="margin:0;padding-left:18px">`+ml.slice(0,kind==='week'?14:40).map(m=>{
+      const secs=Object.keys(m.secs);return `<li><b>${esc(rowLabel(m.r))}</b> <span style="color:var(--mut)">(${m.mode==='dp'?'Day Plan':'Day End'})</span>${kind==='week'?` — missed <b>${m.days.length} time${m.days.length>1?'s':''}</b> (${m.days.join(', ')})`:''}${secs.length?` · ${kind==='week'?secs.map(x=>x+(m.secs[x]>1?' ×'+m.secs[x]:'')).join(', '):secs.join(', ')}`:''}</li>`}).join('')+
+      (ml.length>14&&kind==='week'?`<li>+ ${ml.length-14} more in the grid below</li>`:'')+
+      careRows.filter(x=>x.bad).map(x=>`<li><b>${esc(x.n)}</b>${x.s?' · '+esc(x.s):''} (${x.t}) — met only ${x.met.length}× ${kind==='week'?'on '+x.d:''}</li>`).join('')+`</ul></div>`;
   else h+=`<div class="allclear" style="margin-bottom:12px">✓ Nothing missed ${kind==='week'?'this week':'today'} — well done.</div>`;
-  /* grid */
   ['dp','de'].forEach(mode=>{
     if(kind==='week'){
       h+=`<table class="rgrid"><tr><th>${mode==='dp'?'Day Plan':'Day End'}</th>${dates.map((d,i)=>`<th>${DAYN[i]}<br><span style="font-weight:500">${parseD(d).getDate()}</span></th>`).join('')}<th>✗</th></tr>`;
@@ -973,24 +1120,26 @@ function reportHTML(){
       h+=`</table>`;
     }else{
       const secs=pl.sections;
-      h+=`<table class="rgrid"><tr><th>${mode==='dp'?'Day Plan':'Day End'}</th>${mode==='dp'?secs.map(x=>`<th>${esc(x)}</th>`).join(''):`<th colspan="${secs.length}">Sections (where split) / overall</th>`}<th>✗</th></tr>`;
+      h+=`<table class="rgrid"><tr><th>${mode==='dp'?'Day Plan':'Day End'}</th>${secs.map(x=>`<th>${esc(x)}</th>`).join('')}<th>✗</th></tr>`;
       let lb=null;const doc=getDoc(pl,mode,S.date);
       ROWS[mode].forEach(r=>{
         if(r.block!==lb){h+=`<tr class="bk"><td colspan="${secs.length+2}">${esc(r.block.name)}</td></tr>`;lb=r.block}
-        const ss=secsFor(pl,mode,r);const st=ss.map(sec=>stOf(doc,r,sec,S.date));const xs=st.filter(x=>x==='N'||x==='M').length;
+        const ss=TC_SECS(pl,mode,r);const st=ss.map(sec=>stOf(doc,r,sec,S.date));const xs=st.filter(x=>x==='N'||x==='M').length;
         const cellOf=x=>x==='D'?'<span class="y">✓</span>':x==='A'?'<span class="na">NA</span>':x==='N'||x==='M'?'<span class="x">✗</span>':'<span class="e">·</span>';
-        const tds=ss[0]==='x'?`<td colspan="${secs.length}">${cellOf(st[0])}</td>`:(mode==='dp'?st.map(cellOf).map(c=>`<td>${c}</td>`).join(''):`<td colspan="${secs.length}">${ss.map((sec,i)=>`${esc(sec)} ${cellOf(st[i])}`).join(' &nbsp; ')}</td>`);
+        const tds=ss[0]==='x'?`<td colspan="${secs.length}">${cellOf(st[0])} <span style="color:var(--mut);font-size:10px">(whole ${WHO})</span></td>`:secs.map(x=>{const i=ss.indexOf(x);return `<td>${i<0?'':cellOf(st[i])}</td>`}).join('');
         h+=`<tr class="${xs?'bad':''}"><td>${esc(rowLabel(r))}</td>${tds}<td class="tot ${xs?'':'z'}">${xs||'0'}</td></tr>`;
       });
       h+=`</table>`;
     }
   });
-  /* remarks & actions */
-  const rl=[];dates.forEach((d,i)=>['dp','de'].forEach(mode=>{const doc=getDoc(pl,mode,d);ROWS[mode].forEach(r=>remLines(pl,doc,r).forEach(l=>rl.push({d:DAYN[i],mode,r,l})))}));
-  if(rl.length)h+=`<h3 style="margin:6px 0 6px;font-size:14px">Remarks &amp; actions</h3><table class="rgrid"><tr><th>${kind==='week'?'Day':'Section'}</th><th>Task</th><th>Remark</th><th>Action taken</th></tr>`+rl.map(x=>`<tr><td>${kind==='week'?x.d:''}${x.l.sec!=='x'?(kind==='week'?' · ':'')+esc(x.l.sec):''}</td><td style="text-align:left">${esc(rowLabel(x.r))}</td><td style="text-align:left">${x.l.n!==''?'#'+esc(x.l.n)+' ':''}${esc(x.l.x||'')}</td><td style="text-align:left;color:#16733f">${esc(x.l.ac||'')}</td></tr>`).join('')+`</table>`;
+  if(careRows.length)h+=`<h3 style="margin:6px 0 6px;font-size:14px">${WHO==='PM'?'Medical & care watch':'Care watch'} (guideline: met ${MEET_MIN}× a day)</h3><table class="rgrid"><tr>${kind==='week'?'<th>Day</th>':''}<th>Child</th><th>Type</th><th>Met</th><th>Checks / note</th></tr>`+careRows.map(x=>`<tr class="${x.bad?'bad':''}">${kind==='week'?`<td>${x.d}</td>`:''}<td style="text-align:left">${esc(x.n)}${x.s?' · '+esc(x.s):''}</td><td>${esc(x.t)}</td><td>${x.bad?`<span class="x">${x.met.length}×</span>`:`<span class="y">${x.met.length}×</span>`} <span style="font-size:10px">${x.met.map(fmtT).join(', ')}</span></td><td style="text-align:left">${esc(x.note||'')}</td></tr>`).join('')+`</table>`;
+  const rl=[];dates.forEach((d,i)=>['dp','de'].forEach(mode=>{const doc=getDoc(pl,mode,d);ROWS[mode].forEach(r=>remLines(pl,doc,r,mode).forEach(l=>rl.push({d:DAYN[i],r,l})))}));
+  if(rl.length)h+=`<h3 style="margin:6px 0 6px;font-size:14px">Remarks &amp; actions</h3><table class="rgrid"><tr><th>${kind==='week'?'Day':'Section'}</th><th>Task</th><th>Remark</th><th>Action taken</th></tr>`+rl.map(x=>`<tr><td>${kind==='week'?x.d:''}${x.l.sec!=='x'?(kind==='week'?' · ':'')+esc(x.l.sec):''}</td><td style="text-align:left">${esc(rowLabel(x.r))}</td><td style="text-align:left">${x.l.n!==''?'#'+esc(x.l.n)+' ':''}${esc(x.l.x||'')}${x.l.ph?' 📷'+x.l.ph:''}</td><td style="text-align:left;color:#16733f">${esc(x.l.ac||'')}</td></tr>`).join('')+`</table>`;
   h+=`<div class="rfoot">✓ done (all sections) · ✗ not done or not marked in time (small number = sections missed) · NA not applicable · – no entries that day · · not yet due. Generated ${new Date().toLocaleString('en-IN',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'})}.</div>`;
   return h+`</div>`;
 }
+function cwRemSave(docI,doc,key,e,deb){doc.rem[key]=e;if(deb)schedule(docI,key);else persist(docI,{rem:{[key]:clone(e)}})}
+function confirmDel(t){if(t.dataset.arm)return true;t.dataset.arm=1;const o=t.textContent;t.textContent='Tap again to confirm';setTimeout(()=>{delete t.dataset.arm;t.textContent=o},3000);return false}
 function ringHTML(p,bad){return `<div class="ring" style="--p:${p};--rc:${bad?'#d08a3a':'var(--green)'}"><span>${p}%</span></div>`}
 function dashboard(){
   const mode=S.mode,today=todayStr(),date=S.date;
@@ -1043,7 +1192,12 @@ document.addEventListener('click',ev=>{
   if(a==='reppl'){S.rep.pl=t.dataset.v;render(true);return}
   if(a==='repkind'){S.rep.kind=t.dataset.v;render(true);return}
   if(a==='print'){const pl=plOf(S.rep.pl);const old=document.title;document.title=`PL ${S.rep.kind==='week'?'Weekly':'Daily'} Report - ${pl?pl.name:''} - ${S.rep.kind==='week'?'week of '+S.wk:S.date}`;window.print();setTimeout(()=>document.title=old,1500);return}
-  if(a==='tcall'){S.tcAll=t.dataset.v==='1';render(true);return}
+  if(a==='tctab'){S.tcTab=t.dataset.v;render(true);return}
+  if(a==='cwadd'){cwAdd(t.dataset.pl);return}
+  if(a==='cwdel'){if(confirmDel(t))cwDel(t.dataset.pl,t.dataset.id);return}
+  if(a==='cwmet'){cwMet(t.dataset.pl,t.dataset.id,'add');return}
+  if(a==='cwunmet'){cwMet(t.dataset.pl,t.dataset.id,'pop');return}
+  if(a==='cwchk'){cwChk(t.dataset.pl,t.dataset.id,t.dataset.q);return}
   if(a==='mode'){S.mode=t.dataset.v;render(true)}
   else if(a==='tab'){if(t.dataset.v==='dash'&&!(S.me&&S.me.senior))return;S.tab=t.dataset.v;render(true);window.scrollTo(0,0)}
   else if(a==='day'){S.date=t.dataset.v;render(true)}
@@ -1069,9 +1223,9 @@ document.addEventListener('click',ev=>{
     S.editTime=null;render(true);
   }
 });
-document.addEventListener('input',ev=>{if(ev.target.classList&&ev.target.classList.contains('remin'))onRemInput(ev.target)});
+document.addEventListener('input',ev=>{if(ev.target.classList&&ev.target.classList.contains('remin'))onRemInput(ev.target);else if(ev.target.classList&&ev.target.classList.contains('cwin')&&ev.target.dataset.id)cwAc(ev.target)});
 document.addEventListener('focusout',ev=>{
-  if(ev.target.classList&&ev.target.classList.contains('remin')){flushAll();setTimeout(()=>{if(!typing()&&S.dirty)render(true)},80)}
+  if(ev.target.classList&&(ev.target.classList.contains('remin')||ev.target.classList.contains('cwin'))){flushAll();setTimeout(()=>{if(!typing()&&S.dirty)render(true)},80)}
 });
 document.addEventListener('keydown',ev=>{if(ev.key==='Enter'&&ev.target.id==='lpw')doLogin()});
 window.addEventListener('pagehide',flushAll);
