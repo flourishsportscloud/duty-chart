@@ -273,7 +273,7 @@ function streakAt(sec,subj,s,upto){
   for(const t of ts){const p=pctOf(t,s);if(p==null)continue;st=isLow(t,s)?st+1:0;if(t===upto||(upto&&t.p===upto.p))return st}
   return st;
 }
-function mineSet(){const s=new Set();if(!ME)return s;const f=first(ME);Object.keys(ROSTER).forEach(sec=>{const c=+sec.slice(0,-1);subjectsFor(c).forEach(x=>{if(first(teacherOf(sec,x.n))===f)s.add(sec+'|'+x.n)})});return s}
+function mineSet(){const s=new Set();const who=(U.mentor&&isAdmin())?U.mentor:ME;if(!who)return s;const f=first(who);Object.keys(ROSTER).forEach(sec=>{const c=+sec.slice(0,-1);subjectsFor(c).forEach(x=>{if(first(teacherOf(sec,x.n))===f)s.add(sec+'|'+x.n)})});return s}
 /* ---------- chrome ---------- */
 const TABS=[['check','✎','Check'],['dash','▦','Dashboard'],['rep','▤','Reports'],['stu','☺','Students'],['set','⚙','Setup']];
 const curSec=()=>U.cls+U.sec;
@@ -283,8 +283,8 @@ function ensureSel(){
   const sl=subjectsFor(U.cls);if(!sl.find(x=>x.n===U.subj))U.subj='';
 }
 const IC={check:'<svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h9"/></svg>',dash:'<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>',rep:'<svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h7"/></svg>',stu:'<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c2 .7 3.2 2.5 3.5 5.2"/></svg>',set:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>'};
-IC.rec=IC.rep;
-const NAV=[['Record',[['check','Check','Record checks and marks'],['rec','Class Record','Complete record of a section: books, notebooks, assignments, tests']]],['Insights',[['dash','Dashboard','Rates, trends and what needs attention'],['rep','Reports','Defaulters, summaries and report cards'],['stu','Students','Search a student and open the record']]],['Admin',[['set','Setup','Teachers, items, lessons and preview']]]];
+IC.rec=IC.rep;IC.men=IC.stu;
+const NAV=[['Record',[['check','Check','Record checks and marks'],['rec','Class Record','Complete record of a section: books, notebooks, assignments, tests']]],['Insights',[['dash','Dashboard','Rates, trends and what needs attention'],['rep','Reports','Defaulters, summaries and report cards'],['stu','Students','Search a student and open the record']]],['Admin',[['men','Mentors','Pick a mentor to see their classes, dashboard and reports'],['set','Setup','Teachers, items, lessons and preview']]]];
 const TITLES={};NAV.forEach(g=>g[1].forEach(t=>TITLES[t[0]]=[t[1],t[2]]));
 function roleOf(){if(isAdmin())return 'Director';const p=PLDEF.find(x=>first(x.n)===first(ME));if(p)return p.t;if(mineSet().size)return 'Teacher';return 'Staff'}
 function chrome(){
@@ -293,7 +293,7 @@ function chrome(){
   $('clsRow').innerHTML=segClasses(U.seg).map(c=>'<button class="chip sm" data-act="cls" data-v="'+c+'" aria-pressed="'+(c===U.cls)+'">'+c+'</button>').join('');
   $('secRow').innerHTML=secsOf(U.cls).map(s=>'<button class="chip sm" data-act="sec" data-v="'+s+'" aria-pressed="'+(s===U.sec)+'">'+s+'<small>'+nOf(U.cls+s)+'</small></button>').join('');
   let open=0;try{open=followItems().filter(x=>x.c!=='A').length}catch(e){}
-  $('bn').innerHTML=NAV.map(g=>'<div class="nsec">'+g[0]+'</div>'+g[1].map(t=>'<button class="navb" data-act="tab" data-v="'+t[0]+'" aria-selected="'+(U.tab===t[0])+'">'+IC[t[0]]+'<span>'+t[1]+'</span>'+(t[0]==='rep'&&open?'<span class="cnt">'+(open>999?'999+':open)+'</span>':'')+'</button>').join('')).join('');
+  $('bn').innerHTML=NAV.map(g=>'<div class="nsec">'+g[0]+'</div>'+g[1].filter(t=>t[0]!=='men'||isAdmin()).map(t=>'<button class="navb" data-act="tab" data-v="'+t[0]+'" aria-selected="'+(U.tab===t[0])+'">'+IC[t[0]]+'<span>'+t[1]+'</span>'+(t[0]==='rep'&&open?'<span class="cnt">'+(open>999?'999+':open)+'</span>':'')+'</button>').join('')).join('');
   const T=TITLES[U.tab]||['',''];$('pgT').textContent=T[0];$('pgS').textContent=T[1];
   const ini=(ME||'?').split(/\s+/).map(x=>x[0]).slice(0,2).join('').toUpperCase();
   $('meBtn').innerHTML='<span class="av">'+esc(ini)+'</span><span style="min-width:0"><b>'+esc(ME||'Sign in')+'</b><small>'+esc(roleOf())+'</small></span>';
@@ -475,7 +475,7 @@ function overlayHTML(){
 function renderSheet(){const el=$('sheet');if(!el)return;el.innerHTML=overlayHTML();document.body.classList.toggle('lock',!!el.innerHTML);
   const i=$('smk');if(i)setTimeout(()=>{i.focus();i.select()},60)}
 /* ---------- DASHBOARD ---------- */
-function scopeOpts(){const o=[];if(plSet().size)o.push(['pl','My PL classes']);if(mineSet().size)o.push(['mine','My classes']);o.push(['sec','Section '+curSec()]);o.push(['cls','Class '+U.cls+' · all sections']);o.push(['seg',U.seg==='P'?'All Primary':'All Secondary']);if(isAdmin())o.push(['all','Whole school']);return o}
+function scopeOpts(){const o=[];if(plSet().size)o.push(['pl','My PL classes']);if(mineSet().size)o.push(['mine',(U.mentor&&isAdmin())?U.mentor+'’s classes':'My classes']);o.push(['sec','Section '+curSec()]);o.push(['cls','Class '+U.cls+' · all sections']);o.push(['seg',U.seg==='P'?'All Primary':'All Secondary']);if(isAdmin())o.push(['all','Whole school']);return o}
 function scopeNow(){const o=scopeOpts().map(x=>x[0]);if(!U.scope||!o.includes(U.scope))U.scope=plSet().size?'pl':mineSet().size?'mine':(isAdmin()?'seg':'sec');return U.scope}
 function cutoff(){if(U.per==='all')return '';const d=new Date();d.setDate(d.getDate()-(+U.per));return isoD(d)}
 function inScope(r,ignorePer){
@@ -500,8 +500,16 @@ const zero=()=>({C:0,I:0,N:0,A:0,P:0,W:0});
 const pcell=t=>{const m=t.C+t.I+t.N;return m?Math.round(t.C/(t.C+t.I+t.N)*100)+'%':'—'};
 function trow(label,t,extra){return '<tr><td>'+label+'</td><td class="n">'+(extra==null?'':extra)+'</td><td class="n" style="color:var(--ok)"><b>'+t.C+'</b></td><td class="n" style="color:var(--ic)"><b>'+t.I+'</b></td><td class="n" style="color:var(--ns)"><b>'+t.N+'</b></td><td class="n">'+t.A+'</td><td class="n">'+t.P+'</td><td class="n"><b>'+pcell(t)+'</b></td></tr>'}
 const THEAD='<tr><th></th><th class="n">Checks</th><th class="n">✓</th><th class="n">IC</th><th class="n">NS</th><th class="n">A</th><th class="n">Unmkd</th><th class="n">Done</th></tr>';
+function mBar(){return (U.mentor&&isAdmin())?'<div class="card" style="padding:10px 14px"><div class="eh"><div><div class="small muted">Viewing mentor</div><b>'+esc(U.mentor)+'</b></div><button class="btn ghost sm" data-act="mback">‹ All mentors</button></div></div>':''}
+function viewMen(){
+  const m=new Map();Object.keys(ROSTER).forEach(sec=>{const c=+sec.slice(0,-1);subjectsFor(c).forEach(x=>{const t=teacherOf(sec,x.n);if(!t)return;const k=first(t);if(!m.has(k))m.set(k,{n:t,secs:new Set(),subs:new Set(),dept:new Set()});const o=m.get(k);o.secs.add(sec);o.subs.add(x.n);o.dept.add(x.d||'')})});
+  const L=[...m.values()].sort((a,b)=>a.n.localeCompare(b.n));
+  let h='<div class="card small muted">Tap a mentor to open their classes, dashboard and reports. Listed A–Z, not ranked. Use this to support follow-up, not to compare people; the lists show student names, so keep it within the school.</div>';
+  if(!L.length)return h+'<div class="card">No mentors found. Teachers come from Setup.</div>';
+  h+='<div class="grid2">'+L.map(o=>'<button class="stile" style="--c:var(--g,#0b6)" data-act="mentor" data-n="'+esc(o.n)+'"><b>'+esc(o.n)+'</b><small>'+[...o.subs].slice(0,4).join(', ')+(o.subs.size>4?' +'+(o.subs.size-4):'')+'</small><small>'+o.secs.size+' sections</small></button>').join('')+'</div>';
+  return h}
 function viewDash(){
-  let h=dashHead();
+  let h=mBar()+dashHead();
   if(U.dsub==='chk')h+=dashCheck();else if(U.dsub==='pen')h+=dashPending();else if(U.dsub==='fup')h+=dashFollow();else h+=dashPerf();
   return h;
 }
@@ -597,7 +605,7 @@ function filterBar(){
   return h;
 }
 function viewRep(){
-  const k=U.rep||'def';let h=filterBar();
+  const k=U.rep||'def';let h=mBar()+filterBar();
   h+='<div class="rgrid">'+RTYPES.map(o=>'<button class="rtile" data-act="rtype" data-v="'+o[0]+'" aria-pressed="'+(k===o[0])+'"><b>'+o[1]+'</b><small>'+o[2]+'</small></button>').join('')+'</div>';
   const R=buildRep(k);
   h+='<div class="row noprint" style="margin-bottom:10px"><button class="btn sm" data-act="rprint">Print / PDF</button><button class="btn ghost sm" data-act="rtsv">Copy for Excel</button><button class="btn wa sm" data-act="rwa">Copy for WhatsApp</button>'+(k==='def'?'<button class="chip sm" data-act="incA" aria-pressed="'+!!U.incA+'">Include absent</button>':'')+'</div>';
@@ -843,7 +851,7 @@ if(!API_URL){loadSeedDocs()}
 /* ---------- render / events ---------- */
 function render(){
   chrome();const v=$('view');
-  v.innerHTML=U.tab==='check'?viewCheck():U.tab==='dash'?viewDash():U.tab==='rep'?viewRep():U.tab==='rec'?viewRec():U.tab==='stu'?viewStu():viewSet();renderSheet();
+  v.innerHTML=U.tab==='check'?viewCheck():U.tab==='dash'?viewDash():U.tab==='rep'?viewRep():U.tab==='rec'?viewRec():U.tab==='stu'?viewStu():U.tab==='men'?viewMen():viewSet();renderSheet();
   saveUI();
 }
 let sureK=null;function sure(k){if(sureK===k){sureK=null;return true}sureK=k;toast('Tap again to confirm');setTimeout(()=>{sureK=null},4000);return false}
@@ -884,7 +892,9 @@ document.addEventListener('click',ev=>{
       d.edited=ME+' · '+Date.now();
       if(nd!==d.date){const old=d.p;d.date=nd;d.p=d.k+'/'+nd+'/'+d.sec+'/'+old.split('/').pop();delDoc(old);U.open={k:d.k,p:d.p}}
       putDoc(d);U.edit=false;render();toast('Details updated');break}
-    case'viewas':ME=D.n;lsPut('me',ME);U.scope='';{const f=[...plSet()][0];if(f){U.cls=+f.slice(0,-1);U.sec=f.slice(-1);U.seg=U.cls<=5?'P':'S'}}U.tab='dash';U.dsub='chk';render();toast('Viewing as '+ME);break;
+    case'mentor':U.mentor=D.n;U.scope='mine';U.tab='dash';U.dsub='chk';render();break;
+    case'mback':U.mentor='';U.scope='';U.tab='men';render();break;
+    case'viewas':U.mentor='';ME=D.n;lsPut('me',ME);U.scope='';{const f=[...plSet()][0];if(f){U.cls=+f.slice(0,-1);U.sec=f.slice(-1);U.seg=U.cls<=5?'P':'S'}}U.tab='dash';U.dsub='chk';render();toast('Viewing as '+ME);break;
     case'seed':seedSample();render();toast('Sample data loaded');break;
     case'unseed':if(sure('unseed')){Object.keys(DB).forEach(k=>{if(DB[k].sm)delete DB[k]});persist();lsPut('seeded3',1);render();toast('Sample data removed')}break;
     case'fitem':readForm();U.form.item=D.v;render();break;
