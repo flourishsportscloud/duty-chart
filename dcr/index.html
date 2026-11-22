@@ -323,7 +323,7 @@ table.t tbody tr:hover td,.dr:hover{background:#F8FAFD}
 .c{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .c.oos span{background:var(--amb-t);color:#8A5A06;font-size:12px}
 .sn{margin-right:4px}
-.stk .ab{float:right;margin-left:6px;border:1px solid var(--line);background:var(--pur-t);color:var(--pur);border-radius:8px;font-size:11px;font-weight:700;width:26px;height:24px;margin-top:1px}
+.stk .ab{float:none;display:inline-block;vertical-align:middle;margin:0 6px;border:1px solid var(--line);background:var(--pur-t);color:var(--pur);border-radius:8px;font-size:11px;font-weight:700;width:32px;height:30px}
 .stk .ab:hover{background:var(--pur);color:#fff}
 th .allb{display:block;margin:4px auto 0;border:1px solid var(--line);background:var(--okbg);color:var(--ok);border-radius:999px;font-size:10px;font-weight:700;padding:1px 8px}
 
@@ -370,6 +370,25 @@ th .allb{display:block;margin:4px auto 0;border:1px solid var(--line);background
 @media (max-width:420px){.smx td.sj .ty{display:none}.tgrid{gap:6px}.tl{padding-left:34px}.tl i{width:22px;height:22px;left:6px}.itiles .it{padding:9px 8px;gap:6px}.itiles .it b{font-size:12.5px}}
 .itiles .ty,.istrip .ty,.wchip .ty{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:4px;color:#fff;font-size:10px;font-weight:800;flex:none}
 .istrip button.on .ty{outline:1px solid rgba(255,255,255,.5)}
+
+/* ===== all-names-on-one-screen marking ===== */
+.tgrid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:5px!important}
+@media (min-width:700px){.tgrid{grid-template-columns:repeat(6,minmax(0,1fr))!important}}
+.tl{min-height:46px!important;padding:3px 3px 3px 27px!important;border-radius:10px!important;justify-content:center}
+.tl i{width:20px!important;height:20px!important;left:4px!important;font-size:10px!important}
+.tl .rn{font-size:9.5px;line-height:1}.tl b{font-size:12px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;line-height:1.15}
+.tl em{display:none}.tl.hasn::after{content:'';position:absolute;right:4px;top:4px;width:6px;height:6px;border-radius:50%;background:var(--navy2)}
+@media (max-width:980px){
+ main.itemscr{padding-top:6px}.itemscr .ihead{margin-bottom:4px}.itemscr .istrip{padding-bottom:4px}.itemscr .brush{padding-bottom:4px}.itemscr .icnt{margin:0 0 6px}
+ .col>.tb{display:none}
+ .grid2 td{padding:2px!important}.grid2 .c{width:34px!important;height:30px!important}.grid2 .stk{min-width:150px}.grid2 .sn{font-size:12px}
+}
+/* director exceptions board */
+.xb{margin-top:14px}.xs{border-bottom:1px solid var(--line)}.xs:last-child{border:0}
+.xs>button{width:100%;display:flex;gap:8px;align-items:center;flex-wrap:wrap;border:0;background:none;padding:12px 2px;text-align:left}
+.xs .xb2{padding:0 2px 12px}.xr{display:flex;gap:8px;align-items:flex-start;margin:6px 0;flex-wrap:wrap}.xr .nm{flex:1;min-width:160px;font-size:13px;line-height:1.6}
+.xr .nm span{display:inline-block;background:var(--nobg);border-radius:6px;padding:0 7px;margin:0 4px 3px 0;color:var(--ink)}
+.xr .nm span.a{background:var(--absbg)}.xr .nm span.i{background:var(--amb-t)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -638,7 +657,7 @@ function render(){
   const app=$('#app');const tw=$('.tblwrap');const st=tw?[tw.scrollLeft,tw.scrollTop]:null;const y=window.scrollY;
   if(S.me&&!S.sa.key){const k=scopeSecs();S.sa.key=k[0]?k[0].k:'C5-B'}
   if(S.me&&!S.landed){S.landed=1;const rr=(S.real||S.me).r;if(!(MGMT.includes(rr)||rr==='Director'))S.tab='my'}
-  app.innerHTML=header()+(S.me?viewBar():'')+'<main>'+mainView()+'</main></div></div>'+(S.tab==='my'?mySticky():stickyBar());
+  app.innerHTML=header()+(S.me?viewBar():'')+'<main class="'+(S.tab==='my'&&S.my.screen==='item'?'itemscr':'')+'">'+mainView()+'</main></div></div>'+(S.tab==='my'?mySticky():stickyBar());
   const t2=$('.tblwrap');if(t2&&st){t2.scrollLeft=st[0];t2.scrollTop=st[1]}window.scrollTo(0,y);
   if(!S.me&&!SH&&!LIVE){openWho(true)}}
 const NAVICO={my:'<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 5.5a3 3 0 0 1 0 5.6M18 14.2c1.9.8 3 2.6 3 4.8"/></svg>',dash:'<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>',
@@ -749,6 +768,7 @@ function dashView(){
   const title=sc.all?(sc.kind==='Director'?'Director’s overview':'School overview'):sc.kind+' · '+(sc.keys.size<=3?sc.label:sc.label);
   let h=`<div class="datebar"><h1>${esc(fdl(D0))}</h1><button class="btn sm" data-act="dateshift" data-v="-1" aria-label="Previous day">‹</button><input type="date" id="dbdate" value="${D0}" data-chg="date" aria-label="Pick date"><button class="btn sm" data-act="dateshift" data-v="1" aria-label="Next day">›</button><button class="btn sm" data-act="datetoday">Today</button></div><div class="muted tiny" style="margin-top:4px">${esc(title)}</div>`;
   h+=`<div class="calwrap">${calendarCard(R,D0)}${dayWorklist(R,D0)}</div>`;
+  h+=excBoard(R,D0);
   if(none)h+=`<div class="card empty" style="margin-top:14px"><h3>No rounds yet</h3><p>Create the first round with <b>+ New round</b>, or load sample data to see how every view works.</p><button class="btn gold" data-act="demo">Load sample data</button></div>`;
   h+=`<div class="kpis">
    <div class="kpi gold"><div class="v num">${dDone}/${dist.length}</div><div class="l">Sections distributed</div></div>
@@ -797,7 +817,7 @@ function dashView(){
   const agg={};coll.filter(r=>csubFor(r,D0)).forEach(r=>{const its=itemsFor(r,D0);its.forEach(it=>{const k=it.n+' '+TYPE[it.t];agg[k]=agg[k]||{n:k,m:0}});
     roster(r).forEach(([roll])=>{const sid=sidOf(r,roll);its.forEach(it=>{const c=cell(r,sid,it.id);if(c.d!=='G')return;if(c.c==='M'||c.c==='IC')agg[it.n+' '+TYPE[it.t]].m++})})});
   const top=Object.values(agg).filter(a=>a.m>0).sort((a,b)=>b.m-a.m).slice(0,8);
-  if(top.length){const mx=top[0].m;h+=`<div class="sec-h"><h2>Most missing items</h2><small>Not submitted + incomplete</small></div><div class="card bars">`+top.map(a=>`<div class="bar"><span>${esc(a.n)}</span><div class="t"><span style="width:${Math.max(6,a.m/mx*100)}%"></span></div><b class="num">${a.m}</b></div>`).join('')+`</div>`}
+  if(top.length){const mx=top[0].m;h+=`<div class="sec-h"><h2>Most not-submitted items</h2><small>Not submitted + incomplete</small></div><div class="card bars">`+top.map(a=>`<div class="bar"><span>${esc(a.n)}</span><div class="t"><span style="width:${Math.max(6,a.m/mx*100)}%"></span></div><b class="num">${a.m}</b></div>`).join('')+`</div>`}
   if(canSwitch())h+=`<div style="margin-top:20px"><button class="btn sm" data-act="admin">Admin tools</button></div>`;
   return h}
 
@@ -838,7 +858,7 @@ function roundView(){
   if(ph==='coll'){
     h+=`<div class="chips" style="margin-top:12px">${gs.map(d=>{const n=itemsFor(r,d).length;const sb=csubFor(r,d);return `<button class="chip ${d===gd?'on':''}" data-act="grp" data-v="${d}">${esc(fd(d))} · ${n} item${n>1?'s':''} ${sb?'✓':(d<t?'· overdue':'')}</button>`}).join('')}</div>`;
     if(gd!==t)h+=`<div class="banner ${gd<t?'warn':'info'}" style="margin-top:4px">${gd<t?'Collection of '+fd(gd)+' items was due '+diffDays(t,gd)+' day(s) ago.':'Collection of these items is due '+fd(gd)+'.'} Your name and the actual time are recorded on submit.</div>`}
-  h+=`<div class="legend" style="margin:13px 0 7px">${ph==='dist'?`<span class="pill p-ok">✓ Given</span><span class="pill p-no">✗ Not given</span><span class="pill p-abs">A Absent</span><span class="pill p-ic">NA Not available</span>`:`<span class="pill p-ok">✓ Received</span><span class="pill p-no">✗ Not submitted</span><span class="pill p-abs">A Absent</span><span class="pill p-ic">IC Incomplete</span><span class="pill p-lv">L On leave</span><span class="pill p-rt">RT Retained</span><span class="pill p-na">– Not issued</span>`}<span class="muted tiny" style="align-self:center">Everyone starts as ${ph==='dist'?'given':'received'}. <b>Tap a box to change it, right there</b>: ${ph==='dist'?'✓ → ✗ → A → NA → ✓':'✓ → ✗ → A → IC → ✓'}. Hold a box for a remark, leave or retain. <b>A</b> beside a name marks the whole row absent; <b>✓ all</b> under a heading ticks the column.</span></div>`;
+  h+=`<div class="legend" style="margin:13px 0 7px">${ph==='dist'?`<span class="pill p-ok">✓ Given</span><span class="pill p-no">✗ Not given</span><span class="pill p-abs">A Absent</span>`:`<span class="pill p-ok">✓ Received</span><span class="pill p-no">✗ Not submitted</span><span class="pill p-abs">A Absent</span><span class="pill p-ic">IC Incomplete</span><span class="pill p-lv">L On leave</span><span class="pill p-rt">RT Retained</span><span class="pill p-na">– Not issued</span>`}<span class="muted tiny" style="align-self:center">Everyone starts as ${ph==='dist'?'given':'received'}. <b>Tap a box to change it, right there</b>: ${ph==='dist'?'✓ → ✗ → A → ✓':'✓ → ✗ → A → IC → ✓'}. Hold a box for a remark, leave or retain. <b>A</b> beside a name marks the whole row absent; <b>✓ all</b> under a heading ticks the column.</span></div>`;
   h+=gridTable(r,ph,its);
   h+=reportView(r,ph,its,gd);
   h+=activityCard(r);
@@ -868,7 +888,7 @@ function actView(){
 /* ============ MY CLASS · classroom-first mobile screens ============ */
 const REM_Q=['Parent informed','Will bring tomorrow','Left at home','Pages pending','With tuition teacher','Absent – inform parent'];
 function cv(c,ph){
-  if(ph==='dist'){if(c.d==='N'){if(c.dr==='Absent')return['abs','A','Absent'];if(c.dr==='Out of stock')return['oos','NA','Not available'];return['no','✗','Not given']}return['ok','✓','Given']}
+  if(ph==='dist'){if(c.d==='N'){if(c.dr==='Absent')return['abs','A','Absent'];return['no','✗','Not given']}return['ok','✓','Given']}
   if(c.d==='N')return['na','–','Not issued'];
   if(c.c==='M')return c.cr==='Absent'?['abs','A','Absent']:['no','✗','Not submitted'];
   if(c.c==='IC')return['ic','IC','Incomplete'];if(c.c==='LV')return['lv','L','On leave'];if(c.c==='RT')return['rt','RT','Retained'];
@@ -881,7 +901,7 @@ function secTasks(key,D0){
     if(r.date===D0)dist.push({r,ph:'dist',g:null,its:r.items});
     groupsOf(r).forEach(g=>{if(g===D0)coll.push({r,ph:'coll',g,its:itemsFor(r,g)});else if(g<D0&&r.dsub&&!csubFor(r,g))over.push({r,ph:'coll',g,its:itemsFor(r,g)})})});
   return{dist,coll,over}}
-const fname=n=>{const p=n.trim().split(/\s+/);return p[0]+(p[1]?' '+p[1][0]+'.':'')};
+const fname=n=>n.trim().split(/\s+/)[0];
 function secPicker(secs,key){
   if(secs.length<=1)return `<div class="muted tiny" style="margin-bottom:8px">${esc(secs[0]?secs[0].label:'')} · ${esc(classTeacher(key))}</div>`;
   if(secs.length<=8)return `<div class="chips" style="margin:0 0 10px">${secs.map(s=>`<button class="chip ${s.k===key?'on':''}" data-act="mysec" data-v="${s.k}">${esc(s.label)}</button>`).join('')}</div>`;
@@ -925,8 +945,8 @@ function myItem(){
   <div class="brush"><span class="tiny muted" style="font-weight:700">Auto-remark</span>${[''].concat(REM_Q).map(q=>`<button class="chip ${S.my.brush===q?'on':''}" data-act="brush" data-v="${esc(q)}">${q?esc(q):'None'}</button>`).join('')}</div>
   <div class="icnt"><span class="pill p-ok num">${cn.ok} ${ph==='dist'?'given':'received'}</span>${cn.no?`<span class="pill p-no num">${cn.no} ✗</span>`:''}${cn.abs?`<span class="pill p-abs num">${cn.abs} absent</span>`:''}${cn.oos?`<span class="pill p-ic num">${cn.oos} NA</span>`:''}${cn.ic?`<span class="pill p-ic num">${cn.ic} incomplete</span>`:''}${cn.lv?`<span class="pill p-lv num">${cn.lv} leave</span>`:''}${cn.rt?`<span class="pill p-rt num">${cn.rt} retained</span>`:''}<span class="muted tiny">of ${cn.tot}</span></div>
   <div class="tgrid">${ro.map(([roll,name])=>{const sid=sidOf(r,roll);const c=cell(r,sid,it.id);const [cls,g,lab]=cv(c,ph);
-    return `<button class="tl ${cls}" data-act="mycyc" data-s="${sid}" data-i="${it.id}" aria-label="${esc(name)}: ${lab}"><i>${g}</i><span class="rn">${roll}</span><b>${esc(fname(name))}</b>${c.n?`<em>${esc(c.n)}</em>`:''}</button>`}).join('')}</div>
-  <div class="tiny muted" style="margin-top:10px">Tap = ${ph==='dist'?'✓ → ✗ → A → NA':'✓ → ✗ → A → IC'}. Hold a name for leave, retain or a typed remark. ${S.my.brush?'New exceptions get the remark “'+esc(S.my.brush)+'”.':''}</div>`;
+    return `<button class="tl ${cls}${c.n?' hasn':''}" data-act="mycyc" data-s="${sid}" data-i="${it.id}" aria-label="${esc(name)}: ${lab}"><i>${g}</i><span class="rn">${roll}</span><b>${esc(fname(name))}</b>${c.n?`<em>${esc(c.n)}</em>`:''}</button>`}).join('')}</div>
+  <div class="tiny muted" style="margin-top:10px">Tap = ${ph==='dist'?'✓ → ✗ → A':'✓ → ✗ → A → IC'}. Hold a name for leave, retain or a typed remark. ${S.my.brush?'New exceptions get the remark “'+esc(S.my.brush)+'”.':''}</div>`;
   return h}
 function mySticky(){
   if(S.tab!=='my')return '';
@@ -947,8 +967,7 @@ function cycleIn(rid,ph,gd,sid,iid){
   const r0=S.rounds[rid];const c=cell(r0,sid,iid);const brush=S.my.brush||'';let p;
   if(ph==='dist'){
     if(c.d!=='N')p={d:'N',dr:'Other',n:brush};
-    else if(c.dr!=='Absent'&&c.dr!=='Out of stock')p={d:'N',dr:'Absent',n:brush||c.n};
-    else if(c.dr==='Absent')p={d:'N',dr:'Out of stock',n:brush||c.n};
+    else if(c.dr!=='Absent')p={d:'N',dr:'Absent',n:brush||c.n};
     else p={d:'G',dr:'',n:''}}
   else{
     if(c.d==='N'){toast('Not issued to this student');return}
@@ -1009,13 +1028,28 @@ function remarkStu(lk,sid,text){
   mutL(lk,l=>{Object.values(l.entries).forEach(e=>{if(e.s===sid&&e.st==='open'){(e.h=e.h||[]).push({at:now,by:me.n,act:'Remark',t:text});n++}})});
   toast('Remark added to all open items')}
 
+function excNames(r,ph,it){const o={no:[],abs:[],ic:[],lv:[],rt:[]};roster(r).forEach(([roll,name])=>{const k=cv(cell(r,sidOf(r,roll),it.id),ph)[0];if(o[k])o[k].push(roll+'. '+fname(name))});return o}
+function excBoard(R,D0){
+  const by={};R.forEach(r=>{const dd=r.date===D0,cc=groupsOf(r).includes(D0);if(dd||cc)(by[r.key]=by[r.key]||[]).push({r,dd,cc})});
+  const keys=Object.keys(by).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
+  if(!keys.length)return '';
+  const secs=keys.map(k=>{const dist=[],coll=[];let nd=0,nc=0;
+    by[k].forEach(({r,dd,cc})=>{
+      if(dd)r.items.forEach(it=>{const e=excNames(r,'dist',it);if(e.no.length||e.abs.length){dist.push({r,it,e});nd+=e.no.length}});
+      if(cc)itemsFor(r,D0).forEach(it=>{const e=excNames(r,'coll',it);if(e.no.length||e.ic.length||e.abs.length||e.lv.length||e.rt.length){coll.push({r,it,e});nc+=e.no.length+e.ic.length}})});
+    return{k,dist,coll,nd,nc,dsub:by[k].filter(x=>x.dd).every(x=>x.r.dsub),csub:by[k].filter(x=>x.cc).every(x=>csubFor(x.r,D0))}});
+  const tot=secs.reduce((a,x)=>a+x.nd,0),totc=secs.reduce((a,x)=>a+x.nc,0);
+  const rows=(L,ph)=>L.map(({it,e})=>`<div class="xr"><span>${itemChip(it)}</span><div class="nm">${e.no.map(n=>`<span>${esc(n)}</span>`).join('')}${e.ic.map(n=>`<span class="i">${esc(n)} · IC</span>`).join('')}${e.abs.map(n=>`<span class="a">${esc(n)} · A</span>`).join('')}${e.lv.map(n=>`<span class="a">${esc(n)} · L</span>`).join('')}${e.rt.map(n=>`<span class="a">${esc(n)} · RT</span>`).join('')}</div></div>`).join('');
+  return `<div class="sec-h xb"><h2>Who did not get it · who did not submit</h2><small>${esc(fd(D0))} · tap a section to see names</small></div>
+  <div class="kpis" style="margin-top:0"><div class="kpi no"><div class="v num">${tot}</div><div class="l">Not given · distribution</div></div><div class="kpi no"><div class="v num">${totc}</div><div class="l">Not submitted / incomplete · collection</div></div></div>
+  <div class="card" style="padding:2px 14px;margin-top:10px">`+secs.map(x=>{const op=!!(S.dexp&&S.dexp[x.k]);return `<div class="xs"><button data-act="dexp" data-v="${x.k}"><b>${esc(secLabel(x.k.split('-')[0],x.k.split('-')[1]))}</b><span class="sp"></span>${x.nd?`<span class="pill p-no num">${x.nd} not given</span>`:(x.dist.length||!x.dsub?'':'<span class="muted tiny">dist. clear</span>')}${x.nc?`<span class="pill p-no num">${x.nc} not submitted</span>`:''}${!x.nd&&!x.nc?'<span class="pill p-ok">All clear</span>':''}${x.dsub?'':'<span class="pill p-ic">Dist. pending</span>'}<span class="chev tiny">${op?'▴':'▾'}</span></button>${op?`<div class="xb2">${x.dist.length?`<div class="tiny muted" style="font-weight:700;margin-top:4px">DISTRIBUTION · not given / absent</div>`+rows(x.dist,'dist'):''}${x.coll.length?`<div class="tiny muted" style="font-weight:700;margin-top:8px">COLLECTION · not submitted / incomplete</div>`+rows(x.coll,'coll'):''}${!x.dist.length&&!x.coll.length?'<div class="muted tiny" style="padding:6px 0">No exceptions.</div>':''}<div style="margin-top:6px"><button class="btn sm" data-act="dgo" data-v="${x.k}">Open section</button></div></div>`:''}</div>`}).join('')+`</div>`}
 function gridTable(r,ph,its){
   const ro=roster(r);
   let h=`<div class="tblwrap"><table class="grid2"><thead><tr><th class="stk"><span class="tiny muted">STUDENT (${ro.length})</span></th>`+its.map(it=>`<th><span class="ty t-${it.t}">${it.t}</span><span class="nm" data-act="colsheet" data-i="${it.id}">${esc(short(it.n))}</span>${ph==='dist'&&groupsOf(r).length>1?`<span class="dd">due ${esc(fd(icd(r,it)))}</span>`:''}<button class="allb" data-act="colall" data-i="${it.id}" aria-label="All ${esc(it.n)} ${ph==='dist'?'given':'received'}">✓ all</button></th>`).join('')+`</tr></thead><tbody>`;
   ro.forEach(([roll,name])=>{const sid=sidOf(r,roll);const fl=studentFlag(r,sid,ph,its);
-    h+=`<tr><td class="stk" data-act="stusheet" data-s="${sid}"><span class="rl">${roll}</span><span class="sn">${esc(name)}</span><button class="ab" data-act="rowabs" data-s="${sid}" aria-label="Mark ${esc(name)} absent">A</button>${fl?`<span class="sflag"><span class="pill p-${fl[0]}">${esc(fl[1])}</span></span>`:''}</td>`;
+    h+=`<tr><td class="stk" data-act="stusheet" data-s="${sid}"><span class="rl">${roll}</span><button class="ab" data-act="rowabs" data-s="${sid}" aria-label="Mark ${esc(name)} absent">A</button><span class="sn">${esc(name)}</span>${fl?`<span class="sflag"><span class="pill p-${fl[0]}">${esc(fl[1])}</span></span>`:''}</td>`;
     its.forEach(it=>{const c=cell(r,sid,it.id);let cls='ok',g='✓';
-      if(ph==='dist'){if(c.d==='N'){if(c.dr==='Absent'){cls='abs';g='A'}else if(c.dr==='Out of stock'){cls='oos';g='NA'}else{cls='no';g='✗'}}}
+      if(ph==='dist'){if(c.d==='N'){if(c.dr==='Absent'){cls='abs';g='A'}else{cls='no';g='✗'}}}
       else{if(c.d==='N'){cls='na';g='–'}else if(c.c==='M'){if(c.cr==='Absent'){cls='abs';g='A'}else{cls='no';g='✗'}}else if(c.c==='IC'){cls='ic';g='IC'}else if(c.c==='LV'){cls='lv';g='L'}else if(c.c==='RT'){cls='rt';g='RT'}}
       h+=`<td><button class="c ${cls}" data-act="cell" data-s="${sid}" data-i="${it.id}" aria-label="${esc(name)} ${esc(it.n)}"><span>${g}</span></button></td>`});
     h+=`</tr>`});
@@ -1153,7 +1187,7 @@ function openCell(sid,iid){
   if(ph==='coll'&&c.d==='N'){toast('This item was not issued to the student');return}
   SH={sid,iid};const cur=ph==='dist'?(c.d==='G'?'G':'N:'+(c.dr||'Other')):(c.c==='R'?'R':c.c==='M'?'M:'+(c.cr||'Other'):c.c);
   const O=(v,g,gc,t,sm)=>`<button class="opt ${cur===v?'cur':''}" data-act="setcell" data-v="${v}"><span class="g p-${gc}">${g}</span><span>${t}${sm?`<small>${sm}</small>`:''}</span></button>`;
-  const opts=ph==='dist'?O('G','✓','ok','Given')+O('N:Absent','A','abs','Not given · absent')+O('N:Out of stock','✗','no','Not available','Out of stock / not with teacher')+O('N:Other','✗','no','Not received · other reason')
+  const opts=ph==='dist'?O('G','✓','ok','Given')+O('N:Other','✗','no','Not given')+O('N:Absent','A','abs','Absent')
     :O('R','✓','ok','Received')+O('M:Forgot','✗','no','Not submitted · forgot')+O('M:Absent','A','abs','Absent today')+O('M:Other','✗','no','Not submitted · other reason')+O('IC','IC','ic','Incomplete','Returned to child, will bring again')+O('RT','RT','rt','Retain with child','Child keeps it for now')+O('LV','L','lv','On leave with it','Choose return date below');
   const info=r.dsub?`Issued ${esc(fd(r.date))} by ${esc(r.dsub.by)} · collection due ${esc(fd(icd(r,it)))}`:`Distribution not submitted yet · collection due ${esc(fd(icd(r,it)))}`;
   sheet(`<button class="x" data-act="close" aria-label="Close">×</button><h2>${esc(nm)}</h2><div>${itemChip(it)} <span class="muted tiny">${ph==='dist'?'Distribution':'Collection'}</span></div><div class="tiny muted" style="margin-top:3px">${info}</div>
@@ -1189,12 +1223,12 @@ function applyBulkStu(sid,v){
 function openCol(iid){
   const r=S.rounds[S.openRound];const ph=S.phase;const it=r.items.find(i=>i.id===iid);SH={iid};
   const B=(v,g,gc,t,sm)=>`<button class="opt" data-act="bulkcol" data-v="${v}"><span class="g p-${gc}">${g}</span><span>${t}${sm?`<small>${sm}</small>`:''}</span></button>`;
-  const opts=ph==='dist'?B('G','✓','ok','Given to everyone')+B('stock','✗','no','Not available for anyone','Out of stock, nobody received it'):B('R','✓','ok','Everyone submitted')+B('M','✗','no','Nobody submitted','Whole column not submitted');
+  const opts=ph==='dist'?B('G','✓','ok','Given to everyone')+B('stock','✗','no','Not given to anyone','Nobody received it'):B('R','✓','ok','Everyone submitted')+B('M','✗','no','Nobody submitted','Whole column not submitted');
   sheet(`<button class="x" data-act="close" aria-label="Close">×</button><h2>${itemChip(it)}</h2><div class="muted tiny">Applies to every student for this item. Students not issued stay as they are.</div><div class="opts">${opts}</div>`)}
 function applyBulkCol(iid,v){
   const rid=S.openRound,ph=S.phase;const gd=curGroup(S.rounds[rid]);const ek=editKey(ph,gd);
   mutR(rid,r=>{const ro=roster(r);const bb=ro.map(([roll])=>cdesc(cell(r,sidOf(r,roll),iid),ph));const post=!!(ph==='dist'?r.dsub:csubFor(r,gd));roster(r).forEach(([roll])=>{const sid=sidOf(r,roll);const c=cell(r,sid,iid);
-    if(ph==='dist'){setCell(r,sid,iid,v==='G'?{d:'G'}:{d:'N',dr:'Out of stock'})}else{if(c.d==='N')return;setCell(r,sid,iid,v==='R'?{c:'R'}:{c:'M',cr:'Forgot'})}});
+    if(ph==='dist'){setCell(r,sid,iid,v==='G'?{d:'G'}:{d:'N',dr:'Other'})}else{if(c.d==='N')return;setCell(r,sid,iid,v==='R'?{c:'R'}:{c:'M',cr:'Forgot'})}});
     logBulk(r,ph,post,((r.items.find(i=>i.id===iid)||{}).n||'Item')+' · whole column',bb,ro.map(([roll])=>cdesc(cell(r,sidOf(r,roll),iid),ph)));r.edit=r.edit||{};if(ph==='dist'?r.dsub:csubFor(r,gd))r.edit[ek]=1});closeSheet()}
 function openSubmit(){
   const r=S.rounds[S.openRound];const ph=S.phase;const gd=curGroup(r);const its=ph==='coll'?itemsFor(r,gd):r.items;const s=stats(r,its);
@@ -1375,7 +1409,7 @@ async function loadDemo(){
       ro.forEach(([roll])=>{const sid=sidOf(r,roll);
         its.forEach(it=>{
           if(absD.has(roll)){setCell(r,sid,it.id,{d:'N',dr:'Absent'});return}
-          if(oos&&it.id===oos.id&&R()<.18){setCell(r,sid,it.id,{d:'N',dr:'Out of stock'});return}
+          if(oos&&it.id===oos.id&&R()<.18){setCell(r,sid,it.id,{d:'N',dr:'Other'});return}
           if(leaveRoll&&roll===leaveRoll){setCell(r,sid,it.id,{d:'G',c:'LV',ret:leaveRet});return}
           const g=it.cd;if(!df.collect[g])return;const x=R();
           if(absC.has(roll))setCell(r,sid,it.id,{c:'M',cr:'Absent'});
@@ -1400,7 +1434,7 @@ async function loadDemo(){
           if(!cands.length)break;const [roll,it,c]=pick(cands);const sid=sidOf(r,roll);const was=cdesc(c,'coll');const who=pick([[T,'Class Teacher'],[A1,'Assistant Teacher'],[CM,'Class Manager'],['Harsh Yadav','Director']]);
           const when=r.cs[it.cd].at+(25+Math.floor(R()*200))*60000;if(when>now+864e5*2)continue;
           setCell(r,sid,it.id,{c:'R'});L(when,who[0],who[1],nm(sid)+' · '+it.n+': '+was+' → Received',{ph:'coll',post:1,s:sid})}
-        if(df.i===2&&R()<.25){const [roll]=pick(ro);const it=pick(its);const sid=sidOf(r,roll);const c=cell(r,sid,it.id);if(c.d!=='N'){const was=cdesc(c,'dist');setCell(r,sid,it.id,{d:'N',dr:'Out of stock'});L(df.dAt+40*60000,T,'Class Teacher',nm(sid)+' · '+it.n+': '+was+' → Not issued · Out of stock',{ph:'dist',post:1,s:sid});r.edit={['d']:1}}}}
+        if(df.i===2&&R()<.25){const [roll]=pick(ro);const it=pick(its);const sid=sidOf(r,roll);const c=cell(r,sid,it.id);if(c.d!=='N'){const was=cdesc(c,'dist');setCell(r,sid,it.id,{d:'N',dr:'Other'});L(df.dAt+40*60000,T,'Class Teacher',nm(sid)+' · '+it.n+': '+was+' → Not issued · Out of stock',{ph:'dist',post:1,s:sid});r.edit={['d']:1}}}}
       r.log.sort((a,b)=>a.at-b.at);
       S.rounds[r.id]=r}
     /* defaulter register realism: closures, early returns, remarks */
@@ -1431,6 +1465,7 @@ const ACT={
   open:(el,ev)=>{if(ev)ev.preventDefault();const r=S.rounds[el.dataset.id];if(!r)return;S.openRound=r.id;S.phase=el.dataset.ph||(r.dsub?'coll':'dist');S.grp=el.dataset.g||null;S.tab='round';window.scrollTo(0,0);render()},
   phase:el=>{S.phase=el.dataset.v;render()},grp:el=>{S.grp=el.dataset.v;render()},
   calpick:el=>{S.date=el.dataset.v;S.calM=S.date.slice(0,7);if(el.dataset.go==='today'){S.my.view='today';S.my.screen=null}render()},
+  dexp:el=>{S.dexp=S.dexp||{};S.dexp[el.dataset.v]=!S.dexp[el.dataset.v];render()},dgo:el=>{S.sa.key=el.dataset.v;S.tab='sec';render()},
   mysec:el=>{S.my.sec=el.dataset.v;S.my.screen=null;render()},myv:el=>{S.my.view=el.dataset.v;S.my.screen=null;render()},myback:()=>{S.my.screen=null;render()},
   myitem:el=>{const d=el.dataset;if(d.day)S.date=d.day;S.openRound=d.rid;S.phase=d.ph;S.grp=d.g||null;S.my.task={rid:d.rid,ph:d.ph,g:d.g||null,iid:d.i};S.my.screen='item';window.scrollTo(0,0);render()},
   mycyc:el=>{if(Date.now()-LP<700)return;const t=S.my.task;cycleIn(t.rid,t.ph,t.g,el.dataset.s,el.dataset.i)},brush:el=>{S.my.brush=el.dataset.v;render()},
@@ -1484,8 +1519,7 @@ function cycleCell(sid,iid){
   let p;
   if(ph==='dist'){
     if(c.d!=='N')p={d:'N',dr:'Other'};
-    else if(c.dr!=='Absent'&&c.dr!=='Out of stock')p={d:'N',dr:'Absent'};
-    else if(c.dr==='Absent')p={d:'N',dr:'Out of stock'};
+    else if(c.dr!=='Absent')p={d:'N',dr:'Absent'};
     else p={d:'G',dr:'',n:''};
   }else{
     if(c.d==='N'){toast('Not issued to this student');return}
