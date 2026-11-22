@@ -304,6 +304,12 @@ details.rules summary{font-size:14px}
   .tools{align-items:flex-start}
   .head{gap:11px}
 }
+
+.sw.six{grid-template-columns:repeat(6,minmax(0,1fr))}
+@media (max-width:640px){.sw.six{grid-template-columns:repeat(3,minmax(0,1fr))}.sw.six button{font-size:14px;padding:10px 2px;white-space:nowrap}}
+.yt{position:relative;padding-top:56.25%;border-radius:12px;overflow:hidden;background:#000}.yt iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.rsub{margin:0 0 8px;font:600 17px var(--f-head,inherit)}.rles{font-weight:700;font-size:13.5px;margin:8px 0 2px;color:var(--muted)}
+.rmt{display:inline-flex;align-items:center;padding:4px}.rmt input{width:20px;height:20px}
 </style>
 </head><body class="locked">
 
@@ -323,6 +329,7 @@ details.rules summary{font-size:14px}
       <button type="button" id="seg-check" aria-pressed="false">Checking<small>Assignment, test, notebook</small></button>
       <button type="button" id="seg-mentor" aria-pressed="false">Mentor tasks<small>Daily, weekend, class</small></button>
       <button type="button" id="seg-docs" aria-pressed="false">Documents<small>Class-wise PDFs</small></button>
+      <button type="button" id="seg-res" aria-pressed="false">Resources<small>PPT, video, plans</small></button>
       <button type="button" id="seg-dash" aria-pressed="false">Dashboard<small>Pending work</small></button>
     </div>
   </div>
@@ -349,6 +356,7 @@ details.rules summary{font-size:14px}
   <div id="dashView" class="stack" hidden></div>
   <div id="mentorView" class="stack" hidden></div>
   <div id="docsView" class="stack" hidden></div>
+  <div id="resView" class="stack" hidden></div>
 </div></main>
 
 <script>
@@ -469,7 +477,7 @@ function pushAdd(a){ const n={k:a.kind,d:a.d,c:a.cs,s:cut(a.s,24),l:cut(a.l,40),
 const pushSub=(k,w,rm)=>push('status/'+PFX+'s.'+h36(w+'|'+k),{note:JSON.stringify({k:cut(k,24),w,rm:rm?1:0})},rm?'Removed':'Added');
 function byLine(r,e){ const j=DOCS[r.dp], k=slotOf(r,e); if(!j||!j[k+'_by']) return ''; const d=new Date(j[k+'_at']); let h=d.getHours(); const ap=h<12?'AM':'PM'; h=h%12||12;
   return ' · '+String(j[k+'_by']).split(' ')[0]+', '+d.getDate()+' '+MO[d.getMonth()]+' '+h+':'+String(d.getMinutes()).padStart(2,'0')+' '+ap; }
-const VIEWERS=['1vut0erx8m94h','1hkv5s2x5ymsg','wj56ym193nows','wixt2s193dbkm','1svlg0a1imaq08','1km2jdpxojekf','14sca5akd6lrw','wj4eyr193sw0x','1hkvo5ox5z20e','7ire5c1vbmuki','19icgwg1nunenm','17uw0dvkup68h','82fqvh1vvbdtb','7pnndb1va8iul','1hpns37xai3pt','1vv9pknx964d1','7ngdnb1v812lx','1cvl39e11w0srk','rgj2s61dk0i44','1xx3j1kd5du6i','86831w1vqvo7q'];
+const VIEWERS=['1hpkpdjxaf105','1vut0erx8m94h','1hkv5s2x5ymsg','wj56ym193nows','wixt2s193dbkm','1svlg0a1imaq08','1km2jdpxojekf','14sca5akd6lrw','wj4eyr193sw0x','1hkvo5ox5z20e','7ire5c1vbmuki','19icgwg1nunenm','17uw0dvkup68h','82fqvh1vvbdtb','7pnndb1va8iul','1hpns37xai3pt','1vv9pknx964d1','7ngdnb1v812lx','1cvl39e11w0srk','rgj2s61dk0i44','1xx3j1kd5du6i','86831w1vqvo7q'];
 const canDash=()=>ROLE==='admin'||ROLE==='pl'||VIEWERS.indexOf(h36('v|'+ME.trim().toLowerCase().split(/\s+/)[0].replace(/[^a-z]/g,'')))>=0;
 function askName(){ lock(); }
 function records(){
@@ -508,9 +516,10 @@ function allStaff(all){ const m=new Map(); all.forEach(r=>{ if(!m.has(r.t)) m.se
 
 function render(){
   ['mid','sen'].forEach(k=>$('wing-'+k).setAttribute('aria-pressed',String(wing===k)));
-  ['prep','check','mentor','docs','dash'].forEach(k=>$('seg-'+k).setAttribute('aria-pressed',String(seg===k)));
+  ['prep','check','mentor','docs','res','dash'].forEach(k=>$('seg-'+k).setAttribute('aria-pressed',String(seg===k)));
   $('todayPill').textContent=nice(TODAY);
   const all=records(); all.forEach(r=>r.st=stat(r));
+  $('resView').hidden=seg!=='res'; if(seg==='res'){ $('listView').hidden=true; $('dashView').hidden=true; $('mentorView').hidden=true; $('docsView').hidden=true; renderRes(); return; }
   $('docsView').hidden=seg!=='docs'; if(seg==='docs'){ $('listView').hidden=true; $('dashView').hidden=true; $('mentorView').hidden=true; renderDocs(); return; }
   $('mentorView').hidden=seg!=='mentor'; if(seg==='mentor'){ $('listView').hidden=true; $('dashView').hidden=true; renderMentor(); return; } window.mBusy=false;
   const dash=seg==='dash'; $('listView').hidden=dash; $('dashView').hidden=!dash;
@@ -599,7 +608,7 @@ function detailCard(r,all){
     els.append(el('button',{type:'button',class:'st '+(late?'L':v)+(picking===e.id?' sel':''),'aria-expanded':String(picking===e.id),onclick:()=>{picking=picking===e.id?null:e.id;render()}},
       el('b',{text:ICON[v]+' '+e.name}),el('i',{text:(late?'Overdue · was due on '+nice(e.due):v==='D'?'Done':v==='N'?'Not applicable':NAME[v]+' · due on '+nice(e.due))+byLine(r,e)})));
   });
-  card.append(head(r,r.cs,statusTag(r,r.st),manage?el('button',{type:'button',class:'btn ghost xs',onclick:()=>{editing=editing===r.id?null:r.id;render()}},'Change'):null),els);
+  card.append(head(r,r.cs,statusTag(r,r.st),manage?el('span',{class:'toolr'},rmTick(r),el('button',{type:'button',class:'btn ghost xs',onclick:()=>{editing=editing===r.id?null:r.id;render()}},'Change')):null),els);
   if(pk) card.append(el('div',{class:'pick'},el('b',{text:pk.e.name+' — select the status'}),
     el('div',{class:'opts'},...['P','I','D','N'].map(v=>el('button',{type:'button',class:'st '+v+(pk.v===v?' sel':''),onclick:()=>{picking=null;pushStatus(r,pk.e,v)}},ICON[v]+' '+NAME[v])))));
   card.append(remarkBox(r.id)); { const hb=historyBox(r.id); if(hb) card.append(hb); }
@@ -616,7 +625,7 @@ function editBox(r,all){
   const sW=el('select',{id:'ed-wing'},el('option',{value:'mid',selected:r.wing==='mid'?'':null},'Middle grades (6–8)'),el('option',{value:'sen',selected:r.wing==='sen'?'':null},'Senior grades (9–11)'));
   const ck='rm|'+r.id;
   return el('div',{class:'editbox'},el('b',{text:'Change '+r.cs+' · '+r.s+' '+r.l+(r.kind==='prep'?' (preparation)':' (checking)')}),
-    canDash()?el('div',{class:'form'},el('label',{},'Assign to',sT),el('label',{},'Deadline',sE),el('label',{},'Or a new staff name',sNew),el('label',{},'Group',sG)):el('div',{class:'form'},el('label',{},'Deadline',sE)),
+    canDash()?el('div',{class:'form'},el('label',{},'Assign to',sT),el('label',{},'Deadline',sE),el('label',{},'Or a new staff name',sNew),el('label',{},'Group',sG)):el('div',{class:'form'},el('label',{},'Assign to',sT),el('label',{},'Deadline',sE)),
     ...(r.kind==='check'?[el('b',{text:'Items (tick to keep, untick to remove)'}),tickRow('ed-items',[...new Set(CHK_OPTS.concat(r.els.map(e=>e.name)))].map(x=>[x,x]),v=>r.els.some(e=>e.name===v))]:[]),
     el('div',{class:'toolr'},
       el('button',{type:'button',class:'btn',onclick:()=>{editing=null;pushNote(r,{i:edItems(r),e:sE.value,t:cut(sNew.value,30)||sT.value,g:sG.value,w:r.wing},'Change saved')}},'Save change'),
@@ -675,7 +684,7 @@ function renderDash(all){
 }
 
 ['mid','sen'].forEach(k=>$('wing-'+k).addEventListener('click',()=>{wing=k;teacher='All';grade='All';picking=editing=null;render()}));
-['prep','check','mentor','docs','dash'].forEach(k=>$('seg-'+k).addEventListener('click',()=>{seg=k;picking=editing=null;render()}));
+['prep','check','mentor','docs','res','dash'].forEach(k=>$('seg-'+k).addEventListener('click',()=>{seg=k;picking=editing=null;render()}));
 $('leftOnly').addEventListener('click',()=>{leftOnly=!leftOnly;render()});
 $('manage').addEventListener('click',()=>{manage=!manage;editing=confirmKey=null;render()});
 /* ---------- Mentor tasks: daily, weekend and class tasks per section ---------- */
@@ -753,7 +762,7 @@ let dClass=null, dEdit=null, dAdd=false, dConfirm=null;
 const dPath=id=>'status/'+PFX+'d.'+id;
 const okUrl=u=>/^https:\/\/(drive|docs)\.google\.com\/\S+$/.test(u)&&u.length<=140;
 function dRow(id,title,where,custom){
-  const n=noteOf(dPath(id))||{}, url=okUrl(n.u||'')?n.u:'', head=canDash(), wrap=el('div',{class:'docrow'});
+  const n=noteOf(dPath(id))||{}, url=okUrl(n.u||'')?n.u:'', head=true, wrap=el('div',{class:'docrow'});
   wrap.append(el('div',{class:'secrow',style:'cursor:default'},el('span',{class:'cls',text:where}),
     el('span',{class:'sn'},el('b',{text:title}),el('span',{class:'note',text:url?'PDF attached':'Not attached yet'})),
     el('span',{class:'toolr'},url?el('a',{class:'btn xs',href:url,target:'_blank',rel:'noopener'},'Open'):null,
@@ -765,7 +774,7 @@ function dRow(id,title,where,custom){
         el('button',{type:'button',class:'btn ghost',onclick:()=>{dEdit=dConfirm=null;render()}},'Cancel')))); }
   return wrap; }
 function renderDocs(){
-  const box=$('docsView'); box.replaceChildren(); const head=canDash(); if(GRADES[wing].indexOf(dClass)<0) dClass=GRADES[wing][0]; window.mBusy=!!(dEdit||dAdd);
+  const box=$('docsView'); box.replaceChildren(); const head=true; if(GRADES[wing].indexOf(dClass)<0) dClass=GRADES[wing][0]; window.mBusy=!!(dEdit||dAdd);
   box.append(el('div',{class:'chips','aria-label':'Class'},...GRADES[wing].map(c=>el('button',{type:'button',class:'chip','aria-pressed':String(dClass===c),onclick:()=>{dClass=c;dEdit=null;dAdd=false;render()}},'Class '+c))));
   box.append(el('div',{class:'tools'},el('h2',{class:'lt'},'Class '+dClass+' documents',el('small',{text:'Select Open to view the PDF'})),
     head?el('button',{type:'button',class:'chip sm','aria-pressed':String(dAdd),onclick:()=>{dAdd=!dAdd;dEdit=null;render()}},'Add document'):null));
@@ -780,7 +789,7 @@ function renderDocs(){
   secs.forEach(cs=>list.append(dRow('pi-'+cs,'Parent Insight Chart',cs)));
   Object.keys(DOCS).filter(p=>p.indexOf(dPath('x'))===0).sort().forEach(p=>{ const n=noteOf(p); if(!n||n.rm||n.c!==dClass) return; list.append(dRow(p.slice(dPath('').length),n.t||'Document',n.w||'Class '+dClass,{t:n.t,c:n.c,w:n.w||''})); });
   card.append(list); box.append(card);
-  box.append(el('p',{class:'note',text:head?'Documents stay in Google Drive; this page only keeps the link. Who can open a document is decided by its sharing setting in Drive.':'If a document does not open, ask your PL to share it with your Google account.'}));
+  box.append(el('p',{class:'note',text:head?'Any staff member can attach documents, as many as needed. Files stay in Google Drive; this page only keeps the link, and who can open a file is decided by its sharing setting in Drive.':''}));
 }
 
 /* ===== v2: own-work view for teachers, remarks, change history, quick add, dashboard with WhatsApp ===== */
@@ -819,7 +828,7 @@ function renderManage2(all){
   const fD=el('input',{id:'qa-date',type:'date',value:TODAY}), fE=el('input',{id:'qa-due',type:'date',value:prep?addWork(TODAY,-1):addWork(TODAY,2)});
   fD.addEventListener('change',()=>{ if(fD.value) fE.value=prep?addWork(fD.value,-1):addWork(fD.value,2); });
   const fO=el('input',{id:'qa-other',type:'text',maxlength:'18',placeholder:'Any other item'});
-  const myName=(allStaff(all).find(p=>isMe(p.n))||{n:ME}).n; const fT=canDash()?el('select',{id:'qa-staff'},el('option',{value:''},'Automatic (teacher of each section)'),...allStaff(all).map(p=>el('option',{value:p.n},p.n))):el('select',{id:'qa-staff'},el('option',{value:myName},myName+' (myself)'));
+  const myName=(allStaff(all).find(p=>isMe(p.n))||{n:ME}).n; const fT=canDash()?el('select',{id:'qa-staff'},el('option',{value:''},'Automatic (teacher of each section)'),...allStaff(all).map(p=>el('option',{value:p.n},p.n))):el('select',{id:'qa-staff'},el('option',{value:myName},myName+' (myself)'),...allStaff(all).filter(p=>p.n!==myName).map(p=>el('option',{value:p.n},p.n)));
   const fSub=el('input',{id:'ad-sub',type:'text',placeholder:'e.g. Art'});
   const secs=SECTIONS[wing].filter(cs=>grade==='All'||cs.replace(/[A-C]$/,'')===grade);
   box.replaceChildren(
@@ -842,6 +851,7 @@ function renderManage2(all){
       el('button',{type:'button',class:'btn',onclick:()=>{const k=cut(fSub.value,24); if(!k){fSub.focus();return} subj=k;teacher='All';pushSub(k,wing,0)}},'Add'),
       el('button',{type:'button',class:'btn warn',onclick:()=>{ if(confirmKey===ck){pushSub(subj,wing,1);confirmKey=null;}else confirmKey=ck; render()}},confirmKey===ck?'Confirm: remove '+subj:'Remove '+subj)));
   if(!canDash()){ box.lastChild.remove(); box.lastChild.remove(); }
+  bulkBar(box,all);
 }
 /* ---- dashboard: Preparation / Checking / Mentor tasks -> department -> staff, with WhatsApp ---- */
 let dDept='All', dMk='d', dSel={}, dDue={o:1,t:1,n:1,l:0}, dCls={}, dItems={};
@@ -902,10 +912,61 @@ function renderDash2(all){
   box.append(el('p',{class:'note',text:'A WhatsApp message lists everything pending for that person: preparation, checking and mentor tasks. "Send on WhatsApp" opens WhatsApp for you to choose the contact.'}));
 }
 
+/* ---------- Learning resources: PPT, video and lesson-plan links, class-wise and subject-wise ---------- */
+let lClass=null,lSub='All',lType='All',lAdd=false,lPlay=null,lConfirm=null,lForm={y:'p',s:'',l:''};
+const lPath=id=>'status/'+PFX+'l.'+id;
+const L_TYPE={p:'PPT',v:'Video',x:'Lesson plan',o:'Other'};
+const RES_SUBS=PFX==='t1.'?['English','Hindi','Maths','EVS','Science','S.St.','GK','Computer']:['English','Hindi','Sanskrit','Maths','Science','S.St.','Computer','GK','Commerce'];
+const ytId=u=>{ const m=String(u).match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:\S*&)?v=|shorts\/|embed\/|live\/))([A-Za-z0-9_-]{11})/); return m?m[1]:''; };
+const natKey=x=>String(x).replace(/\d+/g,d=>('0000'+d).slice(-5));
+function renderRes(){
+  const box=$('resView'); box.replaceChildren(); if(GRADES[wing].indexOf(lClass)<0) lClass=GRADES[wing][0]; window.mBusy=!!(lAdd||lPlay);
+  const items=Object.keys(DOCS).filter(p=>p.indexOf(lPath(''))===0).map(p=>{ const n=noteOf(p); return n&&!n.rm&&n.u&&n.c===lClass?Object.assign({p,by:String((DOCS[p]||{}).note_by||''),at:(DOCS[p]||{}).note_at},n):null; }).filter(Boolean);
+  const subs=[...new Set(RES_SUBS.concat(items.map(x=>x.s)))].filter(k=>RES_SUBS.indexOf(k)>=0||items.some(x=>x.s===k)); if(lSub!=='All'&&subs.indexOf(lSub)<0) lSub='All';
+  const chip=(label,on,fn)=>el('button',{type:'button',class:'chip'+(fn.sm?' sm':''),'aria-pressed':String(!!on),onclick:()=>{fn();lPlay=lConfirm=null;render()}},label);
+  box.append(el('div',{class:'chips','aria-label':'Class'},...GRADES[wing].map(c=>chip('Class '+c,lClass===c,()=>{lClass=c}))));
+  box.append(el('div',{class:'frow'},el('span',{class:'flab',text:'Subject'}),el('div',{class:'chips'},...['All'].concat(subs).map(k=>chip(k,lSub===k,Object.assign(()=>{lSub=k},{sm:1}))))));
+  box.append(el('div',{class:'frow'},el('span',{class:'flab',text:'Type'}),el('div',{class:'chips'},chip('All',lType==='All',Object.assign(()=>{lType='All'},{sm:1})),...Object.keys(L_TYPE).map(k=>chip(L_TYPE[k],lType===k,Object.assign(()=>{lType=k},{sm:1}))))));
+  box.append(el('div',{class:'tools'},el('h2',{class:'lt'},'Class '+lClass+' learning resources',el('small',{text:'Any teacher can add. Everyone can open and use them.'})),
+    el('button',{type:'button',class:'chip sm','aria-pressed':String(lAdd),onclick:()=>{lAdd=!lAdd;lPlay=null;render()}},'Add resource')));
+  if(lAdd){ const fY=el('select',{id:'lr-type'},...Object.keys(L_TYPE).map(k=>el('option',{value:k,selected:k===lForm.y?'':null},L_TYPE[k])));
+    const fC=el('select',{id:'lr-class'},...GRADES[wing].map(c=>el('option',{value:c,selected:c===lClass?'':null},'Class '+c)));
+    const cur=lForm.s||(lSub!=='All'?lSub:RES_SUBS[0]), fS=el('select',{id:'lr-sub'},...subs.map(k=>el('option',{value:k,selected:k===cur?'':null},k))), fSO=el('input',{id:'lr-subo',type:'text',maxlength:'22',placeholder:'Only if not in the list'});
+    const fL=el('input',{id:'lr-les',type:'text',maxlength:'40',placeholder:'e.g. Lesson 1',value:lForm.l}), fU=el('input',{id:'lr-url',type:'url',inputmode:'url',placeholder:'Paste the YouTube or Google Drive link'});
+    box.append(el('div',{class:'panel'},el('h2',{text:'Add a learning resource'}),
+      el('div',{class:'form'},el('label',{},'Type',fY),el('label',{},'Class',fC),el('label',{},'Subject',fS),el('label',{},'Other subject',fSO),el('label',{},'Lesson',fL),el('label',{},'Link',fU)),
+      el('div',{class:'toolr'},el('button',{type:'button',class:'btn',onclick:()=>{ const s=cut(fSO.value,22)||fS.value, l=cut(fL.value,40), raw=fU.value.trim(), id=ytId(raw), y=fY.value;
+        if(!l){fL.focus();return} const u=id?'yt:'+id:(okUrl(raw)?raw:''); if(!u){ toast('Paste a YouTube link or a Google Drive / Docs / Sheets / Slides link.',1); fU.focus(); return; }
+        const n={y:id&&y!=='v'?'v':y,c:fC.value,s,l,u}; if(JSON.stringify(n).length>198){ toast('Please shorten the lesson name.',1); return; }
+        lForm={y,s,l}; lClass=fC.value; push(lPath(Date.now().toString(36)+Math.random().toString(36).slice(2,5)),{note:JSON.stringify(n)},'Resource added'); }},'Add resource'),
+        el('button',{type:'button',class:'btn ghost',onclick:()=>{lAdd=false;render()}},'Close')),
+      el('p',{class:'note',text:'PPT, lesson plan and Excel files stay in Google Drive; paste their sharing link. YouTube videos play inside this page. To add several, keep adding one after another.'}))); }
+  const show=items.filter(x=>(lSub==='All'||x.s===lSub)&&(lType==='All'||x.y===lType)).sort((a,b)=>{ const sa=subs.indexOf(a.s),sb=subs.indexOf(b.s); return sa-sb||(natKey(a.l)<natKey(b.l)?-1:natKey(a.l)>natKey(b.l)?1:0)||(a.y<b.y?-1:1); });
+  if(!show.length){ box.append(el('div',{class:'empty',text:'No learning resources added here yet. Select "Add resource" to attach a PPT, video or lesson plan.'})); return; }
+  let curS=null,card=null,list=null,curL=null;
+  show.forEach(x=>{ if(x.s!==curS){ curS=x.s; curL=null; card=el('div',{class:'card'}); card.append(el('h3',{class:'rsub',text:x.s})); list=el('div',{class:'secs'}); card.append(list); box.append(card); }
+    if(x.l!==curL){ curL=x.l; list.append(el('div',{class:'rles',text:x.l})); }
+    const yt=String(x.u).indexOf('yt:')===0?String(x.u).slice(3):'', mine=canDash()||isMe(x.by), wrap=el('div',{class:'docrow'});
+    wrap.append(el('div',{class:'secrow',style:'cursor:default'},el('span',{class:'cls',text:L_TYPE[x.y]||'Other'}),
+      el('span',{class:'sn'},el('b',{text:yt?'YouTube video':'Google Drive file'}),el('span',{class:'note',text:x.by?'Added by '+x.by.split(' ')[0]+(x.at?', '+stamp(x.at):''):''})),
+      el('span',{class:'toolr'},yt?el('button',{type:'button',class:'btn xs',onclick:()=>{lPlay=lPlay===x.p?null:x.p;render()}},lPlay===x.p?'Close':'Play'):el('a',{class:'btn xs',href:x.u,target:'_blank',rel:'noopener'},'Open'),
+        mine?el('button',{type:'button',class:'btn ghost xs',onclick:()=>{ if(lConfirm===x.p){ lConfirm=null; if(lPlay===x.p) lPlay=null; push(x.p,{note:JSON.stringify({y:x.y,c:x.c,s:x.s,l:x.l,u:'',rm:1})},'Removed'); } else { lConfirm=x.p; render(); } }},lConfirm===x.p?'Confirm':'Remove'):null)));
+    if(yt&&lPlay===x.p) wrap.append(el('div',{class:'yt'},el('iframe',{src:'https://www.youtube-nocookie.com/embed/'+yt+'?rel=0',title:x.s+' '+x.l,allow:'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen',allowfullscreen:'',referrerpolicy:'strict-origin-when-cross-origin'})),
+      el('a',{class:'note',href:'https://www.youtube.com/watch?v='+yt,target:'_blank',rel:'noopener'},'Open in YouTube'));
+    list.append(wrap); });
+}
+/* ---- tick several tasks and remove them together ---- */
+let selRm={};
+function rmTick(r){ const c=el('input',{type:'checkbox','aria-label':'Tick to remove'}); c.checked=!!selRm[r.id]; c.addEventListener('change',()=>{ if(c.checked) selRm[r.id]=1; else delete selRm[r.id]; confirmKey=null; render(); }); return el('label',{class:'rmt'},c); }
+function bulkBar(box,all){ const rs=all.filter(r=>selRm[r.id]); Object.keys(selRm).forEach(id=>{ if(!rs.some(r=>r.id===id)) delete selRm[id]; });
+  if(!rs.length){ box.prepend(el('p',{class:'note',text:'To remove several tasks together, open a staff name, tick the tasks in the list, then select Remove here.'})); return; }
+  box.prepend(el('div',{class:'toolr'},el('button',{type:'button',class:'btn warn',onclick:()=>{ if(confirmKey==='bulk'){ confirmKey=null; const n=rs.length; rs.forEach(r=>pushNote(r,{rm:1},'')); selRm={}; toast(n+' removed'); render(); } else { confirmKey='bulk'; render(); } }},(confirmKey==='bulk'?'Confirm: remove ':'Remove ')+rs.length+' ticked '+(rs.length===1?'task':'tasks')),
+    el('button',{type:'button',class:'btn ghost',onclick:()=>{selRm={};confirmKey=null;render()}},'Clear ticks'))); }
+
 let outArm=0; $('meBtn').addEventListener('click',()=>{ if(!ME) return; if(Date.now()-outArm<4000){ setToken(''); lock(); outArm=0; } else { outArm=Date.now(); $('meBtn').textContent='Tap again to log out'; } });
 $('gateF').addEventListener('submit',async e=>{ e.preventDefault(); const n=$('gateN').value.trim(), w=$('gateW').value; if(!n){$('gateE').textContent='Type your name.';return} if(!w){$('gateE').textContent='Enter your password.';return}
   $('gateGo').disabled=true; $('gateE').textContent=''; try{ const r=await dcall('login',[n,w]); setToken(r.token); enter(r.state.me); }catch(x){ $('gateE').textContent=x.message||'Could not log in.'; } $('gateGo').disabled=false; });
-const render0=render; render=function(){ $('meBtn').textContent=ME?ME+' · log out':'Not logged in'; const cd=canDash(), sd=$('seg-dash'); sd.hidden=!cd; sd.parentNode.className='sw '+(cd?'five':'four'); if(!cd&&seg==='dash') seg='prep'; if(ME) render0(); };
+const render0=render; render=function(){ $('meBtn').textContent=ME?ME+' · log out':'Not logged in'; const cd=canDash(), sd=$('seg-dash'); sd.hidden=!cd; sd.parentNode.className='sw '+(cd?'six':'five'); if(!cd&&seg==='dash') seg='prep'; if(ME) render0(); };
 checkLogin(); setInterval(poll,10000); document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll()});
 </script>
 </body></html>
