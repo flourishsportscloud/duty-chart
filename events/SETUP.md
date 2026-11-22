@@ -1,34 +1,26 @@
-# Events & Operations — setup
+# Tasks & Projects: one-time setup (about 5 minutes)
 
-The page (`events/index.html`) is hosted on GitHub Pages and opens from the FIS app. Its data (events, tasks, remarks, access list) lives in a Google Sheet that the Apps Script in `events/Code.gs` creates and manages. **No staff or task data is stored in this GitHub repository** (it is public).
+Try it first without setup: open `/events/?demo=1` and tap any name (sample data stays in your browser).
 
-## One-time setup (about 5 minutes)
+## Connect the live app
+1. Go to script.google.com, **New project**, name it "FIS Tasks & Projects".
+2. Delete the sample code, paste all of `Code.gs`, Save.
+3. **Project Settings > Script properties > Add**: `STAFF_SUFFIX` = the same common staff suffix used in the other FIS apps.
+4. Choose function `setup`, **Run**, allow permissions. This creates the data sheet and adds the 9 people (Harsh Yadav = Director/admin).
+5. **Deploy > New deployment > Web app**: Execute as **Me**, access **Anyone**. Copy the URL ending in `/exec`.
+6. Send that URL to Claude (it goes into `API_URL` in `index.html`), or open the app once with `?api=URL`.
+7. Log in as Harsh Yadav, open the person icon, and tap **Remove sample data** if sample data was loaded.
 
-1. Go to script.google.com (signed in as the school account) → **New project** → name it `FIS Events & Operations`.
-2. Replace the default code with all of `events/Code.gs`. Save.
-3. **Project Settings → Script properties → Add**: `STAFF_SUFFIX` = the same common suffix the other FIS apps use (password = first name + suffix).
-4. Select the function **setup** → **Run** → allow the permissions. The log shows the data sheet link; the Director (Harsh Yadav) is already on the access list as admin.
-5. **Deploy → New deployment → Web app** · Execute as **Me** · Who has access **Anyone** → Deploy → copy the `/exec` URL.
-6. Paste that URL into `API_URL` near the top of the script in `events/index.html` (or send it and it will be added), then remove the "Setting up" tag from the hub tile.
+Login: full name (or unique first name) + password = first name + staff suffix. Only people on the access list can enter; the Director adds or removes people from the person icon.
+To sign everyone out: run `signOutEveryone`.
 
 ## Who can do what
+| Action | Staff | Giver of the task | Director |
+|---|---|---|---|
+| Give a task to anyone | yes | yes | yes |
+| Start, message, photos, submit (if assigned) | yes | yes | yes |
+| Approve, rework, demand, decline, edit, reopen | no | yes | yes |
+| Create project | yes | | yes |
+| Dashboard of everyone, access list | no | | yes |
 
-| | Director / admin | Other members |
-|---|---|---|
-| Open the app | yes | only if on the access list |
-| Create / edit / delete events | yes | no |
-| Add tasks and operations, allocate to members | yes | yes |
-| Update status and remarks | any task | tasks allocated to them or created by them |
-| Edit / delete a task | any | only their own creation |
-| Reports | every member and event | their own only |
-| Access list, sample data | yes | no |
-
-Login: the member's name (first name is enough if unique) and password = first name + `STAFF_SUFFIX`. Add or remove members from the name button (top right) → Members. A removed member loses access immediately. **Sign-out everywhere:** run `signOutEveryone`.
-
-## Updating later
-
-Paste the new `Code.gs`, then **Deploy → Manage deployments → ✏️ Edit → Version: New version → Deploy**.
-
-## Privacy note
-
-The app shows staff names, task remarks and completion times. Keep the access list to the people who need it.
+Staff data is stored only in your Google Sheet, never in this public repo.
