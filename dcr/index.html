@@ -1132,38 +1132,89 @@ function fuText(lk){
 /* demo data */
 function rng(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 async function loadDemo(){
-  const R=rng(11);const t=todayISO();let sat=t;while(parse(sat).getDay()!==6)sat=addDays(sat,-1);if(sat>t)sat=addDays(sat,-7);
-  const keys=SECS.filter(s=>/^C[1-8]$/.test(s.ck)).map(s=>s.k).concat(['C9-A','C10-B','LKG-A','UKG-B','C11-A']);
-  const staffNames=D.staff.map(s=>s[0]);const pickTeacher=k=>(D.ct[k]&&D.ct[k].ct&&D.ct[k].ct[0])||staffNames[Math.floor(R()*staffNames.length)];
-  const remarks=['Parent informed by phone','Will bring tomorrow','Child says left at home','Reminder sent through diary','Spoke to parent at pick-up','Notebook with tuition teacher'];
+  const R=rng(23);const now=Date.now();const t=todayISO();
+  let sat=t;while(parse(sat).getDay()!==6)sat=addDays(sat,-1);
+  const fri=addDays(sat,-1),mon=nextMonday(sat),tue=addDays(mon,1),wed=addDays(mon,2),pSat=addDays(sat,-7),pMon=nextMonday(pSat),pWed=addDays(pMon,2);
+  const at=(d,h,m)=>new Date(d+'T'+pad(h)+':'+pad(m)+':00').getTime();
+  const rt=(d,h)=>at(d,h,5+Math.floor(R()*50));
+  const pick=a=>a[Math.floor(R()*a.length)];
   toast('Loading sample data…');
-  for(const key of keys){const sc=SECMAP[key];const cat=catFor(sc.ck);const bn=cat.filter(i=>i.t!=='A');const as=cat.filter(i=>i.t==='A');
-    let items=(R()>.35?bn:bn.filter(()=>R()>.4)).slice(0,9);if(items.length<4)items=bn.slice(0,5);
-    if(R()<.4&&as.length)items.push(as[0]);
-    const ro=D.stu[key];const teacher=pickTeacher(key);const defs=[{kind:'weekly',date:addDays(sat,-7)},{kind:'weekly',date:sat},{kind:'daily',date:addDays(t,-2)}];
-    const led={entries:{}};
-    for(const [di,df] of defs.entries()){if(df.kind==='daily'&&R()<.3)continue;if(di===1&&R()<.1)continue;
+  for(const r of Object.values(S.rounds).filter(r=>r.demo)){delete S.rounds[r.id];await Store.del('dcr_rounds',r.id)}
+  const staffNames=D.staff.map(s=>s[0]);const cms=D.staff.filter(s=>s[1]==='Class Manager').map(s=>s[0]);
+  const TCH=k=>(D.ct[k]&&D.ct[k].ct&&D.ct[k].ct[0])||pick(staffNames)||'Class Teacher';
+  const AST=k=>(D.ct[k]&&D.ct[k].as&&D.ct[k].as[0])||TCH(k);
+  const remarks=['Parent informed by phone','Will bring tomorrow','Child says left at home','Reminder sent through diary','Spoke to parent at pick-up','Notebook with tuition teacher','Parent will send with driver','Note written in diary'];
+  const reasonsM=['Forgot','Forgot','Forgot','Other'];
+  const Dname=nm=>nm;
+  for(const sc of SECS){
+    const key=sc.k,ro=D.stu[key]||[];if(!ro.length)continue;
+    const cat=catFor(sc.ck);const bk=cat.filter(i=>i.t==='B'),nb=cat.filter(i=>i.t==='N'),as=cat.filter(i=>i.t==='A');
+    const wk=bk.concat(nb).slice(0,8).concat(as.slice(0,1)).map(i=>({id:i.id,t:i.t,n:i.n}));
+    const dl=(nb.length>=2?nb.slice(0,2):cat.slice(0,2)).concat(as.slice(0,1)).slice(0,3).map(i=>({id:i.id,t:i.t,n:i.n}));
+    const T=TCH(key),A1=AST(key),CM=cms.length?pick(cms):T;
+    const led=S.ledger[key]||{entries:{}};led.entries=led.entries||{};Object.keys(led.entries).forEach(ek=>{if(led.entries[ek].demo)delete led.entries[ek]});
+    const splitSec=R()<.6;
+    const defs=[
+      {i:0,kind:'weekly',date:pSat,items:wk,split:splitSec,dAt:rt(pSat,10),collect:{[pMon]:rt(pMon,9),[pWed]:rt(pWed,9)},created:rt(pSat,8)},
+      {i:1,kind:'daily',date:fri,items:dl,split:false,dAt:rt(fri,10),collect:R()<.9?{[sat]:rt(sat,9)}:{},created:rt(fri,8)},
+      {i:2,kind:'weekly',date:sat,items:wk,split:splitSec,dAt:rt(sat,10),collect:R()<.72?{[mon]:rt(mon,9)}:{},created:rt(sat,8)}];
+    if(R()<.55)defs.push({i:3,kind:'daily',date:mon,items:dl,split:false,dAt:rt(mon,10),collect:{},created:rt(mon,8)});
+    for(const df of defs){
       const col=df.kind==='weekly'?nextMonday(df.date):nextSchool(df.date);
-      const its=clone(items);its.forEach(i=>i.cd=col);
-      if(df.kind==='weekly'&&R()<.55){its.filter(i=>i.t==='N').slice(-3).forEach(i=>i.cd=addDays(col,2));its.filter(i=>i.t==='A').forEach(i=>i.cd=addDays(col,2))}
-      const r={id:'demo-'+key.toLowerCase()+'-'+di,cls:sc.ck,sec:sc.sec,key,kind:df.kind,date:df.date,collect:its.map(i=>i.cd).sort().slice(-1)[0],items:its,by:{n:teacher,r:'Class Teacher'},cat:new Date(df.date+'T08:00:00').getTime(),m:{},demo:1,cs:{},log:[{at:Date.now(),by:teacher,act:'Round created'}]};
-      const rate=.025+R()*.035;
-      ro.forEach(([roll])=>{const sid=sidOf(r,roll);const absD=R()<.015,absC=R()<.02;
-        its.forEach(it=>{const x=R();
-          if(absD){setCell(r,sid,it.id,{d:'N',dr:'Absent'});return}
-          if(di===1&&x<.012){setCell(r,sid,it.id,{d:'N',dr:'Out of stock'});return}
-          if(di!==1){if(absC)setCell(r,sid,it.id,{c:'M',cr:'Absent'});else if(x<rate*.55)setCell(r,sid,it.id,{c:'M',cr:'Forgot'});else if(x<rate*.85)setCell(r,sid,it.id,{c:'IC',n:R()<.5?'Pages pending':''});else if(x<rate*.88)setCell(r,sid,it.id,{c:'RT',n:'Keeps for project'})}})});
-      if(di===0&&R()<.85){const [roll]=ro[Math.floor(R()*ro.length)];its.forEach(it=>setCell(r,sidOf(r,roll),it.id,{d:'G',c:'LV',ret:addDays(t,Math.floor(R()*7)-1)}))}
-      const dAt=new Date(df.date+'T10:'+pad(10+Math.floor(R()*40))+':00').getTime();r.dsub={by:teacher,role:'Class Teacher',at:dAt};
-      const by={n:teacher,r:'Class Teacher'};Object.assign(led.entries,buildEntries(r,'dist',by,its));
-      if(di!==1||false){groupsOf(r).forEach((g,gi)=>{if(g>t)return;if(di===0&&gi>0&&R()<.3)return;const cAt=new Date(g+'T09:'+pad(5+Math.floor(R()*45))+':00').getTime();const cb=R()<.6?teacher:pickTeacher(key);r.cs[g]={by:cb,role:'Class Teacher',at:cAt};Object.assign(led.entries,buildEntries(r,'coll',{n:cb,r:'Class Teacher'},itemsFor(r,g)))});if(allColl(r))r.csub=r.cs[groupsOf(r).slice(-1)[0]]}
-      S.rounds[r.id]=r;await Store.set('dcr_rounds',r.id,r)}
-    Object.keys(led.entries).forEach(ek=>{const e=led.entries[ek];e.demo=1;
-      if(e.k==='RETURN'||e.k==='IC'){if(R()<.7){e.st='closed';e.how='Received';e.cb=teacher;e.ca=Date.now()-Math.floor(R()*3)*864e5-36e5}else if(R()<.5){e.h=[{at:Date.now()-864e5,by:teacher,act:'Remark',t:remarks[Math.floor(R()*remarks.length)]}]}}
-      else if(e.k==='ISSUE'&&R()<.65){e.st='closed';e.how='Issued late';e.cb=teacher;e.ca=Date.now()-Math.floor(R()*2)*864e5-36e5}
-      else if(e.k==='LEAVE'){if(R()<.4){e.st='closed';e.how='Received';e.cb=teacher;e.ca=Date.now()-864e5;e.lv=1;e.due=addDays(t,Math.floor(R()*3)+2)}else e.lv=1}});
-    S.ledger[key]=led;await Store.set('dcr_ledger',key,led)}
-  S.date=addDays(sat,0);closeSheet();toast('Sample data loaded · showing '+fd(S.date));render()}
+      const its=clone(df.items);its.forEach(i=>i.cd=col);
+      if(df.split){its.filter(i=>i.t==='N').slice(-3).forEach(i=>i.cd=addDays(col,2));its.filter(i=>i.t==='A').forEach(i=>i.cd=addDays(col,2))}
+      const r={id:'demo-'+key.toLowerCase()+'-'+df.i,cls:sc.ck,sec:sc.sec,key,kind:df.kind,date:df.date,collect:its.map(i=>i.cd).sort().slice(-1)[0],items:its,by:{n:T,r:'Class Teacher'},cat:df.created,m:{},demo:1,cs:{},log:[]};
+      const L=(a,by,role,act,x)=>r.log.push(Object.assign({at:a,by,role,act},x||{}));
+      L(df.created,T,'Class Teacher','Round created');
+      const absD=new Set(),absC=new Set();ro.forEach(([roll])=>{if(R()<.045)absD.add(roll);if(R()<.05)absC.add(roll)});
+      const oos=(df.kind==='weekly'&&df.i===2&&R()<.35)?pick(its.filter(i=>i.t!=='A')):null;
+      const leaveRoll=(df.kind==='weekly'&&R()<.45)?pick(ro)[0]:null;
+      const leaveRet=df.i===0?pick([mon,addDays(mon,-2),sat,addDays(sat,-2)].filter(d=>d)):pick([wed,addDays(wed,2),mon]);
+      const rate=.035+R()*.045;
+      ro.forEach(([roll])=>{const sid=sidOf(r,roll);
+        its.forEach(it=>{
+          if(absD.has(roll)){setCell(r,sid,it.id,{d:'N',dr:'Absent'});return}
+          if(oos&&it.id===oos.id&&R()<.18){setCell(r,sid,it.id,{d:'N',dr:'Out of stock'});return}
+          if(leaveRoll&&roll===leaveRoll){setCell(r,sid,it.id,{d:'G',c:'LV',ret:leaveRet});return}
+          const g=it.cd;if(!df.collect[g])return;const x=R();
+          if(absC.has(roll))setCell(r,sid,it.id,{c:'M',cr:'Absent'});
+          else if(x<rate*.5)setCell(r,sid,it.id,{c:'M',cr:pick(reasonsM)});
+          else if(x<rate*.8)setCell(r,sid,it.id,{c:'IC',n:R()<.6?pick(['Pages pending','Half done','Answers incomplete']):''});
+          else if(x<rate*.9)setCell(r,sid,it.id,{c:'RT',n:'Keeps for project work'});
+          else if(x<rate*.95)setCell(r,sid,it.id,{c:'M',cr:'Forgot',n:pick(remarks)})})});
+      /* pre-submit working edits */
+      const nm=sid=>stuName(r,sid);
+      for(let k=0;k<2+Math.floor(R()*3);k++){const [roll]=pick(ro);const it=pick(its);const sid=sidOf(r,roll);
+        const c=cell(r,sid,it.id);const when=df.created+Math.floor((df.dAt-df.created)*(.2+R()*.7));
+        L(when,R()<.8?T:A1,'Class Teacher',nm(sid)+' · '+it.n+': '+(c.d==='N'?'Given → '+cdesc(c,'dist'):'Given → '+cdesc(c,'dist')),{ph:'dist',post:0,s:sid})}
+      r.dsub={by:T,role:'Class Teacher',at:df.dAt};L(df.dAt,T,'Class Teacher','Distribution submitted');
+      const by={n:T,r:'Class Teacher'};Object.assign(led.entries,Object.fromEntries(Object.entries(buildEntries(r,'dist',by,its)).map(([k,e])=>{e.at=df.dAt;return[k,e]})));
+      Object.keys(df.collect).sort().forEach(g=>{const cb=R()<.62?T:(R()<.7?A1:CM);const cAt=df.collect[g];r.cs[g]={by:cb,role:cb===T?'Class Teacher':cb===A1?'Assistant Teacher':'Class Manager',at:cAt};
+        L(cAt,cb,r.cs[g].role,'Collection submitted · '+fd(g));
+        Object.entries(buildEntries(r,'coll',{n:cb,r:r.cs[g].role},itemsFor(r,g))).forEach(([k,e])=>{e.at=cAt;led.entries[k]=e})});
+      if(allColl(r))r.csub=r.cs[groupsOf(r).slice(-1)[0]];
+      /* after-submit edits (sensitive) */
+      if(Object.keys(df.collect).length||df.i===2){const nEd=R()<.5?1+Math.floor(R()*2):0;
+        for(let k=0;k<nEd;k++){const cands=[];ro.forEach(([roll])=>its.forEach(it=>{const c=cell(r,sidOf(r,roll),it.id);if(r.cs[it.cd]&&(c.c==='M'||c.c==='IC'))cands.push([roll,it,c])}));
+          if(!cands.length)break;const [roll,it,c]=pick(cands);const sid=sidOf(r,roll);const was=cdesc(c,'coll');const who=pick([[T,'Class Teacher'],[A1,'Assistant Teacher'],[CM,'Class Manager'],['Harsh Yadav','Director']]);
+          const when=r.cs[it.cd].at+(25+Math.floor(R()*200))*60000;if(when>now+864e5*2)continue;
+          setCell(r,sid,it.id,{c:'R'});L(when,who[0],who[1],nm(sid)+' · '+it.n+': '+was+' → Received',{ph:'coll',post:1,s:sid})}
+        if(df.i===2&&R()<.25){const [roll]=pick(ro);const it=pick(its);const sid=sidOf(r,roll);const c=cell(r,sid,it.id);if(c.d!=='N'){const was=cdesc(c,'dist');setCell(r,sid,it.id,{d:'N',dr:'Out of stock'});L(df.dAt+40*60000,T,'Class Teacher',nm(sid)+' · '+it.n+': '+was+' → Not issued · Out of stock',{ph:'dist',post:1,s:sid});r.edit={['d']:1}}}}
+      r.log.sort((a,b)=>a.at-b.at);
+      S.rounds[r.id]=r}
+    /* defaulter register realism: closures, early returns, remarks */
+    Object.keys(led.entries).forEach(ek=>{const e=led.entries[ek];if(e.demo===1&&e.st==='closed')return;e.demo=1;
+      const old=e.d0<=pSat+'z'&&e.d0===pSat;
+      if(e.k==='RETURN'||e.k==='IC'){
+        if(old){const x=R();if(x<.6){e.st='closed';e.how='Received';e.cb=R()<.7?T:A1;const base=at(e.due||pMon,15,10+Math.floor(R()*40));e.ca=Math.min(base+pick([-1,-1,0,1,2])*864e5,now-36e5)}
+          else if(x<.85)e.h=[{at:rt(sat,12),by:T,act:'Remark',t:pick(remarks)},{at:rt(mon,8),by:A1,act:'Remark',t:pick(remarks)}].filter(h=>h.at<=now+864e5*2)}
+        else if(e.d0===fri&&R()<.22){e.st='closed';e.how='Received';e.cb=T;e.ca=rt(sat,14)}
+        else if(R()<.3)e.h=[{at:rt(sat,13),by:T,act:'Remark',t:pick(remarks)}]}
+      else if(e.k==='ISSUE'&&R()<.6){e.st='closed';e.how='Issued late';e.cb=T;e.ca=rt(sat,12)}
+      else if(e.k==='LEAVE'){e.lv=1;if(old&&R()<.45){e.st='closed';e.how='Received';e.cb=T;e.ca=at(addDays(e.due||mon,-1),11,20)}}});
+    S.ledger[key]=led;
+    await Promise.all([Store.set('dcr_ledger',key,led)].concat(Object.values(S.rounds).filter(r=>r.key===key&&r.demo).map(r=>Store.set('dcr_rounds',r.id,r))))}
+  S.date=sat;S.calM=sat.slice(0,7);S.tab='dash';closeSheet();toast('Sample data loaded · '+fd(fri)+', '+fd(sat)+', '+fd(mon));render()}
 async function clearDemo(){
   for(const r of Object.values(S.rounds).filter(r=>r.demo)){delete S.rounds[r.id];await Store.del('dcr_rounds',r.id)}
   for(const [k,l] of Object.entries(S.ledger)){let ch=false;Object.keys(l.entries||{}).forEach(ek=>{if(l.entries[ek].demo){delete l.entries[ek];ch=true}});if(ch)await Store.set('dcr_ledger',k,l)}
