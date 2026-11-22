@@ -350,6 +350,14 @@ input.cwin,select.cwin{font:inherit;font-size:13px;border:1px solid #c7cfe2;bord
 .ndmore{display:block;width:100%;margin-top:6px;border:0;background:var(--card2,#f6f4ef);color:var(--ink2);font-weight:700;font-size:12px;border-radius:8px;padding:7px;text-align:left}
 .tk.bad{background:#fff;border-color:var(--line);border-left:4px solid #c43a52}
 .tk.bad .tkh b{color:var(--ink)}
+.cntb button{all:unset;box-sizing:border-box;cursor:pointer;text-align:center}
+.cntb button.on{outline:2px solid var(--navy);outline-offset:1px}
+.cntlist{margin:8px 0 4px;border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:#fff;text-align:left}
+.cntlist.N{border-left:4px solid var(--red)}.cntlist.P{border-left:4px solid var(--amber)}.cntlist.D{border-left:4px solid var(--green)}
+.clh{font-weight:800;font-size:13px;color:var(--ink);margin-bottom:4px}
+.clb{font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);margin:8px 0 2px}
+.cli{display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px dashed var(--line);font-size:12.5px}
+.cli b{font-weight:700;color:var(--ink)}.cli span{color:var(--mut);white-space:nowrap}
 @media print{
   header,nav,#msg,.noprint{display:none!important}
   body{background:#fff}.wrap{padding:0;max-width:none}
@@ -996,7 +1004,7 @@ function plPage(pl){
   else if(!editable&&S.date===today)notice=`<div class="notice">You can view ${esc(pl.name)}’s plan, but only ${esc(pl.name)} and the seniors can update it.</div>`;
   let h=notice+dueBanner(pl,doc);
   h+=`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><div><h3 style="margin:0">${esc(pl.name)} · ${pl.cls}</h3><span class="muted">${mode==='dp'?'Day Plan':'Day End'} · ${pl.sections.length} sections · ${parseD(S.date).toLocaleDateString('en',{weekday:'long',day:'numeric',month:'short'})}</span></div><div class="pct">${c.pct}%</div></div>`+
-    `<div class="counts" style="margin-top:8px"><div class="cnt d"><b>${c.D}</b><span>Done</span></div><div class="cnt n"><b>${c.N}</b><span>Not Done</span></div><div class="cnt a"><b>${c.A}</b><span>NA</span></div><div class="cnt"><b>${c.P}</b><span>Pending</span></div></div>`+
+    countsHTML(pl,mode,S.date,c)+
     `<div class="bar ${c.N?'rd':''}"><i style="width:${c.pct}%"></i></div><div class="muted" style="margin-top:4px">% complete = (Done + NA) ÷ total · ${mode==='dp'?'Observation Update':'Weekend Audit'} ${wkDone(pl,S.wk,wkRowsFor(mode))}/${wkRowsFor(mode).length}</div></div>`;
   if(mode==='dp')cwCarry(pl);
   h+=`<div class="card"><h3>This week</h3>${weekChart(pl)}<div class="repbar" style="margin:10px 0 0"><button data-act="report" data-v="${pl.id}">📄 ${esc(pl.name)}’s report card (✓ / ✗)</button></div></div>`;
@@ -1257,6 +1265,22 @@ function reportHTML(){
   return h+`</div>`;
 }
 function cwRemSave(docI,doc,key,e,deb){doc.rem[key]=e;if(deb){const t=typed[docI]=typed[docI]||{cells:{},rem:{}};t.rem[key]=clone(e);schedule(docI,key)}else persist(docI,{rem:{[key]:clone(e)}})}
+/* tap a count (Done / Not done / NA / Pending) to see exactly which items they are */
+const CNT_LBL={D:'Done',N:'Not done',A:'NA',P:'Pending'};
+function cntItems(pl,mode,date,k){
+  const doc=getDoc(pl,mode,date);const out=[];let lb=null;
+  ROWS[mode].forEach(r=>{const secs=TC_SECS(pl,mode,r).filter(sec=>(cellS(doc,r.key,sec)||'P')===k);if(!secs.length)return;
+    out.push({b:r.block.name,t:rowLabel(r),secs:secs.filter(x=>x!=='x')})});
+  return out;
+}
+function countsHTML(pl,mode,date,c,cls){
+  const key=pl.id+'|'+mode+'|'+date,open=S.cntOpen&&S.cntOpen.indexOf(key+'|')===0?S.cntOpen.split('|')[3]:'';
+  let h=`<div class="${cls||'counts'} cntb">`+['D','N','A','P'].map(k=>`<button class="cnt ${k==='D'?'d':k==='N'?'n':k==='A'?'a':''}${open===k?' on':''}" data-act="cntl" data-v="${key}|${k}"><b>${c[k]}</b><span>${CNT_LBL[k]} ${open===k?'▴':'▾'}</span></button>`).join('')+`</div>`;
+  if(open){const it=cntItems(pl,mode,date,open);let lb=null;
+    h+=`<div class="cntlist ${open}" data-act="noop"><div class="clh">${esc(pl.name)} · ${CNT_LBL[open]} · ${it.reduce((a,x)=>a+Math.max(1,x.secs.length),0)}</div>`+
+      (it.length?it.map(x=>{let s='';if(x.b!==lb){s+=`<div class="clb">${esc(x.b)}</div>`;lb=x.b}return s+`<div class="cli"><b>${esc(x.t)}</b>${x.secs.length?`<span>${x.secs.map(esc).join(', ')}</span>`:''}</div>`}).join(''):'<div class="muted">None.</div>')+`</div>`}
+  return h;
+}
 function dashboard(){
   const mode=S.mode,today=todayStr();let h='';
   h+=`<div class="card"><h3>All PMs · ${parseD(S.date).toLocaleDateString('en',{weekday:'long',day:'numeric',month:'short'})} · ${mode==='dp'?'Day Plan':'Day End'}</h3><div class="grid4">`;
@@ -1264,7 +1288,7 @@ function dashboard(){
     const doc=getDoc(pl,mode,S.date);const c=stats(doc,pl,mode);
     let od=0;DEFS[mode].forEach(b=>{const i=blockInfo(doc,pl,b,S.date);if(i.st==='Overdue'||(S.date<today&&i.st==='Missed'))od++});
     h+=`<div class="plc"><h4>${esc(pl.name)}</h4><small>${pl.cls}</small><div class="pct" style="margin:4px 0">${c.pct}%</div><div class="bar ${c.N?'rd':''}"><i style="width:${c.pct}%"></i></div>`+
-      `<div class="counts" style="margin-top:8px"><div class="cnt d"><b>${c.D}</b><span>Done</span></div><div class="cnt n"><b>${c.N}</b><span>Not Done</span></div><div class="cnt a"><b>${c.A}</b><span>NA</span></div><div class="cnt"><b>${c.P}</b><span>Pending</span></div></div>`+
+      countsHTML(pl,mode,S.date,c)+
       `<div class="muted">Blocks ${S.date<today?'missed':'overdue'}: <b style="color:${od?'var(--red)':'var(--green)'}">${od}</b>${' · Weekly '+wkDone(pl,S.wk,wkRowsFor(mode))+'/'+wkRowsFor(mode).length}</div></div>`;
   });
   h+='</div></div>';
@@ -1358,6 +1382,7 @@ document.addEventListener('click',ev=>{
   if(a==='reppl'){S.rep.pl=t.dataset.v;render(true);return}
   if(a==='repkind'){S.rep.kind=t.dataset.v;render(true);return}
   if(a==='print'){const pl=plOf(S.rep.pl);const old=document.title;document.title=`PM ${S.rep.kind==='week'?'Weekly':'Daily'} Report - ${pl?pl.name:''} - ${S.rep.kind==='week'?'week of '+S.wk:S.date}`;window.print();setTimeout(()=>document.title=old,1500);return}
+  if(a==='cntl'){S.cntOpen=S.cntOpen===t.dataset.v?null:t.dataset.v;render(true);return}
   if(a==='tctab'){S.tcTab=t.dataset.v;render(true);return}
   if(a==='cwadd'){cwAdd(t.dataset.pl);return}
   if(a==='cwdel'){if(confirmDel(t))cwDel(t.dataset.pl,t.dataset.id);return}

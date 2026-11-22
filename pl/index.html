@@ -393,6 +393,14 @@ input.cwin,select.cwin{font:inherit;font-size:13px;border:1px solid #c7cfe2;bord
 .ndmore{display:block;width:100%;margin-top:6px;border:0;background:var(--card2,#f6f4ef);color:var(--ink2);font-weight:700;font-size:12px;border-radius:8px;padding:7px;text-align:left}
 .tk.bad{background:#fff;border-color:var(--line);border-left:4px solid #c43a52}
 .tk.bad .tkh b{color:var(--ink)}
+.cntb button{all:unset;box-sizing:border-box;cursor:pointer;text-align:center}
+.cntb button.on{outline:2px solid var(--navy);outline-offset:1px}
+.cntlist{margin:8px 0 4px;border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:#fff;text-align:left}
+.cntlist.N{border-left:4px solid var(--red)}.cntlist.P{border-left:4px solid var(--amber)}.cntlist.D{border-left:4px solid var(--green)}
+.clh{font-weight:800;font-size:13px;color:var(--ink);margin-bottom:4px}
+.clb{font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);margin:8px 0 2px}
+.cli{display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px dashed var(--line);font-size:12.5px}
+.cli b{font-weight:700;color:var(--ink)}.cli span{color:var(--mut);white-space:nowrap}
 @media print{
   header,nav,#msg,.noprint{display:none!important}
   body{background:#fff}.wrap{padding:0;max-width:none}
@@ -889,7 +897,7 @@ function plPage(pl){
   let h=notice;
   const sm=plSummary(pl,mode,S.date);
   h+=`<div class="card"><div class="hero" style="margin-bottom:12px"><div><div class="eyebrow">${mode==='dp'?'Day Plan · '+pl.sections.length+' sections':'Day End'}</div><h2>${esc(pl.name)} <span class="muted" style="font-size:14px;font-weight:600">· ${pl.cls}</span></h2><div class="muted" style="margin-top:2px">${parseD(S.date).toLocaleDateString('en',{weekday:'long',day:'numeric',month:'long'})}</div></div><div style="display:flex;align-items:center;gap:10px">${statusTag(sm,S.date)}${ringHTML(c.pct,c.N||sm.late.length)}</div></div>`+
-    `<div class="counts"><div class="cnt d"><b>${c.D}</b><span>Done</span></div><div class="cnt n"><b>${c.N}</b><span>Not Done</span></div><div class="cnt a"><b>${c.A}</b><span>NA</span></div><div class="cnt"><b>${c.P}</b><span>Pending</span></div></div>`+
+    countsHTML(pl,mode,S.date,c)+
     `<div class="bar ${c.N?'rd':''}"><i style="width:${c.pct}%"></i></div><div class="muted" style="margin-top:6px">% complete = (Done + NA) ÷ all items</div></div>`;
   h+=`<div class="card"><h3>This week <span class="hint">% complete per day</span></h3>${weekChart(pl)}<div class="tcbar" style="margin:10px 0 0"><button data-act="report" data-v="${pl.id}">📄 ${esc(pl.name)}’s report card (✓ / ✗)</button></div></div>`;
   if(mode==='dp')h+=`<div class="card"><h3>Section-wise completion</h3>${sectionBoxes(pl,doc)}</div>`;
@@ -1167,6 +1175,22 @@ function reportHTML(){
 }
 function cwRemSave(docI,doc,key,e,deb){doc.rem[key]=e;if(deb)schedule(docI,key);else persist(docI,{rem:{[key]:clone(e)}})}
 function confirmDel(t){if(t.dataset.arm)return true;t.dataset.arm=1;const o=t.textContent;t.textContent='Tap again to confirm';setTimeout(()=>{delete t.dataset.arm;t.textContent=o},3000);return false}
+/* tap a count (Done / Not done / NA / Pending) to see exactly which items they are */
+const CNT_LBL={D:'Done',N:'Not done',A:'NA',P:'Pending'};
+function cntItems(pl,mode,date,k){
+  const doc=getDoc(pl,mode,date);const out=[];let lb=null;
+  ROWS[mode].forEach(r=>{const secs=TC_SECS(pl,mode,r).filter(sec=>(cellS(doc,r.key,sec)||'P')===k);if(!secs.length)return;
+    out.push({b:r.block.name,t:rowLabel(r),secs:secs.filter(x=>x!=='x')})});
+  return out;
+}
+function countsHTML(pl,mode,date,c,cls){
+  const key=pl.id+'|'+mode+'|'+date,open=S.cntOpen&&S.cntOpen.indexOf(key+'|')===0?S.cntOpen.split('|')[3]:'';
+  let h=`<div class="${cls||'counts'} cntb">`+['D','N','A','P'].map(k=>`<button class="cnt ${k==='D'?'d':k==='N'?'n':k==='A'?'a':''}${open===k?' on':''}" data-act="cntl" data-v="${key}|${k}"><b>${c[k]}</b><span>${CNT_LBL[k]} ${open===k?'▴':'▾'}</span></button>`).join('')+`</div>`;
+  if(open){const it=cntItems(pl,mode,date,open);let lb=null;
+    h+=`<div class="cntlist ${open}" data-act="noop"><div class="clh">${esc(pl.name)} · ${CNT_LBL[open]} · ${it.reduce((a,x)=>a+Math.max(1,x.secs.length),0)}</div>`+
+      (it.length?it.map(x=>{let s='';if(x.b!==lb){s+=`<div class="clb">${esc(x.b)}</div>`;lb=x.b}return s+`<div class="cli"><b>${esc(x.t)}</b>${x.secs.length?`<span>${x.secs.map(esc).join(', ')}</span>`:''}</div>`}).join(''):'<div class="muted">None.</div>')+`</div>`}
+  return h;
+}
 function ringHTML(p,bad){return `<div class="ring" style="--p:${p};--rc:${bad?'#d08a3a':'var(--green)'}"><span>${p}%</span></div>`}
 function dashboard(){
   const mode=S.mode,today=todayStr(),date=S.date;
@@ -1187,7 +1211,7 @@ function dashboard(){
     const foot=date===today&&nx?`<span>Next: <b>${esc(nx.b.name)}</b></span><span><b>${nx.i.due?fmt12(nx.i.due):'Any time'}</b></span>`
       :`<span>${pl.sections.length} sections</span><span>Tap to open plan ›</span>`;
     return `<div class="plc" data-act="tab" data-v="${pl.id}"><div class="top"><div><h4>${esc(pl.name)}</h4><small>${pl.cls} · ${pl.sections.join(', ')}</small><div style="margin-top:8px">${statusTag(sm,date)}</div></div>${ringHTML(c.pct,c.N||sm.late.length)}</div>`+
-      `<div class="mini3"><span class="d"><b>${c.D}</b>Done</span><span class="n"><b>${c.N}</b>Not done</span><span><b>${c.A}</b>NA</span><span><b>${c.P}</b>Pending</span></div>`+
+      countsHTML(pl,mode,date,c,'mini3')+
       `<div class="bar ${c.N?'rd':''}"><i style="width:${c.pct}%"></i></div><div class="foot">${foot}</div></div>`;
   }).join('')+`</div>`;
   /* 3 · task check (defaulters, one glance) */
@@ -1219,6 +1243,7 @@ document.addEventListener('click',ev=>{
   if(a==='reppl'){S.rep.pl=t.dataset.v;render(true);return}
   if(a==='repkind'){S.rep.kind=t.dataset.v;render(true);return}
   if(a==='print'){const pl=plOf(S.rep.pl);const old=document.title;document.title=`PL ${S.rep.kind==='week'?'Weekly':'Daily'} Report - ${pl?pl.name:''} - ${S.rep.kind==='week'?'week of '+S.wk:S.date}`;window.print();setTimeout(()=>document.title=old,1500);return}
+  if(a==='cntl'){S.cntOpen=S.cntOpen===t.dataset.v?null:t.dataset.v;render(true);return}
   if(a==='tctab'){S.tcTab=t.dataset.v;render(true);return}
   if(a==='cwadd'){cwAdd(t.dataset.pl);return}
   if(a==='cwdel'){if(confirmDel(t))cwDel(t.dataset.pl,t.dataset.id);return}
