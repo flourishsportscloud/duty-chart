@@ -324,6 +324,35 @@ input,select,textarea{font-family:'Inter',sans-serif}
 .dots.u i{background:#E3EFF7;color:var(--blue)}.dots.l i{background:var(--accent-soft);color:#8A5B12}
 .chart td.nm small{display:block;color:var(--muted);font-weight:500;font-size:10.5px}
 .wdur{font-weight:700;font-size:12px}.wdur.bad{color:var(--miss)}.wdur.ok{color:var(--done)}
+.nptw{overflow-x:auto;padding:0 14px}
+.npt{width:100%;border-collapse:separate;border-spacing:0 6px;font-size:14px}
+.npt thead th{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-align:left;padding:4px 8px}
+.npt tbody th{text-align:left;font-family:'Lora',Georgia,serif;font-size:16px;color:var(--navy);padding:8px;white-space:nowrap;background:var(--cream);border-radius:10px 0 0 10px;vertical-align:middle}
+.npt tbody th small{display:block;font-family:'Inter',sans-serif;font-size:11px;color:var(--muted);font-weight:500}
+.npt tr.grp td{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700;padding:12px 4px 2px}
+.npc{padding:0 0 0 6px;vertical-align:middle;min-width:130px}
+.npc button{width:100%;text-align:left;font:inherit;border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:7px 9px;cursor:pointer;color:var(--ink)}
+.npc button b{display:block;font-size:15px}.npc button small{display:block;color:var(--muted);font-size:11.5px}
+.npc button em{display:block;font-style:normal;font-size:11px;font-weight:700;color:#8A5B12;margin-top:2px}
+.npc.chg button{background:var(--accent-soft);border-color:var(--gold)}
+.npc.empty button{background:var(--miss-soft);border-color:var(--miss)}.npc.empty button b{color:var(--miss)}
+.npc.none{color:var(--muted);font-size:12px;padding-left:12px}
+.npc select{width:100%;padding:8px}
+.um{display:block;margin-top:4px;font:inherit;font-size:11px;font-weight:700;border-radius:7px;padding:3px 4px;border:1.5px solid var(--done);background:#fff;color:var(--done);cursor:pointer;width:100%}
+.um.bad{border-color:var(--blue);background:#E3EFF7;color:var(--blue)}
+.pun>div{display:flex;flex-direction:column}
+.mic{font:inherit;border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:8px 10px;cursor:pointer;font-size:15px}
+.mic.on{background:var(--miss);border-color:var(--miss);color:#fff}
+.rep{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:4px 0 12px}
+.rep span{font-size:12.5px;color:var(--muted);font-weight:600;margin-right:4px}
+.rep button{border:1.5px solid var(--line);background:#fff;border-radius:20px;padding:7px 13px;font:inherit;font-weight:600;font-size:13.5px;cursor:pointer;color:var(--ink)}
+.rep button.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.tedit{display:flex;gap:6px;align-items:center;padding:6px 14px;border-top:1px solid var(--line)}.tedit input{flex:1}
+.dg{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin-bottom:14px}.dg>.card2{margin:0}
+.bars2{display:flex;flex-direction:column;gap:6px}.bars2 div{display:grid;grid-template-columns:110px 1fr 46px;gap:8px;align-items:center;font-size:12.5px}
+.bars2 i{display:block;height:8px;border-radius:4px;background:var(--cream);overflow:hidden}.bars2 i u{display:block;height:100%;background:var(--done)}
+.bars2 div.now span{font-weight:700;color:var(--navy)}
+.mrow{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13.5px}.mrow:last-child{border:0}.mrow b{font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
@@ -348,17 +377,10 @@ input,select,textarea{font-family:'Inter',sans-serif}
   <div id="docAlert"></div>
   <div id="svcAlert"></div>
   <div id="dashBody"></div>
-  <section class="win" id="eodSec">
-    <div class="win-h" data-w="eodSec"><span class="time">Day End</span><h2>Day-End WhatsApp Report</h2><span class="cnt" id="eodSum"></span><span class="chev">▾</span></div>
-    <div class="rows" id="eodBody"></div>
-  </section>
+  
   </div>
   <div class="pane" data-pane="tasks" hidden>
-  <div class="meta">
-    <label>Reported by<input id="by" placeholder="Name of transport in-charge"></label>
-    <label>Buses / vans out today<input id="fleet" placeholder="e.g. 18 buses, 21 vans"></label>
-    <label class="full">Day remarks (breakdowns, absentees, complaints)<textarea id="dayNote" placeholder="Anything the Principal / Admin should know about today"></textarea></label>
-  </div>
+  <div id="repBox"></div>
   <div class="legend">
     Tap the box to change status:
     <span><b style="border:1.5px solid var(--line)"></b>Pending</span>
@@ -381,7 +403,7 @@ input,select,textarea{font-family:'Inter',sans-serif}
   <div class="pane" data-pane="uniform" hidden><div id="regBody"></div></div>
   <div class="pane" data-pane="plan" hidden>
   <section class="win" id="nplSec">
-    <div class="win-h" data-w="nplSec"><span class="time">Kal</span><h2>Next-Day Plan (Hindi)</h2><span class="cnt" id="nplSum"></span><span class="chev">▾</span></div>
+    <div class="win-h" data-w="nplSec"><span class="time">Kal</span><h2>Next-Day Plan</h2><span class="cnt" id="nplSum"></span><span class="chev">▾</span></div>
     <div class="rows" id="nplBody"></div>
   </section>
   </div>
@@ -431,7 +453,7 @@ input,select,textarea{font-family:'Inter',sans-serif}
 </div>
 <script>
 /* Self-update: phones keep an old copy of this page for a while, so check for a newer build and reload */
-const APP_V="202611221100";
+const APP_V="202611221500";
 (function(){let busy=false;async function chk(){if(busy||location.protocol==="file:")return;busy=true;
   try{const t=await (await fetch(location.pathname+"?nc="+Date.now(),{cache:"no-store"})).text(),m=t.match(/const APP_V="(\d+)"/);
     if(m&&m[1]!==APP_V){const u=new URL(location.href);u.searchParams.set("v",m[1]);location.replace(u.toString())}}catch(e){}busy=false}
@@ -480,7 +502,7 @@ const FISDB=(function(){
 })();
 </script>
 <script>
-const W=[
+let W=[
  {id:"w1",t:"5:30–6:30",s:"05:30",e:"06:30",n:"Early Morning",g:[
    ["Bus Staff",[["a1","Reminders & Thumbs up"],["a2","Late reach SMS by Kamal"],["a3","Driver call by Kamal"],["a4","Conductor call by me"],["a5","All buses out message"]]],
    ["Pvt Van",[["a6","Pvt Vans 17–38 (21 Vans)"],["a7","Defaulter Calls"]]]]},
@@ -499,7 +521,7 @@ const W=[
  {id:"w8",t:"4:00–5:00",s:"16:00",e:"17:00",n:"Closing",g:[[null,[
    ["h1","Bus Round by Kamal"],["h2","Last Child SMS – All Vans Thumbs Up"],["h3","Diesel Filling by Guard"],["h4","Key Photos"]]]]}
 ];
-const ALL=W.flatMap(w=>w.g.flatMap(g=>g[1].map(t=>({w:w.id,id:t[0],name:t[1]}))));
+let ALL=W.flatMap(w=>w.g.flatMap(g=>g[1].map(t=>({w:w.id,id:t[0],name:t[1]}))));
 const CYCLE=["","done","miss","na"], SYM={"":"",done:"✓",miss:"✗",na:"NA"};
 const $=id=>document.getElementById(id);
 let db=null, date=todayIST(), state=blank(), unsub=null, closed=new Set();
@@ -514,7 +536,7 @@ const ROUTES=[[1,1],[2,1],[3,1],[4,1],[5,1],[6,0],[7,0],[8,1],[9,1],[10,1],[11,0
 const VEH=ROUTES.map(([n,b])=>({id:"p"+n,label:(b?"Bus ":"Van ")+n,bus:!!b}));
 const SLOTS=VEH.flatMap(v=>v.bus?[{id:v.id+"d",v,role:"Driver"},{id:v.id+"c",v,role:"Conductor"}]:[{id:v.id+"d",v,role:"Driver"}]);
 const RES=[...[1,2,3].map(i=>({id:"r"+i,label:"Reserve Driver "+i})),{id:"r4",label:"Reserve Conductor 1",cond:true}];
-let roster={veh:{},area:{},name:{},phone:{},hi:{},pre:[],g:{},rtm:{},rta:{},cleaner:{}}, editRoster=false;
+let roster={veh:{},area:{},name:{},phone:{},hi:{},pre:[],g:{},rtm:{},rta:{},cleaner:{},vci:null,reporters:null}, editRoster=false;
 const vSub=v=>[roster.area[v.id],roster.veh[v.id]].filter(Boolean).join(" · ");
 function absentByName(nm){if(!nm)return false;const k=nm.trim().toLowerCase();
   return [...SLOTS,...RES].some(s=>state.att[s.id]==="A"&&(roster.name[s.id]||"").trim().toLowerCase()===k)}
@@ -563,21 +585,28 @@ function renderStaff(){const b=$("attBody");if(!b)return;
   const I={};ids.forEach(id=>I[id]=info(id));
   const show=id=>attFilter==="all"||(attFilter==="late"&&(I[id].lm||I[id].la))||(attFilter==="notin"&&I[id].ni)||(attFilter==="abs"&&I[id].a)||(attFilter==="uni"&&I[id].u);
   const unc=SLOTS.filter(s=>state.att[s.id]==="A"&&!cov[s.id]),mc=maleConductors();
-  const card=id=>{const x=I[id],p=(state.pu||{})[id]||{},nm=personName(id,roleOf(id)),hn=hi(id),r=RES.find(q=>q.id===id);
-    const pb=([k,h,e])=>{const v=p[k],late=k==="mi"?x.lm:k==="ai"?x.la:0,due=!v&&today&&!x.a&&((k==="mi"&&rtOf(id,"m"))||(k==="ai"&&rtOf(id,"a")));
-      return `<button class="${v?"set":""} ${late?"late":""} ${due?"due":""}" data-pu="${id}|${k}"><small>${h}</small><small>${e}</small><b>${v?h12(v):"—"}</b>${late?`<em>+${late} min late</em>`:k==="mi"&&rtOf(id,"m")&&!v?`<small>due ${h12(rtOf(id,"m"))}</small>`:k==="ai"&&rtOf(id,"a")&&!v?`<small>due ${h12(rtOf(id,"a"))}</small>`:""}</button>`};
-    const ed=puEdit.startsWith(id+"|")?puEdit.split("|")[1]:"";
-    return `<div class="pr ${x.a?"abs":""}"><div class="top"><div class="who"><b>${esc(nm)}</b><span class="hi">${esc(hn!==nm?hn:"")}</span><small>${esc(roleOf(id))}${roster.phone[id]?` · <a href="tel:${esc(roster.phone[id])}">${esc(roster.phone[id])}</a>`:""}</small></div>
-      <button class="un ${x.u?"bad":""}" data-uni="${id}" ${x.a?"disabled":""}>${x.u?"✗ No uniform":"👕 Uniform ✓"}</button>
+  const card=id=>{const x=I[id],p=(state.pu||{})[id]||{},nm=personName(id,roleOf(id)),hn=hi(id),r=RES.find(q=>q.id===id),ed=puEdit===id;
+    const pb=([k,h,e])=>{const v=p[k],late=k==="mi"?x.lm:k==="ai"?x.la:0,isIn=k==="mi"||k==="ai",uk=k==="mi"?"um":"ua",due=!v&&today&&!x.a&&((k==="mi"&&rtOf(id,"m"))||(k==="ai"&&rtOf(id,"a")));
+      return `<div><button class="${v?"set":""} ${late?"late":""} ${due?"due":""}" data-pu="${id}|${k}"><small>${h}</small><small>${e}</small><b>${v?h12(v):"—"}</b>${late?`<em>+${late} min late</em>`:""}</button>
+       ${isIn&&v?`<button class="um ${p[uk]?"bad":""}" data-um="${id}|${uk}">${p[uk]?"✗ No uniform":"👕 Uniform ✓"}</button>`:""}</div>`};
+    return `<div class="pr ${x.a?"abs":""}"><div class="top"><div class="who"><b>${esc(nm)}</b><span class="hi">${esc(hn!==nm?hn:"")}</span><small>${esc(roleOf(id))}${roster.phone[id]?` · <a href="tel:${esc(roster.phone[id])}">${esc(roster.phone[id])}</a>`:""}</small>
+       <small>Ideal time: <strong>${rtOf(id,"m")?h12(rtOf(id,"m")):"not set"}</strong> · <strong>${rtOf(id,"a")?h12(rtOf(id,"a")):"not set"}</strong></small></div>
+      <button class="btn sm" data-ped="${id}" aria-label="Edit ${esc(nm)}">✎</button>
       <button class="pa ${x.a?"A":""}" data-a="${id}" aria-label="${esc(nm)}: ${x.a?"absent":"present"}">${x.a?"A":"P"}</button></div>
+     ${ed?`<div class="card2" style="margin:10px 0 0;padding:10px;border-top-width:3px"><div class="rtgrid" style="grid-template-columns:1fr 1fr">
+        <label class="h">Name<input id="ro-name-${id}" data-r="name.${id}" value="${esc(roster.name[id]||"")}"></label><label class="h">Phone<input id="ro-phone-${id}" data-r="phone.${id}" value="${esc(roster.phone[id]||"")}" inputmode="tel"></label>
+        <label class="h">Hindi name<input id="ro-hi-${id}" data-r="hi.${id}" value="${esc((roster.hi||{})[id]||"")}" placeholder="${esc(HI[id]||"")}"></label><label class="h">Gender<select id="ro-g-${id}" data-r="g.${id}"><option value="M" ${gOf(id)==="M"?"selected":""}>Male</option><option value="F" ${gOf(id)==="F"?"selected":""}>Female</option></select></label>
+        <label class="h">Ideal time · morning<input type="time" id="rt-m-${id}" data-r="rtm.${id}" value="${esc(rtOf(id,"m"))}"></label><label class="h">Ideal time · afternoon<input type="time" id="rt-a-${id}" data-r="rta.${id}" value="${esc(rtOf(id,"a"))}"></label>
+        ${PUN.map(([k,,e])=>`<label class="h">${e} (correct)<input type="time" id="pt-${id}-${k}" data-pt="${id}|${k}" value="${esc(p[k]||"")}"></label>`).join("")}</div>
+        <div class="actions" style="margin:8px 0 0"><button class="btn sm primary" data-ped="${id}">Done</button></div></div>`:""}
      ${x.a?`<div style="margin-top:8px;font-size:13px">${slotOf(id)?(cov[id]?`Covered by <b>${esc(personName(cov[id],cov[id]))}</b>`:`<span class="flag">Not covered</span>`):"Reserve absent"}</div>`
       :`<div class="pun">${PUN.map(pb).join("")}</div>`}
-     ${ed?`<div class="ped"><span style="font-size:12.5px;color:var(--muted)">${PUN.find(q=>q[0]===ed)[2]}</span><input type="time" id="pt-${id}-${ed}" data-pt="${id}|${ed}" value="${esc(p[ed]||"")}"><button class="btn sm" data-puclr="${id}|${ed}">Clear</button><button class="btn sm primary" data-pudone>Done</button></div>`:""}
      ${r&&!x.a?`<div class="ped"><span style="font-size:12.5px;color:var(--muted)">Today's duty</span><select data-c="${id}" id="cover-${id}">${(()=>{const cur=state.cover[id]||"";const taken=new Set(RES.filter(q=>q.id!==id).map(q=>state.cover[q.id]));
         return `<option value="">Standby</option>`+SLOTS.filter(s=>((state.att[s.id]==="A"&&!taken.has(s.id))||s.id===cur)&&(!r.cond||s.role==="Conductor")).map(s=>`<option value="${s.id}" ${s.id===cur?"selected":""}>Replacing ${esc(slotText(s))}</option>`).join("")})()}</select></div>`:""}
-     <div>${x.ni?`<span class="flag">Not checked in</span>`:""}${x.u?`<span class="flag blu">Without uniform</span>`:""}${!rtOf(id,"m")?`<span class="flag amb">Reporting time not set</span>`:""}</div></div>`};
+     <div>${x.ni?`<span class="flag">Not checked in</span>`:""}${x.u?`<span class="flag blu">Without uniform</span>`:""}${!rtOf(id,"m")?`<span class="flag amb">Ideal time not set — tap ✎</span>`:""}</div></div>`};
   const grp=(t,sub,L)=>{const V=L.filter(show);return V.length?`<div class="vt"><b>${t}</b><span>${sub}</span></div>`+V.map(card).join(""):""};
-  b.innerHTML=`<div class="pg-h"><h2>Attendance &amp; Check-in</h2><span>${fmt(date)} · tap a time box when the person arrives or leaves</span><button class="btn sm" id="editRoster" style="margin-left:auto">Staff details &amp; timings</button></div>
+  b.innerHTML=`<div class="pg-h"><h2>Attendance &amp; Check-in</h2><span>${fmt(date)} · one tap records the time automatically</span><button class="btn sm" id="editRoster" style="margin-left:auto">Staff list &amp; timings</button></div>
+   ${today?"":`<div class="note" style="margin:0 0 10px;font-size:12.5px;background:var(--accent-soft);border-radius:10px;padding:9px 12px">Viewing ${fmt(date)}. Times are recorded live only on today's date — use ✎ to correct an old time.</div>`}
    ${unc.length?`<div class="alert">Not covered: ${unc.map(s=>esc(slotText(s))).join(", ")}</div>`:""}
    ${mc.length?`<div class="alert">Conductor rule: ${mc.map(m=>m.none?esc(m.v.label)+" has no conductor":esc(m.v.label)+" — "+esc(personName(m.id,m.id))+" (male)").join(" · ")}</div>`:""}
    <div class="chips2">${[["all","All",ids.length],["notin","Not checked in",st.notin],["late","Late",st.late],["abs","Absent",st.abs],["uni","Without uniform",st.uni]].map(([k,l,n])=>`<button class="${attFilter===k?"on":""}" data-af="${k}">${l}<b>${n}</b></button>`).join("")}</div>
@@ -605,16 +634,17 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",
 const fmt=d=>{const[y,m,dd]=d.split("-");return dd+"/"+m+"/"+y};
 
 function render(){
-  const fa=document.activeElement, fid=fa&&fa.id&&/^(note-|ro-|rt-|pt-|vc-|npl-|cover-|se-|ve-|sv-|eod-|tc-|sup-|wa-)/.test(fa.id)?fa.id:null, sel=fid&&(fa.tagName==="INPUT"||fa.tagName==="TEXTAREA")?[fa.selectionStart,fa.selectionEnd]:null;
+  const fa=document.activeElement, fid=fa&&fa.id&&/^(note-|ro-|rt-|pt-|vc-|vci-|npl-|tk-|tkw-|tkadd-|rep-|cover-|se-|ve-|sv-|eod-|tc-|sup-|wa-)/.test(fa.id)?fa.id:null, sel=fid&&(fa.tagName==="INPUT"||fa.tagName==="TEXTAREA")?[fa.selectionStart,fa.selectionEnd]:null;
   renderInner(); renderStaff(); ensureMonth(); renderReg(); renderVC(); renderSal(); renderVeh(); renderSvc(); renderEod(); renderNpl();
   if(fid){const el=$(fid);if(el){el.focus();if(sel)try{el.setSelectionRange(sel[0],sel[1])}catch(e){}}}
 }
 function renderInner(){
   const now=date===todayIST()?nowMinIST():-1;
-  $("windows").innerHTML=W.map(w=>{
+  $("windows").innerHTML=W.map((w,wi)=>{
     const tasks=w.g.flatMap(g=>g[1]); const done=tasks.filter(t=>state.s[t[0]]&&state.s[t[0]]!=="").length;
     const isNow=now>=mins(w.s)&&now<mins(w.e);
-    const rows=w.g.map(([gn,ts])=>(gn?`<div class="group">${gn}</div>`:"")+ts.map(([id,name])=>{
+    const rows=(tkEdit?`<div class="tedit"><input id="tkw-${wi}-n" data-tkw="${wi}|n" value="${esc(w.n)}" aria-label="Window name"><input type="time" id="tkw-${wi}-s" data-tkw="${wi}|s" value="${w.s}" style="max-width:120px"><input type="time" id="tkw-${wi}-e" data-tkw="${wi}|e" value="${w.e}" style="max-width:120px"></div>`:"")+w.g.map(([gn,ts],gi)=>(gn?`<div class="group">${gn}</div>`:"")+ts.map(([id,name],ti)=>{
+      if(tkEdit)return `<div class="tedit"><input id="tk-${wi}-${gi}-${ti}" data-tk="${wi}|${gi}|${ti}" value="${esc(name)}"><button class="btn sm" data-tkrm="${wi}|${gi}|${ti}" aria-label="Remove task">✕</button></div>`;
       const st=state.s[id]||"", note=state.n[id]||"", open=note||openNotes.has(id), ended=(now>=mins(w.e))||date<todayIST(), tt=(state.tt||{})[id], lt=tt&&mins(tt)>mins(w.e);
       return `<div class="row ${st} ${!st&&ended?"late":""}"><button class="tick ${st}" data-t="${id}" aria-label="${esc(name)}: ${st||"pending"}">${SYM[st]}</button>
       <div class="task"><span>${esc(name)}${!st&&ended?' <small class="latetxt">not marked · time over</small>':""}${tt&&st?` <small class="dt ${lt?"lt":""}">${lt?"late · ":""}${h12(tt)}</small>`:""}</span><button class="addnote ${note?"has":""}" data-n="${id}">${note?"Note ✎":"+ Note"}</button></div>
@@ -623,14 +653,14 @@ function renderInner(){
     return `<section class="win ${isNow?"now":""} ${closed.has(w.id)?"closed":""}" id="${w.id}">
       <div class="win-h" data-w="${w.id}"><span class="time">${w.t}</span><h2>${w.n}</h2>${isNow?'<span class="nowtag">NOW</span>':past&&od?`<span class="latetag">${od} NOT MARKED</span>`:""}
       <span class="cnt ${done===tasks.length?"full":""}">${done}/${tasks.length}</span><span class="chev">▾</span></div>
-      <div class="rows">${rows}</div></section>`}).join("");
+      <div class="rows">${rows}${tkEdit?`<div class="tedit"><input id="tkadd-${wi}" placeholder="New task for ${esc(w.n)}"><button class="btn sm primary" data-tkadd="${wi}">+ Add</button></div>`:""}</div></section>`}).join("");
   {const tn=$("taskNow");if(tn){const cw=W.find(w=>now>=mins(w.s)&&now<mins(w.e)),nx=W.find(w=>now<mins(w.s)),odN=W.filter(w=>now>=mins(w.e)||date<todayIST()).reduce((n,w)=>n+w.g.flatMap(g=>g[1]).filter(t=>!state.s[t[0]]).length,0);
     tn.innerHTML=`<div class="card2" style="border-top-color:var(--gold)"><div class="sh" style="border:0;margin:0;padding:0"><b>${cw?"Now · "+cw.t+" "+cw.n:date===todayIST()?(nx?"Next · "+nx.t+" "+nx.n:"Day closed"):fmt(date)}</b><small>${cw?cw.g.flatMap(g=>g[1]).filter(t=>!state.s[t[0]]).length+" tasks pending in this window":""}</small>${odN?`<span class="r" style="color:var(--miss);font-weight:700">${odN} task${odN>1?"s":""} not marked after time</span>`:""}</div></div>`}}
   const c={done:0,miss:0,na:0};ALL.forEach(t=>{const s=state.s[t.id];if(c[s]!=null)c[s]++});
   const T=ALL.length;
   $("track").innerHTML=`<i class="d" style="width:${c.done/T*100}%"></i><i class="m" style="width:${c.miss/T*100}%"></i><i class="n" style="width:${c.na/T*100}%"></i>`;
   $("progtxt").textContent=`${c.done+c.na}/${T} · ${c.miss} missed`;
-  ["by","fleet","dayNote"].forEach(k=>{if(document.activeElement!==$(k))$(k).value=state[k]||""});
+  renderRep();
 }
 const openNotes=new Set();
 
@@ -851,7 +881,7 @@ function loadSvc(){if(!db){svcState="off";renderSvc();return}
 function renderSvc(){
   const body=$("svcBody");if(!body)return;$("svcSec").classList.toggle("closed",closed.has("svcSec"));
   if(svcState!=="ok"){body.innerHTML=`<div class="lock">${svcState==="loading"?"Loading service records…":"Log in to see service records."}</div>`;$("svcAlert").innerHTML="";return}
-  const ids=Object.keys(SV).sort((a,b)=>(SV[a].order||99)-(SV[b].order||99));
+  const RK={exp:0,due:1,soon:2},ids=Object.keys(SV).sort((a,b)=>((RK[svcCalc(SV[a]).st]??3)-(RK[svcCalc(SV[b]).st]??3))||(SV[a].order||99)-(SV[b].order||99));
   const urg=[];ids.forEach(id=>{const c=svcCalc(SV[id]);if(c.st!=="ok")urg.push(`${SV[id].no} (${c.why})`)});
   $("svcSum").textContent=`${ids.length} vehicles · ${urg.length} due`;$("svcSum").className="cnt"+(urg.length?"":" full");
   $("svcAlert").innerHTML=urg.length?`<div class="dalert">Service due: ${urg.map(esc).join(" · ")} — <button data-gosvc="1">see service schedule</button></div>`:"";
@@ -949,57 +979,8 @@ const HI={p1d:"समसुदिन",p1c:"संतोष चावरिया
  p6d:"अजय गुजराती",p7d:"विकाश",p8d:"अमन",p8c:"आरती न्यू",p9d:"कुशाल",p9c:"पूनम",p10d:"अजीज",p10c:"निर्मला",p11d:"मनीष",p12d:"अरुण न्यू",p13d:"जैराज",
  p14d:"शिवरतन",p14c:"पूजा",p15d:"दिलीप",p15c:"कोमल",p16d:"हनुमान",p34d:"गोपाल",r1:"कमल सिंग",r2:"नितिन",r3:"विश्वबंधु",r4:"मोनिका न्यू"};
 const hi=id=>((roster.hi||{})[id]||"").trim()||HI[id]||personName(id,id);
-function tmrData(){const nd=nextDay(date);if(tmr.d!==nd)return null;if(!tmr.data)tmr.data={att:{},cover:{}};tmr.data.att=tmr.data.att||{};tmr.data.cover=tmr.data.cover||{};return tmr.data}
+function tmrData(){const nd=nextDay(date);if(tmr.d!==nd){if(!db)return null;tmr={d:nd,data:null,loading:true};db.doc("reports/"+nd).get().then(x=>{if(tmr.d===nd){tmr.data=x.exists?x.data():{att:{},cover:{}};tmr.loading=false;render()}}).catch(()=>{if(tmr.d===nd){tmr.data={att:{},cover:{}};tmr.loading=false;render()}});return null}if(tmr.loading)return null;if(!tmr.data)tmr.data={att:{},cover:{}};tmr.data.att=tmr.data.att||{};tmr.data.cover=tmr.data.cover||{};return tmr.data}
 function idByName(nm){const k=String(nm||"").trim().toLowerCase();if(!k)return null;const all=[...SLOTS.map(x=>x.id),...RES.map(r=>r.id)];return all.find(id=>(roster.name[id]||"").trim().toLowerCase()===k)||null}
-function planMsg(){const t=tmrData()||{att:{},cover:{}},A=id=>t.att[id]==="A",cov={};
-  RES.forEach(r=>{const x=t.cover[r.id];if(x&&A(x)&&!A(r.id))cov[x]=r.id});
-  const nd=nextDay(date);let m=`*${dm(nd)}*\n*Morning Adjustments*\nFirst Round - 6:00\n`;
-  VEH.forEach((v,i)=>{const d=v.id+"d",c=v.id+"c";let dr=hi(d),co=v.bus?hi(c):null,line;
-    if(!v.bus){line=A(d)?`${hi(d)} - *${cov[d]?hi(cov[d]):"ड्राइवर नहीं"}*`:hi(d)}
-    else{const ds=A(d)?(cov[d]?`*${hi(cov[d])}* (${hi(d)} की जगह)`:`*ड्राइवर नहीं* (${hi(d)} ऐब्सेंट)`):dr;
-      const cs=A(c)?(cov[c]?`*${hi(cov[c])}* (${hi(c)} की जगह)`:`*कंडक्टर नहीं* (${hi(c)} ऐब्सेंट)`):co;line=`${ds} - ${cs}`}
-    m+=`${i+1}. ${line}\n`});
-  m+=`\n*एक्स्ट्रा*\n`+[RES[1],RES[2],RES[0],RES[3]].map(r=>"- "+hi(r.id).split(" ")[0]).join("\n");
-  const ab=[...SLOTS.map(x=>x.id),...RES.map(r=>r.id)].filter(A);
-  m+=`\n\n*ऐब्सेंट*\n`+(ab.length?ab.map(id=>"- "+hi(id)).join("\n"):"- कोई नहीं");
-  const pre=(roster.pre||[]).filter(p=>p.code);
-  if(pre.length){const used=new Set();m+=`\n\n*Second Round - 7:30*\n`;
-    const sub=(nm,role)=>{const id=idByName(nm);if(!id)return nm;if(!A(id)){used.add(id);return hi(id)}
-      const r=cov[id];if(r&&!used.has(r)&&!pre.some(p=>idByName(p.driver)===r||idByName(p.cond)===r)){used.add(r);return `*${hi(r)}* (${hi(id)} की जगह)`}
-      return `*${role} नहीं* (${hi(id)} ऐब्सेंट)`};
-    pre.forEach(p=>{m+=`${p.code}. ${sub(p.driver,"ड्राइवर")}${p.cond?" - "+sub(p.cond,"कंडक्टर"):""}\n`});
-    const ex=VEH.map(v=>v.id+"d").filter(d=>!A(d)&&!used.has(d));
-    m+=`\nExtra\n`+(ex.length?ex.map(d=>"- "+hi(d)).join("\n"):"- कोई नहीं")}
-  return m}
-function renderNpl(){const b=$("nplBody");if(!b)return;$("nplSec").classList.toggle("closed",closed.has("nplSec"));
-  const nd=nextDay(date),t=tmrData();
-  if(!t){b.innerHTML=`<div class="lock">Loading ${fmt(nd)}…</div>`;return}
-  const st=allStaff(),ab=st.filter(x=>t.att[x.id]==="A");$("nplSum").textContent=`${fmt(nd)} · ${ab.length} absent`;
-  const freeRes=RES.filter(r=>t.att[r.id]!=="A");
-  const covOf=id=>RES.find(r=>t.cover[r.id]===id)?.id||"";
-  b.innerHTML=`<div class="group">Step 1 · Tap tomorrow's absentees (${fmt(nd)})</div>
-   <div class="chips">${st.map(x=>`<button class="pchip ${t.att[x.id]==="A"?"on":""}" data-ta="${x.id}">${esc(x.nm)}</button>`).join("")}</div>
-   ${ab.filter(x=>!RES.some(r=>r.id===x.id)).length?`<div class="group">Step 2 · Who covers?</div>`+ab.filter(x=>!RES.some(r=>r.id===x.id)).map(x=>`<div class="covrow"><span>${esc(x.nm)}</span>
-     <select data-tc="${x.id}" id="tc-${x.id}"><option value="">No cover</option>${freeRes.filter(r=>!r.cond||slotOf(x.id)?.role==="Conductor").map(r=>`<option value="${r.id}" ${covOf(x.id)===r.id?"selected":""}>${esc(personName(r.id,r.label))}</option>`).join("")}</select></div>`).join(""):""}
-   <div class="group">Step 3 · Standard plan is filled in automatically · edit only if something else changes</div>
-   ${nplEdit?`<div style="padding:0 14px"><textarea class="note" id="npl-txt" style="min-height:360px;width:100%">${esc(t.planTxt||planMsg())}</textarea></div><div class="actions" style="margin:10px 14px"><button class="btn primary" id="nplSave">Save plan</button><button class="btn" id="nplCancel">Cancel</button></div>`
-    :`<div class="actions" style="margin:10px 14px"><button class="btn primary" id="nplCopy">Copy Hindi plan for WhatsApp</button><button class="btn" id="nplEdit">✎ Edit plan</button>${t.planTxt?`<button class="btn" id="nplStd">Back to standard plan</button>`:""}</div>
-    ${t.planTxt?`<div class="legend" style="padding:0 14px;margin:0 0 6px">This plan was edited by hand. Absentee changes above will not change it until you tap "Back to standard plan".</div>`:""}
-    <div class="wa" id="nplPrev">${esc(t.planTxt||planMsg())}</div>`}`}
-let nplEdit=false;
-document.addEventListener("click",e=>{const t=tmrData();if(e.target.closest("#nplEdit")){nplEdit=true;render();return}if(e.target.closest("#nplCancel")){nplEdit=false;render();return}
-  if(e.target.closest("#nplSave")&&t){t.planTxt=$("npl-txt").value;nplEdit=false;queue({planTxt:t.planTxt},nextDay(date));render();return}
-  if(e.target.closest("#nplStd")&&t){t.planTxt="";queue({planTxt:""},nextDay(date));render()}});
-document.addEventListener("click",async e=>{
-  const a=e.target.closest("[data-ta]");if(a){const t=tmrData();if(!t)return;const id=a.dataset.ta,v=t.att[id]==="A"?"P":"A";t.att[id]=v;const p={att:{[id]:v}};
-    if(v==="P"){RES.forEach(r=>{if(t.cover[r.id]===id){t.cover[r.id]="";p.cover=Object.assign(p.cover||{},{[r.id]:""})}});if(t.cover[id]){t.cover[id]="";p.cover=Object.assign(p.cover||{},{[id]:""})}}
-    queue(p,nextDay(date));render();return}
-  if(e.target.closest("#nplCopy")){const m=(tmrData()||{}).planTxt||planMsg();try{await navigator.clipboard.writeText(m);setStatus("Hindi plan copied — paste it in WhatsApp.")}catch(err){const r=document.createRange();r.selectNodeContents($("nplPrev"));const sl=getSelection();sl.removeAllRanges();sl.addRange(r);setStatus("Text selected — copy it and paste in WhatsApp.")}}
-});
-document.addEventListener("change",e=>{const id=e.target.dataset.tc;if(!id)return;const t=tmrData();if(!t)return;const rid=e.target.value,p={cover:{}};
-  RES.forEach(r=>{if(t.cover[r.id]===id&&r.id!==rid){t.cover[r.id]="";p.cover[r.id]=""}});if(rid){t.cover[rid]=id;p.cover[rid]=id}
-  queue(p,nextDay(date));render()});
-
 /* ---- tabs & dashboard ---- */
 const TABS=[["dash","Dashboard"],["att","Attendance & Check-in"],["vcheck","Vehicle Check"],["tasks","Daily Checklist"],["sup","सुपरवाइज़र कार्य"],["wash","Sunday Washing"],["plan","Next-Day Plan"],["uniform","Absentee & Uniform"],["docs","Documents"],["service","Service"],["salary","Salary"],["history","History"]];
 const PANE_SEC={plan:"nplSec",docs:"vehSec",service:"svcSec",salary:"salSec"};
@@ -1014,7 +995,8 @@ function tabBadges(){const b={};try{
   if(svcState==="ok")b.service=Object.keys(SV).filter(id=>svcCalc(SV[id]).st!=="ok").length;
  }catch(e){}return b}
 function renderTabs(){const b=tabBadges();
-  $("tabs").innerHTML=TABS.map(([k,l])=>`<button class="${tab===k?"on":""}" data-tab="${k}">${l}${b[k]?`<b>${b[k]}</b>`:""}</button>`).join("");
+  const isAd=typeof FISDB!=="undefined"&&FISDB.isAdmin&&FISDB.isAdmin();if(tab==="salary"&&!isAd)tab="dash";
+  $("tabs").innerHTML=TABS.filter(([k])=>k!=="salary"||isAd).map(([k,l])=>`<button class="${tab===k?"on":""}" data-tab="${k}">${l}${b[k]?`<b>${b[k]}</b>`:""}</button>`).join("");
   document.querySelectorAll(".pane").forEach(p=>p.hidden=p.dataset.pane!==tab)}
 function showTab(k){tab=k;try{localStorage.setItem("td_tab",k)}catch(e){}if(PANE_SEC[k])closed.delete(PANE_SEC[k]);
   try{history.replaceState(null,"","#"+k)}catch(e){}renderTabs();render();scrollTo({top:0});const on=$("tabs").querySelector(".on");on&&on.scrollIntoView({inline:"center",block:"nearest"})}
@@ -1034,7 +1016,7 @@ function dashIssues(){const I=[],today=date===todayIST(),now=today?nowMinIST():-
   add("amb","👕","Without uniform",PEOPLE().filter(id=>state.uni[id]&&state.att[id]!=="A").map(id=>`${nm(id)} <small>(${esc(roleOf(id))})</small>`),"att");
   const V=vcStats();add("red","🔧","Vehicle check problems",V.bad.map(x=>`${esc(x.v.label)} — ${esc(x.l)}${x.n?": "+esc(x.n):""}`),"vcheck");
   const work=!isSun(date);
-  if(work&&(today&&now>=mins("09:00")||date<todayIST()))add("amb","📋","Vehicles not checked",VEH.filter(v=>VCI.some(([k])=>!(vcOf(v.id)[k]||{}).s)).map(v=>`${esc(v.label)} — ${VCI.filter(([k])=>!(vcOf(v.id)[k]||{}).s).map(q=>q[3]).join(", ")}`),"vcheck");
+  if(work&&(today&&now>=mins("09:00")||date<todayIST()))add("amb","📋","Vehicles not checked",VEH.filter(v=>vciList().some(([k])=>!(vcOf(v.id)[k]||{}).s)).map(v=>`${esc(v.label)} — ${vciList().filter(([k])=>!(vcOf(v.id)[k]||{}).s).map(q=>q[3]).join(", ")}`),"vcheck");
   const over=[];if(work)W.forEach(w=>{if(now>=mins(w.e)||date<todayIST())w.g.flatMap(g=>g[1]).forEach(([id,n])=>{if(!state.s[id])over.push(`${esc(n)} <small>(${w.t})</small>`)})});
   add("amb","☑️","Checklist tasks not marked after their time",over,"tasks");
   add("red","✗","Checklist tasks not done",ALL.filter(t=>state.s[t.id]==="miss").map(t=>esc(t.name)+(state.n[t.id]?" — "+esc(state.n[t.id]):"")),"tasks");
@@ -1045,31 +1027,65 @@ function dashIssues(){const I=[],today=date===todayIST(),now=today?nowMinIST():-
   if(salState==="ok"){const L=[];Object.keys(sal).forEach(id=>{const x=sal[id],inc=(x.inc||[]).filter(e=>e.date),last=inc.length?inc[inc.length-1].date:x.doj;if(last&&dayDiff(last)<-365)L.push(`${esc(x.name||personName(id,id))} — last increment ${fmt(last)}`)});add("amb","₹","Increment review due (over 12 months)",L,"salary")}
   const noRt=PEOPLE().filter(id=>!rtOf(id,"m")||!rtOf(id,"a"));if(noRt.length)add("amb","⚙️","Reporting times not set — late cannot be counted",[`${noRt.length} staff · set them in Attendance › Staff details & timings`],"att");
   return I}
-function renderDash(){const el=$("dashBody");if(!el||tab!=="dash")return;
-  const I=dashIssues(),cov=coverMap(),tot=PEOPLE().length,abs=PEOPLE().filter(id=>state.att[id]==="A").length,inM=PEOPLE().filter(id=>(state.pu||{})[id]&&state.pu[id].mi).length;
-  const lM=PEOPLE().filter(id=>lateBy(date,id,"m")).length,lA=PEOPLE().filter(id=>lateBy(date,id,"a")).length,nu=PEOPLE().filter(id=>state.uni[id]&&state.att[id]!=="A").length;
-  const c={done:0,miss:0,na:0};ALL.forEach(t=>{const s=state.s[t.id];if(c[s]!=null)c[s]++});const V=vcStats(),mc=maleConductors().length;
-  const m=monthStats(date.slice(0,7)),top=(k,n)=>PEOPLE().filter(id=>m.R[id][k].length).sort((a,b)=>m.R[b][k].length-m.R[a][k].length).slice(0,n||5);
+let CRD={at:0,data:null};
+function loadCR(){if(Date.now()-CRD.at<10*60e3)return;CRD.at=Date.now();
+  fetch("https://script.google.com/macros/s/AKfycbxkeXNT1rwMcFD8Wpp-jCWDa8Fchaeq-ZKbYnCcBFxdB3ByQ9ZcQkdbHdLocv5S3ZVx5Q/exec",{method:"POST",body:JSON.stringify({fn:"cr_data",args:[false],token:""})})
+   .then(r=>r.json()).then(j=>{if(j.ok){CRD.data=j.v;if(tab==="dash")renderDash()}}).catch(()=>{})}
+function crSummary(){const v=CRD.data;if(!v)return null;const ov=id=>(v.docs||{})["ov/"+id]||{},kind=e=>ov(e.id).kind||e.kind,t=todayIST(),m30=addDays(t,-30),wk=addDays(t,-6);
+  const st=e=>ov(e.id).st||(e.d<m30?"Closed":e.action?"Action logged":"Open"),veh=e=>{const o=ov(e.id);return o.veh?[o.veh]:(e.vehs||[])};
+  const C=(v.entries||[]).filter(e=>kind(e)==="Complaint"),open=C.filter(e=>st(e)==="Open"),week=C.filter(e=>e.d>=wk),today=C.filter(e=>e.d===t);
+  const byV={};C.filter(e=>e.d>=m30).forEach(e=>veh(e).forEach(x=>byV[x]=(byV[x]||0)+1));
+  const R=(v.entries||[]).filter(e=>["Request","Query","Not marked","Call"].includes(kind(e))),newR=R.filter(e=>{const r=ov(e.id).rq||{};return!r.dec&&!r.ack&&ov(e.id).st!=="Closed"&&e.d>=m30});
+  return{open,week,today,top:Object.entries(byV).sort((a,b)=>b[1]-a[1]).slice(0,4),newR,veh}}
+function renderDash(){const el=$("dashBody");if(!el||tab!=="dash")return;loadCR();
+  const I=dashIssues(),tot=PEOPLE().length,abs=PEOPLE().filter(id=>state.att[id]==="A").length,inM=PEOPLE().filter(id=>((state.pu||{})[id]||{}).mi).length,inA=PEOPLE().filter(id=>((state.pu||{})[id]||{}).ai).length;
+  const lMs=PEOPLE().filter(id=>lateBy(date,id,"m")),lAs=PEOPLE().filter(id=>lateBy(date,id,"a")),nu=PEOPLE().filter(id=>state.uni[id]&&state.att[id]!=="A").length;
+  const c={done:0,miss:0,na:0};ALL.forEach(t=>{const s=state.s[t.id];if(c[s]!=null)c[s]++});const V=vcStats(),mc=maleConductors().length,P=planStats(),CR=crSummary();
+  const m=monthStats(date.slice(0,7)),top=k=>PEOPLE().filter(id=>m.R[id][k].length).sort((a,b)=>m.R[b][k].length-m.R[a][k].length).slice(0,5);
   const lateTop=PEOPLE().filter(id=>m.R[id].LM.length+m.R[id].LA.length).sort((a,b)=>(m.R[b].LM.length+m.R[b].LA.length)-(m.R[a].LM.length+m.R[a].LA.length)).slice(0,5);
   const rk=(L,f)=>L.length?L.map((id,i)=>`<div class="rk2"><i>${i+1}</i><span class="nm">${esc(personName(id,id))}<small>${esc(roleOf(id))}</small></span><b>${f(id)}</b></div>`).join(""):`<div class="allok">None this month</div>`;
-  const t=tmrData(),tab_=t?PEOPLE().filter(id=>t.att[id]==="A"):[];
-  const ML=new Date(date+"T00:00:00Z").toLocaleString("en-IN",{month:"long",timeZone:"UTC"});
+  const ML=new Date(date+"T00:00:00Z").toLocaleString("en-IN",{month:"long",timeZone:"UTC"}),now=date===todayIST()?nowMinIST():-1;
+  if(P&&P.empty)I.push({lvl:"amb",ic:"🗓️",title:`Tomorrow (${fmt(nextDay(date))}): empty seats in the plan`,list:planRows().flatMap(r=>r.cells.filter(x=>x&&!planEff(x)).map(x=>`${esc(r.label)} — ${/c$|_c$/.test(x)?"conductor":"driver"}`)),go:"plan"});
+  if(CR&&CR.open.length)I.push({lvl:"red",ic:"📞",title:"Open parent complaints (Transport Helpdesk)",list:CR.open.slice(0,20).map(e=>`${fmt(e.d)} · ${esc(e.name)} ${esc(e.cls)} · ${esc(CR.veh(e).join(", ")||"vehicle ?")} — ${esc(String(e.text).slice(0,90))}`),go:"__cr"});
   const red=I.filter(x=>x.lvl==="red"),amb=I.filter(x=>x.lvl!=="red");
   const iss=x=>`<button class="iss ${x.lvl}" data-go="${x.go}"><span class="ic">${x.ic}</span><span class="tx"><b>${x.title}</b><span>${x.list.slice(0,8).join("<br>")}${x.list.length>8?`<br>+ ${x.list.length-8} more`:""}</span></span><span class="n">${x.list.length}</span></button>`;
-  if(isSun(date))I.unshift({lvl:"amb",ic:"🗓️",title:"Sunday — no school run",list:["Attendance, check-in and checklist are not counted today. Sunday washing is shown below."],go:"wash"});
-  el.innerHTML=`<div class="pg-h"><h2>Day report · ${new Date(date+"T00:00:00Z").toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long",timeZone:"UTC"})}</h2><span>problems first — tap any line to open it</span></div>
+  const wins=W.map(w=>{const ts=w.g.flatMap(g=>g[1]),d=ts.filter(t=>state.s[t[0]]==="done"||state.s[t[0]]==="na").length;return `<div class="${now>=mins(w.s)&&now<mins(w.e)?"now":""}"><span>${w.t}</span><i><u style="width:${ts.length?d/ts.length*100:0}%"></u></i><b>${d}/${ts.length}</b></div>`}).join("");
+  const lw=lastSunWash(),wd=lw.wd?washDefaulters(lw.wd,lw.d):null;
+  let dDue=0,dSoon=0;if(vehState==="ok")Object.keys(veh).forEach(id=>DOCS.forEach(([k])=>{const s=docState(veh[id][k])[0];if(s==="exp"||s==="none"||s==="due")dDue++;else if(s==="soon")dSoon++}));
+  const sDue=svcState==="ok"?Object.keys(SV).filter(id=>svcCalc(SV[id]).st!=="ok").length:null;
+  let salTot=0,salN=0,incDue=0;if(salState==="ok")Object.values(sal).forEach(x=>{const v=curSal(x);if(v){salTot+=v;salN++}const inc=(x.inc||[]).filter(e=>e.date),last=inc.length?inc[inc.length-1].date:x.doj;if(last&&dayDiff(last)<-365)incDue++});
+  const mr=(l,v,cls)=>`<div class="mrow"><span>${l}</span><b ${cls?`style="color:var(--${cls})"`:""}>${v}</b></div>`;
+  el.innerHTML=`<div class="pg-h"><h2>${new Date(date+"T00:00:00Z").toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long",timeZone:"UTC"})}</h2><span>Director's view · problems first · tap any line to open it</span></div>
   <div class="kp">
-   <button class="${abs?"red":"grn"}" data-go="att"><span>Present</span><b>${tot-abs}/${tot}</b><small>${inM} checked in · ${abs} absent</small></button>
-   <button class="${lM+lA?"red":"grn"}" data-go="att"><span>Late</span><b>${lM+lA}</b><small>Morning ${lM} · Afternoon ${lA}</small></button>
-   <button class="${nu?"red":"grn"}" data-go="att"><span>Without uniform</span><b>${nu}</b><small>${mc?`<span style="color:var(--miss)">${mc} conductor rule</span>`:"Conductor rule OK"}</small></button>
+   <button class="${abs?"red":"grn"}" data-go="att"><span>Present</span><b>${tot-abs}/${tot}</b><small>${abs} absent · ${mc?`<span style="color:var(--miss)">conductor rule ✗</span>`:"conductor rule ✓"}</small></button>
+   <button class="${lMs.length+lAs.length?"red":"grn"}" data-go="att"><span>Late</span><b>${lMs.length+lAs.length}</b><small>Morning ${lMs.length} · Afternoon ${lAs.length}</small></button>
+   <button class="${nu?"red":"grn"}" data-go="att"><span>Without uniform</span><b>${nu}</b><small>marked at check-in</small></button>
    <button class="${V.bad.length?"red":V.done===V.tot?"grn":""}" data-go="vcheck"><span>Vehicle checks</span><b>${V.done}/${V.tot}</b><small>${V.bad.length} problem${V.bad.length===1?"":"s"}</small></button>
    <button class="${c.miss?"red":""}" data-go="tasks"><span>Daily checklist</span><b>${c.done+c.na}/${ALL.length}</b><small>${c.miss} not done</small></button>
-   <button class="gold" data-go="plan"><span>Tomorrow</span><b>${tab_.length}</b><small>absent · open plan</small></button>
+   <button class="${CR&&CR.open.length?"red":"grn"}" data-go="__cr"><span>Open complaints</span><b>${CR?CR.open.length:"…"}</b><small>${CR?`${CR.today.length} today · ${CR.week.length} this week`:"loading"}</small></button>
   </div>
   <div class="card2"><div class="sh"><b>Needs attention</b><small>${red.length} serious · ${amb.length} to watch</small></div>${I.length?red.map(iss).join("")+amb.map(iss).join(""):`<div class="allok">✓ No problems recorded for ${fmt(date)}.</div>`}</div>
+  <div class="dg">
+   <div class="card2"><div class="sh"><b>Check-in today</b><button class="btn sm r" data-go="att">Open</button></div>
+    ${mr("Morning check-in",`${inM}/${tot-abs}`)}${mr("Late in the morning",lMs.length,lMs.length?"miss":"")}${mr("Afternoon check-in",`${inA}/${tot-abs}`)}${mr("Late in the afternoon",lAs.length,lAs.length?"miss":"")}
+    ${mr("Not checked in yet",PEOPLE().filter(id=>notInYet(id,"m")||notInYet(id,"a")).length)}${mr("Absent",abs,abs?"miss":"")}</div>
+   <div class="card2"><div class="sh"><b>Checklist by time</b><button class="btn sm r" data-go="tasks">Open</button></div><div class="bars2">${wins}</div></div>
+   <div class="card2"><div class="sh"><b>Supervisors</b><button class="btn sm r" data-go="sup">Open</button></div>
+    ${SUPS.map(([w,l])=>{const S=supStats(w);return mr(`${l} · ${S.done}/${S.tot} done`,S.late?`${S.late} late`:"on time",S.late?"miss":"done")+(S.now.length?`<div style="font-size:12.5px;color:var(--muted);margin:-2px 0 6px">अभी: ${S.now.map(x=>esc(hiT(x))).join(", ")}</div>`:"")}).join("")}</div>
+   <div class="card2"><div class="sh"><b>Fleet</b><button class="btn sm r" data-go="vcheck">Open</button></div>
+    ${mr("Vehicles checked today",`${V.done}/${V.tot}`)}${mr("Check problems",V.bad.length,V.bad.length?"miss":"")}${mr("Documents expired / due in 30 days",vehState==="ok"?dDue:"…",dDue?"miss":"")}${mr("Documents due in 31–60 days",vehState==="ok"?dSoon:"…")}${mr("Service overdue / due",sDue==null?"…":sDue,sDue?"miss":"")}</div>
+   <div class="card2"><div class="sh"><b>Tomorrow · ${fmt(nextDay(date))}</b><button class="btn sm r" data-go="plan">Open plan</button></div>
+    ${P?mr("Changes from regular crew",P.ch,P.ch?"":"")+mr("Empty seats",P.empty,P.empty?"miss":"")+mr("Absent",P.absent.map(id=>esc(personName(id,id))).join(", ")||"–")+mr("Spare",P.spare.map(id=>esc(personName(id,id))).join(", ")||"–"):`<div class="allok">Loading…</div>`}</div>
+   <div class="card2"><div class="sh"><b>Transport Helpdesk</b><a class="btn sm r" href="../complaints/" style="text-decoration:none">Open</a></div>
+    ${CR?mr("Open complaints",CR.open.length,CR.open.length?"miss":"")+mr("Complaints this week",CR.week.length)+mr("New transport requests",CR.newR.length)+(CR.top.length?`<div style="font-size:12.5px;color:var(--muted);margin-top:6px">Most complaints (30 days): ${CR.top.map(([k,n])=>esc(k)+" "+n).join(" · ")}</div>`:""):`<div class="allok">Loading…</div>`}</div>
+   <div class="card2"><div class="sh"><b>Sunday washing · ${fmt(lw.d)}</b><button class="btn sm r" data-go="wash">Open</button></div>
+    ${lw.wd?mr("Vehicles",(lw.wd.list||[]).length)+mr("Washed 30 min or more",(lw.wd.list||[]).filter(v=>{const d=washDur((lw.wd.r||{})[v.id]);return d!=null&&d>=WASH_MIN}).length,"done")+mr("Defaulters",wd.length,wd.length?"miss":""):`<div class="allok">Loading…</div>`}</div>
+   ${salState==="ok"?`<div class="card2"><div class="sh"><b>Salary</b><small>admin only</small><button class="btn sm r" data-go="salary">Open</button></div>${mr("Staff on payroll",salN)}${mr("Monthly salary",inr(salTot))}${mr("Increment review due",incDue,incDue?"miss":"")}</div>`:""}
+  </div>
   <div class="two2"><div class="card2"><div class="sh"><b>Most absent · ${ML}</b><button class="btn sm r" data-go="uniform">Register</button></div>${rk(top("A"),id=>m.R[id].A.length)}</div>
    <div class="card2"><div class="sh"><b>Uniform defaulters · ${ML}</b></div>${rk(top("U"),id=>m.R[id].U.length)}</div></div>
   <div class="card2"><div class="sh"><b>Late arrivals · ${ML}</b><small>morning + afternoon</small></div>${rk(lateTop,id=>m.R[id].LM.length+m.R[id].LA.length)}</div>`}
+document.addEventListener("click",e=>{if(e.target.closest('[data-go="__cr"]')){e.stopPropagation();location.href="../complaints/"}},true);
 
 const _renderTD=render;render=function(){_renderTD();renderSup();renderWash();renderTabs();renderDash()};
 setInterval(()=>{if(tab==="dash")renderDash();renderTabs()},2000);
@@ -1193,7 +1209,10 @@ function washMsg(){const S=washStats();let m=`*Sunday Washing - ${dm(date)}*\nRe
 function renderWash(){const b=$("washBody");if(!b)return;
   if(!isSun(date)){b.innerHTML=`<section class="win"><div class="win-h" style="cursor:default"><span class="time">Sunday</span><h2>Sunday Washing</h2></div>
     <div class="alert" style="background:var(--accent-soft);color:var(--ink)">Washing is done on Sundays. ${fmt(date)} is not a Sunday.</div>
-    <div class="actions" style="margin:10px 14px 14px"><button class="btn sm" data-wgo="${prevSun(date)}">Last Sunday · ${fmt(prevSun(date))}</button><button class="btn sm primary" data-wgo="${nextSun(date)}">Next Sunday · ${fmt(nextSun(date))}</button></div></section>`;return}
+    <div class="actions" style="margin:10px 14px 14px"><button class="btn sm" data-wgo="${prevSun(date)}">Last Sunday · ${fmt(prevSun(date))}</button><button class="btn sm primary" data-wgo="${nextSun(date)}">Next Sunday · ${fmt(nextSun(date))}</button></div>
+    <div class="group">Sample — this is the Sunday form (check-in, check-out, minimum ${WASH_MIN} minutes)</div>
+    <div style="overflow-x:auto;padding:0 14px 14px"><table class="regt"><thead><tr><th>#</th><th>Driver</th><th>Bus</th><th>Check-in</th><th>Check-out</th><th>Minutes</th><th>Checked by</th></tr></thead><tbody>
+    ${washTemplate().map((v,i)=>`<tr><td>${i+1}</td><td><b>${esc(v.name)}</b></td><td>${esc(v.bus)}</td><td>${i===0?"9:00 am":"—"}</td><td>${i===0?"9:40 am":"—"}</td><td>${i===0?'<span class="wdur ok">40 min ✓</span>':i===1?'<span class="wdur bad">20 min ✗</span>':"—"}</td><td>${i===0?"Kamal":"—"}</td></tr>`).join("")}</tbody></table></div></section>`;return}
   const S=washStats(),d=S.d,today=date===todayIST();
   const rows=d.list.map((v,i)=>{const r=d.r[v.id]||{},st=r.done?["d","Washed"]:r.reach?["r","Reached"]:["","Not reached"],pk="photos/"+date+".w."+v.id;
     if(washEdit)return `<div class="wrow"><div class="wtop"><b>${i+1}. ${esc(v.name)}</b><span class="bus">${esc(v.bus)}</span><button class="addnote" data-wrm="${v.id}">✕ Remove</button></div></div>`;
@@ -1228,39 +1247,37 @@ document.addEventListener("input",e=>{const id=e.target.dataset&&e.target.datase
   if(e.target.id==="wa-an")washDraft.an=e.target.value;if(e.target.id==="wa-ab")washDraft.ab=e.target.value});
 
 /* ===== vehicle check ===== */
-const VCI=[["diesel","⛽","डीज़ल","Diesel level"],["clean","🧽","सफ़ाई","Cleaning verified"],["damage","🔧","टूट-फूट / मेंटेनेंस","Damage / maintenance"],["aid","🩹","फर्स्ट एड बॉक्स","First aid box"]];
 let vcFilter="all";
 const vcOf=vid=>(state.vc||{})[vid]||{};
 function vcSave(vid,it,patch){state.vc=state.vc||{};state.vc[vid]=state.vc[vid]||{};state.vc[vid][it]=Object.assign({},state.vc[vid][it]||{},patch);queue({vc:{[vid]:{[it]:patch}}});render()}
-function vcStats(){let done=0,bad=[],pend=0;VEH.forEach(v=>{const c=vcOf(v.id),n=VCI.filter(([k])=>c[k]&&c[k].s).length;if(n===VCI.length)done++;else pend++;
-  VCI.forEach(([k,,,l])=>{if(c[k]&&c[k].s==="bad")bad.push({v,k,l,n:c[k].n||""})})});return{done,pend,bad,tot:VEH.length}}
+function vcStats(){let done=0,bad=[],pend=0;VEH.forEach(v=>{const c=vcOf(v.id),n=vciList().filter(([k])=>c[k]&&c[k].s).length;if(n===vciList().length)done++;else pend++;
+  vciList().forEach(([k,,,l])=>{if(c[k]&&c[k].s==="bad")bad.push({v,k,l,n:c[k].n||""})})});return{done,pend,bad,tot:VEH.length}}
 function renderVC(){const b=$("vcBody");if(!b)return;const S=vcStats(),today=date===todayIST();
-  const show=v=>{const c=vcOf(v.id),n=VCI.filter(([k])=>c[k]&&c[k].s).length;return vcFilter==="all"||(vcFilter==="pend"&&n<VCI.length)||(vcFilter==="bad"&&VCI.some(([k])=>c[k]&&c[k].s==="bad"))};
-  b.innerHTML=`<div class="pg-h"><h2>Vehicle Check</h2><span>${fmt(date)} · diesel, cleaning, damage and first aid — tap ✓ or ✗ and add a photo</span></div>
+  const show=v=>{const c=vcOf(v.id),n=vciList().filter(([k])=>c[k]&&c[k].s).length;return vcFilter==="all"||(vcFilter==="pend"&&n<vciList().length)||(vcFilter==="bad"&&vciList().some(([k])=>c[k]&&c[k].s==="bad"))};
+  b.innerHTML=`<div class="pg-h"><h2>Vehicle Check</h2><span>${fmt(date)} · tap ✓ or ✗ — the time is saved · add a photo · speak the problem with 🎤</span><button class="btn sm" data-vced style="margin-left:auto">${vcEdit?"Done":"✎ Edit checks"}</button></div>
+   ${vcEdit?`<div class="card2"><div class="sh"><b>Checks for every vehicle</b><small>rename, remove or add a check</small></div>${vciList().map((x,i)=>`<div class="tedit"><input id="vci-${i}-1" data-vci="${i}|1" value="${esc(x[1])}" style="max-width:56px"><input id="vci-${i}-2" data-vci="${i}|2" value="${esc(x[2])}"><input id="vci-${i}-3" data-vci="${i}|3" value="${esc(x[3])}"><button class="btn sm" data-vcirm="${x[0]}">✕</button></div>`).join("")}
+    <div class="tedit"><input id="vci-ic" placeholder="Icon" style="max-width:56px"><input id="vci-hi" placeholder="हिंदी नाम"><input id="vci-en" placeholder="English name"><button class="btn sm primary" id="vciAdd">+ Add</button></div></div>`:""}
    <div class="chips2">${[["all","All vehicles",S.tot],["pend","Not checked",S.pend],["bad","Problems",S.bad.length]].map(([k,l,n])=>`<button class="${vcFilter===k?"on":""}" data-vf="${k}">${l}<b>${n}</b></button>`).join("")}</div>
-   ${VEH.filter(show).map(v=>{const c=vcOf(v.id),n=VCI.filter(([k])=>c[k]&&c[k].s).length;
-    return `<div class="vcc"><div class="vh"><b>${v.label}</b><span>${esc([roster.veh[v.id],(roster.cleaner||{})[v.id]?"Cleaner: "+roster.cleaner[v.id]:""].filter(Boolean).join(" · "))}</span><em class="${n===VCI.length?"ok":""}">${n}/${VCI.length}</em></div>
-     ${VCI.map(([k,ic,h,e])=>{const x=c[k]||{},pk="photos/"+date+".v."+v.id+"."+k;
+   ${VEH.filter(show).map(v=>{const c=vcOf(v.id),n=vciList().filter(([k])=>c[k]&&c[k].s).length;
+    return `<div class="vcc"><div class="vh"><b>${v.label}</b><span>${esc([roster.veh[v.id],(roster.cleaner||{})[v.id]?"Cleaner: "+roster.cleaner[v.id]:""].filter(Boolean).join(" · "))}</span><em class="${n===vciList().length?"ok":""}">${n}/${vciList().length}</em></div>
+     ${vciList().map(([k,ic,h,e])=>{const x=c[k]||{},pk="photos/"+date+".v."+v.id+"."+k;
       return `<div class="vci"><div class="ico">${ic}</div><div class="lb"><b>${h}</b><small>${e}${x.s?` · ${esc(x.by||"")} ${x.at?h12(x.at):""}`:""}</small></div>
        <div class="bt"><button class="ok2 ${x.s==="ok"?"on":""}" data-vc="${v.id}|${k}|ok">✓ ठीक</button><button class="bad2 ${x.s==="bad"?"on":""}" data-vc="${v.id}|${k}|bad">✗ समस्या</button>${phBtn(pk,x.ph,"vc|"+v.id+"|"+k)}</div>
-       ${x.s==="bad"?`<input class="note nt" id="vc-n-${v.id}-${k}" data-vcn="${v.id}|${k}" value="${esc(x.n||"")}" placeholder="What is the problem? (diesel low, seat broken, box empty…)">`:""}</div>`}).join("")}</div>`}).join("")||`<div class="allok">Nothing in this list.</div>`}`}
+       ${x.s==="bad"?`<div class="nt" style="display:flex;gap:6px"><input class="note" style="flex:1" id="vc-n-${v.id}-${k}" data-vcn="${v.id}|${k}" value="${esc(x.n||"")}" placeholder="समस्या लिखें या 🎤 दबाकर बोलें"><button class="mic" data-mic="vc-n-${v.id}-${k}" aria-label="Speak the problem">🎤</button></div>`:""}</div>`}).join("")}</div>`}).join("")||`<div class="allok">Nothing in this list.</div>`}`}
 document.addEventListener("click",e=>{const t=e.target.closest("[data-vc],[data-vf]");if(!t)return;e.stopPropagation();const D=t.dataset;
   if(D.vf){vcFilter=D.vf;render();return}
   const[vid,k,s]=D.vc.split("|"),cur=vcOf(vid)[k]||{};vcSave(vid,k,cur.s===s?{s:"",at:"",by:""}:{s,at:date===todayIST()?nowHM():"",by:db&&db.who?db.who():""})},true);
 document.addEventListener("input",e=>{const k=e.target.dataset&&e.target.dataset.vcn;if(!k)return;const[vid,it]=k.split("|");state.vc=state.vc||{};state.vc[vid]=state.vc[vid]||{};state.vc[vid][it]=Object.assign({},state.vc[vid][it]||{},{n:e.target.value});queue({vc:{[vid]:{[it]:{n:e.target.value}}}})});
 
-/* ===== attendance events ===== */
-document.addEventListener("click",e=>{const t=e.target.closest("[data-pu],[data-puclr],[data-pudone],[data-uni],[data-af],#rtFill");if(!t)return;e.stopPropagation();const D=t.dataset;
+document.addEventListener("click",e=>{const t=e.target.closest("[data-pu],[data-um],[data-ped],[data-af],#rtFill");if(!t)return;e.stopPropagation();const D=t.dataset;
   if(t.id==="rtFill"){const m=$("rt-all-m").value,a=$("rt-all-a").value;roster.rtm=roster.rtm||{};roster.rta=roster.rta||{};PEOPLE().forEach(id=>{if(m&&!roster.rtm[id])roster.rtm[id]=m;if(a&&!roster.rta[id])roster.rta[id]=a});saveRoster();render();return}
   if(D.af){attFilter=D.af;render();return}
-  if(D.uni){const id=D.uni,v=!state.uni[id];state.uni[id]=v;queue({uni:{[id]:v}});render();return}
-  if(D.pudone!=null){puEdit="";render();return}
-  if(D.puclr){const[id,k]=D.puclr.split("|");puEdit="";punchSave(id,k,"");return}
-  if(D.pu){const[id,k]=D.pu.split("|"),p=(state.pu||{})[id]||{};
-    if(!p[k]&&date===todayIST()&&puEdit!==D.pu){puEdit="";punchSave(id,k,nowHM());return}
-    puEdit=puEdit===D.pu?"":D.pu;render();setTimeout(()=>{const el=$("pt-"+id+"-"+k);el&&el.focus()},30)}},true);
+  if(D.ped){puEdit=puEdit===D.ped?"":D.ped;render();return}
+  if(D.um){const[id,k]=D.um.split("|"),p=Object.assign({},(state.pu||{})[id]||{});p[k]=!p[k];state.pu=state.pu||{};state.pu[id]=p;const u=!!(p.um||p.ua);state.uni[id]=u;queue({pu:{[id]:{[k]:p[k]}},uni:{[id]:u}});render();return}
+  if(D.pu){const[id,k]=D.pu.split("|"),p=(state.pu||{})[id]||{};if(p[k]){setStatus("Already recorded at "+h12(p[k])+" — use ✎ to correct.");return}
+    if(date!==todayIST()){setStatus("Times are recorded only on today's date. Use ✎ to enter an old time.");return}
+    punchSave(id,k,nowHM())}},true);
 document.addEventListener("change",e=>{const k=e.target.dataset&&e.target.dataset.pt;if(!k)return;const[id,f]=k.split("|");punchSave(id,f,e.target.value)});
-
 /* ===== registers: absentees · uniform · late ===== */
 let regMonth="";
 function monthDays(m){const[y,mm]=m.split("-").map(Number),n=new Date(Date.UTC(y,mm,0)).getUTCDate(),out=[];for(let i=1;i<=n;i++){const d=m+"-"+String(i).padStart(2,"0");if(d>todayIST())break;if(d<START)continue;out.push(d)}return out}
@@ -1296,14 +1313,97 @@ function lastSunWash(){const sd=isSun(date)?date:prevSun(date);if(sd===date)retu
   if(washPrev.d!==sd&&db){washPrev={d:sd,data:null};db.doc("reports/"+sd).get().then(x=>{if(washPrev.d===sd){washPrev.data=x.exists?x.data():{};render()}}).catch(()=>{})}
   if(!washPrev.data)return{d:sd,wd:null};const w=washPrev.data.wash||{};let L=null;if(w.list)try{L=JSON.parse(w.list)}catch(e){}return{d:sd,wd:{list:L||washTemplate(),r:w.r||{}}}}
 
+/* ===== voice note (Hindi) ===== */
+function dictate(btn,inputId){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){setStatus("Voice typing is not available in this browser — use the 🎤 on the phone keyboard.");const el=$(inputId);el&&el.focus();return}
+  const r=new SR();r.lang="hi-IN";r.interimResults=false;r.maxAlternatives=1;btn.classList.add("on");setStatus("Listening… speak in Hindi");
+  r.onresult=ev=>{const el=$(inputId);if(!el)return;el.value=(el.value?el.value+" ":"")+ev.results[0][0].transcript;el.dispatchEvent(new Event("input",{bubbles:true}));setStatus("Saved")};
+  r.onend=()=>btn.classList.remove("on");r.onerror=()=>{btn.classList.remove("on");setStatus("Could not hear — tap 🎤 and try again.")};try{r.start()}catch(e){btn.classList.remove("on")}}
+document.addEventListener("click",e=>{const t=e.target.closest("[data-mic]");if(!t)return;e.stopPropagation();dictate(t,t.dataset.mic)},true);
+/* ===== vehicle check items: editable ===== */
+let vcEdit=false;
+const VCI_DEF=[["diesel","⛽","डीज़ल","Diesel level"],["clean","🧽","सफ़ाई","Cleaning verified"],["damage","🔧","टूट-फूट / मेंटेनेंस","Damage / maintenance"],["aid","🩹","फर्स्ट एड बॉक्स","First aid box"]];
+function vciList(){return Array.isArray(roster.vci)&&roster.vci.length?roster.vci:VCI_DEF}
+document.addEventListener("click",e=>{const t=e.target.closest("[data-vced],[data-vcirm],#vciAdd");if(!t)return;e.stopPropagation();
+  if(t.dataset.vced!=null){vcEdit=!vcEdit;render();return}
+  const L=vciList().map(x=>x.slice());
+  if(t.dataset.vcirm){roster.vci=L.filter(x=>x[0]!==t.dataset.vcirm);saveRoster();render();return}
+  if(t.id==="vciAdd"){const h=($("vci-hi").value||"").trim(),en=($("vci-en").value||"").trim(),ic=($("vci-ic").value||"").trim()||"✔️";if(!h&&!en){setStatus("Type the check name first.");return}L.push(["x"+uid(),ic,h||en,en||h]);roster.vci=L;saveRoster();render()}},true);
+document.addEventListener("input",e=>{const k=e.target.dataset&&e.target.dataset.vci;if(!k)return;const[i,f]=k.split("|"),L=vciList().map(x=>x.slice());if(!L[+i])return;L[+i][+f]=e.target.value;roster.vci=L;saveRoster()});
+/* ===== checklist: reporters + editable tasks ===== */
+let tkEdit=false,tkTpl=null;
+const REP_DEF=["Kamal","Vishvbandu","Harsh Yadav"];
+const repList=()=>Array.isArray(roster.reporters)&&roster.reporters.length?roster.reporters:REP_DEF;
+function renderRep(){const b=$("repBox");if(!b)return;
+  b.innerHTML=`<div class="rep"><span>Reported by</span>${repList().map(n=>`<button class="${state.by===n?"on":""}" data-rep="${esc(n)}">${esc(n)}</button>`).join("")}
+   ${tkEdit?`<input id="rep-new" placeholder="Add a name" style="max-width:150px"><button data-repadd>+ Add</button>${repList().map(n=>`<button data-reprm="${esc(n)}" title="Remove">✕ ${esc(n)}</button>`).join("")}`:""}
+   <button class="btn sm" data-tked style="margin-left:auto">${tkEdit?"Done editing":"✎ Edit tasks"}</button></div>`}
+function applyTasks(w){if(!Array.isArray(w)||!w.length)return;W=w;ALL=W.flatMap(x=>x.g.flatMap(g=>g[1].map(t=>({w:x.id,id:t[0],name:t[1]}))))}
+function saveTasks(){if(!db)return;db.doc("roster/tasks").set({w:JSON.parse(JSON.stringify(W))}).then(()=>setStatus("Checklist saved for every day")).catch(()=>setStatus("Could not save the checklist — try again."))}
+document.addEventListener("click",e=>{const t=e.target.closest("[data-rep],[data-repadd],[data-reprm],[data-tked],[data-tkrm],[data-tkadd]");if(!t)return;e.stopPropagation();const D=t.dataset;
+  if(D.rep){state.by=state.by===D.rep?"":D.rep;queue({by:state.by});render();return}
+  if(D.repadd!=null){const n=($("rep-new").value||"").trim();if(!n)return;roster.reporters=[...repList(),n];saveRoster();render();return}
+  if(D.reprm){roster.reporters=repList().filter(x=>x!==D.reprm);saveRoster();render();return}
+  if(D.tked!=null){if(tkEdit)saveTasks();tkEdit=!tkEdit;render();return}
+  if(D.tkrm){const[wi,gi,ti]=D.tkrm.split("|").map(Number);W[wi].g[gi][1].splice(ti,1);applyTasks(W);render();return}
+  if(D.tkadd){const wi=+D.tkadd,el=$("tkadd-"+wi),n=(el&&el.value||"").trim();if(!n){setStatus("Type the task first.");return}const g=W[wi].g[W[wi].g.length-1];g[1].push(["x"+uid(),n]);applyTasks(W);render()}},true);
+document.addEventListener("input",e=>{const D=e.target.dataset||{};if(D.tk){const[wi,gi,ti]=D.tk.split("|").map(Number);W[wi].g[gi][1][ti][1]=e.target.value;applyTasks(W)}
+  if(D.tkw){const[wi,f]=D.tkw.split("|");W[+wi][f]=e.target.value;if(f==="s"||f==="e")W[+wi].t=h12(W[+wi].s).replace(/ (am|pm)/,"")+"–"+h12(W[+wi].e).replace(/ (am|pm)/,"")}});
+
+/* ===== next-day plan: vehicle table, regular crew, changes highlighted ===== */
+let npSel="";
+const PCK=c=>c; // cell keys: p1d, p1c, preA_d, preA_c
+function planRows(){const R=VEH.map(v=>({key:v.id,label:v.label,first:true,cells:[v.id+"d",v.bus?v.id+"c":null]}));
+  (roster.pre||[]).filter(p=>p.code).forEach(p=>R.push({key:"pre"+p.code,label:"Bus "+p.code,first:false,pre:p,cells:["pre"+p.code+"_d",p.cond?"pre"+p.code+"_c":null]}));return R}
+function planReg(cell){if(!cell.startsWith("pre"))return cell;const code=cell.slice(3,-2),p=(roster.pre||[]).find(x=>x.code===code)||{},nm=cell.endsWith("_d")?p.driver:p.cond;return idByName(nm)||(nm?"n:"+nm:"")}
+function planEff(cell,t){t=t||tmrData()||{att:{},cover:{},plan:{}};const P=t.plan||{};if(cell in P)return P[cell];const reg=planReg(cell);
+  if(!cell.startsWith("pre")&&t.att&&t.att[cell]==="A"){const r=RES.find(x=>(t.cover||{})[x.id]===cell&&t.att[x.id]!=="A");return r?r.id:""}
+  if(reg&&!reg.startsWith("n:")&&t.att&&t.att[reg]==="A")return "";return reg}
+const pName=pid=>!pid?"":pid.startsWith("n:")?pid.slice(2):personName(pid,pid);
+const pHi=pid=>!pid?"":pid.startsWith("n:")?pid.slice(2):hi(pid);
+function planStats(){const t=tmrData();if(!t)return null;let ch=0,empty=0;const used=new Set();
+  planRows().forEach(r=>r.cells.forEach(c=>{if(!c)return;const e=planEff(c,t),g=planReg(c);if(e!==g)ch++;if(!e)empty++;if(e&&r.first)used.add(e)}));
+  const absent=SLOTS.map(s=>s.id).filter(id=>!used.has(id)&&!planRows().some(r=>!r.first&&r.cells.some(c=>c&&planEff(c,t)===id)));
+  const spare=RES.map(r=>r.id).filter(id=>!used.has(id));return{ch,empty,absent,spare}}
+function planMsg(){const t=tmrData()||{att:{},cover:{}},nd=nextDay(date);let m=`*${dm(nd)}*\n*Morning Adjustments*\nFirst Round - 6:00\n`;
+  const cellTxt=c=>{const e=planEff(c,t),g=planReg(c);if(e===g)return pHi(e)||"—";if(!e)return `*${c.endsWith("c")||c.endsWith("_c")?"कंडक्टर":"ड्राइवर"} नहीं* (${pHi(g)} ऐब्सेंट)`;return `*${pHi(e)}*${g?` (${pHi(g)} की जगह)`:""}`};
+  const R=planRows();let i=0;R.filter(r=>r.first).forEach(r=>{i++;m+=`${i}. ${cellTxt(r.cells[0])}${r.cells[1]?" - "+cellTxt(r.cells[1]):""}\n`});
+  const S=planStats()||{spare:[],absent:[]};
+  m+=`\n*एक्स्ट्रा*\n`+(S.spare.length?S.spare.map(id=>"- "+pHi(id).split(" ")[0]).join("\n"):"- कोई नहीं");
+  m+=`\n\n*ऐब्सेंट*\n`+(S.absent.length?S.absent.map(id=>"- "+pHi(id)).join("\n"):"- कोई नहीं");
+  const pre=R.filter(r=>!r.first);if(pre.length){m+=`\n\n*Second Round - 7:30*\n`;pre.forEach(r=>{m+=`${r.pre.code}. ${cellTxt(r.cells[0])}${r.cells[1]?" - "+cellTxt(r.cells[1]):""}\n`})}
+  return m}
+function renderNpl(){const b=$("nplBody");if(!b)return;$("nplSec").classList.remove("closed");
+  const nd=nextDay(date),t=tmrData();if(!t){b.innerHTML=`<div class="lock">Loading ${fmt(nd)}…</div>`;return}
+  t.plan=t.plan||{};const S=planStats();$("nplSum").textContent=`${fmt(nd)} · ${S.ch} change${S.ch===1?"":"s"}`;
+  const cell=(c,role)=>{if(!c)return `<td class="npc none">No ${role.toLowerCase()}</td>`;const e=planEff(c,t),g=planReg(c),chg=e!==g;
+    if(npSel===c)return `<td class="npc sel"><select id="npl-${c}" data-np="${c}"><option value="__reg" ${!chg?"selected":""}>${esc(pName(g)||"—")} (regular)</option><option value="" ${chg&&!e?"selected":""}>— Nobody (seat empty)</option>${PEOPLE().filter(id=>id!==g).map(id=>`<option value="${id}" ${chg&&e===id?"selected":""}>${esc(personName(id,id))} · ${esc(roleOf(id))}</option>`).join("")}</select></td>`;
+    return `<td class="npc ${chg?"chg":""} ${chg&&!e?"empty":""}"><button data-npc="${c}"><b>${esc(pHi(e)||"— खाली —")}</b><small>${esc(pName(e)||"seat empty")}</small>${chg&&g?`<em>replacing ${esc(pName(g))}</em>`:""}</button></td>`};
+  const rows=R=>R.map(r=>`<tr><th>${esc(r.label)}${r.pre&&r.pre.area?`<small>${esc(r.pre.area)}</small>`:vSub(VEH.find(v=>v.id===r.key)||{id:""})?`<small>${esc(vSub(VEH.find(v=>v.id===r.key)))}</small>`:""}</th>${cell(r.cells[0],"Driver")}${cell(r.cells[1],"Conductor")}</tr>`).join("");
+  const R=planRows();
+  b.innerHTML=`<div style="padding:12px 14px 0"><div class="legend" style="margin:0 0 10px">Every vehicle shows its <strong>regular</strong> driver and conductor. Tap a name to change it for ${fmt(nd)} — changes turn <strong style="background:var(--accent-soft);padding:1px 6px;border-radius:5px">gold</strong>, empty seats turn red.</div>
+   <div class="kp" style="margin-bottom:10px"><div class="${S.ch?"gold":"grn"}"><span>Changes</span><b>${S.ch}</b></div><div class="${S.empty?"red":"grn"}"><span>Empty seats</span><b>${S.empty}</b></div><div><span>Absent</span><b>${S.absent.length}</b><small>${S.absent.map(id=>esc(personName(id,id))).join(", ")}</small></div><div><span>Spare</span><b>${S.spare.length}</b><small>${S.spare.map(id=>esc(personName(id,id))).join(", ")}</small></div></div></div>
+   <div class="nptw"><table class="npt"><thead><tr><th>Vehicle</th><th>Driver</th><th>Conductor</th></tr></thead><tbody>
+    <tr class="grp"><td colspan="3">First round · 6:00</td></tr>${rows(R.filter(r=>r.first))}
+    ${R.some(r=>!r.first)?`<tr class="grp"><td colspan="3">Second round · 7:30 (pre-primary)</td></tr>${rows(R.filter(r=>!r.first))}`:""}</tbody></table></div>
+   <div class="actions" style="margin:12px 14px"><button class="btn primary" id="nplCopy">Copy Hindi plan for WhatsApp</button>${S.ch?`<button class="btn" id="nplStd">Reset to regular plan</button>`:""}</div>
+   <details style="margin:0 14px 12px"><summary style="cursor:pointer;color:var(--navy);font-weight:600">See the WhatsApp message</summary><div class="wa" id="nplPrev">${esc(planMsg())}</div></details>`}
+document.addEventListener("click",async e=>{const c=e.target.closest("[data-npc]");if(c){e.stopPropagation();npSel=c.dataset.npc;render();setTimeout(()=>{const s=$("npl-"+npSel);s&&s.focus()},30);return}
+  if(e.target.closest("#nplStd")){const t=tmrData();if(!t)return;const p={};Object.keys(t.plan||{}).forEach(k=>p[k]=null);planRows().forEach(r=>r.cells.forEach(c=>{if(c)p[c]=planReg(c)}));t.plan=Object.assign({},p);
+    const att={},cov={};PEOPLE().forEach(id=>{if((t.att||{})[id]==="A"){att[id]="P";t.att[id]="P"}});RES.forEach(r=>{if((t.cover||{})[r.id]){cov[r.id]="";t.cover[r.id]=""}});queue({plan:p,att,cover:cov},nextDay(date));render();return}
+  if(e.target.closest("#nplCopy")){const m=planMsg();try{await navigator.clipboard.writeText(m);setStatus("Hindi plan copied — paste it in WhatsApp.")}catch(err){const d=e.target.closest(".rows").querySelector("details");if(d)d.open=true;setStatus("Open the message below and copy it.")}}},true);
+document.addEventListener("change",e=>{const c=e.target.dataset&&e.target.dataset.np;if(!c)return;const t=tmrData();if(!t)return;let v=e.target.value;if(v==="__reg")v=planReg(c);
+  t.plan=t.plan||{};t.plan[c]=v;npSel="";queue({plan:{[c]:v}},nextDay(date));render()});
+document.addEventListener("focusout",e=>{if(e.target.dataset&&e.target.dataset.np){setTimeout(()=>{if(npSel===e.target.dataset.np&&document.activeElement!==e.target){npSel="";render()}},200)}});
+
 $("date").value=date; render(); loadHistory();
 setInterval(()=>{if(date===todayIST()&&!document.activeElement?.matches("input,textarea"))render()},60000);
 (async()=>{try{db=await FISDB.ready()}catch(e){db=null}
   subscribe(); loadHistory(); loadSal(); loadVeh(); loadSvc();
+  if(db)db.doc("roster/tasks").onSnapshot(x=>{if(tkEdit)return;const d=x.exists?x.data():null;if(d&&Array.isArray(d.w)){applyTasks(d.w);render()}},()=>{});
   if(db)db.doc("roster/sup").onSnapshot(s=>{supTpl=s.exists?s.data():null;render()},()=>{});
   if(db)db.doc("roster/wash").onSnapshot(s=>{const d=s.exists?s.data():null;washTpl=d&&Array.isArray(d.list)?d.list:null;render()},()=>{});
   let preFix=false;
-  if(db)db.doc("roster/main").onSnapshot(s=>{const ae=document.activeElement?.dataset;if(ae&&(ae.r||ae.pre))return;const d=s.exists?s.data():{};roster={veh:{...(d.veh||{})},area:{...(d.area||{})},name:{...(d.name||{})},phone:{...(d.phone||{})},hi:{...(d.hi||{})},pre:Array.isArray(d.pre)?d.pre:[],mig:{...(d.mig||{})},g:{...(d.g||{})},rtm:{...(d.rtm||{})},rta:{...(d.rta||{})},cleaner:{...(d.cleaner||{})}};
+  if(db)db.doc("roster/main").onSnapshot(s=>{const ae=document.activeElement?.dataset;if(ae&&(ae.r||ae.pre))return;const d=s.exists?s.data():{};roster={veh:{...(d.veh||{})},area:{...(d.area||{})},name:{...(d.name||{})},phone:{...(d.phone||{})},hi:{...(d.hi||{})},pre:Array.isArray(d.pre)?d.pre:[],mig:{...(d.mig||{})},g:{...(d.g||{})},rtm:{...(d.rtm||{})},rta:{...(d.rta||{})},cleaner:{...(d.cleaner||{})},vci:Array.isArray(d.vci)?d.vci:null,reporters:Array.isArray(d.reporters)?d.reporters:null};
     // one-time change asked on 18 Nov 2026: Bus G second round is driven by Manish; Nitin stays spare
     if(s.exists&&!preFix&&!roster.mig.g1118){preFix=true;const G=roster.pre.find(p=>p.code==="G");if(G){G.driver=roster.name.p11d||"Manish";G.dphone=roster.phone.p11d||"";}roster.mig.g1118=1;saveRoster()}
     render()},()=>{});
