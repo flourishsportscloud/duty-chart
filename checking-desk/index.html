@@ -86,6 +86,44 @@ function seedDemo(){
    B({title:'English (FF) Book',material:'Book',subject:'English (FF)',sections:'B',bundle:31,from:hm(m+50),to:hm(m+110)}),
    B({title:'Science Notebook',subject:'Science',sections:'A B'})
   ]);
+
+  /* ---- every other class, both days ---- */
+  var SECS={1:'A B C',2:'A B C',3:'A B C',4:'A B C',5:'A B C',6:'A B C',7:'A B C',8:'A B C',9:'A B',10:'A B',11:'A'};
+  var SUBJ={P:['EVS','Hindi 1','Maths','English','Science'],S:['Maths','Science','S.St','English (FF)','Hindi (Sparsh)','Sanskrit']};
+  ['P1','P2','P3','P4','P5','S6','S7','S8','S9','S10','S11'].forEach(function(uid,i){
+    var num=+uid.slice(1),w=uid[0],secs=SECS[num].split(' '),sa=secs[0],sb=secs[1]||secs[0],sj=SUBJ[w][i%SUBJ[w].length],sj2=SUBJ[w][(i+2)%SUBJ[w].length];
+    var cm=w==='P'?({P1:'Rashami',P2:'Rashami',P3:'Pooja',P4:'Komal',P5:'Mansi'})[uid]:'CM';
+    var ment=function(o){return B(Object.assign({by:'Mentor'},o))};
+    if(!L.docs['days/'+YD+'__'+uid]){
+      mk(YD,uid,[
+        rv(ck(B({title:'Diary checking',material:'Diary',bundle:30+i,from:'08:30',to:'10:00'}),cm,1500),'Reviewer',0,[],'All signed'),
+        rv(du(B({title:sj+' NB',subject:sj,lesson:'L-'+(5+i%4),sections:sa,bundle:34+i,from:'10:00',to:'11:15'}),cm,1400,2+i%4,'Absent students'),'Reviewer',i%3?0:3,i%3?[]:['p_demo'+(1+i%3)],i%3?'':'Presentation errors'),
+        rn(ck(B({title:sj2+' Book',material:'Book',subject:sj2,sections:sb,bundle:33+i,from:'12:00',to:'13:00'}),cm,1300),'Reviewer',i%3+1,'Books left at home'),
+        du(B({title:sj+' Book',material:'Book',subject:sj,lesson:'L-'+(3+i%5),sections:secs.join(' '),bundle:60+i,from:'13:00',to:'14:00'}),cm,1250,3+i%3,'Not brought')
+      ]);
+    }
+    if(!L.docs['days/'+TD+'__'+uid]){
+      mk(TD,uid,[
+        rv(ck(B({title:'Diary checking',material:'Diary',bundle:30+i,from:'08:30',to:'10:00'}),cm,300),'Reviewer',i%2?0:2,i%2?[]:['p_demo'+(1+i%3)],i%2?'Diaries signed':'Two diaries unsigned'),
+        du(B({title:sj+' NB',subject:sj,lesson:'L-'+(6+i%3),sections:sa,bundle:34+i,from:hm(m-110),to:hm(m-50)}),cm,55,1+i%3,'Pending submission'),
+        B({title:sj2+' Book',material:'Book',subject:sj2,sections:sb,bundle:33+i,from:hm(m-15),to:hm(m+45)}),
+        B({title:sj+' NB',subject:sj,lesson:'L-'+(6+i%3),sections:sb,bundle:34+i,from:hm(m+50),to:hm(m+110),after:i%2?hm(m+40):''}),
+        B({title:sj2+' NB',subject:sj2,sections:sa,bundle:32+i,from:hm(m-300),to:hm(m-240)}),
+        B({title:sj2+' Book L-'+(9+i%3),material:'Book',subject:sj2,lesson:'L-'+(9+i%3),sections:secs.join(' ')}),
+        ment({title:'Test Notebook',material:'Test Notebook',subject:'Test Notebook',sections:secs.join(' ')})
+      ]);
+    }
+  });
+  /* ---- the next day, already prepared for two classes (Prepare next day) ---- */
+  var MD=fd(new Date(n.getTime()+864e5));
+  ['P5','S6'].forEach(function(uid){
+    var cnt=0,sl={},T=L.docs['days/'+TD+'__'+uid];
+    sl.t0={order:0,kind:'duty',title:'Morning duty',from:'07:00',to:'07:30',cm:'pending',by:'CM'};
+    sl.t1={order:1,kind:'check',title:'Diary checking',material:'Diary',from:'08:00',to:'09:30',cm:'pending',by:'CM'};
+    Object.keys(T.slots).forEach(function(id){var x=T.slots[id];if(x.by!=='Mentor'&&(x.cm==='due'||(!x.from&&x.cm==='pending'))){sl['c_'+id]={order:50+(cnt++),kind:'check',title:'Due · '+([x.subject,x.lesson].filter(Boolean).join(' ')||x.title),material:x.material||'',subject:x.subject||'',lesson:x.lesson||'',sections:x.sections||'',bundle:x.cm==='due'?x.due:x.bundle,by:'CM',carry:true,cm:'pending',from:'',to:''}}});
+    L.docs['days/'+MD+'__'+uid]={date:MD,unit:uid,slots:sl};
+  });
+  window.__demoDates={y:YD,t:TD,m:MD};
 }
 function local(fn,a){
   if(fn==='ping')return true;
@@ -176,7 +214,11 @@ var ready=new Promise(function(resolve){
     };
   }
   function start(){
-    if(PREVIEW){var b=document.createElement('div');b.textContent='PREVIEW · sample data only, nothing is saved. The live desk opens once it is connected.';b.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:9999;background:#E3A94F;color:#1B2340;font:600 12.5px Inter,system-ui,sans-serif;text-align:center;padding:6px 10px';document.body.appendChild(b);resolve();return}
+    if(PREVIEW){var b=document.createElement('div'),dd=window.__demoDates||{},lab=function(d){var x=d.split('-');return new Date(+x[0],+x[1]-1,+x[2],12).toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'})};
+      b.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:9999;background:#1F2D5A;color:#fff;font:600 12.5px Inter,system-ui,sans-serif;display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;padding:8px 10px;border-top:3px solid #E3A94F';
+      b.innerHTML='<span style="color:#F4D9A6">PREVIEW · sample data only, nothing is saved. Data is loaded for</span>'+[['y','earlier day'],['t','today'],['m','plan prepared from carry-over']].map(function(a){return '<button data-go="'+dd[a[0]]+'" style="background:#E3A94F;color:#1B2340;border:0;border-radius:8px;padding:5px 10px;font-weight:700;cursor:pointer">'+lab(dd[a[0]])+' · '+a[1]+'</button>'}).join('');
+      b.addEventListener('click',function(ev){var g=ev.target.getAttribute&&ev.target.getAttribute('data-go');if(!g)return;var i=document.getElementById('datepick');if(!i){var nb=document.querySelector('nav button');if(nb)nb.click();i=document.getElementById('datepick')}if(i){i.value=g;i.dispatchEvent(new Event('change',{bubbles:true}))}});
+      document.body.appendChild(b);document.body.style.paddingBottom='56px';resolve();return}
     if(!CODE){gate();return}
     call('ping').then(resolve).catch(function(e){if(e.auth){CODE='';try{localStorage.removeItem('cd_tok')}catch(x){}gate()}else resolve()});
   }
