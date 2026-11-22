@@ -549,7 +549,7 @@ const DAY_TEMPLATE=[
  {from:'14:30',to:'14:45',kind:'duty',title:'Departure duty'}
 ];
 const MATERIALS=['Book','Notebook','Assignment','Test','Diary','Other'];
-const NAV=[{id:'board',label:'Day Plan'},{id:'desks',label:'Dashboard'},{id:'setup',label:'Team & Setup'}];
+const NAV=[{id:'board',label:'Day Plan'},{id:'desks',label:'Desks'},{id:'dash',label:'Dashboard'},{id:'setup',label:'Team & Setup'}];
 const ROLE_LABEL={admin:'Admin',head:'Head (PM / CMH / PL)',cm:'Class Manager',guest:'Guest (view only)'};
 const ADMINS=['Harshada','Rahul','Santosh','Sarita','Shubhangi','Garima','Poonam','Sharda','Karishma','Sabah','Asha','Neetu','Divyanshi','Diksha','Shelly'];
 const SEC_ALL='6 7 8 9 10 11';
@@ -754,10 +754,10 @@ function render(){
   
   if(!S.me&&!S.dbMissing)h+='<div class="empty"><b>Choose who you are</b>Tap “Who are you?” at the top to see your plan.</div>';
   else if(S.tab==='board')h+=renderBoard();
-  else if(S.tab==='desks')h+=renderDesks();
+  else if(S.tab==='desks'||S.tab==='dash')h+=renderDesks();
   else if(S.tab==='setup')h+=renderSetup();
   else h+=renderBoard();
-  h+='<div class="ver">CM Checking Desk · version 7 · 22 Nov 2026</div>';
+  h+='<div class="ver">CM Checking Desk · version 8 · 22 Nov 2026</div>';
   if(S.lightbox)h+='<div class="modal light" data-act="img-close"><img src="/_blob/'+esc(S.lightbox)+'" alt="Error photo"></div>';
   if(S.toast)h+='<div class="toast" role="status">'+esc(S.toast)+'</div>';
   m.innerHTML=h;
@@ -1079,9 +1079,10 @@ function renderReports(sc,sl){
   return h;
 }
 function renderDesks(){
+  const dash=S.tab==='dash';if(!dash&&S.desk==='rep')S.desk='all';
   const sc=scopeUnits(),ps=people();
   const names=[];ps.filter(p=>p.role!=='admin'&&p.units.length).forEach(p=>{if(names.indexOf(p.name)<0)names.push(p.name)});
-  let h=bar2(true)+'<div class="deskpick">'+['all','cm','head','rep'].map(k=>'<button class="dk'+(S.desk===k?' on':'')+'" data-act="desk" data-v="'+k+'"><b>'+DESK_INFO[k][0]+'</b><small>'+DESK_INFO[k][2]+'</small></button>').join('')+'</div>';
+  let h=bar2(true)+(dash?'':'<div class="deskpick">'+['all','cm','head'].map(k=>'<button class="dk'+(S.desk===k?' on':'')+'" data-act="desk" data-v="'+k+'"><b>'+DESK_INFO[k][0]+'</b><small>'+DESK_INFO[k][2]+'</small></button>').join('')+'</div>');
   h+='<div class="whobar" role="group" aria-label="Choose person"><button class="cpc'+(!S.who?' on':'')+'" data-act="who" data-v="">Everyone</button>'+names.map(n=>'<button class="cpc'+(S.who===n?' on':'')+'" data-act="who" data-v="'+esc(n)+'">'+esc(n)+'</button>').join('')+'</div>';
   const sl=scopeSlots(sc),tot={items:0,done:0,dueNb:0,errors:0,late:0};
   sc.forEach(u=>{const s=stats(S.date,u.id);Object.keys(tot).forEach(k=>tot[k]+=s[k]||0)});
@@ -1092,10 +1093,10 @@ function renderDesks(){
     const d=mt?[mt+' due','Items of this type marked Due by the Class Manager',x=>x.s.cm==='due'&&(x.s.material||'Other')===mt]:DRILL[S.drill],rows=sl.filter(d[2]);
     h+='<div class="strip drill"><div class="sh"><b>'+d[0]+' · '+rows.length+'</b><span>'+d[1]+(S.who?' · '+esc(S.who):'')+'</span><button class="qb" data-act="drill" data-v="">Close</button></div>'+(rows.length?rows.map(drillRow).join(''):'<div class="empty" style="margin:10px"><b>Nothing here</b>No items for this date.</div>')+'</div>';
   }
-  if(S.desk==='all'){
-    ['P','S'].forEach(w=>{const us=sc.filter(u=>u.wing===w);if(us.length)h+=secHead(WING[w].name,dayShort(S.date))+'<div class="cgrid">'+us.map(classCard).join('')+'</div>'});
-  }else if(S.desk==='rep'){
+  if(dash){
     h+=renderReports(sc,sl);
+  }else if(S.desk==='all'){
+    ['P','S'].forEach(w=>{const us=sc.filter(u=>u.wing===w);if(us.length)h+=secHead(WING[w].name,dayShort(S.date))+'<div class="cgrid">'+us.map(classCard).join('')+'</div>'});
   }else if(S.desk==='cm'){
     const l=ps.filter(p=>p.role==='cm'&&(!S.who||p.units.some(x=>sc.some(u=>u.id===x))));
     h+=secHead('Class Managers','Checked, due and errors found in their work')+(l.length?'<div class="pgrid">'+l.map(personCard).join('')+'</div>':'<div class="empty"><b>No Class Managers</b>Add names in Team & Setup.</div>');
