@@ -146,7 +146,7 @@ function merge(a,b){
   var o=(a&&typeof a==='object'&&!Array.isArray(a))?JSON.parse(JSON.stringify(a)):{};
   Object.keys(b).forEach(function(k){o[k]=merge(o[k],b[k])});return o;
 }
-if(PREVIEW)seedDemo();
+if(PREVIEW){L.docs['config/roster']={units:{P1:{cm:'Manisha',reviewer:'Sanjana'},P2:{cm:'Rashami',reviewer:'Sanjana'},P3:{cm:'Pooja',reviewer:'Neetu'},P4:{cm:'Komal',reviewer:'Divyanshi'},P5:{cm:'Mansi',reviewer:'Diksha'},S6:{cm:'Manisha'},S7:{cm:'Rashmi'},S8:{cm:'Tanushri'},S9:{cm:'Mansi'},S10:{cm:'Pooja'},S11:{cm:'Upinder'}}}}
 var cache={days:{},docs:{}},ver=-1,dates=[],qL=[],dL=[],busy=false,again=false,failed=0;
 function snapDays(){var ids=Object.keys(cache.days);return{docs:ids.map(function(id){return{id:id,data:function(){return cache.days[id]}}}),metadata:{fromCache:false}}}
 function snapDoc(p){var v=cache.docs[p];return{exists:!!v,data:function(){return v}}}
@@ -220,7 +220,7 @@ var ready=new Promise(function(resolve){
   function start(){
     if(PREVIEW){var b=document.createElement('div'),dd=window.__demoDates||{},lab=function(d){var x=d.split('-');return new Date(+x[0],+x[1]-1,+x[2],12).toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'})};
       b.style.cssText='position:relative;z-index:9999;background:#1F2D5A;color:#fff;font:600 12.5px Inter,system-ui,sans-serif;display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;padding:8px 10px;border-bottom:3px solid #E3A94F';
-      b.innerHTML='<span style="color:#F4D9A6">PREVIEW · sample data only, nothing is saved. Data is loaded for</span>'+[['y','earlier day'],['t','today'],['m','plan prepared from carry-over']].map(function(a){return '<button data-go="'+dd[a[0]]+'" style="background:#E3A94F;color:#1B2340;border:0;border-radius:8px;padding:5px 10px;font-weight:700;cursor:pointer">'+lab(dd[a[0]])+' · '+a[1]+'</button>'}).join('');
+      b.innerHTML='<span style="color:#F4D9A6">NOT CONNECTED YET · nothing entered here is saved</span>';
       b.addEventListener('click',function(ev){var g=ev.target.getAttribute&&ev.target.getAttribute('data-go');if(!g)return;var i=document.getElementById('datepick');if(!i){var nb=document.querySelector('nav button');if(nb)nb.click();i=document.getElementById('datepick')}if(i){i.value=g;i.dispatchEvent(new Event('change',{bubbles:true}))}});
       document.body.insertBefore(b,document.body.firstChild);resolve();return}
     if(!CODE){gate();return}
