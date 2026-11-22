@@ -120,4 +120,16 @@ function setupSheets(){
   if(!ss.getSheetByName('Roster')) Logger.log('Now import FIS_Class_Lists_1-11.csv as a sheet named Roster.');
 }
 /* Run to sign everyone out (e.g. after changing STAFF_SUFFIX). */
+/* One-time: copy the records from a helper sheet (same columns as Docs) into Docs, then fix the revision counter.
+   Run importSeed after setupSheets. SEED_SHEET_ID is the id of the helper sheet "Mentor seed docs". */
+function importSeed(){
+  const id = props_().getProperty('SEED_SHEET_ID'); if(!id) fail('Set the script property SEED_SHEET_ID first.');
+  const src = SpreadsheetApp.openById(id).getSheets()[0], rows = src.getDataRange().getValues().slice(1).filter(r => r[0]);
+  const sh = sheet_('Docs'), have = {}; if(sh.getLastRow() > 1) sh.getRange(2,1,sh.getLastRow()-1,1).getValues().forEach(r => have[String(r[0])] = 1);
+  const add = rows.filter(r => !have[String(r[0])]).map(r => r.slice(0, HEAD.length + DOC_CHUNKS).map((v,i) => i === 2 ? "'" + (v instanceof Date ? Utilities.formatDate(v, TZ, 'yyyy-MM-dd') : v) : v));
+  if(add.length) sh.getRange(sh.getLastRow()+1, 1, add.length, add[0].length).setValues(add);
+  fixRev();
+  Logger.log('Imported ' + add.length + ' records.');
+}
+function fixRev(){ const sh = sheet_('Docs'); if(sh.getLastRow() < 2) return; const m = Math.max.apply(null, sh.getRange(2,4,sh.getLastRow()-1,1).getValues().map(r => Number(r[0]) || 0)); const p = props_(); if(m > Number(p.getProperty('rev') || 0)) p.setProperty('rev', String(m)); }
 function signOutEveryone(){ const p = props_(); p.setProperty('TOKEN_VER', String(Number(p.getProperty('TOKEN_VER') || 1) + 1)); }

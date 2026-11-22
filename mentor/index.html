@@ -298,7 +298,7 @@ function chrome(){
   const ini=(ME||'?').split(/\s+/).map(x=>x[0]).slice(0,2).join('').toUpperCase();
   $('meBtn').innerHTML='<span class="av">'+esc(ini)+'</span><span style="min-width:0"><b>'+esc(ME||'Sign in')+'</b><small>'+esc(roleOf())+'</small></span>';
   $('syncSt').textContent=syncMsg;
-  $('banner').innerHTML=API_URL?'':'<div class="banner">'+(SEED_DOCS?'Imported records — real CAR and CCR data to date (Oct–Nov 2026). Records stay on this device until the server is connected.':'Demo data — sample records for every class so the dashboards and reports can be reviewed. Records stay on this device until the server is connected.')+'</div>';
+  $('banner').innerHTML=API_URL?'':(SEED_DOCS?'<div class="banner">Imported records — real CAR and CCR data to date (Oct–Nov 2026). Records stay on this device until the server is connected.</div>':'<div class="banner">Not connected to the school server yet — marks saved now stay on this device only.</div>');
   $('ctx').classList.toggle('hide',U.tab==='set'||!!U.open);
 }
 /* ---------- charts (inline SVG) ---------- */
@@ -839,7 +839,7 @@ function seedSample(){
 }
 function loadSeedDocs(){if(!SEED_DOCS||lsGet('real2',0))return;try{Object.keys(DB).forEach(k=>{if(DB[k]&&(DB[k].sm||(DB[k].im&&!DB[k].ts2&&!DB[k].ed)))delete DB[k]});Object.keys(SEED_DOCS).forEach(k=>{if(!DB[k])DB[k]=SEED_DOCS[k]});persist();lsPut('real2',1);lsPut('seeded3',1)}catch(e){}}
 if(!API_URL){loadSeedDocs()}
-if(!API_URL&&!Object.keys(DB).length&&!lsGet('seeded3',0)){try{seedSample()}catch(e){}}
+/* sample data is no longer loaded automatically; real records come from the server */
 /* ---------- render / events ---------- */
 function render(){
   chrome();const v=$('view');
