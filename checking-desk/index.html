@@ -7,8 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script>
-/* Hosted-mode bridge: gives the page the same db/user/assets calls it uses inside Claude, backed by the Google Apps Script web app in Code.gs. */
+<script>/* Hosted-mode bridge: gives the page the same db/user/assets calls it uses inside Claude, backed by the Google Apps Script web app in Code.gs. */
 (function(){
 var API=(new URLSearchParams(location.search).get('api'))||"";
 var CODE='';try{CODE=localStorage.getItem('cd_tok')||''}catch(e){}
@@ -215,10 +214,10 @@ var ready=new Promise(function(resolve){
   }
   function start(){
     if(PREVIEW){var b=document.createElement('div'),dd=window.__demoDates||{},lab=function(d){var x=d.split('-');return new Date(+x[0],+x[1]-1,+x[2],12).toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'})};
-      b.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:9999;background:#1F2D5A;color:#fff;font:600 12.5px Inter,system-ui,sans-serif;display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;padding:8px 10px;border-top:3px solid #E3A94F';
+      b.style.cssText='position:relative;z-index:9999;background:#1F2D5A;color:#fff;font:600 12.5px Inter,system-ui,sans-serif;display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;padding:8px 10px;border-bottom:3px solid #E3A94F';
       b.innerHTML='<span style="color:#F4D9A6">PREVIEW · sample data only, nothing is saved. Data is loaded for</span>'+[['y','earlier day'],['t','today'],['m','plan prepared from carry-over']].map(function(a){return '<button data-go="'+dd[a[0]]+'" style="background:#E3A94F;color:#1B2340;border:0;border-radius:8px;padding:5px 10px;font-weight:700;cursor:pointer">'+lab(dd[a[0]])+' · '+a[1]+'</button>'}).join('');
       b.addEventListener('click',function(ev){var g=ev.target.getAttribute&&ev.target.getAttribute('data-go');if(!g)return;var i=document.getElementById('datepick');if(!i){var nb=document.querySelector('nav button');if(nb)nb.click();i=document.getElementById('datepick')}if(i){i.value=g;i.dispatchEvent(new Event('change',{bubbles:true}))}});
-      document.body.appendChild(b);document.body.style.paddingBottom='56px';resolve();return}
+      document.body.insertBefore(b,document.body.firstChild);resolve();return}
     if(!CODE){gate();return}
     call('ping').then(resolve).catch(function(e){if(e.auth){CODE='';try{localStorage.removeItem('cd_tok')}catch(x){}gate()}else resolve()});
   }
@@ -231,9 +230,7 @@ window.claude={use:function(n){
   return Promise.reject(new Error('no'));
 }};
 })();
-
-</script>
-<style>
+</script><style>
 /* FIS house style: navy header, gold rule, Lora headings, cream paper. Single light theme by choice. Brand colours are variables so Setup can change them. */
 :root{
   color-scheme:light;
@@ -411,6 +408,50 @@ main{padding:18px 18px 70px;max-width:1180px;margin:0 auto}
   .pt-title{grid-column:1/-1}.pt-st,.pt-in{grid-column:1}.pt-act{grid-column:2;grid-row:auto}
   .pt-detail{padding:4px 14px 14px}
 }
+
+/* v3 layout */
+.eyebrow{font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:4px}
+.cstrip .who{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.pp{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:5px 11px;display:flex;flex-direction:column;line-height:1.2}
+.pp i{font-style:normal;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:#CBD3EA}.pp b{color:#fff;font-size:14px}
+.cchips{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.cgrp{display:flex;gap:6px;overflow-x:auto;align-items:stretch;padding-bottom:2px;scrollbar-width:thin}
+.cgrp>span{flex:none;writing-mode:vertical-rl;transform:rotate(180deg);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);font-weight:700;align-self:center}
+.cchip{flex:none;display:flex;flex-direction:column;align-items:flex-start;gap:1px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:7px 12px;cursor:pointer;min-width:92px;box-shadow:var(--shadow)}
+.cchip b{font:700 14px var(--head);color:var(--navy)}.cchip small{font-size:11px;color:var(--mute)}
+.cchip[aria-pressed=true]{background:var(--navy);border-color:var(--navy)}.cchip[aria-pressed=true] b{color:#fff}.cchip[aria-pressed=true] small{color:var(--gold)}
+.hintbar{background:var(--gold-soft);border:1px solid color-mix(in srgb,var(--gold) 50%,#fff);border-radius:12px;padding:10px 14px;margin:12px 0;color:var(--gold-ink);font-size:13.5px}
+.strip{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--gold);border-radius:14px;box-shadow:var(--shadow);margin:12px 0;overflow:hidden}
+.strip.qa{border-top-color:var(--navy);padding:0 16px 14px}
+.strip .sh{display:flex;gap:10px;align-items:center;padding:11px 16px;background:var(--cream);margin:0 -16px 8px;flex-wrap:wrap}
+.strip.carry .sh{margin:0 0 4px}.sh b{font:700 15px var(--head);color:var(--navy)}.sh span{color:var(--mute);font-size:12.5px;flex:1}
+.srow{display:flex;gap:12px;align-items:center;padding:10px 16px;border-top:1px solid var(--line)}.srow .sm{flex:1;min-width:0}.srow .sm b{font:700 16px var(--head);color:var(--navy)}
+.no{flex:none;display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--navy);color:#fff;font:700 13px var(--body)}
+.pn{display:flex;gap:12px;align-items:flex-start}.pn .no{margin-top:2px}
+.qrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:9px 0}.ql{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:700;width:64px}
+.qgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:8px 0}.chips{display:flex;gap:6px;flex-wrap:wrap}.to{color:var(--mute)}
+.qrow input[type=time]{padding:8px;border:1px solid var(--line);border-radius:8px;background:#fff}
+.ccard{display:block;text-align:left;background:var(--card);border:1px solid var(--line);border-top:4px solid var(--navy);border-radius:14px;padding:13px 14px;box-shadow:var(--shadow);cursor:pointer;width:100%}
+.ccard:hover{border-top-color:var(--gold)}.cc-top{display:flex;justify-content:space-between;align-items:baseline}.cc-top b{font:700 18px var(--head);color:var(--navy)}
+.cc-names{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--mute);margin:5px 0 8px}.cc-names b{color:var(--ink)}
+.cc-n{display:flex;gap:5px;flex-wrap:wrap;margin-top:9px}
+.cgrid,.pgrid,.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}.pgrid{grid-template-columns:repeat(auto-fill,minmax(290px,1fr))}
+.pcard{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--purple);border-radius:14px;padding:14px;box-shadow:var(--shadow)}
+.pc-top{display:flex;gap:11px;align-items:center;margin-bottom:8px}.pc-top b{font:700 16px var(--head);color:var(--navy)}
+.av{width:38px;height:38px;border-radius:50%;background:var(--navy);color:var(--gold);display:grid;place-items:center;font:700 17px var(--head)}
+.deskseg{margin-bottom:12px;max-width:100%;overflow-x:auto}
+.tcard .field{margin-top:8px}.srow2{display:grid;grid-template-columns:2fr 1.4fr 1.4fr;gap:10px;margin-bottom:8px}
+.pgroup{margin-top:12px}.pgroup>span{display:block;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);font-weight:700;margin-bottom:6px}
+.cpc small{opacity:.7}
+.cpc{border:1px solid var(--line);background:#fff;border-radius:20px;padding:7px 13px;font-weight:600;font-size:13px;cursor:pointer;color:var(--navy)}.cpc.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+@media (max-width:760px){
+  .qgrid,.srow2{grid-template-columns:1fr}.ql{width:100%}
+  header{position:static}
+  nav{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--navy);border-top:3px solid var(--gold);padding:6px 6px calc(6px + env(safe-area-inset-bottom));max-width:none;justify-content:space-between;gap:4px;overflow:visible}
+  nav button{flex:1;font:600 11.5px var(--body);padding:9px 4px;text-align:center;white-space:normal;line-height:1.2;border-radius:10px}
+  main{padding-bottom:92px}
+  .pt-row{padding:12px 12px}.pt-title{font-size:16px}
+}
 /* tables */
 .tablewrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-top:4px solid var(--navy);border-radius:14px;box-shadow:var(--shadow)}
 table{border-collapse:collapse;width:100%;min-width:780px}
@@ -497,7 +538,10 @@ const DAY_TEMPLATE=[
  {from:'14:30',to:'14:45',kind:'duty',title:'Departure duty'}
 ];
 const MATERIALS=['Book','Notebook','Assignment','Test','Diary','Other'];
-const NAV=[{id:'board',label:'Day Board'},{id:'overview',label:'Overview'},{id:'next',label:'Next-Day Plan'},{id:'setup',label:'Setup'}];
+const NAV=[{id:'board',label:'Day Plan'},{id:'next',label:'Plan Next Day'},{id:'desks',label:'Desks'},{id:'setup',label:'Team & Setup'}];
+const ROLE_LABEL={director:'Director / Admin',cmh:'PM / CM Head',cm:'Class Manager',pl:'PL / Floor Manager',guest:'Guest (view only)'};
+const DEFAULT_STAFF=[{name:'Harsh Yadav',role:'director',units:''},{name:'Santosh Yadav',role:'director',units:''},{name:'Sharda',role:'director',units:''}];
+const ALL_IDS=UNITS.map(u=>u.id);
 const FIS_THEME={navy:'#1F2D5A',gold:'#E3A94F',purple:'#5F3585',mag:'#C2385B'};
 
 /* ---------- helpers ---------- */
@@ -529,10 +573,9 @@ function hintMin(material,subject){
 }
 
 /* ---------- state ---------- */
-const me0=safeGet('fis-cd-me');
-const S={date:todayStr(),wing:'S',unit:'S6',tab:'board',role:me0&&me0.role||null,meUnit:me0&&me0.unit||null,name:me0&&me0.name||'',
+const me0=safeGet('fis-cd-me3');
+const S={date:todayStr(),unit:'P5',tab:'board',desk:'all',role:null,me:null,meUnits:[],staff:null,roleHint:me0&&me0.role||'',name:me0&&me0.name||'',
   days:{},known:{},cfg:{},theme:{},draft:{},open:{},assets:null,lightbox:null,delConfirm:null,db:null,canWrite:true,loaded:false,slow:false,toast:'',dbMissing:false};
-if(S.role==='cm'&&S.meUnit){S.unit=S.meUnit;S.wing=unitById(S.meUnit).wing}
 let unsubDays=null,loadTimer=null;
 
 /* ---------- theme ---------- */
@@ -543,6 +586,31 @@ function applyTheme(){
 
 /* ---------- roster ---------- */
 function roster(u){const c=S.cfg[u]||{},d=DEFAULT_ROSTER[u]||{};return {cm:c.cm!=null?c.cm:(d.cm||''),reviewer:c.reviewer!=null?c.reviewer:(d.reviewer||'')}}
+
+/* ---------- people and permissions ---------- */
+function parseUnits(tx){tx=String(tx||'').toLowerCase();if(/all/.test(tx))return ALL_IDS.slice();const out=[];(tx.match(/\d+/g)||[]).forEach(n=>{const id=(+n<=5?'P':'S')+(+n);if(unitById(id)&&out.indexOf(id)<0)out.push(id)});return out}
+function people(){
+  const map={};
+  const add=(name,role,units)=>{name=String(name||'').trim();if(!name)return;const k=role+'|'+name.toLowerCase();const p=map[k]||(map[k]={name:name,role:role,units:[]});units.forEach(u=>{if(p.units.indexOf(u)<0)p.units.push(u)})};
+  ((S.staff&&S.staff.list)||DEFAULT_STAFF).forEach(x=>add(x.name,x.role,x.role==='director'?ALL_IDS:parseUnits(x.units)));
+  UNITS.forEach(u=>{const r=roster(u.id);add(r.cm,'cm',[u.id]);add(r.reviewer,'cmh',[u.id])});
+  const order={director:0,cmh:1,cm:2,pl:3};
+  return Object.keys(map).map(k=>map[k]).sort((a,b)=>order[a.role]-order[b.role]||a.name.localeCompare(b.name));
+}
+function resolveMe(){
+  if(!S.name){S.me=null;S.role=null;S.meUnits=[];return}
+  const l=S.name.toLowerCase(),f=l.split(/\s+/)[0],ps=people();
+  const p=ps.find(x=>x.name.toLowerCase()===l&&x.role===S.roleHint)||ps.find(x=>x.name.toLowerCase()===l)||ps.find(x=>x.name.toLowerCase().split(/\s+/)[0]===f);
+  S.me=p?{name:p.name,role:p.role,units:p.units}:{name:S.name,role:'guest',units:[]};
+  S.role=(S.me.role==='director'||S.me.role==='cmh')?'manager':S.me.role==='cm'?'cm':'viewer';
+  S.meUnits=S.me.units;
+}
+const isDirector=()=>!!(S.me&&S.me.role==='director');
+const canEditU=u=>!!(S.canWrite&&S.me&&(S.me.role==='director'||(S.me.role==='cmh'&&S.meUnits.indexOf(u)>=0)));
+const canMarkU=u=>!!(S.canWrite&&S.me&&(canEditU(u)||(S.me.role==='cm'&&S.meUnits.indexOf(u)>=0)));
+function isMgr(){return canEditU(S.unit)}
+function visibleUnits(){return S.me&&S.me.role==='pl'&&S.meUnits.length?UNITS.filter(u=>S.meUnits.indexOf(u.id)>=0):UNITS}
+const whoName=()=>S.name||(S.me&&S.me.name)||'Staff';
 
 /* ---------- data access ---------- */
 function slotsOf(date,unit){
@@ -593,7 +661,7 @@ function queue(key,fn){
 }
 function errText(e){
   const c=e&&e.code;
-  if(c==='invalid_argument')return 'You can view this page but not change it.';
+  if(c==='invalid_argument')return 'You can view this page but not change it. Ask the owner for Contributor access.';
   if(c==='quota_exceeded')return 'The database is full. Delete old days before adding more.';
   return 'Could not save. Check the connection and try again.';
 }
@@ -614,6 +682,8 @@ function writeCfg(units){
     if(S.cfgKnown)await ref.update({units:units});else{await ref.set({units:units});S.cfgKnown=true}
   });
 }
+function readStaff(){const out=[];let i=0;while(document.getElementById('st-n-'+i)){out.push({name:document.getElementById('st-n-'+i).value.trim(),role:document.getElementById('st-r-'+i).value,units:document.getElementById('st-u-'+i).value.trim()});i++}return out.length?out:((S.staff&&S.staff.list)||DEFAULT_STAFF)}
+function writeStaff(list){if(!S.db)return Promise.resolve();return queue('staff',async()=>{await S.db.doc('config/staff').set({list:list});S.staff={list:list}})}
 function writeTheme(t){
   if(!S.db)return Promise.resolve();
   return queue('theme',async()=>{await S.db.doc('config/theme').set(t)});
@@ -623,8 +693,8 @@ function writeTheme(t){
 function subscribeDays(){
   if(!S.db)return;
   if(unsubDays){unsubDays();unsubDays=null}
-  const a=S.date,b=addDays(S.date,1);
-  unsubDays=S.db.collection('days').where('date','in',[a,b]).onSnapshot(snap=>{
+  const a=S.date,b=addDays(S.date,1),c0=addDays(S.date,-1);
+  unsubDays=S.db.collection('days').where('date','in',[c0,a,b]).onSnapshot(snap=>{
     const next={};
     snap.docs.forEach(d=>{next[d.id]=d.data()});
     S.days=next;
@@ -644,10 +714,13 @@ async function boot(){
   try{S.assets=await claude.use('assets')}catch(e){S.assets=null}
   try{const w=user&&user.can&&user.can('data.write');const wv=(w&&typeof w.then==='function')?await w:w;S.canWrite=wv!==false}catch(e){}
   subscribeDays();
-  db.doc('config/roster').onSnapshot(d=>{S.cfgKnown=d.exists;const v=d.exists?d.data():null;S.cfg=(v&&v.units)||{};render()},()=>{});
+  db.doc('config/roster').onSnapshot(d=>{S.cfgKnown=d.exists;const v=d.exists?d.data():null;S.cfg=(v&&v.units)||{};resolveMe();render()},()=>{});
+  db.doc('config/staff').onSnapshot(d=>{S.staffKnown=d.exists;S.staff=d.exists?d.data():null;resolveMe();render()},()=>{});
   db.doc('config/theme').onSnapshot(d=>{S.theme=d.exists?d.data():{};applyTheme();render()},()=>{});
   render();
-  if(!S.role)openRoleDialog();
+  try{const nm=localStorage.getItem('cd_name');if(!S.name&&nm){S.name=nm;resolveMe()}}catch(e){}
+  resolveMe();
+  if(!S.me)openRoleDialog();
 }
 
 /* ---------- toast ---------- */
@@ -665,11 +738,12 @@ function render(){
   if(S.dbMissing)h+='<div class="banner bad">Could not reach the shared plan. Check the connection and reload.</div>';
   else if(S.slow&&!S.loaded)h+='<div class="banner">Saved plans cannot be reached yet. This page keeps trying and will fill in when the connection returns.</div>';
   else if(S.slow)h+='<div class="banner">The connection dropped. What you see may be out of date.</div>';
-  if(!S.canWrite&&!S.dbMissing)h+='<div class="banner">You have view-only access. Ask the owner for Contributor access to update the plan.</div>';
-  if(S.tab==='board')h+=renderBoard();
-  else if(S.tab==='overview')h+=renderOverview();
-  else if(S.tab==='next')h+=renderNext();
-  else h+=renderSetup();
+  
+  if(!S.me&&!S.dbMissing)h+='<div class="empty"><b>Choose who you are</b>Tap “Who are you?” at the top to see your plan.</div>';
+  else if(S.tab==='board'||S.tab==='next')h+=renderBoard();
+  else if(S.tab==='desks')h+=renderDesks();
+  else if(S.tab==='setup')h+=renderSetup();
+  else h+=renderBoard();
   if(S.lightbox)h+='<div class="modal light" data-act="img-close"><img src="/_blob/'+esc(S.lightbox)+'" alt="Error photo"></div>';
   if(S.toast)h+='<div class="toast" role="status">'+esc(S.toast)+'</div>';
   m.innerHTML=h;
@@ -678,18 +752,16 @@ function render(){
 }
 function renderHeader(){
   const nav=document.getElementById('nav');
-  const items=NAV.filter(n=>isMgr()||n.id!=='setup');
-  nav.innerHTML=items.map((n,i)=>'<button data-act="tab" data-v="'+n.id+'"'+(S.tab===n.id?' class="on" aria-current="page"':'')+'><b>'+(i+1)+'</b>'+n.label+'</button>').join('');
+  const items=NAV.filter(n=>!(n.id==='next'&&S.me&&S.me.role==='cm'));
+  nav.innerHTML=items.map(n=>'<button data-act="tab" data-v="'+n.id+'"'+(S.tab===n.id?' class="on" aria-current="page"':'')+'>'+n.label+'</button>').join('');
   const d=new Date();
   document.getElementById('clock').textContent=new Intl.DateTimeFormat('en-IN',{weekday:'short',day:'numeric',month:'short'}).format(d)+' · '+clockTxt(d);
   const me=document.getElementById('me');
-  if(S.role){const u=S.role==='cm'&&S.meUnit?unitById(S.meUnit):null;me.textContent=(S.name||(isMgr()?'Manager':'Class Manager'))+' · '+(isMgr()?'Manager':'CM'+(u?' '+u.label.replace('Class ',''):''))}
-  else me.textContent='Choose role';
+  me.textContent=S.me?(S.me.name+' · '+ROLE_LABEL[S.me.role]):'Who are you?';
 }
-function bar2(showDate,showWing){
-  const wing=showWing&&isMgr()?'<div class="wing" role="group" aria-label="Wing"><button data-act="wing" data-v="P" aria-pressed="'+(S.wing==='P')+'">Primary 1–5</button><button data-act="wing" data-v="S" aria-pressed="'+(S.wing==='S')+'">Secondary 6–11</button></div>':'';
+function bar2(showDate){
   const date=showDate?'<div class="datebar"><button data-act="date-prev" aria-label="Previous day">‹</button><label class="datebtn" title="Click to pick a date"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span><b>'+dayLong(S.date)+'</b>'+(S.date===todayStr()?'<small>Today</small>':S.date===addDays(todayStr(),1)?'<small>Tomorrow</small>':S.date<todayStr()?'<small>Earlier day</small>':'<small>Upcoming</small>')+'</span><input type="date" id="datepick" value="'+S.date+'" aria-label="Pick a date"></label><button data-act="date-next" aria-label="Next day">›</button><button data-act="date-today">Today</button></div>':'';
-  return '<div class="bar2"><div class="tools">'+wing+'</div><div class="tools">'+date+'</div></div>';
+  return '<div class="bar2"><div class="tools"></div><div class="tools">'+date+'</div></div>';
 }
 const secHead=(t,sm)=>'<div class="secthead"><i></i><span>'+t+'</span>'+(sm?'<small>'+sm+'</small>':'')+'</div>';
 
@@ -703,25 +775,54 @@ function liveStrip(sp){
   if(nxt)return '<span class="live">Next · '+fmt(nxt.from)+' · '+esc(nxt.title||nxt.subject)+' · in '+mins(toMin(nxt.from)-nm)+'</span>';
   return '';
 }
+
+const QTYPES=[['Book','Book'],['Notebook','Notebook'],['Diary','Diary'],['Assignment','Assignment'],['Test','Test'],['Duty','Duty'],['Other','Other']];
+function personPills(u){const r=roster(u.id);return '<span class="pp"><i>Class Manager</i><b>'+(esc(r.cm)||'not set')+'</b></span><span class="pp"><i>'+WING[u.wing].mgr+'</i><b>'+(esc(r.reviewer)||'not set')+'</b></span>'}
+function classChips(){
+  const vis=visibleUnits();
+  const row=(w)=>{const us=vis.filter(u=>u.wing===w);return us.length?'<div class="cgrp"><span>'+(w==='P'?'Primary':'Secondary')+'</span>'+us.map(x=>{const r=roster(x.id);return '<button class="cchip" data-act="unit" data-v="'+x.id+'" aria-pressed="'+(x.id===S.unit)+'"><b>'+esc(x.label)+'</b><small>'+(esc(r.cm)||'—')+'</small></button>'}).join('')+'</div>':''};
+  return '<div class="cchips" role="group" aria-label="Choose class">'+row('P')+row('S')+'</div>';
+}
+function carryPanel(u,date){
+  const prev=addDays(date,-1),items=carryItems(prev,u.id),have=slotsOf(date,u.id).map(x=>x.id);
+  const todo=items.filter(s=>have.indexOf('c_'+s.id)<0);
+  if(!todo.length)return '';
+  let h='<div class="strip carry"><div class="sh"><b>Dues from '+dayShort(prev)+'</b><span>'+todo.length+' to put in this day</span>'+(canEditU(u.id)?'<button class="qb ok" data-act="carry-all">Add all</button>':'')+'</div>';
+  todo.forEach((s,i)=>{h+='<div class="srow"><span class="no">'+(i+1)+'</span><div class="sm"><b>'+esc([s.subject,s.lesson,s.material].filter(Boolean).join(' · ')||s.title)+'</b><div class="pt-sub">'+(s.sections?'<span class="tag">Sec '+esc(s.sections)+'</span>':'')+(s.cm==='due'?'<span class="pill p-warn">'+num(s.due)+' due</span>':'<span class="pill p-bad">not checked</span>')+'</div></div>'+(canEditU(u.id)?'<button class="qb" data-act="carry-one" data-id="'+s.id+'">+ Add</button>':'')+'</div>'});
+  return h+'</div>';
+}
+function quickAdd(u){
+  const d=S.draft['q']||(S.draft['q']={type:'Notebook',name:'',subject:'',lesson:'',secs:[],from:'',to:'',split:'one'});
+  const secs=u.sec.split('·').map(x=>x.trim()).filter(Boolean),duty=d.type==='Duty';
+  let h='<div class="strip qa"><div class="sh"><b>Add a task</b><span>Everything is optional — only the time matters</span></div><div class="qrow"><span class="ql">Task</span><div class="chips">'+QTYPES.map(x=>'<button type="button" class="cpc'+(d.type===x[0]?' on':'')+'" data-act="q-type" data-v="'+x[0]+'">'+x[1]+'</button>').join('')+'</div></div>';
+  h+='<div class="qgrid"><div class="field"><label for="q-sub">Subject</label><input id="q-sub" type="text" list="subjects" data-d="q" data-k="subject" value="'+esc(d.subject)+'" placeholder="Maths"></div><div class="field"><label for="q-les">Lesson / number</label><input id="q-les" type="text" data-d="q" data-k="lesson" value="'+esc(d.lesson)+'" placeholder="L-8"></div><div class="field"><label for="q-nm">Task name</label><input id="q-nm" type="text" list="titles" data-d="q" data-k="name" value="'+esc(d.name)+'" placeholder="'+(duty?'Lunch duty':'Auto from subject')+'"></div></div>';
+  if(!duty)h+='<div class="qrow"><span class="ql">Sections</span><div class="chips">'+secs.map(x=>'<button type="button" class="cpc'+(d.secs.indexOf(x)>=0?' on':'')+'" data-act="q-sec" data-v="'+x+'">'+x+(d.secs.indexOf(x)>=0&&d.secs.length>1?' · '+(d.secs.indexOf(x)+1):'')+'</button>').join('')+'</div></div>';
+  if(!duty&&d.secs.length>1)h+='<div class="qrow"><span class="ql">Plan</span><div class="chips"><button type="button" class="cpc'+(d.split==='one'?' on':'')+'" data-act="q-split" data-v="one">One block for all sections</button><button type="button" class="cpc'+(d.split==='each'?' on':'')+'" data-act="q-split" data-v="each">Each section one after another</button></div></div>';
+  h+='<div class="qrow"><span class="ql">Time</span><div class="field"><input id="q-from" type="time" aria-label="Start" data-d="q" data-k="from" value="'+esc(d.from)+'"></div><span class="to">to</span><div class="field"><input id="q-to" type="time" aria-label="End" data-d="q" data-k="to" value="'+esc(d.to)+'"></div><span class="note">Leave empty to keep it in the waiting list</span></div>';
+  h+='<div class="row"><button class="btn gold" data-act="q-save">Add to plan</button><button class="btn ghost" data-act="q-close">Close</button></div></div>';
+  return h;
+}
 function renderBoard(){
-  const u=unitById(S.unit)||UNITS[0],r=roster(u.id),sp=split(S.date,u.id),st=stats(S.date,u.id);
-  let h=bar2(true,true);
-  if(isMgr()){
-    h+='<div class="ucards" role="group" aria-label="Classes">'+UNITS.filter(x=>x.wing===S.wing).map(x=>{
-      const s=stats(S.date,x.id);
-      return '<button class="ucard" data-act="unit" data-v="'+x.id+'" aria-pressed="'+(x.id===u.id)+'"><b>'+esc(x.label)+'</b><small>'+esc(x.sec)+'</small><div class="mini"><div class="g"><span>Done</span><strong>'+s.done+'/'+s.items+'</strong></div><div class="w"><span>Due</span><strong>'+s.dueNb+'</strong></div><div class="'+(s.late?'r':'')+'"><span>Late</span><strong>'+s.late+'</strong></div></div></button>';
-    }).join('')+'</div>';
+  const planning=S.tab==='next';
+  if(visibleUnits().every(x=>x.id!==S.unit))S.unit=visibleUnits()[0].id;
+  const u=unitById(S.unit)||UNITS[0],sp=split(S.date,u.id),st=stats(S.date,u.id),edit=canEditU(u.id);
+  let h=bar2(true)+classChips();
+  h+='<div class="cstrip"><div><div class="eyebrow">'+(planning?'Plan next day':'Checking plan')+' · time based</div><h2>'+esc(u.label)+' · '+(planning?'Plan for ':'Checking plan · ')+dayShort(S.date)+'</h2><div class="who">'+personPills(u)+'</div></div>'+liveStrip(sp)+'</div>';
+  if(planning)h+='<div class="hintbar"><b>How this works:</b> 1) Dues from the day before come in below. 2) Give each task a start and end time. 3) The Class Manager sees the plan in the morning and marks Checked or Due.</div>';
+  h+='<div class="kpis"><div class="kpi g"><span>Done</span><b>'+st.done+'/'+st.items+'</b></div><div class="kpi w"><span>Notebooks due</span><b>'+st.dueNb+'</b></div><div class="kpi"><span>Reviewed</span><b>'+st.reviewed+'/'+st.toReview+'</b></div><div class="kpi '+(st.errors?'r':'')+'"><span>Errors</span><b>'+st.errors+'</b></div></div>';
+  if(edit){
+    h+=carryPanel(u,S.date);
+    h+='<div class="tools" style="margin:12px 0;display:flex;gap:8px;flex-wrap:wrap">'+(S.open.qa?'':'<button class="btn gold" data-act="q-open">+ Add task</button>')+(sp.timed.length?'':'<button class="btn ghost" data-act="template">Add usual duties and diary</button>')+'</div>';
+    if(S.open.qa)h+=quickAdd(u);
   }
-  h+='<div class="cstrip"><div><h2>'+esc(u.label)+' · '+esc(u.sec)+'</h2><div class="who">Class Manager <b>'+(esc(r.cm)||'not set')+'</b> · '+WING[u.wing].mgr+' <b>'+(esc(r.reviewer)||'not set')+'</b> · '+dayShort(S.date)+(S.date===todayStr()?' · Today':'')+'</div></div>'+liveStrip(sp)+'</div>';
-  h+='<div class="kpis"><div class="kpi g"><span>Blocks done</span><b>'+st.done+'/'+st.items+'</b></div><div class="kpi w"><span>Notebooks due</span><b>'+st.dueNb+'</b></div><div class="kpi"><span>Reviewed</span><b>'+st.reviewed+'/'+st.toReview+'</b></div><div class="kpi '+(st.errors?'r':'')+'"><span>Errors found</span><b>'+st.errors+'</b></div></div>';
-  if(isMgr())h+='<div class="tools" style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn gold" data-act="edit-new">+ Add collected work</button>'+(sp.timed.length?'':'<button class="btn ghost" data-act="template">Add day template</button>')+'<button class="btn ghost" data-act="goto-next">Plan next day →</button></div>';
-  if(S.open['new'])h+='<div class="gap">'+editForm({id:'new',kind:'check'},true)+'</div>';
-  const mgr0=isMgr()&&S.canWrite;const poolCM=sp.pool.filter(isCM),poolMentor=sp.pool.filter(s=>isCheck(s)&&s.by==='Mentor');
-  h+=secHead('Collected work and dues · waiting for a time',poolCM.length+' for the Class Manager'+(poolMentor.length?' · '+poolMentor.length+' for mentors':''));
-  if(!poolCM.length&&!poolMentor.length)h+='<div class="empty"><b>Nothing waiting</b>Books, notebooks and assignments collected today appear here. '+(isMgr()?'Use “Add collected work”, then set a time.':'The manager will set a time for each.')+'</div>';
-  else h+='<div class="ptable pool2"><div class="phead"><span>Book · notebook · assignment</span><span>'+(mgr0?'Start – End':'')+'</span><span></span></div>'+poolCM.concat(poolMentor).map(poolRow).join('')+'</div>';
-  h+=secHead('Day plan',sp.timed.length+' blocks with a time');
-  if(!sp.timed.length)h+='<div class="empty"><b>No times set yet</b>'+(isMgr()?'Set a time on a collected item above, or add the day template for duties and diary checking.':'The manager sets the time for each block.')+'</div>';
+  const poolCM=sp.pool.filter(isCM),poolMentor=sp.pool.filter(s=>isCheck(s)&&s.by==='Mentor');
+  if(poolCM.length||poolMentor.length||edit){
+    h+=secHead('Waiting for a time',poolCM.length+' for the Class Manager'+(poolMentor.length?' · '+poolMentor.length+' for mentors':''));
+    if(!poolCM.length&&!poolMentor.length)h+='<div class="empty"><b>Nothing waiting</b>Collected books, notebooks and dues appear here. Give each a start and end time.</div>';
+    else h+='<div class="ptable pool2"><div class="phead"><span>Work to check</span><span>'+(edit?'Start – End':'')+'</span><span></span></div>'+poolCM.concat(poolMentor).map((s,i)=>poolRow(s,i+1)).join('')+'</div>';
+  }
+  h+=secHead('Time plan',sp.timed.length+' task'+(sp.timed.length===1?'':'s')+' with a time');
+  if(!sp.timed.length)h+='<div class="empty"><b>No times set yet</b>'+(edit?'Set a start and end time on a waiting item, or add a task above.':'The manager will set the times.')+'</div>';
   else h+='<div class="ptable"><div class="phead"><span>Time</span><span>Task</span><span>Status</span><span></span></div>'+sp.timed.map(prow).join('')+'</div>';
   return h;
 }
@@ -748,7 +849,7 @@ function remarkRow(s,canMark){
 }
 function cardBody(s){
   const date=S.date,unit=S.unit,id=s.id,open=S.open[id];
-  const locked=isLocked(s,date),canMark=S.canWrite&&(isMgr()||S.meUnit===unit);
+  const locked=isLocked(s,date),canMark=canMarkU(unit);
   let body='';
   if(s.note)body+='<div class="instr"><b>Manager’s note</b>'+esc(s.note)+'</div>';
   if(isCM(s)){
@@ -774,7 +875,7 @@ function cardBody(s){
   }
   body+=remarkRow(s,canMark);
   if(open==='dup')body+=dupPanel(s);
-  if(isMgr()&&S.canWrite)body+='<div class="row"><button class="btn ghost small" data-act="edit-open" data-id="'+id+'">Edit block</button>'+(isCheck(s)?'<button class="btn ghost small" data-act="dup-open" data-id="'+id+'">Copy to sections</button>':'')+'</div>';
+  if(isMgr())body+='<div class="row"><button class="btn ghost small" data-act="edit-open" data-id="'+id+'">Edit block</button>'+(isCheck(s)?'<button class="btn ghost small" data-act="dup-open" data-id="'+id+'">Copy to sections</button>':'')+'</div>';
   return body;
 }
 
@@ -784,7 +885,7 @@ function prow(s){
   const cls=['prw'];
   if(!isCheck(s))cls.push('duty');
   if(s.cm==='checked')cls.push('s-checked');else if(s.cm==='due')cls.push('s-due');else if(isLate(s,date))cls.push('s-late');else if(isNow(s,date))cls.push('s-now');
-  const canMark=S.canWrite&&(isMgr()||S.meUnit===unit),locked=isLocked(s,date),li=liveInfo(s,date);
+  const canMark=canMarkU(unit),locked=isLocked(s,date),li=liveInfo(s,date);
   const det=open==='more'||open==='due'||open==='dup';
   let st=statusPill(s,date);
   if(isCM(s)&&(s.rv==='yes'||s.rv==='no'))st+=s.rv==='no'?'<span class="pill p-warn">'+num(s.notDone)+' not checked</span>':(num(s.errors)?'<span class="pill p-bad">'+num(s.errors)+' error'+(num(s.errors)===1?'':'s')+'</span>':'<span class="pill p-good">Reviewed · no errors</span>');
@@ -798,11 +899,11 @@ function prow(s){
   if(det)h+='<div class="pt-detail">'+cardBody(s)+'</div>';
   return h+'</div>';
 }
-function poolRow(s){
-  const id=s.id,mgr=isMgr()&&S.canWrite,open=S.open[id],mentor=s.by==='Mentor';
+function poolRow(s,n){
+  const id=s.id,mgr=isMgr(),open=S.open[id],mentor=s.by==='Mentor';
   if(open==='edit')return '<div class="prw">'+editForm(s,false)+'</div>';
   const k='a:'+id,d=S.draft[k]||(S.draft[k]={from:'',to:''});
-  let h='<div class="prw'+(mentor?' duty':'')+'"><div class="pt-row"><div><div class="pt-title">'+esc(s.title||s.subject||'Checking')+'</div><div class="pt-sub">'+tags(s)+(num(s.bundle)?'<span class="tag">Bundle '+num(s.bundle)+'</span>':'')+(s.after?'<span class="pill p-pur">After written work · '+fmt(s.after)+'</span>':'')+'</div>'+(s.note?'<div class="note" style="margin-top:4px">'+esc(s.note)+'</div>':'')+'</div>';
+  let h='<div class="prw'+(mentor?' duty':'')+'"><div class="pt-row"><div class="pn">'+(n?'<span class="no">'+n+'</span>':'')+'<div><div class="pt-title">'+esc(s.title||s.subject||'Checking')+'</div><div class="pt-sub">'+tags(s)+(num(s.bundle)?'<span class="tag">Bundle '+num(s.bundle)+'</span>':'')+(s.after?'<span class="pill p-pur">After written work · '+fmt(s.after)+'</span>':'')+'</div>'+(s.note?'<div class="note" style="margin-top:4px">'+esc(s.note)+'</div>':'')+'</div></div>';
   if(mgr&&!mentor){
     h+='<div class="pt-in"><input type="time" aria-label="Start" data-d="'+k+'" data-k="from" value="'+esc(d.from)+'"><input type="time" aria-label="End" data-d="'+k+'" data-k="to" value="'+esc(d.to)+'"></div><div class="pt-act"><button class="qb ok" data-act="alloc" data-id="'+id+'">Set time</button><button class="qb" data-act="edit-open" data-id="'+id+'">Edit</button><button class="qb" data-act="dup-open" data-id="'+id+'">Copy</button></div>';
   }else if(mgr){
@@ -820,7 +921,7 @@ function thumbs(arr,id,removable){
 function reviewBlock(s){
   const id=s.id,k='r:'+id,saved=rvMode(s);
   const d=S.draft[k]||(S.draft[k]={mode:saved,notDone:s.notDone!=null?s.notDone:'',errors:s.errors!=null?s.errors:'',remark:s.rvRemark||'',imgs:(s.rvImgs||[]).slice()});
-  const mgr=isMgr()&&S.canWrite;
+  const mgr=isMgr();
   const sum=saved?'<span class="pill '+(saved==='ok'?'p-good':saved==='err'?'p-warn':'p-bad')+'">'+(saved==='ok'?'Reviewed · no errors':saved==='err'?'Errors · '+num(s.errors):'Not checked · '+num(s.notDone)+' left')+'</span>':'<span class="pill p-pending">Awaiting review</span>';
   let h='<div class="panel"><h4>Manager review of this bundle '+sum+'</h4>';
   if(!mgr){
@@ -828,11 +929,11 @@ function reviewBlock(s){
     h+=thumbs(s.rvImgs,id,false);
     return h+'</div>';
   }
-  h+='<div class="seg" role="group" aria-label="Review result"><button class="'+(d.mode==='ok'?'on-good':'')+'" data-act="rv-pick" data-id="'+id+'" data-v="ok">All good</button><button class="'+(d.mode==='err'?'on-warn':'')+'" data-act="rv-pick" data-id="'+id+'" data-v="err">Errors found</button><button class="'+(d.mode==='no'?'on-bad':'')+'" data-act="rv-pick" data-id="'+id+'" data-v="no">Not checked</button></div>';
+  h+='<div class="seg" role="group" aria-label="Review result"><button class="'+(d.mode==='ok'?'on-good':'')+'" data-act="rv-pick" data-id="'+id+'" data-v="ok">All good</button><button class="'+(d.mode==='err'?'on-warn':'')+'" data-act="rv-pick" data-id="'+id+'" data-v="err">Has errors</button><button class="'+(d.mode==='no'?'on-bad':'')+'" data-act="rv-pick" data-id="'+id+'" data-v="no">Not checked</button></div>';
   if(d.mode==='no')h+='<div class="row"><div class="field"><label for="nd-'+id+'">How many not checked</label><input id="nd-'+id+'" type="number" min="0" inputmode="numeric" data-d="'+k+'" data-k="notDone" value="'+esc(d.notDone)+'"></div></div>';
   if(d.mode==='err'){
     h+='<div class="row"><div class="field"><label for="er-'+id+'">How many errors</label><input id="er-'+id+'" type="number" min="0" inputmode="numeric" data-d="'+k+'" data-k="errors" value="'+esc(d.errors)+'"></div>';
-    h+=S.assets?'<label class="btn ghost small filebtn">'+(S.uploading===id?'Uploading…':'+ Add photo of the error')+'<input type="file" accept="image/*" data-photo="'+id+'"></label>':'<span class="note">Photo upload is not available for this account.</span>';
+    h+=S.assets?'<label class="btn ghost small filebtn">'+(S.uploading===id?'Uploading…':'+ Add photo (optional)')+'<input type="file" accept="image/*" data-photo="'+id+'"></label>':'<span class="note">Photo upload is not available for this account.</span>';
     h+='</div>'+thumbs(d.imgs,id,true);
   }
   if(d.mode)h+='<div class="row"><div class="field grow"><label for="rr-'+id+'">Review remark</label><input id="rr-'+id+'" type="text" data-d="'+k+'" data-k="remark" value="'+esc(d.remark)+'" placeholder="What was missed or marked wrongly"></div><button class="btn small" data-act="rv-save" data-id="'+id+'">Save review</button></div>';
@@ -850,7 +951,7 @@ async function handlePhoto(id,file){
   if(!file||!S.assets)return;
   S.uploading=id;render();
   try{
-    const blob=await new Promise((res,rej)=>{const img=new Image(),u=URL.createObjectURL(file);img.onload=()=>{const sc=Math.min(1,1100/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.round(img.width*sc);c.height=Math.round(img.height*sc);c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(u);c.toBlob(b=>b?res(b):rej(new Error('x')),'image/jpeg',0.68)};img.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('x'))};img.src=u});
+    const blob=await new Promise((res,rej)=>{const img=new Image(),u=URL.createObjectURL(file);img.onload=()=>{const sc=Math.min(1,1400/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.round(img.width*sc);c.height=Math.round(img.height*sc);c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(u);c.toBlob(b=>b?res(b):rej(new Error('x')),'image/jpeg',0.82)};img.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('x'))};img.src=u});
     const r=await S.assets.upload(blob);
     const d=S.draft['r:'+id]||(S.draft['r:'+id]={});d.imgs=(d.imgs||[]).concat([r.id]).slice(0,4);
   }catch(e){toast('The photo could not be uploaded. Try again.')}
@@ -878,21 +979,49 @@ function editForm(s,isNew){
   return h+'</div></div></div>';
 }
 
-/* --- overview --- */
-function renderOverview(){
-  let h=bar2(true,false);
-  const groups=['P','S'].filter(w=>isMgr()||unitById(S.meUnit)&&unitById(S.meUnit).wing===w);
-  const tot={items:0,done:0,dueNb:0,errors:0,late:0,pool:0};
-  UNITS.forEach(u=>{if(!isMgr()&&u.id!==S.meUnit)return;const s=stats(S.date,u.id);Object.keys(tot).forEach(k=>tot[k]+=s[k]||0)});
-  h+='<div class="kpis"><div class="kpi g"><span>Blocks done</span><b>'+tot.done+'/'+tot.items+'</b></div><div class="kpi w"><span>Notebooks due</span><b>'+tot.dueNb+'</b></div><div class="kpi '+(tot.late?'r':'')+'"><span>Not updated</span><b>'+tot.late+'</b></div><div class="kpi '+(tot.errors?'r':'')+'"><span>Errors found</span><b>'+tot.errors+'</b></div></div>';
-  groups.forEach(w=>{
-    h+=secHead(WING[w].name,dayShort(S.date))+'<div class="tablewrap"><table><thead><tr><th>Class</th><th>Class Manager</th><th>'+WING[w].mgr+'</th><th>Collected</th><th>Waiting</th><th>Done</th><th>Due notebooks</th><th>Reviewed</th><th>Errors</th><th>Not updated</th></tr></thead><tbody>';
-    UNITS.filter(u=>u.wing===w&&(isMgr()||u.id===S.meUnit)).forEach(u=>{
-      const s=stats(S.date,u.id),r=roster(u.id),pc=s.items?Math.round(100*s.done/s.items):0;
-      h+='<tr class="click" data-act="open-unit" data-v="'+u.id+'" tabindex="0"><td><b style="font-family:var(--head);color:var(--navy);font-size:16px">'+esc(u.label)+'</b><br><span class="note">'+esc(u.sec)+'</span></td><td>'+(esc(r.cm)||'<span class="note">not set</span>')+'</td><td>'+(esc(r.reviewer)||'<span class="note">not set</span>')+'</td><td class="n">'+s.items+'</td><td class="n">'+(s.pool?'<span class="pill p-warn">'+s.pool+'</span>':'0')+'</td><td class="n">'+s.done+'/'+s.items+'<div class="bar"><i style="width:'+pc+'%"></i></div></td><td class="n">'+s.dueNb+'</td><td class="n">'+s.reviewed+'/'+s.toReview+'</td><td class="n">'+(s.errors?'<span class="pill p-bad">'+s.errors+'</span>':'0')+'</td><td class="n">'+(s.late?'<span class="pill p-bad">'+s.late+'</span>':'0')+'</td></tr>';
-    });
-    h+='</tbody></table></div>';
-  });
+/* --- desks --- */
+function classCard(u){
+  const s=stats(S.date,u.id),r=roster(u.id),pc=s.items?Math.round(100*s.done/s.items):0;
+  return '<button class="ccard" data-act="open-class" data-v="'+u.id+'"><div class="cc-top"><b>'+esc(u.label)+'</b><span class="note">'+esc(u.sec)+'</span></div><div class="cc-names"><span>CM <b>'+(esc(r.cm)||'not set')+'</b></span><span>'+(u.wing==='P'?'PM':'CMH')+' <b>'+(esc(r.reviewer)||'not set')+'</b></span></div><div class="bar"><i style="width:'+pc+'%"></i></div><div class="cc-n"><span class="pill p-good">Done '+s.done+'/'+s.items+'</span>'+(s.dueNb?'<span class="pill p-warn">Due '+s.dueNb+'</span>':'')+(s.late?'<span class="pill p-bad">Not updated '+s.late+'</span>':'')+(s.errors?'<span class="pill p-bad">Errors '+s.errors+'</span>':'')+(s.pool?'<span class="pill p-pending">Waiting '+s.pool+'</span>':'')+'</div></button>';
+}
+function personCard(p){
+  let tot={items:0,done:0,dueNb:0,late:0,errors:0};
+  const us=p.units.map(unitById).filter(Boolean);
+  us.forEach(u=>{const s=stats(S.date,u.id);Object.keys(tot).forEach(k=>tot[k]+=s[k]||0)});
+  return '<div class="pcard"><div class="pc-top"><div class="av">'+esc(p.name.charAt(0).toUpperCase())+'</div><div><b>'+esc(p.name)+'</b><div class="note">'+ROLE_LABEL[p.role]+'</div></div></div><div class="cc-n"><span class="pill p-good">Done '+tot.done+'/'+tot.items+'</span>'+(tot.dueNb?'<span class="pill p-warn">Due '+tot.dueNb+'</span>':'')+(tot.late?'<span class="pill p-bad">Not updated '+tot.late+'</span>':'')+(tot.errors?'<span class="pill p-bad">Errors '+tot.errors+'</span>':'')+'</div><div class="note" style="margin:8px 0 4px">'+(us.length?'Open plan':'No classes set')+'</div><div class="chips">'+us.map(u=>'<button class="cpc" data-act="open-class" data-v="'+u.id+'">'+esc(u.label)+'</button>').join('')+'</div></div>';
+}
+function issuesFor(units){
+  const out=[];
+  units.forEach(u=>{slotsOf(S.date,u.id).filter(isCM).forEach(s=>{
+    const nm=u.label+' · '+(s.title||s.subject||'Checking');
+    if(isLate(s,S.date))out.push({u:u.id,t:nm,k:'Not updated',c:'p-bad'});
+    else if(s.cm==='due')out.push({u:u.id,t:nm,k:num(s.due)+' due',c:'p-warn'});
+    if(s.rv==='yes'&&num(s.errors))out.push({u:u.id,t:nm,k:num(s.errors)+' errors',c:'p-bad'});
+    if(s.rv==='no')out.push({u:u.id,t:nm,k:num(s.notDone)+' not checked',c:'p-warn'});
+    if(s.cm&&s.cm!=='pending'&&s.rv!=='yes'&&s.rv!=='no')out.push({u:u.id,t:nm,k:'Review pending',c:'p-pending'});
+  })});
+  return out;
+}
+function renderDesks(){
+  const vis=visibleUnits(),role=S.me&&S.me.role;
+  const tabs=[['all','All classes'],['cm','CM Desk'],['pm','PM / CMH Desk'],['pl','PL Desk']];
+  let h=bar2(true)+'<div class="seg deskseg" role="group" aria-label="Desk">'+tabs.map(x=>'<button class="'+(S.desk===x[0]?'on-good':'')+'" data-act="desk" data-v="'+x[0]+'">'+x[1]+'</button>').join('')+'</div>';
+  const tot={items:0,done:0,dueNb:0,errors:0,late:0};
+  vis.forEach(u=>{const s=stats(S.date,u.id);Object.keys(tot).forEach(k=>tot[k]+=s[k]||0)});
+  h+='<div class="kpis"><div class="kpi g"><span>Done</span><b>'+tot.done+'/'+tot.items+'</b></div><div class="kpi w"><span>Notebooks due</span><b>'+tot.dueNb+'</b></div><div class="kpi '+(tot.late?'r':'')+'"><span>Not updated</span><b>'+tot.late+'</b></div><div class="kpi '+(tot.errors?'r':'')+'"><span>Errors</span><b>'+tot.errors+'</b></div></div>';
+  const ps=people().filter(p=>p.units.some(x=>vis.some(v=>v.id===x))||p.role==='director');
+  if(S.desk==='all'){
+    ['P','S'].forEach(w=>{const us=vis.filter(u=>u.wing===w);if(us.length)h+=secHead(WING[w].name,dayShort(S.date))+'<div class="cgrid">'+us.map(classCard).join('')+'</div>'});
+  }else if(S.desk==='cm'){
+    const l=ps.filter(p=>p.role==='cm');
+    h+=secHead('Class Managers','Tap a class to see that Class Manager’s plan')+(l.length?'<div class="pgrid">'+l.map(personCard).join('')+'</div>':'<div class="empty"><b>No Class Managers yet</b>Add names in Team & Setup.</div>');
+  }else if(S.desk==='pm'){
+    const l=ps.filter(p=>p.role==='cmh');
+    h+=secHead('PM / CM Head desk','Each head sees their own classes and issues')+(l.length?'<div class="pgrid">'+l.map(p=>{const is=issuesFor(p.units.map(unitById).filter(Boolean));return personCard(p).replace(/<\/div>$/,(is.length?'<div class="note" style="margin:10px 0 4px">Issues today</div><ul class="dues">'+is.slice(0,6).map(i=>'<li><span>'+esc(i.t)+'</span><span class="pill '+i.c+'">'+i.k+'</span></li>').join('')+'</ul>'+(is.length>6?'<div class="note">+ '+(is.length-6)+' more</div>':''):'<div class="note" style="margin-top:8px">No issues today.</div>')+'</div>')}).join('')+'</div>':'<div class="empty"><b>No heads yet</b>Add names in Team & Setup.</div>');
+  }else{
+    const l=ps.filter(p=>p.role==='pl');
+    h+=secHead('PL / Floor Managers','Each PL sees only their own classes')+(l.length?'<div class="pgrid">'+l.map(personCard).join('')+'</div>':'<div class="empty"><b>No PLs added</b>Add PLs with their classes in Team & Setup.</div>');
+  }
   return h;
 }
 
@@ -900,76 +1029,56 @@ function renderOverview(){
 function carryItems(date,unit){
   return slotsOf(date,unit).filter(s=>isCM(s)&&(s.cm==='due'||((!s.cm||s.cm==='pending')&&(isLate(s,date)||(!s.from&&date<=todayStr())))));
 }
-function renderNext(){
-  const nx=addDays(S.date,1);
-  let h=bar2(true,false);
-  h+=secHead('Carry-over into '+dayLabel(nx),'From '+dayShort(S.date));
-  const units=visibleUnits();
-  h+='<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">'+(isMgr()&&S.canWrite?'<button class="btn gold" data-act="plan-all">Prepare '+dayShort(nx)+' for all classes</button>':'')+'<span class="note">Adds duties and diary checking, and carries every due or unchecked item into the waiting list. Times stay with the manager.</span></div>';
-  h+='<div class="cols">';
-  units.forEach(u=>{
-    const r=roster(u.id),items=carryItems(S.date,u.id),t=split(nx,u.id),have=t.timed.length+t.pool.length;
-    const nb=items.reduce((a,s)=>a+(s.cm==='due'?num(s.due):num(s.bundle)),0);
-    h+='<div class="card"><div class="stitle"><h3>'+esc(u.label)+'</h3>'+(have?'<span class="pill p-info">'+have+' items planned</span>':'<span class="pill p-pending">Not planned</span>')+'</div><div class="note">CM '+(esc(r.cm)||'not set')+' · '+WING[u.wing].mgr+' '+(esc(r.reviewer)||'not set')+'</div>';
-    h+=items.length?'<ul class="dues">'+items.map(s=>'<li><span>'+esc([s.material,s.subject,s.lesson].filter(Boolean).join(' · ')||s.title)+'</span><span class="pill '+(s.cm==='due'?'p-warn':'p-bad')+'">'+(s.cm==='due'?num(s.due)+' due':'unchecked')+'</span></li>').join('')+'</ul><div class="note">'+items.length+' item'+(items.length===1?'':'s')+' to carry'+(nb?' · about '+nb+' notebooks':'')+'</div>':'<div class="note">Nothing to carry forward.</div>';
-    if(isMgr()&&S.canWrite)h+='<div class="row"><button class="btn small" data-act="plan-one" data-v="'+u.id+'">Prepare '+dayShort(nx)+'</button><button class="btn ghost small" data-act="open-next" data-v="'+u.id+'">Open '+dayShort(nx)+'</button></div>';
-    h+='</div>';
+async function addCarry(unit,date,only){
+  const prev=addDays(date,-1),map={},have=slotsOf(date,unit).map(x=>x.id);
+  carryItems(prev,unit).forEach((s,i)=>{
+    const id='c_'+s.id;if(have.indexOf(id)>=0||(only&&only!==s.id))return;
+    map[id]={order:50+i,kind:'check',title:[s.subject,s.lesson,s.material].filter(Boolean).join(' ')||s.title||'Checking',material:s.material||'',subject:s.subject||'',lesson:s.lesson||'',sections:s.sections||'',bundle:s.cm==='due'?num(s.due):num(s.bundle),by:s.by||'CM',carry:true,note:'Carried from '+dayShort(prev),cm:'pending',from:'',to:''};
   });
-  return h+'</div>';
-}
-async function planUnit(u){
-  const nx=addDays(S.date,1),have=split(nx,u),map={};
-  if(!have.timed.length){DAY_TEMPLATE.forEach((t,i)=>{const id='t'+pad(i)+'_'+nx.replace(/-/g,'');if(!(have.pool.concat(have.timed).some(x=>x.id===id)))map[id]=Object.assign({order:i,cm:'pending',by:'CM'},t)})}
-  carryItems(S.date,u).forEach((s,i)=>{
-    const id='c_'+s.id;
-    if(slotsOf(nx,u).some(x=>x.id===id))return;
-    map[id]={order:50+i,kind:'check',title:'Due · '+([s.subject,s.lesson].filter(Boolean).join(' ')||s.title||'Checking'),material:s.material||'',subject:s.subject||'',lesson:s.lesson||'',sections:s.sections||'',bundle:s.cm==='due'?num(s.due):num(s.bundle),by:s.by||'CM',carry:true,cm:'pending',from:'',to:''};
-  });
-  if(Object.keys(map).length)await writeSlots(u,nx,map);
+  if(Object.keys(map).length)await writeSlots(unit,date,map);
   return Object.keys(map).length;
 }
 
 /* --- setup --- */
 function renderSetup(){
-  let h='<div style="height:6px"></div>'+secHead('Setup','Names and colours apply to everyone');
-  if(!isMgr())return h+'<div class="empty"><b>Managers only</b>Ask the manager to change names or colours.</div>';
-  const t=Object.assign({},FIS_THEME,S.theme||{});
-  h+='<div class="card"><h3>Brand colours</h3><div class="note">Starts with the FIS logo colours. Changes show for everyone straight away.</div><div class="swatches">'
-   +[['navy','Navy · header and headings'],['gold','Gold · accents and active tab'],['purple','Purple · card edge and labels'],['mag','Magenta · highlights']].map(c=>'<div class="field"><label for="th-'+c[0]+'">'+c[1]+'</label><input id="th-'+c[0]+'" type="color" data-theme="'+c[0]+'" value="'+esc(t[c[0]])+'"></div>').join('')
-   +'</div><div class="row"><button class="btn small" data-act="theme-save"'+(S.canWrite?'':' disabled')+'>Save colours</button><button class="btn ghost small" data-act="theme-reset"'+(S.canWrite?'':' disabled')+'>Reset to FIS colours</button></div></div>';
-  ['P','S'].forEach(w=>{
-    h+=secHead(WING[w].name)+'<div class="tablewrap"><table><thead><tr><th>Class</th><th>Class Manager</th><th>'+WING[w].mgr+'</th></tr></thead><tbody>';
-    UNITS.filter(u=>u.wing===w).forEach(u=>{const r=roster(u.id);
-      h+='<tr><td><b style="font-family:var(--head);color:var(--navy)">'+esc(u.label)+'</b></td><td><div class="field"><input id="cfg-cm-'+u.id+'" type="text" value="'+esc(r.cm)+'" placeholder="Name" aria-label="Class Manager for '+esc(u.label)+'"></div></td><td><div class="field"><input id="cfg-rv-'+u.id+'" type="text" value="'+esc(r.reviewer)+'" placeholder="Name" aria-label="'+WING[w].mgr+' for '+esc(u.label)+'"></div></td></tr>';
-    });
-    h+='</tbody></table></div>';
+  const dir=isDirector()&&S.canWrite;
+  let h='<div style="height:6px"></div>'+secHead('Team & Setup',dir?'Names show for everyone':'View only');
+  h+='<div class="card"><h3>Who sees what</h3><ul class="dues"><li><span><b>Director / Admin</b> · Director, Principal, Sharda</span><span class="note">All classes, can edit everything</span></li><li><span><b>PM / CM Head</b></span><span class="note">Sees all, plans and reviews own classes</span></li><li><span><b>Class Manager</b></span><span class="note">Sees all, marks Checked / Due for own class</span></li><li><span><b>PL / Floor Manager</b></span><span class="note">Sees only the classes given below</span></li></ul><div class="note" style="margin-top:6px">This sorts the screens for each person. It is not a password lock.</div></div>';
+  [['P','Primary 1–5'],['S','Secondary 6–11']].forEach(w=>{
+    h+=secHead(w[1]+' · class team');
+    h+='<div class="tgrid">'+UNITS.filter(u=>u.wing===w[0]).map(u=>{const r=roster(u.id);return '<div class="card tcard"><h3>'+esc(u.label)+'</h3><div class="field"><label for="cfg-cm-'+u.id+'">Class Manager</label><input id="cfg-cm-'+u.id+'" type="text" value="'+esc(r.cm)+'" placeholder="Name"'+(dir?'':' disabled')+'></div><div class="field"><label for="cfg-rv-'+u.id+'">'+WING[u.wing].mgr+(u.wing==='P'?' (PM)':' (CMH)')+'</label><input id="cfg-rv-'+u.id+'" type="text" value="'+esc(r.reviewer)+'" placeholder="Name"'+(dir?'':' disabled')+'></div></div>'}).join('')+'</div>';
   });
-  h+='<div class="row gap"><button class="btn gold" data-act="cfg-save"'+(S.canWrite?'':' disabled')+'>Save names</button></div>';
+  const st=((S.staff&&S.staff.list)||DEFAULT_STAFF);
+  h+=secHead('Directors and PLs','Type class numbers for a PL, for example 1 2 3');
+  h+='<div class="card" id="stafflist">'+st.map((x,i)=>'<div class="srow2"><div class="field"><label for="st-n-'+i+'">Name</label><input id="st-n-'+i+'" type="text" value="'+esc(x.name)+'"'+(dir?'':' disabled')+'></div><div class="field"><label for="st-r-'+i+'">Role</label><select id="st-r-'+i+'"'+(dir?'':' disabled')+'><option value="director"'+(x.role==='director'?' selected':'')+'>Director / Admin</option><option value="pl"'+(x.role==='pl'?' selected':'')+'>PL / Floor Manager</option></select></div><div class="field"><label for="st-u-'+i+'">Classes (PL)</label><input id="st-u-'+i+'" type="text" value="'+esc(x.units||'')+'" placeholder="1 2 3"'+(dir?'':' disabled')+'></div></div>').join('')+(dir?'<div class="row"><button class="btn ghost small" data-act="staff-add">+ Add person</button></div>':'')+'</div>';
+  if(dir)h+='<div class="row gap"><button class="btn gold" data-act="cfg-save">Save team</button></div>';
+  const t=Object.assign({},FIS_THEME,S.theme||{});
+  h+=secHead('Brand colours')+'<div class="card"><div class="note">Starts with the FIS logo colours. Changes show for everyone straight away.</div><div class="swatches">'
+   +[['navy','Navy · header and headings'],['gold','Gold · accents and active tab'],['purple','Purple · card edge and labels'],['mag','Magenta · highlights']].map(c=>'<div class="field"><label for="th-'+c[0]+'">'+c[1]+'</label><input id="th-'+c[0]+'" type="color" data-theme="'+c[0]+'" value="'+esc(t[c[0]])+'"'+(dir?'':' disabled')+'></div>').join('')
+   +'</div>'+(dir?'<div class="row"><button class="btn small" data-act="theme-save">Save colours</button><button class="btn ghost small" data-act="theme-reset">Reset to FIS colours</button></div>':'')+'</div>';
   return h;
 }
 
 /* ---------- role dialog ---------- */
 function openRoleDialog(){
-  const ov=document.getElementById('overlay');
-  const cur=S.role||'manager',curU=S.meUnit||'P1';
-  ov.innerHTML='<div class="modal"><div class="dlg" role="dialog" aria-labelledby="rt"><h2 id="rt">Who is using this?</h2><div class="choice" id="rolechoice"><button type="button" data-role="manager" aria-pressed="'+(cur==='manager')+'"><b>Manager</b><span>Program Manager, CM Head or Director. Sets time, reviews, plans the next day.</span></button><button type="button" data-role="cm" aria-pressed="'+(cur==='cm')+'"><b>Class Manager</b><span>Marks work checked or due for one class.</span></button></div>'
-   +'<div class="field" id="unitfield" style="display:'+(cur==='cm'?'flex':'none')+'"><label for="roleunit">Your class</label><select id="roleunit">'+UNITS.map(u=>'<option value="'+u.id+'"'+(u.id===curU?' selected':'')+'>'+u.label+'</option>').join('')+'</select></div>'
-   +'<div class="field"><label for="rolename">Your name</label><input id="rolename" type="text" value="'+esc(S.name)+'" placeholder="Name shown next to your updates"></div>'
-   +'<button class="btn gold" id="rolesave" type="button">Continue</button></div></div>';
-  ov.dataset.role=cur;
+  const ov=document.getElementById('overlay'),ps=people();
+  const grp=r=>{const l=ps.filter(p=>p.role===r);return l.length?'<div class="pgroup"><span>'+ROLE_LABEL[r]+'</span><div class="chips">'+l.map(p=>'<button type="button" class="cpc" data-pick="'+esc(p.name)+'" data-prole="'+p.role+'">'+esc(p.name)+(p.role==='cm'||p.role==='cmh'?'<small> · '+p.units.map(x=>x.replace(/^[PS]/,'')).join(',')+'</small>':'')+'</button>').join('')+'</div></div>':''};
+  ov.innerHTML='<div class="modal"><div class="dlg" role="dialog" aria-labelledby="rt"><h2 id="rt">Who are you?</h2><div class="note">Pick your name. You will see your own plan first.</div>'+grp('director')+grp('cmh')+grp('cm')+grp('pl')+'<div class="pgroup"><span>Someone else</span><div class="row"><div class="field grow"><input id="rolename" type="text" placeholder="Your name (view only)"></div><button class="btn small" id="rolesave" type="button">Continue</button></div></div></div></div>';
 }
 function closeRoleDialog(){document.getElementById('overlay').innerHTML=''}
+function setMe(name,role){
+  S.name=name;S.roleHint=role;resolveMe();safeSet('fis-cd-me3',{name:name,role:role});closeRoleDialog();
+  const mu=S.meUnits.filter(x=>unitById(x));
+  if(S.me&&mu.length&&mu.indexOf(S.unit)<0)S.unit=mu[0];
+  if(S.me&&S.me.role==='director'&&!mu.length)S.unit=S.unit||'P5';
+  S.tab='board';S.date=todayStr();subscribeDays();render();
+}
 
 /* ---------- events ---------- */
 document.addEventListener('click',e=>{
-  const rc=e.target.closest('#rolechoice button');
-  if(rc){const ov=document.getElementById('overlay');ov.dataset.role=rc.dataset.role;document.querySelectorAll('#rolechoice button').forEach(b=>b.setAttribute('aria-pressed',String(b===rc)));document.getElementById('unitfield').style.display=rc.dataset.role==='cm'?'flex':'none';return}
-  if(e.target.id==='rolesave'){
-    const ov=document.getElementById('overlay'),role=ov.dataset.role||'manager',name=document.getElementById('rolename').value.trim();
-    S.role=role;S.name=name;
-    if(role==='cm'){S.meUnit=document.getElementById('roleunit').value;S.unit=S.meUnit;S.wing=unitById(S.unit).wing;if(S.tab==='setup')S.tab='board'}else S.meUnit=null;
-    safeSet('fis-cd-me',{role:S.role,unit:S.meUnit,name:S.name});closeRoleDialog();render();return;
-  }
+  const pk=e.target.closest('[data-pick]');
+  if(pk){setMe(pk.getAttribute('data-pick'),pk.getAttribute('data-prole'));return}
+  if(e.target.id==='rolesave'){const n=document.getElementById('rolename').value.trim();if(n)setMe(n,'');return}
   const el=e.target.closest('[data-act]');if(!el)return;
   act(el.dataset.act,el.dataset.id,el.dataset.v,el);
 });
@@ -980,23 +1089,42 @@ document.addEventListener('change',e=>{
   const t=e.target;
   if(t.id==='datepick'&&t.value){S.date=t.value;S.loaded=false;subscribeDays();render();return}
   if(t.dataset&&t.dataset.photo){const f=t.files&&t.files[0];t.value='';handlePhoto(t.dataset.photo,f);return}
-  if(t.dataset&&t.dataset.rm){const sl=slotsOf(S.date,S.unit).find(x=>x.id===t.dataset.rm);if(sl&&(sl.cmRemark||'')!==t.value.trim())patch(S.unit,S.date,t.dataset.rm,{cmRemark:t.value.trim(),cmBy:S.name||(isMgr()?'Manager':'CM')});return}
+  if(t.dataset&&t.dataset.rm){const sl=slotsOf(S.date,S.unit).find(x=>x.id===t.dataset.rm);if(sl&&(sl.cmRemark||'')!==t.value.trim())patch(S.unit,S.date,t.dataset.rm,{cmRemark:t.value.trim(),cmBy:whoName()});return}
   if(t.dataset&&t.dataset.theme){S.theme=Object.assign({},S.theme,{[t.dataset.theme]:t.value});applyTheme();return}
   if(t.dataset&&t.dataset.d){const d=S.draft[t.dataset.d]||(S.draft[t.dataset.d]={});d[t.dataset.k]=t.value;if(t.dataset.rerender)render()}
 });
 function setDate(d){S.date=d;S.loaded=false;subscribeDays();render()}
 function getSlot(id){return slotsOf(S.date,S.unit).find(s=>s.id===id)||{id:id}}
 async function act(a,id,v,el){
-  const me=S.name||(isMgr()?'Manager':'CM');
+  const me=whoName();
   switch(a){
-  case 'tab':S.tab=v;render();break;
-  case 'wing':S.wing=v;S.unit=UNITS.find(u=>u.wing===v).id;render();break;
+  case 'tab':{S.tab=v;if(v==='next'&&S.date<=todayStr())setDate(addDays(todayStr(),1));else if(v==='board'&&S.date>todayStr())setDate(todayStr());else render();break}
   case 'unit':S.unit=v;render();break;
-  case 'open-unit':S.unit=v;S.wing=unitById(v).wing;S.tab='board';render();break;
+  case 'open-class':S.unit=v;S.tab='board';render();window.scrollTo(0,0);break;
+  case 'desk':S.desk=v;render();break;
+  case 'q-open':S.open.qa=true;render();break;
+  case 'q-close':S.open.qa=false;render();break;
+  case 'q-type':{const d=S.draft.q||(S.draft.q={type:'Notebook',name:'',subject:'',lesson:'',secs:[],from:'',to:'',split:'one'});d.type=v;render();break}
+  case 'q-sec':{const d=S.draft.q;const i=d.secs.indexOf(v);if(i<0)d.secs.push(v);else d.secs.splice(i,1);render();break}
+  case 'q-split':S.draft.q.split=v;render();break;
+  case 'q-save':{
+    const d=S.draft.q||{};
+    if((d.from&&!d.to)||(!d.from&&d.to)){toast('Set both start and end time, or leave both empty.');break}
+    if(d.from&&toMin(d.to)<=toMin(d.from)){toast('End time must be after the start time.');break}
+    const duty=d.type==='Duty',map={},sub=(d.subject||'').trim(),les=(d.lesson||'').trim();
+    const mk=(sec,from,to,i)=>({kind:duty?'duty':'check',title:(d.name||'').trim()||(duty?'Duty':[sub,les,d.type!=='Other'?d.type:''].filter(Boolean).join(' ')||'Checking'),material:duty?'':d.type,subject:duty?'':sub,lesson:duty?'':les,sections:duty?'':sec,bundle:0,by:'CM',cm:'pending',from:from,to:to,order:(Date.now()%100000)+i});
+    const secs=d.secs.slice();
+    if(!duty&&secs.length>1&&d.split==='each'){let cur=d.from?toMin(d.from):0;const dur=d.from?toMin(d.to)-toMin(d.from):0;secs.forEach((sec,i)=>{const f=d.from?hm(cur):'',e=d.from?hm(Math.min(1439,cur+dur)):'';map[uid()+i]=mk(sec,f,e,i);cur+=dur})}
+    else map[uid()]=mk(secs.join(' '),d.from||'',d.to||'',0);
+    S.draft.q={type:d.type,name:'',subject:'',lesson:'',secs:[],from:'',to:'',split:'one'};
+    await writeSlots(S.unit,S.date,map);toast('Added to the plan');break}
+  case 'carry-all':{const n=await addCarry(S.unit,S.date);toast(n?n+' dues added':'Already added');break}
+  case 'carry-one':{await addCarry(S.unit,S.date,id);break}
+  case 'staff-add':{S.staff={list:readStaff().concat([{name:'',role:'pl',units:''}])};render();break}
   case 'date-prev':setDate(addDays(S.date,-1));break;
   case 'date-next':setDate(addDays(S.date,1));break;
   case 'date-today':setDate(todayStr());break;
-  case 'goto-next':S.tab='next';render();break;
+  case 'goto-next':S.tab='next';setDate(addDays(todayStr(),1));break;
   case 'role-open':openRoleDialog();break;
   case 'more':S.open[id]='more';render();break;
   case 'close':S.open[id]=null;render();break;
@@ -1045,10 +1173,7 @@ async function act(a,id,v,el){
   case 'del-ask':S.delConfirm=id;render();break;
   case 'del-yes':S.delConfirm=null;S.open[id]=null;await patch(S.unit,S.date,id,null);break;
   case 'template':{const map={};DAY_TEMPLATE.forEach((t,i)=>{map['t'+pad(i)+'_'+S.date.replace(/-/g,'')]=Object.assign({order:i,cm:'pending',by:'CM'},t)});await writeSlots(S.unit,S.date,map);break}
-  case 'plan-one':{const n=await planUnit(v);toast(n?'Next day prepared for '+unitById(v).label:'Already prepared');break}
-  case 'plan-all':{let n=0;for(const u of UNITS)n+=await planUnit(u.id);toast(n?'Next day prepared for all classes':'Already prepared');break}
-  case 'open-next':S.unit=v;S.wing=unitById(v).wing;S.tab='board';setDate(addDays(S.date,1));break;
-  case 'cfg-save':{const units={};UNITS.forEach(u=>{units[u.id]={cm:document.getElementById('cfg-cm-'+u.id).value.trim(),reviewer:document.getElementById('cfg-rv-'+u.id).value.trim()}});await writeCfg(units);toast('Names saved');break}
+  case 'cfg-save':{const units={};UNITS.forEach(u=>{units[u.id]={cm:document.getElementById('cfg-cm-'+u.id).value.trim(),reviewer:document.getElementById('cfg-rv-'+u.id).value.trim()}});await writeCfg(units);await writeStaff(readStaff().filter(x=>x.name));toast('Team saved');break}
   case 'theme-save':{const t={};['navy','gold','purple','mag'].forEach(k=>{const i=document.getElementById('th-'+k);t[k]=i?i.value:FIS_THEME[k]});await writeTheme(t);toast('Colours saved');break}
   case 'theme-reset':{S.theme={};applyTheme();await writeTheme(Object.assign({},FIS_THEME));toast('FIS colours restored');break}
   }
