@@ -90,11 +90,12 @@ function sync(ver,dates){
   if(Number(ver)===cur)return{same:true};
   const sh=sheet("Docs"), n=sh.getLastRow()-1, res={ver:cur,days:{},docs:{}};
   if(n<1)return res;
-  const head=sh.getRange(2,1,n,2).getValues(), set={};
+  const head=sh.getRange(2,1,n,2).getValues(), set={}, tz=SS().getSpreadsheetTimeZone();
+  const ymd=v=>v instanceof Date?Utilities.formatDate(v,tz,"yyyy-MM-dd"):String(v);
   (dates||[]).forEach(d=>{set[String(d)]=1});
   head.forEach((r,i)=>{
     const p=String(r[0]);
-    if(p.indexOf("config/")===0||set[String(r[1])]){
+    if(p.indexOf("config/")===0||set[ymd(r[1])]){
       let v=null;try{v=JSON.parse(sh.getRange(i+2,3).getValue())}catch(x){}
       if(v){if(p.indexOf("days/")===0)res.days[p.slice(5)]=v;else res.docs[p]=v}
     }
@@ -110,7 +111,7 @@ function write(op,path,obj){
     let next=obj;
     if(row&&op==="update"){let cur={};try{cur=JSON.parse(sh.getRange(row,3).getValue())||{}}catch(x){}next=merge(cur,obj)}
     const j=JSON.stringify(next);if(j.length>48000)throw new Error("too large");
-    if(row)sh.getRange(row,3).setValue(j);else sh.appendRow([path,dateOf(path),j]);
+    if(row)sh.getRange(row,3).setValue(j);else{sh.appendRow([path,"",j]);const nr=sh.getLastRow();sh.getRange(nr,2).setNumberFormat("@").setValue(dateOf(path))}
     const sp=PropertiesService.getScriptProperties();
     sp.setProperty("VER",String(Number(sp.getProperty("VER")||1)+1));
   }finally{lock.releaseLock()}
