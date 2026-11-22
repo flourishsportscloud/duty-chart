@@ -939,7 +939,8 @@ async function copyText(t,msg){ try{ await navigator.clipboard.writeText(t); toa
 function waSend(t){ if(t.length>3500){ copyText(t,'Message is long, so it was copied. Paste it in WhatsApp.'); return; } window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank','noopener'); }
 function renderDash2(all){
   const box=$('dashView'); box.replaceChildren(); if(dashKind==='all'||!dashKind) dashKind='prep';
-  box.append(el('div',{class:'chips','aria-label':'Type of work'},...[['prep','Preparation'],['check','Checking'],['mentor','Mentor tasks']].map(([v,l])=>el('button',{type:'button',class:'chip','aria-pressed':String(dashKind===v),onclick:()=>{dashKind=v;dSel={};render()}},l))));
+  box.append(el('div',{class:'chips','aria-label':'Type of work'},...[['prep','Preparation'],['check','Checking'],['mentor','Mentor tasks'],['res','Resources']].map(([v,l])=>el('button',{type:'button',class:'chip','aria-pressed':String(dashKind===v),onclick:()=>{dashKind=v;dSel={};render()}},l))));
+  if(dashKind==='res'){ renderResDash(box); return; }
   let groups=new Map(), title='';
   if(dashKind==='mentor'){
     box.append(el('div',{class:'tabs',role:'tablist','aria-label':'Type of task',style:'position:static'},...['d','w','o'].map(k=>el('button',{type:'button',class:'tab',role:'tab','aria-selected':String(dMk===k),onclick:()=>{dMk=k;dSel={};render()}},M_KIND[k]))));
@@ -980,7 +981,7 @@ function renderDash2(all){
 /* ---------- Learning resources: PPT, video and lesson-plan links, class-wise and subject-wise ---------- */
 let lClass=null,lSub='All',lType='All',lAdd=false,lPlay=null,lConfirm=null,lForm={y:'p',s:'',l:''};
 const lPath=id=>'status/'+PFX+'l.'+id;
-const L_TYPE={p:'PPT',v:'Video',x:'Lesson plan',o:'Other'};
+const L_TYPE={p:'PPT',f:'PDF',v:'Video',x:'Lesson plan',o:'Other'};
 const RES_SUBS=PFX==='t1.'?['English','Hindi','Maths','EVS','Science','S.St.','GK','Computer']:['English','Hindi','Sanskrit','Maths','Science','S.St.','Computer','GK','Commerce'];
 const ytId=u=>{ const m=String(u).match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:\S*&)?v=|shorts\/|embed\/|live\/))([A-Za-z0-9_-]{11})/); return m?m[1]:''; };
 const natKey=x=>String(x).replace(/\d+/g,d=>('0000'+d).slice(-5));
@@ -993,32 +994,52 @@ function renderRes(){
   box.append(el('div',{class:'frow'},el('span',{class:'flab',text:'Subject'}),el('div',{class:'chips'},...['All'].concat(subs).map(k=>chip(k,lSub===k,Object.assign(()=>{lSub=k},{sm:1}))))));
   box.append(el('div',{class:'frow'},el('span',{class:'flab',text:'Type'}),el('div',{class:'chips'},chip('All',lType==='All',Object.assign(()=>{lType='All'},{sm:1})),...Object.keys(L_TYPE).map(k=>chip(L_TYPE[k],lType===k,Object.assign(()=>{lType=k},{sm:1}))))));
   box.append(el('div',{class:'tools'},el('h2',{class:'lt'},'Class '+lClass+' learning resources',el('small',{text:'Any teacher can add. Everyone can open and use them.'})),
-    el('button',{type:'button',class:'chip sm','aria-pressed':String(lAdd),onclick:()=>{lAdd=!lAdd;lPlay=null;render()}},'Add resource')));
-  if(lAdd){ const fY=el('select',{id:'lr-type'},...Object.keys(L_TYPE).map(k=>el('option',{value:k,selected:k===lForm.y?'':null},L_TYPE[k])));
-    const fC=el('select',{id:'lr-class'},...GRADES[wing].map(c=>el('option',{value:c,selected:c===lClass?'':null},'Class '+c)));
+    el('button',{type:'button',class:'chip sm','aria-pressed':String(lAdd),onclick:()=>{lAdd=!lAdd;lPlay=null;render()}},'Attach PPT / PDF / video')));
+  if(lAdd){ const fC=el('select',{id:'lr-class'},...GRADES[wing].map(c=>el('option',{value:c,selected:c===lClass?'':null},'Class '+c)));
     const cur=lForm.s||(lSub!=='All'?lSub:RES_SUBS[0]), fS=el('select',{id:'lr-sub'},...subs.map(k=>el('option',{value:k,selected:k===cur?'':null},k))), fSO=el('input',{id:'lr-subo',type:'text',maxlength:'22',placeholder:'Only if not in the list'});
-    const fL=el('input',{id:'lr-les',type:'text',maxlength:'40',placeholder:'e.g. Lesson 1',value:lForm.l}), fU=el('input',{id:'lr-url',type:'url',inputmode:'url',placeholder:'Paste the YouTube or Google Drive link'});
-    box.append(el('div',{class:'panel'},el('h2',{text:'Add a learning resource'}),
-      el('div',{class:'form'},el('label',{},'Type',fY),el('label',{},'Class',fC),el('label',{},'Subject',fS),el('label',{},'Other subject',fSO),el('label',{},'Lesson',fL),el('label',{},'Link',fU)),
-      el('div',{class:'toolr'},el('button',{type:'button',class:'btn',onclick:()=>{ const s=cut(fSO.value,22)||fS.value, l=cut(fL.value,40), raw=fU.value.trim(), id=ytId(raw), y=fY.value;
-        if(!l){fL.focus();return} const u=id?'yt:'+id:(okUrl(raw)?raw:''); if(!u){ toast('Paste a YouTube link or a Google Drive / Docs / Sheets / Slides link.',1); fU.focus(); return; }
-        const n={y:id&&y!=='v'?'v':y,c:fC.value,s,l,u}; if(JSON.stringify(n).length>198){ toast('Please shorten the lesson name.',1); return; }
-        lForm={y,s,l}; lClass=fC.value; push(lPath(Date.now().toString(36)+Math.random().toString(36).slice(2,5)),{note:JSON.stringify(n)},'Resource added'); }},'Add resource'),
+    const fL=el('input',{id:'lr-les',type:'text',maxlength:'40',placeholder:'e.g. Lesson 1',value:lForm.l});
+    const link=(id,ph)=>el('input',{id,type:'url',inputmode:'url',placeholder:ph});
+    const F={p:link('lr-ppt','Google Drive / Slides link to the PPT'),f:link('lr-pdf','Google Drive link to the PDF'),v:link('lr-vid','YouTube link'),x:link('lr-plan','Google Sheets / Drive link to the lesson plan')};
+    box.append(el('div',{class:'panel'},el('h2',{text:'Attach learning resources for a lesson'}),
+      el('div',{class:'form'},el('label',{},'Class',fC),el('label',{},'Subject',fS),el('label',{},'Other subject',fSO),el('label',{},'Lesson',fL)),
+      el('b',{text:'Attach any of these (fill one or more)'}),
+      el('div',{class:'form'},el('label',{},'PPT',F.p),el('label',{},'PDF',F.f),el('label',{},'Video (YouTube)',F.v),el('label',{},'Lesson plan (Excel / Sheets)',F.x)),
+      el('div',{class:'toolr'},el('button',{type:'button',class:'btn',onclick:()=>{ const s=cut(fSO.value,22)||fS.value, l=cut(fL.value,40); if(!l){fL.focus();return}
+        const out=[]; for(const y of ['p','f','v','x']){ const raw=F[y].value.trim(); if(!raw) continue; const id=ytId(raw);
+          if(y==='v'&&!id&&!okUrl(raw)){ toast('Video: paste a YouTube link (or a Google Drive link).',1); F[y].focus(); return; }
+          if(y!=='v'&&!okUrl(raw)){ toast(L_TYPE[y]+': paste a Google Drive / Docs / Sheets / Slides sharing link. Upload the file to Drive first.',1); F[y].focus(); return; }
+          const n={y,c:fC.value,s,l,u:(y==='v'&&id)?'yt:'+id:raw}; if(JSON.stringify(n).length>198){ toast('Please shorten the lesson name.',1); return; } out.push(n); }
+        if(!out.length){ toast('Paste at least one link: PPT, PDF, video or lesson plan.',1); F.p.focus(); return; }
+        lForm={y:'p',s,l}; lClass=fC.value; out.forEach((n,i)=>push(lPath(Date.now().toString(36)+i+Math.random().toString(36).slice(2,5)),{note:JSON.stringify(n)},i===out.length-1?out.length+(out.length===1?' resource':' resources')+' attached':'')); }},'Attach'),
         el('button',{type:'button',class:'btn ghost',onclick:()=>{lAdd=false;render()}},'Close')),
-      el('p',{class:'note',text:'PPT, lesson plan and Excel files stay in Google Drive; paste their sharing link. YouTube videos play inside this page. To add several, keep adding one after another.'}))); }
+      el('p',{class:'note',text:'PPT, PDF and lesson-plan files stay in Google Drive: upload the file there, share it, and paste its link here. YouTube videos play inside this page.'}))); }
   const show=items.filter(x=>(lSub==='All'||x.s===lSub)&&(lType==='All'||x.y===lType)).sort((a,b)=>{ const sa=subs.indexOf(a.s),sb=subs.indexOf(b.s); return sa-sb||(natKey(a.l)<natKey(b.l)?-1:natKey(a.l)>natKey(b.l)?1:0)||(a.y<b.y?-1:1); });
-  if(!show.length){ box.append(el('div',{class:'empty',text:'No learning resources added here yet. Select "Add resource" to attach a PPT, video or lesson plan.'})); return; }
+  if(!show.length){ box.append(el('div',{class:'empty',text:'No learning resources added here yet. Select "Attach PPT / PDF / video" to add a PPT, PDF, video or lesson plan.'})); return; }
   let curS=null,card=null,list=null,curL=null;
   show.forEach(x=>{ if(x.s!==curS){ curS=x.s; curL=null; card=el('div',{class:'card'}); card.append(el('h3',{class:'rsub',text:x.s})); list=el('div',{class:'secs'}); card.append(list); box.append(card); }
     if(x.l!==curL){ curL=x.l; list.append(el('div',{class:'rles',text:x.l})); }
     const yt=String(x.u).indexOf('yt:')===0?String(x.u).slice(3):'', mine=canDash()||isMe(x.by), wrap=el('div',{class:'docrow'});
     wrap.append(el('div',{class:'secrow',style:'cursor:default'},el('span',{class:'cls',text:L_TYPE[x.y]||'Other'}),
-      el('span',{class:'sn'},el('b',{text:yt?'YouTube video':'Google Drive file'}),el('span',{class:'note',text:x.by?'Added by '+x.by.split(' ')[0]+(x.at?', '+stamp(x.at):''):''})),
+      el('span',{class:'sn'},el('b',{text:yt?'YouTube video':(L_TYPE[x.y]||'File')+' · Google Drive'}),el('span',{class:'note',text:x.by?'Added by '+x.by.split(' ')[0]+(x.at?', '+stamp(x.at):''):''})),
       el('span',{class:'toolr'},yt?el('button',{type:'button',class:'btn xs',onclick:()=>{lPlay=lPlay===x.p?null:x.p;render()}},lPlay===x.p?'Close':'Play'):el('a',{class:'btn xs',href:x.u,target:'_blank',rel:'noopener'},'Open'),
         mine?el('button',{type:'button',class:'btn ghost xs',onclick:()=>{ if(lConfirm===x.p){ lConfirm=null; if(lPlay===x.p) lPlay=null; push(x.p,{note:JSON.stringify({y:x.y,c:x.c,s:x.s,l:x.l,u:'',rm:1})},'Removed'); } else { lConfirm=x.p; render(); } }},lConfirm===x.p?'Confirm':'Remove'):null)));
     if(yt&&lPlay===x.p) wrap.append(el('div',{class:'yt'},el('iframe',{src:'https://www.youtube-nocookie.com/embed/'+yt+'?rel=0',title:x.s+' '+x.l,allow:'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen',allowfullscreen:'',referrerpolicy:'strict-origin-when-cross-origin'})),
       el('a',{class:'note',href:'https://www.youtube.com/watch?v='+yt,target:'_blank',rel:'noopener'},'Open in YouTube'));
     list.append(wrap); });
+}
+function renderResDash(box){
+  const all=Object.keys(DOCS).filter(p=>p.indexOf(lPath(''))===0).map(p=>{ const n=noteOf(p); return n&&!n.rm&&n.u?Object.assign({p},n):null; }).filter(x=>x&&GRADES[wing].indexOf(x.c)>=0);
+  const cnt=y=>all.filter(x=>x.y===y).length;
+  box.append(el('div',{class:'tools'},el('h2',{class:'lt'},'Learning resources attached',el('small',{text:['p','f','v','x'].map(y=>L_TYPE[y]+' '+cnt(y)).join(' \u00b7 ')}))));
+  GRADES[wing].forEach(c=>{ const mine=all.filter(x=>x.c===c), card=el('div',{class:'card'}); card.append(el('h3',{class:'rsub',text:'Class '+c}));
+    const subs=[...new Set(RES_SUBS.concat(mine.map(x=>x.s)))], none=RES_SUBS.filter(k=>!mine.some(x=>x.s===k));
+    subs.forEach(sb=>{ const rows=mine.filter(x=>x.s===sb); if(!rows.length) return; card.append(el('div',{class:'rles',text:sb}));
+      [...new Set(rows.map(x=>x.l))].sort((a,b)=>natKey(a)<natKey(b)?-1:1).forEach(l=>{ const line=el('div',{class:'secrow',style:'cursor:default'},el('span',{class:'sn'},el('b',{text:l})),el('span',{class:'toolr'}));
+        rows.filter(x=>x.l===l).forEach(x=>{ const yt=String(x.u).indexOf('yt:')===0; line.lastChild.append(yt?el('button',{type:'button',class:'btn xs',onclick:()=>{seg='res';lClass=c;lSub=sb;lType='All';lPlay=x.p;render()}},'Video'):el('a',{class:'btn xs',href:x.u,target:'_blank',rel:'noopener'},L_TYPE[x.y]||'File')); });
+        card.append(line); }); });
+    if(!mine.length) card.append(el('div',{class:'note',text:'Nothing attached yet.'})); else if(none.length) card.append(el('p',{class:'note',text:'Nothing attached yet for: '+none.join(', ')}));
+    box.append(card); });
+  box.append(el('div',{class:'toolr'},el('button',{type:'button',class:'btn',onclick:()=>{seg='res';lAdd=true;render()}},'Attach PPT / PDF / video')));
 }
 /* ---- tick several tasks and remove them together ---- */
 let selRm={};
