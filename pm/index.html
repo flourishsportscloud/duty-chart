@@ -328,6 +328,28 @@ input.cwin,select.cwin{font:inherit;font-size:13px;border:1px solid #c7cfe2;bord
 .rgrid td.tot{font-weight:800;color:var(--red)}
 .rgrid td.tot.z{color:var(--green)}
 .rfoot{font-size:11px;color:var(--mut);margin-top:6px}
+/* not-done: segment strips (dark, bold) with light defaulter lines */
+.ndhint{font-size:11.5px;color:var(--mut);margin:0 0 8px}
+.ndg{border-radius:12px;margin-bottom:7px;overflow:hidden;border:1px solid #1a2550;background:#fff}
+.ndg>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:11px 12px;background:var(--head);color:#fff}
+.ndg>summary::-webkit-details-marker{display:none}
+.ndgt{font-weight:800;font-size:14.5px;letter-spacing:.01em;flex:1}
+.ndgc{font-size:11px;font-weight:500;color:rgba(255,255,255,.62)}
+.ndgb{min-width:24px;text-align:center;font-size:11.5px;font-weight:800;border-radius:99px;padding:1px 7px;background:#c43a52;color:#fff}
+.ndga{font-size:18px;line-height:1;color:rgba(255,255,255,.7);transition:transform .15s}
+.ndg[open] .ndga{transform:rotate(90deg)}
+.ndgi{padding:4px 12px 8px}
+.ndi{padding:8px 0;border-bottom:1px solid var(--line)}
+.ndi:last-of-type{border-bottom:0}
+.ndi .ndt{font-weight:800;font-size:13.5px;color:var(--ink)}
+.ndi .ndw{font-size:12px;color:var(--mut);margin-top:3px;line-height:1.7;font-weight:400}
+.ndn{font-weight:600;color:var(--ink2)}
+.nds{display:inline-block;font-size:11px;padding:0 6px;border-radius:6px;margin-left:2px;background:var(--greyS);color:var(--mut)}
+.nds.N{background:#fbecef;color:#b0364c}
+.ndw .sep{color:var(--faint);margin:0 6px}
+.ndmore{display:block;width:100%;margin-top:6px;border:0;background:var(--card2,#f6f4ef);color:var(--ink2);font-weight:700;font-size:12px;border-radius:8px;padding:7px;text-align:left}
+.tk.bad{background:#fff;border-color:var(--line);border-left:4px solid #c43a52}
+.tk.bad .tkh b{color:var(--ink)}
 @media print{
   header,nav,#msg,.noprint{display:none!important}
   body{background:#fff}.wrap{padding:0;max-width:none}
@@ -1090,16 +1112,16 @@ function cwCarry(pl){
 
 /* ---------- Dashboard: done / not-done check with category tabs ---------- */
 function rowCheck(r,mode,date){
-  let tot=0,done=0,bad=0,pend=0;const parts=[],badW=[],rems=[];
+  let tot=0,done=0,bad=0,pend=0;const parts=[],badW=[],badL=[],rems=[];
   PLS.forEach(pl=>{
     const doc=getDoc(pl,mode,date);const secs=TC_SECS(pl,mode,r);const bw=[];
-    const chips=secs.map(sec=>{const st=stOf(doc,r,sec,date);tot++;if(st==='D'||st==='A')done++;else if(st==='N'||st==='M'){bad++;bw.push(`${sec!=='x'?esc(sec)+' ':''}${SYM[st]}`)}else pend++;
+    const chips=secs.map(sec=>{const st=stOf(doc,r,sec,date);tot++;if(st==='D'||st==='A')done++;else if(st==='N'||st==='M'){bad++;bw.push(`<span class="nds ${st}">${sec!=='x'?esc(sec)+' ':''}${st==='N'?'not done':'not marked'}</span>`)}else pend++;
       return `<span class="cp ${st}" title="${esc(pl.name)}${sec!=='x'?' · '+sec:''}">${sec!=='x'?esc(sec)+' ':''}${SYM[st]}</span>`}).join('');
     parts.push(`<span class="tpl"><i>${esc(shortN(pl))}</i>${chips}</span>`);
-    if(bw.length)badW.push(`<b>${esc(shortN(pl))}</b> ${bw.join(' ')}`);
+    if(bw.length){badW.push(`<b>${esc(shortN(pl))}</b> ${bw.join(' ')}`);badL.push(`<span class="ndn">${esc(shortN(pl))}</span> ${bw.join(' ')}`)}
     remLines(pl,doc,r,mode).forEach(l=>rems.push(remLineHTML(pl,l,true)));
   });
-  return {tot,done,bad,pend,parts,badW,rems};
+  return {tot,done,bad,pend,parts,badW,badL,rems};
 }
 function careStrip(date){
   const out=[];PLS.forEach(pl=>{
@@ -1132,12 +1154,17 @@ function taskCheck(mode,date){
   h+=`<div class="leg"><span><span class="cp D">✓</span> Done</span><span><span class="cp A">NA</span> Not applicable</span><span><span class="cp N">✗</span> Marked not done</span><span><span class="cp M">!</span> Not marked – time over</span><span><span class="cp P">·</span> Still due</span></div>`;
   if(tab==='care'&&mode==='dp')return h+careTab(date)+`</div>`;
   if(tab==='nd'){
-    let body='',lb=null,okN=0;
+    /* one dark, bold strip per segment — tap to open; inside, task title bold, defaulter names & sections light */
+    let body='',okN=0;const grp={},ord=[];
     ROWS[mode].forEach(r=>{const x=rowCheck(r,mode,date);if(!x.bad){if(!x.pend)okN++;return}
-      if(r.block!==lb){body+=`<div class="tcblk">${esc(r.block.name)}</div>`;lb=r.block}
-      body+=`<div class="ndl" data-act="tctab" data-v="${r.block.id}"><div class="ndt">${esc(rowLabel(r))}</div><div class="ndw">${x.badW.join(' <span class="sep">|</span> ')}</div></div>`});
-    if(cs.length)body+=`<div class="tcblk">${WHO==='PM'?'Medical & care watch':'Care watch'} — met fewer than ${MEET_MIN} times</div>`+cs.map(x=>`<div class="ndl" data-act="tctab" data-v="care"><div class="ndw">${x}</div></div>`).join('');
-    h+=body||`<div class="allclear">✓ Nothing marked not done and nothing overdue.</div>`;
+      if(!grp[r.block.id]){grp[r.block.id]={b:r.block,items:[],n:0};ord.push(r.block.id)}
+      const g=grp[r.block.id];g.n+=x.bad;
+      g.items.push(`<div class="ndi"><div class="ndt">${esc(rowLabel(r))}</div><div class="ndw">${x.badL.join('<span class="sep">·</span>')}</div></div>`)});
+    const seg=(k,title,cnt,sub,inner)=>{const dk='nd|'+mode+'|'+k;
+      return `<details class="ndg" data-k="${dk}" ${detOpen(dk,false)?'open':''}><summary><span class="ndgt">${esc(title)}</span><span class="ndgc">${sub}</span><span class="ndgb">${cnt}</span><span class="ndga">›</span></summary><div class="ndgi">${inner}</div></details>`};
+    ord.forEach(id=>{const g=grp[id];body+=seg(id,g.b.name,g.n,`${g.items.length} task${g.items.length>1?'s':''}`,g.items.join('')+`<button class="ndmore" data-act="tctab" data-v="${id}">See every section of ${esc(g.b.name)} ›</button>`)});
+    if(cs.length)body+=seg('care',WHO==='PM'?'Medical & care watch':'Care watch',cs.length,`met fewer than ${MEET_MIN}×`,cs.map(x=>`<div class="ndi"><div class="ndw">${x}</div></div>`).join('')+`<button class="ndmore" data-act="tctab" data-v="care">Open the full list ›</button>`);
+    h+=body?`<div class="ndhint">Tap a segment to see who has not done it.</div>`+body:`<div class="allclear">✓ Nothing marked not done and nothing overdue.</div>`;
     if(okN)h+=`<div class="okline" style="margin-top:8px">✓ ${okN} task${okN>1?'s':''} done by everyone · tap a category above to see every section</div>`;
     return h+`</div>`;
   }
