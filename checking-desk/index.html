@@ -14,31 +14,78 @@ var API=(new URLSearchParams(location.search).get('api'))||"";
 var CODE='';try{CODE=localStorage.getItem('cd_tok')||''}catch(e){}
 var PREVIEW=!API;
 var L={ver:2,docs:{},ph:{}};
-function seedSat(){
-  var SAT='2026-11-21';
-  function T(from,to,title,o){return Object.assign({kind:'check',cm:'pending',by:'CM',bundle:0,from:from,to:to,title:title},o||{})}
-  function Du(from,to,title){return {kind:'duty',cm:'pending',by:'CM',bundle:0,from:from,to:to,title:title}}
-  function D(title,o){return Object.assign({kind:'check',cm:'pending',by:'CM',bundle:0,from:'',to:'',title:title},o||{})}
-  function mk(unit,arr){var sl={};arr.forEach(function(x,i){x.order=i+1;sl[(x.from?'s':'d')+(i+1)]=x});L.docs['days/'+SAT+'__'+unit]={date:SAT,unit:unit,slots:sl}}
-  mk('P4',[T('08:00','08:30','Maths NB Ex-5.4',{material:'Notebook',subject:'Maths',lesson:'Ex-5.4',sections:'B'}),T('08:30','10:00','Diary checking',{material:'Diary',sections:'A B C'}),T('10:00','11:30','Maths NB and pasting follow up',{material:'Notebook',subject:'Maths',sections:'B'}),Du('11:30','12:00','Lunch duty'),T('12:00','13:00','English 2 Book L-7',{material:'Book',subject:'English 2',lesson:'L-7',sections:'A'}),T('13:00','14:00','English 2 Book L-7',{material:'Book',subject:'English 2',lesson:'L-7',sections:'C'}),Du('14:00','14:30','Lunch'),T('14:30','15:00','Follow up of absentees NB',{material:'Notebook',sections:'A B C'}),D('English Book L-8',{material:'Book',subject:'English',lesson:'L-8',sections:'A B C'}),D('SST Book L-12',{material:'Book',subject:'S.St',lesson:'L-12',sections:'A B C'}),D('GK Book pg 44',{material:'Book',subject:'GK',lesson:'Pg 44',sections:'A B C'})]);
-  mk('P5',[T('08:00','08:30','English NB L8',{material:'Notebook',subject:'English',lesson:'L8',sections:'A',note:'12 due'}),T('08:30','10:00','Diary checking',{material:'Diary'}),T('10:00','11:30','English NB L8',{material:'Notebook',subject:'English',lesson:'L8',sections:'C'}),Du('11:30','12:00','Lunch duty'),T('12:00','12:30','English NB L8',{material:'Notebook',subject:'English',lesson:'L8',sections:'C'}),T('12:30','13:30','Follow up',{sections:'A B C'}),Du('13:30','14:00','Lunch'),T('14:00','14:55','Computer Book L6',{material:'Book',subject:'Computer',lesson:'L6',sections:'A'}),D('Maths Book L11 (Pg. 190, 193)',{material:'Book',subject:'Maths',lesson:'L11',sections:'A B C'}),D('English Book L8',{material:'Book',subject:'English',lesson:'L8',sections:'A B C'}),D('Maths NB L11 (Ex. 11.1 QA-C)',{material:'Notebook',subject:'Maths',lesson:'L11',sections:'A B C'})]);
-  mk('P1',[T('08:00','08:45','EVS NB L-14',{material:'Notebook',subject:'EVS',lesson:'L-14',sections:'C'}),T('08:45','10:15','Diary checking',{material:'Diary'}),T('10:15','11:30','Maths NB',{material:'Notebook',subject:'Maths',sections:'B'}),Du('11:30','12:00','Lunch duty'),T('12:00','13:00','Maths NB',{material:'Notebook',subject:'Maths',sections:'C'}),Du('13:00','13:30','Lunch'),T('13:30','14:55','Class 1 and 2 follow up'),D('EVS Book L-14',{material:'Book',subject:'EVS',lesson:'L-14',sections:'A B C'})]);
+function mkImg(txt,circ){
+  var c=document.createElement('canvas');c.width=640;c.height=420;var x=c.getContext('2d');
+  x.fillStyle='#FBF8EF';x.fillRect(0,0,640,420);x.strokeStyle='#C9D6EA';x.lineWidth=1;
+  for(var i=50;i<420;i+=34){x.beginPath();x.moveTo(0,i);x.lineTo(640,i);x.stroke()}
+  x.strokeStyle='#E7A0A0';x.beginPath();x.moveTo(70,0);x.lineTo(70,420);x.stroke();
+  x.fillStyle='#1F2D5A';x.font='italic 24px Georgia,serif';x.fillText(txt[0],90,80);x.fillText(txt[1],90,148);x.fillText(txt[2],90,216);
+  x.strokeStyle='#C2385B';x.lineWidth=4;x.beginPath();x.ellipse(circ[0],circ[1],circ[2],26,0,0,7);x.stroke();
+  x.fillStyle='#C2385B';x.font='bold 20px Arial';x.fillText('error',circ[0]-26,circ[1]+54);
+  return c.toDataURL('image/jpeg',0.7);
 }
-function seed(){
-  var n=new Date(),p=function(x){return(x<10?'0':'')+x},iso=n.getFullYear()+'-'+p(n.getMonth()+1)+'-'+p(n.getDate()),m=n.getHours()*60+n.getMinutes();
+function seedDemo(){
+  var n=new Date(),p=function(x){return(x<10?'0':'')+x},fd=function(d){return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())};
+  var TD=fd(n),y=new Date(n);y.setDate(y.getDate()-1);var YD=fd(y),m=n.getHours()*60+n.getMinutes(),now=Date.now();
   var hm=function(t){t=Math.max(0,Math.min(1439,t));return p(Math.floor(t/60))+':'+p(t%60)};
-  function sl(o,i){return Object.assign({order:i,kind:'check',cm:'pending',rv:'pending',by:'CM',sections:'',subject:'',lesson:'',bundle:0,from:'',to:'',note:''},o)}
-  L.docs['days/'+iso+'__P5']={date:iso,unit:'P5',slots:{
-    a1:sl({title:'Diary checking',material:'Diary',by:'CM',bundle:34,from:hm(m-150),to:hm(m-60),cm:'checked',rv:'yes',errors:0},1),
-    a2:sl({title:'Science notebook',material:'Notebook',subject:'Science',lesson:'L-8',sections:'A',by:'CM',bundle:36,from:hm(m-30),to:hm(m+75)},2),
-    a3:sl({title:'Maths notebook',material:'Notebook',subject:'Maths',sections:'B',by:'CM',bundle:35,from:hm(m+90),to:hm(m+150)},3),
-    a4:sl({title:'English book',material:'Book',subject:'English',sections:'C',by:'CM',bundle:33,note:'Collected after written work'},4)
-  }};
-  seedSat();
-  L.docs['days/'+iso+'__S6']={date:iso,unit:'S6',slots:{
-    b1:sl({title:'Diary checking',material:'Diary',by:'CM',bundle:40,from:hm(m-200),to:hm(m-110),cm:'due',due:3},1),
-    b2:sl({title:'S.St book',material:'Book',subject:'S.St',sections:'A',by:'CM',bundle:41,from:hm(m+20),to:hm(m+80)},2)
-  }};
+  L.ph.p_demo1=mkImg(['5 x 8 = 45','12 + 19 = 21','Ans: 7 apples'],[300,60,70]);
+  L.ph.p_demo2=mkImg(['Ravi go to school','She are my friend','They plays cricket'],[250,128,110]);
+  L.ph.p_demo3=mkImg(['Photosynthesis','needs sunlite and water','Ans: oxigen'],[330,196,90]);
+  L.docs['config/roster']={units:{P1:{cm:'Rashami',reviewer:'Sanjana'},P2:{cm:'Rashami',reviewer:'Sanjana'},P3:{cm:'Pooja',reviewer:'Neetu'},P4:{cm:'Komal',reviewer:'Divyanshi'},P5:{cm:'Mansi',reviewer:'Diksha'}}};
+  var k=0;
+  function B(o){k++;var r=Object.assign({order:k,kind:'check',cm:'pending',rv:'pending',by:'CM',bundle:0,from:'',to:'',material:'Notebook'},o);if(r.kind==='duty')r.material='';return r}
+  function mk(date,unit,arr){var sl={};k=0;arr.forEach(function(x,i){sl['x'+(i+1)]=x});L.docs['days/'+date+'__'+unit]={date:date,unit:unit,slots:sl}}
+  var ck=function(o,by,ago,extra){return Object.assign(o,{cm:'checked',done:o.bundle,due:0,cmBy:by,cmAt:now-ago*60000},extra||{})};
+  var du=function(o,by,ago,n2,rem){return Object.assign(o,{cm:'due',due:n2,done:o.bundle-n2,cmBy:by,cmAt:now-ago*60000,cmRemark:rem||''})};
+  var rv=function(o,by,errs,imgs,rem){return Object.assign(o,{rv:'yes',errors:errs,notDone:0,rvImgs:imgs||[],rvRemark:rem||'',rvBy:by,rvAt:now-10*60000})};
+  var rn=function(o,by,nd,rem){return Object.assign(o,{rv:'no',notDone:nd,errors:0,rvRemark:rem||'',rvBy:by,rvAt:now-10*60000})};
+  /* ---- yesterday, Class 5: a finished day ---- */
+  mk(YD,'P5',[
+   B({kind:'duty',title:'Morning duty',from:'07:00',to:'07:30'}),
+   rv(ck(B({title:'Diary checking',material:'Diary',bundle:36,from:'08:00',to:'09:30'}),'Mansi',1500),'Diksha',0,[],'All diaries signed'),
+   rv(du(B({title:'English NB L8',subject:'English',lesson:'L8',sections:'A',bundle:38,from:'10:00',to:'11:30'}),'Mansi',1400,12,'12 not submitted, parents informed'),'Diksha',0),
+   rv(ck(B({title:'Computer Book L6',material:'Book',subject:'Computer',lesson:'L6',sections:'A',bundle:38,from:'12:00',to:'12:55'}),'Mansi',1300),'Diksha',3,['p_demo2'],'Capital letters missing'),
+   rn(ck(B({title:'Maths NB L10',subject:'Maths',lesson:'L10',sections:'B',bundle:37,from:'13:00',to:'14:00'}),'Mansi',1250),'Diksha',4,'4 notebooks left at home'),
+   du(B({title:'S.St Book L-12',material:'Book',subject:'S.St',lesson:'L-12',sections:'A B C',bundle:110,from:'14:00',to:'14:45'}),'Mansi',1230,6,'Six books not brought')
+  ]);
+  /* ---- today, Class 5: every state ---- */
+  mk(TD,'P5',[
+   ck(B({kind:'duty',title:'Morning duty',from:'07:00',to:'07:30'}),'Mansi',400),
+   rv(ck(B({title:'Diary checking',material:'Diary',bundle:36,from:'08:00',to:'09:30',note:'Check parent signature'}),'Mansi',300,{cmRemark:'Two diaries missing signature'}),'Diksha',0,[],'Parents informed by SMS'),
+   rv(ck(B({title:'Maths NB L11 Ex 11.1',subject:'Maths',lesson:'L11',sections:'A',bundle:38,from:hm(m-200),to:hm(m-140)}),'Mansi',120),'Diksha',5,['p_demo1','p_demo2'],'Wrong carry-over in Q3, redo'),
+   rn(ck(B({title:'Hindi NB',subject:'Hindi 1',sections:'A',bundle:38,from:hm(m-135),to:hm(m-105)}),'Mansi',100),'Diksha',6,'Six notebooks not brought'),
+   du(B({title:'Science NB L-8',subject:'Science',lesson:'L-8',sections:'A',bundle:38,from:hm(m-100),to:hm(m-40),carry:true}),'Mansi',45,4,'4 absent, will submit on Monday'),
+   B({title:'Science NB L-8',subject:'Science',lesson:'L-8',sections:'B',bundle:36,from:hm(m-20),to:hm(m+40)}),
+   B({title:'Science NB L-8',subject:'Science',lesson:'L-8',sections:'C',bundle:37,from:hm(m+40),to:hm(m+100),after:hm(m+30),note:'Class C written work is on until then'}),
+   B({title:'English Book L-8',material:'Book',subject:'English',lesson:'L-8',sections:'A',bundle:38,from:hm(m-260),to:hm(m-200)}),
+   B({kind:'duty',title:'Lunch duty',from:'11:30',to:'12:00'}),
+   B({kind:'duty',title:'Departure duty',from:'14:30',to:'14:45'}),
+   B({title:'Maths NB L11 (Ex. 11.1 QA-C)',subject:'Maths',lesson:'L11',sections:'A B C',carry:true,note:'Carried due from yesterday'}),
+   B({title:'English Book L8',material:'Book',subject:'English',lesson:'L8',sections:'A B C'}),
+   B({title:'GK Book pg 44',material:'Book',subject:'GK',lesson:'Pg 44',sections:'A B C'}),
+   B({title:'S.St Assignment 3',material:'Assignment',subject:'S.St',lesson:'Assignment 3',sections:'A B C',by:'Mentor'}),
+   B({title:'Test Notebook',material:'Test Notebook',subject:'Test Notebook',sections:'A B C',by:'Mentor'})
+  ]);
+  /* Class 4 */
+  mk(TD,'P4',[
+   ck(B({title:'Diary checking',material:'Diary',bundle:35,from:'08:30',to:'10:00'}),'Komal',280),
+   du(B({title:'Maths NB Ex-5.4',subject:'Maths',lesson:'Ex-5.4',sections:'B',bundle:35,from:hm(m-70),to:hm(m-10)}),'Komal',20,2,'Pasting pending'),
+   B({title:'English 2 Book L-7',material:'Book',subject:'English 2',lesson:'L-7',sections:'A',bundle:34,from:hm(m+5),to:hm(m+65)}),
+   B({title:'SST Book L-12',material:'Book',subject:'S.St',lesson:'L-12',sections:'A B C'})
+  ]);
+  mk(TD,'P1',[B({title:'EVS NB L-14',subject:'EVS',lesson:'L-14',sections:'C',bundle:30,from:hm(m-30),to:hm(m+30)}),B({title:'Diary checking',material:'Diary',from:hm(m+40),to:hm(m+100)})]);
+  /* Secondary */
+  mk(TD,'S6',[
+   ck(B({title:'S.St Book',material:'Book',subject:'S.St',sections:'A B C',bundle:118,from:hm(m-90),to:hm(m-30)}),'Pooja',35,{rv:'yes',errors:2,rvImgs:['p_demo3'],rvRemark:'Spellings of Sahara',rvBy:'Mentor head',rvAt:now-5*60000}),
+   B({title:'Maths HW Notebook',subject:'Maths',lesson:'HW',sections:'A B C',by:'Mentor'}),
+   B({title:'Test Notebook',material:'Test Notebook',subject:'Test Notebook',sections:'A B C',by:'Mentor'}),
+   B({title:'Sanskrit Book',material:'Book',subject:'Sanskrit',sections:'A B C',by:'Mentor'})
+  ]);
+  mk(TD,'S10',[
+   B({title:'English (FF) Book',material:'Book',subject:'English (FF)',sections:'A',bundle:32,from:hm(m-10),to:hm(m+50)}),
+   B({title:'English (FF) Book',material:'Book',subject:'English (FF)',sections:'B',bundle:31,from:hm(m+50),to:hm(m+110)}),
+   B({title:'Science Notebook',subject:'Science',sections:'A B'})
+  ]);
 }
 function local(fn,a){
   if(fn==='ping')return true;
@@ -57,7 +104,7 @@ function merge(a,b){
   var o=(a&&typeof a==='object'&&!Array.isArray(a))?JSON.parse(JSON.stringify(a)):{};
   Object.keys(b).forEach(function(k){o[k]=merge(o[k],b[k])});return o;
 }
-if(PREVIEW)seed();
+if(PREVIEW)seedDemo();
 var cache={days:{},docs:{}},ver=-1,dates=[],qL=[],dL=[],busy=false,again=false,failed=0;
 function snapDays(){var ids=Object.keys(cache.days);return{docs:ids.map(function(id){return{id:id,data:function(){return cache.days[id]}}}),metadata:{fromCache:false}}}
 function snapDoc(p){var v=cache.docs[p];return{exists:!!v,data:function(){return v}}}
