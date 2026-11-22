@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Van Duty · FIS</title>
+<link rel="icon" href="../fis/fis-logo-192.png">
+<link rel="apple-touch-icon" href="../fis/fis-logo-180.png">
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@600;700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#1F2D5A;--navy2:#16214A;--gold:#E3A94F;--bg:#F5F3EE;--ink:#1B2340;--mute:#646B80;--line:#E6E2D8;--grn:#1F6B47;--grnbg:#E6F1EA;--red:#A42A47;--redbg:#F8E6EA;--goldbg:#FBF1DC}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+header{background:var(--navy);color:#fff;border-bottom:3px solid var(--gold);padding:12px 16px;display:flex;gap:12px;align-items:center;position:sticky;top:0;z-index:5}
+.logo{width:44px;height:44px;border-radius:12px;background:#fff;display:grid;place-items:center;flex:none}.logo img{width:38px;height:38px}
+h1{font-family:Lora,Georgia,serif;font-size:20px;margin:0;font-weight:600}h1 small{display:block;font-family:Inter;font-size:10.5px;letter-spacing:.2em;color:var(--gold);font-weight:700;text-transform:uppercase}
+main{max-width:560px;margin:0 auto;padding:16px 14px 60px}
+.card{background:#fff;border:1px solid var(--line);border-top:4px solid var(--navy);border-radius:16px;padding:16px;margin-bottom:14px}
+.card.gold{border-top-color:var(--gold)}
+label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);font-weight:700;margin:12px 0 5px}
+input,select{width:100%;font:inherit;font-size:16px;padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.btn{font:inherit;font-weight:800;border:0;border-radius:14px;padding:14px;width:100%;cursor:pointer;background:var(--navy);color:#fff;font-size:16px}
+.who{font-family:Lora,Georgia,serif;font-size:22px;color:var(--navy);font-weight:700}.who small{display:block;font-family:Inter;font-size:13px;color:var(--mute);font-weight:600;margin-top:2px}
+.notice{background:var(--goldbg);border:1px solid #F0DDB3;border-radius:14px;padding:12px 14px;font-size:16px;line-height:1.5;margin-bottom:14px;white-space:pre-wrap}
+.notice b{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8A5B12;margin-bottom:4px}
+.trip h2{font-family:Lora,Georgia,serif;font-size:19px;color:var(--navy);margin:0 0 4px}.trip p{margin:0 0 12px;color:var(--mute);font-size:13.5px}
+.big{display:block;width:100%;border:0;border-radius:18px;padding:20px 12px;font:inherit;font-weight:800;font-size:20px;cursor:pointer;margin-top:10px;line-height:1.25}
+.big small{display:block;font-size:13px;font-weight:600;opacity:.85;margin-top:3px}
+.go{background:var(--grn);color:#fff}.stop{background:var(--red);color:#fff}
+.done{background:var(--grnbg);color:var(--grn);border:2px solid var(--grn);cursor:default}
+.loc{font-size:13px;color:var(--mute);margin-top:10px}.loc a{color:var(--navy);font-weight:700}
+.err{color:var(--red);font-size:14px;margin-top:8px;min-height:1.2em}
+.row{display:flex;gap:8px;align-items:center;justify-content:space-between;font-size:13px;color:var(--mute);margin-top:10px}
+.row button{background:none;border:0;color:var(--navy);font:inherit;font-weight:700;text-decoration:underline;cursor:pointer}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:11px 16px;border-radius:12px;border-bottom:2px solid var(--gold);font-size:14px;z-index:9}
+</style>
+</head>
+<body>
+<header><div class="logo"><img src="../fis/fis-logo-192.png" alt="FIS"></div><h1><small>FIS · Transport</small>Van Duty · वैन ड्यूटी</h1></header>
+<main id="m"><div class="card">Loading…</div></main>
+<div class="toast" id="toast" hidden></div>
+<script>
+const QS=new URLSearchParams(location.search);
+const API=QS.get('api')||'https://script.google.com/macros/s/AKfycbzIeMjvNueZiTlS6m-j8VNKJxLAbWVITVYkvdj7COAUJMhAsxe2BvPmPD7K3czI6oqWfw/exec';
+const LS={g(k){try{return JSON.parse(localStorage.getItem('van_'+k))}catch(e){return null}},s(k,v){try{localStorage.setItem('van_'+k,JSON.stringify(v))}catch(e){}},d(k){try{localStorage.removeItem('van_'+k)}catch(e){}}};
+const $=id=>document.getElementById(id),esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ist=()=>new Date(Date.now()+330*6e4),today=()=>ist().toISOString().slice(0,10),hm=()=>ist().toISOString().slice(11,16);
+const h12=t=>{if(!t)return'';const[a,b]=t.split(':').map(Number);return (a%12||12)+':'+String(b).padStart(2,'0')+(a<12?' am':' pm')};
+function toast(m){const t=$('toast');t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,2800)}
+const VAN_SEED=[["Van 17","Raj Inda"],["Van 18","Mumtaj"],["Van 19","Yogesh"],["Van 20","Jaswant"],["Van 21","Surya"],["Van 22","Ram Lal"],["Van 23","Dulhi Chand"],["Van 24","Anwar Khan"],["Van 25","Chennaram"],["Van 26","Jeet"],["Van 27","Mohsin"],["Van 28","Mangtu Ram"],["Van 29","Prabhu"],["Van 30","Jagdish"],["Van 31","Ravi"],["Van 32","Mussa"],["Van 33","Kishan Singh"],["Van 35","Yashwardhan"],["Van 36","Badal"],["Van 37","Sonu"],["Van 38","Ajij"]].map(([l,d])=>({id:'v'+l.split(' ')[1],label:l,driver:d}));
+let S={token:LS.g('token'),name:LS.g('name'),vid:LS.g('vid'),vans:VAN_SEED,notice:'',me:{},watch:null,lastLoc:0};
+async function call(fn,args){const r=await fetch(API,{method:'POST',body:JSON.stringify({fn,args,token:S.token})});const j=await r.json();
+  if(!j.ok){if(j.login){LS.d('token');S.token=null;draw()}throw new Error(j.err||'Error')}return j.v}
+async function load(){try{const v=await call('td_since',[S.token,0]);const d=v.docs||{},R=d['roster/main']||{};if(Array.isArray(R.vans)&&R.vans.length)S.vans=R.vans;S.notice=R.vanNotice||'';
+  S.me=(((d['reports/'+today()]||{}).van)||{})[S.vid]||{};draw()}catch(e){if(e.message!=='LOGIN'){toast('No internet — will retry');setTimeout(load,15000)}}}
+async function save(patch){Object.assign(S.me,patch);draw();try{await call('td_update',[S.token,'reports/'+today(),{date:today(),van:{[S.vid]:patch}}]);toast('Saved ✓')}catch(e){toast('Not saved — check internet and tap again')}}
+function locate(force,once){if(!navigator.geolocation)return;const ok=p=>{const now=Date.now();if(!force&&now-S.lastLoc<120000)return;S.lastLoc=now;
+    save({loc:{lat:+p.coords.latitude.toFixed(5),lng:+p.coords.longitude.toFixed(5),acc:Math.round(p.coords.accuracy),t:hm()}})};
+  navigator.geolocation.getCurrentPosition(ok,()=>toast('Location is off — please allow location'),{enableHighAccuracy:true,timeout:15000});
+  if(!once&&!S.watch)S.watch=navigator.geolocation.watchPosition(ok,()=>{},{enableHighAccuracy:true,maximumAge:60000})}
+function stopWatch(){if(S.watch!=null){navigator.geolocation.clearWatch(S.watch);S.watch=null}}
+let wake=null;async function keepAwake(on){try{if(on&&'wakeLock' in navigator&&!wake)wake=await navigator.wakeLock.request('screen');if(!on&&wake){wake.release();wake=null}}catch(e){}}
+function draw(){const m=$('m');
+  if(!S.token){m.innerHTML=`<div class="card gold"><div class="who">Log in<small>Van driver · same password as the school apps</small></div>
+    <label for="n">Your name</label><input id="n" autocomplete="name" value="${esc(S.name||'')}"><label for="p">Password</label><input id="p" type="password">
+    <div style="margin-top:14px"><button class="btn" id="go">Log in</button></div><div class="err" id="er"></div></div>`;return}
+  if(!S.vid){m.innerHTML=`<div class="card gold"><div class="who">Choose your van<small>अपनी वैन चुनें — this phone will remember it</small></div>
+    <label for="vs">Van</label><select id="vs">${S.vans.map(v=>`<option value="${v.id}">${esc(v.label)} · ${esc(v.driver)}</option>`).join('')}</select>
+    <div style="margin-top:14px"><button class="btn" id="pick">Continue</button></div></div>`;return}
+  const v=S.vans.find(x=>x.id===S.vid)||{label:'Van',driver:''},x=S.me,running=(x.ms&&!x.me)||(x.as&&!x.ae);
+  const trip=(t,h,s,e,due)=>`<div class="card trip"><h2>${h}</h2><p>${due?'Start time '+h12(due):''}</p>
+    ${x[s]?`<button class="big done" disabled>✓ Started ${h12(x[s])}<small>रूट शुरू</small></button>`:`<button class="big go" data-start="${s}">▶ Start route<small>रूट शुरू करें</small></button>`}
+    ${x[s]?(x[e]?`<button class="big done" disabled>✓ All children dropped ${h12(x[e])}<small>सब बच्चे छोड़ दिए</small></button>`:`<button class="big stop" data-end="${e}">■ All children dropped<small>सब बच्चे छोड़ दिए — रूट खत्म</small></button>`):''}</div>`;
+  m.innerHTML=`<div class="card"><div class="who">${esc(v.label)} · ${esc(v.driver)}<small>${new Date(today()+'T00:00:00Z').toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',timeZone:'UTC'})}</small></div></div>
+   ${S.notice?`<div class="notice"><b>Notice from school · सूचना</b>${esc(S.notice)}</div>`:''}
+   ${trip('m','Morning · सुबह','ms','me',v.start||'05:30')}${trip('a','Afternoon · दोपहर','as','ae',v.astart||'13:15')}
+   <div class="loc">${x.loc&&x.loc.lat?`📍 Location shared at ${h12(x.loc.t)} · <a href="https://www.google.com/maps?q=${x.loc.lat},${x.loc.lng}" target="_blank" rel="noopener">see map</a>`:'📍 Location is shared when you start a route.'}${running?' Keep this page open during the route.':''}</div>
+   <div class="row"><span>${esc(S.name||'')}</span><span><button id="chg">Change van</button> · <button id="out">Log out</button></span></div>`;
+  if(running){locate(false);keepAwake(true)}else{stopWatch();keepAwake(false)}}
+document.addEventListener('click',async e=>{const t=e.target.closest('button');if(!t)return;
+  if(t.id==='go'){const n=$('n').value,p=$('p').value;$('er').textContent='Checking…';try{const v=await call('login',[n,p]);S.token=v.token;S.name=v.name;LS.s('token',v.token);LS.s('name',v.name);draw();load()}catch(err){$('er').textContent=err.message}return}
+  if(t.id==='pick'){S.vid=$('vs').value;LS.s('vid',S.vid);S.me={};draw();load();return}
+  if(t.id==='chg'){S.vid=null;LS.d('vid');stopWatch();draw();return}
+  if(t.id==='out'){LS.d('token');S.token=null;stopWatch();draw();return}
+  if(t.dataset.start){await save({[t.dataset.start]:hm()});locate(true);return}
+  if(t.dataset.end){await save({[t.dataset.end]:hm()});locate(true,true);return}});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.token&&S.vid)load()});
+draw();if(S.token&&S.vid)load();
+</script>
+</body>
+</html>
