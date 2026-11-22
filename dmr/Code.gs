@@ -1,19 +1,21 @@
 /* ===== Daily Maintenance Record — server logic (runs inside Google Apps Script) =====
-   All rules are enforced here, on Google's side, not in the browser:
-   - passwords are stored only as salted hashes in the Users sheet
-   - staff and the maintenance manager can log complaints; the director can only view
-   - only the maintenance manager can change status, remark, repair time, vendor, or delete any record
-   - staff can edit or delete their own complaint only on the day they entered it (India time)
-   - photos are kept in a private Drive folder and are sent only to logged-in users
+   No passwords: a person picks or types their name. The Config lists decide the role:
+   - team (default Anoop, Rahul, Jay, Shubhangi, Sarita): can change status, remark, repair time, vendor, completion photo
+   - directors (default Harsh Yadav): see everything and the performance score
+   - everyone else: can log requests with photo and location, add remarks, send reminders
+   Every write is recorded in the Log sheet with the name used. This is trust-based: it suits an internal school link.
+   Photos are kept in a private Drive folder and are sent only through this script.
 */
-const FLOORS=["LGF","GF","1F","2F","3F","OUTDOOR","CAMPUS"];
+const FLOORS=["LGF","GF","1F","2F","3F","STORE","OUTDOOR","CAMPUS"];
 const CATS=["CCTV","Computer lab","Digital board","Electric","Machinery","Wifi","Vendors","Others"];
 const KINDS=["complaint","task","vendor"];
 const PRIOS=["urgent","normal","low"];
 const STATUSES=["open","working","done"];
 const ROLES=["staff","manager","director"];
 const DEFAULT_VENDORS=["Raju ji (carpenter)","Rahul ji (AC)","CCTV","Intercom"];
-const TOKEN_DAYS=120;
+const DEFAULT_TEAM=["Anoop","Rahul","Jay","Shubhangi","Sarita"];
+const DEFAULT_DIRECTORS=["Harsh Yadav"];
+const MAX_THREAD=60;
 const WINDOW_DAYS=45;        // state() sends open items plus everything from the last 45 days
 const BACKDATE_DAYS=60;      // a complaint can be dated at most 60 days back
 const MAX_PHOTO=900000;      // characters of base64 JPEG
@@ -37,31 +39,33 @@ function etaDaysOf(t){
   return null;
 }
 
-function hashPw(H,salt,pw){let h=salt+"|"+pw;for(let i=0;i<500;i++)h=H.sha(h+"|"+salt);return h}
-function makeToken(H,secret,u,now){const exp=now+TOKEN_DAYS*864e5;const body=u.name+"|"+exp+"|"+u.ver;return H.b64(body)+"."+H.hmac(body,secret)}
-function readToken(H,secret,DB,token,now){
-  if(!token)return null;
-  const [b,sig]=String(token).split(".");if(!b||!sig)return null;
-  let body;try{body=H.unb64(b)}catch(e){return null}
-  if(H.hmac(body,secret)!==sig)return null;
-  const [name,exp,ver]=body.split("|");
-  if(Number(exp)<now)return null;
-  const u=DB.Users.find(x=>x.name===name);
-  if(!u||u.status!=="active"||String(u.ver)!==ver)return null;
-  return u;
+function listOf(DB,key,def){const l=DB.Config[key];return Array.isArray(l)&&l.length?l:def}
+function roleOf(DB,name){
+  const n=name.toLowerCase();
+  if(listOf(DB,"team",DEFAULT_TEAM).some(x=>x.toLowerCase()===n))return "manager";
+  if(listOf(DB,"directors",DEFAULT_DIRECTORS).some(x=>x.toLowerCase()===n))return "director";
+  return "staff";
 }
-function needUser(ctx,token){const u=readToken(ctx.H,ctx.secret,ctx.DB,token,ctx.now);if(!u)fail("Please log in again.");return u}
-function needManager(ctx,token){const u=needUser(ctx,token);if(u.role!=="manager")fail("Only the maintenance manager can do this.");return u}
-function needWriter(ctx,token){const u=needUser(ctx,token);if(u.role==="director")fail("The director has view-only access.");return u}
+// the "token" is simply the person's name: there are no passwords
+function readToken(H,secret,DB,token,now){
+  const name=str(token,40);if(!name)return null;
+  const known=listOf(DB,"team",DEFAULT_TEAM).concat(listOf(DB,"directors",DEFAULT_DIRECTORS)).find(x=>x.toLowerCase()===name.toLowerCase());
+  const nm=known||name;
+  return {name:nm,role:roleOf(DB,nm)};
+}
+function needUser(ctx,token){const u=readToken(ctx.H,ctx.secret,ctx.DB,token,ctx.now);if(!u)fail("Tell us your name first.");return u}
+function needManager(ctx,token){const u=needUser(ctx,token);if(u.role!=="manager")fail("Only the maintenance team can do this.");return u}
+function needWriter(ctx,token){return needUser(ctx,token)}
 
 function vendorsOf(DB){
   const set=new Set(Array.isArray(DB.Config.vendors)?DB.Config.vendors:DEFAULT_VENDORS);
   Object.values(DB.Complaints).forEach(c=>{if(c.vendor)set.add(c.vendor)});
   return Array.from(set).sort((a,b)=>a.localeCompare(b));
 }
+function threadOf(c){try{const t=JSON.parse(c.thread||"[]");return Array.isArray(t)?t:[]}catch(e){return []}}
 function pubComplaint(c){
   return {id:c.id,floor:c.floor,area:c.area,text:c.text,category:c.category,kind:c.kind,priority:c.priority,vendor:c.vendor,date:c.date,
-    hasPhoto:!!c.photo,hasDonePhoto:!!c.donePhoto,by:c.by,at:c.at,status:c.status,remark:c.remark,eta:c.eta,etaDays:c.etaDays,etaSet:c.etaSet,doneDate:c.doneDate,doneAt:c.doneAt};
+    hasPhoto:!!c.photo,hasDonePhoto:!!c.donePhoto,thread:threadOf(c),by:c.by,at:c.at,status:c.status,remark:c.remark,eta:c.eta,etaDays:c.etaDays,etaSet:c.etaSet,doneDate:c.doneDate,doneAt:c.doneAt};
 }
 function publicState(ctx,me){
   const DB=ctx.DB,cutoff=addDays(ctx.today,-WINDOW_DAYS),complaints={};
@@ -71,7 +75,7 @@ function publicState(ctx,me){
   return {
     today:ctx.today,cutoff,
     me:me?{name:me.name,role:me.role}:null,
-    users:me&&me.role==="manager"?DB.Users.map(u=>({name:u.name,role:u.role,status:u.status,requestedAt:u.requestedAt||"",approvedAt:u.approvedAt||""})):[],
+    team:listOf(DB,"team",DEFAULT_TEAM),directors:listOf(DB,"directors",DEFAULT_DIRECTORS),
     vendors:me?vendorsOf(DB):[],
     complaints
   };
@@ -106,45 +110,9 @@ const MANAGER_KEYS=["vendor","remark","date","eta","status"];
 const API={
   state(ctx,token){return publicState(ctx,readToken(ctx.H,ctx.secret,ctx.DB,token,ctx.now))},
 
-  // first-time setup: the person types their name, picks a role and sets their own password
-  setup(ctx,name,pw,wantRole){
-    const DB=ctx.DB;name=str(name,40);pw=String(pw||"");
-    if(!name)fail("Type your name.");
-    if(pw.length<6)fail("Password must be at least 6 characters.");
-    const role=ROLES.includes(wantRole)?wantRole:"staff";
-    const existing=DB.Users.find(x=>x.name.toLowerCase()===name.toLowerCase());
-    if(existing&&existing.status==="active")fail(name+" already has a login. Use Log in, or ask the maintenance manager to reset the password.");
-    const noManager=!DB.Users.some(u=>u.role==="manager"&&u.status==="active");
-    const salt=ctx.H.salt();
-    const u=existing||{name,ver:1};
-    Object.assign(u,{salt,hash:hashPw(ctx.H,salt,pw),role,requestedAt:new Date(ctx.now).toISOString()});
-    if(role==="manager"&&noManager){u.status="active";u.approvedAt=u.requestedAt;u.approvedBy="(first manager)"}
-    else u.status="pending";
-    if(!existing)DB.Users.push(u);
-    ctx.dirty.Users=true;
-    if(u.status==="active")return {token:makeToken(ctx.H,ctx.secret,u,ctx.now),state:publicState(ctx,u)};
-    return {pending:true,state:publicState(ctx,null)};
-  },
-
-  login(ctx,name,pw){
-    const u=ctx.DB.Users.find(x=>x.name.toLowerCase()===str(name,40).toLowerCase());
-    if(!u||!u.hash)fail("No login for this name yet. Use “First time? Set password”.");
-    if(hashPw(ctx.H,u.salt,String(pw||""))!==u.hash)fail("Wrong password.");
-    if(u.status!=="active")fail("Your login is waiting for the maintenance manager to approve it.");
-    return {token:makeToken(ctx.H,ctx.secret,u,ctx.now),state:publicState(ctx,u)};
-  },
-
-  changePassword(ctx,token,oldPw,newPw){
-    const u=needUser(ctx,token);
-    if(hashPw(ctx.H,u.salt,String(oldPw||""))!==u.hash)fail("Current password is wrong.");
-    if(String(newPw||"").length<6)fail("New password must be at least 6 characters.");
-    u.salt=ctx.H.salt();u.hash=hashPw(ctx.H,u.salt,String(newPw));u.ver=Number(u.ver||1)+1;ctx.dirty.Users=true;
-    return {token:makeToken(ctx.H,ctx.secret,u,ctx.now),state:publicState(ctx,u)};
-  },
-
   addComplaint(ctx,token,c){
     const me=needWriter(ctx,token);c=c||{};
-    const rec={id:ctx.H.uid(),floor:"",area:"",text:"",category:"Others",kind:"complaint",priority:"normal",vendor:"",date:ctx.today,photo:"",
+    const rec={id:ctx.H.uid(),thread:"",floor:"",area:"",text:"",category:"Others",kind:"complaint",priority:"normal",vendor:"",date:ctx.today,photo:"",
       by:me.name,at:new Date(ctx.now).toISOString(),status:"open",remark:"",eta:"",etaDays:null,etaSet:"",doneDate:"",updatedBy:"",updatedAt:""};
     LOGGED_KEYS.forEach(k=>{if(c[k]!=null&&c[k]!=="")rec[k]=c[k]});
     // reuse the validation by passing only the keys that were sent
@@ -178,7 +146,7 @@ const API={
       if(ctx.dateOf(rec.at)!==ctx.today)fail("Locked: you can change a complaint only on the day you logged it. Ask the maintenance manager.");
     }
     keys.forEach(k=>{
-      if(MANAGER_KEYS.includes(k)){if(!mgr)fail("Only the maintenance manager can change "+k+".")}
+      if(MANAGER_KEYS.includes(k)){if(!mgr)fail("Only the maintenance team can change "+k+".")}
       else if(!LOGGED_KEYS.includes(k))fail("Unknown field.");
     });
     const before=JSON.stringify(rec);
@@ -217,7 +185,7 @@ const API={
 
   // maintenance manager only: the photo of the finished work, allowed once the complaint is Done; "" removes it
   setDonePhoto(ctx,token,id,photo){
-    const me=needUser(ctx,token);if(me.role!=="manager")fail("Only the maintenance manager can add the completion photo.");
+    const me=needUser(ctx,token);if(me.role!=="manager")fail("Only the maintenance team can add the completion photo.");
     const rec=ctx.DB.Complaints[str(id,40)];if(!rec)fail("This complaint no longer exists.");
     if(photo===""||photo==null){
       if(rec.donePhoto){ctx.photos.trash(rec.donePhoto);rec.donePhoto="";ctx.dirty.Complaints=true;ctx.log(me.name,"done-photo-removed",rec.id,"")}
@@ -251,14 +219,30 @@ const API={
     return publicState(ctx,me);
   },
 
-  approve(ctx,token,name,role){
-    const me=needManager(ctx,token);const u=ctx.DB.Users.find(x=>x.name===name);if(!u)fail("Request not found.");
-    u.status="active";u.role=ROLES.includes(role)?role:"staff";u.approvedAt=new Date(ctx.now).toISOString();u.approvedBy=me.name;
-    ctx.dirty.Users=true;ctx.log(me.name,"approve login",name,u.role);return publicState(ctx,me);
+  saveTeam(ctx,token,team,directors){
+    const me=needManager(ctx,token);
+    const clean=l=>{const seen=new Set(),out=[];(Array.isArray(l)?l:[]).forEach(v=>{v=str(v,40);if(v&&!seen.has(v.toLowerCase())){seen.add(v.toLowerCase());out.push(v)}});return out.slice(0,40)};
+    const t=clean(team),d=clean(directors);
+    if(!t.length)fail("Keep at least one person in the maintenance team.");
+    if(!t.some(x=>x.toLowerCase()===me.name.toLowerCase()))fail("You cannot remove yourself from the team.");
+    ctx.DB.Config.team=t;ctx.DB.Config.directors=d;ctx.dirty.Config=true;
+    ctx.log(me.name,"team","",t.length+" team, "+d.length+" directors");
+    return publicState(ctx,me);
   },
-  removeUser(ctx,token,name){
-    const me=needManager(ctx,token);if(name===me.name)fail("You can't remove your own login.");
-    ctx.DB.Users=ctx.DB.Users.filter(x=>x.name!==name);ctx.dirty.Users=true;ctx.log(me.name,"remove login",name,"");return publicState(ctx,me);
+
+  // anyone: a follow-up remark (second, third...) or a reminder on a pending item
+  addRemark(ctx,token,id,text,type){
+    const me=needUser(ctx,token);
+    const rec=ctx.DB.Complaints[str(id,40)];if(!rec)fail("This complaint no longer exists.");
+    const isRem=type==="reminder";
+    text=str(text,300);
+    if(!isRem&&!text)fail("Type the remark.");
+    if(isRem&&rec.status==="done")fail("This is already done.");
+    const t=threadOf(rec);
+    t.push({by:me.name,at:new Date(ctx.now).toISOString(),type:isRem?"reminder":"remark",text:text});
+    rec.thread=JSON.stringify(t.slice(-MAX_THREAD));
+    ctx.dirty.Complaints=true;ctx.log(me.name,isRem?"reminder":"remark",rec.id,text.slice(0,60));
+    return publicState(ctx,me);
   },
 };
 function runApi(ctx,fn,args){
@@ -271,7 +255,7 @@ function runApi(ctx,fn,args){
 const TZ="Asia/Kolkata";
 const COLS={
   Users:["name","role","status","salt","hash","ver","requestedAt","approvedAt","approvedBy"],
-  Complaints:["id","date","floor","area","text","category","kind","priority","status","vendor","remark","eta","by","at","photo","doneDate","etaDays","etaSet","updatedBy","updatedAt","donePhoto","doneAt"],
+  Complaints:["id","date","floor","area","text","category","kind","priority","status","vendor","remark","eta","by","at","photo","doneDate","etaDays","etaSet","updatedBy","updatedAt","donePhoto","doneAt","thread"],
   Config:["name","json"],
   Log:["time","who","action","item","detail"],
 };

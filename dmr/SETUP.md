@@ -13,48 +13,22 @@ The page (`index.html`) is hosted on GitHub Pages. Its data lives in a Google Sh
    - **Deploy**, then copy the **Web app URL** (it ends in `/exec`).
 5. Open the app once as `dmr/?api=<that URL>`, or send the URL to Claude to build it into `dmr/index.html` (`const API_URL = ... || ''`) and switch the launcher tile to live.
 
-## 2. First manager login — do this straight away
+## 2. No passwords
 
-Open the link → **First time? Set password** → choose **Maintenance manager** → type your name → set a password → **Create login**.
-The first manager request is approved automatically, so create it before sharing the link with anyone. Every login after that needs one approval from a manager.
+Anyone with the link picks or types their name and can log a request (location, category, photo), add remarks and send reminders.
+Roles come from names, set in **Admin → Who can update**:
 
-## 3. Staff and Director
-
-Send staff the link. Each taps **First time? Set password**, types their name, chooses **Staff** and sets their own password. The maintenance manager approves each one once in **Admin → Waiting for approval**, and can set the role there (Staff, Director, Maintenance manager). Approve the Director with the **Director** role.
-
-## Who can do what
-
-| Role | Can do |
+| Who | Can do |
 |---|---|
-| Staff | Log complaints with date and photo; see all complaints and their status; edit or delete their own complaint on the day they logged it |
-| Maintenance manager | Everything staff can, plus change status (Open / Working / Done), remark, time required to repair, vendor, priority, category, date; edit or delete any complaint; approve and reset logins; edit the vendor list |
-| Director | View only: Dashboard (pending, urgent, overdue, completed this week, department status, pending by location, oldest unresolved) and all lists |
+| Maintenance team (default Anoop, Rahul, Jay, Shubhangi, Sarita) | Change status, remark, repair time, vendor, completion photo; edit the team and vendor lists |
+| Director (default Harsh Yadav) | See everything and the performance score |
+| Everyone else (PLs, PMs, CMs, any staff) | Log requests, follow status, add 2nd/3rd remarks, send reminders (WhatsApp) |
+
+A name is trusted as typed, so keep the link inside the school. Every change is written with the name to the **Log** tab.
 
 ## Views
 
-- **Dashboard** — summary tiles, department status (CCTV, Computer lab, Digital board, Electric, Machinery, Wifi, Vendors, Others, Management tasks), pending by location, due / overdue, oldest unresolved.
-- **By date**, **Location** (LGF, GF, 1F, 2F, 3F, Outdoor, Campus-wide) and **Vendor** — filter by status, category, or a single date.
-- A complaint is shown as **hot** when it is urgent or has been pending 3 or more days. Due date is the date the repair time was set plus the days given; "Needs parts" gives no due date.
-
-## Rules the server enforces
-
-- Passwords are stored only as salted hashes; nobody (including managers) can see them.
-- Complaints and photos are sent only to logged-in users. Photos are kept in a private Drive folder and loaded only on request.
-- Only the maintenance manager can change status, remark, repair time, vendor and date, and approve or reset logins.
-- The Director cannot change anything.
-- The page loads open complaints and the last 45 days; picking an older date fetches that day.
-- Every change is written to the **Log** tab with time and name.
-
-## Privacy note
-
-This tracker stores staff names (who logged each complaint) and login names. Both stay in the Google Sheet and are never in this public GitHub page. Keep the sheet shared only with the people who need it.
-
-## Newer features
-
-- Maintenance manager can upload a completion photo on done jobs; cards show Logged, Resolved and Time taken.
-- Entry types: Complaint, Management task, Vendor repair (manager can set the vendor when logging).
-- Overview tiles open filtered lists; the manager and Director see a performance score (resolution 40%, on time 35%, speed 25%; formula shown in the page).
-- Paste the latest `Code.gs` and redeploy as a New version after each update; the page needs it for completion photos and the Vendor repair type.
+Overview (clickable tiles, performance, trend, location, category, waiting time), By date, Location (incl. Storage), Vendor, Admin (team only).
 
 ## Updating the script later
 

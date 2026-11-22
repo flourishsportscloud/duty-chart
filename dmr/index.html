@@ -65,6 +65,7 @@ button{cursor:pointer}
   background:radial-gradient(120% 140% at 100% 0%,var(--navy-2) 0%,var(--navy) 62%);box-shadow:var(--shadow)}
 .mast::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,#8C6A1C,#E7C877 45%,#8C6A1C)}
 .mast-top{display:flex;gap:14px;align-items:center}
+.crest-img{flex:none;width:60px;height:60px;border-radius:18px;border:2px solid var(--gold-b);box-shadow:0 0 0 3px rgb(212 175 90 / .22);background:#18213A}
 .crest{flex:none;width:58px;height:58px;border-radius:18px;background:#18213A;border:2px solid var(--gold-b);display:grid;place-items:center;align-content:center;gap:3px;
   box-shadow:0 0 0 3px rgb(212 175 90 / .22),inset 0 0 0 1px rgb(255 255 255 / .08)}
 .crest b{font:italic 800 21px/1 var(--serif);letter-spacing:.02em;color:#fff}
@@ -96,7 +97,7 @@ button{cursor:pointer}
 .field .lbl{margin-bottom:0}
 
 /* ----- navigation ----- */
-.tabs{position:sticky;top:calc(6px + env(safe-area-inset-top,0px));z-index:15;margin:14px 0 14px;display:grid;grid-template-columns:repeat(var(--n,5),1fr);gap:4px;padding:5px;
+.tabs{position:sticky;top:calc(6px + env(safe-area-inset-top,0px));z-index:15;margin:12px 0 14px;display:grid;grid-template-columns:repeat(var(--n,5),1fr);gap:4px;padding:5px;
   background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
 .tabs button{border:0;background:transparent;border-radius:11px;padding:10px 2px;font:600 13px var(--sans);color:var(--ink-2);position:relative;transition:background .15s,color .15s}
 .tabs button[aria-pressed="true"]{background:var(--navy);color:#fff;box-shadow:inset 0 -2px 0 var(--gold-b)}
@@ -104,6 +105,9 @@ button{cursor:pointer}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .tabs button[aria-pressed="true"]{background:var(--navy-2)}}
 .tabs .bdg{margin-left:4px;font:700 10.5px var(--sans);background:var(--open);color:#fff;border-radius:9px;padding:1px 6px}
 
+.newreq{display:flex;align-items:center;gap:12px;width:100%;margin:14px 0 0;padding:14px 16px;border-radius:16px;border:1.5px solid var(--gold-b);background:linear-gradient(135deg,var(--gold-bg),var(--surface));font:700 16px var(--sans);text-align:left;color:var(--ink);box-shadow:var(--shadow)}
+.newreq span{display:grid;place-items:center;flex:none;width:30px;height:30px;border-radius:50%;background:var(--navy);color:var(--gold-b);font:700 20px/1 var(--sans)}
+.newreq small{display:block;font:500 12px var(--sans);color:var(--ink-2);margin-left:auto;text-align:right}
 .fbar{display:grid;gap:10px;margin-bottom:6px}
 .search{position:relative}
 .search input{padding-left:38px}
@@ -298,6 +302,16 @@ tr:last-child td{border-bottom:0}
 td select{width:auto}
 h3.sub{margin:18px 0 8px;font:700 17px var(--serif)}
 
+/* thread, reminders */
+.thread{display:grid;gap:7px}
+.te{background:var(--surface-2);border-radius:11px;padding:8px 12px;border-left:3px solid var(--blue)}
+.te.reminder{border-left-color:var(--gold-b);background:var(--gold-bg)}
+.te .th{display:flex;justify-content:space-between;gap:10px;font-size:12.5px}
+.te .tt{color:var(--ink-2);white-space:nowrap}
+.te p{margin:3px 0 0;font-size:14px;overflow-wrap:anywhere}
+.remn{color:var(--gold);font-weight:600}
+.wrapchips{flex-wrap:wrap;overflow:visible}
+.remarkform{align-items:center}
 /* ----- floating action + sheets ----- */
 .fab{position:fixed;z-index:20;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));
   display:flex;align-items:center;gap:9px;background:var(--navy);color:#fff;border:1.5px solid var(--gold-b);border-radius:999px;padding:14px 22px 14px 16px;
@@ -334,7 +348,7 @@ h3.sub{margin:18px 0 8px;font:700 17px var(--serif)}
   <a class="back" href="../fis/">&lsaquo; FIS apps</a>
   <header class="mast">
     <div class="mast-top">
-      <div class="crest" aria-hidden="true"><b>FIS</b><i><s></s><s></s><s></s></i></div>
+      <img class="crest-img" src="../fis/fis-icon-192.png" alt="FIS logo" width="60" height="60">
       <div>
         <p class="eyebrow">Flourish International School</p>
         <h1>Daily Maintenance Record</h1>
@@ -348,6 +362,7 @@ h3.sub{margin:18px 0 8px;font:700 17px var(--serif)}
   <section id="auth" hidden></section>
 
   <div id="app" hidden>
+    <button class="newreq" id="newreq" type="button"><span aria-hidden="true">+</span> New request <small>Report a problem with photo and location</small></button>
     <nav class="tabs" id="tabs" role="group" aria-label="View"></nav>
     <div class="fbar" id="filters">
       <div class="search"><input type="search" id="q" placeholder="Search complaints, areas, vendors, names" autocomplete="off" aria-label="Search complaints"></div>
@@ -364,12 +379,12 @@ h3.sub{margin:18px 0 8px;font:700 17px var(--serif)}
   <p class="status" id="status"><i></i><span id="statusText">Loading…</span></p>
 </div>
 
-<button class="fab" id="fab" type="button" hidden><span aria-hidden="true">+</span>Log entry</button>
+<button class="fab" id="fab" type="button" hidden><span aria-hidden="true">+</span>New request</button>
 
 <div class="scrim" id="sheet" hidden>
   <form class="sheet" id="form" novalidate aria-labelledby="sheet-title">
     <div class="sheet-head">
-      <h2 id="sheet-title">New entry</h2>
+      <h2 id="sheet-title">New request</h2>
       <button type="button" class="btn" id="f-close">Close</button>
     </div>
     <div class="field">
@@ -422,17 +437,6 @@ h3.sub{margin:18px 0 8px;font:700 17px var(--serif)}
   </form>
 </div>
 
-<div class="scrim" id="pwShade" hidden>
-  <form class="sheet" id="pwForm" novalidate aria-labelledby="pw-title">
-    <div class="sheet-head"><h2 id="pw-title">Change password</h2><button type="button" class="btn" id="pwCancel">Close</button></div>
-    <div class="field"><label for="pwOld">Current password</label><input type="password" id="pwOld" autocomplete="current-password"></div>
-    <div class="field"><label for="pwNew">New password (6+ characters)</label><input type="password" id="pwNew" autocomplete="new-password"></div>
-    <div class="field"><label for="pwNew2">New password again</label><input type="password" id="pwNew2" autocomplete="new-password"></div>
-    <p class="err" id="pwErr" role="alert" hidden></p>
-    <div class="row"><button class="btn primary" id="pwSave" type="submit">Change password</button></div>
-  </form>
-</div>
-
 <input type="file" id="dp-file" accept="image/*" hidden>
 <div class="lightbox" id="lightbox" hidden><img id="lb-img" alt="Complaint photo"></div>
 <div class="toast" id="toast" role="status" hidden></div>
@@ -448,12 +452,13 @@ const API_URL = new URLSearchParams(location.search).get('api') || 'https://scri
 var FLOORS=[
   {k:'LGF',n:'Lower ground floor'},{k:'GF',n:'Ground floor'},{k:'1F',n:'1st floor'},
   {k:'2F',n:'2nd floor'},{k:'3F',n:'3rd floor'},
-  {k:'OUTDOOR',n:'Outdoor'},{k:'CAMPUS',n:'Campus-wide'}
+  {k:'STORE',n:'Storage / store room'},{k:'OUTDOOR',n:'Outdoor'},{k:'CAMPUS',n:'Campus-wide'}
 ];
 var FLOOR_KEYS=FLOORS.map(function(f){return f.k;});
 var FLOOR_NAME={};FLOORS.forEach(function(f){FLOOR_NAME[f.k]=f.n;});
 var AREAS=['Classroom','Girls washroom','Boys washroom','Staff room','Corridor','Office','Lab','Stairs'];
-var ZONES=['Playground','Gate','Parking','Garden','Boundary'];
+var ZONES=['Playground','Gate','Parking','Garden','Boundary','Terrace'];
+var STORES=['Main store','Sports store','Book store','Stationery store'];
 var CATS=['CCTV','Computer lab','Digital board','Electric','Machinery','Wifi','Vendors','Others'];
 var KINDS={complaint:'Complaint',task:'Management task',vendor:'Vendor repair'};
 var KIND_SUB={complaint:'Something is broken or not working',task:'Work assigned by management',vendor:'A job for an outside vendor'};
@@ -464,19 +469,19 @@ var STATUS={open:'Open',working:'Working',done:'Done'};
 var PRIOS=['urgent','normal','low'];
 var PRIO_LABEL={urgent:'Urgent',normal:'Normal',low:'Low'};
 var SLA_DAYS={urgent:1,normal:3,low:7}; // standard target when the manager has not given a repair estimate
-var ROLE_LABEL={staff:'Staff',manager:'Maintenance manager',director:'Director'};
+var ROLE_LABEL={staff:'Staff',manager:'Maintenance team',director:'Director'};
 var CHIPS=[['all','All'],['pending','Pending'],['overdue','Overdue'],['open','Open'],['working','Working'],['done','Done']];
 var PRESETS=['1 hour','Half day','1 day','2–3 days','1 week','Needs parts'];
 var DATE_RE=/^\d{4}-\d{2}-\d{2}$/;
 
-var token='';try{token=localStorage.getItem('dmr-token')||''}catch(e){}
-function setToken(t){token=t||'';try{if(token)localStorage.setItem('dmr-token',token);else localStorage.removeItem('dmr-token')}catch(e){}}
+var token='';try{token=localStorage.getItem('dmr-name')||''}catch(e){}
+function setToken(t){token=(t||'').trim();try{if(token)localStorage.setItem('dmr-name',token);else localStorage.removeItem('dmr-name')}catch(e){}}
 
 var S={
   me:null,users:[],vendors:[],complaints:{},extra:{},days:{},today:'',cutoff:'',
   ready:false,view:'',drill:'',status:'all',cat:'all',date:'',q:'',perfDays:30,authMode:'login',
   drafts:{},expanded:new Set(),confirm:'',dirty:false,form:null,photos:{},
-  pending:0,epoch:0
+  pending:0,epoch:0,team:[],directors:[],remarkOpen:new Set()
 };
 try{var sv=localStorage.getItem('dmr-view');if(sv&&sv!=='drill')S.view=sv}catch(e){}
 
@@ -539,10 +544,9 @@ async function api(fn,args){
 }
 function applyState(s){
   if(!s)return;
-  S.me=s.me||null;S.users=s.users||[];S.vendors=s.vendors||[];S.today=s.today||S.today;S.cutoff=s.cutoff||'';
+  S.me=s.me||null;S.team=s.team||[];S.directors=s.directors||[];S.vendors=s.vendors||[];S.today=s.today||S.today;S.cutoff=s.cutoff||'';
   S.complaints=s.complaints||{};
-  if(token&&!S.me){setToken('');banner('Please log in again.','info');}
-  if(S.me&&!S.view)S.view=S.me.role==='staff'?'date':'dash';
+    if(S.me&&!S.view)S.view=S.me.role==='staff'?'date':'dash';
   S.ready=true;
   setStatus('live','Live · updated '+new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}));
   render();
@@ -590,7 +594,7 @@ function items(){
     }
     out.push({id:id,floor:FLOOR_KEYS.indexOf(c.floor)>-1?c.floor:'CAMPUS',area:c.area||'',text:c.text||'',
       cat:CATS.indexOf(c.category)>-1?c.category:'Others',kind:KINDS[c.kind]?c.kind:'complaint',
-      vendor:c.vendor||'',date:date,age:age,at:c.at||'',atMs:atMs,by:c.by||'',hasPhoto:!!c.hasPhoto,hasDonePhoto:!!c.hasDonePhoto,
+      vendor:c.vendor||'',date:date,age:age,at:c.at||'',atMs:atMs,by:c.by||'',hasPhoto:!!c.hasPhoto,hasDonePhoto:!!c.hasDonePhoto,thread:c.thread||[],
       st:st,prio:prio,hot:st!=='done'&&(prio==='urgent'||age>=3),
       remark:c.remark||'',eta:c.eta||'',due:due,deadline:deadline,estimated:!!due,
       overdue:st!=='done'&&!!deadline&&deadline<today,
@@ -608,7 +612,7 @@ function byUrgency(a,b){return (b.overdue?1:0)-(a.overdue?1:0)||hotFirst(a,b)||c
 function byResolved(a,b){return -cmpStr(a.doneAt||a.doneDate,b.doneAt||b.doneDate);}
 function vendorNames(){var s={};S.vendors.forEach(function(v){s[v]=1;});items().forEach(function(i){if(i.vendor)s[i.vendor]=1;});return Object.keys(s).sort();}
 function isMgr(){return !!S.me&&S.me.role==='manager';}
-function canLog(){return !!S.me&&S.me.role!=='director';}
+function canLog(){return !!S.me;}
 function canSeePerf(){return !!S.me&&S.me.role!=='staff';}
 function canEditOwn(i){return !!S.me&&S.me.role==='staff'&&i.by===S.me.name&&istDate(i.at)===TODAY();}
 
@@ -711,6 +715,31 @@ function timeline(i){
   }
   return h('div',{class:'timeline'},kids);
 }
+function threadBlock(i){
+  var t=i.thread||[];if(!t.length)return null;
+  return h('div',{class:'thread'},t.map(function(e){
+    return h('div',{class:'te '+e.type},
+      h('div',{class:'th'},h('b',null,(e.type==='reminder'?'Reminder · ':'')+e.by),h('span',{class:'tt'},fmtDT(e.at))),
+      e.text?h('p',null,e.text):null);
+  }));
+}
+function remarkForm(i){
+  var inp=h('input',{type:'text',id:'nr-'+i.id,maxlength:'300',placeholder:'Add a remark, e.g. still not fixed, or work started',value:(draftOf(i.id).newRemark)||'',
+    oninput:function(e){setDraft(i.id,{newRemark:e.target.value});}});
+  var post=function(){
+    var v=inp.value.trim();if(!v){toast('Type the remark first');return;}
+    write('addRemark',[token,i.id,v,'remark']).then(function(ok){if(ok){setDraft(i.id,{newRemark:''});S.remarkOpen.delete(i.id);toast('Remark added');render();}});
+  };
+  inp.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();post();}});
+  return h('div',{class:'row remarkform'},h('div',{style:'flex:1;min-width:200px'},inp),h('button',{class:'btn primary',type:'button',id:'nr-post-'+i.id,onclick:post},'Post'));
+}
+function pageUrl(){return location.origin+location.pathname;}
+function remind(i){
+  var late=i.overdue?' It is overdue by '+daysBetween(i.deadline,TODAY())+' days.':'';
+  var msg='Reminder – Maintenance: '+(FLOOR_NAME[i.floor]||i.floor)+(i.area?' · '+i.area:'')+' – '+i.text+'. Pending for '+(i.age>0?i.age+' days':'today')+'.'+late+' Please update the status: '+pageUrl();
+  try{window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');}catch(e){}
+  write('addRemark',[token,i.id,'','reminder']).then(function(ok){if(ok)toast('Reminder recorded. Choose the people to send it to on WhatsApp.');});
+}
 function draftOf(id){return S.drafts[id]||{};}
 function setDraft(id,patch){S.drafts[id]=Object.assign({},S.drafts[id],patch);}
 
@@ -727,13 +756,18 @@ function card(i,ctx){
   var meta=[h('span',null,i.cat)];
   if(i.vendor&&ctx!=='vendor')meta.push(h('span',null,'Vendor: '+i.vendor));
   if(i.by)meta.push(h('span',null,'Logged by '+i.by));
+  var rn=(i.thread||[]).filter(function(e){return e.type==='reminder';}).length;
+  if(rn)meta.push(h('span',{class:'remn'},'Reminded '+rn+(rn===1?' time':' times')));
   kids.push(h('p',{class:'meta'},meta));
   kids.push(timeline(i));
   var th=thumbsOf(i);if(th)kids.push(th);
   if(i.remark||(i.eta&&i.st!=='done')||(i.eta&&i.st==='done'))kids.push(h('div',{class:'note'},
     i.remark?h('p',null,i.remark):null,
     i.eta?h('p',{class:'eta'},(i.st==='done'?'Estimated: ':'Time needed: ')+i.eta):null));
+  var th2=threadBlock(i);if(th2)kids.push(th2);
   var acts=[];
+  if(i.st!=='done')acts.push(h('button',{class:'btn'+(i.overdue||i.age>=3?' primary':''),type:'button','data-remind':i.id,onclick:function(){remind(i);}},'Send reminder'));
+  acts.push(h('button',{class:'btn',type:'button','data-remark':i.id,'aria-expanded':String(S.remarkOpen.has(i.id)),onclick:function(){if(S.remarkOpen.has(i.id))S.remarkOpen.delete(i.id);else S.remarkOpen.add(i.id);render();}},'Add remark'));
   if(canEditOwn(i))acts.push(h('button',{class:'btn',type:'button',onclick:function(){openSheet(i);}},'Edit'));
   if(isMgr()){
     var open=S.expanded.has(i.id);
@@ -753,6 +787,7 @@ function card(i,ctx){
       i.hasDonePhoto?h('button',{class:'btn danger',type:'button',onclick:function(){removeDonePhoto(i);}},'Remove'):null));
   }
   if(acts.length)kids.push(h('div',{class:'mgr'},acts));
+  if(S.remarkOpen.has(i.id))kids.push(remarkForm(i));
   if(isMgr()&&S.expanded.has(i.id))kids.push(panel(i));
   return h('article',{class:'card st-'+i.st+(i.hot?' hot':'')+(i.overdue?' overdue':''),'data-id':i.id},kids);
 }
@@ -1040,40 +1075,15 @@ function dash(all){
 function slug(s){return String(s).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');}
 function adminView(){
   var out=[];
-  var pend=S.users.filter(function(u){return u.status==='pending';});
-  out.push(secHead('Logins',h('span',{class:'gcount'},'approve each person once')));
-  out.push(h('h3',{class:'sub',style:'margin-top:0'},'Waiting for approval'+(pend.length?' ('+pend.length+')':'')));
-  if(!pend.length)out.push(h('p',{class:'hint'},'No login requests. Staff open the link, tap “First time? Set password”, type their name and set a password.'));
-  else{
-    var tb=h('tbody');
-    pend.forEach(function(u){
-      var sel=h('select',{id:'ap-r-'+slug(u.name),'aria-label':'Role for '+u.name},['staff','director','manager'].map(function(r){return h('option',{value:r,selected:u.role===r},ROLE_LABEL[r]);}));
-      tb.append(h('tr',null,
-        h('td',null,h('b',null,u.name)),
-        h('td',null,u.requestedAt?fmtShort(istDate(u.requestedAt)):'—'),
-        h('td',null,sel),
-        h('td',null,
-          h('button',{class:'btn primary',type:'button',id:'ap-ok-'+slug(u.name),onclick:function(){write('approve',[token,u.name,sel.value]);}},'Approve'),' ',
-          h('button',{class:'btn',type:'button',id:'ap-no-'+slug(u.name),onclick:function(){write('removeUser',[token,u.name]);}},'Reject'))));
-    });
-    out.push(h('div',{class:'tw'},h('table',null,h('thead',null,h('tr',null,['Name','Asked on','Role',''].map(function(x){return h('th',null,x);}))),tb)));
-    out.push(h('p',{class:'hint'},'Approve only people you know asked for a login. Anyone with the link can send a request.'));
-  }
-  var act=S.users.filter(function(u){return u.status==='active';}).sort(function(a,b){return (a.role+a.name).localeCompare(b.role+b.name);});
-  out.push(h('h3',{class:'sub'},'Active logins ('+act.length+')'));
-  var tb2=h('tbody');
-  act.forEach(function(u){
-    var rm=h('button',{class:'btn',type:'button',id:'rm-'+slug(u.name)},'Reset / remove login');
-    rm.onclick=function(){
-      if(rm.dataset.arm!=='1'){rm.dataset.arm='1';rm.textContent='Tap again — they must set a new password';return;}
-      write('removeUser',[token,u.name]);
-    };
-    if(S.me&&u.name===S.me.name)rm.disabled=true;
-    tb2.append(h('tr',null,h('td',null,h('b',null,u.name)),h('td',null,ROLE_LABEL[u.role]||u.role),h('td',null,u.approvedAt?fmtShort(istDate(u.approvedAt)):'—'),h('td',null,rm)));
-  });
-  out.push(h('div',{class:'tw'},h('table',null,h('thead',null,h('tr',null,['Name','Role','Approved',''].map(function(x){return h('th',null,x);}))),tb2)));
-  out.push(h('p',{class:'hint'},'Forgotten password: reset the login, then the person sets a new password with “First time? Set password” and you approve it again. Every change is also written to the Log tab of the Google Sheet.'));
-
+  out.push(secHead('Who can update',h('span',{class:'gcount'},'no passwords')));
+  var t=h('textarea',{id:'teamList',rows:'5',maxlength:'1000',placeholder:'One name per line'});t.value=S.team.join('\n');
+  var d=h('textarea',{id:'dirList',rows:'3',maxlength:'500',placeholder:'One name per line'});d.value=S.directors.join('\n');
+  out.push(h('div',{class:'field'},h('label',{for:'teamList'},'Maintenance team (can change status, remarks, photos)'),t));
+  out.push(h('div',{class:'field',style:'margin-top:12px'},h('label',{for:'dirList'},'Directors (see performance score)'),d));
+  out.push(h('div',{class:'row',style:'margin-top:10px'},h('button',{class:'btn primary',type:'button',id:'teamSave',onclick:function(){
+    write('saveTeam',[token,t.value.split('\n'),d.value.split('\n')]).then(function(ok){if(ok)toast('Saved');});
+  }},'Save names')));
+  out.push(h('p',{class:'hint'},'Everyone else can log requests, add remarks and send reminders. A name is trusted as typed, and every change is written with that name to the Log tab of the Google Sheet.'));
   out.push(secHead('Vendors',h('span',{class:'gcount'},'suggested when you assign a job')));
   var ta=h('textarea',{id:'vendorList',rows:'5',maxlength:'2000',placeholder:'One vendor per line'});
   ta.value=S.vendors.join('\n');
@@ -1084,36 +1094,27 @@ function adminView(){
   return out;
 }
 
-/* ---------- login ---------- */
+/* ---------- who are you (no password) ---------- */
 function renderAuth(){
-  var setup=S.authMode==='setup';
-  var name=h('input',{type:'text',id:'lgName',maxlength:'40',autocomplete:'username',autocapitalize:'words',placeholder:'e.g. Anita Sharma'});
-  var role=h('select',{id:'lgRole'},['staff','director','manager'].map(function(r){return h('option',{value:r},ROLE_LABEL[r]);}));
-  var pw=h('input',{type:'password',id:'lgPw',autocomplete:setup?'new-password':'current-password',placeholder:setup?'Set a password (6+ characters)':'Password'});
-  var go=h('button',{class:'btn primary',type:'submit',id:'lgGo'},setup?'Create login':'Log in');
-  var sw=h('button',{class:'btn',type:'button',id:'lgSwitch',onclick:function(){S.authMode=setup?'login':'setup';banner('');renderAuth();}},setup?'I already have a password':'First time? Set password');
+  var name=h('input',{type:'text',id:'lgName',maxlength:'40',autocomplete:'name',autocapitalize:'words',placeholder:'Type your name'});
+  var go=h('button',{class:'btn primary',type:'submit',id:'lgGo'},'Continue');
+  var known=S.team.concat(S.directors);
+  var chips=known.length?h('div',{class:'chips wrapchips',role:'group','aria-label':'Team'},known.map(function(n){
+    return h('button',{type:'button',class:'chip whochip',onclick:function(){name.value=n;go.click();}},n);
+  })):null;
   var f=h('form',{class:'authcard',id:'loginForm',novalidate:true},
-    h('h2',null,setup?'First-time setup':'Welcome'),
-    h('p',null,setup?'Type your name and choose your own password. The maintenance manager approves your login once; nobody else can see or change your password.':'Log in to record repairs, follow their progress and see what has been resolved.'),
+    h('h2',null,'Welcome'),
+    h('p',null,'No password needed. Tell us your name to report a problem, follow its progress or remind the team.'),
+    known.length?h('div',{class:'field'},h('span',{class:'lbl'},'Maintenance team and Director'),chips):null,
     h('div',{class:'field'},h('label',{for:'lgName'},'Your name'),name),
-    setup?h('div',{class:'field'},h('label',{for:'lgRole'},'I am'),role):null,
-    h('div',{class:'field'},h('label',{for:'lgPw'},'Password'),pw),
-    h('div',{class:'row'},go,sw));
+    h('div',{class:'row'},go));
   f.onsubmit=async function(e){
     e.preventDefault();
     var nm=name.value.trim();
     if(!nm){banner('Type your name.');return;}
-    if(!pw.value){banner('Enter your password.');return;}
     go.disabled=true;banner('');
-    try{
-      if(setup){
-        var r=await api('setup',[nm,pw.value,role.value]);
-        if(r.token){setToken(r.token);applyState(r.state);}
-        else{S.authMode='login';applyState(r.state);renderAuth();banner('Password set for '+nm+'. The maintenance manager needs to approve your login once. After that, log in with this password.','info');}
-      }else{
-        var r2=await api('login',[nm,pw.value]);setToken(r2.token);applyState(r2.state);
-      }
-    }catch(err){banner(err.message);}
+    try{var st=await api('state',[nm]);setToken(nm);applyState(st);}
+    catch(err){banner(err.message);}
     go.disabled=false;
   };
   replace($('auth'),[f]);
@@ -1133,10 +1134,10 @@ function render(){
     return;
   }
   var authed=!!S.me;
-  $('who').hidden=!authed;$('app').hidden=!authed;$('fab').hidden=!canLog();
+  $('who').hidden=!authed;$('app').hidden=!authed;$('fab').hidden=!canLog();$('newreq').hidden=!canLog();
   $('auth').hidden=authed||!S.ready;
   if(!authed){
-    if(S.ready&&!$('loginForm'))renderAuth();
+    if(S.ready&&!$('loginForm')){renderAuth();}
     return;
   }
   renderWho();
@@ -1145,7 +1146,7 @@ function render(){
   all.forEach(function(i){n[i.st]++;if(i.st!=='done')n.pending++;if(i.overdue)n.overdue++;});
 
   var tabs=[['dash','Overview'],['date','By date'],['floor','Location'],['vendor','Vendor']];
-  var pendUsers=S.users.filter(function(u){return u.status==='pending';}).length;
+  var pendUsers=0;
   if(isMgr())tabs.push(['admin','Admin']);
   if(!tabs.some(function(t){return t[0]===S.view;}))S.view='dash';
   var tabsEl=$('tabs');tabsEl.style.setProperty('--n',tabs.length);
@@ -1185,7 +1186,7 @@ function render(){
   var frag=[];
   if(S.view==='dash')frag=S.drill?drillView(all):dash(all);
   else if(S.view==='admin')frag=adminView();
-  else if(!all.length)frag.push(h('p',{class:'empty'},'No complaints yet.'+(canLog()?' Tap “Log entry” to add the first one.':'')));
+  else if(!all.length)frag.push(h('p',{class:'empty'},'No complaints yet.'+(canLog()?' Tap “New request” to add the first one.':'')));
   else if(!list.length)frag.push(h('p',{class:'empty'},S.date&&!S.days[S.date]&&S.date<S.cutoff?'Loading that day…':'Nothing matches this filter.'));
   else if(S.view==='date'){
     var byDate={};
@@ -1220,13 +1221,11 @@ function render(){
 }
 function renderWho(){
   replace($('who'),[
-    h('span',null,'Signed in as ',h('b',null,S.me.name)),
+    h('span',null,'Hello, ',h('b',null,S.me.name)),
     h('span',{class:'role'},ROLE_LABEL[S.me.role]||S.me.role),
     h('span',{class:'sp'}),
-    h('button',{class:'chipbtn',type:'button',id:'pwBtn',onclick:function(){
-      ['pwOld','pwNew','pwNew2'].forEach(function(i){$(i).value='';});$('pwErr').hidden=true;$('pwShade').hidden=false;$('pwOld').focus();}},'Password'),
     h('button',{class:'chipbtn',type:'button',id:'logout',onclick:function(){
-      setToken('');S.me=null;S.complaints={};S.extra={};S.users=[];S.view='';S.drill='';S.authMode='login';banner('');render();}},'Log out')
+      setToken('');S.me=null;S.complaints={};S.extra={};S.view='';S.drill='';banner('');render();}},'Change name')
   ]);
 }
 $('list').addEventListener('focusout',function(){
@@ -1257,7 +1256,7 @@ function renderFloorPick(){
     return h('button',{type:'button','aria-pressed':String(S.form.floor===f.k),onclick:function(){S.form.floor=f.k;renderFloorPick();}},
       h('span',{class:'sign'},f.k),h('span',null,f.n));
   }));
-  var list=S.form.floor==='OUTDOOR'?ZONES:AREAS;
+  var list=S.form.floor==='OUTDOOR'?ZONES:S.form.floor==='STORE'?STORES:AREAS;
   replace($('f-zones'),list.map(function(n){return h('button',{type:'button',onclick:function(){$('f-area').value=n;}},n);}));
 }
 function renderKindPick(){
@@ -1301,6 +1300,7 @@ function openSheet(edit){
 }
 function closeSheet(){sheet.hidden=true;if(!$('fab').hidden)$('fab').focus();}
 $('fab').addEventListener('click',function(){openSheet(null);});
+$('newreq').addEventListener('click',function(){openSheet(null);});
 $('f-close').addEventListener('click',closeSheet);
 sheet.addEventListener('click',function(e){if(e.target===sheet)closeSheet();});
 $('f-photo').addEventListener('change',async function(e){
@@ -1352,23 +1352,10 @@ form.addEventListener('submit',async function(e){
   else showErr($('banner').textContent||'Could not save. Try again.');
 });
 
-/* ---------- change password ---------- */
-$('pwCancel').addEventListener('click',function(){$('pwShade').hidden=true;});
-$('pwForm').addEventListener('submit',async function(e){
-  e.preventDefault();
-  var o=$('pwOld').value,n=$('pwNew').value,n2=$('pwNew2').value;
-  function err(m){$('pwErr').textContent=m;$('pwErr').hidden=false;}
-  if(n.length<6)return err('New password must be at least 6 characters.');
-  if(n!==n2)return err("The two new passwords don't match.");
-  try{var r=await api('changePassword',[token,o,n]);setToken(r.token);applyState(r.state);$('pwShade').hidden=true;toast('Password changed');}
-  catch(x){err(x.message);}
-});
-
 document.addEventListener('keydown',function(e){
   if(e.key!=='Escape')return;
   if(!$('lightbox').hidden)$('lightbox').click();
   else if(!sheet.hidden)closeSheet();
-  else if(!$('pwShade').hidden)$('pwShade').hidden=true;
 });
 
 /* ---------- start ---------- */
@@ -1376,7 +1363,7 @@ render();
 if(API_URL){
   refresh();
   setInterval(function(){
-    var busy=!sheet.hidden||!$('pwShade').hidden||!$('lightbox').hidden;
+    var busy=!sheet.hidden||!$('lightbox').hidden;
     var a=document.activeElement,typing=a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA')&&S.me;
     if(document.visibilityState==='visible'&&!busy&&!typing&&S.me)refresh();
   },30000);
