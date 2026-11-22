@@ -319,6 +319,13 @@ table.t tbody tr:hover td,.dr:hover{background:#F8FAFD}
 .arow:last-child{border:0}.arow.post{background:linear-gradient(90deg,var(--amb-t),transparent 60%);margin:0 -16px;padding-left:16px;padding-right:16px}
 .arow .at{color:var(--ink2);font-size:12px}.arow .aw b{display:block}.arow .aw small{color:var(--ink2);font-size:11px}
 @media (max-width:980px){.calwrap{grid-template-columns:1fr}.wgrid{grid-template-columns:1fr}.arow{grid-template-columns:1fr;gap:2px}.arow.post{margin:0 -16px}}
+
+.c{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.c.oos span{background:var(--amb-t);color:#8A5A06;font-size:12px}
+.sn{margin-right:4px}
+.stk .ab{float:right;margin-left:6px;border:1px solid var(--line);background:var(--pur-t);color:var(--pur);border-radius:8px;font-size:11px;font-weight:700;width:26px;height:24px;margin-top:1px}
+.stk .ab:hover{background:var(--pur);color:#fff}
+th .allb{display:block;margin:4px auto 0;border:1px solid var(--line);background:var(--okbg);color:var(--ok);border-radius:999px;font-size:10px;font-weight:700;padding:1px 8px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -536,7 +543,12 @@ function cdesc(c,ph){if(c.d==='N')return 'Not issued'+(c.dr?' · '+c.dr:'');if(p
   return c.c==='M'?'Not submitted'+(c.cr?' · '+c.cr:''):c.c==='IC'?'Incomplete':c.c==='LV'?'On leave':c.c==='RT'?'Retained':'Received'}
 function stuName(r,sid){const x=roster(r).find(z=>sidOf(r,z[0])===sid);return x?x[1]+' #'+x[0]:sid}
 function logEdit(r,ph,post,sid,it,b,a){if(!it)return;const f=cdesc(b,ph),t=cdesc(a,ph);if(f===t&&b.n===a.n)return;
-  logAdd(r,stuName(r,sid)+' · '+it.n+': '+f+' → '+t+(a.n&&a.n!==b.n?' · “'+a.n+'”':''),{ph,post:post?1:0,s:sid})}
+  const me=stamp().n,now=Date.now();r.log=r.log||[];
+  const k=r.log.findIndex(l=>l.s===sid&&l.i===it.id&&l.ph===ph&&l.by===me&&!l.bulk&&now-l.at<10*60000);
+  const txt=(f0,t0)=>stuName(r,sid)+' · '+it.n+': '+f0+' → '+t0+(a.n&&a.n!==b.n?' · “'+a.n+'”':'');
+  if(k>=0){const l=r.log[k];if(l.f===t&&!l.post===!post){r.log.splice(k,1);return}
+    l.t=t;l.at=now;l.post=post?1:l.post;l.act=txt(l.f,t);r.log.push(r.log.splice(k,1)[0]);return}
+  logAdd(r,txt(f,t),{ph,post:post?1:0,s:sid,i:it.id,f,t})}
 function logBulk(r,ph,post,label,bb,aa){let n=0;bb.forEach((x,i)=>{if(x!==aa[i])n++});if(!n)return;
   logAdd(r,label+': '+n+' changed → '+[...new Set(aa)].join(', '),{ph,post:post?1:0,bulk:1})}
 function submitPhase(rid,phase,gd){
@@ -781,7 +793,7 @@ function roundView(){
   if(ph==='coll'){
     h+=`<div class="chips" style="margin-top:12px">${gs.map(d=>{const n=itemsFor(r,d).length;const sb=csubFor(r,d);return `<button class="chip ${d===gd?'on':''}" data-act="grp" data-v="${d}">${esc(fd(d))} · ${n} item${n>1?'s':''} ${sb?'✓':(d<t?'· overdue':'')}</button>`}).join('')}</div>`;
     if(gd!==t)h+=`<div class="banner ${gd<t?'warn':'info'}" style="margin-top:4px">${gd<t?'Collection of '+fd(gd)+' items was due '+diffDays(t,gd)+' day(s) ago.':'Collection of these items is due '+fd(gd)+'.'} Your name and the actual time are recorded on submit.</div>`}
-  h+=`<div class="legend" style="margin:13px 0 7px">${ph==='dist'?`<span class="pill p-ok">✓ Given</span><span class="pill p-no">✗ Not received</span><span class="pill p-abs">A Absent</span>`:`<span class="pill p-ok">✓ Received</span><span class="pill p-no">✗ Not submitted</span><span class="pill p-abs">A Absent</span><span class="pill p-ic">IC Incomplete</span><span class="pill p-lv">L On leave</span><span class="pill p-rt">RT Retained</span><span class="pill p-na">– Not issued</span>`}<span class="muted tiny" style="align-self:center">Everyone starts as ${ph==='dist'?'given':'received'}. Tap only the exceptions. Tap a name for the whole row, an item heading for the whole column.</span></div>`;
+  h+=`<div class="legend" style="margin:13px 0 7px">${ph==='dist'?`<span class="pill p-ok">✓ Given</span><span class="pill p-no">✗ Not given</span><span class="pill p-abs">A Absent</span><span class="pill p-ic">NA Not available</span>`:`<span class="pill p-ok">✓ Received</span><span class="pill p-no">✗ Not submitted</span><span class="pill p-abs">A Absent</span><span class="pill p-ic">IC Incomplete</span><span class="pill p-lv">L On leave</span><span class="pill p-rt">RT Retained</span><span class="pill p-na">– Not issued</span>`}<span class="muted tiny" style="align-self:center">Everyone starts as ${ph==='dist'?'given':'received'}. <b>Tap a box to change it, right there</b>: ${ph==='dist'?'✓ → ✗ → A → NA → ✓':'✓ → ✗ → A → IC → ✓'}. Hold a box for a remark, leave or retain. <b>A</b> beside a name marks the whole row absent; <b>✓ all</b> under a heading ticks the column.</span></div>`;
   h+=gridTable(r,ph,its);
   h+=reportView(r,ph,its,gd);
   h+=activityCard(r);
@@ -810,11 +822,11 @@ function actView(){
 
 function gridTable(r,ph,its){
   const ro=roster(r);
-  let h=`<div class="tblwrap"><table class="grid2"><thead><tr><th class="stk"><span class="tiny muted">STUDENT (${ro.length})</span></th>`+its.map(it=>`<th><span class="ty t-${it.t}">${it.t}</span><span class="nm" data-act="colsheet" data-i="${it.id}">${esc(short(it.n))}</span>${ph==='dist'&&groupsOf(r).length>1?`<span class="dd">due ${esc(fd(icd(r,it)))}</span>`:''}</th>`).join('')+`</tr></thead><tbody>`;
+  let h=`<div class="tblwrap"><table class="grid2"><thead><tr><th class="stk"><span class="tiny muted">STUDENT (${ro.length})</span></th>`+its.map(it=>`<th><span class="ty t-${it.t}">${it.t}</span><span class="nm" data-act="colsheet" data-i="${it.id}">${esc(short(it.n))}</span>${ph==='dist'&&groupsOf(r).length>1?`<span class="dd">due ${esc(fd(icd(r,it)))}</span>`:''}<button class="allb" data-act="colall" data-i="${it.id}" aria-label="All ${esc(it.n)} ${ph==='dist'?'given':'received'}">✓ all</button></th>`).join('')+`</tr></thead><tbody>`;
   ro.forEach(([roll,name])=>{const sid=sidOf(r,roll);const fl=studentFlag(r,sid,ph,its);
-    h+=`<tr><td class="stk" data-act="stusheet" data-s="${sid}"><span class="rl">${roll}</span><span class="sn">${esc(name)}</span>${fl?`<span class="sflag"><span class="pill p-${fl[0]}">${esc(fl[1])}</span></span>`:''}</td>`;
+    h+=`<tr><td class="stk" data-act="stusheet" data-s="${sid}"><span class="rl">${roll}</span><span class="sn">${esc(name)}</span><button class="ab" data-act="rowabs" data-s="${sid}" aria-label="Mark ${esc(name)} absent">A</button>${fl?`<span class="sflag"><span class="pill p-${fl[0]}">${esc(fl[1])}</span></span>`:''}</td>`;
     its.forEach(it=>{const c=cell(r,sid,it.id);let cls='ok',g='✓';
-      if(ph==='dist'){if(c.d==='N'){if(c.dr==='Absent'){cls='abs';g='A'}else{cls='no';g='✗'}}}
+      if(ph==='dist'){if(c.d==='N'){if(c.dr==='Absent'){cls='abs';g='A'}else if(c.dr==='Out of stock'){cls='oos';g='NA'}else{cls='no';g='✗'}}}
       else{if(c.d==='N'){cls='na';g='–'}else if(c.c==='M'){if(c.cr==='Absent'){cls='abs';g='A'}else{cls='no';g='✗'}}else if(c.c==='IC'){cls='ic';g='IC'}else if(c.c==='LV'){cls='lv';g='L'}else if(c.c==='RT'){cls='rt';g='RT'}}
       h+=`<td><button class="c ${cls}" data-act="cell" data-s="${sid}" data-i="${it.id}" aria-label="${esc(name)} ${esc(it.n)}"><span>${g}</span></button></td>`});
     h+=`</tr>`});
@@ -1230,7 +1242,7 @@ const ACT={
   open:(el,ev)=>{if(ev)ev.preventDefault();const r=S.rounds[el.dataset.id];if(!r)return;S.openRound=r.id;S.phase=el.dataset.ph||(r.dsub?'coll':'dist');S.grp=el.dataset.g||null;S.tab='round';window.scrollTo(0,0);render()},
   phase:el=>{S.phase=el.dataset.v;render()},grp:el=>{S.grp=el.dataset.v;render()},
   calpick:el=>{S.date=el.dataset.v;S.calM=S.date.slice(0,7);render()},calmon:el=>{const b=(S.calM||S.date.slice(0,7)).split('-').map(Number);const d=new Date(b[0],b[1]-1+Number(el.dataset.v),1);S.calM=d.getFullYear()+'-'+pad(d.getMonth()+1);render()},dateshift:el=>{S.date=addDays(S.date,Number(el.dataset.v));render()},datetoday:()=>{S.date=todayISO();S.calM=S.date.slice(0,7);render()},
-  cell:el=>openCell(el.dataset.s,el.dataset.i),setcell:el=>applyCell(SH.sid,SH.iid,el.dataset.v),
+  cell:el=>{if(Date.now()-LP<700)return;cycleCell(el.dataset.s,el.dataset.i)},rowabs:el=>rowAbsent(el.dataset.s),colall:el=>colAll(el.dataset.i),setcell:el=>applyCell(SH.sid,SH.iid,el.dataset.v),
   stusheet:el=>openStu(el.dataset.s),bulkstu:el=>applyBulkStu(SH.sid,el.dataset.v),
   colsheet:el=>openCol(el.dataset.i),bulkcol:el=>applyBulkCol(SH.iid,el.dataset.v),
   submit:()=>{if(!S.me){openWho(true);return}openSubmit()},dosubmit:()=>{closeSheet();const r=S.rounds[S.openRound];submitPhase(S.openRound,S.phase,S.phase==='coll'?curGroup(r):null)},
@@ -1271,6 +1283,37 @@ async function saveLeave(){
   S.rounds[r.id]=r;await Store.set('dcr_rounds',r.id,r);
   const fresh=buildEntries(r,'coll',by);Object.values(fresh).forEach(e=>e.lv=1);mutL(key,l=>applyEntries(l,r,'coll',fresh));
   LV.items.clear();LV.roll='';LV.note='';toast('Leave kit recorded for '+st[1]);render()}
+function cycleCell(sid,iid){
+  if(!S.me){openWho(true);return}
+  const rid=S.openRound;const r0=S.rounds[rid];const ph=S.phase;const c=cell(r0,sid,iid);const gd=curGroup(r0);
+  let p;
+  if(ph==='dist'){
+    if(c.d!=='N')p={d:'N',dr:'Other'};
+    else if(c.dr!=='Absent'&&c.dr!=='Out of stock')p={d:'N',dr:'Absent'};
+    else if(c.dr==='Absent')p={d:'N',dr:'Out of stock'};
+    else p={d:'G',dr:''};
+  }else{
+    if(c.d==='N'){toast('Not issued to this student');return}
+    if(c.c==='R')p={c:'M',cr:'Forgot'};
+    else if(c.c==='M'&&c.cr!=='Absent')p={c:'M',cr:'Absent'};
+    else if(c.c==='M')p={c:'IC',cr:''};
+    else p={c:'R',cr:'',ret:''};
+  }
+  mutR(rid,r=>{const b0=cell(r,sid,iid);const post=!!(ph==='dist'?r.dsub:csubFor(r,gd));
+    setCell(r,sid,iid,p);
+    logEdit(r,ph,post,sid,r.items.find(i=>i.id===iid),b0,cell(r,sid,iid));
+    if(post){r.edit=r.edit||{};r.edit[editKey(ph,gd)]=1}})}
+function rowAbsent(sid){
+  if(!S.me){openWho(true);return}
+  const r0=S.rounds[S.openRound];const ph=S.phase;const gd=curGroup(r0);const its=ph==='coll'?itemsFor(r0,gd):r0.items;
+  const all=its.every(it=>{const c=cell(r0,sid,it.id);return ph==='dist'?(c.d==='N'&&c.dr==='Absent'):(c.d==='N'||(c.c==='M'&&c.cr==='Absent'))});
+  applyBulkStu(sid,all?(ph==='dist'?'G':'R'):'absent')}
+function colAll(iid){if(!S.me){openWho(true);return}applyBulkCol(iid,S.phase==='dist'?'G':'R')}
+let LP=0,LPT=null;
+document.addEventListener('pointerdown',ev=>{const b=ev.target.closest('button.c');if(!b)return;clearTimeout(LPT);
+  LPT=setTimeout(()=>{LP=Date.now();if(navigator.vibrate)try{navigator.vibrate(15)}catch(e){}openCell(b.dataset.s,b.dataset.i)},480)});
+['pointerup','pointercancel','pointerleave','scroll'].forEach(e=>document.addEventListener(e,()=>clearTimeout(LPT),true));
+document.addEventListener('contextmenu',ev=>{const b=ev.target.closest('button.c');if(b){ev.preventDefault();clearTimeout(LPT);LP=Date.now();openCell(b.dataset.s,b.dataset.i)}});
 document.addEventListener('click',ev=>{
   const el=ev.target.closest('[data-act]');if(el){const f=ACT[el.dataset.act];if(f){f(el,ev)}return}
   if(ev.target.id==='sheet'&&S.me)closeSheet()});
