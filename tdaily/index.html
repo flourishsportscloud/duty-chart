@@ -3,28 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<link rel="icon" href="../fis/fis-icon-192.png">
+<link rel="icon" href="../fis/fis-logo-192.png">
 <style>html,body{margin:0}[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
-<title>Transport Daily Report</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<title>Transport Operations · FIS</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap">
 <style>
 /* Layout: sticky date bar, then one stacked card per time window, current window highlighted */
 :root{
-  --bg:#eef0f2; --surface:#ffffff; --ink:#1b2128; --muted:#5d6670; --line:#d9dde2;
-  --accent:#e8a400; --accent-ink:#3a2a00; --accent-soft:#fff3cf;
-  --done:#1f8a4c; --done-soft:#e1f4e8; --miss:#c4372c; --miss-soft:#fbe4e1; --na:#6d7680; --na-soft:#e9ecef; --blue:#1f5fd6;
-  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
-  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
-  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --bg:#F5F3EE; --surface:#ffffff; --ink:#1B2340; --muted:#646B80; --line:#E6E2D8;
+  --accent:#E3A94F; --accent-ink:#16214A; --accent-soft:#FBF1DC;
+  --done:#1F6B47; --done-soft:#E6F1EA; --miss:#A42A47; --miss-soft:#F8E6EA; --na:#8A90A2; --na-soft:#EEF0F4; --blue:#1B5E8A;
+  --display:"Lora",Georgia,serif; --body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"Inter",system-ui,sans-serif;
+  color-scheme:light;
 }
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#12161b; --surface:#1b2128; --ink:#e8ebee; --muted:#9aa3ad; --line:#2c343d;
-  --accent:#f2b51d; --accent-ink:#2a1e00; --accent-soft:#3a2f12;
-  --done:#4cc27e; --done-soft:#173524; --miss:#ff7a6e; --miss-soft:#3c1d1a; --na:#a1aab3; --na-soft:#262d35; --blue:#7fa9ff; color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#12161b; --surface:#1b2128; --ink:#e8ebee; --muted:#9aa3ad; --line:#2c343d;
-  --accent:#f2b51d; --accent-ink:#2a1e00; --accent-soft:#3a2f12;
-  --done:#4cc27e; --done-soft:#173524; --miss:#ff7a6e; --miss-soft:#3c1d1a; --na:#a1aab3; --na-soft:#262d35; --blue:#7fa9ff; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.4}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--ink)}
@@ -224,6 +215,115 @@ table.svc{min-width:760px} .svc td{padding:6px 8px}
 .btn.sm{padding:5px 10px;font-size:12px}
 @media (max-width:520px){.meta{grid-template-columns:1fr}h1{font-size:19px}.veh{grid-template-columns:1fr}.res{grid-template-columns:minmax(0,1fr) 40px}.res select{grid-column:1/-1}}
 @media (prefers-reduced-motion:reduce){.chev{transition:none}}
+/* ===== FIS premium corporate theme (navy · gold · cream) ===== */
+:root{--navy:#1F2D5A;--navy2:#16214A;--gold:#E3A94F;--cream:#F3F0E8;--cream2:#F8F6F1}
+body{font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;background:var(--bg)}
+body::before{background:var(--navy)}
+header.bar{background:var(--navy);color:#fff;border-bottom:3px solid var(--gold);box-shadow:0 4px 18px rgba(15,22,50,.28)}
+.brand{display:flex;align-items:center;gap:11px;flex:1 1 auto;min-width:0}
+.brand .logo{width:44px;height:44px;border-radius:12px;background:#fff;display:grid;place-items:center;flex:none;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.brand .logo img{width:38px;height:38px;object-fit:contain}
+h1{font-family:'Lora',Georgia,serif;text-transform:none;font-size:20px;font-weight:600;letter-spacing:0;color:#fff;line-height:1.15}
+h1 small{display:block;font-family:'Inter',sans-serif;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:2px}
+.datebox button,.datebox input{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.22);color:#fff;border-radius:10px}
+.datebox input{font-family:'Inter',sans-serif}
+.prog span{color:#DCE1F0;font-family:'Inter',sans-serif}
+.track{background:rgba(255,255,255,.14)}
+.tabs{gap:6px;padding-bottom:12px;margin-bottom:-10px}
+.tabs button{font-family:'Lora',Georgia,serif;font-size:14px;color:#DCE1F0;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:8px 13px}
+.tabs button.on{background:var(--gold);color:var(--navy2);border-color:var(--gold)}
+.tabs button b{font-family:'Inter',sans-serif;background:#C2385B}
+.status{color:var(--muted);font-size:12.5px}
+section.win,.card2{background:#fff;border:1px solid var(--line);border-top:4px solid var(--navy);border-radius:16px;box-shadow:0 1px 2px rgba(20,25,60,.05),0 6px 20px rgba(20,25,60,.04)}
+section.win.now{border-top-color:var(--gold);box-shadow:0 0 0 2px rgba(227,169,79,.45),0 6px 20px rgba(20,25,60,.06)}
+.win-h h2{font-family:'Lora',Georgia,serif;text-transform:none;letter-spacing:0;font-size:18px;font-weight:600;color:var(--navy)}
+.win-h .time{font-family:'Inter',sans-serif;background:var(--cream);color:var(--navy);border-radius:8px;font-weight:700}
+.cnt{font-family:'Inter',sans-serif}
+.btn{border-radius:11px;font-family:'Inter',sans-serif}
+.btn.primary{background:var(--navy);border-color:var(--navy);color:#fff}
+.group{font-family:'Inter',sans-serif;letter-spacing:.12em;color:var(--muted)}
+input,select,textarea{font-family:'Inter',sans-serif}
+.nowtag{background:var(--gold);color:var(--navy2)}
+.dc{border-top:3px solid var(--gold);border-radius:14px}
+.dc h4{font-family:'Lora',Georgia,serif;color:var(--navy)}
+/* shared new pieces */
+.pg-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:14px 2px 10px}
+.pg-h h2{font-family:'Lora',Georgia,serif;font-size:21px;color:var(--navy);margin:0;font-weight:600}
+.pg-h span{color:var(--muted);font-size:13px}
+.card2{padding:14px 16px;margin-bottom:14px}
+.card2 .sh{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:0 0 10px;padding-bottom:9px;border-bottom:1px solid var(--line)}
+.card2 .sh b{font-family:'Lora',Georgia,serif;font-size:17.5px;color:var(--navy);font-weight:600}
+.card2 .sh small{color:var(--muted);font-size:12.5px}.card2 .sh .r{margin-left:auto}
+.kp{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:0 0 14px}
+.kp>*{background:#fff;border:1px solid var(--line);border-top:3px solid var(--navy);border-radius:14px;padding:11px 13px;text-align:left;font:inherit;color:var(--ink);cursor:pointer}
+.kp>.red{border-top-color:var(--miss)}.kp>.grn{border-top-color:var(--done)}.kp>.gold{border-top-color:var(--gold)}
+.kp span{display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.kp b{display:block;font-family:'Lora',Georgia,serif;font-size:27px;color:var(--navy2);line-height:1.15;margin-top:3px;font-variant-numeric:tabular-nums}
+.kp .red b{color:var(--miss)}.kp small{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+.iss{display:flex;gap:12px;padding:11px 2px;border-bottom:1px solid var(--line);cursor:pointer;width:100%;background:none;border-left:0;border-right:0;border-top:0;text-align:left;font:inherit;color:inherit;align-items:flex-start}
+.iss:last-child{border-bottom:0}.iss:hover{background:var(--cream2)}
+.iss .ic{flex:none;width:36px;height:36px;border-radius:10px;display:grid;place-items:center;font-size:17px;background:var(--miss-soft)}
+.iss.amb .ic{background:var(--accent-soft)}.iss.ok .ic{background:var(--done-soft)}
+.iss .tx{flex:1;min-width:0}.iss .tx b{display:block;font-size:14.5px}.iss .tx span{display:block;font-size:13px;color:var(--muted);margin-top:2px;line-height:1.45}
+.iss .n{font-family:'Lora',Georgia,serif;font-size:22px;font-weight:700;color:var(--miss);min-width:26px;text-align:right}
+.iss.amb .n{color:#B7791F}.iss.ok .n{color:var(--done)}
+.allok{padding:14px;text-align:center;color:var(--done);font-weight:600}
+.two2{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media (max-width:760px){.two2{grid-template-columns:1fr}}
+.rk2{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}.rk2:last-child{border-bottom:0}
+.rk2 i{font-style:normal;width:24px;height:24px;border-radius:7px;background:var(--cream);color:var(--navy);font-weight:700;font-size:12px;display:grid;place-items:center;flex:none}
+.rk2 .nm{flex:1;min-width:0}.rk2 .nm small{display:block;color:var(--muted);font-size:12px}
+.rk2 b{font-family:'Lora',Georgia,serif;font-size:18px;color:var(--navy2)}
+.chips2{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}
+.chips2 button{border:1px solid var(--line);background:#fff;border-radius:11px;padding:7px 12px;font:inherit;font-weight:600;font-size:13px;cursor:pointer;color:var(--ink)}
+.chips2 button b{margin-left:6px;color:var(--muted)}.chips2 button.on{background:var(--navy);border-color:var(--navy);color:#fff}.chips2 button.on b{color:var(--gold)}
+/* attendance */
+.pr{border:1px solid var(--line);border-radius:14px;padding:11px 12px;margin-bottom:10px;background:#fff}
+.pr.abs{background:var(--miss-soft);border-color:#E9C3CC}
+.pr .top{display:flex;gap:10px;align-items:center}
+.pr .who{flex:1;min-width:0}.pr .who b{display:block;font-size:15.5px}.pr .who small{display:block;color:var(--muted);font-size:12px}
+.pr .who .hi{color:var(--navy);font-size:13px}
+.pa{flex:none;font:inherit;font-weight:800;font-size:15px;width:46px;height:40px;border-radius:11px;border:2px solid var(--done);background:var(--done-soft);color:var(--done);cursor:pointer}
+.pa.A{border-color:var(--miss);background:var(--miss);color:#fff}
+.un{flex:none;font:inherit;font-weight:700;font-size:12px;height:40px;padding:0 9px;border-radius:11px;border:2px solid var(--line);background:#fff;color:var(--muted);cursor:pointer;white-space:nowrap}
+.un.bad{border-color:var(--blue);background:#E3EFF7;color:var(--blue)}
+.pun{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:9px}
+.pun button{font:inherit;border:1.5px dashed #C9C4B6;background:var(--cream2);border-radius:11px;padding:7px 2px;cursor:pointer;min-height:54px;color:var(--muted);line-height:1.15}
+.pun button small{display:block;font-size:10.5px;font-weight:600}
+.pun button b{display:block;font-size:15px;color:var(--ink);margin-top:3px;font-variant-numeric:tabular-nums}
+.pun button.set{border-style:solid;border-color:var(--done);background:var(--done-soft)}
+.pun button.late{border-color:var(--miss);background:var(--miss-soft)}.pun button.late b{color:var(--miss)}
+.pun button.due{border-color:var(--gold);border-style:solid;background:#fff}
+.pun button em{display:block;font-style:normal;font-size:10.5px;font-weight:700;color:var(--miss)}
+.ped{display:flex;gap:6px;align-items:center;margin-top:8px;flex-wrap:wrap}.ped input{flex:1;min-width:110px}
+.flag{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:6px;background:var(--miss-soft);color:var(--miss);margin:6px 4px 0 0}
+.flag.amb{background:var(--accent-soft);color:#8A5B12}.flag.blu{background:#E3EFF7;color:var(--blue)}.flag.grn{background:var(--done-soft);color:var(--done)}
+.vt{display:flex;align-items:baseline;gap:8px;margin:16px 2px 8px}.vt b{font-family:'Lora',Georgia,serif;font-size:17px;color:var(--navy)}.vt span{color:var(--muted);font-size:12.5px}
+.rtgrid{display:grid;grid-template-columns:minmax(0,1.4fr) 1fr 1fr 80px;gap:6px 8px;align-items:center;font-size:13.5px}
+.rtgrid input,.rtgrid select{width:100%;padding:6px 7px}
+.rtgrid .h{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
+/* vehicle check */
+.vcc{border:1px solid var(--line);border-radius:16px;background:#fff;margin-bottom:12px;overflow:hidden}
+.vcc .vh{display:flex;align-items:center;gap:10px;padding:11px 14px;background:linear-gradient(90deg,var(--navy),#2A3B72);color:#fff}
+.vcc .vh b{font-family:'Lora',Georgia,serif;font-size:18px}.vcc .vh span{font-size:12px;color:#DCE1F0;flex:1}
+.vcc .vh em{font-style:normal;font-weight:800;background:var(--gold);color:var(--navy2);border-radius:8px;padding:3px 9px;font-size:13px}
+.vcc .vh em.ok{background:#7BD3A0}
+.vci{display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:8px 10px;align-items:center;padding:10px 14px;border-top:1px solid var(--line)}
+.vci .ico{font-size:24px;text-align:center}
+.vci .lb b{display:block;font-size:15px}.vci .lb small{color:var(--muted);font-size:12px}
+.vci .bt{display:flex;gap:6px;align-items:center}
+.ok2,.bad2{font:inherit;font-weight:800;font-size:13px;border-radius:11px;padding:9px 10px;cursor:pointer;border:2px solid var(--line);background:#fff;color:var(--muted);white-space:nowrap}
+.ok2.on{background:var(--done);border-color:var(--done);color:#fff}.bad2.on{background:var(--miss);border-color:var(--miss);color:#fff}
+.vci .nt{grid-column:2/-1}
+@media (max-width:520px){.vci{grid-template-columns:34px minmax(0,1fr)}.vci .bt{grid-column:1/-1;justify-content:flex-end}.vci .nt{grid-column:1/-1}}
+/* register */
+.regt{width:100%;border-collapse:collapse;font-size:13.5px}
+.regt th{background:var(--cream);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px}
+.regt td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}.regt td.n{text-align:right;font-family:'Lora',Georgia,serif;font-size:17px;font-weight:700;color:var(--navy2)}
+.regt small{color:var(--muted)}
+.dots{display:flex;gap:3px;flex-wrap:wrap}.dots i{font-style:normal;font-size:11px;font-weight:700;padding:1px 5px;border-radius:5px;background:var(--miss-soft);color:var(--miss)}
+.dots.u i{background:#E3EFF7;color:var(--blue)}.dots.l i{background:var(--accent-soft);color:#8A5B12}
+.chart td.nm small{display:block;color:var(--muted);font-weight:500;font-size:10.5px}
+.wdur{font-weight:700;font-size:12px}.wdur.bad{color:var(--miss)}.wdur.ok{color:var(--done)}
 </style>
 </head>
 <body>
@@ -232,7 +332,7 @@ table.svc{min-width:760px} .svc td{padding:6px 8px}
 <div class="wrap">
   <header class="bar">
     <div class="bar-top">
-      <h1>Transport <span>Daily</span> Report</h1>
+      <div class="brand"><div class="logo"><img src="../fis/fis-logo-192.png" alt="FIS"></div><h1><small>FIS · Transport</small>Transport Operations</h1></div>
       <div class="datebox">
         <button id="prev" aria-label="Previous day">‹</button>
         <input type="date" id="date" aria-label="Report date">
@@ -247,7 +347,11 @@ table.svc{min-width:760px} .svc td{padding:6px 8px}
   <div class="pane" data-pane="dash" hidden>
   <div id="docAlert"></div>
   <div id="svcAlert"></div>
-  <div id="dashBody" class="dash"></div>
+  <div id="dashBody"></div>
+  <section class="win" id="eodSec">
+    <div class="win-h" data-w="eodSec"><span class="time">Day End</span><h2>Day-End WhatsApp Report</h2><span class="cnt" id="eodSum"></span><span class="chev">▾</span></div>
+    <div class="rows" id="eodBody"></div>
+  </section>
   </div>
   <div class="pane" data-pane="tasks" hidden>
   <div class="meta">
@@ -262,6 +366,7 @@ table.svc{min-width:760px} .svc td{padding:6px 8px}
     <span><b style="background:var(--miss-soft);color:var(--miss)">✗</b>Not done</span>
     <span><b style="background:var(--na-soft);color:var(--na);font-size:9px">NA</b>Not applicable</span>
   </div>
+  <div id="taskNow"></div>
   <div id="windows"></div>
   <div class="actions">
     <button class="btn primary" id="copy">Copy WhatsApp report</button>
@@ -271,35 +376,13 @@ table.svc{min-width:760px} .svc td{padding:6px 8px}
   <textarea id="copybox" hidden readonly></textarea>
 
   </div>
-  <div class="pane" data-pane="staff" hidden>
-  <section class="win" id="staff">
-    <div class="win-h" data-w="staff"><span class="time">Staff</span><h2>Driver &amp; Conductor Attendance</h2>
-      <button class="btn sm" id="editRoster">Edit names</button><span class="cnt" id="staffSum"></span><span class="chev">▾</span></div>
-    <div class="rows" id="staffBody"></div>
-  </section>
-  </div>
-  <div class="pane" data-pane="uniform" hidden>
-  <section class="win" id="chartSec">
-    <div class="win-h" data-w="chartSec"><span class="time">Register</span><h2>Uniform &amp; Absentee Chart · <span id="chartTitle"></span></h2><span class="chev">▾</span></div>
-    <div class="rows">
-      <div class="legend" style="padding:10px 14px 0;margin:0">Tap a day to mark:
-        <span><b class="cm A" style="width:20px;height:20px;min-height:0">A</b>Absent</span>
-        <span><b class="cm U" style="width:20px;height:20px;min-height:0">U</b>Without uniform</span>
-        <span>Tap again to clear · Sundays greyed</span></div>
-      <div class="chart-wrap"><table id="chart" class="chart"></table></div>
-    </div>
-  </section>
-  </div>
+  <div class="pane" data-pane="att" hidden><div id="attBody"></div></div>
+  <div class="pane" data-pane="vcheck" hidden><div id="vcBody"></div></div>
+  <div class="pane" data-pane="uniform" hidden><div id="regBody"></div></div>
   <div class="pane" data-pane="plan" hidden>
   <section class="win" id="nplSec">
     <div class="win-h" data-w="nplSec"><span class="time">Kal</span><h2>Next-Day Plan (Hindi)</h2><span class="cnt" id="nplSum"></span><span class="chev">▾</span></div>
     <div class="rows" id="nplBody"></div>
-  </section>
-  </div>
-  <div class="pane" data-pane="dayend" hidden>
-  <section class="win" id="eodSec">
-    <div class="win-h" data-w="eodSec"><span class="time">Day End</span><h2>Day-End Summary</h2><span class="cnt" id="eodSum"></span><span class="chev">▾</span></div>
-    <div class="rows" id="eodBody"></div>
   </section>
   </div>
   <div class="pane" data-pane="sup" hidden>
@@ -309,12 +392,6 @@ table.svc{min-width:760px} .svc td{padding:6px 8px}
   <div id="washBody"></div>
   </div>
   <div id="phView" hidden></div>
-  <div class="pane" data-pane="complaints" hidden>
-  <section class="win" id="crSec">
-    <div class="win-h" data-w="crSec"><span class="time">FO</span><h2>Complaints &amp; Requests</h2><span class="chev">▾</span></div>
-    <div class="rows"><div class="lock" style="color:var(--ink)">Complaints, requests and transport changes are read live from the Daily FO, with Student-wise, Bus-wise and Driver-wise views and follow-up status.<div class="actions" style="margin:10px 0 0"><a class="btn primary" style="text-decoration:none" href="../complaints/">Open Complaints &amp; Requests dashboard</a></div><div style="font-size:12px;color:var(--muted);margin-top:8px">Also in the FIS Application.</div></div></div>
-  </section>
-  </div>
   <div class="pane" data-pane="docs" hidden>
   <section class="win" id="vehSec">
     <div class="win-h" data-w="vehSec"><span class="time">Docs</span><h2>Vehicle Documents &amp; Renewal Plan</h2><span class="cnt" id="vehSum"></span><span class="chev">▾</span></div>
@@ -343,7 +420,7 @@ table.svc{min-width:760px} .svc td{padding:6px 8px}
 
 <div id="fisLogin" hidden style="position:fixed;inset:0;z-index:60;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-left,0px))">
   <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px;width:min(380px,100%)">
-    <h1 style="color:var(--ink);font-size:22px;margin:0 0 4px">Transport <span style="color:var(--accent)">Daily</span> Report</h1>
+    <h1 style="color:var(--navy);font-size:22px;margin:0 0 4px">Transport Operations</h1>
     <p style="color:var(--muted);font-size:13px;margin:0 0 14px">FIS staff login · same password as the other FIS apps</p>
     <label style="display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px" for="fl-n">Full name</label>
     <input id="fl-n" autocomplete="name" style="width:100%;font:inherit;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)">
@@ -354,7 +431,7 @@ table.svc{min-width:760px} .svc td{padding:6px 8px}
 </div>
 <script>
 /* Self-update: phones keep an old copy of this page for a while, so check for a newer build and reload */
-const APP_V="202611181215";
+const APP_V="202611221100";
 (function(){let busy=false;async function chk(){if(busy||location.protocol==="file:")return;busy=true;
   try{const t=await (await fetch(location.pathname+"?nc="+Date.now(),{cache:"no-store"})).text(),m=t.match(/const APP_V="(\d+)"/);
     if(m&&m[1]!==APP_V){const u=new URL(location.href);u.searchParams.set("v",m[1]);location.replace(u.toString())}}catch(e){}busy=false}
@@ -430,14 +507,14 @@ try{JSON.parse(localStorage.getItem("closed")||"[]").forEach(x=>closed.add(x))}c
 
 function todayIST(){const d=new Date(Date.now()+330*60000);return d.toISOString().slice(0,10)}
 function nowMinIST(){const d=new Date(Date.now()+330*60000);return d.getUTCHours()*60+d.getUTCMinutes()}
-function blank(){return{s:{},n:{},by:"",fleet:"",dayNote:"",att:{},cover:{},uni:{},eod:{},sup:{},wash:{}}}
+function blank(){return{s:{},n:{},by:"",fleet:"",dayNote:"",att:{},cover:{},uni:{},eod:{},sup:{},wash:{},pu:{},vc:{},tt:{}}}
 
 /* ---- fleet & staff ---- */
 const ROUTES=[[1,1],[2,1],[3,1],[4,1],[5,1],[6,0],[7,0],[8,1],[9,1],[10,1],[11,0],[12,0],[13,0],[14,1],[15,1],[16,0],[34,0]];
 const VEH=ROUTES.map(([n,b])=>({id:"p"+n,label:(b?"Bus ":"Van ")+n,bus:!!b}));
 const SLOTS=VEH.flatMap(v=>v.bus?[{id:v.id+"d",v,role:"Driver"},{id:v.id+"c",v,role:"Conductor"}]:[{id:v.id+"d",v,role:"Driver"}]);
 const RES=[...[1,2,3].map(i=>({id:"r"+i,label:"Reserve Driver "+i})),{id:"r4",label:"Reserve Conductor 1",cond:true}];
-let roster={veh:{},area:{},name:{},phone:{},hi:{},pre:[]}, editRoster=false;
+let roster={veh:{},area:{},name:{},phone:{},hi:{},pre:[],g:{},rtm:{},rta:{},cleaner:{}}, editRoster=false;
 const vSub=v=>[roster.area[v.id],roster.veh[v.id]].filter(Boolean).join(" · ");
 function absentByName(nm){if(!nm)return false;const k=nm.trim().toLowerCase();
   return [...SLOTS,...RES].some(s=>state.att[s.id]==="A"&&(roster.name[s.id]||"").trim().toLowerCase()===k)}
@@ -445,14 +522,7 @@ const slotOf=id=>SLOTS.find(s=>s.id===id);
 const personName=(id,fb)=>roster.name[id]||fb;
 const slotText=s=>`${s.v.label} ${s.role}${roster.name[s.id]?" ("+roster.name[s.id]+")":""}`;
 function coverMap(){const m={};RES.forEach(r=>{const t=state.cover[r.id];if(t&&state.att[t]==="A"&&state.att[r.id]!=="A")m[t]=r.id});return m}
-function renderStaff(){
-  const cov=coverMap(), absent=SLOTS.filter(s=>state.att[s.id]==="A"), unc=absent.filter(s=>!cov[s.id]);
-  const total=SLOTS.length+RES.length, absN=absent.length+RES.filter(r=>state.att[r.id]==="A").length;
-  $("staffSum").textContent=`${total-absN}/${total} present`; $("staffSum").className="cnt"+(unc.length?"":" full");
-  $("editRoster").textContent=editRoster?"Done":"Edit names";
-  $("staff").classList.toggle("closed",closed.has("staff"));
-  if(editRoster){
-    $("staffBody").innerHTML=`<div class="group">Names, phone numbers and vehicle numbers stay the same every day · when a person changes, also type the Hindi name (used in the WhatsApp plan)</div>`+
+function namesEditor(){const el=$("staffBody");if(!el)return;el.innerHTML=`<div class="group">Names, phone numbers and vehicle numbers stay the same every day · when a person changes, also type the Hindi name (used in the WhatsApp plan)</div>`+
     VEH.map(v=>`<div class="redit"><b>${v.label}</b>
       <label>Area<input class="note" id="ro-area-${v.id}" data-r="area.${v.id}" value="${esc(roster.area[v.id]||"")}" placeholder="Area"></label>
       <label>Vehicle no.<input class="note" id="ro-veh-${v.id}" data-r="veh.${v.id}" value="${esc(roster.veh[v.id]||"")}" placeholder="MP 09 …"></label>
@@ -468,28 +538,65 @@ function renderStaff(){
       <label>Driver<input class="note" id="ro-pre-${i}-driver" data-pre="${i}.driver" list="staffNames" value="${esc(p.driver||"")}" placeholder="Driver"></label>
       <label>Driver phone<input class="note" id="ro-pre-${i}-dphone" data-pre="${i}.dphone" value="${esc(p.dphone||"")}" inputmode="tel" placeholder="Mobile"></label>
       <label>Conductor<input class="note" id="ro-pre-${i}-cond" data-pre="${i}.cond" list="staffNames" value="${esc(p.cond||"")}" placeholder="Conductor"></label>
-      <label>Conductor phone<input class="note" id="ro-pre-${i}-cphone" data-pre="${i}.cphone" value="${esc(p.cphone||"")}" inputmode="tel" placeholder="Mobile"></label></div>`).join("");
-    return;
-  }
-  const slotBtn=s=>{const a=state.att[s.id]==="A",c=cov[s.id];
-    return `<button class="slot ${a?"A":""} ${a&&!c?"unc":""}" data-a="${s.id}" aria-label="${esc(slotText(s))}: ${a?"absent":"present"}"><small>${s.role}${roster.phone[s.id]?" · "+esc(roster.phone[s.id]):""}</small><span>${esc(personName(s.id,"—"))}</span><em>${a?"A":"P"}</em>${a?`<div class="cv">${c?"↳ "+esc(personName(c,RES.find(r=>r.id===c).label)):"Not covered"}</div>`:""}</button>`};
-  const opts=r=>{const cur=state.cover[r.id]||"";const taken=new Set(RES.filter(x=>x.id!==r.id).map(x=>state.cover[x.id]));
-    const list=SLOTS.filter(s=>((state.att[s.id]==="A"&&!taken.has(s.id))||s.id===cur)&&(!r.cond||s.role==="Conductor"));
-    return `<option value="">Standby</option>`+list.map(s=>`<option value="${s.id}" ${s.id===cur?"selected":""}>${esc(slotText(s))}</option>`).join("")};
-  $("staffBody").innerHTML=
-    (unc.length?`<div class="alert">Not covered: ${unc.map(s=>esc(slotText(s))).join(", ")}</div>`:absent.length?`<div class="ok">All absences covered by reserve staff.</div>`:"")+
-    `<div class="group">Buses · Driver + Conductor &nbsp;·&nbsp; tap a name to mark P / A</div>`+
-    VEH.filter(v=>v.bus).map(v=>`<div class="veh"><div class="vlabel"><b>${v.label}</b><span>${esc(vSub(v))}</span></div><div class="slots">${SLOTS.filter(s=>s.v===v).map(slotBtn).join("")}</div></div>`).join("")+
-    `<div class="group">Small Vans · Driver only</div>`+
-    VEH.filter(v=>!v.bus).map(v=>`<div class="veh"><div class="vlabel"><b>${v.label}</b><span>${esc(vSub(v))}</span></div><div class="slots">${slotBtn(SLOTS.find(s=>s.v===v))}<div class="slot none">No conductor</div></div></div>`).join("")+
-    `<div class="group">Reserve staff · drivers can replace any driver or conductor · reserve conductor replaces conductors</div>`+
-    RES.map(r=>{const a=state.att[r.id]==="A";return `<div class="res"><div class="task"><span><b>${esc(personName(r.id,r.label))}</b>${roster.name[r.id]?`<br><small style="color:var(--muted)">${r.label}</small>`:""}</span></div>
-      <button class="tick ${a?"miss":"done"}" data-a="${r.id}" aria-label="${esc(r.label)}: ${a?"absent":"present"}">${a?"A":"P"}</button>
-      <select data-c="${r.id}" id="cover-${r.id}" aria-label="${esc(r.label)} assignment" ${a?"disabled":""}>${opts(r)}</select></div>`}).join("")+
-    (roster.pre&&roster.pre.length?`<div class="group">Pre-Primary run · absences carry over from above</div>`+roster.pre.map(p=>{
-      const pc=(nm,ph,role)=>nm?`<div class="slot ${absentByName(nm)?"A unc":""}" style="cursor:default"><small>${role}${ph?" · "+esc(ph):""}</small><span>${esc(nm)}</span><em>${absentByName(nm)?"A":"P"}</em>${absentByName(nm)?'<div class="cv">Absent — arrange replacement</div>':""}</div>`:`<div class="slot none">${role==="Conductor"?"No conductor":"—"}</div>`;
-      return `<div class="veh"><div class="vlabel"><b>${p.code?esc(p.code)+" · "+esc(p.kind):"Spare"}</b><span>${esc(p.area||"")}</span></div><div class="slots">${p.driver?pc(p.driver,p.dphone,"Driver"):'<div class="slot none">No driver</div>'}${pc(p.cond,p.cphone,"Conductor")}</div></div>`}).join(""):"");
-}
+      <label>Conductor phone<input class="note" id="ro-pre-${i}-cphone" data-pre="${i}.cphone" value="${esc(p.cphone||"")}" inputmode="tel" placeholder="Mobile"></label></div>`).join("")}
+/* ===== people, reporting times, gender ===== */
+const PUN=[["mi","सुबह आए","Morning in"],["mo","सुबह गए","Morning out"],["ai","दोपहर आए","Afternoon in"],["ao","दोपहर गए","Afternoon out"]];
+const PEOPLE=()=>[...SLOTS.map(s=>s.id),...RES.map(r=>r.id)];
+const roleOf=id=>{const s=slotOf(id);if(s)return s.v.label+" · "+s.role;const r=RES.find(x=>x.id===id);return r?r.label:id};
+const gOf=id=>(roster.g||{})[id]||(id==="r4"||/c$/.test(id)?"F":"M");
+const rtOf=(id,k)=>((k==="m"?roster.rtm:roster.rta)||{})[id]||"";
+function puOf(d,id){if(d===date)return (state.pu||{})[id]||{};const x=monthData[d]||{},p=pendingBy[d]||{};return Object.assign({},((x.pu||{})[id])||{},((p.pu||{})[id])||{})}
+function lateBy(d,id,k){const p=puOf(d,id),t=p[k==="m"?"mi":"ai"],r=rtOf(id,k);if(!t||!r)return 0;const n=mins(t)-mins(r);return n>0?n:0}
+function notInYet(id,k){if(date!==todayIST()||isSun(date)||state.att[id]==="A")return false;const r=rtOf(id,k),p=(state.pu||{})[id]||{};if(!r||p[k==="m"?"mi":"ai"])return false;
+  if(k==="a"&&!p.mi)return false;return nowMinIST()>mins(r)+15}
+function maleConductors(){const cov=coverMap(),out=[];VEH.filter(v=>v.bus).forEach(v=>{const c=v.id+"c";let who=c;
+  if(state.att[c]==="A"){if(!cov[c]){out.push({v,none:true});return}who=cov[c]}if(gOf(who)==="M")out.push({v,id:who})});return out}
+let puEdit="", attFilter="all";
+function punchSave(id,k,v){state.pu=state.pu||{};state.pu[id]=Object.assign({},state.pu[id]||{},{[k]:v});const p={pu:{[id]:{[k]:v}}};
+  if(v&&state.att[id]==="A"){state.att[id]="P";p.att={[id]:"P"}}queue(p);render()}
+function renderStaff(){const b=$("attBody");if(!b)return;
+  if(editRoster){b.innerHTML=staffEditor();namesEditor();return}
+  const cov=coverMap(),today=date===todayIST(),ids=PEOPLE();
+  const st={late:0,notin:0,abs:0,uni:0};
+  const info=id=>{const a=state.att[id]==="A",lm=lateBy(date,id,"m"),la=lateBy(date,id,"a"),ni=notInYet(id,"m")||notInYet(id,"a"),u=state.uni[id]&&!a;
+    if(a)st.abs++;if(lm||la)st.late++;if(ni)st.notin++;if(u)st.uni++;return{a,lm,la,ni,u}};
+  const I={};ids.forEach(id=>I[id]=info(id));
+  const show=id=>attFilter==="all"||(attFilter==="late"&&(I[id].lm||I[id].la))||(attFilter==="notin"&&I[id].ni)||(attFilter==="abs"&&I[id].a)||(attFilter==="uni"&&I[id].u);
+  const unc=SLOTS.filter(s=>state.att[s.id]==="A"&&!cov[s.id]),mc=maleConductors();
+  const card=id=>{const x=I[id],p=(state.pu||{})[id]||{},nm=personName(id,roleOf(id)),hn=hi(id),r=RES.find(q=>q.id===id);
+    const pb=([k,h,e])=>{const v=p[k],late=k==="mi"?x.lm:k==="ai"?x.la:0,due=!v&&today&&!x.a&&((k==="mi"&&rtOf(id,"m"))||(k==="ai"&&rtOf(id,"a")));
+      return `<button class="${v?"set":""} ${late?"late":""} ${due?"due":""}" data-pu="${id}|${k}"><small>${h}</small><small>${e}</small><b>${v?h12(v):"—"}</b>${late?`<em>+${late} min late</em>`:k==="mi"&&rtOf(id,"m")&&!v?`<small>due ${h12(rtOf(id,"m"))}</small>`:k==="ai"&&rtOf(id,"a")&&!v?`<small>due ${h12(rtOf(id,"a"))}</small>`:""}</button>`};
+    const ed=puEdit.startsWith(id+"|")?puEdit.split("|")[1]:"";
+    return `<div class="pr ${x.a?"abs":""}"><div class="top"><div class="who"><b>${esc(nm)}</b><span class="hi">${esc(hn!==nm?hn:"")}</span><small>${esc(roleOf(id))}${roster.phone[id]?` · <a href="tel:${esc(roster.phone[id])}">${esc(roster.phone[id])}</a>`:""}</small></div>
+      <button class="un ${x.u?"bad":""}" data-uni="${id}" ${x.a?"disabled":""}>${x.u?"✗ No uniform":"👕 Uniform ✓"}</button>
+      <button class="pa ${x.a?"A":""}" data-a="${id}" aria-label="${esc(nm)}: ${x.a?"absent":"present"}">${x.a?"A":"P"}</button></div>
+     ${x.a?`<div style="margin-top:8px;font-size:13px">${slotOf(id)?(cov[id]?`Covered by <b>${esc(personName(cov[id],cov[id]))}</b>`:`<span class="flag">Not covered</span>`):"Reserve absent"}</div>`
+      :`<div class="pun">${PUN.map(pb).join("")}</div>`}
+     ${ed?`<div class="ped"><span style="font-size:12.5px;color:var(--muted)">${PUN.find(q=>q[0]===ed)[2]}</span><input type="time" id="pt-${id}-${ed}" data-pt="${id}|${ed}" value="${esc(p[ed]||"")}"><button class="btn sm" data-puclr="${id}|${ed}">Clear</button><button class="btn sm primary" data-pudone>Done</button></div>`:""}
+     ${r&&!x.a?`<div class="ped"><span style="font-size:12.5px;color:var(--muted)">Today's duty</span><select data-c="${id}" id="cover-${id}">${(()=>{const cur=state.cover[id]||"";const taken=new Set(RES.filter(q=>q.id!==id).map(q=>state.cover[q.id]));
+        return `<option value="">Standby</option>`+SLOTS.filter(s=>((state.att[s.id]==="A"&&!taken.has(s.id))||s.id===cur)&&(!r.cond||s.role==="Conductor")).map(s=>`<option value="${s.id}" ${s.id===cur?"selected":""}>Replacing ${esc(slotText(s))}</option>`).join("")})()}</select></div>`:""}
+     <div>${x.ni?`<span class="flag">Not checked in</span>`:""}${x.u?`<span class="flag blu">Without uniform</span>`:""}${!rtOf(id,"m")?`<span class="flag amb">Reporting time not set</span>`:""}</div></div>`};
+  const grp=(t,sub,L)=>{const V=L.filter(show);return V.length?`<div class="vt"><b>${t}</b><span>${sub}</span></div>`+V.map(card).join(""):""};
+  b.innerHTML=`<div class="pg-h"><h2>Attendance &amp; Check-in</h2><span>${fmt(date)} · tap a time box when the person arrives or leaves</span><button class="btn sm" id="editRoster" style="margin-left:auto">Staff details &amp; timings</button></div>
+   ${unc.length?`<div class="alert">Not covered: ${unc.map(s=>esc(slotText(s))).join(", ")}</div>`:""}
+   ${mc.length?`<div class="alert">Conductor rule: ${mc.map(m=>m.none?esc(m.v.label)+" has no conductor":esc(m.v.label)+" — "+esc(personName(m.id,m.id))+" (male)").join(" · ")}</div>`:""}
+   <div class="chips2">${[["all","All",ids.length],["notin","Not checked in",st.notin],["late","Late",st.late],["abs","Absent",st.abs],["uni","Without uniform",st.uni]].map(([k,l,n])=>`<button class="${attFilter===k?"on":""}" data-af="${k}">${l}<b>${n}</b></button>`).join("")}</div>
+   ${VEH.filter(v=>v.bus).map(v=>grp(v.label,vSub(v),[v.id+"d",v.id+"c"])).join("")}
+   ${VEH.filter(v=>!v.bus).map(v=>grp(v.label,vSub(v)+" · driver only",[v.id+"d"])).join("")}
+   ${grp("Reserve staff","drivers replace a driver or conductor · reserve conductor replaces conductors",RES.map(r=>r.id))}
+   ${attFilter!=="all"&&!ids.some(show)?`<div class="allok">Nobody in this list.</div>`:""}`}
+function staffEditor(){const row=(id,label)=>`<div>${esc(label)}<br><small style="color:var(--muted)">${esc(personName(id,"—"))}</small></div>
+   <input type="time" id="rt-m-${id}" data-r="rtm.${id}" value="${esc(rtOf(id,"m"))}" aria-label="Morning reporting time"><input type="time" id="rt-a-${id}" data-r="rta.${id}" value="${esc(rtOf(id,"a"))}" aria-label="Afternoon reporting time">
+   <select id="ro-g-${id}" data-r="g.${id}" aria-label="Gender"><option value="M" ${gOf(id)==="M"?"selected":""}>Male</option><option value="F" ${gOf(id)==="F"?"selected":""}>Female</option></select>`;
+  return `<div class="pg-h"><h2>Staff details &amp; timings</h2><span>saved for every day</span><button class="btn sm primary" id="editRoster" style="margin-left:auto">Done</button></div>
+  <div class="card2"><div class="sh"><b>Reporting times</b><small>each person's fixed morning and afternoon reporting time · late is counted against these</small></div>
+   <div class="ped" style="margin:0 0 10px"><span style="font-size:13px">Fill blanks for everyone:</span><input type="time" id="rt-all-m" aria-label="Morning"><input type="time" id="rt-all-a" aria-label="Afternoon"><button class="btn sm" id="rtFill">Fill blanks</button></div>
+   <div class="rtgrid"><div class="h">Person</div><div class="h">Morning</div><div class="h">Afternoon</div><div class="h">Gender</div>
+   ${SLOTS.map(s=>row(s.id,s.v.label+" "+s.role)).join("")}${RES.map(r=>row(r.id,r.label)).join("")}</div>
+   <div class="legend" style="margin:10px 0 0">Conductors on buses must be female — a male person in a conductor seat is flagged on the dashboard.</div></div>
+  <div class="card2"><div class="sh"><b>Cleaners</b><small>person responsible for cleaning each vehicle (shown in Vehicle Check)</small></div>
+   <div class="rtgrid" style="grid-template-columns:90px 1fr">${VEH.map(v=>`<div><b>${v.label}</b></div><input id="ro-cl-${v.id}" data-r="cleaner.${v.id}" value="${esc((roster.cleaner||{})[v.id]||"")}" placeholder="Cleaner name">`).join("")}</div></div>
+  <div class="card2"><div class="sh"><b>Names, phones &amp; vehicles</b></div><div class="rows" id="staffBody"></div></div>`}
 let rosterChain=Promise.resolve(), rosterTimer=null;
 function saveRoster(){clearTimeout(rosterTimer);rosterTimer=setTimeout(()=>{if(!db)return;const snap=JSON.parse(JSON.stringify(roster));
   rosterChain=rosterChain.then(()=>db.doc("roster/main").set(snap)).then(()=>setStatus("Names saved")).catch(e=>setStatus(e&&e.code==="permission_denied"?"You have view-only access to the names.":"Could not save names — try again."))},600);setStatus("Saving names…")}
@@ -498,8 +605,8 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",
 const fmt=d=>{const[y,m,dd]=d.split("-");return dd+"/"+m+"/"+y};
 
 function render(){
-  const fa=document.activeElement, fid=fa&&fa.id&&/^(note-|ro-|cover-|se-|ve-|sv-|eod-|tc-|sup-|wa-)/.test(fa.id)?fa.id:null, sel=fid&&(fa.tagName==="INPUT"||fa.tagName==="TEXTAREA")?[fa.selectionStart,fa.selectionEnd]:null;
-  renderInner(); renderStaff(); ensureMonth(); renderChart(); renderSal(); renderVeh(); renderSvc(); renderEod(); renderNpl();
+  const fa=document.activeElement, fid=fa&&fa.id&&/^(note-|ro-|rt-|pt-|vc-|npl-|cover-|se-|ve-|sv-|eod-|tc-|sup-|wa-)/.test(fa.id)?fa.id:null, sel=fid&&(fa.tagName==="INPUT"||fa.tagName==="TEXTAREA")?[fa.selectionStart,fa.selectionEnd]:null;
+  renderInner(); renderStaff(); ensureMonth(); renderReg(); renderVC(); renderSal(); renderVeh(); renderSvc(); renderEod(); renderNpl();
   if(fid){const el=$(fid);if(el){el.focus();if(sel)try{el.setSelectionRange(sel[0],sel[1])}catch(e){}}}
 }
 function renderInner(){
@@ -508,14 +615,17 @@ function renderInner(){
     const tasks=w.g.flatMap(g=>g[1]); const done=tasks.filter(t=>state.s[t[0]]&&state.s[t[0]]!=="").length;
     const isNow=now>=mins(w.s)&&now<mins(w.e);
     const rows=w.g.map(([gn,ts])=>(gn?`<div class="group">${gn}</div>`:"")+ts.map(([id,name])=>{
-      const st=state.s[id]||"", note=state.n[id]||"", open=note||openNotes.has(id);
-      return `<div class="row ${st}"><button class="tick ${st}" data-t="${id}" aria-label="${esc(name)}: ${st||"pending"}">${SYM[st]}</button>
-      <div class="task"><span>${esc(name)}</span><button class="addnote ${note?"has":""}" data-n="${id}">${note?"Note ✎":"+ Note"}</button></div>
+      const st=state.s[id]||"", note=state.n[id]||"", open=note||openNotes.has(id), ended=(now>=mins(w.e))||date<todayIST(), tt=(state.tt||{})[id], lt=tt&&mins(tt)>mins(w.e);
+      return `<div class="row ${st} ${!st&&ended?"late":""}"><button class="tick ${st}" data-t="${id}" aria-label="${esc(name)}: ${st||"pending"}">${SYM[st]}</button>
+      <div class="task"><span>${esc(name)}${!st&&ended?' <small class="latetxt">not marked · time over</small>':""}${tt&&st?` <small class="dt ${lt?"lt":""}">${lt?"late · ":""}${h12(tt)}</small>`:""}</span><button class="addnote ${note?"has":""}" data-n="${id}">${note?"Note ✎":"+ Note"}</button></div>
       ${open?`<input class="note" id="note-${id}" data-ni="${id}" value="${esc(note)}" placeholder="Bus no., reason, person…">`:""}</div>`}).join("")).join("");
+    const od=tasks.filter(t=>!state.s[t[0]]).length;const past=(now>=mins(w.e))||date<todayIST();
     return `<section class="win ${isNow?"now":""} ${closed.has(w.id)?"closed":""}" id="${w.id}">
-      <div class="win-h" data-w="${w.id}"><span class="time">${w.t}</span><h2>${w.n}</h2>${isNow?'<span class="nowtag">NOW</span>':""}
+      <div class="win-h" data-w="${w.id}"><span class="time">${w.t}</span><h2>${w.n}</h2>${isNow?'<span class="nowtag">NOW</span>':past&&od?`<span class="latetag">${od} NOT MARKED</span>`:""}
       <span class="cnt ${done===tasks.length?"full":""}">${done}/${tasks.length}</span><span class="chev">▾</span></div>
       <div class="rows">${rows}</div></section>`}).join("");
+  {const tn=$("taskNow");if(tn){const cw=W.find(w=>now>=mins(w.s)&&now<mins(w.e)),nx=W.find(w=>now<mins(w.s)),odN=W.filter(w=>now>=mins(w.e)||date<todayIST()).reduce((n,w)=>n+w.g.flatMap(g=>g[1]).filter(t=>!state.s[t[0]]).length,0);
+    tn.innerHTML=`<div class="card2" style="border-top-color:var(--gold)"><div class="sh" style="border:0;margin:0;padding:0"><b>${cw?"Now · "+cw.t+" "+cw.n:date===todayIST()?(nx?"Next · "+nx.t+" "+nx.n:"Day closed"):fmt(date)}</b><small>${cw?cw.g.flatMap(g=>g[1]).filter(t=>!state.s[t[0]]).length+" tasks pending in this window":""}</small>${odN?`<span class="r" style="color:var(--miss);font-weight:700">${odN} task${odN>1?"s":""} not marked after time</span>`:""}</div></div>`}}
   const c={done:0,miss:0,na:0};ALL.forEach(t=>{const s=state.s[t.id];if(c[s]!=null)c[s]++});
   const T=ALL.length;
   $("track").innerHTML=`<i class="d" style="width:${c.done/T*100}%"></i><i class="m" style="width:${c.miss/T*100}%"></i><i class="n" style="width:${c.na/T*100}%"></i>`;
@@ -550,7 +660,7 @@ function rangeEnd(){const m=[date.slice(0,7),todayIST().slice(0,7),START.slice(0
 function ensureMonth(){
   const end=rangeEnd(); if(end===month&&window.__monthDb===db)return; month=end; monthData={};
   if(monthUnsub){monthUnsub();monthUnsub=null} window.__monthDb=db; if(!db)return;
-  const take=q=>{monthData={};q.docs.forEach(doc=>{const x=doc.data()||{},k=x.date||doc.id;if(k>=START&&k<=end)monthData[k]={att:x.att||{},uni:x.uni||{}}});renderChart()};
+  const take=q=>{monthData={};q.docs.forEach(doc=>{const x=doc.data()||{},k=x.date||doc.id;if(k>=START&&k<=end)monthData[k]={att:x.att||{},uni:x.uni||{},pu:x.pu||{}}});renderChart()};
   const fallback=()=>db.collection("reports").orderBy("date","desc").limit(400).get().then(take).catch(()=>{});
   try{monthUnsub=db.collection("reports").where("date",">=",START).where("date","<=",end).onSnapshot(take,fallback)}catch(e){fallback()}
 }
@@ -558,29 +668,17 @@ function cellVal(d,id){let a,u;
   if(d===date){a=state.att[id];u=state.uni[id]}
   else{const x=monthData[d]||{},p=pendingBy[d]||{};a=p.att&&id in p.att?p.att[id]:(x.att||{})[id];u=p.uni&&id in p.uni?p.uni[id]:(x.uni||{})[id]}
   return a==="A"?"A":u?"U":""}
-function renderChart(){
-  if(!month)return; $("chartSec").classList.toggle("closed",closed.has("chartSec"));
-  const days=[];for(let t=new Date(START+"T00:00:00Z");t.toISOString().slice(0,10)<=month;t.setUTCDate(t.getUTCDate()+1))days.push(t.toISOString().slice(0,10));
-  const MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"], dl=d=>+d.slice(8)===1?`<small class="mo">${MON[+d.slice(5,7)-1]}</small>1`:+d.slice(8);
-  const sun=d=>new Date(d+"T00:00:00Z").getUTCDay()===0;
-  $("chartTitle").textContent="from 1 Oct 2026";
-  let h=`<thead><tr><th class="nm">Driver &amp; Conductor</th>${days.map(d=>`<th class="${sun(d)?"sun":""} ${d===date?"cur":""} ${+d.slice(8)===1?"m1":""}">${dl(d)}</th>`).join("")}<th class="tot ta">A</th><th class="tot tu">U</th></tr></thead><tbody>`;
-  CHART.forEach((id,i)=>{let a=0,u=0;
-    const cells=days.map(d=>{if(sun(d))return `<td class="sun"></td>`;const v=cellVal(d,id);if(v==="A")a++;if(v==="U")u++;
-      return `<td class="${d===date?"cur":""} ${+d.slice(8)===1?"m1":""}"><button class="cm ${v}" data-cm="${d}|${id}" aria-label="${esc(personName(id,id))}, ${fmt(d)}: ${v==="A"?"absent":v==="U"?"without uniform":"present"}">${v}</button></td>`}).join("");
-    h+=`<tr><td class="nm"><span>${i+1}</span>${esc(personName(id,id))}</td>${cells}<td class="tot ta">${a||""}</td><td class="tot tu">${u||""}</td></tr>`});
-  $("chart").innerHTML=h+"</tbody>";
-}
+function renderChart(){renderReg()}
 function setStatus(t){$("status").textContent=t}
 
 /* ---- events ---- */
 document.addEventListener("click",e=>{
-  const t=e.target.closest("[data-t]"); if(t){const id=t.dataset.t;const st=CYCLE[(CYCLE.indexOf(state.s[id]||"")+1)%4];state.s[id]=st;render();queue({s:{[id]:st}});return}
+  const t=e.target.closest("[data-t]"); if(t){const id=t.dataset.t;const st=CYCLE[(CYCLE.indexOf(state.s[id]||"")+1)%4];state.s[id]=st;state.tt=state.tt||{};const tv=st?(state.tt[id]||(date===todayIST()?nowHM():"")):"";state.tt[id]=tv;render();queue({s:{[id]:st},tt:{[id]:tv}});return}
   const cm=e.target.closest("[data-cm]"); if(cm){const[d,id]=cm.dataset.cm.split("|");const v=cellVal(d,id),nv=v===""?"A":v==="A"?"U":"";
     const p={att:{[id]:nv==="A"?"A":"P"},uni:{[id]:nv==="U"}};
     if(d===date&&nv!=="A")RES.forEach(r=>{if(state.cover[r.id]===id){p.cover=Object.assign(p.cover||{},{[r.id]:""})}});
     if(d===date)deepMerge(state,p); queue(p,d); render(); return}
-  if(e.target.closest("#editRoster")){editRoster=!editRoster;closed.delete("staff");render();return}
+  if(e.target.closest("#editRoster")){editRoster=!editRoster;render();scrollTo({top:0});return}
   const a=e.target.closest("[data-a]"); if(a){const id=a.dataset.a;const v=state.att[id]==="A"?"P":"A";state.att[id]=v;const p={att:{[id]:v}};
     if(v==="P"){RES.forEach(r=>{if(state.cover[r.id]===id){state.cover[r.id]="";p.cover=Object.assign(p.cover||{},{[r.id]:""})}})}
     render();queue(p);return}
@@ -627,7 +725,7 @@ function subscribe(){
   setStatus("Loading "+fmt(date)+"…");
   unsub=db.doc("reports/"+date).onSnapshot(snap=>{
     const d=snap.exists?snap.data():null; const keep=pendingBy[date]||{};
-    state=d?{s:{...(d.s||{})},n:{...(d.n||{})},by:d.by||"",fleet:d.fleet||"",dayNote:d.dayNote||"",att:{...(d.att||{})},cover:{...(d.cover||{})},uni:{...(d.uni||{})},eod:{...(d.eod||{})},sup:JSON.parse(JSON.stringify(d.sup||{})),wash:JSON.parse(JSON.stringify(d.wash||{}))}:blank();
+    state=d?{s:{...(d.s||{})},n:{...(d.n||{})},by:d.by||"",fleet:d.fleet||"",dayNote:d.dayNote||"",att:{...(d.att||{})},cover:{...(d.cover||{})},uni:{...(d.uni||{})},eod:{...(d.eod||{})},sup:JSON.parse(JSON.stringify(d.sup||{})),wash:JSON.parse(JSON.stringify(d.wash||{})),pu:JSON.parse(JSON.stringify(d.pu||{})),vc:JSON.parse(JSON.stringify(d.vc||{})),tt:{...(d.tt||{})}}:blank();
     deepMerge(state,JSON.parse(JSON.stringify(keep)));
     render(); if(!writing&&!hasPending(date))setStatus(d?("Saved report · last update "+(d.updatedAt?new Date(d.updatedAt).toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"}):"")):"No entries yet for "+fmt(date)+" — tap a box to start.");
   },err=>setStatus("Could not load this report ("+(err&&err.code||"error")+")."));
@@ -797,6 +895,8 @@ function eodAuto(){const st=allStaff(),a={};
   a.absent=st.filter(x=>state.att[x.id]==="A").map(x=>x.nm).join(", ");
   a.uniform=st.filter(x=>state.uni[x.id]&&state.att[x.id]!=="A").map(x=>x.nm).join(", ");
   a.spareDrivers=RES.map(r=>personName(r.id,r.label)).join("\n");
+  try{a.late=PEOPLE().filter(id=>lateBy(date,id,"m")||lateBy(date,id,"a")).map(id=>personName(id,id)).join(", ");
+    a.male=maleConductors().map(m=>m.none?m.v.label+" (no conductor)":personName(m.id,m.id)+" ("+m.v.label+")").join(", ")}catch(e){}
   const t=tmr.d===nextDay(date)&&tmr.data;
   if(t){const ta=t.att||{},tc=t.cover||{};a.tAbsent=st.filter(x=>ta[x.id]==="A").map(x=>x.nm).join("\n");
     a.adjust=RES.filter(r=>tc[r.id]&&ta[tc[r.id]]==="A").map(r=>`${personName(tc[r.id],tc[r.id])} replaced by ${personName(r.id,r.label)}.`).join("\n")}
@@ -881,25 +981,33 @@ function renderNpl(){const b=$("nplBody");if(!b)return;$("nplSec").classList.tog
    <div class="chips">${st.map(x=>`<button class="pchip ${t.att[x.id]==="A"?"on":""}" data-ta="${x.id}">${esc(x.nm)}</button>`).join("")}</div>
    ${ab.filter(x=>!RES.some(r=>r.id===x.id)).length?`<div class="group">Step 2 · Who covers?</div>`+ab.filter(x=>!RES.some(r=>r.id===x.id)).map(x=>`<div class="covrow"><span>${esc(x.nm)}</span>
      <select data-tc="${x.id}" id="tc-${x.id}"><option value="">No cover</option>${freeRes.filter(r=>!r.cond||slotOf(x.id)?.role==="Conductor").map(r=>`<option value="${r.id}" ${covOf(x.id)===r.id?"selected":""}>${esc(personName(r.id,r.label))}</option>`).join("")}</select></div>`).join(""):""}
-   <div class="actions" style="margin:10px 14px"><button class="btn primary" id="nplCopy">Copy Hindi plan for WhatsApp</button></div>
-   <div class="wa" id="nplPrev">${esc(planMsg())}</div>`}
+   <div class="group">Step 3 · Standard plan is filled in automatically · edit only if something else changes</div>
+   ${nplEdit?`<div style="padding:0 14px"><textarea class="note" id="npl-txt" style="min-height:360px;width:100%">${esc(t.planTxt||planMsg())}</textarea></div><div class="actions" style="margin:10px 14px"><button class="btn primary" id="nplSave">Save plan</button><button class="btn" id="nplCancel">Cancel</button></div>`
+    :`<div class="actions" style="margin:10px 14px"><button class="btn primary" id="nplCopy">Copy Hindi plan for WhatsApp</button><button class="btn" id="nplEdit">✎ Edit plan</button>${t.planTxt?`<button class="btn" id="nplStd">Back to standard plan</button>`:""}</div>
+    ${t.planTxt?`<div class="legend" style="padding:0 14px;margin:0 0 6px">This plan was edited by hand. Absentee changes above will not change it until you tap "Back to standard plan".</div>`:""}
+    <div class="wa" id="nplPrev">${esc(t.planTxt||planMsg())}</div>`}`}
+let nplEdit=false;
+document.addEventListener("click",e=>{const t=tmrData();if(e.target.closest("#nplEdit")){nplEdit=true;render();return}if(e.target.closest("#nplCancel")){nplEdit=false;render();return}
+  if(e.target.closest("#nplSave")&&t){t.planTxt=$("npl-txt").value;nplEdit=false;queue({planTxt:t.planTxt},nextDay(date));render();return}
+  if(e.target.closest("#nplStd")&&t){t.planTxt="";queue({planTxt:""},nextDay(date));render()}});
 document.addEventListener("click",async e=>{
   const a=e.target.closest("[data-ta]");if(a){const t=tmrData();if(!t)return;const id=a.dataset.ta,v=t.att[id]==="A"?"P":"A";t.att[id]=v;const p={att:{[id]:v}};
     if(v==="P"){RES.forEach(r=>{if(t.cover[r.id]===id){t.cover[r.id]="";p.cover=Object.assign(p.cover||{},{[r.id]:""})}});if(t.cover[id]){t.cover[id]="";p.cover=Object.assign(p.cover||{},{[id]:""})}}
     queue(p,nextDay(date));render();return}
-  if(e.target.closest("#nplCopy")){const m=planMsg();try{await navigator.clipboard.writeText(m);setStatus("Hindi plan copied — paste it in WhatsApp.")}catch(err){const r=document.createRange();r.selectNodeContents($("nplPrev"));const sl=getSelection();sl.removeAllRanges();sl.addRange(r);setStatus("Text selected — copy it and paste in WhatsApp.")}}
+  if(e.target.closest("#nplCopy")){const m=(tmrData()||{}).planTxt||planMsg();try{await navigator.clipboard.writeText(m);setStatus("Hindi plan copied — paste it in WhatsApp.")}catch(err){const r=document.createRange();r.selectNodeContents($("nplPrev"));const sl=getSelection();sl.removeAllRanges();sl.addRange(r);setStatus("Text selected — copy it and paste in WhatsApp.")}}
 });
 document.addEventListener("change",e=>{const id=e.target.dataset.tc;if(!id)return;const t=tmrData();if(!t)return;const rid=e.target.value,p={cover:{}};
   RES.forEach(r=>{if(t.cover[r.id]===id&&r.id!==rid){t.cover[r.id]="";p.cover[r.id]=""}});if(rid){t.cover[rid]=id;p.cover[rid]=id}
   queue(p,nextDay(date));render()});
 
 /* ---- tabs & dashboard ---- */
-const TABS=[["dash","Dashboard"],["tasks","Daily Checklist"],["sup","सुपरवाइज़र कार्य"],["wash","Sunday Washing"],["staff","Staff Attendance"],["uniform","Uniform & Absentee"],["plan","Next-Day Plan"],["dayend","Day-End"],["complaints","Complaints"],["docs","Documents"],["service","Service"],["salary","Salary"],["history","History"]];
-const PANE_SEC={staff:"staff",uniform:"chartSec",plan:"nplSec",dayend:"eodSec",complaints:"crSec",docs:"vehSec",service:"svcSec",salary:"salSec"};
-let tab=(()=>{const h=location.hash.slice(1);if(TABS.some(t=>t[0]===h))return h;try{return localStorage.getItem("td_tab")||"dash"}catch(e){return"dash"}})();
+const TABS=[["dash","Dashboard"],["att","Attendance & Check-in"],["vcheck","Vehicle Check"],["tasks","Daily Checklist"],["sup","सुपरवाइज़र कार्य"],["wash","Sunday Washing"],["plan","Next-Day Plan"],["uniform","Absentee & Uniform"],["docs","Documents"],["service","Service"],["salary","Salary"],["history","History"]];
+const PANE_SEC={plan:"nplSec",docs:"vehSec",service:"svcSec",salary:"salSec"};
+let tab=(()=>{const h=location.hash.slice(1);if(TABS.some(t=>t[0]===h))return h;try{const v=localStorage.getItem("td_tab");return TABS.some(t=>t[0]===v)?v:"dash"}catch(e){return"dash"}})();
 function tabBadges(){const b={};try{
   b.tasks=ALL.filter(t=>state.s[t.id]==="miss").length;
-  const cov=coverMap();b.staff=SLOTS.filter(x=>state.att[x.id]==="A"&&!cov[x.id]).length;
+  const cov=coverMap();b.att=SLOTS.filter(x=>state.att[x.id]==="A"&&!cov[x.id]).length+PEOPLE().filter(id=>lateBy(date,id,"m")||lateBy(date,id,"a")||notInYet(id,"m")||notInYet(id,"a")).length+maleConductors().length;
+  b.vcheck=vcStats().bad.length;
   if(vehState==="ok")b.docs=Object.keys(veh).reduce((n,id)=>n+DOCS.filter(([k])=>{const st=docState(veh[id][k])[0];return st==="exp"||st==="none"||st==="due"}).length,0);
   b.sup=SUPS.reduce((n,[w])=>n+supStats(w).late,0);
   if(isSun(date)&&date<=todayIST())b.wash=washStats().left;
@@ -914,42 +1022,55 @@ document.addEventListener("click",e=>{const t=e.target.closest("[data-tab]");if(
   const d=e.target.closest("[data-go]");if(d){e.stopPropagation();showTab(d.dataset.go);return}
   if(e.target.closest("[data-goveh]")){e.stopPropagation();showTab("docs");return}
   if(e.target.closest("[data-gosvc]")){e.stopPropagation();showTab("service");return}},true);
+/* ===== Director's dashboard: problems first ===== */
+function dashIssues(){const I=[],today=date===todayIST(),now=today?nowMinIST():-1,cov=coverMap(),nm=id=>esc(personName(id,id));
+  const add=(lvl,ic,title,list,go)=>{if(list&&list.length)I.push({lvl,ic,title,list,go})};
+  const abs=PEOPLE().filter(id=>state.att[id]==="A");
+  add("red","🚫","Absent staff",abs.map(id=>`${nm(id)} <small>(${esc(roleOf(id))})</small>${slotOf(id)?(cov[id]?` → covered by ${nm(cov[id])}`:` → <b style="color:var(--miss)">not covered</b>`):""}`),"att");
+  add("red","⏰","Late in the morning",PEOPLE().filter(id=>lateBy(date,id,"m")).map(id=>`${nm(id)} — in ${h12(puOf(date,id).mi)}, due ${h12(rtOf(id,"m"))} (+${lateBy(date,id,"m")} min)`),"att");
+  add("red","⏰","Late in the afternoon",PEOPLE().filter(id=>lateBy(date,id,"a")).map(id=>`${nm(id)} — in ${h12(puOf(date,id).ai)}, due ${h12(rtOf(id,"a"))} (+${lateBy(date,id,"a")} min)`),"att");
+  add("amb","⌛","Not checked in yet",PEOPLE().filter(id=>notInYet(id,"m")||notInYet(id,"a")).map(id=>`${nm(id)} — due ${h12(notInYet(id,"m")?rtOf(id,"m"):rtOf(id,"a"))}`),"att");
+  add("red","🚌","Male staff as bus conductor",maleConductors().map(m=>m.none?`${esc(m.v.label)} — no conductor at all`:`${esc(m.v.label)} — ${nm(m.id)}`),"att");
+  add("amb","👕","Without uniform",PEOPLE().filter(id=>state.uni[id]&&state.att[id]!=="A").map(id=>`${nm(id)} <small>(${esc(roleOf(id))})</small>`),"att");
+  const V=vcStats();add("red","🔧","Vehicle check problems",V.bad.map(x=>`${esc(x.v.label)} — ${esc(x.l)}${x.n?": "+esc(x.n):""}`),"vcheck");
+  const work=!isSun(date);
+  if(work&&(today&&now>=mins("09:00")||date<todayIST()))add("amb","📋","Vehicles not checked",VEH.filter(v=>VCI.some(([k])=>!(vcOf(v.id)[k]||{}).s)).map(v=>`${esc(v.label)} — ${VCI.filter(([k])=>!(vcOf(v.id)[k]||{}).s).map(q=>q[3]).join(", ")}`),"vcheck");
+  const over=[];if(work)W.forEach(w=>{if(now>=mins(w.e)||date<todayIST())w.g.flatMap(g=>g[1]).forEach(([id,n])=>{if(!state.s[id])over.push(`${esc(n)} <small>(${w.t})</small>`)})});
+  add("amb","☑️","Checklist tasks not marked after their time",over,"tasks");
+  add("red","✗","Checklist tasks not done",ALL.filter(t=>state.s[t.id]==="miss").map(t=>esc(t.name)+(state.n[t.id]?" — "+esc(state.n[t.id]):"")),"tasks");
+  if(work)SUPS.forEach(([w,l])=>{const d=supDay(w),L=[];d.list.forEach(sl=>{const ss=slotState(sl,d);sl.items.forEach(it=>{if(ss==="late"&&!d.st[it.id])L.push(esc(hiT(it.name))+` <small>(${sl.t})</small>`);if(d.st[it.id]==="miss")L.push(esc(hiT(it.name))+" ✗")})});add("amb","🧑‍✈️",`Supervisor ${l}: tasks late or not done`,L,"sup")});
+  const lw=lastSunWash();if(lw.wd)add("red","🧽",`Sunday washing defaulters · ${fmt(lw.d)} (minimum ${WASH_MIN} min)`,washDefaulters(lw.wd,lw.d).map(x=>`${esc(x.v.name)} (${esc(x.v.bus)}) — ${esc(x.why)}`),"wash");
+  if(vehState==="ok"){const L=[];Object.keys(veh).forEach(id=>DOCS.forEach(([k,lab])=>{const[st,txt]=docState(veh[id][k]);if(st==="exp"||st==="none"||st==="due")L.push(`${esc(veh[id].no)} ${lab} — ${esc(txt)}`)}));add("red","📄","Vehicle documents expired or due",L,"docs")}
+  if(svcState==="ok")add("amb","🛠️","Service overdue or due soon",Object.keys(SV).filter(id=>svcCalc(SV[id]).st!=="ok").map(id=>{const k=svcCalc(SV[id]);return `${esc(SV[id].no)} — ${k.st==="exp"?"overdue":"due soon"} · ${esc(k.why)}`}),"service");
+  if(salState==="ok"){const L=[];Object.keys(sal).forEach(id=>{const x=sal[id],inc=(x.inc||[]).filter(e=>e.date),last=inc.length?inc[inc.length-1].date:x.doj;if(last&&dayDiff(last)<-365)L.push(`${esc(x.name||personName(id,id))} — last increment ${fmt(last)}`)});add("amb","₹","Increment review due (over 12 months)",L,"salary")}
+  const noRt=PEOPLE().filter(id=>!rtOf(id,"m")||!rtOf(id,"a"));if(noRt.length)add("amb","⚙️","Reporting times not set — late cannot be counted",[`${noRt.length} staff · set them in Attendance › Staff details & timings`],"att");
+  return I}
 function renderDash(){const el=$("dashBody");if(!el||tab!=="dash")return;
-  const c={done:0,miss:0,na:0};ALL.forEach(t=>{const s=state.s[t.id];if(c[s]!=null)c[s]++});const T=ALL.length,fin=c.done+c.na,pct=T?Math.round(fin/T*100):0;
-  const now=date===todayIST()?nowMinIST():-1;
-  const wins=W.map(w=>{const ts=w.g.flatMap(g=>g[1]),d=ts.filter(t=>state.s[t[0]]==="done"||state.s[t[0]]==="na").length,m=ts.filter(t=>state.s[t[0]]==="miss").length;
-    return `<div class="${now>=mins(w.s)&&now<mins(w.e)?"now":""}"><span>${w.t}</span><i><u style="width:${d/ts.length*100}%"></u><u class="m" style="width:${m/ts.length*100}%"></u></i><em>${d}/${ts.length}</em></div>`}).join("");
-  const missed=ALL.filter(t=>state.s[t.id]==="miss").map(t=>t.name);
-  const cov=coverMap(),abs=[...SLOTS.map(x=>x.id),...RES.map(r=>r.id)].filter(id=>state.att[id]==="A"),unc=SLOTS.filter(x=>state.att[x.id]==="A"&&!cov[x.id]);
-  const total=SLOTS.length+RES.length,nu=CHART.filter(id=>state.uni[id]&&state.att[id]!=="A");
-  // month register
-  let mA={},mU={};CHART.forEach(id=>{mA[id]=0;mU[id]=0});
-  try{const[y,mm]=date.slice(0,7).split("-").map(Number),last=new Date(Date.UTC(y,mm,0)).getUTCDate();
-    for(let i=1;i<=last;i++){const d=date.slice(0,8)+String(i).padStart(2,"0");if(d>todayIST())break;CHART.forEach(id=>{const v=cellVal(d,id);if(v==="A")mA[id]++;if(v==="U")mU[id]++})}}catch(e){}
-  const topA=CHART.filter(id=>mA[id]).sort((a,b)=>mA[b]-mA[a]).slice(0,4),topU=CHART.filter(id=>mU[id]).sort((a,b)=>mU[b]-mU[a]).slice(0,4);
-  const nm=id=>esc(personName(id,id));
-  // tomorrow
-  const t=tmrData(),tab_=t?[...SLOTS.map(x=>x.id),...RES.map(r=>r.id)].filter(id=>t.att[id]==="A"):[];
-  // docs / service / salary
-  let dU=[],dS=0;if(vehState==="ok")Object.keys(veh).forEach(id=>DOCS.forEach(([k,lab])=>{const d=veh[id][k],[st,txt]=docState(d);if(st==="exp"||st==="none"||st==="due")dU.push(`${esc(veh[id].no)} ${lab} <span class="r">${esc(txt)}</span>`);else if(st==="soon")dS++}));
-  let sU=[];if(svcState==="ok")Object.keys(SV).sort((a,b)=>(SV[a].order||99)-(SV[b].order||99)).forEach(id=>{const k=svcCalc(SV[id]);if(k.st!=="ok")sU.push(`${esc(SV[id].no)} <span class="r">${k.st==="exp"?"Overdue":"Due soon"} · ${esc(k.why)}</span>`)});
-  let salTot=0,salN=0;if(salState==="ok")Object.values(sal).forEach(x=>{const v=curSal(x);if(v){salTot+=v;salN++}});
-  let eodF=0;try{const a=eodAuto();eodF=EODF.filter(([k])=>eodVal(k,a).trim()).length}catch(e){}
-  const card=(go,title,sub,body,wide)=>`<button class="dc ${wide?"wide":""}" data-go="${go}"><h4>${title}<small>${sub||""}</small></h4>${body}</button>`;
-  el.innerHTML=
-   card("tasks","Daily Checklist",fmt(date),`<div class="big ${pct===100?"bok":c.miss?"bbad":""}">${pct}%<small>${fin}/${T} done · ${c.miss} missed</small></div><div class="mini">${wins}</div>${missed.length?`<div class="dl"><b>Not done:</b> ${missed.slice(0,6).map(esc).join(", ")}${missed.length>6?" …":""}</div>`:""}`)+
-   card("sup","सुपरवाइज़र कार्य",fmt(date),SUPS.map(([w,l])=>{const S=supStats(w);return `<div class="dl"><b>${l}:</b> ${S.done}/${S.tot} पूरे${S.late?` · <span class="r">${S.late} देरी</span>`:""}${S.now.length?`<br>अभी: ${S.now.map(x=>esc(hiT(x))).join(", ")}`:""}</div>`}).join(""))+
-   card("wash","Sunday Washing",isSun(date)?fmt(date):"next "+fmt(nextSun(date)),isSun(date)?(()=>{const W2=washStats();return `<div class="big ${W2.done===W2.tot?"bok":""}">${W2.done}/${W2.tot}<small>washed · ${W2.reach} reached · ${W2.chk} checked</small></div>`})():`<div class="dl">Washing is on Sundays. Open to see the list.</div>`)+
-   card("staff","Staff Attendance",fmt(date),`<div class="big ${unc.length?"bbad":"bok"}">${total-abs.length}/${total}<small>present</small></div><div class="dl">${abs.length?`<b>Absent:</b> ${abs.map(nm).join(", ")}`:"All drivers & conductors present"}${unc.length?`<br><span class="r">Not covered: ${unc.map(x=>esc(slotText(x))).join(", ")}</span>`:abs.length?"<br>All absences covered":""}${nu.length?`<br><b>Without uniform:</b> ${nu.map(nm).join(", ")}`:""}</div>`)+
-   card("uniform","Uniform & Absentee",new Date(date+"T00:00:00Z").toLocaleString("en-IN",{month:"long",year:"numeric",timeZone:"UTC"}),`<div class="big">${Object.values(mA).reduce((a,b)=>a+b,0)}<small>A</small> ${Object.values(mU).reduce((a,b)=>a+b,0)}<small>U</small></div><div class="dl">${topA.length?`<b>Most absent:</b> ${topA.map(id=>nm(id)+" "+mA[id]).join(", ")}`:"No absences this month"}${topU.length?`<br><b>Most without uniform:</b> ${topU.map(id=>nm(id)+" "+mU[id]).join(", ")}`:""}</div>`)+
-   card("plan","Next-Day Plan",fmt(nextDay(date)),`<div class="big">${tab_.length}<small>absent tomorrow</small></div><div class="dl">${tab_.length?tab_.map(nm).join(", "):"No absentees marked for tomorrow yet"}<br>Open to mark absentees and copy the Hindi plan</div>`)+
-   card("dayend","Day-End Summary",fmt(date),`<div class="big ${eodF>=EODF.length?"bok":""}">${eodF}/${EODF.length}<small>lines filled</small></div><div class="dl">Copy the WhatsApp day-end message</div>`)+
-   card("docs","Vehicle Documents",vehState==="ok"?Object.keys(veh).length+" vehicles":"",vehState!=="ok"?'<div class="dl">Loading…</div>':`<div class="big ${dU.length?"bbad":"bok"}">${dU.length}<small>need action · ${dS} in 31–60 days</small></div><div class="dl">${dU.length?dU.slice(0,5).join("<br>"):"Nothing due in the next 30 days"}</div>`)+
-   card("service","Service Schedule",svcState==="ok"?Object.keys(SV).length+" vehicles":"",svcState!=="ok"?'<div class="dl">Loading…</div>':`<div class="big ${sU.length?"bbad":"bok"}">${sU.length}<small>overdue / due soon</small></div><div class="dl">${sU.length?sU.slice(0,5).join("<br>"):"No service due"}</div>`)+
-   card("complaints","Complaints & Requests","from Daily FO",`<div class="dl">Open the live dashboard: student-wise, bus-wise and driver-wise complaints and requests</div>`)+
-   (salState==="ok"?card("salary","Salary",salN+" staff",`<div class="big">${inr(salTot)}<small>per month</small></div>`):"")+
-   card("history","History","last 14 days",`<div class="dl">Completion and staff absence for each saved day</div>`);
-}
+  const I=dashIssues(),cov=coverMap(),tot=PEOPLE().length,abs=PEOPLE().filter(id=>state.att[id]==="A").length,inM=PEOPLE().filter(id=>(state.pu||{})[id]&&state.pu[id].mi).length;
+  const lM=PEOPLE().filter(id=>lateBy(date,id,"m")).length,lA=PEOPLE().filter(id=>lateBy(date,id,"a")).length,nu=PEOPLE().filter(id=>state.uni[id]&&state.att[id]!=="A").length;
+  const c={done:0,miss:0,na:0};ALL.forEach(t=>{const s=state.s[t.id];if(c[s]!=null)c[s]++});const V=vcStats(),mc=maleConductors().length;
+  const m=monthStats(date.slice(0,7)),top=(k,n)=>PEOPLE().filter(id=>m.R[id][k].length).sort((a,b)=>m.R[b][k].length-m.R[a][k].length).slice(0,n||5);
+  const lateTop=PEOPLE().filter(id=>m.R[id].LM.length+m.R[id].LA.length).sort((a,b)=>(m.R[b].LM.length+m.R[b].LA.length)-(m.R[a].LM.length+m.R[a].LA.length)).slice(0,5);
+  const rk=(L,f)=>L.length?L.map((id,i)=>`<div class="rk2"><i>${i+1}</i><span class="nm">${esc(personName(id,id))}<small>${esc(roleOf(id))}</small></span><b>${f(id)}</b></div>`).join(""):`<div class="allok">None this month</div>`;
+  const t=tmrData(),tab_=t?PEOPLE().filter(id=>t.att[id]==="A"):[];
+  const ML=new Date(date+"T00:00:00Z").toLocaleString("en-IN",{month:"long",timeZone:"UTC"});
+  const red=I.filter(x=>x.lvl==="red"),amb=I.filter(x=>x.lvl!=="red");
+  const iss=x=>`<button class="iss ${x.lvl}" data-go="${x.go}"><span class="ic">${x.ic}</span><span class="tx"><b>${x.title}</b><span>${x.list.slice(0,8).join("<br>")}${x.list.length>8?`<br>+ ${x.list.length-8} more`:""}</span></span><span class="n">${x.list.length}</span></button>`;
+  if(isSun(date))I.unshift({lvl:"amb",ic:"🗓️",title:"Sunday — no school run",list:["Attendance, check-in and checklist are not counted today. Sunday washing is shown below."],go:"wash"});
+  el.innerHTML=`<div class="pg-h"><h2>Day report · ${new Date(date+"T00:00:00Z").toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long",timeZone:"UTC"})}</h2><span>problems first — tap any line to open it</span></div>
+  <div class="kp">
+   <button class="${abs?"red":"grn"}" data-go="att"><span>Present</span><b>${tot-abs}/${tot}</b><small>${inM} checked in · ${abs} absent</small></button>
+   <button class="${lM+lA?"red":"grn"}" data-go="att"><span>Late</span><b>${lM+lA}</b><small>Morning ${lM} · Afternoon ${lA}</small></button>
+   <button class="${nu?"red":"grn"}" data-go="att"><span>Without uniform</span><b>${nu}</b><small>${mc?`<span style="color:var(--miss)">${mc} conductor rule</span>`:"Conductor rule OK"}</small></button>
+   <button class="${V.bad.length?"red":V.done===V.tot?"grn":""}" data-go="vcheck"><span>Vehicle checks</span><b>${V.done}/${V.tot}</b><small>${V.bad.length} problem${V.bad.length===1?"":"s"}</small></button>
+   <button class="${c.miss?"red":""}" data-go="tasks"><span>Daily checklist</span><b>${c.done+c.na}/${ALL.length}</b><small>${c.miss} not done</small></button>
+   <button class="gold" data-go="plan"><span>Tomorrow</span><b>${tab_.length}</b><small>absent · open plan</small></button>
+  </div>
+  <div class="card2"><div class="sh"><b>Needs attention</b><small>${red.length} serious · ${amb.length} to watch</small></div>${I.length?red.map(iss).join("")+amb.map(iss).join(""):`<div class="allok">✓ No problems recorded for ${fmt(date)}.</div>`}</div>
+  <div class="two2"><div class="card2"><div class="sh"><b>Most absent · ${ML}</b><button class="btn sm r" data-go="uniform">Register</button></div>${rk(top("A"),id=>m.R[id].A.length)}</div>
+   <div class="card2"><div class="sh"><b>Uniform defaulters · ${ML}</b></div>${rk(top("U"),id=>m.R[id].U.length)}</div></div>
+  <div class="card2"><div class="sh"><b>Late arrivals · ${ML}</b><small>morning + afternoon</small></div>${rk(lateTop,id=>m.R[id].LM.length+m.R[id].LA.length)}</div>`}
+
 const _renderTD=render;render=function(){_renderTD();renderSup();renderWash();renderTabs();renderDash()};
 setInterval(()=>{if(tab==="dash")renderDash();renderTabs()},2000);
 renderTabs();
@@ -1029,7 +1150,8 @@ function phBtn(key,has,ref){return has?`<button class="phb has" data-phv="${key}
   :`<label class="phb" aria-label="Add photo">📷<input type="file" accept="image/*" capture="environment" data-phup="${key}|${ref}"></label>`}
 function phMark(ref,v){const p=ref.split("|");
   if(p[0]==="sup")supSave(p[1],{ph:{[p[2]]:v}});
-  else if(p[0]==="wash")washSave(p[1],{ph:v})}
+  else if(p[0]==="wash")washSave(p[1],{ph:v})
+  else if(p[0]==="vc")vcSave(p[1],p[2],{ph:v})}
 function shrink(file){return new Promise((res,rej)=>{const u=URL.createObjectURL(file),img=new Image();
   img.onload=()=>{URL.revokeObjectURL(u);let w=Math.min(900,Math.max(img.width,img.height)),q=.72,out="";
     for(let i=0;i<8;i++){const k=w/Math.max(img.width,img.height),c=document.createElement("canvas");c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);
@@ -1066,7 +1188,7 @@ function washSave(id,patch){state.wash=state.wash||{};state.wash.r=state.wash.r|
 function washSaveList(L){state.wash=state.wash||{};state.wash.list=JSON.stringify(L);queue({wash:{list:JSON.stringify(L)}});render()}
 function washStats(){const d=washDay();let reach=0,chk=0,done=0;d.list.forEach(v=>{const r=d.r[v.id]||{};if(r.reach)reach++;if(r.chk)chk++;if(r.done)done++});return{tot:d.list.length,reach,chk,done,left:d.list.length-done,d}}
 function washMsg(){const S=washStats();let m=`*Sunday Washing - ${dm(date)}*\nReached ${S.reach}/${S.tot} · Washed ${S.done}/${S.tot} · Checked ${S.chk}/${S.tot}\n`;
-  S.d.list.forEach((v,i)=>{const r=S.d.r[v.id]||{};m+=`\n${i+1}. ${v.name} - ${v.bus}\n`+(r.reach?`Reach ${h12(r.reach)}`:"Not reached ❌")+(r.done?` · Done ${h12(r.done)} ✅`:r.reach?" · Washing pending":"")+(r.chk?` · Checked by ${r.chk}${r.chkAt?" "+h12(r.chkAt):""}`:"")+(r.ph?" 📷":"")+(r.n?` (${r.n})`:"")});
+  S.d.list.forEach((v,i)=>{const r=S.d.r[v.id]||{};m+=`\n${i+1}. ${v.name} - ${v.bus}\n`+(r.reach?`In ${h12(r.reach)}`:"Not reached ❌")+(r.done?` · Out ${h12(r.done)} · ${washDur(r)} min ${washDur(r)<WASH_MIN?"❌":"✅"}`:r.reach?" · No check-out":"")+(r.chk?` · Checked by ${r.chk}${r.chkAt?" "+h12(r.chkAt):""}`:"")+(r.ph?" 📷":"")+(r.n?` (${r.n})`:"")});
   return m.trim()}
 function renderWash(){const b=$("washBody");if(!b)return;
   if(!isSun(date)){b.innerHTML=`<section class="win"><div class="win-h" style="cursor:default"><span class="time">Sunday</span><h2>Sunday Washing</h2></div>
@@ -1077,11 +1199,12 @@ function renderWash(){const b=$("washBody");if(!b)return;
     if(washEdit)return `<div class="wrow"><div class="wtop"><b>${i+1}. ${esc(v.name)}</b><span class="bus">${esc(v.bus)}</span><button class="addnote" data-wrm="${v.id}">✕ Remove</button></div></div>`;
     const tf=(k,lab)=>`<label class="wf">${lab}<span class="in"><input type="time" id="wa-${k}-${v.id}" data-wt="${v.id}|${k}" value="${esc(r[k]||"")}">${today?`<button class="btn xs" data-wnow="${v.id}|${k}">Now</button>`:""}</span></label>`;
     return `<div class="wrow"><div class="wtop"><b>${i+1}. ${esc(v.name)}</b><span class="bus">${esc(v.bus)}</span><span class="wst ${st[0]}">${st[1]}</span>${phBtn(pk,r.ph,"wash|"+v.id)}</div>
-      <div class="wgrid">${tf("reach","Driver reach time")}${tf("done","Washing done time")}
+      <div class="wgrid">${tf("reach","Check-in · आए")}${tf("done","Check-out · गए")}
       <div class="wf">Supervisor check<span class="in">${["Kamal","Vishvbandu"].map(l=>`<button class="chk ${r.chk===l?"on":""}" data-wchk="${v.id}|${l}">${r.chk===l?"✓ ":""}${l}</button>`).join("")}</span>${r.chk&&r.chkAt?`<span class="dt" style="text-transform:none;letter-spacing:0">checked ${h12(r.chkAt)}</span>`:""}</div></div>
+      ${washDur(r)!=null?`<div class="wdur ${washDur(r)<WASH_MIN?"bad":"ok"}" style="margin-top:6px">${washDur(r)} min${washDur(r)<WASH_MIN?" — less than "+WASH_MIN+" min (defaulter)":" ✓"}</div>`:""}
       <input class="note" style="margin-top:8px" id="wa-n-${v.id}" data-wn="${v.id}" value="${esc(r.n||"")}" placeholder="Remark (optional)"></div>`}).join("");
   b.innerHTML=`<section class="win"><div class="win-h" style="cursor:default"><span class="time">Sunday</span><h2>Washing · ${fmt(date)}</h2><span class="cnt ${S.done===S.tot?"full":""}">${S.done}/${S.tot}</span></div>
-    <div class="wsum"><span>Reached ${S.reach}/${S.tot}</span><span>Washed ${S.done}/${S.tot}</span><span>Checked ${S.chk}/${S.tot}</span></div>
+    <div class="wsum"><span style="color:var(--miss)">Defaulters ${washDefaulters(S.d,date).length}</span><span>Minimum ${WASH_MIN} min</span><span>Reached ${S.reach}/${S.tot}</span><span>Washed ${S.done}/${S.tot}</span><span>Checked ${S.chk}/${S.tot}</span></div>
     <div class="rows">${rows}
     ${washEdit?`<div class="wrow"><div class="wgrid"><input class="note" id="wa-an" placeholder="Driver name" value="${esc(washDraft.an||"")}"><input class="note" id="wa-ab" placeholder="Bus no." value="${esc(washDraft.ab||"")}"><button class="btn sm primary" data-wadd>Add vehicle</button></div></div>`:""}</div>
     <div class="actions" style="margin:10px 14px">${washEdit?`<button class="btn sm primary" data-wdone>Done editing</button><button class="btn sm" data-wdef>Save as default list</button><button class="btn sm" data-wreset>Reset this Sunday to default</button>`
@@ -1104,6 +1227,75 @@ document.addEventListener("change",e=>{const k=e.target.dataset&&e.target.datase
 document.addEventListener("input",e=>{const id=e.target.dataset&&e.target.dataset.wn;if(id){state.wash=state.wash||{};state.wash.r=state.wash.r||{};state.wash.r[id]=Object.assign({},state.wash.r[id]||{},{n:e.target.value});queue({wash:{r:{[id]:{n:e.target.value}}}});return}
   if(e.target.id==="wa-an")washDraft.an=e.target.value;if(e.target.id==="wa-ab")washDraft.ab=e.target.value});
 
+/* ===== vehicle check ===== */
+const VCI=[["diesel","⛽","डीज़ल","Diesel level"],["clean","🧽","सफ़ाई","Cleaning verified"],["damage","🔧","टूट-फूट / मेंटेनेंस","Damage / maintenance"],["aid","🩹","फर्स्ट एड बॉक्स","First aid box"]];
+let vcFilter="all";
+const vcOf=vid=>(state.vc||{})[vid]||{};
+function vcSave(vid,it,patch){state.vc=state.vc||{};state.vc[vid]=state.vc[vid]||{};state.vc[vid][it]=Object.assign({},state.vc[vid][it]||{},patch);queue({vc:{[vid]:{[it]:patch}}});render()}
+function vcStats(){let done=0,bad=[],pend=0;VEH.forEach(v=>{const c=vcOf(v.id),n=VCI.filter(([k])=>c[k]&&c[k].s).length;if(n===VCI.length)done++;else pend++;
+  VCI.forEach(([k,,,l])=>{if(c[k]&&c[k].s==="bad")bad.push({v,k,l,n:c[k].n||""})})});return{done,pend,bad,tot:VEH.length}}
+function renderVC(){const b=$("vcBody");if(!b)return;const S=vcStats(),today=date===todayIST();
+  const show=v=>{const c=vcOf(v.id),n=VCI.filter(([k])=>c[k]&&c[k].s).length;return vcFilter==="all"||(vcFilter==="pend"&&n<VCI.length)||(vcFilter==="bad"&&VCI.some(([k])=>c[k]&&c[k].s==="bad"))};
+  b.innerHTML=`<div class="pg-h"><h2>Vehicle Check</h2><span>${fmt(date)} · diesel, cleaning, damage and first aid — tap ✓ or ✗ and add a photo</span></div>
+   <div class="chips2">${[["all","All vehicles",S.tot],["pend","Not checked",S.pend],["bad","Problems",S.bad.length]].map(([k,l,n])=>`<button class="${vcFilter===k?"on":""}" data-vf="${k}">${l}<b>${n}</b></button>`).join("")}</div>
+   ${VEH.filter(show).map(v=>{const c=vcOf(v.id),n=VCI.filter(([k])=>c[k]&&c[k].s).length;
+    return `<div class="vcc"><div class="vh"><b>${v.label}</b><span>${esc([roster.veh[v.id],(roster.cleaner||{})[v.id]?"Cleaner: "+roster.cleaner[v.id]:""].filter(Boolean).join(" · "))}</span><em class="${n===VCI.length?"ok":""}">${n}/${VCI.length}</em></div>
+     ${VCI.map(([k,ic,h,e])=>{const x=c[k]||{},pk="photos/"+date+".v."+v.id+"."+k;
+      return `<div class="vci"><div class="ico">${ic}</div><div class="lb"><b>${h}</b><small>${e}${x.s?` · ${esc(x.by||"")} ${x.at?h12(x.at):""}`:""}</small></div>
+       <div class="bt"><button class="ok2 ${x.s==="ok"?"on":""}" data-vc="${v.id}|${k}|ok">✓ ठीक</button><button class="bad2 ${x.s==="bad"?"on":""}" data-vc="${v.id}|${k}|bad">✗ समस्या</button>${phBtn(pk,x.ph,"vc|"+v.id+"|"+k)}</div>
+       ${x.s==="bad"?`<input class="note nt" id="vc-n-${v.id}-${k}" data-vcn="${v.id}|${k}" value="${esc(x.n||"")}" placeholder="What is the problem? (diesel low, seat broken, box empty…)">`:""}</div>`}).join("")}</div>`}).join("")||`<div class="allok">Nothing in this list.</div>`}`}
+document.addEventListener("click",e=>{const t=e.target.closest("[data-vc],[data-vf]");if(!t)return;e.stopPropagation();const D=t.dataset;
+  if(D.vf){vcFilter=D.vf;render();return}
+  const[vid,k,s]=D.vc.split("|"),cur=vcOf(vid)[k]||{};vcSave(vid,k,cur.s===s?{s:"",at:"",by:""}:{s,at:date===todayIST()?nowHM():"",by:db&&db.who?db.who():""})},true);
+document.addEventListener("input",e=>{const k=e.target.dataset&&e.target.dataset.vcn;if(!k)return;const[vid,it]=k.split("|");state.vc=state.vc||{};state.vc[vid]=state.vc[vid]||{};state.vc[vid][it]=Object.assign({},state.vc[vid][it]||{},{n:e.target.value});queue({vc:{[vid]:{[it]:{n:e.target.value}}}})});
+
+/* ===== attendance events ===== */
+document.addEventListener("click",e=>{const t=e.target.closest("[data-pu],[data-puclr],[data-pudone],[data-uni],[data-af],#rtFill");if(!t)return;e.stopPropagation();const D=t.dataset;
+  if(t.id==="rtFill"){const m=$("rt-all-m").value,a=$("rt-all-a").value;roster.rtm=roster.rtm||{};roster.rta=roster.rta||{};PEOPLE().forEach(id=>{if(m&&!roster.rtm[id])roster.rtm[id]=m;if(a&&!roster.rta[id])roster.rta[id]=a});saveRoster();render();return}
+  if(D.af){attFilter=D.af;render();return}
+  if(D.uni){const id=D.uni,v=!state.uni[id];state.uni[id]=v;queue({uni:{[id]:v}});render();return}
+  if(D.pudone!=null){puEdit="";render();return}
+  if(D.puclr){const[id,k]=D.puclr.split("|");puEdit="";punchSave(id,k,"");return}
+  if(D.pu){const[id,k]=D.pu.split("|"),p=(state.pu||{})[id]||{};
+    if(!p[k]&&date===todayIST()&&puEdit!==D.pu){puEdit="";punchSave(id,k,nowHM());return}
+    puEdit=puEdit===D.pu?"":D.pu;render();setTimeout(()=>{const el=$("pt-"+id+"-"+k);el&&el.focus()},30)}},true);
+document.addEventListener("change",e=>{const k=e.target.dataset&&e.target.dataset.pt;if(!k)return;const[id,f]=k.split("|");punchSave(id,f,e.target.value)});
+
+/* ===== registers: absentees · uniform · late ===== */
+let regMonth="";
+function monthDays(m){const[y,mm]=m.split("-").map(Number),n=new Date(Date.UTC(y,mm,0)).getUTCDate(),out=[];for(let i=1;i<=n;i++){const d=m+"-"+String(i).padStart(2,"0");if(d>todayIST())break;if(d<START)continue;out.push(d)}return out}
+function monthStats(m){const days=monthDays(m),R={};PEOPLE().forEach(id=>R[id]={A:[],U:[],LM:[],LA:[]});
+  days.forEach(d=>{if(isSun(d))return;PEOPLE().forEach(id=>{const v=cellVal(d,id);if(v==="A")R[id].A.push(d);else{if(v==="U")R[id].U.push(d);if(lateBy(d,id,"m"))R[id].LM.push(d);if(lateBy(d,id,"a"))R[id].LA.push(d)}})});return{days,R}}
+function renderReg(){const b=$("regBody");if(!b)return;if(!regMonth)regMonth=date.slice(0,7);
+  const{days,R}=monthStats(regMonth),ML=new Date(regMonth+"-01T00:00:00Z").toLocaleString("en-IN",{month:"long",year:"numeric",timeZone:"UTC"});
+  const dl=L=>L.map(d=>`<i>${+d.slice(8)}</i>`).join("");
+  const tbl=(key,cls,title,sub)=>{const L=PEOPLE().filter(id=>R[id][key].length).sort((a,b)=>R[b][key].length-R[a][key].length);
+    return `<div class="card2"><div class="sh"><b>${title}</b><small>${sub} · ${L.length} staff · ${L.reduce((n,id)=>n+R[id][key].length,0)} days</small></div>
+     ${L.length?`<table class="regt"><thead><tr><th>Staff</th><th>Dates in ${ML.split(" ")[0]}</th><th style="text-align:right">Days</th></tr></thead><tbody>${L.map(id=>`<tr><td><b>${esc(personName(id,id))}</b><br><small>${esc(roleOf(id))}</small></td><td><div class="dots ${cls}">${dl(R[id][key])}</div></td><td class="n">${R[id][key].length}</td></tr>`).join("")}</tbody></table>`:`<div class="allok">None this month.</div>`}</div>`};
+  const late=PEOPLE().filter(id=>R[id].LM.length||R[id].LA.length).sort((a,b)=>(R[b].LM.length+R[b].LA.length)-(R[a].LM.length+R[a].LA.length));
+  const tA=PEOPLE().reduce((n,id)=>n+R[id].A.length,0),tU=PEOPLE().reduce((n,id)=>n+R[id].U.length,0),tLM=PEOPLE().reduce((n,id)=>n+R[id].LM.length,0),tLA=PEOPLE().reduce((n,id)=>n+R[id].LA.length,0);
+  const mn=m=>new Date(m+"-01T00:00:00Z").toLocaleString("en-IN",{month:"short",timeZone:"UTC"});const can=d=>d>=START.slice(0,7)&&d<=todayIST().slice(0,7);const mv=n=>{const[y,m]=regMonth.split("-").map(Number),t=new Date(Date.UTC(y,m-1+n,1));return t.toISOString().slice(0,7)};
+  const sun=d=>isSun(d);
+  b.innerHTML=`<div class="pg-h"><h2>Absentee, Uniform &amp; Late Register</h2><span>${ML}</span><span style="margin-left:auto;display:flex;gap:6px"><button class="btn sm" data-rm="${mv(-1)}" ${can(mv(-1))?"":"disabled"}>‹ ${mn(mv(-1))}</button><button class="btn sm" data-rm="${mv(1)}" ${can(mv(1))?"":"disabled"}>${mn(mv(1))} ›</button></span></div>
+   <div class="kp"><div class="red"><span>Absent days</span><b>${tA}</b></div><div><span>Without uniform</span><b>${tU}</b></div><div class="gold"><span>Late · morning</span><b>${tLM}</b></div><div class="gold"><span>Late · afternoon</span><b>${tLA}</b></div></div>
+   ${tbl("A","","Absentees","days absent")}${tbl("U","u","Uniform defaulters","days without uniform")}
+   <div class="card2"><div class="sh"><b>Late arrivals</b><small>check-in after the person's reporting time</small></div>
+    ${late.length?`<table class="regt"><thead><tr><th>Staff</th><th>Morning</th><th>Afternoon</th><th style="text-align:right">Total</th></tr></thead><tbody>${late.map(id=>`<tr><td><b>${esc(personName(id,id))}</b><br><small>${esc(roleOf(id))}</small></td><td><div class="dots l">${dl(R[id].LM)}</div></td><td><div class="dots l">${dl(R[id].LA)}</div></td><td class="n">${R[id].LM.length+R[id].LA.length}</td></tr>`).join("")}</tbody></table>`:`<div class="allok">No late arrivals recorded${PEOPLE().some(id=>rtOf(id,"m"))?"":" — set reporting times in Attendance › Staff details"}.</div>`}</div>
+   <details class="card2"><summary style="cursor:pointer;font-family:Lora,serif;font-size:17px;color:var(--navy);font-weight:600">Daily register · tap a day to mark A / U</summary>
+    <div class="chart-wrap" style="margin-top:10px"><table class="chart"><thead><tr><th class="nm">Staff</th>${days.map(d=>`<th class="${sun(d)?"sun":""} ${d===date?"cur":""}">${+d.slice(8)}</th>`).join("")}<th class="tot ta">A</th><th class="tot tu">U</th></tr></thead><tbody>
+    ${PEOPLE().map((id,i)=>`<tr><td class="nm"><span>${i+1}</span>${esc(personName(id,id))}<small>${esc(roleOf(id))}</small></td>${days.map(d=>{if(sun(d))return`<td class="sun"></td>`;const v=cellVal(d,id);return `<td class="${d===date?"cur":""}"><button class="cm ${v}" data-cm="${d}|${id}" aria-label="${esc(personName(id,id))} ${fmt(d)}">${v}</button></td>`}).join("")}<td class="tot ta">${R[id].A.length||""}</td><td class="tot tu">${R[id].U.length||""}</td></tr>`).join("")}</tbody></table></div></details>`}
+document.addEventListener("click",e=>{const t=e.target.closest("[data-rm]");if(!t)return;e.stopPropagation();regMonth=t.dataset.rm;render()},true);
+
+/* ===== Sunday washing helpers (30-minute rule) ===== */
+const WASH_MIN=30;
+function washDur(r){return r&&r.reach&&r.done?mins(r.done)-mins(r.reach):null}
+function washDefaulters(wd,sd){const live=sd===todayIST()&&nowMinIST()<mins("12:00"),out=[];(wd.list||[]).forEach(v=>{const r=(wd.r||{})[v.id]||{},d=washDur(r);
+  if(!r.reach){if(!live)out.push({v,why:"Did not come"})}else if(!r.done){if(!live)out.push({v,why:"In "+h12(r.reach)+", no check-out"})}else if(d<WASH_MIN)out.push({v,why:`In ${h12(r.reach)} · out ${h12(r.done)} · only ${d} min`})});return out}
+let washPrev={d:"",data:null};
+function lastSunWash(){const sd=isSun(date)?date:prevSun(date);if(sd===date)return{d:sd,wd:washDay()};
+  if(washPrev.d!==sd&&db){washPrev={d:sd,data:null};db.doc("reports/"+sd).get().then(x=>{if(washPrev.d===sd){washPrev.data=x.exists?x.data():{};render()}}).catch(()=>{})}
+  if(!washPrev.data)return{d:sd,wd:null};const w=washPrev.data.wash||{};let L=null;if(w.list)try{L=JSON.parse(w.list)}catch(e){}return{d:sd,wd:{list:L||washTemplate(),r:w.r||{}}}}
+
 $("date").value=date; render(); loadHistory();
 setInterval(()=>{if(date===todayIST()&&!document.activeElement?.matches("input,textarea"))render()},60000);
 (async()=>{try{db=await FISDB.ready()}catch(e){db=null}
@@ -1111,7 +1303,7 @@ setInterval(()=>{if(date===todayIST()&&!document.activeElement?.matches("input,t
   if(db)db.doc("roster/sup").onSnapshot(s=>{supTpl=s.exists?s.data():null;render()},()=>{});
   if(db)db.doc("roster/wash").onSnapshot(s=>{const d=s.exists?s.data():null;washTpl=d&&Array.isArray(d.list)?d.list:null;render()},()=>{});
   let preFix=false;
-  if(db)db.doc("roster/main").onSnapshot(s=>{const ae=document.activeElement?.dataset;if(ae&&(ae.r||ae.pre))return;const d=s.exists?s.data():{};roster={veh:{...(d.veh||{})},area:{...(d.area||{})},name:{...(d.name||{})},phone:{...(d.phone||{})},hi:{...(d.hi||{})},pre:Array.isArray(d.pre)?d.pre:[],mig:{...(d.mig||{})}};
+  if(db)db.doc("roster/main").onSnapshot(s=>{const ae=document.activeElement?.dataset;if(ae&&(ae.r||ae.pre))return;const d=s.exists?s.data():{};roster={veh:{...(d.veh||{})},area:{...(d.area||{})},name:{...(d.name||{})},phone:{...(d.phone||{})},hi:{...(d.hi||{})},pre:Array.isArray(d.pre)?d.pre:[],mig:{...(d.mig||{})},g:{...(d.g||{})},rtm:{...(d.rtm||{})},rta:{...(d.rta||{})},cleaner:{...(d.cleaner||{})}};
     // one-time change asked on 18 Nov 2026: Bus G second round is driven by Manish; Nitin stays spare
     if(s.exists&&!preFix&&!roster.mig.g1118){preFix=true;const G=roster.pre.find(p=>p.code==="G");if(G){G.driver=roster.name.p11d||"Manish";G.dphone=roster.phone.p11d||"";}roster.mig.g1118=1;saveRoster()}
     render()},()=>{});
