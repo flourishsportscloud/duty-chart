@@ -1,6 +1,6 @@
 /* FIS Mentor Student Record · Google Apps Script backend
  * Kept in the "Mentor Student Record Data" Google Sheet:
- *   Roster – the student list for Classes 1-5 (Class | Section | Name); imported once, never stored in GitHub
+ *   Roster – the student list for Classes 1-11 (Class | Section | Name); imported once, never stored in GitHub
  *   Docs   – one row per record (checking entries, performance tests, settings)
  *   Log    – who saved what, and when
  * Every request needs a staff login. Password = staff first name + the common FIS staff suffix,
@@ -61,7 +61,7 @@ function roster_(){
   return out;
 }
 /* ---------- documents ---------- */
-const PATH_RE = /^(config\/(setup|lessons)|(e|t)\/\d{4}-\d\d-\d\d\/[1-5][ABC]\/[a-z0-9]{4,12})$/;
+const PATH_RE = /^(config\/(setup|lessons)|(e|t)\/\d{4}-\d\d-\d\d\/(?:[1-9]|1[01])[ABC]\/[a-z0-9]{4,12})$/;
 function parts_(path){ if(!PATH_RE.test(String(path||''))) fail('Bad record.'); const s = path.split('/');
   return s[0] === 'config' ? {coll: 'config', day: 'config'} : {coll: s[0] + '/' + s[2], day: s[1]}; }
 function rev_(next){ const p = props_(); let r = Number(p.getProperty('rev') || 0); if(next){ r++; p.setProperty('rev', String(r)); } return r; }
