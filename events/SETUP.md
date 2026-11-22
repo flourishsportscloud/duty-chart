@@ -8,7 +8,7 @@ Try it first without setup: open `/events/?demo=1` and tap any name (sample data
 3. **Project Settings > Script properties > Add**: `STAFF_SUFFIX` = the same common staff suffix used in the other FIS apps.
 4. Choose function `setup`, **Run**, allow permissions. This creates the data sheet and adds the 9 people (Harsh Yadav = Director/admin).
 5. **Deploy > New deployment > Web app**: Execute as **Me**, access **Anyone**. Copy the URL ending in `/exec`.
-6. Send that URL to Claude (it goes into `API_URL` in `index.html`), or open the app once with `?api=URL`.
+6. Done: the live URL is already set in `API_URL` (deployed 22 Nov 2026).
 7. Log in as Harsh Yadav, open the person icon, and tap **Remove sample data** if sample data was loaded.
 
 Login: full name (or unique first name) + password = first name + staff suffix. Only people on the access list can enter; the Director adds or removes people from the person icon.
