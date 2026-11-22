@@ -732,13 +732,13 @@ async function boot(){
   try{S.assets=await claude.use('assets')}catch(e){S.assets=null}
   try{const w=user&&user.can&&user.can('data.write');const wv=(w&&typeof w.then==='function')?await w:w;S.canWrite=wv!==false}catch(e){}
   subscribeDays();
-  db.doc('config/roster').onSnapshot(d=>{S.cfgKnown=d.exists;const v=d.exists?d.data():null;S.cfg=(v&&v.units)||{};resolveMe();render()},()=>{});
-  db.doc('config/staff').onSnapshot(d=>{S.staffKnown=d.exists;S.staff=d.exists?d.data():null;resolveMe();render()},()=>{});
+  db.doc('config/roster').onSnapshot(d=>{S.cfgKnown=d.exists;const v=d.exists?d.data():null;S.cfg=(v&&v.units)||{};resolveMe();if(S.me&&S.me.role!=='guest'&&document.getElementById('rt'))closeRoleDialog();render()},()=>{});
+  db.doc('config/staff').onSnapshot(d=>{S.staffKnown=d.exists;S.staff=d.exists?d.data():null;resolveMe();if(S.me&&S.me.role!=='guest'&&document.getElementById('rt'))closeRoleDialog();render()},()=>{});
   db.doc('config/theme').onSnapshot(d=>{S.theme=d.exists?d.data():{};applyTheme();render()},()=>{});
   render();
-  try{const nm=localStorage.getItem('cd_name');if(!S.name&&nm){S.name=nm;resolveMe()}}catch(e){}
+  try{const nm=localStorage.getItem('cd_name');if(nm){S.name=nm;S.roleHint='';resolveMe();if(S.me&&S.me.role!=='guest')safeSet('fis-cd-me3',{name:S.me.name,role:S.me.role})}}catch(e){}
   resolveMe();
-  if(!S.me)openRoleDialog();
+  if(!S.me||S.me.role==='guest')openRoleDialog();
 }
 
 /* ---------- toast ---------- */
