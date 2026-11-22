@@ -231,7 +231,7 @@ h1{font-family:var(--serif);font-weight:600;font-size:1.8rem;line-height:1.1;mar
   <div class="in">
     <a class="back" href="../fis/"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="m15 6-6 6 6 6"/></svg>FIS Staff Hub</a>
     <div class="brand"><span class="lg hex"><img src="../fis/fis-logo-192.png" alt=""></span>
-      <div><h1>Announcements</h1><div class="sub">Notices · Circulars · Parent SMS</div></div></div>
+      <div><h1>Announcements</h1><div class="sub">Circulars · SMS · Information</div></div></div>
     <div class="me"><div class="field"><label for="me">You are</label>
       <input id="me" list="staff" placeholder="Type your name" autocomplete="off" enterkeyhint="done"></div>
       <datalist id="staff"></datalist>
@@ -257,7 +257,8 @@ const call = (fn, args) => fetch(API, {method:'POST', redirect:'follow', headers
   .then(r => r.json()).then(j => { if (!j.ok) throw new Error(j.err || 'Server error'); return j.v; });
 const store = { get(k){ try { return localStorage.getItem(k) || ''; } catch(e){ return ''; } }, set(k,v){ try { v ? localStorage.setItem(k,v) : localStorage.removeItem(k); } catch(e){} } };
 
-const TYPES = [['all','All'],['Notice','Notices'],['Circular','Circulars'],['SMS','SMS']];
+const TYPES = [['all','All'],['Circular','Circulars'],['SMS','SMS'],['Notice','Information']];
+const TLABEL = t => t === 'Notice' ? 'Information' : t;
 const AUDS = ['All staff','Pre-primary','Primary','Middle','Secondary','Co-curricular','Admin & Operations'];
 /* who is expected to read an announcement, from the staff category in the Duty Chart list */
 const AUD_CATS = {
@@ -379,7 +380,7 @@ function card(a){
   return `<article class="card${open ? ' open' : ''}" id="c_${a.id}" style="--c:var(--c-${esc(a.type)})">
     <button type="button" class="ch" data-open="${a.id}" aria-expanded="${open}">
       <span class="ic">${ICON[a.type] || ICON.Notice}</span>
-      <span class="cm"><span class="ty">${esc(a.type === 'SMS' ? 'Parent SMS' : a.type)}</span><b>${esc(a.title)}</b>
+      <span class="cm"><span class="ty">${esc(TLABEL(a.type))}</span><b>${esc(a.title)}</b>
         <small>${esc(a.by || '')} · ${esc(ago(a.at))}${a.sample ? ' · sample' : ''}${a.file ? ' · 📎 PDF' : ''}</small>
         <span class="aud">${aud.map(x => `<span>${esc(x)}</span>`).join('')}</span></span>
       ${ME && forMe(a) ? `<span class="st ${sk}">${sl}</span>` : ''}
@@ -529,9 +530,9 @@ function adminMenu(){
 function form(a){
   a = a || {type:'Notice', aud:['All staff'], ack:true, act:false, actl:'Announced in class', hi:false};
   const d = sheet(`<h2>${a.id ? 'Edit announcement' : 'New announcement'}</h2>
-    <label class="fl">Type</label><div class="seg" id="fty">${['Notice','Circular','SMS'].map(t => `<button type="button" data-v="${t}" aria-pressed="${a.type===t}">${t === 'SMS' ? 'Parent SMS' : t}</button>`).join('')}</div>
+    <label class="fl">Type</label><div class="seg" id="fty">${['Circular','SMS','Notice'].map(t => `<button type="button" data-v="${t}" aria-pressed="${a.type===t}">${TLABEL(t)}</button>`).join('')}</div>
     <label class="fl" for="ftitle">Title</label><input type="text" id="ftitle" maxlength="160" value="${esc(a.title || '')}" placeholder="e.g. Sports Day duty briefing">
-    <label class="fl" for="fbody">Message</label><textarea id="fbody" maxlength="6000" placeholder="Write the full notice here">${esc(a.body || '')}</textarea>
+    <label class="fl" for="fbody">Message</label><textarea id="fbody" maxlength="6000" placeholder="Write the full message here">${esc(a.body || '')}</textarea>
     <label class="fl">Attach PDF (optional)</label>
     <div class="att" id="fatt">${a.file ? `<span class="pdfchip">${PDFI}<span>${esc(a.file.name)}<small>${esc(kb(a.file.size))}</small></span></span><button type="button" class="mini rd" id="frmf">Remove</button>` : ''}
       <label class="mini" style="cursor:pointer">${a.file ? 'Replace' : 'Choose PDF'}<input type="file" id="ffile" accept="application/pdf,.pdf" hidden></label></div>
