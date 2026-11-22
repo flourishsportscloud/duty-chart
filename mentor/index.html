@@ -124,6 +124,11 @@ table.rt td{vertical-align:top}table.rt td.red{color:var(--bad);font-weight:700}
  .topbar{position:static;padding:12px 16px}.work{padding:16px 14px 50px}.cols2{grid-template-columns:1fr}.stick{top:0}.nlist{grid-template-columns:1fr}
 }
 @media print{.side,.topbar,.ctx,.noprint,.toast,.ov,.banner{display:none!important}.app{display:block}body{background:#fff}.work{padding:0}.card{box-shadow:none;border:0;padding:0}table{font-size:11px}}
+
+.badge.ps{background:#EDE4F7;color:#572686}.nrow.ps{background:#F3ECFA;border-color:#D9C7EE}.obig .W{background:#F3ECFA;border-color:#D9C7EE;color:#572686}.obig .W.on{background:#572686;color:#fff;border-color:#572686}.obig.o5{grid-template-columns:1fr 1fr 1fr}.legend .ps{color:#572686}.bar i.ps{background:#8E5BC4}
+.rtab{border-collapse:separate;border-spacing:0;font-size:12px;min-width:100%}.rtab th,.rtab td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap;background:#fff}.rtab td.nm,.rtab th.nm{position:sticky;left:0;text-align:left;font-weight:600;color:var(--navy);z-index:1;max-width:160px;overflow:hidden;text-overflow:ellipsis;border-right:1px solid var(--line);cursor:pointer}.rtab th{font-size:10.5px;color:var(--mut);vertical-align:bottom;line-height:1.25}.rtab tfoot td{font-weight:700;background:var(--surface2)}
+.cc{display:inline-block;min-width:26px;border-radius:7px;padding:2px 5px;font-weight:800;font-size:12px}.cc.ok{background:var(--ok-t);color:var(--ok)}.cc.ic{background:var(--amb-t);color:#9A6208}.cc.ns{background:var(--bad-t);color:var(--bad)}.cc.ab{background:var(--ab-bg);color:var(--ab)}.cc.ps{background:#EDE4F7;color:#572686}.cc.lo{background:var(--bad-t);color:var(--bad)}.cc.gd{color:var(--navy)}.cc.mt{color:#B5BED2;font-weight:500}
+.rgrp{border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin-top:8px;background:#fff}.rgrp b{color:var(--navy)}.mis{font-size:12px;color:var(--bad);margin-top:3px}
 </style></head><body>
 <div id="gate" class="hide"><form id="gf" novalidate><h2>Mentor Student Performance Record</h2><p class="muted" style="margin:0 0 14px">Staff login · Flourish International School</p>
 <div class="field"><label>Your full name</label><input id="gn" autocomplete="name" placeholder="e.g. Megha Sharma"></div>
@@ -247,13 +252,13 @@ async function loadRoster(){if(!API_URL||!TOKEN)return;try{const r=await call('r
 function saveCfg(){lsPut('cfg',CFG);if(API_URL){OUT['config/setup']=Object.assign({p:'config/setup'},CFG);persist();flushSoon()}}
 function saveLessons(){lsPut('lessons',LESSONS);if(API_URL){OUT['config/lessons']=Object.assign({p:'config/lessons'},LESSONS);persist();flushSoon()}}
 /* ---------- records ---------- */
-const CODES={C:{t:'✓',n:'Checked',k:'ok'},I:{t:'IC',n:'Incomplete',k:'ic'},N:{t:'NS',n:'Not submitted',k:'ns'},A:{t:'A',n:'Absent',k:'ab'}};
+const CODES={C:{t:'✓',n:'Checked',k:'ok'},I:{t:'IC',n:'Incomplete',k:'ic'},N:{t:'NS',n:'Not submitted',k:'ns'},A:{t:'A',n:'Absent',k:'ab'},W:{t:'P',n:'Pasting',k:'ps'}};
 const docs=k=>Object.values(DB).filter(d=>d&&d.k===k);
 const entriesFor=(sec,subj)=>docs('e').filter(e=>e.sec===sec&&(!subj||e.subj===subj)).sort((a,b)=>b.date.localeCompare(a.date)||b.ts-a.ts);
 const testsFor=(sec,subj)=>docs('t').filter(e=>e.sec===sec&&(!subj||e.subj===subj)).sort((a,b)=>b.date.localeCompare(a.date)||b.ts-a.ts);
 const nOf=sec=>(ROSTER[sec]||[]).length;
 const nameOf=(sec,s)=>(ROSTER[sec]||[])[s-1]||('#'+s);
-function tally(e){const t={C:0,I:0,N:0,A:0,P:0};for(let s=1;s<=nOf(e.sec);s++){const c=e.m[s];if(c)t[c]++;else t.P++}return t}
+function tally(e){const t={C:0,I:0,N:0,A:0,P:0,W:0};for(let s=1;s<=nOf(e.sec);s++){const c=e.m[s];if(c)t[c]++;else t.P++}return t}
 function sinceOf(e,s){let t=e.ts;(e.lg||[]).forEach(l=>{if(l[0]==s&&l[1]!=='C')t=l[2]});return t}
 function timeline(e,s){return (e.lg||[]).filter(l=>l[0]==s).map(l=>'<b>'+CODES[l[1]].t+'</b> '+fDT(l[2])+(l[4]?' ('+esc(l[4])+')':'')).join(' → ')}
 function setMark(e,s,code){
@@ -278,7 +283,8 @@ function ensureSel(){
   const sl=subjectsFor(U.cls);if(!sl.find(x=>x.n===U.subj))U.subj='';
 }
 const IC={check:'<svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h9"/></svg>',dash:'<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>',rep:'<svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h7"/></svg>',stu:'<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c2 .7 3.2 2.5 3.5 5.2"/></svg>',set:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>'};
-const NAV=[['Record',[['check','Check','Record checks and marks']]],['Insights',[['dash','Dashboard','Rates, trends and what needs attention'],['rep','Reports','Defaulters, summaries and report cards'],['stu','Students','Search a student and open the record']]],['Admin',[['set','Setup','Teachers, items, lessons and preview']]]];
+IC.rec=IC.rep;
+const NAV=[['Record',[['check','Check','Record checks and marks'],['rec','Class Record','Complete record of a section: books, notebooks, assignments, tests']]],['Insights',[['dash','Dashboard','Rates, trends and what needs attention'],['rep','Reports','Defaulters, summaries and report cards'],['stu','Students','Search a student and open the record']]],['Admin',[['set','Setup','Teachers, items, lessons and preview']]]];
 const TITLES={};NAV.forEach(g=>g[1].forEach(t=>TITLES[t[0]]=[t[1],t[2]]));
 function roleOf(){if(isAdmin())return 'Director';const p=PLDEF.find(x=>first(x.n)===first(ME));if(p)return p.t;if(mineSet().size)return 'Teacher';return 'Staff'}
 function chrome(){
@@ -335,8 +341,8 @@ function svgHeat(rows,cols,get,o){
 const kpi=(l,v,sub,c)=>'<div class="kpi" style="--c:'+(c||'#1B3156')+'"><span class="l">'+l+'</span><b>'+v+'</b><small>'+(sub||'&nbsp;')+'</small></div>';
 const ab9=s=>s.length>9?s.slice(0,8)+'.':s;
 function bar(t,n){const tot=n||(t.C+t.I+t.N+t.A+t.P)||1;const w=k=>(t[k]/tot*100).toFixed(1)+'%';
-  return '<div class="bar"><i class="ok" style="width:'+w('C')+'"></i><i class="ic" style="width:'+w('I')+'"></i><i class="ns" style="width:'+w('N')+'"></i><i class="ab" style="width:'+w('A')+'"></i></div>'+legend(t)}
-function legend(t){return '<div class="legend"><span class="ok">✓ '+t.C+'</span><span class="ic">IC '+t.I+'</span><span class="ns">NS '+t.N+'</span><span class="ab">A '+t.A+'</span><span class="p">Unmarked '+t.P+'</span></div>'}
+  return '<div class="bar"><i class="ok" style="width:'+w('C')+'"></i><i class="ic" style="width:'+w('I')+'"></i><i class="ns" style="width:'+w('N')+'"></i><i class="ab" style="width:'+w('A')+'"></i><i class="ps" style="width:'+w('W')+'"></i></div>'+legend(t)}
+function legend(t){return '<div class="legend"><span class="ok">✓ '+t.C+'</span><span class="ic">IC '+t.I+'</span><span class="ns">NS '+t.N+'</span><span class="ab">A '+t.A+'</span>'+(t.W?'<span class="ps">P '+t.W+'</span>':'')+'<span class="p">Unmarked '+t.P+'</span></div>'}
 function subjChips(forPerf){
   const sl=subjectsFor(U.cls);const ds=[...new Set(sl.map(x=>x.d))];
   let h='<div class="card" style="padding:10px"><div class="row" style="margin-bottom:6px"><span class="lab">Subject</span></div><div class="scroll">';
@@ -449,7 +455,8 @@ function sheetHTML(){
     h+='<div class="snav"><button class="btn ghost" data-act="sprev">‹ Prev</button><button class="btn big" data-act="snext">Save &amp; Next ›</button></div>';
   }else{
     const c=d.m[s];
-    h+='<div class="obig">'+['C','I','N','A'].map(x=>'<button class="'+x+(c===x?' on':'')+'" data-act="mark" data-s="'+s+'" data-c="'+x+'"><b>'+CODES[x].t+'</b>'+CODES[x].n+'</button>').join('')+'</div>';
+    const cd=['C','I','N','A'];if(+d.sec.slice(0,-1)<=5&&/Notebook/.test(d.item)&&!/Test/.test(d.item))cd.push('W');
+    h+='<div class="obig'+(cd.length>4?' o5':'')+'">'+cd.map(x=>'<button class="'+x+(c===x?' on':'')+'" data-act="mark" data-s="'+s+'" data-c="'+x+'"><b>'+CODES[x].t+'</b>'+CODES[x].n+'</button>').join('')+'</div>';
     if(c&&c!=='C')h+='<div class="rem" style="margin-top:12px"><input id="srem" data-act="note" data-s="'+s+'" placeholder="Remark (optional)" value="'+esc((d.rm||{})[s]||'')+'"><div class="qr">'+QUICK.map(q=>'<button data-act="quick" data-s="'+s+'" data-q="'+esc(q)+'">'+esc(q)+'</button>').join('')+'</div></div>';
     h+='<div class="snav"><button class="btn ghost" data-act="sprev">‹ Prev</button><button class="btn big" data-act="snext">Next ›</button></div>';
   }
@@ -468,7 +475,7 @@ function overlayHTML(){
 function renderSheet(){const el=$('sheet');if(!el)return;el.innerHTML=overlayHTML();document.body.classList.toggle('lock',!!el.innerHTML);
   const i=$('smk');if(i)setTimeout(()=>{i.focus();i.select()},60)}
 /* ---------- DASHBOARD ---------- */
-function scopeOpts(){const o=[];if(plSet().size)o.push(['pl','My PL classes']);if(mineSet().size)o.push(['mine','My classes']);o.push(['sec','Section '+curSec()]);o.push(['seg',U.seg==='P'?'All Primary':'All Secondary']);if(isAdmin())o.push(['all','Whole school']);return o}
+function scopeOpts(){const o=[];if(plSet().size)o.push(['pl','My PL classes']);if(mineSet().size)o.push(['mine','My classes']);o.push(['sec','Section '+curSec()]);o.push(['cls','Class '+U.cls+' · all sections']);o.push(['seg',U.seg==='P'?'All Primary':'All Secondary']);if(isAdmin())o.push(['all','Whole school']);return o}
 function scopeNow(){const o=scopeOpts().map(x=>x[0]);if(!U.scope||!o.includes(U.scope))U.scope=plSet().size?'pl':mineSet().size?'mine':(isAdmin()?'seg':'sec');return U.scope}
 function cutoff(){if(U.per==='all')return '';const d=new Date();d.setDate(d.getDate()-(+U.per));return isoD(d)}
 function inScope(r,ignorePer){
@@ -476,6 +483,7 @@ function inScope(r,ignorePer){
   if(sc==='pl'){if(!plSet().has(r.sec))return false}
   else if(sc==='mine'){if(!mineSet().has(r.sec+'|'+r.subj))return false}
   else if(sc==='sec'){if(r.sec!==curSec())return false}
+  else if(sc==='cls'){if(+r.sec.slice(0,-1)!==U.cls)return false}
   else if(sc==='seg'){if(segOf(r.sec)!==U.seg)return false}
   if(U.dept){const d=(subjDef(+r.sec.slice(0,-1),r.subj)||{}).d;if(d!==U.dept)return false}
   if(!ignorePer){const c=cutoff();if(c&&r.date<c)return false}
@@ -484,17 +492,17 @@ function inScope(r,ignorePer){
 function deptList(){const set=new Set();subjectsFor(U.cls).forEach(x=>set.add(x.d));if(scopeNow()!=='sec'){segClasses(U.seg).forEach(c=>subjectsFor(c).forEach(x=>set.add(x.d)))}return [...set]}
 function dashHead(){
   let h=filterBar();
-  h+='<div class="scroll" style="margin-bottom:10px">'+[['chk','Checking'],['fup','Defaulters'],['prf','Performance']].map(o=>'<button class="chip" data-act="dsub" data-v="'+o[0]+'" aria-pressed="'+(U.dsub===o[0])+'">'+o[1]+'</button>').join('')+'</div>';
+  h+='<div class="scroll" style="margin-bottom:10px">'+[['chk','Checking'],['pen','Pending status'],['fup','Defaulters'],['prf','Performance']].map(o=>'<button class="chip" data-act="dsub" data-v="'+o[0]+'" aria-pressed="'+(U.dsub===o[0])+'">'+o[1]+'</button>').join('')+'</div>';
   return h;
 }
-const addT=(a,b)=>{['C','I','N','A','P'].forEach(k=>a[k]+=b[k]);return a};
-const zero=()=>({C:0,I:0,N:0,A:0,P:0});
+const addT=(a,b)=>{['C','I','N','A','P','W'].forEach(k=>a[k]+=b[k]);return a};
+const zero=()=>({C:0,I:0,N:0,A:0,P:0,W:0});
 const pcell=t=>{const m=t.C+t.I+t.N;return m?Math.round(t.C/(t.C+t.I+t.N)*100)+'%':'—'};
 function trow(label,t,extra){return '<tr><td>'+label+'</td><td class="n">'+(extra==null?'':extra)+'</td><td class="n" style="color:var(--ok)"><b>'+t.C+'</b></td><td class="n" style="color:var(--ic)"><b>'+t.I+'</b></td><td class="n" style="color:var(--ns)"><b>'+t.N+'</b></td><td class="n">'+t.A+'</td><td class="n">'+t.P+'</td><td class="n"><b>'+pcell(t)+'</b></td></tr>'}
 const THEAD='<tr><th></th><th class="n">Checks</th><th class="n">✓</th><th class="n">IC</th><th class="n">NS</th><th class="n">A</th><th class="n">Unmkd</th><th class="n">Done</th></tr>';
 function viewDash(){
   let h=dashHead();
-  if(U.dsub==='chk')h+=dashCheck();else if(U.dsub==='fup')h+=dashFollow();else h+=dashPerf();
+  if(U.dsub==='chk')h+=dashCheck();else if(U.dsub==='pen')h+=dashPending();else if(U.dsub==='fup')h+=dashFollow();else h+=dashPerf();
   return h;
 }
 function attnList(limit){
@@ -598,15 +606,19 @@ function viewRep(){
 }
 function followItems(){
   const out=[];
-  docs('e').filter(e=>inScope(e,true)).forEach(e=>{for(let s=1;s<=nOf(e.sec);s++){const c=e.m[s];if(c==='I'||c==='N'||c==='A'){const since=sinceOf(e,s);out.push({e,s,c,since,days:Math.floor((Date.now()-since)/864e5)})}}});
+  docs('e').filter(e=>inScope(e,true)).forEach(e=>{for(let s=1;s<=nOf(e.sec);s++){const c=e.m[s];if(c==='I'||c==='N'||c==='A'||c==='W'){const since=sinceOf(e,s);out.push({e,s,c,since,days:Math.floor((Date.now()-since)/864e5)})}}});
   return out;
 }
 function dashFollow(){
-  const all=followItems(),list=U.overdue?all.filter(x=>x.days>=2):all;
+  const all=followItems(),kindOf=it=>/Test/.test(it)?'T':/Book/.test(it)?'B':/Notebook/.test(it)?'N':/Assignment/.test(it)?'A':'O';
+  let list=U.overdue?all.filter(x=>x.days>=2):all;
+  const subsIn=[...new Set(all.map(x=>x.e.subj))].sort();
+  if(U.fitem)list=list.filter(x=>kindOf(x.e.item)===U.fitem);if(U.fcode)list=list.filter(x=>x.c===U.fcode);if(U.fsub&&subsIn.includes(U.fsub))list=list.filter(x=>x.e.subj===U.fsub);
   const g={};list.forEach(x=>{const k=x.e.sec+'#'+x.s;(g[k]=g[k]||[]).push(x)});
   const keys=Object.keys(g).sort((a,b)=>parseInt(a)-parseInt(b)||a.localeCompare(b)||(+a.split('#')[1])-(+b.split('#')[1]));
   const nsN=all.filter(x=>x.c==='N').length,icN=all.filter(x=>x.c==='I').length,odN=all.filter(x=>x.days>=2).length;
   let h='<div class="kpis">'+kpi('Open items',all.length,'to follow up','#1B3156')+kpi('Students',new Set(all.map(x=>x.e.sec+'#'+x.s)).size,'with pending work','#572686')+kpi('Not submitted',nsN,'NS','#D93A4B')+kpi('Incomplete',icN,'IC','#EFA11D')+kpi('Overdue',odN,'pending 2+ days','#D93A4B')+'</div><div class="row" style="margin-bottom:10px"><button class="chip sm" data-act="overdue" aria-pressed="'+!!U.overdue+'">Overdue only (2+ days)</button><button class="btn wa sm" data-act="copyfup">Copy WhatsApp list</button><span class="small muted">'+list.length+' open items · '+keys.length+' students</span></div>';
+  h+='<div class="card" style="padding:10px"><div class="row"><span class="lab">Item</span><div class="scroll">'+[['','All'],['B','Book'],['N','Notebook'],['A','Assignment']].map(o=>'<button class="chip sm" data-act="fitem" data-v="'+o[0]+'" aria-pressed="'+((U.fitem||'')===o[0])+'">'+o[1]+'</button>').join('')+'</div></div><div class="row" style="margin-top:6px"><span class="lab">Status</span><div class="scroll">'+[['','All'],['N','Not submitted'],['I','Incomplete'],['W','Pasting (P)'],['A','Absent']].map(o=>'<button class="chip sm" data-act="fcode" data-v="'+o[0]+'" aria-pressed="'+((U.fcode||'')===o[0])+'">'+o[1]+'</button>').join('')+'</div></div><div class="row" style="margin-top:6px"><span class="lab">Subject</span><div class="scroll"><button class="chip sm" data-act="fsub" data-v="" aria-pressed="'+!U.fsub+'">All</button>'+subsIn.map(x=>'<button class="chip sm" data-act="fsub" data-v="'+esc(x)+'" aria-pressed="'+(U.fsub===x)+'">'+esc(x)+'</button>').join('')+'</div></div></div>';
   if(U.wa)h+='<div class="card"><h4>Select all and copy</h4><textarea rows="8" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:10px" readonly>'+esc(U.wa)+'</textarea></div>';
   if(!keys.length)h+='<div class="empty">Nothing pending — every IC / NS / Absent has been resolved. 🎉</div>';
   keys.forEach(k=>{const [sec,s]=k.split('#');const items=g[k].sort((a,b)=>a.since-b.since);
@@ -624,7 +636,8 @@ function repeatConcerns(){
 }
 function dashPerf(){
   const ts=docs('t').filter(t=>inScope(t));
-  let h='<div class="scroll" style="margin-bottom:14px">'+[['subj','Subject-wise'],['date','Date-wise']].map(o=>'<button class="chip sm" data-act="pview" data-v="'+o[0]+'" aria-pressed="'+((U.pview||'subj')===o[0])+'">'+o[1]+'</button>').join('')+'</div>';
+  let h='<div class="scroll" style="margin-bottom:14px">'+[['subj','Subject-wise'],['date','Date-wise'],['poor','Poor performers'],['cmp','Compare sections']].map(o=>'<button class="chip sm" data-act="pview" data-v="'+o[0]+'" aria-pressed="'+((U.pview||'subj')===o[0])+'">'+o[1]+'</button>').join('')+'</div>';
+  if(U.pview==='poor')return h+dashPoor();if(U.pview==='cmp')return h+dashCmp();
   if(!ts.length)return h+'<div class="empty">No test marks in this view yet.</div>';
   let sum=0,k=0,poor=0,ab=0;ts.forEach(t=>{const st=testStats(t);poor+=st.poor;ab+=st.ab;if(st.avg!=null){sum+=st.avg;k++}});
   const rc=repeatConcerns().filter(r=>/minimum/.test(r.what)).length;
@@ -651,6 +664,119 @@ function waFollow(){
   Object.keys(g).sort((a,b)=>parseInt(a)-parseInt(b)||a.localeCompare(b)).forEach(sec=>{t+='\n*Class '+sec+'*\n';g[sec].sort((a,b)=>a.s-b.s).forEach((x,i)=>{t+=(i+1)+'. '+nameOf(sec,x.s)+' – '+x.e.subj+' '+x.e.item+' '+lessonLabel(x.e)+' – '+CODES[x.c].t+' since '+fD(isoD(new Date(x.since)))+'\n'})});
   return t;
 }
+/* ---------- CLASS RECORD, PENDING STATUS, POOR PERFORMERS, SECTION COMPARISON ---------- */
+const lkey=ls=>String(ls==null?'':ls).toLowerCase().replace(/lesson|chapter/g,'').replace(/(^|[^a-z0-9])l[-\s.]*(?=\d)/g,'$1').replace(/[^a-z0-9]/g,'');
+const shortL=e=>{const t=lessonLabel(e);return t.length>14?t.slice(0,13)+'…':t};
+const mcell=(t,s)=>{const v=t.m[s];if(typeof v==='number')return '<span class="cc '+(isLow(t,s)?'lo':'gd')+'">'+fmtN(v)+'</span>';if(v==='A')return '<span class="cc ab">Ab</span>';if(v==='NG')return '<span class="cc ab">NG</span>';return '<span class="cc mt">·</span>'};
+function chipRow(lab,opts,act,cur){return '<div class="row" style="margin-top:6px"><span class="lab">'+lab+'</span><div class="scroll">'+opts.map(o=>'<button class="chip sm" data-act="'+act+'" data-v="'+esc(o[0])+'" aria-pressed="'+(cur===o[0])+'">'+esc(o[1])+'</button>').join('')+'</div></div>'}
+function secsInScope(){const sc=scopeNow();return Object.keys(ROSTER).filter(sec=>sc==='pl'?plSet().has(sec):sc==='mine'?[...mineSet()].some(x=>x.startsWith(sec+'|')):sc==='sec'?sec===curSec():sc==='cls'?+sec.slice(0,-1)===U.cls:sc==='seg'?segOf(sec)===U.seg:true).sort(secSort)}
+function viewRec(){
+  const c=U.cls,sbs=subjectsFor(c);if(!sbs.find(x=>x.n===U.rs))U.rs=sbs[0].n;
+  const its=itemsFor(c,U.rs);if(!its.includes(U.ri))U.ri=its[0];
+  let h='<div class="card" style="padding:10px"><div class="row"><span class="lab">Subject</span><div class="scroll">'+sbs.map(x=>'<button class="chip sm" data-act="rs" data-v="'+esc(x.n)+'" aria-pressed="'+(U.rs===x.n)+'">'+esc(x.n)+'</button>').join('')+'</div></div>';
+  h+=chipRow('View',its.map(i=>[i,IT_SHORT[i]||i]),'ri',U.ri);
+  h+=chipRow('Period',[['all','From start (1 Oct)'],['30','30 days'],['14','14 days']],'rper',U.rper||'all');
+  h+='<div class="row" style="margin-top:6px"><button class="chip sm" data-act="rall" aria-pressed="'+!!U.rall+'">All sections of Class '+c+'</button></div></div>';
+  const secs=U.rall?secsOf(c).map(l=>c+l):[curSec()];
+  secs.forEach(sec=>{h+=recSection(sec)});
+  return h;
+}
+function recSection(sec){
+  const test=U.ri==='Test Notebook',per=U.rper||'all',cut=per==='all'?'':dayAgo(+per),n=nOf(sec);
+  const list=(test?testsFor(sec,U.rs):entriesFor(sec,U.rs).filter(e=>e.item===U.ri)).filter(d=>!cut||d.date>=cut).sort((a,b)=>a.date.localeCompare(b.date)||a.ts-b.ts);
+  let h='<div class="card"><div class="eh"><h3 style="margin:0">'+sec+' · '+esc(U.rs)+' · '+esc(IT_SHORT[U.ri]||U.ri)+'</h3><span class="badge g">'+list.length+(test?' tests':' checks')+'</span></div><div class="small muted" style="margin:2px 0 8px">'+esc(teacherOf(sec,U.rs)||'—')+' · '+n+' students · tap a name to open the student</div>';
+  if(!list.length)return h+'<div class="empty" style="margin:0">Nothing recorded yet for this view.</div></div>';
+  h+='<div class="tw"><table class="rtab"><thead><tr><th class="nm">Student</th>'+list.map(d=>'<th>'+esc(shortL(d))+'<br>'+fD(d.date)+(test?'<br>/'+d.max:'')+'</th>').join('')+(test?'<th>Avg</th>':'<th>Open</th>')+'</tr></thead><tbody>';
+  for(let s=1;s<=n;s++){
+    h+='<tr><td class="nm" data-act="stu" data-sec="'+sec+'" data-s="'+s+'">'+s+'. '+esc(nameOf(sec,s))+'</td>';
+    if(test){let sum=0,k=0;list.forEach(t=>{h+='<td>'+mcell(t,s)+'</td>';const p=pctOf(t,s);if(p!=null){sum+=p;k++}});h+='<td><b'+(k&&sum/k<60?' class="red"':'')+'>'+(k?Math.round(sum/k)+'%':'—')+'</b></td>'}
+    else{let o=0;list.forEach(e=>{const c=e.m[s];h+='<td>'+(c?'<span class="cc '+CODES[c].k+'">'+CODES[c].t+'</span>':'<span class="cc mt">·</span>')+'</td>';if(c==='I'||c==='N'||c==='W')o++});h+='<td>'+(o?'<span class="badge ns">'+o+'</span>':'<span class="cc mt">0</span>')+'</td>'}
+    h+='</tr>'}
+  h+='</tbody><tfoot><tr><td class="nm" style="cursor:default">'+(test?'Class average':'Not done')+'</td>';
+  if(test){let ga=0,gk=0;list.forEach(t=>{const st=testStats(t);h+='<td>'+(st.avg==null?'—':Math.round(st.avg)+'%')+'</td>';if(st.avg!=null){ga+=st.avg;gk++}});h+='<td>'+(gk?Math.round(ga/gk)+'%':'—')+'</td>'}
+  else{list.forEach(e=>{const t=tally(e);h+='<td>'+(t.I+t.N+t.W)+'</td>'});h+='<td></td>'}
+  h+='</tr></tfoot></table></div>';
+  if(test){
+    const thr=U.pthr||2,rows=[];
+    for(let s=1;s<=n;s++){let run=0,best=0;const ps=list.filter(t=>pctOf(t,s)!=null);ps.forEach(t=>{run=isLow(t,s)?run+1:0;best=Math.max(best,run)});if(best>=thr)rows.push({s,best,still:run>0,last:ps.slice(-5).reverse().map(t=>fmtN(t.m[s])).join(', ')})}
+    h+='<div class="rgrp"><b>Poor performers · low in '+thr+'+ tests in a row ('+rows.length+')</b>'+chipRow('Rule',[['1','1+'],['2','2+'],['3','3+'],['4','4+']],'pthr',String(thr));
+    h+=rows.length?rows.sort((a,b)=>b.best-a.best).map(r=>'<div class="attn" data-act="stu" data-sec="'+sec+'" data-s="'+r.s+'"><span class="nmx">'+esc(nameOf(sec,r.s))+'<small>latest first: '+r.last+'</small></span><span class="badge ns">'+r.best+' low in a row</span>'+(r.still?'<span class="flag">still low</span>':'')+'</div>').join(''):'<div class="small muted" style="margin-top:6px">Nobody low '+thr+'+ times in a row.</div>';
+    h+='</div>';
+  }else{
+    const g={};for(let s=1;s<=n;s++){list.forEach(e=>{const c=e.m[s];if(c==='I'||c==='N'||c==='W'){(g[s]=g[s]||{N:[],I:[],W:[]})[c].push(lessonLabel(e))}})}
+    const ks=Object.keys(g);
+    h+='<div class="rgrp"><b>Defaulters · '+esc(IT_SHORT[U.ri]||U.ri)+' ('+ks.length+')</b>';
+    h+=ks.length?ks.map(s=>{const x=g[s];return '<div class="attn" data-act="stu" data-sec="'+sec+'" data-s="'+s+'"><span class="nmx">'+esc(nameOf(sec,+s))+'<small>'+(x.N.length?'Not submitted: '+esc(x.N.join(', '))+'. ':'')+(x.I.length?'Incomplete: '+esc(x.I.join(', '))+'. ':'')+(x.W.length?'Pasting: '+esc(x.W.join(', ')):'')+'</small></span><span class="badge ns">'+(x.N.length+x.I.length+x.W.length)+'</span></div>'}).join(''):'<div class="small muted" style="margin-top:6px">No defaulters — everything submitted.</div>';
+    h+='</div>';
+  }
+  return h+'</div>';
+}
+function dashPending(){
+  const secs=secsInScope(),c0=cutoff(),byC={};secs.forEach(s=>{const c=+s.slice(0,-1);(byC[c]=byC[c]||[]).push(s)});
+  const res={},cls=Object.keys(byC).map(Number).sort((a,b)=>a-b);let totalMiss=0,secUp=0,secAll=0,anyData=false;
+  cls.forEach(c=>{
+    const sis=Object.keys(ROSTER).filter(s=>+s.slice(0,-1)===c).sort(secSort),rows=[];
+    subjectsFor(c).filter(sb=>!U.dept||sb.d===U.dept).forEach(sb=>itemsFor(c,sb.n).forEach(it=>{
+      const src=it==='Test Notebook'?docs('t'):docs('e').filter(e=>e.item===it),per={},exp=new Map();
+      sis.forEach(sec=>{per[sec]=src.filter(e=>e.sec===sec&&e.subj===sb.n&&(!c0||e.date>=c0));per[sec].forEach(e=>{const k=lkey(e.ls);if(!k)return;if(!exp.has(k))exp.set(k,{label:lessonLabel(e),by:[]});exp.get(k).by.push(sec)})});
+      if(!exp.size)return;anyData=true;
+      const cell={};byC[c].forEach(sec=>{const own=new Set(per[sec].map(e=>lkey(e.ls)).filter(Boolean));const miss=[...exp.entries()].filter(([k])=>!own.has(k)).map(([k,v])=>({label:v.label,by:v.by}));let unm=0;if(it!=='Test Notebook')per[sec].forEach(e=>{unm+=tally(e).P});cell[sec]={n:per[sec].length,miss,unm}});
+      rows.push({sb,it,cell});
+    }));
+    res[c]={rows,secs:byC[c]};
+  });
+  cls.forEach(c=>res[c].secs.forEach(sec=>{secAll++;const m=res[c].rows.reduce((a,r)=>a+r.cell[sec].miss.length,0);totalMiss+=m;if(!m)secUp++}));
+  let h='<div class="kpis">'+kpi('Sections in view',secAll,'','#1B3156')+kpi('Fully up to date',secUp,'nothing behind sister sections','#1E9E6A')+kpi('With pending',secAll-secUp,'sections behind','#EFA11D')+kpi('Pending checks',totalMiss,'lessons not yet checked','#D93A4B')+'</div>';
+  h+='<div class="small muted" style="margin:0 2px 10px">Pending = a lesson checked in a sister section of the same class but not yet in this one. Pick “Class '+U.cls+' · all sections” above to compare A, B and C.</div>';
+  if(!anyData)return h+'<div class="empty">No checking records in this view yet.</div>';
+  cls.forEach(c=>{const R=res[c];if(!R.rows.length)return;
+    h+='<div class="card"><h3>Class '+c+' · checks done per section</h3><div class="tw"><table class="rtab"><thead><tr><th class="nm">Subject · item</th>'+R.secs.map(s=>'<th>'+s+'</th>').join('')+'</tr></thead><tbody>';
+    R.rows.forEach(r=>{h+='<tr><td class="nm" style="cursor:default">'+esc(r.sb.n)+' · '+esc(IT_SHORT[r.it]||r.it)+'</td>'+R.secs.map(s=>{const x=r.cell[s];return '<td>'+(x.miss.length?'<span class="cc ns">−'+x.miss.length+'</span>':'<span class="cc ok">'+x.n+'</span>')+'</td>'}).join('')+'</tr>'});
+    h+='</tbody></table></div><div class="small muted" style="margin-top:6px">Green = number of checks done. Red −N = N lessons still to be checked.</div></div>';
+    R.secs.forEach(sec=>{const lines=[];R.rows.forEach(r=>{const x=r.cell[sec];if(x.miss.length||x.unm)lines.push({r,x})});
+      const m=lines.reduce((a,l)=>a+l.x.miss.length,0);
+      h+='<div class="card"><div class="eh"><h3 style="margin:0">'+sec+'</h3><span class="badge '+(m?'ns':'ok')+'">'+(m?m+' pending':'Up to date')+'</span></div>';
+      if(!lines.length)h+='<div class="small muted" style="margin-top:6px">Every checked lesson in the class is done here too.</div>';
+      lines.forEach(l=>{const tch=teacherOf(sec,l.r.sb.n);h+='<div class="rgrp"><b>'+esc(l.r.sb.n)+' · '+esc(IT_SHORT[l.r.it]||l.r.it)+'</b> <span class="small muted">'+esc(tch)+'</span>'+(l.x.miss.length?'<div class="mis">Not checked: '+l.x.miss.slice(0,8).map(m=>esc(m.label)+' (done in '+m.by.join(', ')+')').join(' · ')+(l.x.miss.length>8?' +'+(l.x.miss.length-8)+' more':'')+'</div>':'')+(l.x.unm?'<div class="small muted">'+l.x.unm+' students still unmarked in checks already started</div>':'')+'</div>'});
+      h+='</div>'});
+  });
+  return h;
+}
+function perfSubs(secs){return [...new Set(docs('t').filter(t=>secs.includes(t.sec)&&(!U.dept||((subjDef(+t.sec.slice(0,-1),t.subj)||{}).d===U.dept))).map(t=>t.subj))].sort()}
+function dashPoor(){
+  const secs=secsInScope(),thr=U.pthr||2,K=U.pk||5,subs=perfSubs(secs);
+  let h='<div class="card" style="padding:10px">'+chipRow('Low in',[['1','1+ test'],['2','2+ in a row'],['3','3+ in a row'],['4','4+ in a row']],'pthr',String(thr))+chipRow('Last',[['3','3 tests'],['4','4 tests'],['5','5 tests'],['8','8 tests']],'pkk',String(K))+'<div class="row" style="margin-top:6px"><span class="lab">Subject</span><div class="scroll"><button class="chip sm" data-act="psub" data-v="" aria-pressed="'+!U.psub+'">All subjects</button>'+subs.map(x=>'<button class="chip sm" data-act="psub" data-v="'+esc(x)+'" aria-pressed="'+(U.psub===x)+'">'+esc(x)+'</button>').join('')+'</div></div><div class="small muted" style="margin-top:6px">Marks below the test’s minimum, newest test first. Absent and Not given are skipped. Use the Show and Dept filters above for several sections, classes or departments together.</div></div>';
+  let total=0,cards='';
+  secs.forEach(sec=>{
+    const n=nOf(sec),bySub=[...new Set(docs('t').filter(t=>t.sec===sec).map(t=>t.subj))].filter(sb=>(!U.psub||sb===U.psub)&&(!U.dept||((subjDef(+sec.slice(0,-1),sb)||{}).d===U.dept))).sort();
+    bySub.forEach(sb=>{
+      const ts=testsFor(sec,sb).slice(0,K),rows=[];
+      for(let s=1;s<=n;s++){const seq=ts.filter(t=>pctOf(t,s)!=null);let run=0,best=0;seq.slice().reverse().forEach(t=>{run=isLow(t,s)?run+1:0;best=Math.max(best,run)});if(best>=thr)rows.push({s,best,still:seq.length&&isLow(seq[0],s)})}
+      if(!rows.length)return;total+=rows.length;
+      cards+='<div class="card"><div class="eh"><h3 style="margin:0">'+sec+' · '+esc(sb)+'</h3><span class="badge ns">'+rows.length+' students</span></div><div class="tw" style="margin-top:6px"><table class="rtab"><thead><tr><th class="nm">Student</th>'+ts.map(t=>'<th>'+esc(shortL(t))+'<br>'+fD(t.date)+'<br>/'+t.max+'</th>').join('')+'<th>Status</th></tr></thead><tbody>'+rows.sort((a,b)=>b.best-a.best).map(r=>'<tr><td class="nm" data-act="stu" data-sec="'+sec+'" data-s="'+r.s+'">'+esc(nameOf(sec,r.s))+'</td>'+ts.map(t=>'<td>'+mcell(t,r.s)+'</td>').join('')+'<td style="text-align:left"><b>'+r.best+' low in a row</b>'+(r.still?' <span class="flag">still low</span>':'')+'</td></tr>').join('')+'</tbody></table></div></div>'});
+  });
+  return h+'<div class="kpis">'+kpi('Poor performers',total,'student × subject','#D93A4B')+kpi('Sections',secs.length,'in this view','#1B3156')+'</div>'+(cards||'<div class="empty">No student is low '+thr+'+ times in a row in the last '+K+' tests.</div>');
+}
+function dashCmp(){
+  const secs=secsInScope(),subs=perfSubs(secs);if(!subs.length)return '<div class="empty">No test marks in this view yet.</div>';
+  if(!subs.includes(U.csub))U.csub=subs[0];
+  let h='<div class="card" style="padding:10px">'+chipRow('Subject',subs.map(x=>[x,x]),'csub',U.csub)+chipRow('Tests',[['3','Last 3'],['5','Last 5'],['8','Last 8'],['20','All']],'pkk',String(U.pk||5))+'<div class="small muted" style="margin-top:6px">Same subject and same lesson test, section against section. Choose “Class N · all sections” in Show to compare A, B and C.</div></div>';
+  const byC={};secs.forEach(s=>{const c=+s.slice(0,-1);(byC[c]=byC[c]||[]).push(s)});
+  Object.keys(byC).map(Number).sort((a,b)=>a-b).forEach(c=>{
+    if(!subjectsFor(c).find(x=>x.n===U.csub))return;
+    const grp=new Map();byC[c].forEach(sec=>testsFor(sec,U.csub).forEach(t=>{const k=lkey(t.ls)||t.date;if(!grp.has(k))grp.set(k,{label:lessonLabel(t),date:t.date,by:{}});const g=grp.get(k);if(t.date>g.date)g.date=t.date;g.by[sec]=t}));
+    const list=[...grp.values()].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,U.pk||5);
+    if(!list.length)return;
+    h+='<h3 style="margin:14px 2px 6px">Class '+c+' · '+esc(U.csub)+'</h3>';
+    list.forEach(g=>{
+      const rows=byC[c].map(sec=>{const t=g.by[sec];if(!t)return{sec,none:1};const st=testStats(t),low=[];for(let s=1;s<=nOf(sec);s++)if(isLow(t,s))low.push({s,p:pctOf(t,s)});return{sec,t,st,low,ab:Object.values(t.m).filter(v=>v==='A').length,ng:Object.values(t.m).filter(v=>v==='NG').length}});
+      const best=Math.max(...rows.filter(r=>r.st&&r.st.avg!=null).map(r=>r.st.avg),-1);
+      h+='<div class="card"><div class="eh"><b style="color:var(--navy)">'+esc(g.label)+'</b><span class="badge g">'+fD(g.date)+'</span></div><div class="tw" style="margin-top:6px"><table class="rtab"><thead><tr><th class="nm">Section</th><th>Wrote</th><th>Ab</th><th>NG</th><th>Average</th><th>Below min</th></tr></thead><tbody>'+rows.map(r=>r.none?'<tr><td class="nm" style="cursor:default">'+r.sec+'</td><td colspan="5" class="small muted">no test recorded</td></tr>':'<tr><td class="nm" style="cursor:default">'+r.sec+'</td><td>'+r.st.k+'</td><td>'+r.ab+'</td><td>'+r.ng+'</td><td><b'+(r.st.avg!=null&&r.st.avg<60?' class="red"':'')+'>'+(r.st.avg==null?'—':r.st.avg.toFixed(1)+'%')+'</b>'+(r.st.avg!=null&&r.st.avg===best&&rows.filter(x=>x.st).length>1?' <span class="badge ok">BEST</span>':'')+'</td><td>'+r.low.length+'</td></tr>').join('')+'</tbody></table></div>'
+       +rows.filter(r=>r.low&&r.low.length).map(r=>'<div class="rgrp"><b>'+r.sec+' below minimum ('+r.low.length+')</b><div class="small" style="margin-top:3px">'+r.low.sort((a,b)=>a.p-b.p).map(x=>'<a data-act="stu" data-sec="'+r.sec+'" data-s="'+x.s+'" style="cursor:pointer;color:var(--navy)">'+esc(nameOf(r.sec,x.s))+' ('+fmtN(r.t.m[x.s])+'/'+r.t.max+(streakAt(r.sec,U.csub,x.s,r.t)>=2?', again':'')+')</a>').join(', ')+'</div></div>').join('')+'</div>'});
+  });
+  return h;
+}
+
 /* ---------- STUDENTS ---------- */
 function viewStu(){
   let h='<div class="card" style="padding:10px"><div class="field" style="margin:0"><input id="sq" placeholder="Search a student name…" value="'+esc(U.q)+'" autocomplete="off"></div></div>';
@@ -711,13 +837,13 @@ function seedSample(){
   });
   persist();lsPut('seeded3',1);
 }
-function loadSeedDocs(){if(!SEED_DOCS||lsGet('real1',0))return;try{Object.keys(DB).forEach(k=>{if(DB[k]&&DB[k].sm)delete DB[k]});Object.keys(SEED_DOCS).forEach(k=>{if(!DB[k])DB[k]=SEED_DOCS[k]});persist();lsPut('real1',1);lsPut('seeded3',1)}catch(e){}}
+function loadSeedDocs(){if(!SEED_DOCS||lsGet('real2',0))return;try{Object.keys(DB).forEach(k=>{if(DB[k]&&(DB[k].sm||(DB[k].im&&!DB[k].ts2&&!DB[k].ed)))delete DB[k]});Object.keys(SEED_DOCS).forEach(k=>{if(!DB[k])DB[k]=SEED_DOCS[k]});persist();lsPut('real2',1);lsPut('seeded3',1)}catch(e){}}
 if(!API_URL){loadSeedDocs()}
 if(!API_URL&&!Object.keys(DB).length&&!lsGet('seeded3',0)){try{seedSample()}catch(e){}}
 /* ---------- render / events ---------- */
 function render(){
   chrome();const v=$('view');
-  v.innerHTML=U.tab==='check'?viewCheck():U.tab==='dash'?viewDash():U.tab==='rep'?viewRep():U.tab==='stu'?viewStu():viewSet();renderSheet();
+  v.innerHTML=U.tab==='check'?viewCheck():U.tab==='dash'?viewDash():U.tab==='rep'?viewRep():U.tab==='rec'?viewRec():U.tab==='stu'?viewStu():viewSet();renderSheet();
   saveUI();
 }
 let sureK=null;function sure(k){if(sureK===k){sureK=null;return true}sureK=k;toast('Tap again to confirm');setTimeout(()=>{sureK=null},4000);return false}
@@ -786,6 +912,9 @@ document.addEventListener('click',ev=>{
     case'dsub':U.dsub=D.v;render();break;
     case'pview':U.pview=D.v;render();break;
     case'overdue':U.overdue=!U.overdue;render();break;
+    case'fitem':U.fitem=D.v;render();break;case'fcode':U.fcode=D.v;render();break;case'fsub':U.fsub=D.v;render();break;
+    case'pthr':U.pthr=+D.v;render();break;case'pkk':U.pk=+D.v;render();break;case'psub':U.psub=D.v;render();break;case'csub':U.csub=D.v;render();break;
+    case'rs':U.rs=D.v;U.ri='';render();break;case'ri':U.ri=D.v;render();break;case'rper':U.rper=D.v;render();break;case'rall':U.rall=!U.rall;render();break;
     case'copyfup':{const t=waFollow();(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Copied · paste in WhatsApp'),()=>{U.wa=t;render()});break}
     case'stu':U.stu={sec:D.sec,s:+D.s};renderSheet();break;
     case'stuback':U.stu=null;render();break;
