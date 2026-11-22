@@ -51,13 +51,12 @@ function user_(token){      // the member behind a token; a removed member loses
 function login_(name, pw){
   name = norm_(name);
   if(name.length < 2) fail('Type your name.');
-  const suf = String(props_().getProperty('STAFF_SUFFIX') || '').toLowerCase();
-  if(!suf) fail('The staff password is not set up yet. Ask the Director.');
-  Utilities.sleep(400);
+  const suf = String(props_().getProperty('STAFF_SUFFIX') || '').toLowerCase();   // empty = open mode: choose your name, no password
+  if(suf) Utilities.sleep(400);
   const list = members_();
   let m = list.filter(x => norm_(x.name) === name)[0];
   if(!m){ const f = list.filter(x => first_(x.name) === first_(name) && first_(name) === name.replace(/[^a-z]/g,'')); if(f.length === 1) m = f[0]; }
-  if(!m || String(pw||'').trim().toLowerCase().replace(/\s+/g,'') !== first_(m.name) + suf) fail('Wrong name or password, or your name is not on the access list. Ask the Director.');
+  if(!m || (suf && String(pw||'').trim().toLowerCase().replace(/\s+/g,'') !== first_(m.name) + suf)) fail('Wrong name or password, or your name is not on the access list. Ask the Director.');
   const body = m.name + '|' + (Date.now() + TOKEN_DAYS*864e5) + '|' + (props_().getProperty('TOKEN_VER') || '1');
   log_(m.name, '', 'login');
   return {token: H_.b64(body) + '.' + H_.hmac(body, secret_()), name: m.name};
@@ -135,6 +134,7 @@ function strip_(o){ Object.keys(o).forEach(k => { if(o[k] === undefined) delete 
 
 const API = {
   login: login_,
+  login_info(){ return {pw: !!String(props_().getProperty('STAFF_SUFFIX') || ''), names: members_().map(m => m.name)}; },
   ev_data(u){
     const projects = [], tasks = [];
     rows_().forEach(r => {
@@ -320,7 +320,7 @@ function doPost(e){
   const fn = API[req.fn]; if(!fn || req.fn === 'constructor') return out({ok: false, err: 'Unknown request.'});
   try{
     const args = req.args || [];
-    const v = req.fn === 'login' ? fn.apply(null, args) : fn.apply(null, [user_(req.token)].concat(args));
+    const v = (req.fn === 'login' || req.fn === 'login_info') ? fn.apply(null, args) : fn.apply(null, [user_(req.token)].concat(args));
     return out({ok: true, v: v});
   }catch(x){ const m = String(x && x.message || x); return out({ok: false, err: m, login: m === 'LOGIN' ? 1 : 0}); }
 }

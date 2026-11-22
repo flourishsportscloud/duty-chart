@@ -752,6 +752,16 @@ function authView(){
   }
   if(!API_URL){$('#app').innerHTML=head+'<div class="panel gold"><h2 style="font:700 24px var(--serif)">Setting up</h2><p>This app is not connected to its data sheet yet. The Director needs to finish the one-time setup, then it opens for staff.</p><a class="btn" style="text-decoration:none;text-align:center" href="?demo=1">See the demo with sample data</a></div>';return}
   var saved='';try{saved=localStorage.getItem('fisEvName')||''}catch(e){}
+  api('login_info',[]).then(function(inf){
+    if(inf&&inf.pw===false){
+      $('#app').innerHTML=head+'<div class="panel gold"><h2 style="font:700 24px var(--serif)">Who are you?</h2><p class="sub">Tap your name to open your tasks.</p><div class="persona">'+inf.names.map(function(n){return '<button data-nm="'+esc(n)+'"><span class="av lg c'+hue(n.toLowerCase().replace(/[^a-z0-9]/g,''))+'">'+esc(n.charAt(0))+'</span><span>'+esc(n.split(' ')[0])+'</span></button>'}).join('')+'</div><div class="err" id="au-e"></div></div>';
+      $$('[data-nm]').forEach(function(b){b.onclick=function(){api('login',[b.dataset.nm,'']).then(function(r){S.tok=r.token;try{localStorage.setItem('fisEvTok',r.token);localStorage.setItem('fisEvName',r.name)}catch(x){}paint();return load()},function(er){$('#au-e').textContent=er.message||'Could not sign in'})}});
+      return;
+    }
+    passForm();
+  },function(){passForm()});
+  return;
+  function passForm(){
   $('#app').innerHTML=head+'<form class="panel gold" id="af" autocomplete="on"><h2 style="font:700 24px var(--serif)">Staff login</h2><p class="sub">Only people on the access list can open this app.</p><div><label class="l" for="au-n">Your name</label><input type="text" id="au-n" autocomplete="username" value="'+esc(saved)+'"></div><div><label class="l" for="au-p">Password</label><input type="password" id="au-p" autocomplete="current-password"></div><div class="err" id="au-e"></div><button class="btn pri" type="submit" id="au-b">Open</button></form>';
   $('#af').onsubmit=function(e){
     e.preventDefault();var n=$('#au-n').value.trim(),p=$('#au-p').value;
@@ -761,6 +771,7 @@ function authView(){
       function(er){var b=$('#au-b');if(b){b.disabled=false;$('#au-e').textContent=er.message||'Could not sign in'}});
   };
   setTimeout(function(){var i=$(saved?'#au-p':'#au-n');if(i)i.focus()},60);
+  }
 }
 function start(){
   paint();
