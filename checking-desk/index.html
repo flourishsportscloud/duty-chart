@@ -556,7 +556,8 @@ const NAV=[{id:'board',label:'Day Plan'},{id:'desks',label:'Desks'},{id:'dash',l
 const ROLE_LABEL={admin:'Admin',head:'Head (PM / CMH / PL)',cm:'Class Manager',guest:'Guest (view only)'};
 const ADMINS=['Harshada','Rahul','Santosh','Sarita','Shubhangi','Garima','Poonam','Sharda','Karishma','Sabah','Asha','Neetu','Divyanshi','Diksha','Shelly'];
 const SEC_ALL='6 7 8 9 10 11';
-const DEFAULT_STAFF=[['Harshada',''],['Rahul',SEC_ALL],['Santosh',SEC_ALL],['Sarita',SEC_ALL],['Shubhangi',SEC_ALL],['Garima','8 9 11'],['Poonam',SEC_ALL],['Sharda',SEC_ALL],['Karishma',''],['Sabah',SEC_ALL],['Asha',SEC_ALL],['Neetu',''],['Divyanshi',''],['Diksha',''],['Shelly','']].map(x=>({name:x[0],role:'admin',units:x[1]}));
+const ALL11='1 2 3 4 5 6 7 8 9 10 11';
+const DEFAULT_STAFF=[['Harshada',''],['Rahul',ALL11],['Santosh',ALL11],['Sarita',ALL11],['Shubhangi',ALL11],['Garima','8 9 11'],['Poonam',SEC_ALL],['Sharda',ALL11],['Karishma',ALL11],['Sabah',SEC_ALL],['Asha',ALL11],['Neetu',''],['Divyanshi',''],['Diksha',''],['Shelly',''],['Kapil',ALL11,'head']].map(x=>({name:x[0],role:x[2]||'admin',units:x[1]}));
 const ALL_IDS=UNITS.map(u=>u.id);
 const FIS_THEME={navy:'#1F2D5A',gold:'#E3A94F',purple:'#5F3585',mag:'#C2385B'};
 
