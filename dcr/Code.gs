@@ -86,7 +86,7 @@ function readDoc(sh,r){
   const parts=sh.getRange(r,4,1,w-3).getValues()[0].join("");
   try{return JSON.parse(parts)}catch(e){return null}
 }
-/* rows changed since version `ver`; rounds older than `cutoff` are skipped on a first load. Deleted docs come back as null. */
+/* rows changed since version ver; rounds older than cutoff are skipped on a first load. Deleted docs come back as null. */
 function sync(ver,cutoff){
   ver=Number(ver)||0;const cur=Number(PropertiesService.getScriptProperties().getProperty("VER")||1);
   if(ver===cur)return{same:true};
