@@ -30,7 +30,7 @@ function seedDemo(){
   L.ph.p_demo1=mkImg(['5 x 8 = 45','12 + 19 = 21','Ans: 7 apples'],[300,60,70]);
   L.ph.p_demo2=mkImg(['Ravi go to school','She are my friend','They plays cricket'],[250,128,110]);
   L.ph.p_demo3=mkImg(['Photosynthesis','needs sunlite and water','Ans: oxigen'],[330,196,90]);
-  L.docs['config/roster']={units:{P1:{cm:'Manisha',reviewer:'Sanjana'},P2:{cm:'Rashami',reviewer:'Sanjana'},P3:{cm:'Pooja',reviewer:'Neetu'},P4:{cm:'Komal',reviewer:'Divyanshi'},P5:{cm:'Mansi',reviewer:'Diksha'},S6:{cm:'Manisha'},S7:{cm:'Rashmi'},S8:{cm:'Tanushri'},S9:{cm:'Mansi'},S10:{cm:'Pooja'},S11:{cm:'Upinder'}}};
+  L.docs['config/roster']={units:{P1:{cm:'Yashika',reviewer:'Sanjana'},P2:{cm:'Manisha',reviewer:'Sanjana'},P3:{cm:'Vijayaraj',reviewer:'Neetu'},P4:{cm:'Komal',reviewer:'Divyanshi'},P5:{cm:'Mansi',reviewer:'Diksha'},S6:{cm:'Manisha'},S7:{cm:'Rashmi'},S8:{cm:'Tanushri'},S9:{cm:'Mansi'},S10:{cm:'Pooja'},S11:{cm:'Upinder'}}};
   var k=0;
   function B(o){k++;var r=Object.assign({order:k,kind:'check',cm:'pending',rv:'pending',by:'CM',bundle:0,from:'',to:'',material:'Notebook'},o);if(r.kind==='duty')r.material='';return r}
   function mk(date,unit,arr){var sl={};k=0;arr.forEach(function(x,i){sl['x'+(i+1)]=x});L.docs['days/'+date+'__'+unit]={date:date,unit:unit,slots:sl}}
@@ -146,7 +146,7 @@ function merge(a,b){
   var o=(a&&typeof a==='object'&&!Array.isArray(a))?JSON.parse(JSON.stringify(a)):{};
   Object.keys(b).forEach(function(k){o[k]=merge(o[k],b[k])});return o;
 }
-if(PREVIEW){L.docs['config/roster']={units:{P1:{cm:'Manisha',reviewer:'Sanjana'},P2:{cm:'Rashami',reviewer:'Sanjana'},P3:{cm:'Pooja',reviewer:'Neetu'},P4:{cm:'Komal',reviewer:'Divyanshi'},P5:{cm:'Mansi',reviewer:'Diksha'},S6:{cm:'Manisha'},S7:{cm:'Rashmi'},S8:{cm:'Tanushri'},S9:{cm:'Mansi'},S10:{cm:'Pooja'},S11:{cm:'Upinder'}}}}
+if(PREVIEW){L.docs['config/roster']={units:{P1:{cm:'Yashika',reviewer:'Sanjana'},P2:{cm:'Manisha',reviewer:'Sanjana'},P3:{cm:'Vijayaraj',reviewer:'Neetu'},P4:{cm:'Komal',reviewer:'Divyanshi'},P5:{cm:'Mansi',reviewer:'Diksha'},S6:{cm:'Manisha'},S7:{cm:'Rashmi'},S8:{cm:'Tanushri'},S9:{cm:'Mansi'},S10:{cm:'Pooja'},S11:{cm:'Upinder'}}}}
 var cache={days:{},docs:{}},ver=-1,dates=[],qL=[],dL=[],busy=false,again=false,failed=0;
 function snapDays(){var ids=Object.keys(cache.days);return{docs:ids.map(function(id){return{id:id,data:function(){return cache.days[id]}}}),metadata:{fromCache:false}}}
 function snapDoc(p){var v=cache.docs[p];return{exists:!!v,data:function(){return v}}}
@@ -540,7 +540,7 @@ const UNITS=[
  {id:'S9',wing:'S',label:'Class 9',sec:'A · B'},{id:'S10',wing:'S',label:'Class 10',sec:'A · B'},{id:'S11',wing:'S',label:'Class 11',sec:'A'}
 ];
 const WING={P:{name:'Primary · Classes 1–5',mgr:'Program Manager'},S:{name:'Secondary · Classes 6–11',mgr:'CM Head'}};
-const DEFAULT_ROSTER={P1:{reviewer:'Sanjana'},P2:{reviewer:'Sanjana'},P3:{reviewer:'Neetu'},P4:{reviewer:'Divyanshi'},P5:{cm:'Mansi',reviewer:'Diksha'},S6:{cm:'Manisha'},S7:{cm:'Rashmi'},S8:{cm:'Tanushri'},S9:{cm:'Mansi'},S10:{cm:'Pooja'},S11:{cm:'Upinder'}};
+const DEFAULT_ROSTER={P1:{cm:'Yashika',reviewer:'Sanjana'},P2:{cm:'Manisha',reviewer:'Sanjana'},P3:{cm:'Vijayaraj',reviewer:'Neetu'},P4:{cm:'Komal',reviewer:'Divyanshi'},P5:{cm:'Mansi',reviewer:'Diksha'},S6:{cm:'Manisha'},S7:{cm:'Rashmi'},S8:{cm:'Tanushri'},S9:{cm:'Mansi'},S10:{cm:'Pooja'},S11:{cm:'Upinder'}};
 const DAY_TEMPLATE=[
  {from:'07:00',to:'07:30',kind:'duty',title:'Morning duty'},
  {from:'08:00',to:'09:30',kind:'check',title:'Diary checking',material:'Diary',subject:'Diary'},
