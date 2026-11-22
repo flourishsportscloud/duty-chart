@@ -358,7 +358,7 @@ const overdue=p=>{const s=sinceVisit(p);return !!s&&s.min>G[p.group].every};
 function sheet(o){
   return new Promise(res=>{
     const L=$('layer'),st={};o.fields.forEach(f=>st[f.k]=f.val==null?'':f.val);
-    let pic=null,pid=o.photoId||'',arm=false;
+    let pic=null,pid=o.photoId||'',arm=false;const mp=(o.photoIds||[]).slice(),mn=[];
     const close=v=>{L.innerHTML='';res(v)};
     const draw=()=>{
       const fh=o.fields.map(f=>{
@@ -367,7 +367,9 @@ function sheet(o){
         if(f.type==='ta')return `<div class="fl">${esc(f.l)}</div><textarea id="f_${f.k}" rows="${f.rows||3}" data-i="${f.k}" placeholder="${esc(f.ph||'')}">${esc(st[f.k])}</textarea>`;
         return `<div class="fl">${esc(f.l)}</div><input id="f_${f.k}" data-i="${f.k}" type="${f.type||'text'}" value="${esc(st[f.k])}" placeholder="${esc(f.ph||'')}">`}).join('');
       let ph='';
-      if(o.photo&&o.photo!=='none'){
+      if(o.photo==='multi'||o.photo==='multireq'){
+        ph=`<div class="fl">Photos ${o.photo==='multireq'?'(at least one)':'(optional)'} · ${mp.length+mn.length}</div><div class="row">${mp.map((x,i)=>`<div style="position:relative"><img class="th s" data-ph="${esc(x)}" alt="photo"><button type="button" class="btn bad sm" data-rmo="${i}" style="min-height:28px;padding:0 8px;position:absolute;top:-6px;right:-6px">✕</button></div>`).join('')}${mn.map((x,i)=>`<div style="position:relative"><img class="th s" src="${x}" alt="new photo"><button type="button" class="btn bad sm" data-rmn="${i}" style="min-height:28px;padding:0 8px;position:absolute;top:-6px;right:-6px">✕</button></div>`).join('')}</div><button type="button" class="btn sec" id="spm" style="margin-top:8px">📷 Add photo</button>`;
+      }else if(o.photo&&o.photo!=='none'){
         ph=`<div class="fl">Photo ${o.photo==='req'?'(needed)':'(optional)'}</div><button type="button" class="btn sec" id="sp">📷 ${pic||pid?'Take again':'Take photo'}</button>${pic?`<img class="pv" src="${pic}" alt="new photo">`:pid?`<img class="pv" data-ph="${esc(pid)}" alt="photo">`:''}`;
       }
       L.innerHTML=`<div class="modal" id="bd"><div class="box"><h3>${esc(o.title)}</h3>${o.sub?`<div class="hint">${esc(o.sub)}</div>`:''}${fh}${ph}
@@ -379,8 +381,11 @@ function sheet(o){
       L.querySelectorAll('.ch[data-mk]').forEach(b=>b.onclick=()=>{const a=st[b.dataset.mk],i=a.indexOf(b.dataset.mv);if(i>=0)a.splice(i,1);else a.push(b.dataset.mv);draw()});
       L.querySelectorAll('[data-i]').forEach(e=>e.oninput=()=>{st[e.dataset.i]=e.value});
       const sp=L.querySelector('#sp');if(sp)sp.onclick=async()=>{const d=await pickPhoto();if(d){pic=d;draw()}};
+      const spm=L.querySelector('#spm');if(spm)spm.onclick=async()=>{const d=await pickPhoto();if(d){mn.push(d);draw()}};
+      L.querySelectorAll('[data-rmo]').forEach(b=>b.onclick=()=>{mp.splice(+b.dataset.rmo,1);draw()});
+      L.querySelectorAll('[data-rmn]').forEach(b=>b.onclick=()=>{mn.splice(+b.dataset.rmn,1);draw()});
       L.querySelector('#scn').onclick=()=>close(null);
-      L.querySelector('#sok').onclick=()=>{const m=o.validate?o.validate(st,pic,pid):'';if(m){toast(m);return}close({st,pic,pid,del:false})};
+      L.querySelector('#sok').onclick=()=>{const m=o.validate?o.validate(st,pic||mn[0],pid||mp[0]):'';if(m){toast(m);return}close({st,pic,pid,pics:mn,pids:mp,del:false})};
       const sd=L.querySelector('#sdl');if(sd)sd.onclick=()=>{if(!arm){arm=true;draw();return}close({del:true})};
     };
     draw();
@@ -514,21 +519,22 @@ async function bulkFlow(){
 }
 async function washFlow(w,v){
   if(!(await needName()))return;
-  const cl=people('clean').map(p=>p.name).concat(['Evening team','Not known']);
-  const F=[{k:'who',l:'Who cleaned it?',type:'chips',o:cl,val:v?v.who:''}];
+  const cl=people('clean').concat(people('helper'),people('eve')).map(p=>p.name).concat(['Evening team','Not known']);
+  const known=v&&v.who&&cl.indexOf(v.who)>=0;
+  const F=[{k:'who',l:'Who cleaned it? (tap a name)',type:'chips',o:cl,val:known?v.who:''},{k:'whoT',l:'…or type any name(s)',type:'text',val:v&&!known?v.who:'',ph:'e.g. Gita Devi and Kamla Bai'}];
   WASHF.forEach(x=>F.push({k:x.k,l:x.l,type:'chips',o:x.o,val:v&&v.f?v.f[x.k]:''}));
   F.push({k:'cubno',l:'Which cubicle has a problem? (optional)',type:'text',val:v?v.cubno:''});
   F.push({k:'remark',l:'Remark – repair, damage, smell, cleaning, toiletries',type:'ta',val:v?v.remark:'',ph:'Write what you saw'});
   if(v)F.push({k:'t',l:'Time',type:'time',val:v.t});
-  const r=await sheet({title:(v?'Edit – ':'Inspect – ')+w.name,sub:v?'':'Time is saved automatically: '+hhmm(),fields:F,photo:'req',photoId:v&&v.ph,del:!!v,ok:'Save inspection',
+  const r=await sheet({title:(v?'Edit – ':'Inspect – ')+w.name,sub:v?'':'Time is saved automatically: '+hhmm(),fields:F,photo:'multireq',photoIds:v?(v.phs&&v.phs.length?v.phs:(v.ph?[v.ph]:[])):[],del:!!v,ok:'Save inspection',
     validate:(s,pic,pid)=>(!pic&&!pid)?'Take a photo of the washroom':''});
   if(!r)return;
   if(r.del){del('wash',v.id);return}
-  const ph=r.pic?await savePhoto(r.pic):r.pid;
+  const phs=r.pids.slice();for(const d of r.pics)phs.push(await savePhoto(d));const ph=phs[0]||'';
   const f={};WASHF.forEach(x=>{if(r.st[x.k])f[x.k]=r.st[x.k]});
   const base=v?clone(v):{id:'w'+uid(),date:S.date,t:hhmm(),by:S.me,wid:w.id,wname:w.name,floor:w.floor||''};
   if(v&&r.st.t)base.t=r.st.t;
-  save('wash',base.id,Object.assign(base,{who:r.st.who||'',f,cubno:r.st.cubno||'',remark:r.st.remark||'',ph}));
+  save('wash',base.id,Object.assign(base,{who:(r.st.whoT||'').trim()||r.st.who||'',f,cubno:r.st.cubno||'',remark:r.st.remark||'',ph,phs}));
   toast('Inspection saved '+base.t);
 }
 async function wsFlow(w){
@@ -766,6 +772,7 @@ function rLog(){
   h+=`<div class="row sp" style="margin-bottom:10px"><b>${vs.length} visit${vs.length===1?'':'s'}</b><button class="btn sec sm" data-act="copy">Copy table</button></div>`;
   return h+(vs.map(v=>vcard(v,true)).join('')||`<div class="card empty">No supervisor visits logged on this day.</div>`);
 }
+const wphs=(v,cls)=>(v.phs&&v.phs.length?v.phs:(v.ph?[v.ph]:[])).map(x=>img(x,cls)).join('');
 const washBad=v=>WASHF.filter(x=>{const val=v.f&&v.f[x.k];return val&&x.o.indexOf('!'+val)>=0}).map(x=>v.f[x.k]);
 function washTags(v){
   const t=[];if(v.who)t.push(`<span class="tag">Cleaned by ${esc(v.who)}</span>`);
@@ -783,13 +790,13 @@ function rWash(){
     h+=`<div class="fh">${esc(f)}${f==='Admin'||f==='Staff'||f==='Other'?'':' floor'}</div>`;
     fl[f].forEach(w=>{
       const l=lastOf(w),b=l?washBad(l):[];
-      h+=`<div class="wr ${l?(b.length?'bad':'ok'):''}"><div class="h"><div><b>${esc(w.name)}</b><div class="hint">${w.cub?w.cub+' cubicles · ':''}${l?'Checked '+esc(l.t)+(isT?' · '+ago(Math.max(0,nowM()-mins(l.t))):'')+' · by '+esc(l.by||'?'):'Not checked yet'}</div></div>${l&&l.ph?img(l.ph,'s'):''}</div>
-       ${l?`<div class="tg">${washTags(l)}</div>${l.remark?`<div class="hint">${esc(l.remark)}</div>`:''}`:''}
+      h+=`<div class="wr ${l?(b.length?'bad':'ok'):''}"><div class="h"><div><b>${esc(w.name)}</b><div class="hint">${w.cub?w.cub+' cubicles · ':''}${l?'Checked '+esc(l.t)+(isT?' · '+ago(Math.max(0,nowM()-mins(l.t))):'')+' · by '+esc(l.by||'?'):'Not checked yet'}</div></div></div>
+       ${l?`<div class="row" style="margin-top:6px">${wphs(l,'s')}</div><div class="tg">${washTags(l)}</div>${l.remark?`<div class="hint">${esc(l.remark)}</div>`:''}`:''}
        <button class="btn sm" data-act="winspect" data-v="${w.id}" style="margin-top:8px">🧭 Inspect now</button></div>`;
     });
   });
   h+=`<div class="fh">All inspections ${isT?'today':'on this day'} (${ins.length})</div>`;
-  h+=ins.slice().reverse().map(v=>`<button class="vis" data-act="editwash" data-v="${esc(v.id)}"><div class="h"><b>${esc(v.t)}</b><small>${esc(v.wname)} · by ${esc(v.by||'?')}</small></div><div class="tg">${washTags(v)}</div>${v.remark?`<p>${esc(v.remark)}</p>`:''}${img(v.ph)}</button>`).join('')||`<div class="card empty">No washroom inspection logged yet.</div>`;
+  h+=ins.slice().reverse().map(v=>`<button class="vis" data-act="editwash" data-v="${esc(v.id)}"><div class="h"><b>${esc(v.t)}</b><small>${esc(v.wname)} · by ${esc(v.by||'?')}</small></div><div class="tg">${washTags(v)}</div>${v.remark?`<p>${esc(v.remark)}</p>`:''}<div class="row">${wphs(v,'')}</div></button>`).join('')||`<div class="card empty">No washroom inspection logged yet.</div>`;
   return h;
 }
 function floorSummary(ps){
