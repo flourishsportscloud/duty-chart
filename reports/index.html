@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<title>FIS Reports</title>
+<title>FIS Performance Report</title>
 <link rel="icon" href="../fis/fis-icon-192.png">
 <link rel="apple-touch-icon" href="../fis/fis-icon-192.png">
 <meta name="theme-color" content="#18213A">
@@ -218,8 +218,8 @@ main .wrap > *, .poor > * { min-width: 0 }
   <div class="top-in">
     <div class="top-t">
       <div class="school">Flourish International School · 2026-27</div>
-      <h1>FIS Reports</h1>
-      <div class="asof"><a href="../fis/" class="back">‹ FIS apps</a> · Checking &amp; test performance, Class 1-11<span class="unl" hidden> · data as of <b id="asof"></b> · <button type="button" class="lockbtn" id="lockbtn">Lock</button></span></div>
+      <h1>Performance Report</h1>
+      <div class="asof"><a href="../fis/" class="back">‹ FIS apps</a> · Checking and test performance · Classes 1–11<span class="unl" hidden> · data as of <b id="asof"></b> · <button type="button" class="lockbtn" id="lockbtn">Lock</button></span></div>
     </div>
     <div class="views unl" role="group" aria-label="View" hidden>
       <button id="v-pdf" type="button" data-view="pdf" aria-pressed="true">PDF reports</button>
@@ -443,7 +443,7 @@ $('lockbtn').onclick = () => { try { localStorage.removeItem('fisReportsKey'); }
 function toast(t) { const el = $('toast'); el.textContent = t; el.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => el.hidden = true, 3600); }
 function fileName(f) { return `${f[1]} ${f[2]}.pdf`; }
 function waLinkHref(f) {
-  const msg = `*${f[1]} ${f[2]}* (${f[3]} pages, data as of ${AS_OF})\nFIS Reports (staff password needed)\n${PAGE_URL}#${f[1]}`;
+  const msg = `*${f[1]} ${f[2]}* (${f[3]} pages, data as of ${AS_OF})\nFIS Performance Report (staff password needed)\n${PAGE_URL}#${f[1]}`;
   return 'https://wa.me/?text=' + encodeURIComponent(msg);
 }
 const cache = {};
