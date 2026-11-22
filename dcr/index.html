@@ -326,6 +326,50 @@ table.t tbody tr:hover td,.dr:hover{background:#F8FAFD}
 .stk .ab{float:right;margin-left:6px;border:1px solid var(--line);background:var(--pur-t);color:var(--pur);border-radius:8px;font-size:11px;font-weight:700;width:26px;height:24px;margin-top:1px}
 .stk .ab:hover{background:var(--pur);color:#fff}
 th .allb{display:block;margin:4px auto 0;border:1px solid var(--line);background:var(--okbg);color:var(--ok);border-radius:999px;font-size:10px;font-weight:700;padding:1px 8px}
+
+/* ===== My class (classroom, mobile-first) ===== */
+.seg{display:flex;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:3px;gap:2px;position:sticky;top:64px;z-index:20}
+.seg button{flex:1;border:0;background:none;border-radius:9px;padding:9px 6px;font-weight:700;font-size:13.5px;color:var(--ink2)}
+.seg button.on{background:var(--navy);color:#fff;box-shadow:0 2px 6px rgba(20,35,63,.2)}
+.tcard{margin-bottom:12px;padding:14px}.tch{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.itiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.itiles .it{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px;min-height:52px;text-align:left}
+.itiles .it:hover{border-color:var(--navy2);background:#F8FAFD}.itiles .it b{flex:1;font-size:13px;line-height:1.2;color:var(--navy)}
+.itiles .it .cn{font-size:12px;color:var(--ink2);white-space:nowrap}.itiles .it em,.istrip em,.wchip em,.mx em{font-style:normal;background:var(--no);color:#fff;border-radius:999px;font-size:10.5px;font-weight:700;padding:0 6px;margin-left:4px;line-height:16px;display:inline-block}
+.tcf{margin-top:10px;display:flex;justify-content:flex-end}
+.ihead{display:flex;gap:10px;align-items:center;margin-bottom:8px}.itl{font-size:16px}
+.istrip{display:flex;gap:6px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none}
+.istrip button{flex:none;display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 12px;font-weight:600;font-size:12.5px}
+.istrip button.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.brush{display:flex;gap:6px;overflow-x:auto;align-items:center;padding:2px 0 8px;scrollbar-width:none}.brush .chip{flex:none;padding:6px 12px;font-size:12px;white-space:nowrap}
+.icnt{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:2px 0 10px}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:7px}
+.tl{position:relative;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:1px;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:8px 9px 8px 38px;min-height:56px;text-align:left;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.tl i{position:absolute;left:8px;top:50%;transform:translateY(-50%);font-style:normal;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:800}
+.tl .rn{font-size:10px;color:var(--ink2);font-weight:700}.tl b{font-size:12.5px;line-height:1.15;color:var(--ink)}.tl em{font-style:normal;font-size:10px;color:var(--ink2);line-height:1.15;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tl.ok i{background:var(--okbg);color:var(--ok)}.tl.no{background:var(--nobg);border-color:#F2B8BE}.tl.no i{background:var(--no);color:#fff}
+.tl.abs{background:var(--absbg);border-color:#CDBBE3}.tl.abs i{background:var(--pur);color:#fff}
+.tl.oos{background:var(--amb-t);border-color:#F3D69B}.tl.oos i{background:var(--amb);color:#fff;font-size:10px}
+.tl.ic{background:var(--amb-t);border-color:#F3D69B}.tl.ic i{background:#9A6508;color:#fff;font-size:10px}
+.tl.lv{background:var(--sky-t);border-color:#B6DDF2}.tl.lv i{background:var(--sky);color:#fff}
+.tl.rt{background:var(--rtbg);border-color:#C7D0E4}.tl.rt i{background:var(--navy2);color:#fff;font-size:10px}
+.tl.na{opacity:.55;background:var(--soft)}.tl.na i{background:var(--nabg);color:var(--na)}
+.tl:active{transform:scale(.97)}
+.srow{border-bottom:1px solid var(--line)}.srow:last-child{border:0}
+.sr1{width:100%;display:flex;align-items:center;gap:8px;border:0;background:none;padding:12px 0;text-align:left;flex-wrap:wrap}
+.sr1 .chev{color:var(--ink2);font-size:11px}.sr2{padding:2px 0 12px 4px}
+.wday{margin-bottom:10px;padding:12px 14px}.wday.cur{border-color:var(--navy2);box-shadow:0 0 0 2px rgba(36,61,105,.12)}
+.wdh{display:flex;align-items:center;gap:8px;margin-bottom:6px}.wsec{margin-top:6px}.wchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.wchip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:6px 11px;font-size:12.5px;font-weight:600;background:#fff}
+.wchip.done,.mx.done{background:var(--okbg);border-color:#BFE6D2;color:var(--ok)}.wchip.warn,.mx.warn{background:var(--amb-t);border-color:#F3D69B;color:#8A5A06}
+.wchip.over,.mx.over{background:var(--nobg);border-color:#F2B8BE;color:var(--no)}.wchip.pend,.mx.pend,.wchip.wait,.mx.wait{background:var(--nabg);color:var(--ink2)}
+.smx{width:100%;border-collapse:separate;border-spacing:0 4px;table-layout:fixed}.smx th:first-child,.smx td.sj{width:34%}.smx td.sj .chip,.smx td.sj>*{max-width:100%}.smx td.sj{white-space:normal;font-size:11.5px;overflow:hidden}.smx .mx{min-width:0;width:100%;max-width:34px;height:30px;margin:1px 0;font-size:11px}.smx th{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--ink2);padding:4px;text-align:center}.smx th.cur{color:var(--navy)}
+.smx th small{display:block;font-size:12px;color:var(--navy)}.smx th:first-child,.smx td.sj{text-align:left;white-space:nowrap}.smx td{text-align:center;padding:2px;vertical-align:middle}
+.mx{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:34px;border:1px solid var(--line);border-radius:10px;font-weight:800;font-size:12.5px;margin:1px}
+@media (max-width:980px){.seg{top:0}.tgrid{grid-template-columns:repeat(3,minmax(0,1fr))}.itiles{grid-template-columns:repeat(2,minmax(0,1fr))}.tb{position:static;flex-wrap:nowrap;padding:10px 14px}.vbar{display:none}.col,main{min-width:0;max-width:100vw;overflow-x:hidden}.slogo b,.slogo small{display:none}.tb .tt small{display:none}.me span{display:none}.me{padding:3px}.brush .tiny{white-space:nowrap}.tb .btn.gold{padding:8px 12px}.ihead{flex-wrap:wrap}}
+@media (max-width:420px){.smx td.sj .ty{display:none}.tgrid{gap:6px}.tl{padding-left:34px}.tl i{width:22px;height:22px;left:6px}.itiles .it{padding:9px 8px;gap:6px}.itiles .it b{font-size:12.5px}}
+.itiles .ty,.istrip .ty,.wchip .ty{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:4px;color:#fff;font-size:10px;font-weight:800;flex:none}
+.istrip button.on .ty{outline:1px solid rgba(255,255,255,.5)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -414,7 +458,7 @@ const PERSONAS=[['Director','Director','Whole school: every section, every defau
 
 /* ============ state ============ */
 const S={me:null,tab:'dash',date:todayISO(),rounds:{},ledger:{},config:{custom:[]},openRound:null,phase:'dist',grp:null,
-  fu:{k:'all',cls:'',sec:'',t:'',q:'',od:false,res:false},rf:{q:'',cls:'',scope:'recent'},sa:{key:''},loaded:false,mode:'local',syncMsg:''};
+  fu:{k:'all',cls:'',sec:'',t:'',q:'',od:false,res:false},my:{sec:'',view:'today',screen:null,task:null,brush:'',open:'',cf:'all'},rf:{q:'',cls:'',scope:'recent'},sa:{key:''},loaded:false,mode:'local',syncMsg:''};
 if(!LIVE){try{const m=JSON.parse(localStorage.getItem('dcr_me')||'null');if(m&&m.n)S.me=m}catch(e){}}
 const canSwitch=()=>!LIVE||!S.real||MGMT.includes(S.real.r)||S.real.r==='Director';
 
@@ -593,18 +637,19 @@ function sync(){return S.syncMsg?`<span class="sync warn">${esc(S.syncMsg)}</spa
 function render(){
   const app=$('#app');const tw=$('.tblwrap');const st=tw?[tw.scrollLeft,tw.scrollTop]:null;const y=window.scrollY;
   if(S.me&&!S.sa.key){const k=scopeSecs();S.sa.key=k[0]?k[0].k:'C5-B'}
-  app.innerHTML=header()+(S.me?viewBar():'')+'<main>'+mainView()+'</main></div></div>'+stickyBar();
+  if(S.me&&!S.landed){S.landed=1;const rr=(S.real||S.me).r;if(!(MGMT.includes(rr)||rr==='Director'))S.tab='my'}
+  app.innerHTML=header()+(S.me?viewBar():'')+'<main>'+mainView()+'</main></div></div>'+(S.tab==='my'?mySticky():stickyBar());
   const t2=$('.tblwrap');if(t2&&st){t2.scrollLeft=st[0];t2.scrollTop=st[1]}window.scrollTo(0,y);
   if(!S.me&&!SH&&!LIVE){openWho(true)}}
-const NAVICO={dash:'<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>',
+const NAVICO={my:'<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 5.5a3 3 0 0 1 0 5.6M18 14.2c1.9.8 3 2.6 3 4.8"/></svg>',dash:'<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>',
  rounds:'<svg viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12"/><path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>',
  fu:'<svg viewBox="0 0 24 24"><path d="M12 3 2.5 20h19L12 3Z"/><path d="M12 10v4.5M12 17.5h.01"/></svg>',
  sec:'<svg viewBox="0 0 24 24"><path d="M3 20V10M9 20V4M15 20v-7M21 20V8"/></svg>',
  leave:'<svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>',
  act:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>'};
-const TABT={dash:'Dashboard',rounds:'Rounds',fu:'Defaulter register',sec:'Section analysis',leave:'Leave desk',act:'Activity'};
+const TABT={my:'My class',dash:'Dashboard',rounds:'Rounds',fu:'Defaulter register',sec:'Section analysis',leave:'Leave desk',act:'Activity'};
 function header(){
-  const tabs=[['dash','Dashboard'],['rounds','Rounds'],['fu','Defaulters'],['sec','Sections'],['leave','Leave desk'],['act','Activity']];
+  const tabs=[['my','My class'],['dash','Dashboard'],['rounds','Rounds'],['fu','Defaulters'],['sec','Sections'],['leave','Leave desk'],['act','Activity']];
   const open=S.tab==='round'?'rounds':S.tab;
   let nOpen=0;try{if(S.me)nOpen=openEntries().length}catch(e){}
   const sc=S.me?SC():null;
@@ -618,7 +663,7 @@ function header(){
   return `<div class="shell">${side}<div class="col">${top}`}
 function viewBar(){const sc=SC();return `<div class="vbar"><div class="in"><span>Signed in as <b>${esc((S.real||S.me).n)}</b>${(S.real||S.me).r?' · '+esc((S.real||S.me).r):''}</span><span>·</span><span>View: <b>${esc(sc.kind)}</b> — ${esc(sc.label)}</span><span class="sp"></span>${canSwitch()?'<button class="btn sm" data-act="who">'+(LIVE?'View as another role':'Switch user / demo views')+'</button>':''}</div></div>`}
 function mainView(){
-  switch(S.tab){case 'dash':return dashView();case 'rounds':return roundsView();case 'round':return roundView();case 'fu':return fuView();case 'sec':return secView();case 'leave':return leaveView();case 'act':return actView()}
+  switch(S.tab){case 'dash':return dashView();case 'rounds':return roundsView();case 'round':return roundView();case 'fu':return fuView();case 'sec':return secView();case 'leave':return leaveView();case 'act':return actView();case 'my':return myView()}
   return ''}
 function stickyBar(){
   if(S.tab!=='round')return '';const r=S.rounds[S.openRound];if(!r||r.kind==='leave')return '';
@@ -819,6 +864,150 @@ function actView(){
   <div class="fbar" style="margin-bottom:10px"><label class="field">Person<select data-chg="actf"><option value="">Everyone</option>${who.map(n=>`<option ${n===f?'selected':''}>${esc(n)}</option>`).join('')}</select></label></div>`;
   if(!rows.length)return h+`<div class="card empty"><h3>No activity yet</h3><p>Marks, submissions and register actions will appear here with the person and time.</p></div>`;
   return h+`<div class="card acts">${rows.slice(0,200).map(l=>actRow(l,l.sec)).join('')}</div>`}
+
+/* ============ MY CLASS · classroom-first mobile screens ============ */
+const REM_Q=['Parent informed','Will bring tomorrow','Left at home','Pages pending','With tuition teacher','Absent – inform parent'];
+function cv(c,ph){
+  if(ph==='dist'){if(c.d==='N'){if(c.dr==='Absent')return['abs','A','Absent'];if(c.dr==='Out of stock')return['oos','NA','Not available'];return['no','✗','Not given']}return['ok','✓','Given']}
+  if(c.d==='N')return['na','–','Not issued'];
+  if(c.c==='M')return c.cr==='Absent'?['abs','A','Absent']:['no','✗','Not submitted'];
+  if(c.c==='IC')return['ic','IC','Incomplete'];if(c.c==='LV')return['lv','L','On leave'];if(c.c==='RT')return['rt','RT','Retained'];
+  return['ok','✓','Received']}
+function itemCounts(r,ph,it){const o={ok:0,no:0,abs:0,oos:0,ic:0,lv:0,rt:0,na:0,tot:0};roster(r).forEach(([roll])=>{const k=cv(cell(r,sidOf(r,roll),it.id),ph)[0];o[k]++;if(k!=='na')o.tot++});o.bad=o.no+o.abs+o.oos+o.ic+o.lv+o.rt;return o}
+const taskSub=T=>T.ph==='dist'?T.r.dsub:csubFor(T.r,T.g);
+function secTasks(key,D0){
+  const dist=[],coll=[],over=[];
+  Object.values(S.rounds).filter(r=>r.key===key&&r.kind!=='leave').forEach(r=>{
+    if(r.date===D0)dist.push({r,ph:'dist',g:null,its:r.items});
+    groupsOf(r).forEach(g=>{if(g===D0)coll.push({r,ph:'coll',g,its:itemsFor(r,g)});else if(g<D0&&r.dsub&&!csubFor(r,g))over.push({r,ph:'coll',g,its:itemsFor(r,g)})})});
+  return{dist,coll,over}}
+const fname=n=>{const p=n.trim().split(/\s+/);return p[0]+(p[1]?' '+p[1][0]+'.':'')};
+function secPicker(secs,key){
+  if(secs.length<=1)return `<div class="muted tiny" style="margin-bottom:8px">${esc(secs[0]?secs[0].label:'')} · ${esc(classTeacher(key))}</div>`;
+  if(secs.length<=8)return `<div class="chips" style="margin:0 0 10px">${secs.map(s=>`<button class="chip ${s.k===key?'on':''}" data-act="mysec" data-v="${s.k}">${esc(s.label)}</button>`).join('')}</div>`;
+  return `<label class="field" style="margin-bottom:10px;max-width:320px">Section<select data-chg="mysec">${secs.map(s=>`<option value="${s.k}" ${s.k===key?'selected':''}>${esc(s.label)}</option>`).join('')}</select></label>`}
+function myView(){
+  const secs=scopeSecs();if(!secs.length)return `<div class="card empty"><h3>No sections in your view</h3><p>Ask the Director to assign your class.</p></div>`;
+  let key=S.my.sec;if(!secs.find(s=>s.k===key))key=S.my.sec=secs[0].k;
+  const D0=S.date;let h=secPicker(secs,key);
+  if(S.my.screen==='item'&&S.my.task&&S.rounds[S.my.task.rid])return h+myItem();
+  S.my.screen=null;
+  const V=[['today','Today'],['class','Class'],['week','Week'],['subj','Subjects']];
+  h+=`<div class="seg" role="tablist">${V.map(v=>`<button class="${S.my.view===v[0]?'on':''}" data-act="myv" data-v="${v[0]}">${v[1]}</button>`).join('')}</div>`;
+  h+=`<div class="datebar" style="margin:10px 0 12px"><button class="btn sm" data-act="dateshift" data-v="-1" aria-label="Previous day">‹</button><b style="font-size:15px;color:var(--navy)">${esc(fdl(D0))}</b><button class="btn sm" data-act="dateshift" data-v="1" aria-label="Next day">›</button><button class="btn sm" data-act="datetoday">Today</button><input type="date" value="${D0}" data-chg="date" aria-label="Pick date"></div>`;
+  switch(S.my.view){case 'class':return h+myClass(key,D0);case 'week':return h+myWeek(key,D0);case 'subj':return h+mySubj(key,D0);default:return h+myToday(key,D0)}}
+function tileStat(r,ph,it){const c=itemCounts(r,ph,it);return `<span class="num"><b>${c.ok}</b>/${c.tot}</span>${c.bad?`<em class="bad num">${c.bad}</em>`:''}`}
+function taskCard(T,label){
+  const sub=taskSub(T);const blocked=T.ph==='coll'&&!T.r.dsub;const t=todayISO();
+  const late=!sub&&!blocked&&((T.ph==='dist'?T.r.date:T.g)<t);
+  const pill=sub?`<span class="pill p-ok">Submitted · ${esc(sub.by)} · ${esc(ft(sub.at))}</span>`:blocked?`<span class="pill p-na">Not distributed yet</span>`:`<span class="pill ${late?'p-no':'p-ic'}">${late?'Overdue':'Not submitted'}</span>`;
+  const ed=T.r.edit&&T.r.edit[editKey(T.ph,T.g)];
+  return `<div class="card tcard"><div class="tch"><div><b>${label||(T.ph==='dist'?'Distribute':'Collect')}</b> <span class="muted tiny">${esc(KINDLBL[T.r.kind])} · ${T.ph==='dist'?'issued '+esc(fd(T.r.date)):'handed out '+esc(fd(T.r.date))}</span></div><div>${pill}${ed?' <span class="pill p-ic">Edited · re-submit</span>':''}</div></div>
+  <div class="itiles">${T.its.map(it=>`<button class="it" data-act="myitem" data-rid="${T.r.id}" data-ph="${T.ph}" data-g="${T.g||''}" data-i="${it.id}"><span class="ty t-${it.t}">${it.t}</span><b>${esc(short(it.n))}</b><span class="cn">${tileStat(T.r,T.ph,it)}</span></button>`).join('')}</div>
+  ${blocked?'':`<div class="tcf"><button class="btn sm ${sub&&!ed?'':'ok'}" data-act="mysubmit" data-rid="${T.r.id}" data-ph="${T.ph}" data-g="${T.g||''}">${sub?(ed?'Re-submit':'Submitted ✓'):'Submit '+(T.ph==='dist'?'distribution':'collection')}</button></div>`}</div>`}
+function myToday(key,D0){
+  const {dist,coll,over}=secTasks(key,D0);
+  const nd=dist.reduce((a,T)=>a+T.its.length,0),nc=coll.reduce((a,T)=>a+T.its.length,0),no=over.reduce((a,T)=>a+T.its.length,0);
+  const pend=[...dist,...coll,...over].filter(T=>!taskSub(T)&&!(T.ph==='coll'&&!T.r.dsub)).length;
+  let h=`<div class="kpis" style="margin-top:0"><div class="kpi"><div class="l">To distribute</div><div class="v num">${nd}</div></div><div class="kpi"><div class="l">To collect</div><div class="v num">${nc}</div></div><div class="kpi ${no?'no':'ok'}"><div class="l">Overdue collections</div><div class="v num">${no}</div></div><div class="kpi ${pend?'ic':'ok'}"><div class="l">Waiting to submit</div><div class="v num">${pend}</div></div></div>`;
+  if(over.length)h+=`<div class="sec-h"><h2>Overdue collections</h2><small>Handed out earlier, not yet collected</small></div>`+over.map(T=>taskCard(T,'Collect · due '+fd(T.g))).join('');
+  if(coll.length)h+=`<div class="sec-h"><h2>Collect today</h2><small>Tap an item, tap the students who did not bring it</small></div>`+coll.map(T=>taskCard(T)).join('');
+  if(dist.length)h+=`<div class="sec-h"><h2>Distribute today</h2><small>Everyone starts as given. Tap only the exceptions</small></div>`+dist.map(T=>taskCard(T)).join('');
+  if(!dist.length&&!coll.length&&!over.length)h+=`<div class="card empty" style="margin-top:12px"><h3>Nothing due on ${esc(fd(D0))}</h3><p>Use <b>Week</b> to see what is coming, or start a round.</p><button class="btn gold" data-act="newround">+ New round</button></div>`;
+  return h}
+function myItem(){
+  const t=S.my.task;const r=S.rounds[t.rid];const ph=t.ph;const gd=t.g||null;
+  const its=ph==='coll'?itemsFor(r,gd):r.items;const it=its.find(i=>i.id===t.iid)||its[0];t.iid=it.id;
+  const cn=itemCounts(r,ph,it);const sub=ph==='dist'?r.dsub:csubFor(r,gd);
+  const ro=roster(r);
+  let h=`<div class="ihead"><button class="btn sm" data-act="myback">‹ Back</button><div style="min-width:0"><b class="itl">${itemChip(it)}</b><div class="muted tiny">${ph==='dist'?'Distribute':'Collect'} · ${esc(KINDLBL[r.kind])} · ${esc(fd(ph==='dist'?r.date:gd))}</div></div></div>
+  <div class="istrip">${its.map(i=>{const c=itemCounts(r,ph,i);return `<button class="${i.id===it.id?'on':''}" data-act="myitem" data-rid="${r.id}" data-ph="${ph}" data-g="${gd||''}" data-i="${i.id}"><span class="ty t-${i.t}">${i.t}</span>${esc(short(i.n))}${c.bad?`<em class="num">${c.bad}</em>`:''}</button>`}).join('')}</div>
+  <div class="brush"><span class="tiny muted" style="font-weight:700">Auto-remark</span>${[''].concat(REM_Q).map(q=>`<button class="chip ${S.my.brush===q?'on':''}" data-act="brush" data-v="${esc(q)}">${q?esc(q):'None'}</button>`).join('')}</div>
+  <div class="icnt"><span class="pill p-ok num">${cn.ok} ${ph==='dist'?'given':'received'}</span>${cn.no?`<span class="pill p-no num">${cn.no} ✗</span>`:''}${cn.abs?`<span class="pill p-abs num">${cn.abs} absent</span>`:''}${cn.oos?`<span class="pill p-ic num">${cn.oos} NA</span>`:''}${cn.ic?`<span class="pill p-ic num">${cn.ic} incomplete</span>`:''}${cn.lv?`<span class="pill p-lv num">${cn.lv} leave</span>`:''}${cn.rt?`<span class="pill p-rt num">${cn.rt} retained</span>`:''}<span class="muted tiny">of ${cn.tot}</span></div>
+  <div class="tgrid">${ro.map(([roll,name])=>{const sid=sidOf(r,roll);const c=cell(r,sid,it.id);const [cls,g,lab]=cv(c,ph);
+    return `<button class="tl ${cls}" data-act="mycyc" data-s="${sid}" data-i="${it.id}" aria-label="${esc(name)}: ${lab}"><i>${g}</i><span class="rn">${roll}</span><b>${esc(fname(name))}</b>${c.n?`<em>${esc(c.n)}</em>`:''}</button>`}).join('')}</div>
+  <div class="tiny muted" style="margin-top:10px">Tap = ${ph==='dist'?'✓ → ✗ → A → NA':'✓ → ✗ → A → IC'}. Hold a name for leave, retain or a typed remark. ${S.my.brush?'New exceptions get the remark “'+esc(S.my.brush)+'”.':''}</div>`;
+  return h}
+function mySticky(){
+  if(S.tab!=='my')return '';
+  if(S.my.screen==='item'&&S.my.task&&S.rounds[S.my.task.rid]){
+    const t=S.my.task,r=S.rounds[t.rid],ph=t.ph,gd=t.g||null;const sub=ph==='dist'?r.dsub:csubFor(r,gd);const ed=r.edit&&r.edit[editKey(ph,gd)];
+    const its=ph==='coll'?itemsFor(r,gd):r.items;const i=its.findIndex(x=>x.id===t.iid);const nx=its[i+1];
+    const blocked=ph==='coll'&&!r.dsub;
+    return `<div class="sticky-bar"><div class="in"><div style="flex:1;min-width:150px" class="tiny">${sub?'Submitted by <b>'+esc(sub.by)+'</b> · '+esc(fdt(sub.at))+(ed?' · <b style="color:var(--ic)">edited</b>':''):(blocked?'Distribution is not submitted yet':'Not submitted · marking as <b>'+esc(S.me?S.me.n:'—')+'</b>')}</div>
+    ${nx?`<button class="btn" data-act="myitem" data-rid="${r.id}" data-ph="${ph}" data-g="${gd||''}" data-i="${nx.id}">Next: ${esc(short(nx.n))} ›</button>`:''}
+    <button class="btn ${sub&&!ed?'':'ok'}" ${blocked?'disabled':''} data-act="mysubmit" data-rid="${r.id}" data-ph="${ph}" data-g="${gd||''}">${sub?(ed?'Re-submit':'Submitted ✓'):'Submit all '+its.length+' item'+(its.length>1?'s':'')}</button></div></div>`}
+  if(S.my.view==='today'){
+    const {dist,coll,over}=secTasks(S.my.sec,S.date);const P=[...dist,...coll,...over].filter(T=>!taskSub(T)&&!(T.ph==='coll'&&!T.r.dsub));
+    if(!P.length)return '';
+    return `<div class="sticky-bar"><div class="in"><div style="flex:1" class="tiny"><b class="num">${P.length}</b> list${P.length>1?'s':''} waiting to submit · marking as <b>${esc(S.me?S.me.n:'—')}</b></div><button class="btn ok" data-act="mysubmitall">Submit all (${P.length})</button></div></div>`}
+  return ''}
+function cycleIn(rid,ph,gd,sid,iid){
+  if(!S.me){openWho(true);return}
+  const r0=S.rounds[rid];const c=cell(r0,sid,iid);const brush=S.my.brush||'';let p;
+  if(ph==='dist'){
+    if(c.d!=='N')p={d:'N',dr:'Other',n:brush};
+    else if(c.dr!=='Absent'&&c.dr!=='Out of stock')p={d:'N',dr:'Absent',n:brush||c.n};
+    else if(c.dr==='Absent')p={d:'N',dr:'Out of stock',n:brush||c.n};
+    else p={d:'G',dr:'',n:''}}
+  else{
+    if(c.d==='N'){toast('Not issued to this student');return}
+    if(c.c==='R')p={c:'M',cr:'Forgot',n:brush};
+    else if(c.c==='M'&&c.cr!=='Absent')p={c:'M',cr:'Absent',n:brush||c.n};
+    else if(c.c==='M')p={c:'IC',cr:'',n:brush||c.n};
+    else p={c:'R',cr:'',ret:'',n:''}}
+  mutR(rid,r=>{const b0=cell(r,sid,iid);const post=!!(ph==='dist'?r.dsub:csubFor(r,gd));
+    setCell(r,sid,iid,p);logEdit(r,ph,post,sid,r.items.find(i=>i.id===iid),b0,cell(r,sid,iid));
+    if(post){r.edit=r.edit||{};r.edit[editKey(ph,gd)]=1}})}
+function submitNow(rid,ph,g){if(!S.me){openWho(true);return}const r=S.rounds[rid];if(!r)return;if(ph==='coll'&&!r.dsub){toast('Submit the distribution first');return}submitPhase(rid,ph,ph==='coll'?g:null)}
+function myClass(key,D0){
+  const {dist,coll}=secTasks(key,D0);const tasks=[...dist,...coll];
+  const led=(S.ledger[key]&&S.ledger[key].entries)||{};const open={};Object.entries(led).forEach(([ek,e])=>{if(e.st==='open')(open[e.s]=open[e.s]||[]).push(Object.assign({ek},e))});
+  const ro=D.stu[key]||[];const f=S.my.cf;
+  const rows=ro.map(([roll,name])=>{const sid=key+'-'+roll;const ops=open[sid]||[];let abs=0,exc=0;
+    tasks.forEach(T=>{const sid2=sidOf(T.r,roll);T.its.forEach(it=>{const k=cv(cell(T.r,sid2,it.id),T.ph)[0];if(k==='abs')abs++;else if(k!=='ok'&&k!=='na')exc++})});
+    return{roll,name,sid,ops,abs,exc,lv:ops.some(e=>e.k==='LEAVE')}});
+  const shown=rows.filter(x=>f==='all'||(f==='pend'&&x.ops.length)||(f==='exc'&&(x.exc||x.abs))||(f==='lv'&&x.lv)).sort((a,b)=>f==='pend'?b.ops.length-a.ops.length:a.roll-b.roll);
+  const np=rows.filter(x=>x.ops.length).length;
+  let h=`<div class="kpis" style="margin-top:0"><div class="kpi"><div class="l">Students</div><div class="v num">${rows.length}</div></div><div class="kpi ${np?'no':'ok'}"><div class="l">Holding something</div><div class="v num">${np}</div></div><div class="kpi ic"><div class="l">Open items</div><div class="v num">${rows.reduce((a,x)=>a+x.ops.length,0)}</div></div><div class="kpi abs"><div class="l">Absent today</div><div class="v num">${rows.filter(x=>x.abs).length}</div></div></div>
+  <div class="chips" style="margin:12px 0">${[['all','All'],['pend','Has pending'],['exc','Marked today'],['lv','On leave']].map(c=>`<button class="chip ${f===c[0]?'on':''}" data-act="mycf" data-v="${c[0]}">${c[1]}</button>`).join('')}</div>`;
+  h+=`<div class="card" style="padding:4px 14px">`+shown.map(x=>{const op=S.my.open===x.sid;
+    return `<div class="srow"><button class="sr1" data-act="stuopen" data-s="${x.sid}"><span class="rl">${x.roll}</span><b>${esc(x.name)}</b><span class="sp"></span>${x.abs?'<span class="pill p-abs">A today</span>':''}${x.exc?`<span class="pill p-no num">${x.exc} ✗ today</span>`:''}${x.lv?'<span class="pill p-lv">Leave</span>':''}${x.ops.length?`<span class="pill p-ic num">${x.ops.length} pending</span>`:'<span class="muted tiny">clear</span>'}<span class="chev">${op?'▴':'▾'}</span></button>
+    ${op?`<div class="sr2">${x.ops.length?x.ops.sort((a,b)=>(a.due||'')<(b.due||'')?-1:1).map(e=>`<div class="erow"><span class="grow">${itemChip({t:e.t,n:e.in})} <span class="muted tiny">${esc(e.k==='LEAVE'?'on leave':e.k==='ISSUE'?'not issued':e.k==='IC'?'incomplete':'not submitted')} · due ${esc(fd(e.due))}${e.rs&&!['Forgot','Absent'].includes(e.rs)?' · '+esc(e.rs):''}</span>${(e.h&&e.h.length)?`<div class="tiny rem">“${esc(e.h[e.h.length-1].t||e.h[e.h.length-1].act)}” · ${esc(e.h[e.h.length-1].by)}</div>`:''}</span><button class="btn sm ok" data-act="res1" data-lk="${key}" data-ek="${e.ek}">${e.k==='ISSUE'?'Issued ✓':'Received ✓'}</button></div>`).join('')+`<div class="brush" style="margin:8px 0 2px"><span class="tiny muted" style="font-weight:700">Remark all</span>${REM_Q.map(q=>`<button class="chip" data-act="remstu" data-lk="${key}" data-s="${x.sid}" data-v="${esc(q)}">${esc(q)}</button>`).join('')}</div>`:'<div class="muted tiny" style="padding:6px 0">Nothing pending for this student.</div>'}
+    <div style="margin-top:6px"><button class="btn sm" data-act="stuhist" data-key="${key}" data-roll="${x.roll}">Full history</button></div></div>`:''}</div>`}).join('')+(shown.length?'':'<div class="muted" style="padding:14px 0">No students match.</div>')+`</div>`;
+  return h}
+function myWeek(key,D0){
+  const off=(parse(D0).getDay()+6)%7;const st=addDays(D0,-off);const days=[0,1,2,3,4,5].map(i=>addDays(st,i));const t=todayISO();
+  let h=`<div class="tiny muted" style="margin-bottom:8px">Week of ${esc(fd(st))} · tap an item to mark it</div>`;
+  days.forEach(d=>{const {dist,coll}=secTasks(key,d);const none=!dist.length&&!coll.length;
+    h+=`<div class="card wday${d===D0?' cur':''}"><div class="wdh"><b>${esc(fd(d))}</b>${d===t?'<span class="pill p-gold">Today</span>':''}<span class="sp"></span><button class="btn sm" data-act="calpick" data-v="${d}" data-go="today">Open day</button></div>`;
+    if(none)h+=`<div class="muted tiny" style="padding:4px 0">Nothing scheduled</div>`;
+    const sec=(title,list)=>list.length?`<div class="wsec"><span class="tiny muted" style="font-weight:700">${title}</span><div class="wchips">${list.map(T=>{const sub=taskSub(T);return T.its.map(it=>{const c=itemCounts(T.r,T.ph,it);return `<button class="wchip ${sub?(c.bad?'warn':'done'):(T.ph==='coll'&&!T.r.dsub?'wait':(d<t?'over':'pend'))}" data-act="myitem" data-rid="${T.r.id}" data-ph="${T.ph}" data-g="${T.g||''}" data-i="${it.id}" data-day="${d}"><span class="ty t-${it.t}">${it.t}</span>${esc(short(it.n))}${sub&&c.bad?`<em class="num">${c.bad}</em>`:''}</button>`}).join('')}).join('')}</div></div>`:'';
+    h+=sec('DISTRIBUTE',dist)+sec('COLLECT',coll)+`</div>`});
+  h+=`<div class="legend" style="margin-top:8px"><span class="pill p-ok">Submitted · all fine</span><span class="pill p-ic">Submitted · exceptions</span><span class="pill p-na">Pending</span><span class="pill p-no">Overdue</span></div>`;
+  return h}
+function mySubj(key,D0){
+  const off=(parse(D0).getDay()+6)%7;const st=addDays(D0,-off);const days=[0,1,2,3,4,5].map(i=>addDays(st,i));const t=todayISO();
+  const rows={};const rs=Object.values(S.rounds).filter(r=>r.key===key&&r.kind!=='leave');
+  rs.forEach(r=>{const add=(d,T)=>{if(!days.includes(d))return;T.its.forEach(it=>{const k=it.t+'|'+it.n;((rows[k]=rows[k]||{it,cells:{}}).cells[d]=rows[k].cells[d]||[]).push({T,it})})};
+    add(r.date,{r,ph:'dist',g:null,its:r.items});groupsOf(r).forEach(g=>add(g,{r,ph:'coll',g,its:itemsFor(r,g)}))});
+  const keys=Object.keys(rows).sort((a,b)=>a.localeCompare(b));
+  let h=`<div class="tiny muted" style="margin-bottom:8px">Subjects across the week of ${esc(fd(st))} · <b>D</b> distribute · <b>C</b> collect · red number = exceptions</div>`;
+  if(!keys.length)return h+`<div class="card empty"><h3>No rounds this week</h3></div>`;
+  h+=`<div class="card tw" style="padding:6px"><table class="smx"><thead><tr><th>Subject</th>${days.map(d=>`<th class="${d===D0?'cur':''}">${esc(DOW[parse(d).getDay()])}<small>${parse(d).getDate()}</small></th>`).join('')}</tr></thead><tbody>`+
+   keys.map(k=>{const R=rows[k];return `<tr><td class="sj">${itemChip(R.it)}</td>${days.map(d=>`<td>${(R.cells[d]||[]).map(({T,it})=>{const sub=taskSub(T);const c=itemCounts(T.r,T.ph,it);const cl=sub?(c.bad?'warn':'done'):(T.ph==='coll'&&!T.r.dsub?'wait':(d<t?'over':'pend'));
+     return `<button class="mx ${cl}" data-act="myitem" data-rid="${T.r.id}" data-ph="${T.ph}" data-g="${T.g||''}" data-i="${it.id}" data-day="${d}">${T.ph==='dist'?'D':'C'}${sub&&c.bad?`<em class="num">${c.bad}</em>`:''}</button>`}).join('')}</td>`).join('')}</tr>`}).join('')+`</tbody></table></div>`;
+  return h}
+function resolveOne(lk,ek){
+  if(!S.me){openWho(true);return}const me=stamp();const now=Date.now();
+  mutL(lk,l=>{const e=l.entries[ek];if(!e||e.st!=='open')return;const lg=e.h=(e.h||[]);
+    if(e.k==='ISSUE'){e.k='RETURN';e.ph='x';e.due=nextSchool(todayISO());e.rs='Issued late';e.ib=me.n;e.ia=now;lg.push({at:now,by:me.n,act:'Issued now',t:''})}
+    else{e.st='closed';e.how='Received';e.cb=me.n;e.ca=now;lg.push({at:now,by:me.n,act:'Received',t:''})}});
+  toast('Marked by '+me.n)}
+function remarkStu(lk,sid,text){
+  if(!S.me){openWho(true);return}const me=stamp();const now=Date.now();let n=0;
+  mutL(lk,l=>{Object.values(l.entries).forEach(e=>{if(e.s===sid&&e.st==='open'){(e.h=e.h||[]).push({at:now,by:me.n,act:'Remark',t:text});n++}})});
+  toast('Remark added to all open items')}
 
 function gridTable(r,ph,its){
   const ro=roster(r);
@@ -1237,11 +1426,17 @@ const ACT={
   close:()=>closeSheet(),
   tab:el=>{S.tab=el.dataset.v;window.scrollTo(0,0);render()},
   who:()=>{if(canSwitch())openWho(false)},
-  setme:el=>{saveMe({n:el.dataset.n,r:el.dataset.r});closeSheet();S.tab='dash';render();toast('Viewing as '+el.dataset.n)},
+  setme:el=>{saveMe({n:el.dataset.n,r:el.dataset.r});closeSheet();S.my.sec='';S.my.screen=null;S.tab=(MGMT.includes(el.dataset.r)||el.dataset.r==='Director')?'dash':'my';render();toast('Viewing as '+el.dataset.n)},
   newround:()=>{if(!S.me){openWho(true);return}openNewRound()},
   open:(el,ev)=>{if(ev)ev.preventDefault();const r=S.rounds[el.dataset.id];if(!r)return;S.openRound=r.id;S.phase=el.dataset.ph||(r.dsub?'coll':'dist');S.grp=el.dataset.g||null;S.tab='round';window.scrollTo(0,0);render()},
   phase:el=>{S.phase=el.dataset.v;render()},grp:el=>{S.grp=el.dataset.v;render()},
-  calpick:el=>{S.date=el.dataset.v;S.calM=S.date.slice(0,7);render()},calmon:el=>{const b=(S.calM||S.date.slice(0,7)).split('-').map(Number);const d=new Date(b[0],b[1]-1+Number(el.dataset.v),1);S.calM=d.getFullYear()+'-'+pad(d.getMonth()+1);render()},dateshift:el=>{S.date=addDays(S.date,Number(el.dataset.v));render()},datetoday:()=>{S.date=todayISO();S.calM=S.date.slice(0,7);render()},
+  calpick:el=>{S.date=el.dataset.v;S.calM=S.date.slice(0,7);if(el.dataset.go==='today'){S.my.view='today';S.my.screen=null}render()},
+  mysec:el=>{S.my.sec=el.dataset.v;S.my.screen=null;render()},myv:el=>{S.my.view=el.dataset.v;S.my.screen=null;render()},myback:()=>{S.my.screen=null;render()},
+  myitem:el=>{const d=el.dataset;if(d.day)S.date=d.day;S.openRound=d.rid;S.phase=d.ph;S.grp=d.g||null;S.my.task={rid:d.rid,ph:d.ph,g:d.g||null,iid:d.i};S.my.screen='item';window.scrollTo(0,0);render()},
+  mycyc:el=>{if(Date.now()-LP<700)return;const t=S.my.task;cycleIn(t.rid,t.ph,t.g,el.dataset.s,el.dataset.i)},brush:el=>{S.my.brush=el.dataset.v;render()},
+  mysubmit:el=>submitNow(el.dataset.rid,el.dataset.ph,el.dataset.g||null),
+  mysubmitall:()=>{const {dist,coll,over}=secTasks(S.my.sec,S.date);[...dist,...coll,...over].filter(T=>!taskSub(T)&&!(T.ph==='coll'&&!T.r.dsub)).forEach(T=>submitNow(T.r.id,T.ph,T.g))},
+  mycf:el=>{S.my.cf=el.dataset.v;render()},stuopen:el=>{S.my.open=S.my.open===el.dataset.s?'':el.dataset.s;render()},res1:el=>resolveOne(el.dataset.lk,el.dataset.ek),remstu:el=>remarkStu(el.dataset.lk,el.dataset.s,el.dataset.v),calmon:el=>{const b=(S.calM||S.date.slice(0,7)).split('-').map(Number);const d=new Date(b[0],b[1]-1+Number(el.dataset.v),1);S.calM=d.getFullYear()+'-'+pad(d.getMonth()+1);render()},dateshift:el=>{S.date=addDays(S.date,Number(el.dataset.v));render()},datetoday:()=>{S.date=todayISO();S.calM=S.date.slice(0,7);render()},
   cell:el=>{if(Date.now()-LP<700)return;cycleCell(el.dataset.s,el.dataset.i)},rowabs:el=>rowAbsent(el.dataset.s),colall:el=>colAll(el.dataset.i),setcell:el=>applyCell(SH.sid,SH.iid,el.dataset.v),
   stusheet:el=>openStu(el.dataset.s),bulkstu:el=>applyBulkStu(SH.sid,el.dataset.v),
   colsheet:el=>openCol(el.dataset.i),bulkcol:el=>applyBulkCol(SH.iid,el.dataset.v),
@@ -1291,13 +1486,13 @@ function cycleCell(sid,iid){
     if(c.d!=='N')p={d:'N',dr:'Other'};
     else if(c.dr!=='Absent'&&c.dr!=='Out of stock')p={d:'N',dr:'Absent'};
     else if(c.dr==='Absent')p={d:'N',dr:'Out of stock'};
-    else p={d:'G',dr:''};
+    else p={d:'G',dr:'',n:''};
   }else{
     if(c.d==='N'){toast('Not issued to this student');return}
     if(c.c==='R')p={c:'M',cr:'Forgot'};
     else if(c.c==='M'&&c.cr!=='Absent')p={c:'M',cr:'Absent'};
     else if(c.c==='M')p={c:'IC',cr:''};
-    else p={c:'R',cr:'',ret:''};
+    else p={c:'R',cr:'',ret:'',n:''};
   }
   mutR(rid,r=>{const b0=cell(r,sid,iid);const post=!!(ph==='dist'?r.dsub:csubFor(r,gd));
     setCell(r,sid,iid,p);
@@ -1310,17 +1505,17 @@ function rowAbsent(sid){
   applyBulkStu(sid,all?(ph==='dist'?'G':'R'):'absent')}
 function colAll(iid){if(!S.me){openWho(true);return}applyBulkCol(iid,S.phase==='dist'?'G':'R')}
 let LP=0,LPT=null;
-document.addEventListener('pointerdown',ev=>{const b=ev.target.closest('button.c');if(!b)return;clearTimeout(LPT);
+document.addEventListener('pointerdown',ev=>{const b=ev.target.closest('button.c,button.tl');if(!b)return;clearTimeout(LPT);
   LPT=setTimeout(()=>{LP=Date.now();if(navigator.vibrate)try{navigator.vibrate(15)}catch(e){}openCell(b.dataset.s,b.dataset.i)},480)});
 ['pointerup','pointercancel','pointerleave','scroll'].forEach(e=>document.addEventListener(e,()=>clearTimeout(LPT),true));
-document.addEventListener('contextmenu',ev=>{const b=ev.target.closest('button.c');if(b){ev.preventDefault();clearTimeout(LPT);LP=Date.now();openCell(b.dataset.s,b.dataset.i)}});
+document.addEventListener('contextmenu',ev=>{const b=ev.target.closest('button.c,button.tl');if(b){ev.preventDefault();clearTimeout(LPT);LP=Date.now();openCell(b.dataset.s,b.dataset.i)}});
 document.addEventListener('click',ev=>{
   const el=ev.target.closest('[data-act]');if(el){const f=ACT[el.dataset.act];if(f){f(el,ev)}return}
   if(ev.target.id==='sheet'&&S.me)closeSheet()});
 document.addEventListener('change',ev=>{
   const el=ev.target.closest('[data-chg]');if(!el)return;const k=el.dataset.chg,v=el.type==='checkbox'?el.checked:el.value;
   switch(k){
-    case 'date':if(v){S.date=v;S.calM=v.slice(0,7)}render();break;case 'actf':S.actf=v;render();break;
+    case 'date':if(v){S.date=v;S.calM=v.slice(0,7)}render();break;case 'actf':S.actf=v;render();break;case 'mysec':S.my.sec=v;S.my.screen=null;render();break;
     case 'rf-cls':S.rf.cls=v;render();break;case 'rf-scope':S.rf.scope=v;render();break;
     case 'fu-cls':S.fu.cls=v;S.fu.sec='';render();break;case 'fu-sec':S.fu.sec=v;render();break;case 'fu-t':S.fu.t=v;render();break;case 'fu-od':S.fu.od=v;render();break;case 'fu-res':S.fu.res=v;render();break;
     case 'sa-cls':{const f=SECS.find(s=>s.ck===v&&inScope(s.k));if(f)S.sa.key=f.k;render();break}
