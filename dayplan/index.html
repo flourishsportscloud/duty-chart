@@ -155,7 +155,7 @@ button.nm{cursor:pointer}
 <div id="app"></div>
 <script>
 /* ============ configuration ============ */
-const API=(new URLSearchParams(location.search).get('api'))||"";   /* paste the Apps Script /exec URL between the last two quotes (see SETUP.md) */
+const API=(new URLSearchParams(location.search).get('api'))||"https://script.google.com/macros/s/AKfycbz7qhQnCURNiHwGBbix3mAdYHizLXn6PWnSmv2a_9lOqXRqs92dvP-XIozSlV3fwtVG/exec";   /* paste the Apps Script /exec URL between the last two quotes (see SETUP.md) */
 const PREVIEW=!API;
 const CLASS_LIST=[["N","Nursery","Pre-primary"],["LKG","LKG","Pre-primary"],["UKG","UKG","Pre-primary"],["1","Class 1","Primary"],["2","Class 2","Primary"],["3","Class 3","Primary"],["4","Class 4","Primary"],["5","Class 5","Primary"],["6","Class 6","Middle & Secondary"],["7","Class 7","Middle & Secondary"],["8","Class 8","Middle & Secondary"],["9","Class 9","Middle & Secondary"],["10","Class 10","Middle & Secondary"],["11","Class 11","Middle & Secondary"],["A15","Adjustments · Classes 1–5","Daily charts"],["A611","Adjustments · Classes 6–11","Daily charts"],["F15","Free Teachers · Classes 1–5","Daily charts"],["F611","Free Teachers · Classes 6–11","Daily charts"],["CO","Co-curricular Schedule","Daily charts"]];
 const SHORT={N:"Nur",A15:"Adj 1–5",A611:"Adj 6–11",F15:"Free 1–5",F611:"Free 6–11",CO:"Co-curr."};
