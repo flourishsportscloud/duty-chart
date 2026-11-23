@@ -1044,7 +1044,7 @@ function renderResDash(box){
 /* ---- tick several tasks and remove them together ---- */
 let selRm={};
 function rmTick(r){ const c=el('input',{type:'checkbox','aria-label':'Tick to remove'}); c.checked=!!selRm[r.id]; c.addEventListener('change',()=>{ if(c.checked) selRm[r.id]=1; else delete selRm[r.id]; confirmKey=null; render(); }); return el('label',{class:'rmt'},c); }
-function bulkBar(box,all){ const rs=all.filter(r=>selRm[r.id]); Object.keys(selRm).forEach(id=>{ if(!rs.some(r=>r.id===id)) delete selRm[id]; });
+function bulkBar(box,all){ [...box.childNodes].forEach(n=>{ if(n.nodeType===3&&n.textContent==='null') n.remove(); }); const rs=all.filter(r=>selRm[r.id]); Object.keys(selRm).forEach(id=>{ if(!rs.some(r=>r.id===id)) delete selRm[id]; });
   if(!rs.length){ box.prepend(el('p',{class:'note',text:'To remove several tasks together, open a staff name, tick the tasks in the list, then select Remove here.'})); return; }
   box.prepend(el('div',{class:'toolr'},el('button',{type:'button',class:'btn warn',onclick:()=>{ if(confirmKey==='bulk'){ confirmKey=null; const n=rs.length; rs.forEach(r=>pushNote(r,{rm:1},'')); selRm={}; toast(n+' removed'); render(); } else { confirmKey='bulk'; render(); } }},(confirmKey==='bulk'?'Confirm: remove ':'Remove ')+rs.length+' ticked '+(rs.length===1?'task':'tasks')),
     el('button',{type:'button',class:'btn ghost',onclick:()=>{selRm={};confirmKey=null;render()}},'Clear ticks'))); }
