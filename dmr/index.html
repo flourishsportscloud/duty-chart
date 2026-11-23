@@ -544,6 +544,7 @@ async function api(fn,args){
 }
 function applyState(s){
   if(!s)return;
+  if(!Array.isArray(s.team)){S.ready=true;S.me=null;banner('The server script is out of date. Open the Apps Script project, paste the latest Code.gs, then Deploy → Manage deployments → ✏️ → New version → Deploy (see SETUP.md).');render();return;}
   S.me=s.me||null;S.team=s.team||[];S.directors=s.directors||[];S.vendors=s.vendors||[];S.today=s.today||S.today;S.cutoff=s.cutoff||'';
   S.complaints=s.complaints||{};
     if(S.me&&!S.view)S.view=S.me.role==='staff'?'date':'dash';
@@ -558,7 +559,7 @@ async function refresh(){
     var s=await api('state',[token]);
     if(S.pending||ep!==S.epoch)return; // a change was made while we were asking: its answer is newer
     applyState(s);
-  }catch(e){setStatus('off',"Can't reach the server — retrying");if(!S.ready)render();}
+  }catch(e){setStatus('off',"Can't reach the server — retrying");banner(e.message);if(!S.ready)render();}
 }
 async function write(fn,args,optimistic){
   S.epoch++;S.pending++;
