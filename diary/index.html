@@ -1278,7 +1278,7 @@ function renderSet(){
   };
   const card = (t, sub, list) => { const k = el("div","card"); const h = el("div","cardh"); const h2 = el("h2", null, t); if (sub) h2.appendChild(el("small", null, sub)); h.appendChild(h2); k.appendChild(h); list.forEach(u => k.appendChild(row(u))); if (!list.length) k.appendChild(el("div","empty","No one here.")); return k; };
   if (pend.length) box.appendChild(card("Waiting for approval", pend.length + " request" + (pend.length === 1 ? "" : "s"), pend));
-  box.appendChild(card("Staff logins", "CM marks diaries · PL acts on remarks · FO sees everything and sends SMS", act));
+  box.appendChild(card("Staff logins", "Everyone marks the diary for their classes · PL, PM and FO act on remarks · FO also sends SMS and manages Settings", act));
 }
 function parseRoster(text){
   const out = {}; let n = 0, bad = 0;
@@ -1420,7 +1420,7 @@ setInterval(() => { if (document.visibilityState === "visible" && me && view !==
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && me) { retryDirty(); refresh(); } });
 
 /* ---------- auto-update: if a newer page is published, reload into it ---------- */
-const BUILD = "202611201122";
+const BUILD = "202611231417";
 (function(){
   const run = () => fetch(location.pathname + "?v=" + Date.now(), {cache:"no-store"}).then(r => r.text()).then(t => {
     const m = t.match(/const BUILD = "(\d+)"/);
