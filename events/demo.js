@@ -35,6 +35,7 @@ function mkSheet(name){var d=data.sheets[name]=data.sheets[name]||[];
    appendRow:function(r){d.push(r.slice())},deleteRow:function(i){d.splice(i-1,1)},setFrozenRows:function(){}}}
 var SS={getId:function(){return 'demo'},getUrl:function(){return '#'},getSheetByName:function(n){return data.sheets[n]?mkSheet(n):null},insertSheet:function(n){data.sheets[n]=[];return mkSheet(n)}};
 var PropertiesService={getScriptProperties:function(){return {getProperty:function(k){return data.props[k]===undefined?null:data.props[k]},setProperty:function(k,v){data.props[k]=v}}}};
+var _cm={};var CacheService={getScriptCache:function(){var m=_cm;return {get:function(k){return m[k]===undefined?null:m[k]},put:function(k,v){m[k]=String(v)},putAll:function(o){for(var k in o)m[k]=String(o[k])},getAll:function(ks){var o={};ks.forEach(function(k){if(m[k]!==undefined)o[k]=m[k]});return o},remove:function(k){delete m[k]}}}};
 var SpreadsheetApp={create:function(){return SS},openById:function(){return SS}};
 var LockService={getScriptLock:function(){return {tryLock:function(){return true},releaseLock:function(){}}}};
 var ContentService={MimeType:{JSON:1},createTextOutput:function(s){return {s:s,setMimeType:function(){return this}}}};
@@ -108,15 +109,18 @@ function login_(name, pw){
   if(!m){ const f = list.filter(x => first_(x.name) === first_(name) && first_(name) === name.replace(/[^a-z]/g,'')); if(f.length === 1) m = f[0]; }
   if(!m || (suf && String(pw||'').trim().toLowerCase().replace(/\s+/g,'') !== first_(m.name) + suf)) fail('Wrong name or password, or your name is not on the access list. Ask the Director.');
   const body = m.name + '|' + (Date.now() + TOKEN_DAYS*864e5) + '|' + (props_().getProperty('TOKEN_VER') || '1');
-  log_(m.name, '', 'login');
   return {token: H_.b64(body) + '.' + H_.hmac(body, secret_()), name: m.name};
 }
 
 /* ---------- document store (one row per document) ---------- */
+let ROWS_ = null;                       // the sheet is read once per request, not once per question
 function rows_(){
-  const sh = DOCS(), n = sh.getLastRow(); if(n < 2) return [];
-  return sh.getRange(2,1,n-1,4).getValues();
+  if(ROWS_) return ROWS_;
+  const sh = DOCS(), n = sh.getLastRow();
+  ROWS_ = n < 2 ? [] : sh.getRange(2,1,n-1,4).getValues();
+  return ROWS_;
 }
+function touch_(){ ROWS_ = null; try{ props_().setProperty('REV', Date.now().toString(36) + Math.random().toString(36).slice(2,5)); }catch(e){} }
 function get_(key){
   const r = rows_().filter(x => x[0] === key)[0]; if(!r) return null;
   try{ return JSON.parse(r[1]); }catch(e){ return null; }
@@ -129,13 +133,23 @@ function put_(key, obj, who){
   if(last > 1){ const k = sh.getRange(2,1,last-1,1).getValues(); for(let i = 0; i < k.length; i++) if(k[i][0] === key){ row = i+2; break; } }
   const v = [key, json, new Date().toISOString(), who || ''];
   if(row) sh.getRange(row,1,1,4).setValues([v]); else sh.appendRow(v);
+  if(key === 'config/members'){ try{ CacheService.getScriptCache().put('MEM', JSON.stringify(obj.list || []), 21600); props_().setProperty('MEM_BAK', JSON.stringify(obj.list || [])); }catch(e){} }
+  touch_();
 }
 function del_(key){
   const sh = DOCS(), last = sh.getLastRow(); if(last < 2) return;
   const k = sh.getRange(2,1,last-1,1).getValues();
-  for(let i = k.length-1; i >= 0; i--) if(k[i][0] === key){ sh.deleteRow(i+2); return; }
+  for(let i = k.length-1; i >= 0; i--) if(k[i][0] === key){ sh.deleteRow(i+2); touch_(); return; }
 }
-function members_(){ const d = get_('config/members'); return (d && d.list) || []; }
+function members_(){        // cached, with a saved copy, so a slow or half-written sheet read can never lock people out
+  const c = CacheService.getScriptCache(); let j = null;
+  try{ j = c.get('MEM'); }catch(e){}
+  if(j){ try{ const l = JSON.parse(j); if(l && l.length) return l; }catch(e){} }
+  const d = get_('config/members'); let list = (d && d.list) || [];
+  if(!list.length){ try{ list = JSON.parse(props_().getProperty('MEM_BAK') || '[]'); }catch(e){ list = []; } }
+  if(list.length){ try{ c.put('MEM', JSON.stringify(list), 21600); }catch(e){} }
+  return list;
+}
 
 /* ---------- photos: a small thumbnail row plus the full picture split into rows (a cell holds 50,000 characters) ---------- */
 const CH_ = 45000, IMGID_ = /^[a-z0-9-]{6,30}$/;
@@ -153,10 +167,15 @@ function writeImg_(id, thumb, full){
 }
 function readImgs_(ids, which){
   const sh = IMGS(), keys = imgRows_(), at = {}; keys.forEach((k,i) => { at[k] = i+2; });
-  const out = {};
+  const out = {}, cache = CacheService.getScriptCache(), want = ids.slice(0,24).filter(id => IMGID_.test(id)); let tc = {};
+  if(which === 't'){ try{ const g = cache.getAll(want.map(id => 'T_' + id)); want.forEach(id => { if(g['T_' + id]) tc[id] = g['T_' + id]; }); }catch(e){ tc = {}; } }
   ids.slice(0,24).forEach(id => {
     if(!IMGID_.test(id)) return;
-    if(which === 't'){ const r = at[id + ':t']; if(r) out[id] = String(sh.getRange(r,2).getValue()); return; }
+    if(which === 't'){
+      const hit = tc[id]; if(hit){ out[id] = hit; return; }
+      const r = at[id + ':t']; if(r){ const v = String(sh.getRange(r,2).getValue()); out[id] = v; try{ cache.put('T_' + id, v, 21600); }catch(e){} }
+      return;
+    }
     let s = '', i = 0; while(at[id + ':' + i]){ s += String(sh.getRange(at[id + ':' + i],2).getValue()); i++; }
     if(s) out[id] = s;
   });
@@ -164,10 +183,11 @@ function readImgs_(ids, which){
 }
 
 /* ---------- tasks ---------- */
-const KEY_ = /^(projects|tasks)\/[a-z0-9-]{4,30}$/;
+const KEY_ = /^(projects|tasks|notes)\/[a-z0-9-]{4,30}$/;
 function inLock_(f){
   const lock = LockService.getScriptLock();
   if(!lock.tryLock(20000)) fail('Server busy, try again.');
+  ROWS_ = null;     // anything read before the lock may be out of date
   try{ return f(); }finally{ try{ lock.releaseLock(); }catch(x){} }
 }
 const cleanImgs_ = a => (Array.isArray(a) ? a : []).map(String).filter(x => IMGID_.test(x)).slice(0,8);
@@ -182,17 +202,50 @@ function cleanTask_(t, u, base){
 function msg_(u, kind, text, imgs, st, problem){ return {by: u.id, at: Date.now(), kind: kind, text: text, imgs: imgs, st: st, problem: problem ? true : undefined}; }
 function strip_(o){ Object.keys(o).forEach(k => { if(o[k] === undefined) delete o[k]; }); return o; }
 
+function snapshot_(rev){     // the whole list, kept in the script cache until anything changes
+  const c = CacheService.getScriptCache(), pre = 'D' + rev + '_';
+  try{
+    const n = Number(c.get(pre + 'n') || 0);
+    if(n){ const keys = []; for(let i = 0; i < n; i++) keys.push(pre + i); const g = c.getAll(keys); let s = '', ok = true;
+      for(let i = 0; i < n; i++){ if(g[pre + i] == null){ ok = false; break; } s += g[pre + i]; }
+      if(ok) return JSON.parse(s); }
+  }catch(e){}
+  const projects = [], tasks = [], notes = [];
+  rows_().forEach(r => {
+    const k = String(r[0]); let o; try{ o = JSON.parse(r[1]); }catch(e){ return; }
+    const id = k.split('/')[1];
+    if(k.indexOf('projects/') === 0){ o.id = id; projects.push(o); } else if(k.indexOf('tasks/') === 0){ o.id = id; tasks.push(o); } else if(k.indexOf('notes/') === 0){ o.id = id; notes.push(o); }
+  });
+  const out = {projects: projects, tasks: tasks, notes: notes};
+  try{
+    const s = JSON.stringify(out), SZ = 30000, n = Math.ceil(s.length / SZ);
+    if(n > 0 && n <= 30){ const put = {}; for(let i = 0; i < n; i++) put[pre + i] = s.slice(i*SZ, (i+1)*SZ); put[pre + 'n'] = String(n); c.putAll(put, 21600); }
+  }catch(e){}
+  return out;
+}
+
 const API = {
   login: login_,
   login_info(){ return {pw: !!String(props_().getProperty('STAFF_SUFFIX') || ''), names: members_().map(m => m.name)}; },
-  ev_data(u){
-    const projects = [], tasks = [];
-    rows_().forEach(r => {
-      const k = String(r[0]); let o; try{ o = JSON.parse(r[1]); }catch(e){ return; }
-      const id = k.split('/')[1];
-      if(k.indexOf('projects/') === 0){ o.id = id; projects.push(o); } else if(k.indexOf('tasks/') === 0){ o.id = id; tasks.push(o); }
+  ev_data(u, since){
+    const rev = String(props_().getProperty('REV') || '0');
+    if(since && String(since) === rev) return {same: true, rev: rev};       // nothing changed: a very small answer
+    const base = snapshot_(rev);
+    return {rev: rev, me: {id: u.id, name: u.name, admin: !!u.admin}, members: members_(), projects: base.projects, tasks: base.tasks,
+      notes: base.notes.filter(n => n.owner === u.id), at: Utilities.formatDate(new Date(), TZ, 'dd MMM yyyy, HH:mm')};
+  },
+  ev_note(u, id, obj){        // a private note, only its owner can see or change it
+    id = String(id||''); const key = 'notes/' + id; if(!KEY_.test(key)) fail('Bad key.');
+    obj = obj || {};
+    return inLock_(() => {
+      const old = get_(key); if(old && old.owner !== u.id) fail('This is a private note.');
+      const done = obj.done !== undefined ? !!obj.done : !!(old && old.done);
+      const doc = strip_({title: String(obj.title||'').trim().slice(0,200), note: String(obj.note||'').slice(0,1500), date: day_(obj.date),
+        time: /^\d{2}:\d{2}$/.test(obj.time||'') ? obj.time : '', project: String(obj.project||'').replace(/[^a-z0-9-]/g,'').slice(0,30),
+        done: done, doneAt: done ? ((old && old.doneAt) || Date.now()) : undefined, owner: u.id, createdAt: (old && old.createdAt) || Date.now(), sample: old && old.sample ? true : undefined});
+      if(!doc.title) fail('Write the note first.');
+      put_(key, doc, u.name); doc.id = id; return doc;
     });
-    return {me: {id: u.id, name: u.name, admin: !!u.admin}, members: members_(), projects: projects, tasks: tasks, at: Utilities.formatDate(new Date(), TZ, 'dd MMM yyyy, HH:mm')};
   },
   ev_set(u, key, obj){        // create a project or a task (any member); change a project (creator or admin)
     key = String(key||''); if(!KEY_.test(key)) fail('Bad key.');
@@ -275,7 +328,8 @@ const API = {
     key = String(key||''); if(!KEY_.test(key)) fail('Bad key.');
     return inLock_(() => {
       const old = get_(key); if(!old) return {ok: 1};
-      if(!(u.admin || old.createdBy === u.id)) fail('Only the creator or the Director can delete this.');
+      if(key.indexOf('notes/') === 0){ if(old.owner !== u.id) fail('This is a private note.'); }
+      else if(!(u.admin || old.createdBy === u.id)) fail('Only the creator or the Director can delete this.');
       if(key.indexOf('projects/') === 0){
         const pid = key.split('/')[1];
         rows_().forEach(r => { if(String(r[0]).indexOf('tasks/') === 0){ try{ if(JSON.parse(r[1]).project === pid) del_(r[0]); }catch(e){} } });
@@ -360,6 +414,10 @@ const API = {
       T('','Update stock register',-1,'14:00',['chandan'],hd,'done','normal',0,[]);
       T('','Notice board update',1,'09:00',['shubhangi'],'sanjana','todo','normal',0,[]);
       T('','Morning gate and arrival check',1,'07:30',['jay'],hd,'todo','normal',0,[]);
+      put_('notes/sp-n1', {title: 'Points for the staff meeting', note: 'Annual Day budget, Open House roster, transport complaints', date: D(1), time: '15:00', owner: dir, createdAt: now, sample: true}, 'sample');
+      put_('notes/sp-n2', {title: 'Call the printer about invitation cards', date: D(0), time: '11:00', owner: dir, createdAt: now - 1, sample: true}, 'sample');
+      put_('notes/sp-n3', {title: 'Review the half-yearly timetable', note: 'Check the clash between Class 9 and Class 10 papers', date: D(4), owner: dir, createdAt: now - 2, sample: true}, 'sample');
+      put_('notes/sp-n4', {title: 'Order new visitor passes', date: D(-1), owner: dir, done: true, doneAt: now - 3600e3, createdAt: now - 3, sample: true}, 'sample');
       return {ok: 1};
     });
   }
