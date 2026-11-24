@@ -55,6 +55,18 @@ function write_(path, obj, who, what){
   const r = rowOf_(sh, path); if(r) sh.getRange(r,1,1,row.length).setValues([row]); else sh.appendRow(row);
   log_(who, path, what || 'saved'); return rev;
 }
+/* ---- uploads (PDF, PPT and similar) ---- */
+const UPLOAD_MAX_MB = 15, UPLOAD_EXT = ['pdf','ppt','pptx','pps','ppsx','doc','docx','xls','xlsx','jpg','jpeg','png'];
+const DIARY_API = 'https://script.google.com/macros/s/AKfycbyvWTDOKOQ8F0vD-oy9vchmq04GdhfZfgtpomgWg73rIa13gmkrFkpZsvQl9ISZKrSFQw/exec';
+function uploadFolder_(){ const p = props_(); let id = p.getProperty('UPLOAD_FOLDER');
+  if(id){ try{ return DriveApp.getFolderById(id); }catch(e){} }
+  const f = DriveApp.createFolder('FIS Teacher Preparation and Checking - Uploads'); p.setProperty('UPLOAD_FOLDER', f.getId()); return f; }
+// only someone logged in to the staff (Diary) login may upload
+function staffToken_(token){ token = String(token || ''); if(token.length < 8) fail('Please log in again.');
+  let j = null; try{ j = JSON.parse(UrlFetchApp.fetch(DIARY_API, {method: 'post', contentType: 'text/plain', payload: JSON.stringify({fn: 'state', args: [token, Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd'), '']}), followRedirects: true, muteHttpExceptions: true}).getContentText()); }catch(e){}
+  if(!j || !j.ok || !j.v || !j.v.me) fail('Please log in again.'); return j.v.me; }
+/* Run once from the editor after updating: asks for the Drive and web permissions that uploads need. */
+function authorizeUploads(){ uploadFolder_(); UrlFetchApp.fetch(DIARY_API, {muteHttpExceptions: true}); return 'Uploads are ready.'; }
 const API = {
   me(who){ return {name: who, admin: isAdmin_(who)}; },
   all(){ return {rev: rev_(), docs: read_(() => true)}; },
@@ -86,6 +98,23 @@ const API = {
     if(!obj || typeof obj !== 'object' || Array.isArray(obj)) fail('Bad record.');
     return {rev: write_(path, obj, who, 'plan saved')};
   },
+  // what this deployment can do (the pages show the upload button only when this answers)
+  caps(){ return {upload: 1, maxMb: UPLOAD_MAX_MB}; },
+  // a PDF / PPT / sheet chosen on a phone: saved in the school's Drive upload folder, viewable by link, link returned
+  upload(name, mime, b64, token, who){
+    name = String(name || '').replace(/[\\/:*?"<>|\u0000-\u001f]/g, ' ').trim().slice(0, 120); mime = String(mime || '');
+    const ext = (name.match(/\.([A-Za-z0-9]{2,5})$/) || [])[1]; 
+    if(!name || !ext || UPLOAD_EXT.indexOf(ext.toLowerCase()) < 0) fail('Only PDF, PPT, Word, Excel or image files can be uploaded.');
+    b64 = String(b64 || ''); if(!b64) fail('The file is empty.');
+    if(b64.length > UPLOAD_MAX_MB * 1024 * 1024 * 1.37) fail('The file is larger than ' + UPLOAD_MAX_MB + ' MB.');
+    staffToken_(token);
+    const blob = Utilities.newBlob(Utilities.base64Decode(b64), mime || 'application/octet-stream', name);
+    const f = uploadFolder_().createFile(blob);
+    try{ f.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); }catch(e){}
+    f.setDescription('Uploaded from Teacher Preparation and Checking by ' + who);
+    log_(who, 'upload', name + ' (' + f.getId() + ')');
+    return {id: f.getId(), url: 'https://drive.google.com/file/d/' + f.getId() + '/view', name: name};
+  },
   // one-time import of a lesson file (plans and earlier marks) prepared by Claude
   importFile(data, who){
     if(!isAdmin_(who)) fail('Only the Dean or the Director can load a lesson file.');
@@ -105,6 +134,7 @@ function doPost(e){
     const who = who_(req.who);
     if(req.fn === 'me') args = [who];
     else if(req.fn === 'importFile') args = [args[0], who];
+    else if(req.fn === 'upload') args = args.slice(0, 4).concat([who]);
     else if(write) args = args.slice(0, 2).concat([who]);
     if(write && !lock.tryLock(25000)) return out({ok: false, err: 'Server busy, trying again.'});
     return out({ok: true, v: fn.apply(null, args)});

@@ -310,6 +310,7 @@ details.rules summary{font-size:14px}
 .yt{position:relative;padding-top:56.25%;border-radius:12px;overflow:hidden;background:#000}.yt iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .rsub{margin:0 0 8px;font:600 17px var(--f-head,inherit)}.rles{font-weight:700;font-size:13.5px;margin:8px 0 2px;color:var(--muted)}
 .pdfwrap{display:grid;gap:6px;margin-top:6px}.pdfv{position:relative;height:72vh;min-height:420px;border-radius:12px;overflow:hidden;background:#EEE;border:1px solid var(--line,#ddd)}.pdfv iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.upw{display:grid;gap:3px;margin-top:5px;font-weight:400}.upf{font-size:12.5px;max-width:100%}
 .rmt{display:inline-flex;align-items:center;padding:4px}.rmt input{width:20px;height:20px}
 </style>
 </head><body class="locked">
@@ -460,7 +461,7 @@ const dpath=id=>'status/'+PFX+'r.'+h36(id);
 async function call(fn,args){ const r=await fetch(API_URL,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn,args:args||[],who:ME})}); const j=await r.json(); if(!j.ok) throw new Error(j.err||'Could not save.'); return j.v; }
 function take(v){ let ch=false; (v.docs||[]).forEach(d=>{ if(d.p.indexOf('status/'+PFX)!==0) return; ch=true; if(d.del) delete DOCS[d.p]; else DOCS[d.p]=d.j; }); if(v.rev) REV=v.rev; return ch; }
 let toastT; function toast(m,err){ const t=$('toast'); t.textContent=m; t.className=err?'err':''; t.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>t.hidden=true,err?6000:2200); }
-async function loadAll(){ try{ take(await call('all')); LOADED=true; render(); }catch(e){ toast('Could not load saved updates. Check the internet connection.',1); } }
+async function loadAll(){ try{ take(await call('all')); LOADED=true; render(); checkCaps(); }catch(e){ toast('Could not load saved updates. Check the internet connection.',1); } }
 async function poll(){ if(document.hidden||!LOADED) return; try{ if(take(await call('sync',[REV]))&&!picking&&!editing&&!manage&&!window.mBusy&&!rmkEdit) render(); }catch(e){} }
 async function push(path,fields,msg){ if(!ME){ lock(); return; }
   const old=DOCS[path]; DOCS[path]=Object.assign({},old||{},fields); render();
@@ -770,7 +771,7 @@ function dRow(id,title,where,custom){
       head?el('button',{type:'button',class:'btn ghost xs',onclick:()=>{dEdit=dEdit===id?null:id;dConfirm=null;render()}},url?'Change':'Attach'):null)));
   if(url&&dView===id&&dEdit!==id) wrap.append(pdfBox(url,title+' '+where));
   if(head&&dEdit===id){ const f=el('input',{id:'doc-url',type:'url',inputmode:'url',placeholder:'Paste the Google Drive link',value:url});
-    wrap.append(el('div',{class:'editbox'},el('div',{class:'form'},el('label',{},'Google Drive link to the PDF',f)),
+    wrap.append(el('div',{class:'editbox'},el('div',{class:'form'},el('label',{},'Google Drive link to the PDF',f,upBtn(f,'.pdf,.ppt,.pptx,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png'))),
       el('div',{class:'toolr'},el('button',{type:'button',class:'btn',onclick:()=>{ const u=f.value.trim(); if(!okUrl(u)){toast('Paste a Google Drive link (drive.google.com).',1);f.focus();return} dEdit=null; push(dPath(id),{note:JSON.stringify(Object.assign({},custom||{},{u}))},'Document attached'); }},'Save'),
         url||custom?el('button',{type:'button',class:'btn warn',onclick:()=>{ if(dConfirm===id){ dEdit=dConfirm=null; push(dPath(id),{note:JSON.stringify(custom?Object.assign({},custom,{rm:1,u:''}):{u:''})},'Removed'); } else { dConfirm=id; render(); } }},dConfirm===id?'Confirm: remove':custom?'Remove document':'Remove link'):null,
         el('button',{type:'button',class:'btn ghost',onclick:()=>{dEdit=dConfirm=null;render()}},'Cancel')))); }
@@ -783,7 +784,7 @@ function renderDocs(){
   const secs=SECTIONS[wing].filter(cs=>cs.replace(/[A-C]$/,'')===dClass);
   if(head&&dAdd){ const fT=el('input',{id:'da-title',type:'text',maxlength:'40',placeholder:'e.g. Syllabus'}), fU=el('input',{id:'da-url',type:'url',inputmode:'url',placeholder:'Paste the Google Drive link'});
     const fW=el('select',{id:'da-for'},el('option',{value:''},'Whole class'),...secs.map(cs=>el('option',{value:cs},cs)));
-    box.append(el('div',{class:'panel'},el('h2',{text:'Add a document for Class '+dClass}),el('div',{class:'form'},el('label',{},'Title',fT),el('label',{},'For',fW),el('label',{},'Google Drive link to the PDF',fU)),
+    box.append(el('div',{class:'panel'},el('h2',{text:'Add a document for Class '+dClass}),el('div',{class:'form'},el('label',{},'Title',fT),el('label',{},'For',fW),el('label',{},'Google Drive link to the PDF',fU,upBtn(fU,'.pdf,.ppt,.pptx,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png'))),
       el('div',{class:'toolr'},el('button',{type:'button',class:'btn',onclick:()=>{ const t=cut(fT.value,40),u=fU.value.trim(); if(!t){fT.focus();return} if(!okUrl(u)){toast('Paste a Google Drive link (drive.google.com).',1);fU.focus();return}
         dAdd=false; push(dPath('x'+Date.now().toString(36)),{note:JSON.stringify({t,c:dClass,w:fW.value,u})},'Document added'); }},'Add document')))); }
   const card=el('div',{class:'card'}), list=el('div',{class:'secs'});
@@ -945,7 +946,7 @@ function renderRes(){
     box.append(el('div',{class:'panel'},el('h2',{text:'Attach learning resources for a lesson'}),
       el('div',{class:'form'},el('label',{},'Class',fC),el('label',{},'Subject',fS),el('label',{},'Other subject',fSO),el('label',{},'Lesson',fL)),
       el('b',{text:'Attach any of these (fill one or more)'}),
-      el('div',{class:'form'},el('label',{},'PPT',F.p),el('label',{},'PDF',F.f),el('label',{},'Video (YouTube)',F.v),el('label',{},'Lesson plan (Excel / Sheets)',F.x)),
+      el('div',{class:'form'},el('label',{},'PPT',F.p,upBtn(F.p,'.ppt,.pptx,.pps,.ppsx,.pdf')),el('label',{},'PDF',F.f,upBtn(F.f,'.pdf')),el('label',{},'Video (YouTube)',F.v),el('label',{},'Lesson plan (Excel / Sheets)',F.x,upBtn(F.x,'.xls,.xlsx,.pdf,.doc,.docx'))),
       el('div',{class:'toolr'},el('button',{type:'button',class:'btn',onclick:()=>{ const s=cut(fSO.value,22)||fS.value, l=cut(fL.value,40); if(!l){fL.focus();return}
         const out=[]; for(const y of ['p','f','v','x']){ const raw=F[y].value.trim(); if(!raw) continue; const id=ytId(raw);
           if(y==='v'&&!id&&!okUrl(raw)){ toast('Video: paste a YouTube link (or a Google Drive link).',1); F[y].focus(); return; }
@@ -991,6 +992,16 @@ function bulkBar(box,all){ [...box.childNodes].forEach(n=>{ if(n.nodeType===3&&n
   if(!rs.length){ box.prepend(el('p',{class:'note',text:'To remove several tasks together, open a staff name, tick the tasks in the list, then select Remove here.'})); return; }
   box.prepend(el('div',{class:'toolr'},el('button',{type:'button',class:'btn warn',onclick:()=>{ if(confirmKey==='bulk'){ confirmKey=null; const n=rs.length; rs.forEach(r=>pushNote(r,{rm:1},'')); selRm={}; toast(n+' removed'); render(); } else { confirmKey='bulk'; render(); } }},(confirmKey==='bulk'?'Confirm: remove ':'Remove ')+rs.length+' ticked '+(rs.length===1?'task':'tasks')),
     el('button',{type:'button',class:'btn ghost',onclick:()=>{selRm={};confirmKey=null;render()}},'Clear ticks'))); }
+
+/* ---------- direct upload of PDF / PPT (shown only when the saving script supports it) ---------- */
+let CAN_UP=false, UP_MAX=15;
+async function checkCaps(){ try{ const c=await call('caps'); CAN_UP=!!(c&&c.upload); UP_MAX=(c&&c.maxMb)||15; if(CAN_UP&&!window.mBusy&&!picking&&!editing) render(); }catch(e){ CAN_UP=false; } }
+function upBtn(target,accept){ if(!CAN_UP) return el('span',{hidden:''}); const inp=el('input',{type:'file',accept,class:'upf'}), st=el('span',{class:'note'},'Or upload the file from this phone or computer (up to '+UP_MAX+' MB)');
+  inp.addEventListener('change',()=>{ const f=inp.files&&inp.files[0]; if(!f) return; if(f.size>UP_MAX*1048576){ toast('This file is larger than '+UP_MAX+' MB.',1); inp.value=''; return; }
+    st.textContent='Uploading '+f.name+' …'; inp.disabled=true; const rd=new FileReader();
+    rd.onload=async()=>{ try{ const b64=String(rd.result).split(',')[1]||''; const v=await call('upload',[f.name,f.type,b64,TOKEN]); target.value=v.url; st.textContent='Uploaded: '+f.name+'. Now save it below.'; toast('File uploaded'); }catch(e){ st.textContent='Could not upload. '+(e.message||''); toast(e.message||'Could not upload.',1); } inp.disabled=false; };
+    rd.onerror=()=>{ st.textContent='Could not read the file.'; inp.disabled=false; }; rd.readAsDataURL(f); });
+  return el('span',{class:'upw'},inp,st); }
 
 let outArm=0; $('meBtn').addEventListener('click',()=>{ if(!ME) return; if(Date.now()-outArm<4000){ setToken(''); lock(); outArm=0; } else { outArm=Date.now(); $('meBtn').textContent='Tap again to log out'; } });
 $('gateF').addEventListener('submit',async e=>{ e.preventDefault(); const n=$('gateN').value.trim(), w=$('gateW').value; if(!n){$('gateE').textContent='Type your name.';return} if(!w){$('gateE').textContent='Enter your password.';return}
