@@ -204,7 +204,7 @@ label.l{display:block;font-size:11.5px;font-weight:700;letter-spacing:.06em;text
 'use strict';
 var API_URL='https://script.google.com/macros/s/AKfycbw4OG5V07zPUjbFvfZr7-9YpcAG6W7cSJ6cJ84nY_chPehLlH0Tezv-jVsV95eExJv4/exec';/* paste the Web app URL (ends in /exec) between the quotes, or open the page once with ?api=URL */
 var GUIDE_URL='FIS-Tasks-and-Projects-Guide.pdf';
-var S={tok:'',me:'',admin:false,loaded:false,err:'',rev:'',busy:0,tasks:[],notes:[],projects:[],people:[],P:{},PJ:{},view:'home',scope:'me',group:'deadline',flt:'open',pj:'',pjp:'',period:'week',dp:'',dpg:'deadline',mx:false,cmp:{},confirm:null,redraw:null,demo:false,seen:{},base:0,imgc:{},open:''};
+var S={fp:'',tok:'',me:'',admin:false,loaded:false,err:'',rev:'',busy:0,tasks:[],notes:[],projects:[],people:[],P:{},PJ:{},view:'home',scope:'me',group:'deadline',flt:'open',pj:'',pjp:'',period:'week',dp:'',dpg:'deadline',mx:false,cmp:{},confirm:null,redraw:null,demo:false,seen:{},base:0,imgc:{},open:''};
 var $=function(s,r){return (r||document).querySelector(s)};
 var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
@@ -354,8 +354,14 @@ function groupTasks(list,mode,scope){
 function tasksHtml(){
   if(S.scope==='notes')return '<div class="seg">'+[['me','Given to me'],['by','Given by me'],['notes','My notes']].map(function(x){return '<button data-act="scope" data-v="'+x[0]+'" aria-pressed="'+(S.scope===x[0])+'">'+x[1]+'</button>'}).join('')+'</div>'+notesPage();
   var base=S.tasks.filter(function(t){return S.scope==='me'?has(t,S.me):(t.by===S.me)});
+  var pc={};base.forEach(function(t){(S.scope==='me'?[t.by||'?']:(t.assignees||[])).forEach(function(x){pc[x]=(pc[x]||0)+1})});
+  if(S.fp&&!pc[S.fp])S.fp='';
+  var pids=Object.keys(pc).filter(function(x){return x!=='?'}).sort(function(a,b){return pc[b]-pc[a]});
+  var pf=pids.length>1?'<div class="scroll"><button class="chip" data-act="fp" data-id="" aria-pressed="'+(!S.fp)+'">'+(S.scope==='me'?'From everyone':'Everyone')+' · '+base.length+'</button>'+pids.map(function(x){return '<button class="chip" data-act="fp" data-id="'+x+'" aria-pressed="'+(S.fp===x)+'">'+esc(fn1(x))+' · '+pc[x]+'</button>'}).join('')+'</div>':'';
+  if(S.fp)base=base.filter(function(t){return S.scope==='me'?t.by===S.fp:has(t,S.fp)});
   var list=base.filter(function(t){var s=stOf(t);return S.flt==='all'||(S.flt==='open'&&(s==='todo'||s==='working'||s==='rework'||s==='review'))||(S.flt==='review'&&s==='review')||(S.flt==='done'&&(s==='done'||s==='declined'))});
   var h='<div class="seg"><button data-act="scope" data-v="me" aria-pressed="'+(S.scope==='me')+'">Given to me</button><button data-act="scope" data-v="by" aria-pressed="'+(S.scope==='by')+'">Given by me</button><button data-act="scope" data-v="notes" aria-pressed="false">My notes</button></div>';
+  h+=pf;
   h+='<div class="scroll">'+[['deadline','By deadline'],['person',S.scope==='me'?'By who gave':'By person'],['project','By project'],['status','By status']].map(function(x){return '<button class="chip" data-act="grp" data-v="'+x[0]+'" aria-pressed="'+(S.group===x[0])+'">'+x[1]+'</button>'}).join('')+'</div>';
   h+='<div class="scroll">'+[['open','Open'],['review','In review'],['done','Done'],['all','All']].map(function(x){return '<button class="chip" data-act="flt" data-v="'+x[0]+'" aria-pressed="'+(S.flt===x[0])+'">'+x[1]+'</button>'}).join('')+'</div>';
   if(!list.length)return h+'<div class="empty"><b>Nothing here</b>'+(S.scope==='me'?'No tasks match this filter.':'You have not given any task yet. Tap + to allocate one.')+'</div>';
@@ -824,7 +830,8 @@ document.addEventListener('click',function(e){
   if(act==='nav'){S.view=v;S.dp='';if(v!=='projects')S.pj='';paint();window.scrollTo(0,0);return}
   if(act==='go'&&v==='notes'){S.view='tasks';S.scope='notes';paint();window.scrollTo(0,0);return}
   if(act==='go'){S.view='tasks';S.scope=v==='approve'?'by':'me';S.group='deadline';S.flt=v==='approve'?'review':'open';paint();window.scrollTo(0,0);return}
-  if(act==='scope'){S.scope=v;paint();return}
+  if(act==='scope'){S.scope=v;S.fp='';paint();return}
+  if(act==='fp'){S.fp=id||'';paint();return}
   if(act==='grp'){S.group=v;paint();return}
   if(act==='flt'){S.flt=v;paint();return}
   if(act==='period'){S.period=v;paint();return}
