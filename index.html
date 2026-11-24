@@ -405,6 +405,51 @@ details.tm.left summary{color:var(--muted)}
 details.ntfd{margin:10px 0 0;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
 details.ntfd summary{cursor:pointer;padding:10px 12px;font-weight:700;font-size:.88rem;display:flex;align-items:center;gap:6px}
 details.ntfd .ntf{margin:0;padding:0 10px 10px}details.ntfd .ntf h3{display:none}
+
+/* Compact top (24 Nov 2026): the header no longer sticks and takes about a quarter of the screen, so the absentees fit on one screen */
+header.top{position:static;padding:8px 0 9px}
+.titlerow{flex-wrap:nowrap;align-items:center;column-gap:8px}
+.fis{flex:0 0 auto;flex-basis:auto;margin:0;font-size:0;letter-spacing:0;text-decoration:none}
+.fis::before{content:'‹ Hub';font-family:var(--body);font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:4px 9px;display:inline-block}
+h1{font-size:1.22rem;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.month{font-size:.6rem;letter-spacing:.1em;white-space:nowrap}
+.search{margin-top:8px}
+.search input{padding:7px 36px 7px 12px;border-radius:10px}
+.tabs{margin-top:8px;gap:5px}
+.tab{padding:6px 11px;font-size:.86rem;border-radius:10px}
+.tab small{display:none}
+.whobar{margin-top:7px;font-size:.74rem;gap:2px 8px}
+.whobar select{padding:2px 6px;border-radius:8px}
+.whobar small{display:none}
+.notice{margin-top:8px;padding:8px 10px 10px}
+.nhead{gap:6px}
+.nhead .nav{width:32px;height:32px;font-size:18px;border-radius:10px}
+.ntitle h2{font-size:1.02rem}
+.ntitle .nmin{display:inline-flex;width:auto;margin:3px auto 0;padding:1px 9px;border:0;background:transparent;font-size:.7rem;font-weight:700;color:var(--muted);border-radius:999px;justify-content:center}
+#notice.min .ntitle .nmin{display:flex;flex-direction:column;background:var(--chip);padding:5px 10px;margin-top:5px;color:var(--ink)}
+.ntabs{margin:8px 0 6px;padding:3px}
+.ntabs button{min-height:38px;padding:4px 2px}
+.lgrp{margin-bottom:6px}
+.lgh{margin:2px 2px 4px}
+.lrow{flex-wrap:nowrap;padding:5px 10px;margin-bottom:3px;border-radius:9px;align-items:baseline}
+.lrow .xa{font-size:.88rem;flex:0 0 auto}
+.lrow .lm{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lrow .lst{flex:0 0 auto}
+.xr{padding:7px 10px}
+.wrap>header.top{display:flex;flex-wrap:wrap;align-items:center;column-gap:8px}
+header.top>.titlerow{flex:1 1 100%}
+header.top>.search{flex:1 1 50%;min-width:0;order:1}
+header.top>.whobar{flex:0 1 auto;order:2;margin-top:8px;max-width:48%}
+header.top>.whobar[hidden]{display:none}
+header.top>.whobar select{max-width:100%;width:150px;margin:0}
+header.top>.whobar label{font-size:0;display:flex}
+header.top>.whobar select{font-size:16px}
+header.top>.search{flex-basis:0}
+header.top>.tabs{flex:1 1 100%;order:3}
+.lgrp .lrow{margin:0;border-radius:0;border-width:0 0 1px;padding:4px 10px}
+.lgrp{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
+.lgrp .lgh{margin:0;padding:5px 10px 3px;background:var(--chip)}
+.lgrp .lrow:last-child{border-bottom:0}
 </style>
 </head>
 <body>
@@ -416,7 +461,7 @@ details.ntfd .ntf{margin:0;padding:0 10px 10px}details.ntfd .ntf h3{display:none
       <span class="month">September 2026</span>
     </div>
     <div class="search">
-      <input id="q" type="search" placeholder="Type a name to see all their duties" list="names" autocomplete="off" aria-label="Search by name">
+      <input id="q" type="search" placeholder="Search a name" list="names" autocomplete="off" aria-label="Search by name">
       <datalist id="names"></datalist>
       <datalist id="duties"></datalist>
       <datalist id="staffnames"></datalist>
@@ -519,7 +564,7 @@ Saturday Adjustment - 26/09
       <span class="month">September 2026</span>
     </div>
     <div class="search">
-      <input id="q" type="search" placeholder="Type a name to see all their duties" list="names" autocomplete="off" aria-label="Search by name">
+      <input id="q" type="search" placeholder="Search a name" list="names" autocomplete="off" aria-label="Search by name">
       <datalist id="names"></datalist>
       <datalist id="duties"></datalist>
       <datalist id="staffnames"></datalist>
@@ -1043,10 +1088,9 @@ function renderNotice(){
   $('#notice').innerHTML = `
     <div class="nhead">
       <button class="nav" id="prevDay" aria-label="Previous day">‹</button>
-      <div class="ntitle"><h2>${rel?rel+' · ':''}${esc(nice(DAY))}</h2><small>Staff leaves · adjustment · duty cover</small></div>
+      <div class="ntitle"><h2>${rel?rel+' · ':''}${esc(nice(DAY))}</h2><button type="button" class="nmin" id="nMin" aria-expanded="${!NMIN}">${NMIN ? '▾ Show details' : '▴ Hide details'}<span>${esc(nSummary())}</span></button></div>
       <button class="nav" id="nextDay" aria-label="Next day">›</button>
     </div>
-    <button type="button" class="nmin" id="nMin" aria-expanded="${!NMIN}">${NMIN ? '▾ Show details' : '▴ Hide details'}<span>${esc(nSummary())}</span></button>
     <div class="nbody">
     ${myBox()}${ciLine}
     <div class="ntabs" role="tablist">${tabs.map(([k, l, b]) => `<button type="button" role="tab" data-ntab="${k}" aria-selected="${k === NTAB}">${l}${b}</button>`).join('')}</div>
