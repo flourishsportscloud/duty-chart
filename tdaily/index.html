@@ -535,7 +535,7 @@ body.drvmode .datebox,body.drvmode .prog,body.drvmode #tabs,body.drvmode #subtab
 </div>
 <script>
 /* Self-update: phones keep an old copy of this page for a while, so check for a newer build and reload */
-const APP_V="202611241200";
+const APP_V="202611241500";
 (function(){let busy=false;async function chk(){if(busy||location.protocol==="file:")return;busy=true;
   try{const t=await (await fetch(location.pathname+"?nc="+Date.now(),{cache:"no-store"})).text(),m=t.match(/const APP_V="(\d+)"/);
     if(m&&m[1]!==APP_V){const u=new URL(location.href);u.searchParams.set("v",m[1]);location.replace(u.toString())}}catch(e){}busy=false}
@@ -1671,11 +1671,27 @@ function dutyCard(L,t,me,when){const rH=k=>k==="d"?"ड्राइवर":"क�
     <b>${esc(VEH_HI(x.r.label))}</b><small>${esc(x.r.label)}${(roster.area||{})[x.r.key]||(x.r.pre&&x.r.pre.area)?" · "+esc((roster.area||{})[x.r.key]||x.r.pre.area):""}${x.r.first&&vehNoOf(x.r.key)?" · "+esc(vehNoOf(x.r.key)):""}</small>
     <div class="pt">आप: <b>${rH(x.role)}</b>${x.hasPartner?`<br>साथ में ${rH(x.role==="d"?"c":"d")}: <b class="${x.pchanged?"chgt":""}">${x.partner?esc(pHi(x.partner))+" · "+esc(pName(x.partner)):"अभी तय नहीं · not decided"}</b>${ph?` <a href="tel:${esc(ph)}">📞 ${esc(ph)}</a>`:""}`:""}</div></div>`}).join("")}
 function renderDrv(){const b=$("drvBody");if(!b||tab!=="drv")return;
-  const ids=PEOPLE().filter(id=>roster.name[id]),me=ids.includes(drvMe)?drvMe:"";
-  const sel=`<label class="dsel"><span>${DRV_MODE?"आप कौन हैं? · Who are you?":"Driver app · see the screen of"}</span><select id="drv-me">${!me?`<option value="">— अपना नाम चुनें · choose your name —</option>`:""}${ids.map(id=>`<option value="${id}" ${id===me?"selected":""}>${esc(hi(id))} · ${esc(personName(id,id))} — ${esc(roleOf(id))}</option>`).join("")}</select></label>`;
+  const loaded=Object.keys(roster.name||{}).length>0,ids=PEOPLE().filter(id=>roster.name[id]),VL=vanList();
+  const vids=VL.map(v=>"van:"+v.id),me=ids.concat(vids).includes(drvMe)?drvMe:"";
+  const opt=id=>`<option value="${id}" ${id===me?"selected":""}>${esc(hi(id)&&hi(id)!==personName(id,"")?hi(id)+" · ":"")}${esc(personName(id,id))} — ${esc(roleOf(id))}</option>`;
+  const grp=(l,L)=>L.length?`<optgroup label="${l}">${L.join("")}</optgroup>`:"";
+  const dr=ids.filter(id=>/d$/.test(id)),co=ids.filter(id=>/c$/.test(id)),rs=ids.filter(id=>!/[dc]$/.test(id));
+  const opts=!loaded?`<option value="">नाम लोड हो रहे हैं… · loading names…</option>`:(!me?`<option value="">— अपना नाम चुनें · choose your name —</option>`:"")
+    +grp("ड्राइवर · Drivers",dr.map(opt))+grp("कंडक्टर · Conductors",co.map(opt))+grp("रिज़र्व · Reserve",rs.map(opt))
+    +grp("वैन ड्राइवर · Private vans",VL.map(v=>`<option value="van:${v.id}" ${"van:"+v.id===me?"selected":""}>${esc(v.driver||"—")} — ${esc(v.label)}</option>`));
+  const sig=opts;const old=$("drv-me");
+  const sel=`<label class="dsel"><span>${DRV_MODE?"आप कौन हैं? · Who are you?":"Driver app · see the screen of"}</span><select id="drv-me" ${loaded?"":"disabled"}>${opts}</select></label>`;
+  if(old&&document.activeElement===old&&old.dataset.sig===sig)return;
   const link=location.origin+location.pathname.replace(/index\.html$/,"")+"?driver=1";
   const top=DRV_MODE?"":`<div class="pg-h"><h2>Driver app</h2><span>what each driver and conductor sees on his phone · link for drivers: <a href="${esc(link)}" target="_blank" rel="noopener">?driver=1</a></span><button class="btn sm" id="drvCopy" style="margin-left:auto">Copy link for drivers</button></div>`;
-  if(!me){b.innerHTML=top+`<div class="card2">${sel}</div>`;return}
+  const fin=()=>{const x=$("drv-me");if(x)x.dataset.sig=sig};
+  if(!me){b.innerHTML=top+`<div class="card2">${sel}</div>`;fin();return}
+  if(me.startsWith("van:")){const v=VL.find(x=>"van:"+x.id===me)||{},x=vanOf(v.id||""),[c,t]=vanStatus(v,x),vl=location.origin+location.pathname.replace(/index\.html$/,"")+"van.html";
+    b.innerHTML=top+`<div class="card2">${sel}</div>
+    <div class="dtop"><div class="dh"><span>आपकी वैन · Your van</span><b>${dS(date)}</b></div><div class="dbig"><b>${esc(VEH_HI(v.label||""))}</b><small>${esc(v.driver||"")}${v.no?" · "+esc(v.no):""}${v.phone?" · "+esc(v.phone):""}</small>
+     <div class="pt">सुबह रूट शुरू: <b>${h12(v.start||"05:30")}</b> · दोपहर: <b>${h12(v.astart||"13:15")}</b><br>आज: <b class="${c==="red"?"chgt":""}">${esc(t)}</b></div></div></div>
+    ${roster.vanNotice?`<div class="card2 warn"><b>📢 सूचना · Notice</b><p style="white-space:pre-wrap">${esc(roster.vanNotice)}</p></div>`:""}
+    <div class="card2"><a class="btn primary" style="display:block;text-align:center;text-decoration:none;padding:14px" href="${esc(vl)}">▶ रूट शुरू करें / खत्म करें · Open Van Duty</a></div>`;fin();return}
   const t=tmrData(),nd=nextDay(date),T=t?dutyOf(me,t):[],D=dutyOf(me,state);
   const vid=(D.find(x=>x.r.first)||{}).r?.key||(slotOf(me)||{}).v?.id||"",v=VEH.find(x=>x.id===vid);
   const key=vid?vehKey(vid):null,R=(state.vcr||{})[vid]||{};
@@ -1689,7 +1705,7 @@ function renderDrv(){const b=$("drvBody");if(!b||tab!=="drv")return;
      <div class="vcc" style="border:0;margin:0;padding:0">${vcItemsHTML(v)}</div>
      <div class="rvw ${R.s||""}">${R.s?`सुपरवाइज़र ने देखा: <b>${R.s==="ok"?"✓ ठीक":"✗ समस्या"}</b> · ${esc(R.by||"")} ${R.at?h12(R.at):""}${R.n?"<br>"+esc(R.n):""}`:"सुपरवाइज़र ने अभी नहीं देखा · not reviewed yet"}</div></div>
     <div class="card2"><div class="sh"><b>आपकी गाड़ी के कागज़ात और सर्विस</b><small>${esc(vehNoOf(vid)||"vehicle number not linked")}</small></div>${docs+sv||`<div class="empty2">${vehState==="ok"?"Vehicle number not linked — office: Fleet review › vehicle no.":"Loading…"}</div>`}</div>`:""}
-   <div class="card2"><div class="sh"><b>सभी गाड़ियाँ · बकाया काम</b><small>documents &amp; service due</small></div>${all.length?`<div class="nl">${all.map(x=>`<div><span class="who">${esc(vehLabelOfKey(x.k)||"")} ${esc((veh[x.k]||SV[x.k]||{}).no||x.k)}<small>${esc(x.t)}</small></span><span class="v ${x.st==="exp"||x.st==="none"?"red":"amb"}">${esc(x.why)}</span></div>`).join("")}</div>`:`<div class="empty2">✓ सब ठीक · nothing due</div>`}</div>`}
+   <div class="card2"><div class="sh"><b>सभी गाड़ियाँ · बकाया काम</b><small>documents &amp; service due</small></div>${all.length?`<div class="nl">${all.map(x=>`<div><span class="who">${esc(vehLabelOfKey(x.k)||"")} ${esc((veh[x.k]||SV[x.k]||{}).no||x.k)}<small>${esc(x.t)}</small></span><span class="v ${x.st==="exp"||x.st==="none"?"red":"amb"}">${esc(x.why)}</span></div>`).join("")}</div>`:`<div class="empty2">✓ सब ठीक · nothing due</div>`}</div>`;fin()}
 document.addEventListener("click",async e=>{if(!e.target.closest("#drvCopy"))return;const l=location.origin+location.pathname.replace(/index\.html$/,"")+"?driver=1";try{await navigator.clipboard.writeText(l);setStatus("Driver link copied")}catch(x){setStatus(l)}});
 /* supervisor review of vehicle checks */
 let vrFilter="all";
