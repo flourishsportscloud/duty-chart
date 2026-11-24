@@ -3,7 +3,8 @@
  * it only adds the requests td_since, td_set, td_update and td_photo to that project's API.
  * Data lives in the Google Sheet "Transport Daily Data" (first tab: key | coll | json | updated | rev; tab Log).
  * Salary records (salary/...) are sent only to the people named in Script Property TD_ADMINS
- * (first names, comma-separated, e.g. "harsh, kamal").
+ * (first names, comma-separated, e.g. "harsh, rahul"). If Script Property TD_SAL_PIN is set, salary records also
+ * need that PIN, so typing an admin's name at login is not enough.
  */
 var TD_ = (function(){
 const TZ = 'Asia/Kolkata';
@@ -18,20 +19,23 @@ function log_(who, key, what){ try{ const s = ss(); let l = s.getSheetByName('Lo
   l.appendRow([Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd HH:mm:ss'), who, key, what]); }catch(e){} }
 const first = n => String(n||'').trim().split(/\s+/)[0].toLowerCase().replace(/[^a-z]/g,'');
 function admin_(who){ return String(props().getProperty('TD_ADMINS')||'').toLowerCase().split(/[,\s]+/).filter(Boolean).indexOf(first(who)) >= 0; }
-const may_ = (key, who) => key.indexOf('salary/') !== 0 || admin_(who);
+function pinSet_(){ return String(props().getProperty('TD_SAL_PIN')||'').trim(); }
+function pinOk_(pin){ const p = pinSet_(); return !p || String(pin||'').trim() === p; }
+const may_ = (key, who, pin) => key.indexOf('salary/') !== 0 || (admin_(who) && pinOk_(pin));
 function rows_(){ const s = docs_(), n = s.getLastRow(); return n < 2 ? [] : s.getRange(2,1,n-1,5).getValues(); }
 function rev_(){ return Number(props().getProperty('TD_REV') || '1'); }
 function merge_(a, b){ for(const k in b){ const v = b[k];
   if(v && typeof v === 'object' && !Array.isArray(v)){ if(!a[k] || typeof a[k] !== 'object' || Array.isArray(a[k])) a[k] = {}; merge_(a[k], v); } else a[k] = v; } return a; }
-function since(who, since){
+function since(who, since, pin){
   since = Number(since) || 0; const out = {}, cur = rev_();
-  rows_().forEach(r => { const k = String(r[0]); if(!k || k.indexOf('photos/') === 0 || Number(r[4]) <= since || !may_(k, who)) return;
+  rows_().forEach(r => { const k = String(r[0]); if(!k || k.indexOf('photos/') === 0 || Number(r[4]) <= since || !may_(k, who, pin)) return;
     try{ out[k] = JSON.parse(r[2]); }catch(e){} });
-  return {docs: out, rev: cur, admin: admin_(who), full: since === 0};
+  const adm = admin_(who);
+  return {docs: out, rev: cur, admin: adm, full: since === 0, salPin: !adm ? 'no' : (pinSet_() ? (pinOk_(pin) ? 'ok' : 'need') : 'none')};
 }
-function write(who, key, obj, isMerge){
+function write(who, key, obj, isMerge, pin){
   key = String(key||''); if(!KEY_RE.test(key)) fail('Bad key.');
-  if(!may_(key, who)) fail('Only Transport admins can change salaries.');
+  if(!may_(key, who, pin)) fail('Only Harsh Yadav and Rahul Yadav (with the salary PIN) can change salaries.');
   if(!obj || typeof obj !== 'object') fail('Nothing to save.');
   const lock = LockService.getScriptLock(); if(!lock.tryLock(20000)) fail('Server busy, try again.');
   try{
@@ -54,8 +58,8 @@ return {since: since, write: write, photo: photo};
 })();
 // The Student Entry Exit doPost checks the staff login (me_) before calling these.
 Object.assign(API, {
-  td_since: function(token, rev){ return TD_.since(me_(token), rev); },
-  td_set: function(token, key, obj){ return TD_.write(me_(token), key, obj, false); },
-  td_update: function(token, key, obj){ return TD_.write(me_(token), key, obj, true); },
+  td_since: function(token, rev, pin){ return TD_.since(me_(token), rev, pin); },
+  td_set: function(token, key, obj, pin){ return TD_.write(me_(token), key, obj, false, pin); },
+  td_update: function(token, key, obj, pin){ return TD_.write(me_(token), key, obj, true, pin); },
   td_photo: function(token, key){ return TD_.photo(me_(token), key); }
 });
