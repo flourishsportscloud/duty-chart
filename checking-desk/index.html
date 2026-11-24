@@ -516,6 +516,39 @@ td .bar i{display:block;height:100%;background:var(--good)}
   .seg button{padding:10px 15px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* v9 compact time plan */
+.tll{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--navy);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+.tl{border-top:1px solid var(--line);border-left:5px solid #d9d4c7}.tl:first-child{border-top:0}
+.tl.s-checked{border-left-color:var(--good)}.tl.s-due{border-left-color:var(--warn)}.tl.s-late{border-left-color:var(--bad);background:color-mix(in srgb,var(--bad) 4%,#fff)}.tl.s-now{border-left-color:var(--gold);background:color-mix(in srgb,var(--gold) 12%,#fff)}
+.tl-row{display:grid;grid-template-columns:62px minmax(0,1fr) auto;gap:9px;align-items:center;padding:7px 9px;min-height:52px;cursor:pointer}
+.tl.duty .tl-row{min-height:42px;padding-top:4px;padding-bottom:4px}
+.tl-t{font-variant-numeric:tabular-nums;line-height:1.2}.tl-t b{display:block;font-size:12.5px;color:var(--navy2)}.tl-t span{display:block;font-size:11px;color:var(--mute)}
+.tl-title{display:flex;gap:6px;align-items:baseline;min-width:0}
+.tl-title .tt{font:700 14.5px/1.25 var(--head);color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.tl.duty .tt{color:var(--mute);font-weight:600}
+.tl-title .sec{font-style:normal;font-size:11px;font-weight:700;background:var(--cream);border:1px solid var(--line);border-radius:6px;padding:0 6px;color:var(--navy2);flex:none}
+.tl-meta{font-size:11.5px;color:var(--mute);line-height:1.3;margin-top:1px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tl-meta b{font-weight:700}.m-ok{color:var(--good)}.m-warn{color:var(--warn)}.m-bad{color:var(--bad)}.m-gold{color:var(--gold-ink)}.m-mute{color:var(--mute)}.m-mentor{color:var(--purple)}.m-sec{color:var(--navy2)}
+.tr-act{display:flex;gap:5px;justify-content:flex-end;align-items:center;min-width:110px}
+.tb{min-width:34px;height:32px;padding:0 9px;border:1px solid var(--line);background:#fff;border-radius:9px;font-weight:700;font-size:13px;color:var(--navy);cursor:pointer}
+.tb.ok{background:var(--good-bg);color:var(--good);border-color:color-mix(in srgb,var(--good) 40%,#fff)}.tb.wn{background:var(--warn-bg);color:var(--warn);border-color:color-mix(in srgb,var(--warn) 40%,#fff)}.tb.wide{min-width:96px}.tb:disabled{opacity:.45;cursor:not-allowed}
+.tchip{display:inline-flex;justify-content:center;align-items:center;min-width:100px;height:32px;border-radius:9px;font-weight:700;font-size:12.5px;border:0;cursor:pointer;background:var(--cream);color:var(--mute)}
+.tchip.ok{background:var(--good);color:#fff}.tchip.wn{background:var(--warn);color:#fff}.tchip.pu{background:var(--pur-bg);color:var(--purple)}
+.tmr{font-weight:700;font-size:12px;color:var(--gold-ink);background:var(--gold-soft);border-radius:9px;padding:7px 8px;white-space:nowrap}
+.tl-panel{padding:8px 12px 14px;display:flex;flex-direction:column;gap:10px;background:var(--cream2);border-top:1px dashed var(--line)}
+.tl-full{font:700 15px/1.3 var(--head);color:var(--navy)}
+.timing{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.tm-l{background:#fff;border:1px solid var(--line);border-radius:10px;padding:5px 4px;text-align:center}.tm-l span{display:block;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);font-weight:700}.tm-l b{font-size:12px;color:var(--navy2);font-variant-numeric:tabular-nums}
+.seg button.on-pend{background:var(--navy);color:#fff}.seg button{padding:10px 16px}
+.viewas{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between;background:var(--gold-soft);border:1px solid color-mix(in srgb,var(--gold) 55%,#fff);border-left:5px solid var(--gold);border-radius:12px;padding:9px 12px;margin:0 0 10px}
+.viewas i{font-style:normal;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-ink);font-weight:700}.viewas b{font:700 16px var(--head);color:var(--navy)}.viewas small{display:block;color:var(--mute);font-size:11.5px}
+.d2{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--warn);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+.d2h{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;background:var(--warn-bg);font-size:12.5px;font-weight:700;color:var(--warn)}
+.d2r{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px 12px;border-top:1px solid var(--line)}
+.d2r b{font:700 14px var(--head);color:var(--navy);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.d2r small{font-size:11.5px;color:var(--mute)}
+.cmx{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--sky);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+.cmx .d2r{border-top:1px solid var(--line)}.cmx .dt{font-size:11px;font-weight:700;color:var(--sky);text-transform:uppercase;letter-spacing:.08em}
+.cmx .grp{padding:6px 12px;background:var(--sky-bg);font-size:11px;font-weight:700;color:var(--sky);letter-spacing:.1em;text-transform:uppercase}
 </style>
 </head>
 <body>
@@ -626,7 +659,7 @@ function resolveMe(){
 }
 const isDirector=()=>!!(S.me&&S.me.role==='admin');
 const canEditU=u=>!!(S.canWrite&&S.me&&(S.me.role==='admin'||(S.me.role==='head'&&S.meUnits.indexOf(u)>=0)));
-const canMarkU=u=>!!(S.canWrite&&S.me&&(canEditU(u)||(S.me.role==='cm'&&S.meUnits.indexOf(u)>=0)));
+const canMarkU=u=>!!(S.canWrite&&S.me&&S.me.role!=='guest');
 function isMgr(){return canEditU(S.unit)}
 function visibleUnits(){return UNITS}
 const whoName=()=>S.name||(S.me&&S.me.name)||'Staff';
@@ -672,6 +705,29 @@ function liveInfo(s,date){
   return {txt:'Ended '+mins(nm-e)+' ago',cls:isCheck(s)?'p-bad':'p-pending'};
 }
 
+
+/* ---------- execution timing, dues, coming up ---------- */
+function execInfo(s){
+  if(!s.startAt)return null;
+  const run=!s.endAt&&(!s.cm||s.cm==='pending'),end=s.endAt||Date.now();
+  return {run:run,m:Math.max(0,Math.round((end-s.startAt)/60000)),plan:(s.from&&s.to)?toMin(s.to)-toMin(s.from):0};
+}
+function carryList(unit,date){
+  const out=[];
+  for(let i=1;i<=7;i++){
+    const d=addDays(date,-i);
+    carryItems(d,unit).forEach(s=>{
+      let done=false;
+      for(let j=i-1;j>=0&&!done;j--){if(slotsOf(addDays(date,-j),unit).some(x=>x.id==='c_'+s.id))done=true}
+      if(!done)out.push(Object.assign({},s,{_from:d}));
+    });
+  }
+  return out;
+}
+const TPC_ASOF='24 Nov 2026';
+const TPC=[["2026-11-12","1","EVS","L-13",["Assignment","Test"],"2026-11-16","ABC","Sunita, Priyanshi Bhojak, Kanika"],["2026-11-12","10","English","FP L-9",["Notebook","Assignment","Test notebook"],"2026-11-16","B","Shaan"],["2026-11-12","10","Maths","L-14",["Notebook","Test notebook"],"2026-11-16","AB","Vipul, Amit"],["2026-11-12","2","EVS","L-12",["Assignment","Test"],"2026-11-16","ABC","Deepmala, Deepali, Chhavi"],["2026-11-12","3","Science","L-8",["Assignment","Test"],"2026-11-16","ABC","Tina, Vaneshwari, Saroj"],["2026-11-12","4","Science","L-8",["Assignment","Test"],"2026-11-16","ABC","Pooja, Priya Shekhawat, Gauri"],["2026-11-12","5","Science","L-9",["Assignment","Test"],"2026-11-16","ABC","Anuradha, Reema, Divyanshi"],["2026-11-12","6","S.St.","L-8",["Notebook","Assignment","Test notebook"],"2026-11-16","ABC","Shailesh, Ishita, Monika"],["2026-11-12","7","Hindi I","L-12",["Notebook","Assignment","Test notebook"],"2026-11-16","ABC","Tripti, Ajita, Bharti"],["2026-11-12","8","Maths","L-7",["Notebook","Assignment","Test notebook"],"2026-11-16","ABC","Vipul, Amit, Neha J"],["2026-11-12","8","Science","L-10",["Notebook","Assignment","Test notebook"],"2026-11-16","ABC","Pallavi, Shreya, Ritika"],["2026-11-12","9","Hindi","L-11",["Notebook","Assignment","Test notebook"],"2026-11-16","A","Shobha"],["2026-11-12","9","Science","L-11",["Notebook","Assignment","Test notebook"],"2026-11-16","B","Nisha"],["2026-11-13","10","S.St.","Geo-6",["Notebook","Assignment","Test notebook"],"2026-11-17","A","Jatin"],["2026-11-13","3","Hindi I","L-11",["Notebook","Test"],"2026-11-17","ABC","Geeta, Preeti, Anita"],["2026-11-13","4","Hindi II","L-8",["Notebook","Test"],"2026-11-17","ABC","Geeta, Preeti, Anita"],["2026-11-13","5","Hindi II","L-8",["Notebook","Test"],"2026-11-17","ABC","Geeta, Preeti, Anita"],["2026-11-13","6","English II","L-7",["Notebook","Assignment","Test notebook"],"2026-11-17","ABC","Swati, Yavnika, Jyotshna"],["2026-11-13","7","Hindi I","L-13",["Notebook","Assignment","Test notebook"],"2026-11-17","ABC","Tripti, Ajita, Bharti"],["2026-11-13","8","Sanskrit","L-11",["Notebook","Assignment","Test notebook"],"2026-11-17","ABC","Tripti, Ajita, Bharti"],["2026-11-16","10","English","FP L-9",["Notebook","Assignment","Test notebook"],"2026-11-18","A","Shaan"],["2026-11-16","10","Science","L-13",["Notebook","Assignment","Test notebook"],"2026-11-18","B","Pallavi"],["2026-11-16","2","Hindi I","L-10",["Notebook","Assignment","Test"],"2026-11-18","ABC","Geeta, Preeti, Anita"],["2026-11-16","6","Hindi II","L-14",["Notebook","Assignment","Test notebook"],"2026-11-18","ABC","Tripti, Ajita, Bharti"],["2026-11-16","7","English I","Poem 5",["Notebook","Assignment","Test notebook"],"2026-11-18","ABC","Swati, Yavnika, Jyotshna"],["2026-11-16","8","Sanskrit","L-12",["Notebook","Assignment","Test notebook"],"2026-11-18","ABC","Tripti, Ajita, Bharti"],["2026-11-17","1","Maths","L-12",["Assignment","Test"],"2026-11-19","ABC","Sunita, Priyanshi Bhojak, Kanika"],["2026-11-17","10","Hindi","Sparsh L-7",["Notebook","Assignment","Test notebook"],"2026-11-19","A","Shobha"],["2026-11-17","10","S.St.","Geo-6",["Notebook","Assignment","Test notebook"],"2026-11-19","B","Radha"],["2026-11-17","2","Maths","L-8",["Assignment","Test"],"2026-11-19","ABC","Deepmala, Deepali, Chhavi"],["2026-11-17","4","S.St.","L-12",["Assignment","Test"],"2026-11-19","ABC","Pooja, Priya Shekhawat, Gauri"],["2026-11-17","5","English II","L-6",["Assignment","Test"],"2026-11-19","ABC","Anuradha, Reema, Divyanshi"],["2026-11-17","7","GK","Pages so far",["Test notebook"],"2026-11-19","ABC","Shailesh, Ishita, Monika"],["2026-11-17","8","English I","Poem 4 & Poem 5",["Notebook","Assignment","Test notebook"],"2026-11-19","ABC","Swati, Yavnika, Jyotshna"],["2026-11-17","9","S.St.","Part-II L-1",["Notebook","Assignment","Test notebook"],"2026-11-19","B","Jatin"],["2026-11-18","1","English I","L-8",["Assignment","Test"],"2026-11-20","ABC","Sunita, Priyanshi Bhojak, Kanika"],["2026-11-18","10","Hindi","Sparsh L-14",["Notebook","Assignment","Test notebook"],"2026-11-20","B","Shobha"],["2026-11-18","10","S.St.","Geo-7",["Notebook","Assignment","Test notebook"],"2026-11-20","A","Jatin"],["2026-11-18","2","GK","Pages 28\u201331",["Test"],"2026-11-20","ABC","Deepmala, Deepali, Chhavi"],["2026-11-18","3","GK","Pages 30\u201332, 44, 49",["Test"],"2026-11-20","ABC","Tina, Vaneshwari, Saroj"],["2026-11-18","5","S.St.","L-11",["Assignment","Test"],"2026-11-20","ABC","Anuradha, Reema, Divyanshi"],["2026-11-18","7","Hindi II","L-13",["Notebook","Assignment","Test notebook"],"2026-11-20","ABC","Tripti, Ajita, Bharti"],["2026-11-18","8","English I","L-8",["Notebook","Assignment","Test notebook"],"2026-11-20","ABC","Swati, Yavnika, Jyotshna"],["2026-11-18","9","Science","L-11",["Notebook","Assignment","Test notebook"],"2026-11-20","A","Nisha"],["2026-11-19","1","Hindi","L-16",["Notebook","Assignment","Test"],"2026-11-21","ABC","Geeta, Preeti, Anita"],["2026-11-19","10","English","FF L-9",["Notebook","Assignment","Test notebook"],"2026-11-21","B","Shaan"],["2026-11-19","2","English I","L-8",["Assignment","Test"],"2026-11-21","ABC","Deepmala, Deepali, Chhavi"],["2026-11-19","4","Hindi I","L-11",["Notebook","Test"],"2026-11-21","ABC","Geeta, Preeti, Anita"],["2026-11-19","5","Hindi I","L-11",["Notebook","Test"],"2026-11-21","ABC","Geeta, Preeti, Anita"],["2026-11-19","6","S.St.","L-3",["Notebook","Assignment","Test notebook"],"2026-11-21","ABC","Shailesh, Ishita, Monika"],["2026-11-19","7","English I","L-8",["Notebook","Assignment","Test notebook"],"2026-11-21","ABC","Swati, Yavnika, Jyotshna"],["2026-11-19","8","Sanskrit","L-13",["Notebook","Assignment","Test notebook"],"2026-11-21","AC","Tripti, Bharti"],["2026-11-19","8","Sanskrit","L-13",["Notebook","Assignment","Test notebook","Book"],"2026-11-21","B","Ajita"],["2026-11-19","9","Hindi","L-11",["Notebook","Assignment","Test notebook"],"2026-11-21","B","Poonam Gaur"],["2026-11-20","1","EVS","L-14 (A, B, C, D)",["Assignment"],"2026-11-20","ABC","Sunita, Priyanshi Bhojak, Kanika"],["2026-11-20","1","English II","Story \u2013 The Fox and the Grapes",["Assignment","Test"],"2026-11-23","ABC","Sunita, Priyanshi Bhojak, Kanika"],["2026-11-20","1","Hindi","\u092e\u0947\u0930\u093e \u092a\u0930\u093f\u091a\u092f",["Notebook"],"2026-11-20","ABC","Geeta, Preeti, Anita"],["2026-11-20","10","English","FF L-7",["Assignment"],"2026-11-20","A","Shaan"],["2026-11-20","10","English","FF L-8",["Assignment"],"2026-11-20","A","Shaan"],["2026-11-20","10","English","FF L-9",["Assignment"],"2026-11-20","A","Shaan"],["2026-11-20","10","English","FF Poem-8",["Assignment"],"2026-11-20","A","Shaan"],["2026-11-20","10","Hindi","Sparsh L-13",["Notebook","Assignment","Test notebook"],"2026-11-23","A","Shobha"],["2026-11-20","10","Maths","HW Notebook",["Notebook"],"2026-11-20","A","Vipul"],["2026-11-20","10","S.St.","Geo-7",["Notebook","Assignment","Test notebook"],"2026-11-23","B","Radha"],["2026-11-20","10","Science","Diwali Assignment",["Assignment"],"2026-11-20","AB","Nisha"],["2026-11-20","11","Accountancy","L-18",["Test notebook"],"2026-11-20","A","Jitesh"],["2026-11-20","11","Accountancy","L-19",["Notebook"],"2026-11-20","A","Jitesh"],["2026-11-20","11","Business Studies","L-7",["Test notebook","Notebook","Assignment"],"2026-11-20","A","Jitesh"],["2026-11-20","11","Informatics Practices","Class Test",["Test notebook"],"2026-11-20","A","Himanshu"],["2026-11-20","11","Informatics Practices","L-8",["Test notebook"],"2026-11-20","A","Jitesh"],["2026-11-20","11","Microeconomics","L-9",["Notebook","Assignment","Test notebook"],"2026-11-20","A","Manisha"],["2026-11-20","11","Statistics","Ch-8",["Assignment"],"2026-11-20","A","Manisha"],["2026-11-20","2","All subjects","Assignment ticking",["Assignment"],"2026-11-20","C","Chhavi"],["2026-11-20","2","English II","L-8",["Assignment","Test"],"2026-11-23","ABC","Deepmala, Deepali, Chhavi"],["2026-11-20","2","GK","Assignment 8",["Assignment"],"2026-11-20","C","Chhavi"],["2026-11-20","2","GK","Assignment 8 (ticking)",["Assignment"],"2026-11-20","A","Deepmala"],["2026-11-20","2","Maths","Assignment 13.1",["Assignment"],"2026-11-20","AB","Deepmala, Deepali"],["2026-11-20","3","Hindi I","L-12",["Book Exercise","\u0915\u0920\u093f\u0928 \u0936\u092c\u094d\u0926, \u0936\u092c\u094d\u0926\u093e\u0930\u094d\u0925"],"2026-11-20","ABC","Geeta, Preeti, Anita"],["2026-11-20","3","S.St.","L-12",["Assignment","Test"],"2026-11-23","ABC","Tina, Vaneshwari, Saroj"],["2026-11-20","4","All subjects","Holiday Assignment",["Assignment"],"2026-11-20","B","Priya Shekhawat"],["2026-11-20","4","English I","L-8 (A, B, C, D)",["Assignment"],"2026-11-20","ABC","Pooja, Priya Shekhawat, Gauri"],["2026-11-20","4","Hindi II","\u091a\u093f\u0924\u094d\u0930 \u0935\u0930\u094d\u0923\u0928",["Book Exercise"],"2026-11-20","ABC","Geeta, Preeti, Anita"],["2026-11-20","4","Maths","Assignment 5.2",["Assignment"],"2026-11-20","A","Pooja"],["2026-11-20","4","Maths","Assignment 5.3",["Assignment"],"2026-11-20","ABC","Pooja, Priya Shekhawat, Gauri"],["2026-11-20","5","Hindi II","\u0935\u093f\u0932\u094b\u092e \u0936\u092c\u094d\u0926",["Notebook"],"2026-11-20","ABC","Geeta, Preeti, Anita"],["2026-11-20","5","Maths","L-10",["Assignment","Test"],"2026-11-23","ABC","Anuradha, Reema, Divyanshi"],["2026-11-20","5","S.St.","Google Sheets",["Google Sheets"],"2026-11-20","A","Anuradha"],["2026-11-20","6","English I","L-8",["Notebook","Assignment","Test notebook"],"2026-11-23","ABC","Swati, Yavnika, Jyotshna"],["2026-11-20","6","English II","L-8",["Assignment"],"2026-11-20","ABC","Swati, Yavnika, Jyotshna"],["2026-11-20","6","Maths","HW Notebook",["Notebook"],"2026-11-20","A","Amit"],["2026-11-20","6","Science","L-9",["Assignment"],"2026-11-20","AC","Pallavi, Ritika"],["2026-11-20","7","English I","Diwali Assignment",["Assignment"],"2026-11-20","A","Swati"],["2026-11-20","7","Maths","Home Assignment 7D",["Assignment"],"2026-11-20","A","Vipul"],["2026-11-20","7","Maths","L-7",["Test notebook","Assignment"],"2026-11-20","ABC","Vipul, Madhu, Neha J"],["2026-11-20","7","S.St.","Diwali Assignment",["Assignment"],"2026-11-20","C","Monika"],["2026-11-20","8","Computer","Chapter 7",["Notebook","Assignment","Test notebook"],"2026-11-23","ABC","Himanshu"],["2026-11-20","8","English I","L-7",["Assignment"],"2026-11-20","BC","Yavnika, Jyotshna"],["2026-11-20","8","Hindi I","L-11",["Notebook","Assignment","Test notebook"],"2026-11-23","ABC","Tripti, Ajita, Bharti"],["2026-11-20","8","Maths","Home Assignment 1A",["Assignment"],"2026-11-20","ABC","Vipul, Amit, Neha J"],["2026-11-20","8","Maths","Home Assignment 1B",["Assignment"],"2026-11-20","ABC","Vipul, Amit, Neha J"],["2026-11-20","8","S.St.","Diwali Assignment",["Assignment"],"2026-11-20","C","Monika"],["2026-11-20","9","English","L-6",["Assignment"],"2026-11-20","B","Shaan"],["2026-11-20","9","Maths","Home Assignment 13.1",["Assignment"],"2026-11-20","A","Amit"],["2026-11-20","9","Maths","Home Assignment 13.2",["Assignment"],"2026-11-20","A","Amit"],["2026-11-20","9","Maths","L-10",["Notebook","Test notebook"],"2026-11-23","AB","Amit, Vipul"],["2026-11-20","9","Sanskrit","L-1",["Test notebook"],"2026-11-20","A","Shobha"],["2026-11-20","9","Science","Diwali Assignment",["Assignment"],"2026-11-20","AB","Nisha"],["2026-11-21","10","English","FF L-9",["Notebook","Assignment","Test notebook"],"2026-11-25","A","Shaan"],["2026-11-21","3","Maths","L-7",["Assignment","Test"],"2026-11-25","ABC","Tina, Vaneshwari, Saroj"],["2026-11-21","4","English I","L-8",["Assignment","Test"],"2026-11-25","ABC","Pooja, Priya Shekhawat, Gauri"],["2026-11-21","6","Hindi II","L-15",["Notebook","Assignment","Test notebook"],"2026-11-25","ABC","Tripti, Ajita, Bharti"],["2026-11-21","6","Maths","Assignment-6 (Days 1\u20133)",["Assignment"],"2026-11-25","ABC","Amit, Madhu, Neha J"],["2026-11-21","7","S.St.","Part II L-1",["Notebook","Assignment","Test notebook"],"2026-11-25","ABC","Shailesh, Ishita, Monika"],["2026-11-21","8","Hindi II","L-13",["Notebook","Assignment","Test notebook"],"2026-11-25","ABC","Tripti, Ajita, Bharti"],["2026-11-23","1","EVS","L-14",["Assignment","Test"],"2026-11-26","ABC","Sunita, Priyanshi Bhojak, Kanika"],["2026-11-23","1","Hindi","\u092e\u0947\u0930\u093e \u092a\u0930\u093f\u091a\u092f, \u0932\u093f\u0902\u0917 \u092c\u0926\u0932\u094b and \u0938\u0902\u091c\u094d\u091e\u093e",["Notebook","Assignment","Test"],"2026-11-26","ABC","Geeta, Preeti, Anita"],["2026-11-23","10","English","Grammar",["Notebook","Assignment","Test notebook"],"2026-11-26","AB","Shaan, Renu"],["2026-11-23","2","Hindi II","L-8",["Notebook","Test"],"2026-11-26","ABC","Geeta, Preeti, Anita"],["2026-11-23","3","Hindi II","L-9",["Notebook","Test"],"2026-11-26","ABC","Geeta, Preeti, Anita"],["2026-11-23","4","Maths","L-5",["Assignment","Test"],"2026-11-26","ABC","Pooja, Priya Shekhawat, Gauri"],["2026-11-23","5","English I","L-8",["Assignment","Test"],"2026-11-26","ABC","Anuradha, Reema, Divyanshi"],["2026-11-23","6","Computer","Chapter 6",["Notebook","Assignment","Test notebook"],"2026-11-26","ABC","Himanshu, Richa"],["2026-11-23","6","English I","Poem 5",["Notebook","Assignment","Test notebook"],"2026-11-26","ABC","Swati, Yavnika, Jyotshna"],["2026-11-23","6","Maths","L-6",["Notebook","Assignment","Test notebook"],"2026-11-26","ABC","Amit, Madhu, Neha J"],["2026-11-23","7","Hindi II","L-14",["Notebook","Assignment","Test notebook"],"2026-11-26","ABC","Tripti, Ajita, Bharti"],["2026-11-23","8","Hindi II","L-17",["Notebook","Assignment","Test notebook"],"2026-11-26","ABC","Tripti, Ajita, Bharti"],["2026-11-23","9","S.St.","Part-II L-1",["Notebook","Assignment","Test notebook"],"2026-11-26","A","Radha"],["2026-11-25","10","S.St.","Revision",["Notebook","Assignment","Test notebook"],"2026-11-27","AB","Jatin, Radha"],["2026-11-25","10","Science","L-12",["Notebook","Assignment","Test notebook"],"2026-11-27","B","Nisha"],["2026-11-25","2","EVS","L-13",["Assignment","Test"],"2026-11-27","ABC","Deepmala, Deepali, Chhavi"],["2026-11-25","3","English II","L-7",["Assignment","Test"],"2026-11-27","ABC","Tina, Vaneshwari, Saroj"],["2026-11-25","5","GK","Pages 33\u201338, 50, 56",["Test"],"2026-11-27","ABC","Anuradha, Reema, Divyanshi"],["2026-11-25","6","Sanskrit","L-11",["Notebook","Assignment","Test notebook"],"2026-11-27","ABC","Tripti, Ajita, Bharti"],["2026-11-25","7","Maths","L-7",["Notebook","Assignment","Test notebook"],"2026-11-27","ABC","Vipul, Madhu, Neha J"],["2026-11-25","8","Hindi I","L-12",["Notebook","Assignment","Test notebook"],"2026-11-27","ABC","Tripti, Ajita, Bharti"],["2026-11-25","9","English","L-7",["Notebook","Assignment","Test notebook"],"2026-11-27","A","Shaan"],["2026-11-25","9","Science","L-12",["Notebook","Assignment","Test notebook"],"2026-11-27","B","Nisha"],["2026-11-26","1","GK","Pages 27\u201328",["Test"],"2026-11-28","ABC","Sunita, Priyanshi Bhojak, Kanika"],["2026-11-26","10","Hindi","Sparsh L-14",["Notebook","Assignment","Test notebook"],"2026-11-28","A","Shobha"],["2026-11-26","2","Maths","L-13",["Assignment","Test"],"2026-11-28","ABC","Deepmala, Deepali, Chhavi"],["2026-11-26","3","English I","L-8",["Assignment","Test"],"2026-11-28","ABC","Tina, Vaneshwari, Saroj"],["2026-11-26","4","Science","L-9",["Assignment","Test"],"2026-11-28","ABC","Pooja, Priya Shekhawat, Gauri"],["2026-11-26","5","Hindi II","L-9",["Notebook","Test"],"2026-11-28","ABC","Geeta, Preeti, Anita"],["2026-11-26","6","Hindi II","L-16",["Notebook","Assignment","Test notebook"],"2026-11-28","ABC","Tripti, Ajita, Bharti"],["2026-11-26","7","English II","L-8",["Notebook","Assignment","Test notebook"],"2026-11-28","ABC","Swati, Yavnika, Jyotshna"],["2026-11-26","9","Computer","Chapter 4",["Notebook","Assignment","Test notebook"],"2026-11-28","AB","To be assigned"],["2026-11-27","1","English I","L-9",["Assignment","Test"],"2026-11-30","ABC","Sunita, Priyanshi Bhojak, Kanika"],["2026-11-27","10","English","FF Poem-8",["Notebook","Assignment","Test notebook"],"2026-11-30","B","Renu"],["2026-11-27","10","Science","L-12",["Notebook","Assignment","Test notebook"],"2026-11-30","A","Nisha"],["2026-11-27","4","Hindi II","L-9",["Notebook","Test"],"2026-11-30","ABC","Geeta, Preeti, Anita"],["2026-11-27","6","English II","L-8",["Notebook","Assignment","Test notebook"],"2026-11-30","ABC","Swati, Yavnika, Jyotshna"],["2026-11-27","7","Hindi I","L-14",["Notebook","Assignment","Test notebook"],"2026-11-30","ABC","Tripti, Ajita, Bharti"],["2026-11-27","9","S.St.","Part-II L-2",["Notebook","Assignment","Test notebook"],"2026-11-30","B","Jatin"],["2026-11-28","2","English I","L-9",["Assignment","Test"],"2026-12-01","ABC","Deepmala, Deepali, Chhavi"],["2026-11-28","3","Hindi II","L-17",["Notebook","Test"],"2026-12-01","ABC","Geeta, Preeti, Anita"],["2026-11-28","4","GK","Pages 28\u201331, 44, 49",["Test"],"2026-12-01","ABC","Pooja, Priya Shekhawat, Gauri"],["2026-11-28","5","Science","L-10",["Assignment","Test"],"2026-12-01","ABC","Anuradha, Reema, Divyanshi"],["2026-11-28","6","Sanskrit","L-12",["Notebook","Assignment","Test notebook"],"2026-12-01","ABC","Tripti, Ajita, Bharti"],["2026-11-28","9","English","L-7",["Notebook","Assignment","Test notebook"],"2026-12-01","B","Shaan"],["2026-11-28","9","Sanskrit","L-1",["Notebook","Assignment","Test notebook"],"2026-12-01","A","Shobha"],["2026-11-30","1","Computer","L-6",["Test"],"2026-12-02","ABC","Sunita, Priyanshi Bhojak, Kanika"],["2026-11-30","10","English","FF Poem-8",["Notebook","Assignment","Test notebook"],"2026-12-02","A","Shaan"],["2026-11-30","3","Science","L-9",["Assignment","Test"],"2026-12-02","ABC","Tina, Vaneshwari, Saroj"],["2026-11-30","4","S.St.","L-13",["Assignment","Test"],"2026-12-02","ABC","Pooja, Priya Shekhawat, Gauri"],["2026-11-30","5","English II","L-7",["Assignment","Test"],"2026-12-02","ABC","Anuradha, Reema, Divyanshi"],["2026-11-30","6","Hindi I","L-15",["Notebook","Assignment","Test notebook"],"2026-12-02","ABC","Tripti, Ajita, Bharti"],["2026-11-30","7","Science","L-10",["Notebook","Assignment","Test notebook"],"2026-12-02","ABC","Pallavi, Shreya, Ritika"],["2026-11-30","9","S.St.","Part-II L-2",["Notebook","Assignment","Test notebook"],"2026-12-02","A","Radha"],["2026-12-01","2","Computer","L-6",["Test"],"2026-12-03","ABC","Deepmala, Deepali, Chhavi"],["2026-12-01","5","S.St.","L-12",["Assignment","Test"],"2026-12-03","ABC","Anuradha, Reema, Divyanshi"],["2026-12-01","7","Hindi II","L-15",["Notebook","Assignment","Test notebook"],"2026-12-03","ABC","Tripti, Ajita, Bharti"],["2026-12-01","8","S.St.","Part II L-4",["Notebook","Assignment","Test notebook"],"2026-12-03","ABC","Shailesh, Ishita, Monika"],["2026-12-01","9","English","Poem-7",["Notebook","Assignment","Test notebook"],"2026-12-03","A","Shaan"],["2026-12-01","9","Sanskrit","L-1",["Notebook","Assignment","Test notebook"],"2026-12-03","B","Poonam Gaur"],["2026-12-02","2","Hindi I","L-11",["Notebook","Assignment","Test"],"2026-12-04","ABC","Geeta, Preeti, Anita"],["2026-12-02","3","S.St.","L-13",["Assignment","Test"],"2026-12-04","ABC","Tina, Vaneshwari, Saroj"],["2026-12-02","6","Science","L-10",["Notebook","Assignment","Test notebook"],"2026-12-04","ABC","Pallavi, Shreya, Ritika"],["2026-12-02","7","Sanskrit","L-12",["Notebook","Assignment","Test notebook"],"2026-12-04","ABC","Tripti, Ajita, Bharti"],["2026-12-02","8","Hindi I","L-13",["Notebook","Assignment","Test notebook"],"2026-12-04","ABC","Tripti, Ajita, Bharti"],["2026-12-02","9","Hindi","L-7",["Notebook","Assignment","Test notebook"],"2026-12-04","A","Shobha"],["2026-12-02","9","S.St.","Part-II L-4",["Notebook","Assignment","Test notebook"],"2026-12-04","B","Jatin"],["2026-12-02","9","Sanskrit","L-3",["Notebook","Assignment","Test notebook"],"2026-12-04","A","Shobha"],["2026-12-03","3","Hindi I","L-12",["Notebook","Test"],"2026-12-07","ABC","Geeta, Preeti, Anita"],["2026-12-03","4","English I","L-9",["Assignment","Test"],"2026-12-07","ABC","Pooja, Priya Shekhawat, Gauri"],["2026-12-03","6","Sanskrit","L-13",["Notebook","Assignment","Test notebook"],"2026-12-07","ABC","Tripti, Ajita, Bharti"],["2026-12-03","9","Sanskrit","L-3",["Notebook","Assignment","Test notebook"],"2026-12-07","B","Poonam Gaur"],["2026-12-04","4","Hindi I","L-12",["Notebook","Test"],"2026-12-08","ABC","Geeta, Preeti, Anita"],["2026-12-04","6","Hindi I","L-16",["Notebook","Assignment","Test notebook"],"2026-12-08","ABC","Tripti, Ajita, Bharti"],["2026-12-04","7","S.St.","Part II L-2",["Notebook","Assignment","Test notebook"],"2026-12-08","ABC","Shailesh, Ishita, Monika"],["2026-12-04","8","English II","L-9",["Notebook","Assignment","Test notebook"],"2026-12-08","ABC","Swati, Yavnika, Jyotshna"],["2026-12-05","4","Hindi I","L-13",["Notebook","Test"],"2026-12-08","ABC","Geeta, Preeti, Anita"],["2026-12-05","5","English I","L-9",["Assignment","Test"],"2026-12-08","ABC","Anuradha, Reema, Divyanshi"]];
+function tpcMat(n){n=String(n).toLowerCase();if(/assign/.test(n))return 'Assignment';if(/test/.test(n))return 'Test';if(/exercise|book/.test(n)&&!/notebook/.test(n))return 'Book';if(/note/.test(n))return 'Notebook';return 'Other'}
+
 /* ---------- writes (serial per document) ---------- */
 const queues={};
 function queue(key,fn){
@@ -712,8 +768,8 @@ function writeTheme(t){
 function subscribeDays(){
   if(!S.db)return;
   if(unsubDays){unsubDays();unsubDays=null}
-  const a=S.date,b=addDays(S.date,1),c0=addDays(S.date,-1);
-  unsubDays=S.db.collection('days').where('date','in',[c0,a,b]).onSnapshot(snap=>{
+  const rng=[];for(let i=-7;i<=1;i++)rng.push(addDays(S.date,i));
+  unsubDays=S.db.collection('days').where('date','in',rng).onSnapshot(snap=>{
     const next={};
     snap.docs.forEach(d=>{next[d.id]=d.data()});
     S.days=next;
@@ -761,7 +817,7 @@ function render(){
   else if(S.tab==='desks'||S.tab==='dash')h+=renderDesks();
   else if(S.tab==='setup')h+=renderSetup();
   else h+=renderBoard();
-  h+='<div class="ver">CM Checking Desk · version 8 · 22 Nov 2026</div>';
+  h+='<div class="ver">CM Checking Desk · version 9 · 24 Nov 2026</div>';
   if(S.lightbox)h+='<div class="modal light" data-act="img-close"><img src="/_blob/'+esc(S.lightbox)+'" alt="Error photo"></div>';
   if(S.toast)h+='<div class="toast" role="status">'+esc(S.toast)+'</div>';
   m.innerHTML=h;
@@ -824,24 +880,26 @@ function renderBoard(){
   const planning=S.date>todayStr();
   if(visibleUnits().every(x=>x.id!==S.unit))S.unit=visibleUnits()[0].id;
   const u=unitById(S.unit)||UNITS[0],sp=split(S.date,u.id),st=stats(S.date,u.id),edit=canEditU(u.id);
-  let h=bar2(true)+classChips();
+  let h=bar2(true)+(S.viewAs?viewAsBar():classChips());
   h+='<div class="cstrip"><div><div class="eyebrow">'+(planning?'Planning ahead':S.date<todayStr()?'Earlier day':'Today')+' · time based</div><h2>'+esc(u.label)+' · '+'Checking plan · '+dayShort(S.date)+'</h2><div class="who">'+personPills(u)+'</div></div>'+liveStrip(sp)+'</div>';
   if(planning)h+='<div class="hintbar"><b>Planning this day:</b> 1) Dues from the day before come in below. 2) Give each task a start and end time. 3) The Class Manager sees the plan in the morning and marks Checked or Due.</div>';
   h+='<div class="kpis"><div class="kpi g"><span>Done</span><b>'+st.done+'/'+st.items+'</b></div><div class="kpi w"><span>Notebooks due</span><b>'+st.dueNb+'</b></div><div class="kpi"><span>Reviewed</span><b>'+st.reviewed+'/'+st.toReview+'</b></div><div class="kpi '+(st.errors?'r':'')+'"><span>Errors</span><b>'+st.errors+'</b></div></div>';
   if(edit){
-    h+=carryPanel(u,S.date);
-    h+='<div class="tools" style="margin:12px 0;display:flex;gap:8px;flex-wrap:wrap">'+(S.open.qa?'':'<button class="btn gold" data-act="q-open">+ Add task</button>')+(sp.timed.length?'':'<button class="btn ghost" data-act="template">Add usual duties and diary</button>')+'</div>';
+    h+='<div class="tools" style="margin:12px 0;display:flex;gap:8px;flex-wrap:wrap">'+(S.open.qa?'':'<button class="btn gold" data-act="q-open">+ Add task</button>')+'<button class="btn ghost" data-act="mvall-open">Hand over unfinished…</button>'+(sp.timed.length?'':'<button class="btn ghost" data-act="template">Add usual duties and diary</button>')+'</div>';
     if(S.open.qa)h+=quickAdd(u);
+    if(S.open.mvall)h+=mvAllPanel(u);
   }
+  h+=secHead('Time plan',sp.timed.length+' task'+(sp.timed.length===1?'':'s')+' with a time');
+  if(!sp.timed.length)h+='<div class="empty"><b>No times set yet</b>'+(edit?'Set a start and end time on a waiting item, or add a task above.':'The manager will set the times.')+'</div>';
+  else h+='<div class="tll">'+sp.timed.map(trow).join('')+'</div>';
   const poolCM=sp.pool.filter(isCM),poolMentor=sp.pool.filter(s=>isCheck(s)&&s.by==='Mentor');
   if(poolCM.length||poolMentor.length||edit){
     h+=secHead('Waiting for a time',poolCM.length+' for the Class Manager'+(poolMentor.length?' · '+poolMentor.length+' for mentors':''));
     if(!poolCM.length&&!poolMentor.length)h+='<div class="empty"><b>Nothing waiting</b>Collected books, notebooks and dues appear here. Give each a start and end time.</div>';
     else h+='<div class="ptable pool2"><div class="phead"><span>Work to check</span><span>'+(edit?'Start – End':'')+'</span><span></span></div>'+poolCM.concat(poolMentor).map((s,i)=>poolRow(s,i+1)).join('')+'</div>';
   }
-  h+=secHead('Time plan',sp.timed.length+' task'+(sp.timed.length===1?'':'s')+' with a time');
-  if(!sp.timed.length)h+='<div class="empty"><b>No times set yet</b>'+(edit?'Set a start and end time on a waiting item, or add a task above.':'The manager will set the times.')+'</div>';
-  else h+='<div class="ptable"><div class="phead"><span>Time</span><span>Task</span><span>Status</span><span></span></div>'+sp.timed.map(prow).join('')+'</div>';
+  h+=duesBlock(u,S.date);
+  h+=comingBlock(u,S.date);
   return h;
 }
 function tags(s){
@@ -865,23 +923,54 @@ function remarkRow(s,canMark){
   const id=s.id;
   return '<div class="remark"><label for="rm-'+id+'">Remark</label><input id="rm-'+id+'" type="text" data-rm="'+id+'" value="'+esc(s.cmRemark||'')+'" placeholder="'+(canMark?'Add a remark':'No remark')+'"'+(canMark?'':' readonly')+'></div>';
 }
+function metaLine(s,date){
+  const t=(s.title||'').toLowerCase(),p=[];
+  [s.material&&s.material!=='Other'?s.material:'',s.subject,s.lesson].forEach(x=>{if(x&&t.indexOf(String(x).toLowerCase())<0&&p.indexOf(esc(x))<0)p.push(esc(x))});
+  if(s.sections)p.unshift('<b class="m-sec">Sec '+esc(s.sections)+'</b>');
+  if(s.by==='Mentor')p.push('<b class="m-mentor">Mentor checks</b>');
+  if(s.carry)p.push('<b class="m-warn">Carried due</b>');
+  const d=durTxt(s.from,s.to);if(d)p.push(d);
+  const ex=execInfo(s);
+  if(ex&&ex.run)p.push('<b class="m-gold">Started '+clockTxt(s.startAt)+' · '+mins(ex.m)+' so far</b>');
+  else if(ex&&s.endAt)p.push('<b class="m-ok">Took '+mins(ex.m)+(ex.plan?' of '+mins(ex.plan):'')+'</b>');
+  if(isCM(s)&&(s.rv==='yes'||s.rv==='no'))p.push(s.rv==='no'?'<b class="m-warn">'+num(s.notDone)+' not checked</b>':(num(s.errors)?'<b class="m-bad">'+num(s.errors)+' error'+(num(s.errors)===1?'':'s')+'</b>':'<b class="m-ok">Reviewed · no errors</b>'));
+  else if(isCM(s)&&s.cm&&s.cm!=='pending')p.push('<span class="m-mute">Review pending</span>');
+  const li=liveInfo(s,date);
+  if(li){const bad=li.cls.indexOf('p-bad')>=0,gold=li.cls.indexOf('p-gold')>=0;p.push('<b class="'+(bad?'m-bad':gold?'m-gold':'m-mute')+'">'+(bad?'Not updated · ':'')+li.txt+'</b>')}
+  return p.join(' · ');
+}
+function movePanel(s){
+  const id=s.id,opts=UNITS.filter(u=>u.id!==S.unit).map(u=>{const r=roster(u.id);return '<button class="cpc" data-act="mv-do" data-id="'+id+'" data-v="'+u.id+'">'+esc(u.label)+' · '+(esc(r.cm)||'no CM')+'</button>'}).join('');
+  return '<div class="panel"><h4>Move this task to another Class Manager</h4><div class="chips">'+opts+'</div><div class="note">It leaves this plan and shows in that class’s plan on this day with the same time.</div><div class="row"><button class="btn ghost small" data-act="close" data-id="'+id+'">Cancel</button></div></div>';
+}
+function mvAllPanel(u){
+  const n=slotsOf(S.date,u.id).filter(x=>isCM(x)&&(!x.cm||x.cm==='pending')).length;
+  const opts=UNITS.filter(x=>x.id!==u.id).map(x=>{const r=roster(x.id);return '<button class="cpc" data-act="mvall-do" data-v="'+x.id+'">'+esc(x.label)+' · '+(esc(r.cm)||'no CM')+'</button>'}).join('');
+  return '<div class="strip qa"><div class="sh"><b>Hand over unfinished work</b><span>'+n+' task'+(n===1?'':'s')+' not yet marked in '+esc(u.label)+'</span></div><div class="chips">'+opts+'</div><div class="row"><button class="btn ghost" data-act="mvall-close">Close</button></div></div>';
+}
+function viewAsBar(){
+  const p=people().find(x=>x.name===S.viewAs&&x.role!=='admin'),us=p?p.units.map(unitById).filter(Boolean):[];
+  return '<div class="viewas"><div><i>Viewing as</i> <b>'+esc(S.viewAs)+'</b>'+(p?' · '+ROLE_LABEL[p.role]:'')+'<small>This is exactly what they see. You can change anything.</small></div>'+(us.length>1?'<div class="chips">'+us.map(x=>'<button class="cpc'+(x.id===S.unit?' on':'')+'" data-act="unit" data-v="'+x.id+'">'+esc(x.label)+'</button>').join('')+'</div>':'')+'<button class="qb" data-act="view-off">← Back to CM Desk</button></div>';
+}
 function cardBody(s){
   const date=S.date,unit=S.unit,id=s.id,open=S.open[id];
   const locked=isLocked(s,date),canMark=canMarkU(unit);
-  let body='';
-  if(s.note)body+='<div class="instr"><b>Manager’s note</b>'+esc(s.note)+'</div>';
+  let body='<div class="tl-full">'+esc(s.title||s.subject||'Checking')+(s.sections?' · Sec '+esc(s.sections):'')+'</div>';
+  if(s.note)body+='<div class="instr"><b>Note</b>'+esc(s.note)+'</div>';
   if(isCM(s)){
     const chk=s.cm==='checked',due=s.cm==='due',rv=(s.rv==='yes'||s.rv==='no');
     body+='<div class="vstats"><div><span>Bundle</span><strong>'+(num(s.bundle)||'–')+'</strong></div><div class="'+(chk?'g':'')+'"><span>Checked</span><strong>'+(chk?(num(s.bundle)||'✓'):'–')+'</strong></div><div class="'+(due?'w':'')+'"><span>Due</span><strong>'+(due?num(s.due):'–')+'</strong></div><div class="'+(rv&&num(s.errors)?'r':'')+'"><span>Errors</span><strong>'+(rv?num(s.errors):'–')+'</strong></div></div>';
   }
   if(!isCheck(s)){
-    body+='<div><div class="seg"><button class="'+(s.cm==='checked'?'on-good':'')+'" data-act="cm-checked" data-id="'+id+'"'+(canMark?'':' disabled')+'>Done</button><button data-act="cm-reset" data-id="'+id+'"'+(canMark?'':' disabled')+'>Reset</button></div></div>';
+    body+='<div><div class="seg"><button class="'+(s.cm!=='checked'?'on-pend':'')+'" data-act="cm-reset" data-id="'+id+'"'+(canMark?'':' disabled')+'>Not done</button><button class="'+(s.cm==='checked'?'on-good':'')+'" data-act="cm-checked" data-id="'+id+'"'+(canMark?'':' disabled')+'>Done</button></div></div>';
   }else if(s.by==='Mentor'){
     body+='<div class="note">This work is checked by the subject mentor, not the Class Manager.</div>';
   }else{
     if(locked)body+='<div class="lock">Written work in class is still on. Checking opens at '+fmt(s.after)+'.</div>';
-    const dis=(canMark&&!locked)?'':' disabled';
-    body+='<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><div class="seg" role="group" aria-label="Checking status"><button class="'+(s.cm==='checked'?'on-good':'')+'" data-act="cm-checked" data-id="'+id+'"'+dis+'>Yes, checked</button><button class="'+(s.cm==='due'?'on-warn':'')+'" data-act="cm-due-open" data-id="'+id+'"'+dis+'>Due</button></div>'+(s.cm&&s.cm!=='pending'&&canMark?'<button class="btn ghost small" data-act="cm-reset" data-id="'+id+'">Undo</button>':'')+'</div>';
+    const ex=execInfo(s),dis=(canMark&&!locked)?'':' disabled';
+    body+='<div class="timing"><div class="tm-l"><span>Planned</span><b>'+(s.from?fmt(s.from).replace(' ',''):'–')+(s.to?'–'+fmt(s.to).replace(' ',''):'')+'</b></div><div class="tm-l"><span>Started</span><b>'+(s.startAt?clockTxt(s.startAt):'–')+'</b></div><div class="tm-l"><span>Finished</span><b>'+(s.endAt?clockTxt(s.endAt):'–')+'</b></div><div class="tm-l"><span>Took</span><b>'+(ex?mins(ex.m):'–')+'</b></div></div>';
+    body+='<div class="row">'+(s.startAt?'<button class="qb" data-act="tl-unstart" data-id="'+id+'"'+(canMark?'':' disabled')+'>Clear start time</button>':'<button class="qb ok" data-act="tl-start" data-id="'+id+'"'+(canMark?'':' disabled')+'>▶ Start now</button>')+'<span class="note">Start, then Checked or Due. The time taken is saved by itself.</span></div>';
+    body+='<div class="seg" role="group" aria-label="Checking status"><button class="'+(!s.cm||s.cm==='pending'?'on-pend':'')+'" data-act="cm-reset" data-id="'+id+'"'+(canMark?'':' disabled')+'>Pending</button><button class="'+(s.cm==='checked'?'on-good':'')+'" data-act="cm-checked" data-id="'+id+'"'+dis+'>Checked</button><button class="'+(s.cm==='due'?'on-warn':'')+'" data-act="cm-due-open" data-id="'+id+'"'+dis+'>Due</button></div>';
     if(open==='due'){
       const d=S.draft['d:'+id]||{};
       body+='<div class="panel"><h4>How many are due?</h4><div class="row"><div class="field"><label for="due-'+id+'">Notebooks due</label><input id="due-'+id+'" type="number" min="0" inputmode="numeric" data-d="d:'+id+'" data-k="due" value="'+esc(d.due!=null?d.due:'')+'"></div><div class="field grow"><label for="dr-'+id+'">Reason or remark</label><input id="dr-'+id+'" type="text" data-d="d:'+id+'" data-k="remark" value="'+esc(d.remark||'')+'" placeholder="Absent students, not submitted"></div></div><div class="row"><button class="btn small" data-act="cm-due-save" data-id="'+id+'">Save due</button><button class="btn ghost small" data-act="close" data-id="'+id+'">Cancel</button></div></div>';
@@ -893,10 +982,51 @@ function cardBody(s){
   }
   body+=remarkRow(s,canMark);
   if(open==='dup')body+=dupPanel(s);
-  if(isMgr())body+='<div class="row"><button class="btn ghost small" data-act="edit-open" data-id="'+id+'">Edit block</button>'+(isCheck(s)?'<button class="btn ghost small" data-act="dup-open" data-id="'+id+'">Copy to sections</button>':'')+'</div>';
+  if(open==='move')body+=movePanel(s);
+  if(isMgr())body+='<div class="row"><button class="btn ghost small" data-act="edit-open" data-id="'+id+'">Edit block</button>'+(isCheck(s)?'<button class="btn ghost small" data-act="dup-open" data-id="'+id+'">Copy to sections</button>':'')+'<button class="btn ghost small" data-act="mv-open" data-id="'+id+'">Move to another CM</button></div>';
   return body;
 }
-
+function trow(s){
+  const date=S.date,unit=S.unit,id=s.id,open=S.open[id];
+  if(open==='edit')return '<div class="tl">'+editForm(s,false)+'</div>';
+  const chk=isCheck(s),cm=isCM(s),can=canMarkU(unit),locked=isLocked(s,date),ex=execInfo(s),dis=(can&&!locked)?'':' disabled';
+  const sc=s.cm==='checked'?' s-checked':s.cm==='due'?' s-due':isLate(s,date)?' s-late':isNow(s,date)?' s-now':'';
+  const det=open==='more'||open==='due'||open==='dup'||open==='move',tg=det?'close':'more';
+  let act='';
+  if(!chk)act='<button class="tb wide'+(s.cm==='checked'?' ok':'')+'" data-act="'+(s.cm==='checked'?'cm-reset':'cm-checked')+'" data-id="'+id+'"'+(can?'':' disabled')+'>'+(s.cm==='checked'?'✓ Done':'Mark done')+'</button>';
+  else if(!cm)act='<span class="tchip pu">Mentor</span>';
+  else if(s.cm==='checked')act='<button class="tchip ok" data-act="'+tg+'" data-id="'+id+'">✓ Checked</button>';
+  else if(s.cm==='due')act='<button class="tchip wn" data-act="'+tg+'" data-id="'+id+'">Due '+num(s.due)+'</button>';
+  else{
+    const first=ex&&ex.run?'<span class="tmr" title="Running">▶ '+ex.m+'m</span>':(date===todayStr()?'<button class="tb" data-act="tl-start" data-id="'+id+'" aria-label="Start" title="Start timer"'+(can?'':' disabled')+'>▶</button>':'');
+    act=first+'<button class="tb ok" data-act="cm-checked" data-id="'+id+'" aria-label="Checked" title="Checked"'+dis+'>✓</button><button class="tb wn" data-act="cm-due-open" data-id="'+id+'" aria-label="Due"'+dis+'>Due</button>';
+  }
+  const ml=metaLine(s,date);
+  return '<div class="tl'+(chk?'':' duty')+sc+'"><div class="tl-row" data-act="'+tg+'" data-id="'+id+'"><div class="tl-t"><b>'+fmt(s.from)+'</b><span>'+fmt(s.to)+'</span></div><div class="tl-b"><div class="tl-title"><span class="tt">'+esc(s.title||s.subject||'Checking')+'</span>'+'</div>'+(ml?'<div class="tl-meta">'+ml+'</div>':'')+'</div><div class="tr-act">'+act+'</div></div>'+(det?'<div class="tl-panel">'+cardBody(s)+'</div>':'')+'</div>';
+}
+function duesBlock(u,date){
+  const items=carryList(u.id,date);
+  if(!items.length)return '';
+  const can=canMarkU(u.id);
+  let h=secHead('Dues from earlier days',items.length+' not yet in this day’s plan')+'<div class="d2"><div class="d2h"><span>Work still pending from before</span>'+(can?'<button class="qb ok" data-act="carry-all">Add all to this day</button>':'')+'</div>';
+  items.forEach(s=>{
+    const t=[s.subject,s.lesson,s.material].filter(Boolean).join(' · ')||s.title||'Checking';
+    h+='<div class="d2r"><div style="min-width:0"><b>'+esc(t)+(s.sections?' · Sec '+esc(s.sections):'')+'</b><small>'+(s.cm==='due'?'<span class="m-warn"><b>'+num(s.due)+' due</b></span>':'<span class="m-bad"><b>Not updated</b></span>')+' · from '+dayShort(s._from)+(s.cmRemark?' · '+esc(s.cmRemark):'')+'</small></div>'+(can?'<button class="qb" data-act="carry-one" data-id="'+s.id+'">+ Add</button>':'')+'</div>';
+  });
+  return h+'</div>';
+}
+function comingBlock(u,date){
+  const cn=u.id.slice(1),end=addDays(date,4);
+  const idx=[];TPC.forEach((r,i)=>{if(r[1]===cn&&r[5]>=date&&r[0]<=end)idx.push(i)});
+  if(!idx.length)return '';
+  const now=idx.filter(i=>TPC[i][0]<=date),next=idx.filter(i=>TPC[i][0]>date),can=canMarkU(u.id),have=slotsOf(date,u.id).map(x=>x.id);
+  const row=(i,lbl)=>{const r=TPC[i],added=have.indexOf('tp'+i+'_0')>=0;return '<div class="d2r"><div style="min-width:0"><b>'+esc(r[2])+' · '+esc(r[3])+'</b><small><span class="dt">'+lbl+'</span> · '+(r[6]?'Sec '+esc(r[6])+' · ':'')+esc(r[4].join(', '))+(r[7]?' · '+esc(r[7]):'')+' · check by '+dayShort(r[5])+'</small></div>'+(added?'<span class="pill p-good">Added</span>':(can?'<button class="qb" data-act="tpc-add" data-id="'+i+'">+ Add</button>':''))+'</div>'};
+  let h=secHead('Coming from the teachers’ checking plan','From Teacher Preparation & Checking · saved '+TPC_ASOF)+'<div class="cmx">';
+  if(now.length){h+='<div class="grp">To check now · '+now.length+'</div>'+now.slice(0,S.open.tpcAll?99:6).map(i=>row(i,'Open since '+dayShort(TPC[i][0]))).join('')}
+  if(next.length){h+='<div class="grp">Coming next · '+next.length+'</div>'+next.slice(0,S.open.tpcAll?99:6).map(i=>row(i,dayShort(TPC[i][0]))).join('')}
+  if(now.length>6||next.length>6)h+='<div class="d2r"><button class="qb" data-act="tpc-more">'+(S.open.tpcAll?'Show fewer':'Show all')+'</button><span></span></div>';
+  return h+'</div>';
+}
 function prow(s){
   const date=S.date,unit=S.unit,id=s.id,open=S.open[id];
   if(open==='edit')return '<div class="prw">'+editForm(s,false)+'</div>';
@@ -1054,7 +1184,15 @@ function perfLine(p){
 }
 function personCard(p){
   const us=(p.role==='admin'?[]:p.units).map(unitById).filter(Boolean);
-  return '<div class="pcard"><div class="pc-top"><div class="av">'+esc(p.name.charAt(0).toUpperCase())+'</div><div><b>'+esc(p.name)+'</b><div class="note">'+ROLE_LABEL[p.role]+'</div></div></div>'+perfLine(p)+'<div class="note" style="margin:8px 0 4px">Open plan</div><div class="chips">'+us.map(u=>'<button class="cpc" data-act="open-class" data-v="'+u.id+'">'+esc(u.label)+'</button>').join('')+'</div><div class="row" style="margin-top:8px"><button class="btn ghost small" data-act="who" data-v="'+esc(p.name)+'">See only '+esc(p.name)+'’s classes</button></div></div>';
+  return '<div class="pcard"><div class="pc-top"><div class="av">'+esc(p.name.charAt(0).toUpperCase())+'</div><div><b>'+esc(p.name)+'</b><div class="note">'+ROLE_LABEL[p.role]+'</div></div></div>'+perfLine(p)+'<button class="btn gold small" data-act="view-as" data-v="'+esc(p.name)+'" style="margin:10px 0 2px;width:100%">See '+esc(p.name.split(' ')[0])+'’s day plan</button><div class="note" style="margin:8px 0 4px">Open plan</div><div class="chips">'+us.map(u=>'<button class="cpc" data-act="open-class" data-v="'+u.id+'">'+esc(u.label)+'</button>').join('')+'</div><div class="row" style="margin-top:8px"><button class="btn ghost small" data-act="who" data-v="'+esc(p.name)+'">See only '+esc(p.name)+'’s classes</button></div></div>';
+}
+function renderExec(sl){
+  const by={};
+  sl.forEach(x=>{const s=x.s;if(!s.startAt||!s.endAt)return;const r=roster(x.u.id),nm=s.cmBy&&s.cmBy!=='CM'?s.cmBy:(r.cm||x.u.label);const o=by[nm]||(by[nm]={n:0,took:0,plan:0,over:0});const m=Math.round((s.endAt-s.startAt)/60000),pl=s.from&&s.to?toMin(s.to)-toMin(s.from):0;o.n++;o.took+=m;o.plan+=pl;if(pl&&m>pl)o.over++});
+  const k=Object.keys(by);
+  let h=secHead('Time taken','Start to Finish, saved when the Class Manager taps ▶ and then Checked or Due');
+  h+=k.length?'<div class="rtable"><div class="rh"><span>Class Manager</span><span>Timed</span><span>Avg taken / plan</span><span>Over plan</span></div>'+k.map(n=>{const o=by[n];return '<div class="rr"><span><b>'+esc(n)+'</b></span><span>'+o.n+'</span><span>'+mins(o.took/o.n)+(o.plan?' / '+mins(o.plan/o.n):'')+'</span><span>'+o.over+'</span></div>'}).join('')+'</div>':'<div class="empty"><b>No timed work yet</b>Tap ▶ on a block, then Checked or Due. The time taken appears here.</div>';
+  return h;
 }
 function renderReports(sc,sl){
   let h='';
@@ -1069,6 +1207,7 @@ function renderReports(sc,sl){
     if(s.cm&&s.cm!=='pending'&&s.cmAt){o.marked++;const d=new Date(s.cmAt),same=ymd(d)===S.date,mm=d.getHours()*60+d.getMinutes();if(same&&mm<=toMin(s.to)+5)o.ontime++;else o.late++}else o.open++});
   const cn=Object.keys(cms);
   h+=cn.length?'<div class="pgrid">'+cn.map(n=>{const o=cms[n],pc=o.marked?Math.round(100*o.ontime/o.marked):0;return '<div class="pcard"><div class="pc-top"><div class="av">'+esc(n.charAt(0).toUpperCase())+'</div><div><b>'+esc(n)+'</b><div class="note">'+o.plan+' timed task'+(o.plan===1?'':'s')+' · '+mins(o.mins)+' planned</div></div></div><div class="perf"><span>Marked on time <b>'+o.ontime+'</b></span><span>Marked late <b>'+o.late+'</b></span><span>Not marked yet <b>'+o.open+'</b></span><span>On-time rate <b>'+(o.marked?pc+'%':'—')+'</b></span></div></div>'}).join('')+'</div>':'<div class="empty"><b>No timed tasks on this date</b>Give tasks a start and end time in the Day Plan.</div>';
+  h+=renderExec(sl);
   h+=secHead('Reviews by head','How much each head reviewed and the errors found');
   const heads={};
   sl.forEach(x=>{const s=x.s;if(s.rv!=='yes'&&s.rv!=='no')return;const nm=s.rvBy||'Head';const o=heads[nm]||(heads[nm]={rev:0,err:0,nd:0});o.rev++;o.err+=num(s.errors);o.nd+=num(s.notDone)});
@@ -1116,10 +1255,10 @@ function carryItems(date,unit){
   return slotsOf(date,unit).filter(s=>isCM(s)&&(s.cm==='due'||((!s.cm||s.cm==='pending')&&(isLate(s,date)||(!s.from&&date<=todayStr())))));
 }
 async function addCarry(unit,date,only){
-  const prev=addDays(date,-1),map={},have=slotsOf(date,unit).map(x=>x.id);
-  carryItems(prev,unit).forEach((s,i)=>{
+  const map={},have=slotsOf(date,unit).map(x=>x.id);
+  carryList(unit,date).forEach((s,i)=>{
     const id='c_'+s.id;if(have.indexOf(id)>=0||(only&&only!==s.id))return;
-    map[id]={order:50+i,kind:'check',title:[s.subject,s.lesson,s.material].filter(Boolean).join(' ')||s.title||'Checking',material:s.material||'',subject:s.subject||'',lesson:s.lesson||'',sections:s.sections||'',bundle:s.cm==='due'?num(s.due):num(s.bundle),by:s.by||'CM',carry:true,note:'Carried from '+dayShort(prev),cm:'pending',from:'',to:''};
+    map[id]={order:50+i,kind:'check',title:[s.subject,s.lesson,s.material].filter(Boolean).join(' ')||s.title||'Checking',material:s.material||'',subject:s.subject||'',lesson:s.lesson||'',sections:s.sections||'',bundle:s.cm==='due'?num(s.due):num(s.bundle),by:s.by||'CM',carry:true,note:'Carried from '+dayShort(s._from),cm:'pending',from:'',to:''};
   });
   if(Object.keys(map).length)await writeSlots(unit,date,map);
   return Object.keys(map).length;
@@ -1184,14 +1323,25 @@ function getSlot(id){return slotsOf(S.date,S.unit).find(s=>s.id===id)||{id:id}}
 async function act(a,id,v,el){
   const me=whoName();
   switch(a){
-  case 'tab':S.tab=v;render();window.scrollTo(0,0);break;
+  case 'tab':S.tab=v;S.viewAs='';render();window.scrollTo(0,0);break;
   case 'date-tmr':setDate(addDays(todayStr(),1));break;
   case 'unit':S.unit=v;render();break;
-  case 'open-class':S.unit=v;S.tab='board';render();window.scrollTo(0,0);break;
+  case 'open-class':S.unit=v;S.viewAs='';S.tab='board';render();window.scrollTo(0,0);break;
   case 'desk':S.desk=v;render();break;
   case 'who':S.who=v||'';render();break;
   case 'drill':S.drill=(S.drill===v)?'':v;render();break;
   case 'open-slot':S.unit=v;S.tab='board';S.open[id]=true;render();setTimeout(()=>{const e=document.querySelector('[data-id="'+id+'"]');if(e)e.scrollIntoView({block:'center'})},60);break;
+  case 'tl-start':{await patch(S.unit,S.date,id,{startAt:Date.now(),endAt:0,startBy:me});break}
+  case 'tl-unstart':{await patch(S.unit,S.date,id,{startAt:0,endAt:0});break}
+  case 'mv-open':S.open[id]='move';render();break;
+  case 'mv-do':{const s0=getSlot(id),dest=v,body=Object.assign({},s0);delete body.id;body.note=((body.note?body.note+' · ':'')+'Moved from '+unitById(S.unit).label+' by '+me).slice(0,160);body.movedFrom=S.unit;S.open[id]=null;await writeSlots(dest,S.date,{[id]:body});await patch(S.unit,S.date,id,null);toast('Moved to '+unitById(dest).label);break}
+  case 'mvall-open':S.open.mvall=true;render();break;
+  case 'mvall-close':S.open.mvall=false;render();break;
+  case 'mvall-do':{const dest=v,map={},src=slotsOf(S.date,S.unit).filter(x=>isCM(x)&&(!x.cm||x.cm==='pending')),del={};if(!src.length){toast('Nothing to hand over.');break}src.forEach(x=>{const b=Object.assign({},x);delete b.id;b.note=((b.note?b.note+' · ':'')+'Handed over from '+unitById(S.unit).label+' by '+me).slice(0,160);b.movedFrom=S.unit;map[x.id]=b;del[x.id]=null});S.open.mvall=false;await writeSlots(dest,S.date,map);await writeSlots(S.unit,S.date,del);toast(src.length+' task'+(src.length===1?'':'s')+' handed to '+unitById(dest).label);break}
+  case 'view-as':{const p=people().find(x=>x.name===v&&x.role!=='admin'&&x.units.length);if(p){S.viewAs=v;S.unit=p.units[0];S.tab='board';render();window.scrollTo(0,0)}break}
+  case 'view-off':S.viewAs='';S.tab='desks';S.desk='cm';render();window.scrollTo(0,0);break;
+  case 'tpc-more':S.open.tpcAll=!S.open.tpcAll;render();break;
+  case 'tpc-add':{const i=parseInt(id,10),r=TPC[i];if(!r)break;const have=slotsOf(S.date,S.unit).map(x=>x.id),map={};r[4].forEach((it,k)=>{const sid='tp'+i+'_'+k;if(have.indexOf(sid)>=0)return;const mat=tpcMat(it);map[sid]={order:80+k,kind:'check',title:[r[2],r[3],it].join(' '),material:mat,subject:r[2],lesson:r[3],sections:r[6]||'',bundle:0,by:'CM',cm:'pending',from:'',to:'',note:'From the teachers’ checking plan'+(r[7]?' · '+r[7]:'')}});if(Object.keys(map).length)await writeSlots(S.unit,S.date,map);toast('Added to “Waiting for a time”');break}
   case 'q-open':S.open.qa=true;render();break;
   case 'q-close':S.open.qa=false;render();break;
   case 'q-type':{const d=S.draft.q||(S.draft.q={type:'Notebook',name:'',subject:'',lesson:'',secs:[],from:'',to:'',split:'one'});d.type=v;render();break}
@@ -1218,10 +1368,10 @@ async function act(a,id,v,el){
   case 'role-open':openRoleDialog();break;
   case 'more':S.open[id]='more';render();break;
   case 'close':S.open[id]=null;render();break;
-  case 'cm-checked':{const s=getSlot(id);S.open[id]=null;await patch(S.unit,S.date,id,{cm:'checked',done:num(s.bundle),due:0,cmBy:me,cmAt:Date.now()});break}
+  case 'cm-checked':{const s=getSlot(id);S.open[id]=null;await patch(S.unit,S.date,id,{cm:'checked',done:num(s.bundle),due:0,cmBy:me,cmAt:Date.now(),endAt:s.startAt?(s.endAt||Date.now()):0});break}
   case 'cm-due-open':{const s=getSlot(id);S.draft['d:'+id]={due:s.cm==='due'?num(s.due):(num(s.bundle)||''),remark:s.cmRemark||''};S.open[id]='due';render();break}
-  case 'cm-due-save':{const d=S.draft['d:'+id]||{};const n=num(d.due);if(!n){toast('Enter how many notebooks are due.');break}S.open[id]=null;await patch(S.unit,S.date,id,{cm:'due',due:n,done:0,cmBy:me,cmAt:Date.now(),cmRemark:(d.remark||'').trim()});break}
-  case 'cm-reset':{S.open[id]=null;delete S.draft['r:'+id];await patch(S.unit,S.date,id,{cm:'pending',due:0,done:0,rv:'pending',errors:0,notDone:0,rvRemark:'',rvImgs:[]});break}
+  case 'cm-due-save':{const d=S.draft['d:'+id]||{};const n=num(d.due);if(!n){toast('Enter how many notebooks are due.');break}{const s0=getSlot(id);S.open[id]=null;await patch(S.unit,S.date,id,{cm:'due',due:n,done:0,cmBy:me,cmAt:Date.now(),cmRemark:(d.remark||'').trim(),endAt:s0.startAt?(s0.endAt||Date.now()):0});break}}
+  case 'cm-reset':{const s0=getSlot(id);if(s0.cm==='pending'||!s0.cm){S.open[id]=null;render();break}if((s0.rv==='yes'||s0.rv==='no')&&S.resetAsk!==id){S.resetAsk=id;toast('The head already reviewed this. Tap again to clear the status and the review.');break}S.resetAsk=null;S.open[id]=null;delete S.draft['r:'+id];await patch(S.unit,S.date,id,{cm:'pending',due:0,done:0,endAt:0,rv:'pending',errors:0,notDone:0,rvRemark:'',rvImgs:[]});break}
   case 'rv-pick':{const k='r:'+id,d=S.draft[k]||(S.draft[k]={});d.mode=v;if(v==='ok'){d.errors=0;d.notDone=0}render();break}
   case 'rv-save':{
     const d=S.draft['r:'+id]||{};if(!d.mode){toast('Choose All good, Errors found or Not checked.');break}
