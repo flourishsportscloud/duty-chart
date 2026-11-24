@@ -456,9 +456,12 @@ const editKey=(ph,gd)=>ph==='dist'?'dist':'c'+gd;
 
 /* ============ roles & scope ============ */
 const MGMT=['Chairperson','Dean - Academics','Operational Manager','Director'];
-const DEF_SCOPES={'Chandani Chayal':['PG','NUR'],'Karishma Suthar':['LKG','UKG'],'Komal Suthar':['C1','C2'],'Manisha Chauhan':['C3'],'Vijay Raj Soni':['C4'],'Yashika Gupta':['C5'],
+const C611=['C6','C7','C8','C9','C10','C11'],C15=['C1','C2','C3','C4','C5'],CALL=['PG','NUR','LKG','UKG'].concat(C15,C611);
+const DEF_SCOPES={'Chandani Chayal':['PG','NUR'],'Karishma Suthar':C15.concat(['LKG','UKG']),'Komal Suthar':['C1','C2'],'Manisha Chauhan':['C3'],'Vijay Raj Soni':['C4'],'Yashika Gupta':['C5'],
   'Mansi Soni':['C6','C7'],'Rashmi Singh':['C8'],'Saba Panwar':['C9'],'Tanushree Purohit':['C10'],'Upender Singh Shekhawat':['C11'],
-  'Dr. Garima Khatri':['PG','NUR','LKG','UKG'],'Neha Sethia':['C1','C2'],'Poonam Sharda':['C3','C4','C5'],'Rashmi Rathore':['C6','C7'],'Sarita Saini':['C8','C9'],'Shally Taneja':['C10','C11']};
+  'Dr. Garima Khatri':C611,'Poonam Sharda':C611,'Sarita Saini':C611,'Shally Taneja':C15,'Neha Sethia':['C1','C2'],'Rashmi Rathore':['C6','C7'],
+  'Sanjana Sarswat':['C1','C2'],'Neetu Dara':['C3'],'Divyanshi Jain':['C4'],'Diksha Singh Raghuwanshi':['C5'],
+  'Shubhangi':CALL,'Sharda Yadav':CALL,'Santosh Yadav':CALL};
 const scopesCfg=()=>Object.assign({},DEF_SCOPES,(S.config&&S.config.scopes)||{});
 function scopeFor(n,r){
   if(!n)return{all:true,label:'Whole school',kind:'Staff'};
@@ -769,7 +772,7 @@ function dashView(){
   let h=`<div class="datebar"><h1>${esc(fdl(D0))}</h1><button class="btn sm" data-act="dateshift" data-v="-1" aria-label="Previous day">‹</button><input type="date" id="dbdate" value="${D0}" data-chg="date" aria-label="Pick date"><button class="btn sm" data-act="dateshift" data-v="1" aria-label="Next day">›</button><button class="btn sm" data-act="datetoday">Today</button></div><div class="muted tiny" style="margin-top:4px">${esc(title)}</div>`;
   h+=`<div class="calwrap">${calendarCard(R,D0)}${dayWorklist(R,D0)}</div>`;
   h+=excBoard(R,D0);
-  if(none)h+=`<div class="card empty" style="margin-top:14px"><h3>No rounds yet</h3><p>Create the first round with <b>+ New round</b>, or load sample data to see how every view works.</p><button class="btn gold" data-act="demo">Load sample data</button></div>`;
+  if(none)h+=`<div class="card empty" style="margin-top:14px"><h3>No rounds yet</h3><p>Create the first round with <b>+ New round</b>, ${API?'':'or load sample data to see how every view works.'}</p>${API?'':'<button class="btn gold" data-act="demo">Load sample data</button>'}</div>`;
   h+=`<div class="kpis">
    <div class="kpi gold"><div class="v num">${dDone}/${dist.length}</div><div class="l">Sections distributed</div></div>
    <div class="kpi gold"><div class="v num">${cDone}/${coll.length}</div><div class="l">Sections collected</div></div>
@@ -1281,7 +1284,7 @@ let NR=null;
 function autoCollect(n){return n.kind==='weekly'?nextMonday(n.date):n.kind==='daily'?nextSchool(n.date):(n.collect&&n.collect>=n.date?n.collect:addDays(n.date,1))}
 const nrCd=(id)=>(NR.split&&NR.cd[id])||NR.collect;
 function openNewRound(pre){
-  const t=todayISO();let ck='C5',secs=new Set();
+  const t=S.date||todayISO();let ck='C5',secs=new Set();
   if(S.me){const sc=SC();if(!sc.all){const k=[...sc.keys][0];ck=k.split('-')[0];if(sc.keys.size===1)secs=new Set([k.split('-')[1]])}}
   if(pre&&pre.ck){ck=pre.ck;secs=new Set(pre.sec?[pre.sec]:[])}
   NR={kind:parse(t).getDay()===6?'weekly':'daily',date:t,collect:'',ck,secs,items:new Map(),cn:'N',cname:'',split:false,cd:{}};NR.collect=autoCollect(NR);
@@ -1296,6 +1299,7 @@ function nrBody(){
   const nd=new Set(sel.map(i=>nrCd(i.id))).size;
   return `<button class="x" data-act="close" aria-label="Close">×</button><h2>New round</h2><p class="muted tiny" style="margin:0 0 6px">Choose the class, the date and what is handed out. Subjects may share one collection date or each have their own.</p>
   <div class="chips">${['weekly','daily','other'].map(k=>`<button class="chip ${NR.kind===k?'on':''}" data-act="nr-kind" data-v="${k}">${KINDLBL[k]}</button>`).join('')}</div>
+  <div class="tiny muted" style="font-weight:800;margin-top:6px">ROUND FOR</div><div class="chips" style="margin:4px 0 8px">${[[0,'Today'],[-1,'Yesterday'],[-2,'2 days ago'],[1,'Tomorrow']].map(x=>{const d=addDays(todayISO(),x[0]);return `<button class="chip ${NR.date===d?'on':''}" data-act="nr-dchip" data-v="${d}">${x[1]}</button>`}).join('')}</div>
   <div class="frm"><label class="field">Distribution date<input type="date" value="${NR.date}" data-chg="nr-date"></label><label class="field">Collection date (default)<input type="date" value="${NR.collect}" data-chg="nr-collect"></label>
   <label class="field">Class<select data-chg="nr-cls">${D.classes.map(x=>`<option value="${x.k}" ${NR.ck===x.k?'selected':''}>${esc(x.l)}</option>`).join('')}</select></label></div>
   <div class="tiny muted" style="font-weight:800">SECTIONS <button class="btn sm" data-act="nr-allsec">All</button></div><div class="chips">${c.s.map(s=>`<button class="chip ${NR.secs.has(s)?'on':''}" data-act="nr-sec" data-v="${s}">${esc(s)}${classTeacher(NR.ck+'-'+s)?' · '+esc(classTeacher(NR.ck+'-'+s).split(' ')[0]):''}</button>`).join('')}</div>
@@ -1335,9 +1339,9 @@ function confirmDelete(){SH='del';sheet(`<h2>Delete this round?</h2><p>All marks
 function openAdmin(){
   const demo=Object.values(S.rounds).some(r=>r.demo);SH='admin';
   sheet(`<button class="x" data-act="close" aria-label="Close">×</button><h2>Admin tools</h2><p class="muted tiny">Data mode: <b>${S.mode==='live'?'shared live data':'this device only (not shared)'}</b>. ${S.mode==='live'?'Staff need edit access to the page to save marks.':'Open the page while signed in to claude.ai to share data with staff.'}</p>
-  <div class="opts"><button class="opt" data-act="who"><span class="g p-gold">U</span><span>Switch user / demo views</span></button><button class="opt" data-act="scopes"><span class="g p-gold">C</span><span>Coordinator sections<small>Which classes each coordinator and program leader sees</small></span></button><button class="opt" data-act="demo"><span class="g p-gold">+</span><span>Load sample data<small>Rounds for about 28 sections with defaulters</small></span></button>${demo?`<button class="opt" data-act="cleardemo"><span class="g p-no">×</span><span>Remove sample data<small>Deletes only the sample rounds and their entries</small></span></button>`:''}</div>`)}
+  <div class="opts"><button class="opt" data-act="who"><span class="g p-gold">U</span><span>Switch user / demo views</span></button><button class="opt" data-act="scopes"><span class="g p-gold">C</span><span>Coordinator sections<small>Which classes each coordinator and program leader sees</small></span></button>${API?'':`<button class="opt" data-act="demo"><span class="g p-gold">+</span><span>Load sample data<small>Rounds for about 28 sections with defaulters</small></span></button>`}${demo?`<button class="opt" data-act="cleardemo"><span class="g p-no">×</span><span>Remove sample data<small>Deletes only the sample rounds and their entries</small></span></button>`:''}</div>`)}
 function openScopes(pick){
-  const names=D.staff.filter(s=>['Class Manager','Program Leader'].includes(s[1]));const cur=pick||names[0][0];const sc=scopesCfg()[cur]||[];SH={scope:cur};
+  const names=D.staff.filter(s=>['Class Manager','Program Leader','Floor Manager'].includes(s[1])||['Shubhangi','Sharda Yadav','Santosh Yadav'].includes(s[0]));const cur=pick||names[0][0];const sc=scopesCfg()[cur]||[];SH={scope:cur};
   sheet(`<button class="x" data-act="close" aria-label="Close">×</button><h2>Coordinator sections</h2><p class="muted tiny" style="margin:0">Sample assignments are pre-filled. Change them to match the real coordinator list.</p>
   <label class="field" style="margin-top:10px">Staff member<select data-chg="sc-pick">${names.map(n=>`<option value="${esc(n[0])}" ${n[0]===cur?'selected':''}>${esc(n[0])} · ${esc(n[1])}</option>`).join('')}</select></label>
   <div class="chips">${D.classes.map(c=>`<button class="chip ${sc.includes(c.k)?'on':''}" data-act="sc-tog" data-c="${c.k}">${esc(c.l)}</button>`).join('')}</div>`)}
@@ -1450,10 +1454,12 @@ async function loadDemo(){
     S.ledger[key]=led;
     await Promise.all([Store.set('dcr_ledger',key,led)].concat(Object.values(S.rounds).filter(r=>r.key===key&&r.demo).map(r=>Store.set('dcr_rounds',r.id,r))))}
   S.date=sat;S.calM=sat.slice(0,7);S.tab='dash';closeSheet();toast('Sample data loaded · '+fd(fri)+', '+fd(sat)+', '+fd(mon));render()}
-async function clearDemo(){
+async function clearDemo(quiet){
   for(const r of Object.values(S.rounds).filter(r=>r.demo)){delete S.rounds[r.id];await Store.del('dcr_rounds',r.id)}
   for(const [k,l] of Object.entries(S.ledger)){let ch=false;Object.keys(l.entries||{}).forEach(ek=>{if(l.entries[ek].demo){delete l.entries[ek];ch=true}});if(ch)await Store.set('dcr_ledger',k,l)}
-  closeSheet();toast('Sample data removed');render()}
+  if(!quiet){closeSheet();toast('Sample data removed')}render()}
+let PURGING=false;
+function autoPurge(){if(!API||PURGING)return;const has=Object.values(S.rounds).some(r=>r.demo)||Object.values(S.ledger).some(l=>Object.values((l&&l.entries)||{}).some(e=>e.demo));if(!has)return;PURGING=true;clearDemo(true).finally(()=>{PURGING=false})}
 
 /* ============ events ============ */
 const ACT={
@@ -1494,7 +1500,7 @@ const ACT={
   'nr-addc':()=>{const n=(NR.cname||'').trim();if(!n)return;const t=NR.cn;const b=CLSMAP[NR.ck].b;const id=t+'_'+slug(n);
     if(!(S.config.custom||[]).find(c=>c.b===b&&c.t===t&&c.n===n))mutC(c=>{c.custom=c.custom||[];c.custom.push({b,t,n})});
     NR.items.set(id,{id,t,n});NR.cname='';sheetBody(nrBody())},
-  'nr-create':()=>createRounds(),
+  'nr-create':()=>createRounds(),'nr-dchip':el=>{NR.date=el.dataset.v;NR.collect=autoCollect(NR);sheetBody(nrBody())},
   roundmenu:()=>openRoundMenu(),'rm-save':()=>saveRoundDates(),'rm-del':()=>confirmDelete(),
   'rm-del2':async()=>{const r=S.rounds[S.openRound];const id=r.id,key=r.key;delete S.rounds[id];await Store.del('dcr_rounds',id);mutL(key,l=>{Object.keys(l.entries).forEach(ek=>{if(l.entries[ek].r===id)delete l.entries[ek]})});closeSheet();S.tab='rounds';render();toast('Round deleted')},
   'lv-item':el=>{const id=el.dataset.id;LV.items.has(id)?LV.items.delete(id):LV.items.add(id);render()},
@@ -1578,8 +1584,8 @@ async function boot(){
   const done=()=>{if(first){first=false;clearTimeout(timer);S.syncMsg='';S.loaded=true}};
   const cutoff=addDays(todayISO(),-21);
   Store.sub('dcr_rounds',docs=>{done();const next={};docs.forEach(d=>{if(d.data&&d.data.id)next[d.id]=d.data});
-    Object.keys(S.rounds).forEach(id=>{if((Q.r[id]||inflight.has(id))&&S.rounds[id])next[id]=S.rounds[id]});S.rounds=next;render()},['date','>=',cutoff]);
-  Store.sub('dcr_ledger',docs=>{done();const next={};docs.forEach(d=>{if(d.data)next[d.id]=d.data});Object.keys(S.ledger).forEach(k=>{if(Q.l[k])next[k]=S.ledger[k]});S.ledger=next;render()});
+    Object.keys(S.rounds).forEach(id=>{if((Q.r[id]||inflight.has(id))&&S.rounds[id])next[id]=S.rounds[id]});S.rounds=next;render();autoPurge()},['date','>=',cutoff]);
+  Store.sub('dcr_ledger',docs=>{done();const next={};docs.forEach(d=>{if(d.data)next[d.id]=d.data});Object.keys(S.ledger).forEach(k=>{if(Q.l[k])next[k]=S.ledger[k]});S.ledger=next;render();autoPurge()});
   Store.sub('dcr_config',docs=>{const c=docs.find(d=>d.id==='main');if(c&&c.data)S.config=Object.assign({custom:[]},c.data)});
 }
 boot();
