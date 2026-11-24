@@ -363,6 +363,48 @@ h1{font-family:var(--head);font-weight:600;font-size:1.8rem;letter-spacing:0;col
   :root:not([data-theme="light"]) .notice{border-top-color:var(--gold)}
   :root:not([data-theme="light"]) .btn:not(.ghost):not(.warn){background:var(--gold);color:var(--navy2)}
   :root:not([data-theme="light"]) .ptab[aria-selected="true"]{background:var(--gold);color:var(--navy2)} }
+
+/* Leaves & Duty Cover panel: tabs, compact rows, team list */
+.ntabs{display:flex;gap:4px;margin:10px 0 8px;padding:4px;border-radius:12px;background:var(--chip);position:sticky;top:0;z-index:3}
+.ntabs button{flex:1;min-width:0;font:inherit;font-size:.76rem;font-weight:700;border:0;border-radius:9px;padding:6px 2px;background:transparent;color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;white-space:nowrap;line-height:1.1;min-height:44px}
+.ntabs button>span{font-size:.66rem;min-width:18px}
+.ntabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.ntabs .cnt,.ntabs .pendc{margin:0}.ntabs .okc{color:#2E8B57;font-weight:800}
+.ngrp{display:flex;gap:6px;margin:2px 0 8px;overflow-x:auto}
+.ngrp button{font:inherit;font-size:.78rem;font-weight:700;border:1px solid var(--line);border-radius:999px;padding:5px 11px;background:var(--surface);color:var(--ink);white-space:nowrap;display:flex;align-items:center;gap:5px}
+.ngrp button[aria-selected="true"]{background:var(--navy,#1F2D5A);color:#fff;border-color:transparent}
+.ngrp b{font-weight:800;opacity:.75}.ngrp .dot{width:7px;height:7px;border-radius:50%;background:var(--gate)}
+.pline{font-size:.78rem;color:var(--muted);margin:0 0 8px}
+.xlist{display:flex;flex-direction:column;gap:6px}
+.xr{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 10px;padding:9px 11px;border:1px solid var(--line);border-radius:12px;background:var(--surface);cursor:default}
+.xr[data-qa]{cursor:pointer}
+.xr.pend{border-color:color-mix(in srgb,var(--gate) 40%,var(--line));background:color-mix(in srgb,var(--gate) 5%,var(--surface))}
+.xr.na{opacity:.75}
+.xl{flex:1 1 52%;min-width:0;display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 7px}
+.xa{font-weight:700;font-size:.92rem;white-space:nowrap}
+.xc{font-size:.7rem;font-weight:800;background:var(--chip);border-radius:6px;padding:1px 6px;white-space:nowrap}
+.xs{font-size:.72rem;color:var(--muted);font-weight:600}
+.xd{flex-basis:100%;font-size:.74rem;color:var(--muted);line-height:1.3}
+.xb{flex:0 1 auto;text-align:right;margin-left:auto}
+.xb b.by{font-weight:700;white-space:nowrap}.xb small.tm{display:block;font-size:.72rem;color:var(--muted);font-weight:600}
+.xb .pbtns{justify-content:flex-end;flex-wrap:nowrap}
+.lgrp{margin-bottom:10px}.lgh{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;font-weight:800;color:var(--muted);margin:4px 2px 6px;display:flex;align-items:center;gap:6px}
+.lrow{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;padding:7px 11px;border:1px solid var(--line);border-radius:10px;background:var(--surface);margin-bottom:5px}
+.lrow .lm{font-size:.74rem;color:var(--muted);flex:1}.lrow .lm b{color:var(--ink);font-weight:700}
+.lst{font-size:.7rem;font-weight:700;border-radius:999px;padding:1px 8px;background:color-mix(in srgb,var(--gold,#E3A94F) 22%,transparent);color:#7A4E0E;white-space:nowrap}
+details.tm{border:1px solid var(--line);border-radius:12px;background:var(--surface);margin-bottom:6px;overflow:hidden}
+details.tm summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;font-weight:700;font-size:.9rem}
+details.tm summary::-webkit-details-marker{display:none}
+details.tm summary span:first-child{flex:1}details.tm summary::after{content:'▾';color:var(--muted);font-size:.8rem}
+details.tm[open] summary::after{content:'▴'}
+details.tm .mvd{font-size:.68rem;color:var(--gate);font-weight:700}
+details.tm.left summary{color:var(--muted)}
+.tmr{display:flex;align-items:center;gap:8px;padding:7px 12px;border-top:1px solid var(--line)}
+.tmr .tn{flex:1;min-width:0}.tmr .tn b{display:block;font-size:.88rem}.tmr .tn small{display:block;font-size:.72rem;color:var(--muted)}
+.tmr select{font:inherit;font-size:.74rem;max-width:44%;border:1px solid var(--line);border-radius:8px;padding:4px 6px;background:var(--chip);color:var(--ink)}
+details.ntfd{margin:10px 0 0;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+details.ntfd summary{cursor:pointer;padding:10px 12px;font-weight:700;font-size:.88rem;display:flex;align-items:center;gap:6px}
+details.ntfd .ntf{margin:0;padding:0 10px 10px}details.ntfd .ntf h3{display:none}
 </style>
 </head>
 <body>
@@ -610,17 +652,22 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbyxWYwmvDDlIR6VjS2W4209
       if (ex && ex.cols) Object.keys(EX).forEach(h => { const col = ex.cols.find(c => c.h === h); if (!col) return;
         col.groups = EX[h].map(o => ({t:o.t, c:o.c, p:o.p.slice()})); });
     })();
-    /* Staff who have left the school (17 Nov 2026): taken off every duty, even where the Sheet still lists them */
+    /* Staff who have left the school (17 Nov 2026): taken off every duty, even where the Sheet still lists them.
+       24 Nov 2026: Bhagyashree and Shivika have left – their duties go to Shivangi. */
     (function(){
       const GONE = ['renu harsh','renu','ashok suthar','ashok','neha jain','pooja chauhan','monika navani','khushi bhadani','khushi'];
-      const gone = n => GONE.includes(String(n).trim().toLowerCase().replace(/\s+/g,' '));
-      const cleanName = n => { const parts = String(n).split(/\s+[–-]\s+/); const k = parts.filter(x => !gone(x)); return k.length === parts.length ? n : k.join(' – '); };
+      const REPL = {'bhagyashree rathore':'Shivangi Gupta','bhagyashree':'Shivangi','bhagyashri':'Shivangi','shivika ranjan':'Shivangi Gupta','shivika':'Shivangi'};
+      const lc = n => String(n).trim().toLowerCase().replace(/\s+/g,' ');
+      const gone = n => GONE.includes(lc(n));
+      const cleanName = n => { const parts = String(n).split(/\s+[–-]\s+/); const m = parts.map(x => REPL[lc(x)] || x); const k = m.filter(x => !gone(x));
+        return k.length === parts.length && m.every((x, i) => x === parts[i]) ? n : k.join(' – '); };
+      const dedupe = arr => { const seen = new Set(); return arr.filter(x => { if (typeof x !== 'string') return true; const q = x.split('|'); const id = lc(q.length > 1 && /^\d/.test(q[0]) ? q.join('|') : q[0]); if (seen.has(id)) return false; seen.add(id); return true; }); };
       const clean = (x, bus) => { if (typeof x !== 'string') return x; const q = x.split('|');
         if (bus && q.length > 1){ q[1] = cleanName(q[1]); if (/^pooja$/i.test(q[1].trim())) q[1] = ''; return q[1].trim() ? q.join('|') : null; }
         q[0] = cleanName(q[0]); return q[0].trim() ? q.join('|') : null; };
       (b.tabs || []).forEach(tab => {
-        (tab.cards || []).forEach(c => { c.p = (c.p || []).map(x => clean(x, c.bus)).filter(x => x !== null); });
-        (tab.cols || []).forEach(col => (col.groups || []).forEach(g => { g.p = (g.p || []).map(x => clean(x)).filter(x => x !== null); }));
+        (tab.cards || []).forEach(c => { c.p = dedupe((c.p || []).map(x => clean(x, c.bus)).filter(x => x !== null)); });
+        (tab.cols || []).forEach(col => (col.groups || []).forEach(g => { g.p = dedupe((g.p || []).map(x => clean(x)).filter(x => x !== null)); }));
       });
     })();
     return b;
@@ -675,17 +722,24 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbyxWYwmvDDlIR6VjS2W4209
 <script type="text/plain" id="appsrc">
 const Z = {gate:'Gate & entry',transport:'Transport',disc:'Discipline & rooms',floor:'Corridors',time:'Late comers & free staff',stay:'Stayback',sports:'Sports'};
 const COL = {gate:'var(--gate)',transport:'var(--transport)',disc:'var(--disc)',floor:'var(--floor)',time:'var(--time)',stay:'var(--stay)',sports:'var(--sports)'};
-const CATS = ['Pre Primary Teacher','Primary Teacher','Secondary Teacher','Hindi Teacher','Computer Teacher','Admin','PL','CM','Floor Manager','Activity','Support Staff'];
-const CAT_LABEL = {'Pre Primary Teacher':'Pre Primary Teachers','Primary Teacher':'Primary Teachers','Secondary Teacher':'Secondary Teachers','Hindi Teacher':'Hindi Teachers','Computer Teacher':'Computer Teachers','Admin':'Admin','PL':'PL','Teacher':'Teachers','Admin & PL':'Admin & PL','CM':'Class Managers','Floor Manager':'Floor Managers','Activity':'Co-curricular','Support Staff':'Support Staff'};
+const CATS = ['Pre Primary Teacher','Primary Teacher','Secondary Teacher','Hindi Teacher','Computer Teacher','Admin','Operations','PL','CM','Floor Manager','Activity','Support Staff'];
+const CAT_LABEL = {'Pre Primary Teacher':'Pre Primary Teachers','Primary Teacher':'Primary Teachers','Secondary Teacher':'Secondary Teachers','Hindi Teacher':'Hindi Teachers','Computer Teacher':'Computer Teachers','Admin':'Administration','Operations':'Operations','PL':'Program Leaders','Teacher':'Teachers','Admin & PL':'Admin & PL','CM':'Class Managers','Floor Manager':'Primary Managers','Activity':'Co-curricular','Support Staff':'Support Staff'};
 /* [full name, designation, category] – from the Members list, 25 Sep 2026 */
 const STAFF_LIST = [["Ajita Upadhyay", "Hindi Teacher", "Hindi Teacher"], ["Akash Gurjar", "Wushu Coach", "Activity"], ["Amit Sanwal", "Mathematics Teacher", "Secondary Teacher"], ["Anamika Shrimali", "Teacher", "Pre Primary Teacher"], ["Anita Sharma", "Hindi Teacher", "Hindi Teacher"], ["Anoop Gahlot", "Operational Manager", "Admin"], ["Anuradha Chaudhary", "Teacher", "Primary Teacher"], ["Archana Choudhary", "German Teacher", "Secondary Teacher"], ["Asha Rao", "Floor Manager", "Floor Manager"], ["Bhagyashree Rathore", "Assistant Teacher", "Pre Primary Teacher"], ["Bharti Ratawa", "Hindi Teacher", "Hindi Teacher"], ["Bhavyadeep Soni", "Keyboard Instructor", "Activity"], ["Bhawishya Joshi", "Lawn Tennis Coach", "Activity"], ["Bhupendra Yogi", "Acting Instructor", "Activity"], ["Bhuwan Bhatt", "Ukulele & Guitar Instructor", "Activity"], ["Chandan Soni", "Store Incharge", "Admin"], ["Chandani Chayal", "Class Manager", "CM"], ["Chhavi Vinaik", "Teacher", "Primary Teacher"], ["Chotulal", "Guard", "Support Staff"], ["Deepali Tiwari", "Teacher", "Primary Teacher"], ["Deepmala Rathore", "Teacher", "Primary Teacher"], ["Devanshi Saini", "Teacher", "Primary Teacher"], ["Diksha Singh Raghuwanshi", "Floor Manager", "Floor Manager"], ["Dilshad", "Teacher", "Pre Primary Teacher"], ["Divyanshi Jain", "Floor Manager", "Floor Manager"], ["Dr. Garima Khatri", "Program Leader", "PL"], ["Gauri Adhana", "Teacher", "Primary Teacher"], ["Geeta Panwar", "Hindi Teacher", "Hindi Teacher"], ["Gokul Vyas", "Guitar Coach", "Activity"], ["Harsh Yadav", "Transport Manager", "Admin"], ["Harshvardhan Soni", "Parents Relation Officer", "Admin"], ["Himanshi Negi", "Computer Teacher", "Computer Teacher"], ["Himanshu Singh", "Basketball Coach", "Activity"], ["Himanshu Singh Bhadoria", "Faculty – Informatics Practices", "Secondary Teacher"], ["Ishita", "Social Science Teacher", "Secondary Teacher"], ["Jai Pandla", "Operational Manager", "Admin"], ["Jatan Solanki", "Guard", "Support Staff"], ["Jatin Sankhla", "Social Science Teacher", "Secondary Teacher"], ["Jitendra Karwa", "Karate Coach", "Activity"], ["Jitesh Mehendiratta", "Faculty – Accountancy", "Secondary Teacher"], ["Juhi Ahuja", "Teacher", "Pre Primary Teacher"], ["Jyotshna Jayan", "English Teacher", "Secondary Teacher"], ["Kamal", "Extra Driver", "Support Staff"], ["Kanhaiya Lal Swami", "Cricket Coach", "Activity"], ["Kanika Gahlot", "Teacher", "Primary Teacher"], ["Karishma Suthar", "Class Manager", "CM"], ["Kavita Gupta", "Abacus Instructor", "Activity"], ["Khanaiya Lal Gujrati", "Guard", "Support Staff"], ["Komal Damani", "Teacher", "Pre Primary Teacher"], ["Komal Suthar", "Class Manager", "CM"], ["Kritika Pareek", "Wushu Coach", "Activity"], ["Lohit Tailong", "Taekwondo Coach", "Activity"], ["Madhu Mathur", "Mathematics Teacher", "Secondary Teacher"], ["Mahak Chaudhary", "Teacher", "Pre Primary Teacher"], ["Manisha Chauhan", "Class Manager", "CM"], ["Manisha Sharma", "Faculty – Economics", "Secondary Teacher"], ["Manmohan Singh", "Skating Coach", "Activity"], ["Mansi Singh Panwar", "Classical Dance Instructor", "Activity"], ["Mansi Soni", "Class Manager", "CM"], ["Mansi Yadav", "Teacher", "Secondary Teacher"], ["Megha Shekhawat", "Parents Relation Officer", "Admin"], ["Monika Rajpurohit", "Social Science Teacher", "Secondary Teacher"], ["Mukul Jangid", "Accountant", "Admin"], ["Mukul Parihar", "Photography Instructor & Cinematographer", "Activity"], ["Nahida", "Head of Co-Curricular Activities", "Admin"], ["Nandini Shekhawat", "Teacher", "Pre Primary Teacher"], ["Narendra Dara", "Office Exceutive", "Admin"], ["Navratan", "Guard", "Support Staff"], ["Neelam Rajwani", "Culinary Skills Instructor", "Activity"], ["Neetu Dara", "Floor Manager", "Floor Manager"], ["Neha Kumari", "Mathematics Teacher", "Secondary Teacher"], ["Neha Sethia", "Program Leader", "PL"], ["Nisha", "Science Teacher", "Secondary Teacher"], ["Nishant Harsh", "Manager", "Activity"], ["Niviya Singh Bhati", "Table Tennis Coach", "Activity"], ["Pallavi Joshi", "Science Teacher", "Secondary Teacher"], ["Pooja Sharma", "Teacher", "Primary Teacher"], ["Poojal Shekhawat", "Teacher", "Pre Primary Teacher"], ["Poonam Gaur", "Hindi Teacher", "Hindi Teacher"], ["Poonam Rathore", "Teacher", "Pre Primary Teacher"], ["Poonam Sharda", "Program Leader", "PL"], ["Prashant Devra", "Graphic Designer", "Admin"], ["Prashant Verma", "Basketball Coach", "Activity"], ["Preeti Choudhary", "Hindi Teacher", "Hindi Teacher"], ["Preeti Jain", "Parents Relation Officer", "Admin"], ["Priya Bagri", "Teacher", "Pre Primary Teacher"], ["Priya Shekhawat", "Teacher", "Primary Teacher"], ["Priyanka Bhargava", "Medical Officer", "Admin"], ["Priyanka Sand", "Teacher", "Pre Primary Teacher"], ["Priyanshi Bhojak", "English Teacher", "Primary Teacher"], ["Radha Soni", "Social Science Teacher", "Secondary Teacher"], ["Radheyshyam", "Guard", "Support Staff"], ["Rahul Yadav", "Staff", "Admin"], ["Raj Vyas", "Archery Coach", "Activity"], ["Rajeev Nagal", "Content Designer", "Admin"], ["Ram Singh Rathore", "French Teacher", "Secondary Teacher"], ["Rashmi Rathore", "Program Leader", "PL"], ["Rashmi Singh", "Class Manager", "CM"], ["Reema Tiwari", "Teacher", "Primary Teacher"], ["Rekha", "Teacher", "Pre Primary Teacher"], ["Renuka Tak", "Art Teacher", "Activity"], ["Richa Sharma", "Computer Teacher", "Computer Teacher"], ["Ritanshu Sharma", "Cricket Coach", "Activity"], ["Ritika Purohit", "Science Teacher", "Secondary Teacher"], ["Saba Panwar", "Class Manager", "CM"], ["Sahil Kumar", "Shooting Coach", "Activity"], ["Sakil Gouri", "Western Dance Instructor", "Activity"], ["Sanjana Sarswat", "Floor Manager", "Floor Manager"], ["Santosh Yadav", "Staff", "Admin"], ["Sarita Saini", "Program Leader", "PL"], ["Saroj", "Teacher", "Primary Teacher"], ["Shaan Siddiqui", "English Teacher", "Secondary Teacher"], ["Shailesh Joshi", "Social Science Teacher", "Secondary Teacher"], ["Shally Taneja", "Program Leader", "PL"], ["Sharda Yadav", "Staff", "Admin"], ["Shikha Sharma", "Art Teacher", "Activity"], ["Shivangi Gupta", "Teacher", "Pre Primary Teacher"], ["Shivika Ranjan", "Arts & Textile Desigining Instructor", "Activity"], ["Shobha Sharma", "Hindi Teacher", "Hindi Teacher"], ["Shreya", "Science Teacher", "Secondary Teacher"], ["Shubhangi", "Dean - Academics", "Admin"], ["Sonika Lalwani", "Teacher", "Pre Primary Teacher"], ["Sourabh Tripathi", "Floor Manager", "Floor Manager"], ["Suman Bishnoi", "Floor Manager", "Floor Manager"], ["Sunita Nirban", "Teacher", "Primary Teacher"], ["Surender Yadav", "Chairperson", "Admin"], ["Swati Sehgal", "English Teacher", "Secondary Teacher"], ["Tanushree Purohit", "Class Manager", "CM"], ["Tina Sangtani", "Teacher", "Primary Teacher"], ["Tripti", "Hindi Teacher", "Hindi Teacher"], ["Upender Singh Shekhawat", "Class Manager", "CM"], ["Vahnisvari Bika", "Teacher", "Primary Teacher"], ["Vaibhav Pandey", "Tabla Instructor", "Activity"], ["Vaishali Rathore", "Parents Relation Officer", "Admin"], ["Vijay Raj Soni", "Class Manager", "CM"], ["Vipul Vijay", "Mathematics Teacher", "Secondary Teacher"], ["Vishwabandhu", "Extra Driver", "Support Staff"], ["Yashika Gupta", "Class Manager", "CM"], ["Yavnika Dembla", "English Teacher", "Secondary Teacher"], ["Yogesh Purohit", "Harmonium Instructor", "Activity"]];
+/* Staff who have left the school: off the staff list, the team list and every picker (their old leave records keep the saved category) */
+const LEFT_STAFF = ['Bhagyashree Rathore','Shivika Ranjan'];
+for (let i = STAFF_LIST.length - 1; i >= 0; i--) if (LEFT_STAFF.includes(STAFF_LIST[i][0])) STAFF_LIST.splice(i, 1);
+/* Team (category) of each person. TEAM_FIX = decided in chat; the Team tab can move anyone (saved for everyone). */
+const TEAM_FIX = {'Anoop Gahlot':'Operations','Jai Pandla':'Operations'};
+STAFF_LIST.forEach(x => { x[3] = TEAM_FIX[x[0]] || x[2]; x[2] = x[3]; });
+function applyTeam(){ const mv = ((typeof ROSTER !== 'undefined' && ROSTER._team) || {}).cat || {}; STAFF_LIST.forEach(x => { x[2] = mv[x[0]] || x[3]; }); }
 /* Co-curricular segments: [segment, [[activity, [staff…]], …]] */
 const SEGS = [
  ['Sports', [['Skating',['Manmohan Singh']],['Cricket',['Kanhaiya Lal Swami','Ritanshu Sharma']],['Table Tennis',['Niviya Singh Bhati']],['Archery',['Raj Vyas']],['Shooting',['Sahil Kumar']],['Lawn Tennis',['Bhawishya Joshi']],['Basketball',['Himanshu Singh']]]],
  ['Fitness', [['Wushu',['Akash Gurjar','Kritika Pareek']],['Karate',['Jitendra Karwa']],['Taekwondo',['Lohit Tailong']],['Yoga',['Neelam Rajwani']]]],
  ['Dance', [['Western',['Sakil Gouri']],['Classical',['Mansi Singh Panwar']]]],
  ['Music', [['Tabla',['Vaibhav Pandey']],['Keyboard',['Bhavyadeep Soni']],['Guitar',['Bhuwan Bhatt','Gokul Vyas']],['Harmonium',['Yogesh Purohit']]]],
- ['Skill course', [['Cooking',['Neelam Rajwani']],['Pottery',['Sundar']],['Photography',['Mukul Parihar']],['Textile',['Shivika Ranjan']],['Agriculture',['Nahida']],['Abacus / Vedic Math',['Kavita Gupta']],['Acting',['Bhupendra Yogi']]]],
+ ['Skill course', [['Cooking',['Neelam Rajwani']],['Pottery',['Sundar']],['Photography',['Mukul Parihar']],['Textile',[]],['Agriculture',['Nahida']],['Abacus / Vedic Math',['Kavita Gupta']],['Acting',['Bhupendra Yogi']]]],
  ['Foreign language', [['French',['Ram Singh Rathore']],['German',['Archana Choudhary']]]]
 ];
 /* Class teachers (sections 1A–11) */
@@ -695,7 +749,7 @@ const CT = {'1A':'Sunita Nirban','1B':'Priyanshi Bhojak','1C':'Kanika Gahlot','2
 const normCls = c => String(c||'').toUpperCase().replace(/\s+/g,'').replace(/^NURSERY/,'NUR').replace(/^PRE-?NUR(SERY)?/,'NUR');
 /* Pre-primary sections (17 Nov 2026) – each section can have more than one class teacher */
 const PRE = {'PG A':['Dilshad','Poonam Rathore'], 'PG B':['Komal Damani','Priya Bagri'],
-  'Nur A':['Poojal Shekhawat','Rekha'], 'Nur B':['Anamika Shrimali','Bhagyashree Rathore'],
+  'Nur A':['Poojal Shekhawat','Rekha'], 'Nur B':['Anamika Shrimali'],
   'LKG A':['Juhi Ahuja','Nandini Shekhawat'], 'LKG B':['Mahak Chaudhary','Priyanka Sand'],
   'UKG A':['Shivangi Gupta'], 'UKG B':['Sonika Lalwani']};
 const PRE_BY = Object.fromEntries(Object.keys(PRE).map(l => [normCls(l), l]));
@@ -905,62 +959,87 @@ function nSummary(){
   const pa = lv.filter(l => !l.na && !adj.some(a => same1(a.f, l.n))).length, pc = lv.filter(l => needsCover(l) && !l.cna && !cv.some(c => same1(c.f, l.n))).length;
   return `${lv.length} on leave · Adjustment ${pa ? pa + ' pending' : 'done'} · Cover ${pc ? pc + ' pending' : 'done'}`;
 }
+let NTAB = 'leave', NG = {adj: '', cover: ''};
+try { NTAB = sessionStorage.getItem('dutyNTab') || 'leave'; } catch(e){}
+const TEAMS = [['Pre Primary Teacher','Pre-primary Teachers'],['Primary Teacher','Primary Teachers'],['Secondary Teacher','Secondary Teachers'],['Hindi Teacher','Hindi Teachers'],['Computer Teacher','Computer Teachers'],
+  ['CM','Class Managers'],['Floor Manager','Primary Managers'],['PL','Program Leaders'],['Activity','Co-curricular'],['Operations','Operations'],['Admin','Administration'],['Support Staff','Support Staff']];
+let TEAM_OPEN = '';
+function teamHTML(){
+  const can = CAN_EDIT && isAdmin();
+  const opts = cur => TEAMS.map(([k, l]) => `<option value="${esc(k)}"${k === cur ? ' selected' : ''}>${esc(l)}</option>`).join('');
+  const lc = new Set(LEFT_STAFF);
+  return `<p class="hint" style="margin:2px 0 10px">Every staff member by team. ${can ? 'If someone is in the wrong team, choose the right one – it is saved for everyone and used for leaves and adjustments.' : 'Ask the Director or an in-charge to correct a wrong team.'}</p>` +
+    TEAMS.map(([k, l]) => { const ms = STAFF_LIST.filter(x => x[2] === k).sort((a, b) => a[0].localeCompare(b[0])); if (!ms.length) return '';
+      const moved = ms.filter(x => x[3] !== x[2]).length;
+      return `<details class="tm"${TEAM_OPEN === k ? ' open' : ''} data-tk="${esc(k)}"><summary><span>${esc(l)}</span><span class="cnt">${ms.length}</span>${moved ? `<small class="mvd">${moved} moved</small>` : ''}</summary>` +
+        ms.map(x => `<div class="tmr"><span class="tn"><b>${esc(x[0])}</b><small>${esc(x[1])}${clsOf(x[0]) ? ' · CT ' + esc(clsOf(x[0])) : ''}</small></span>${can ? `<select data-mv="${esc(x[0])}" aria-label="Team of ${esc(x[0])}">${opts(k)}</select>` : ''}</div>`).join('') + `</details>`; }).join('') +
+    `<details class="tm left"><summary><span>Left the school</span><span class="cnt">${lc.size}</span></summary>${[...lc].map(n => `<div class="tmr"><span class="tn"><b>${esc(n)}</b><small>Duties now with Shivangi Gupta</small></span></div>`).join('')}</details>`;
+}
 function renderNotice(){
+  applyTeam();
   const d = dayData(), lv = d.leave||[], cv = d.cover||[], adj = d.adj||[];
   const today = ymd(new Date());
   const rel = DAY === today ? 'Today' : DAY === addDays(today,1) ? 'Tomorrow' : DAY === addDays(today,-1) ? 'Yesterday' : '';
-  let body = '';
   const ciLine = ciSummaryLine();
-  if (!lv.length && !cv.length && !adj.length){
-    body = `<p class="none">No leave or adjustments entered for this day.</p>`;
+  const grpOf = k => GRP.find(g => g[2].includes(k)) || GRP[0];
+  const ed = (m,i) => CAN_UI() ? ` data-qa="${m}:${i}"` : '';
+  const by = (n, t) => `<b class="by">${esc(n)}</b>${t?`<small class="tm">${esc(t)}</small>`:''}`;
+  const by2 = a => by(a.b, a.t) + (a.b2 ? `<div class="by2">${by(a.b2, a.t2)}</div>` : '');
+  const rt = t => `<span class="rtag">${t}</span>`;
+  const byCls = a => [a.b ? [a.b, a.t, a.c ? 'Class Teacher' : ''] : null, a.b2 ? [a.b2, a.t2, 'Subject Teacher'] : null, a.b3 ? [a.b3, a.t3, 'Subject Teacher'] : null].filter(Boolean)
+    .map(([n, t, r], k) => `<div class="${k ? 'by2' : ''}">${by(n, t)}${r ? rt(r) : ''}</div>`).join('');
+  const stt = l => stKey(l) ? `<span class="xs">${esc(stLabel(l))}</span>` : '';
+  const adjBtns = (l, mode) => CAN_UI() ? `<div class="pbtns${mode === 'cover' ? ' sm' : ''}"><button type="button" class="padj" data-padj="${esc(l.n)}" data-pc="${mode === 'adj' ? esc(clsOf(l.n)) : ''}" data-pm="${mode}">+ ${mode === 'cover' ? 'Cover' : 'Adjust'}</button><button type="button" class="pna" data-na="${esc(l.n)}" data-nk="${mode === 'cover' ? 'cna' : 'na'}">NA</button></div>` : `<span class="pendt${mode === 'cover' ? ' sm' : ''}">Pending</span>`;
+  const naCell = (l, k) => CAN_UI() ? `<button type="button" class="natag" data-unna="${esc(l.n)}" data-nk="${k}" title="Tap to undo">Not applicable</button>` : '<span class="natag">Not applicable</span>';
+  const xc = t => t ? `<span class="xc">${esc(t)}</span>` : '';
+  const adjRow = ([a,i]) => a.a
+    ? `<div class="xr"${ed('adj',i)}><div class="xl">${xc(a.a)}<span class="xa">${esc(a.f || '')}</span>${a.c ? `<span class="xs">${esc(a.c)}</span>` : ''}</div><div class="xb">${by2(a)}</div></div>`
+    : `<div class="xr"${ed('adj',i)}><div class="xl">${xc(a.c)}<span class="xa">${esc(a.f || ctOf(a.c) || '')}</span>${!a.f && ctOf(a.c) ? '<span class="xs">Class teacher</span>' : ''}</div><div class="xb">${byCls(a)}</div></div>`;
+  const covRow = ([c,i]) => `<div class="xr"${ed('cover',i)}><div class="xl"><span class="xa">${esc(c.f || '')}</span><span class="xd">${esc(c.d || 'All duties')}</span></div><div class="xb">${by(c.n)}</div></div>`;
+  /* one group of one section: every absentee of that group, then entries whose absent person is not on the leave list */
+  const collect = (items, kind, g) => {
+    const used = new Set(), rows = []; let pend = 0, n = 0;
+    const ls = lv.filter(l => grpOf(lcat(l)) === g && (kind !== 'cover' || needsCover(l) || items.some(x => same1(x.f, l.n)))).slice().sort((x, y) => x.n.localeCompare(y.n));
+    ls.forEach(l => {
+      n++;
+      const mine = items.map((x,i) => [x,i]).filter(([x], k) => !used.has(k) && same1(x.f, l.n));
+      mine.forEach(([,i]) => used.add(i));
+      const left = kind === 'cover' ? `<span class="xa">${esc(l.n)}</span>${stt(l)}<span class="xd">${esc(dutiesOf(l.n).join(' · '))}</span>`
+                                    : `${g === GRP[0] ? xc(clsOf(l.n)) : ''}<span class="xa">${esc(l.n)}</span>${stt(l)}`;
+      if (mine.length) rows.push(...mine.map(kind === 'cover' ? covRow : adjRow));
+      else if (l[kind === 'cover' ? 'cna' : 'na']) rows.push(`<div class="xr na"><div class="xl">${left}</div><div class="xb">${naCell(l, kind === 'cover' ? 'cna' : 'na')}</div></div>`);
+      else { pend++; rows.push(`<div class="xr pend"><div class="xl">${left}</div><div class="xb">${adjBtns(l, kind === 'cover' ? 'cover' : lcat(l) === 'Activity' ? 'act' : g === GRP[1] ? 'ops' : 'adj')}</div></div>`); }
+    });
+    const orphan = items.map((x,i) => [x,i]).filter(([x]) => !lv.some(l => same1(x.f, l.n)) && (kind === 'cover' ? g === GRP[1] : x.a ? g === GRP[2] : g === GRP[0]));
+    rows.push(...orphan.map(kind === 'cover' ? covRow : adjRow)); n += orphan.length;
+    return {rows, pend, n};
+  };
+  const S = {adj: GRP.map(g => [g, collect(adj, 'adj', g)]), cover: GRP.map(g => [g, collect(cv, 'cover', g)])};
+  const pendOf = k => S[k].reduce((t, [, r]) => t + r.pend, 0);
+  const tabs = [['leave', 'Leaves', `<span class="cnt">${lv.length}</span>`], ['adj', 'Adjustment', pendOf('adj') ? `<span class="pendc">${pendOf('adj')}</span>` : adj.length ? '<span class="okc">✓</span>' : ''],
+    ['cover', 'Duty Cover', pendOf('cover') ? `<span class="pendc sm">${pendOf('cover')}</span>` : cv.length ? '<span class="okc">✓</span>' : ''], ['team', 'Team', '']];
+  if (!tabs.some(t => t[0] === NTAB)) NTAB = 'leave';
+  let pane = '';
+  if (NTAB === 'team') pane = teamHTML();
+  else if (NTAB === 'leave'){
+    pane = !lv.length ? `<p class="none">No staff on leave for this day.</p>` : GRP.map(g => { const ls = lv.filter(l => grpOf(lcat(l)) === g); if (!ls.length) return '';
+      const order = l => CATS.indexOf(lcat(l));
+      return `<div class="lgrp"><div class="lgh">${esc(g[1])} <span class="cnt">${ls.length}</span></div>` + ls.slice().sort((x, y) => order(x) - order(y) || x.n.localeCompare(y.n)).map(l =>
+        `<div class="lrow"><span class="xa">${esc(l.n)}</span><span class="lm">${esc(({'Operations':'Operations','Admin':'Administration','Activity':'Co-curricular','Support Staff':'Support Staff'})[lcat(l)] || (CAT_LABEL[lcat(l)] || lcat(l)).replace(/s$/, ''))}${clsOf(l.n) ? ` · <b>CT ${esc(clsOf(l.n))}</b>` : ''}</span>${stKey(l) ? `<span class="lst">${esc(stLabel(l))}</span>` : ''}</div>`).join('') + `</div>`; }).join('');
   } else {
-    const byCat = CATS.concat([...new Set(lv.map(lcat).filter(k=>!CATS.includes(k)))]);
-    body += `<h3>Staff Leaves <span class="cnt">${lv.length}</span></h3><table><thead><tr><th>Category</th><th>Staff</th></tr></thead><tbody>` +
-      byCat.map(k => { const ps = lv.filter(l => lcat(l) === k);
-        return `<tr><td>${esc(CAT_LABEL[k]||k)}</td><td>${ps.length ? ps.map(l => esc(l.n) + (clsOf(l.n)?` <span class="ctg">CT ${esc(clsOf(l.n))}</span>`:'') + (stKey(l)?' <em>('+esc(stLabel(l))+')</em>':'')).join(', ') : '—'}</td></tr>`; }).join('') + `</tbody></table>`;
-    const ed = (m,i) => CAN_UI() ? ` data-qa="${m}:${i}"` : '';
-    const by = (n, t) => `<b class="by">${esc(n)}</b>${t?`<small class="tm">${esc(t)}</small>`:''}`;
-    const by2 = a => by(a.b, a.t) + (a.b2 ? `<div class="by2">${by(a.b2, a.t2)}</div>` : '');
-    const rt = t => `<span class="rtag">${t}</span>`;
-    const byCls = a => [a.b ? [a.b, a.t, a.c ? 'Class Teacher' : ''] : null, a.b2 ? [a.b2, a.t2, 'Subject Teacher'] : null, a.b3 ? [a.b3, a.t3, 'Subject Teacher'] : null].filter(Boolean)
-      .map(([n, t, r], k) => `<div class="${k ? 'by2' : ''}">${by(n, t)}${r ? rt(r) : ''}</div>`).join('');
-    const ab = n => n ? `<span class="nw">${esc(n)}</span>` : '';
-    const stt = l => stKey(l) ? `<small class="tm">${esc(stLabel(l))}</small>` : '';
-    const absCell = l => `<span class="nw">${esc(l.n)}</span>${stt(l)}`;
-    const grpOf = k => GRP.find(g => g[2].includes(k)) || GRP[0];
-    const sub = (g, n, kind) => `<tr class="gsub"><td colspan="3">${g[1]}${n ? ` <span class="pendc${kind === 'cover' ? ' sm' : ''}">${n} pending</span>` : ''}</td></tr>`;
-    const adjBtns = (l, mode) => CAN_UI() ? `<div class="pbtns${mode === 'cover' ? ' sm' : ''}"><button type="button" class="padj" data-padj="${esc(l.n)}" data-pc="${mode === 'adj' ? esc(clsOf(l.n)) : ''}" data-pm="${mode}">+ ${mode === 'cover' ? 'Cover' : 'Adjust'}</button><button type="button" class="pna" data-na="${esc(l.n)}" data-nk="${mode === 'cover' ? 'cna' : 'na'}">NA</button></div>` : `<span class="pendt${mode === 'cover' ? ' sm' : ''}">Pending</span>`;
-    const naCell = (l, k) => CAN_UI() ? `<button type="button" class="natag" data-unna="${esc(l.n)}" data-nk="${k}" title="Tap to undo">Not applicable</button>` : '<span class="natag">Not applicable</span>';
-    const adjRow = ([a,i]) => a.a
-      ? `<tr${ed('adj',i)}><td>${esc(a.a)}${a.c?`<small class="tm">${esc(a.c)}</small>`:''}</td><td>${ab(a.f)}</td><td>${by2(a)}</td></tr>`
-      : `<tr${ed('adj',i)}><td>${esc(a.c)}</td><td>${a.f ? ab(a.f) : ctOf(a.c) ? `${esc(ctOf(a.c))}<small class="tm">Class teacher</small>` : ab('')}</td><td>${byCls(a)}</td></tr>`;
-    const covRow = ([c,i]) => `<tr${ed('cover',i)}><td class="duty">${esc(c.d||'All duties')}</td><td>${ab(c.f)}</td><td>${by(c.n)}</td></tr>`;
-    /* one section (Adjustment or Duty Cover): every absentee, grouped Teachers / Operations / Co-curricular, in leave order */
-    const section = (title, items, kind, head3) => {
-      const used = new Set(); let html = '', pend = 0;
-      GRP.forEach(g => {
-        const ls = lv.filter(l => grpOf(lcat(l)) === g && (kind !== 'cover' || needsCover(l) || items.some(x => same1(x.f, l.n)))).slice().sort((x, y) => x.n.localeCompare(y.n));
-        const rows = []; let gp = 0;
-        const clsCell = l => kind !== 'cover' && g === GRP[0] && clsOf(l.n) ? esc(clsOf(l.n)) : kind === 'cover' ? `<small class="dlist">${esc(dutiesOf(l.n).join(', '))}</small>` : '';
-        ls.forEach(l => {
-          const mine = items.map((x,i) => [x,i]).filter(([x], k) => !used.has(k) && same1(x.f, l.n));
-          mine.forEach(([,i]) => used.add(i));
-          if (mine.length) rows.push(...mine.map(kind === 'cover' ? covRow : adjRow));
-          else if (l[kind === 'cover' ? 'cna' : 'na']) rows.push(`<tr class="nar"><td>${clsCell(l)}</td><td>${absCell(l)}</td><td>${naCell(l, kind === 'cover' ? 'cna' : 'na')}</td></tr>`);
-          else { gp++; rows.push(`<tr class="pendr${kind === 'cover' ? ' pcv' : ''}"><td>${clsCell(l)}</td><td>${absCell(l)}</td><td>${adjBtns(l, kind === 'cover' ? 'cover' : lcat(l) === 'Activity' ? 'act' : g === GRP[1] ? 'ops' : 'adj')}</td></tr>`); }
-        });
-        /* entries whose absent person is not on the leave list */
-        const orphan = items.map((x,i) => [x,i]).filter(([x], k) => !used.has(k) && !lv.some(l => same1(x.f, l.n)) && (kind === 'cover' ? g === GRP[1] : x.a ? g === GRP[2] : g === GRP[0]));
-        orphan.forEach(([,i]) => used.add(i));
-        rows.push(...orphan.map(kind === 'cover' ? covRow : adjRow));
-        if (rows.length){ pend += gp; html += sub(g, gp, kind) + rows.join(''); }
-      });
-      if (!html) return '';
-      return `<h3>${title} <span class="cnt ${head3}">${items.length}</span>${pend ? ` <span class="pendc${kind === 'cover' ? ' sm' : ''}">${pend} pending</span>` : ''}</h3><table class="adjt"><thead><tr><th>${kind === 'cover' ? 'Duty' : 'Class / Activity'}</th><th>Absent</th><th>${kind === 'cover' ? 'Covered by' : 'Adjusted by'}</th></tr></thead><tbody>${html}</tbody></table>`;
-    };
-    body += section('Adjustment', adj, 'adj', 'k2');
-    body += section('Duty Cover', cv, 'cover', 'k4');
+    const groups = S[NTAB].filter(([, r]) => r.n);
+    if (!groups.length) pane = `<p class="none">${NTAB === 'cover' ? 'Nobody on leave holds a duty today.' : 'Nothing to adjust for this day.'}</p>`;
+    else {
+      let cur = groups.find(([g]) => g[0] === NG[NTAB]) || groups.find(([, r]) => r.pend) || groups[0];
+      NG[NTAB] = cur[0][0];
+      pane = `<div class="ngrp" role="tablist">${groups.map(([g, r]) => `<button type="button" data-ng="${g[0]}" aria-selected="${g === cur[0]}">${esc(g[1])} <b>${r.n}</b>${r.pend ? `<i class="dot" title="${r.pend} pending"></i>` : ''}</button>`).join('')}</div>` +
+        (cur[1].pend ? `<p class="pline">${cur[1].pend} pending – tap <b>${NTAB === 'cover' ? '+ Cover' : '+ Adjust'}</b>, or <b>NA</b> if not needed.</p>` : '') + `<div class="xlist">${cur[1].rows.join('')}</div>`;
+    }
+    pane += NTAB === 'adj' ? `<div class="nbtns qbtns" ${CAN_UI()?'':'hidden'}><button class="btn ghost" data-qnew="adj">+ Class adjustment</button><button class="btn ghost" data-qnew="act">+ Activity adjustment</button></div>`
+                           : `<div class="nbtns qbtns" ${CAN_UI()?'':'hidden'}><button class="btn ghost" data-qnew="cover">+ Duty cover</button></div>`;
+    if (CAN_UI() && (NTAB === 'adj' ? adj.length : cv.length)) pane += '<p class="hint" style="margin:6px 0 0">Tap a row to change or remove it.</p>';
   }
+  const ntf = notifyBox();
   $('#notice').innerHTML = `
     <div class="nhead">
       <button class="nav" id="prevDay" aria-label="Previous day">‹</button>
@@ -969,13 +1048,10 @@ function renderNotice(){
     </div>
     <button type="button" class="nmin" id="nMin" aria-expanded="${!NMIN}">${NMIN ? '▾ Show details' : '▴ Hide details'}<span>${esc(nSummary())}</span></button>
     <div class="nbody">
-    ${myBox()}${ciLine}${body}${notifyBox()}
-    <div class="nbtns qbtns" ${CAN_UI()?'':'hidden'}>
-      <button class="btn ghost" data-qnew="adj">+ Class adjustment</button>
-      <button class="btn ghost" data-qnew="act">+ Activity adjustment</button>
-      <button class="btn ghost" data-qnew="cover">+ Duty cover</button>
-    </div>
-    ${CAN_UI() && (cv.length || adj.length) ? '<p class="hint" style="margin:6px 0 0">Tap a row to change or remove it. Tap any name on the chart to replace them.</p>' : ''}
+    ${myBox()}${ciLine}
+    <div class="ntabs" role="tablist">${tabs.map(([k, l, b]) => `<button type="button" role="tab" data-ntab="${k}" aria-selected="${k === NTAB}">${l}${b}</button>`).join('')}</div>
+    <div class="npane" id="npane">${pane}</div>
+    ${ntf && NTAB !== 'team' ? `<details class="ntfd"><summary>📲 Notify staff <span class="cnt">${affected().length}</span></summary>${ntf}</details>` : ''}
     <div class="nbtns">
       <button class="btn ghost" id="copyWa">Copy for WhatsApp</button>
       <button class="btn" id="openEd" ${CAN_UI()?'':'hidden'}>${CAN_EDIT ? '✎ Update leave' : '✎ Fill leave → WhatsApp'}</button>
@@ -986,6 +1062,15 @@ function renderNotice(){
   $('#nextDay').onclick = () => setDay(addDays(DAY,1));
   $('#copyWa').onclick = copyWa;
   $('#openEd').onclick = () => openEditor(DAY);
+  const goTab = t => { NTAB = t; try { sessionStorage.setItem('dutyNTab', t); } catch(e){} renderNotice(); };
+  $('#notice').querySelectorAll('[data-ntab]').forEach(b => b.onclick = () => goTab(b.dataset.ntab));
+  $('#notice').querySelectorAll('[data-ng]').forEach(b => b.onclick = () => { NG[NTAB] = b.dataset.ng; renderNotice(); });
+  /* swipe left / right on the panel to move between Leaves → Adjustment → Duty Cover → Team */
+  const pn = $('#npane'); let sx = null, sy = 0;
+  pn.addEventListener('touchstart', e => { const t = e.touches[0]; sx = t.clientX; sy = t.clientY; }, {passive: true});
+  pn.addEventListener('touchend', e => { if (sx === null) return; const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy; sx = null;
+    if (Math.abs(dx) < 60 || Math.abs(dy) > Math.abs(dx) * .7 || e.target.closest('select,input')) return;
+    const ks = tabs.map(x => x[0]), i = ks.indexOf(NTAB) + (dx < 0 ? 1 : -1); if (i >= 0 && i < ks.length) goTab(ks[i]); }, {passive: true});
   const cil = $('#notice').querySelector('[data-goci]'); if (cil) cil.onclick = () => { render('checkin'); window.scrollTo({top:0}); };
   $('#notice').querySelectorAll('[data-padj]').forEach(b => b.onclick = e => { e.stopPropagation(); if (CAN_UI()) openQA({mode: b.dataset.pm === 'ops' ? 'adj' : b.dataset.pm, simple: b.dataset.pm === 'ops', ...(b.dataset.pc && b.dataset.pm === 'adj' ? {c: b.dataset.pc} : {}), f: b.dataset.padj}); });
   const setNA = (n, on, k) => { if (!ART){ toast('Enter the edit PIN to save'); return; } const next = JSON.parse(JSON.stringify(DAILY)); const dd = next[DAY] || {};
@@ -994,6 +1079,15 @@ function renderNotice(){
   $('#notice').querySelectorAll('[data-unna]').forEach(b => b.onclick = e => { e.stopPropagation(); setNA(b.dataset.unna, false, b.dataset.nk || 'na'); });
   $('#notice').querySelectorAll('[data-qnew]').forEach(b => b.onclick = () => openQA({mode: b.dataset.qnew}));
   $('#notice').querySelectorAll('[data-qa]').forEach(r => r.onclick = () => { const [m,i] = r.dataset.qa.split(':'); openQA({mode: m, idx: +i}); });
+  $('#notice').querySelectorAll('details.tm').forEach(dt => dt.addEventListener('toggle', () => { if (dt.open) TEAM_OPEN = dt.dataset.tk || ''; }));
+  $('#notice').querySelectorAll('[data-mv]').forEach(sel => sel.onchange = () => {
+    if (!ART){ toast('Enter the edit PIN to save'); return; }
+    const n = sel.dataset.mv, x = STAFF_LIST.find(s => s[0] === n); if (!x) return;
+    const t = JSON.parse(JSON.stringify(ROSTER._team || {})); t.cat = t.cat || {};
+    if (sel.value === x[3]) delete t.cat[n]; else t.cat[n] = sel.value;
+    TEAM_OPEN = sel.value; save(DAILY, DAY, null, {...ROSTER, _team: t});
+    toast(n + ' → ' + (TEAMS.find(z => z[0] === sel.value) || [, sel.value])[1]);
+  });
 }
 function setDay(d){ DAY = d; LV = leaveMap(); renderNotice(); render(TAB); doSearch(); }
 
@@ -1267,13 +1361,13 @@ $('#main').addEventListener('click', e => {
 
 /* ---------- duty check-in (reached / late / absent) ---------- */
 const AREAS = [
- {id:'gf',  t:'Ground Floor',  by:'Nahida',     p:['Harshvardhan','Shivika','Poonam Rathore','Madhu','Sanjana','Poojal','Nahida','Chandani','Suman','Priyanka Bhargava']},
+ {id:'gf',  t:'Ground Floor',  by:'Nahida',     p:['Harshvardhan','Shivangi','Poonam Rathore','Madhu','Sanjana','Poojal','Nahida','Chandani','Suman','Priyanka Bhargava']},
  {id:'ff',  t:'First Floor',   by:'Neetu',      p:['Neetu','Diksha','Karishma','Divyanshi','Shally','Himanshi','Richa','Geeta','Preeti']},
  {id:'sf',  t:'Second Floor',  by:'Sarita',     p:['Tanushree','Ajita','Garima','Poonam Sharda','Saba','Sarita','Asha','Tripti','Bharti','Neha','Mansi']},
  {id:'tf',  t:'Third Floor',   by:'Upender',    p:['Upender','Jatin','Shobha','Poonam Gaur']},
  {id:'out', t:'Outer Area',    by:'Jay Pandla', p:['Anoop Gahlot','Sourabh','Kamal','Vishwabandhu','Khanaiya Lal Gujrati','Chotulal','Radheyshyam','Jatan Solanki','Navratan','Jai Pandla']},
  {id:'fo',  t:'Front Office',  by:'Vaishali',   p:['Vaishali','Preeti Jain','Megha','Narendra','Harshvardhan']},
- {id:'bus', t:'Transport',     by:'Harsh',      p:['Harsh','Amit','Anita','Juhi','Priyanka S.','Mansi','Komal','Bhagyashree','Ram','Chandan','Rashmi','Renuka','Vijay','Yashika','Vipul','Himanshu']}
+ {id:'bus', t:'Transport',     by:'Harsh',      p:['Harsh','Amit','Anita','Juhi','Priyanka S.','Mansi','Komal','Shivangi','Ram','Chandan','Rashmi','Renuka','Vijay','Yashika','Vipul','Himanshu']}
 ];
 /* Teachers segment: class-wise groups, marked by the class PL / incharge. Starts with the class teachers of each section. */
 const CLASS_GROUPS = [['c12','Class 1–2',['1','2'],'Shally / Sanjana'],['c3','Class 3',['3'],'Neetu'],['c4','Class 4',['4'],'Divyanshi'],['c5','Class 5',['5'],'Diksha'],
@@ -1297,7 +1391,8 @@ const CAN_ALL = () => CAN_EDIT && isAdmin();
 const CAN_UI = () => !CAN_EDIT || isAdmin();
 const canArea = id => !CAN_EDIT || isAdmin() || myAreas().includes(id);
 const secTag = n => { const c = clsOf(n); return c ? c : ''; };
-const areaNames = ar => (ROSTER[ar.id] && ROSTER[ar.id].p) || ar.p;
+const LEFT_SWAP = {shivika:'Shivangi','shivika ranjan':'Shivangi',bhagyashree:'Shivangi','bhagyashree rathore':'Shivangi'};
+const areaNames = ar => { const p = (ROSTER[ar.id] && ROSTER[ar.id].p) || ar.p; const out = []; p.forEach(n => { const m = LEFT_SWAP[String(n).trim().toLowerCase()] || n; if (!out.some(x => key(x) === key(m))) out.push(m); }); return out; };
 const areaBy = ar => (ROSTER[ar.id] && ROSTER[ar.id].by) || ar.by;
 const ST_LABEL = {r:'Reached', l:'Late', a:'Absent'};
 const nowHM = () => { const d = new Date(); return d.getHours() + ':' + pad(d.getMinutes()); };
@@ -1433,7 +1528,7 @@ function canon(n, cat){
 }
 const OLDCAT = {'Teacher':'Secondary Teacher','Admin & PL':'Admin'};
 const GRP = [['teach','Teachers',['Pre Primary Teacher','Primary Teacher','Secondary Teacher','Hindi Teacher','Computer Teacher','Teacher']],
-  ['ops','Operations',['Admin','PL','CM','Floor Manager','Support Staff','Admin & PL']],
+  ['ops','Operations',['Admin','Operations','PL','CM','Floor Manager','Support Staff','Admin & PL']],
   ['cocur','Co-curricular',['Activity']]];
 const lcat = l => (resolve(l.n, l.k) || [])[2] || OLDCAT[l.k] || l.k || 'Secondary Teacher';
 const catOfName = (n, fallback) => { const s = resolve(n, fallback); return s ? s[2] : (OLDCAT[fallback] || fallback || 'Secondary Teacher'); };
