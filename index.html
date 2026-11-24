@@ -450,6 +450,82 @@ header.top>.tabs{flex:1 1 100%;order:3}
 .lgrp{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
 .lgrp .lgh{margin:0;padding:5px 10px 3px;background:var(--chip)}
 .lgrp .lrow:last-child{border-bottom:0}
+
+/* ===== Premium panel (24 Nov 2026) – FIS logo colours: pink #D63F63, purple #5E3585, sky #72B6E3, amber #E8AE55, navy #1E3560 ===== */
+:root{--fp:#D63F63;--fu:#5E3585;--fs:#72B6E3;--fa:#E8AE55;--fn:#1E3560}
+#notice.notice{position:relative;border:1px solid var(--line);border-top:0;border-left:0;border-radius:20px;padding:14px 12px 12px;box-shadow:0 1px 2px rgba(30,53,96,.06),0 10px 28px -12px rgba(30,53,96,.22);overflow:hidden}
+#notice.notice::before{content:'';position:absolute;left:0;right:0;top:0;height:4px;background:linear-gradient(90deg,var(--fp) 0 25%,var(--fu) 25% 50%,var(--fs) 50% 75%,var(--fa) 75%)}
+#notice .nhead{display:flex;align-items:center;gap:6px;margin-top:2px}
+#notice .ntitle{flex:1;text-align:left;min-width:0}
+#notice .ney{display:block;font-size:.62rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--fp)}
+#notice .ntitle h2{font-size:1.2rem;line-height:1.15;margin:1px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#notice .nhead .nav{width:34px;height:34px;border-radius:50%;background:var(--surface);border:1px solid var(--line);box-shadow:0 1px 2px rgba(30,53,96,.08);font-size:18px;color:var(--ink)}
+#notice .nmin{display:inline-flex;width:auto;margin:6px 0 0;padding:0;border:0;background:transparent;font-size:.7rem;font-weight:700;color:var(--muted)}
+#notice.min .nmin{display:flex;flex-direction:column;align-items:flex-start;width:100%;background:var(--chip);padding:7px 11px;border-radius:12px;color:var(--ink)}
+/* KPI tabs */
+#notice .ntabs{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:10px 0 10px;padding:0;background:transparent;position:static}
+#notice .ntabs button{position:relative;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:1px;min-height:58px;padding:8px 10px 7px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--muted);text-align:left;box-shadow:0 1px 2px rgba(30,53,96,.05);overflow:hidden}
+#notice .ntabs button::after{content:'';position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--kc,var(--fn));opacity:.35}
+#notice .ntabs button>b{font-family:var(--head);font-size:1.35rem;font-weight:700;line-height:1;color:var(--kc,var(--fn))}
+#notice .ntabs button>b.ok{color:#2E8B57}#notice .ntabs button>b.z{color:var(--muted);opacity:.6}
+#notice .ntabs button>b.tmi{font-size:1.05rem}
+#notice .ntabs button>span{font-size:.66rem;font-weight:700;letter-spacing:.02em;white-space:nowrap;color:var(--muted)}
+#notice .ntabs .k-leave{--kc:var(--fn)}#notice .ntabs .k-adj{--kc:var(--fp)}#notice .ntabs .k-cover{--kc:#C98A2B}#notice .ntabs .k-team{--kc:var(--fu)}
+#notice .ntabs button[aria-selected="true"]{background:var(--kc);border-color:transparent;box-shadow:0 6px 16px -8px var(--kc)}
+#notice .ntabs button[aria-selected="true"]>b,#notice .ntabs button[aria-selected="true"]>span{color:#fff}
+#notice .ntabs button[aria-selected="true"]::after{background:rgba(255,255,255,.5);opacity:1}
+/* avatars */
+.av{flex:0 0 auto;width:24px;height:24px;border-radius:50%;display:inline-grid;place-items:center;font-size:.6rem;font-weight:800;letter-spacing:.02em;color:#fff;align-self:center}
+.av.g1{background:linear-gradient(135deg,#72B6E3,#3C88BF)}.av.g2{background:linear-gradient(135deg,#7B4FA6,#5E3585)}.av.g3{background:linear-gradient(135deg,#F0C27A,#E8AE55);color:#5B3A06}
+/* leave list */
+#notice .lgrp{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--surface);margin-bottom:8px;box-shadow:0 1px 2px rgba(30,53,96,.04)}
+#notice .lgrp .lgh{display:flex;align-items:center;gap:7px;margin:0;padding:7px 12px 6px;background:transparent;border-bottom:1px solid var(--line);font-size:.64rem;letter-spacing:.16em;color:var(--ink)}
+#notice .lgh i{width:8px;height:8px;border-radius:50%;background:var(--fs)}
+#notice .lg2 .lgh i{background:var(--fu)}#notice .lg3 .lgh i{background:var(--fa)}
+#notice .lgh .cnt{background:var(--chip);color:var(--ink);font-weight:800}
+#notice .lgrp .lrow{display:flex;align-items:center;gap:9px;padding:5px 12px;border:0;border-bottom:1px solid color-mix(in srgb,var(--line) 70%,transparent);margin:0;background:transparent}
+#notice .lgrp .lrow:last-child{border-bottom:0}
+#notice .lrow .xa{font-size:.88rem;font-weight:700}
+#notice .lrow .lm{flex:1;font-size:.72rem;color:var(--muted)}
+#notice .lrow .lm b{color:var(--fn);font-weight:800}
+#notice .lst{background:color-mix(in srgb,var(--fa) 22%,transparent);color:#7A4E0E}
+/* adjustment / cover rows */
+#notice .ngrp{gap:6px;margin:0 0 8px}
+#notice .ngrp button{border-radius:999px;padding:6px 12px;background:var(--surface);box-shadow:0 1px 2px rgba(30,53,96,.05)}
+#notice .ngrp button[aria-selected="true"]{background:var(--fn);color:#fff}
+#notice .ngrp .dot{background:var(--fp)}
+#notice .pline{font-size:.72rem}
+#notice .xlist{gap:6px}
+#notice .xr{position:relative;align-items:center;gap:6px 10px;padding:8px 11px 8px 14px;border:1px solid var(--line);border-radius:14px;background:var(--surface);box-shadow:0 1px 2px rgba(30,53,96,.05);overflow:hidden}
+#notice .xr::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:#2E8B57}
+#notice .xr.pend::before{background:var(--fp)}#notice .xr.na::before{background:var(--line)}
+#notice .xr.pend{background:var(--surface);border-color:color-mix(in srgb,var(--fp) 30%,var(--line))}
+#notice .xl{align-items:center;gap:3px 7px}
+#notice .xc{background:color-mix(in srgb,var(--fn) 9%,transparent);color:var(--fn);border-radius:6px}
+#notice .xd{padding-left:31px}
+#notice .xb b.by{color:var(--fn)}
+#notice .pbtns .padj{background:var(--fn);color:#fff;border:0;border-radius:999px;font-weight:700;padding:6px 13px;box-shadow:0 4px 10px -6px var(--fn)}
+#notice .pbtns .pna{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:5px 11px}
+#notice .pbtns.sm .padj{background:var(--fn);color:#fff}
+#notice .rtag{background:color-mix(in srgb,var(--fs) 22%,transparent);color:#1E5B86}
+/* team + notify + actions */
+#notice details.tm,#notice details.ntfd{border-radius:14px;box-shadow:0 1px 2px rgba(30,53,96,.05)}
+#notice details.tm summary .cnt{background:var(--fu)}
+#notice .nbtns .btn{border-radius:999px}
+#notice .nbtns .btn:not(.ghost){background:var(--fn);box-shadow:0 6px 16px -8px var(--fn)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #notice .lrow .lm b,:root:not([data-theme="light"]) #notice .xb b.by,:root:not([data-theme="light"]) #notice .xc{color:var(--fa)}
+ :root:not([data-theme="light"]) #notice .ntabs .k-leave{--kc:#3C5A99}}
+
+#notice .ney .nmin{display:inline;margin:0 0 0 10px;padding:0;font-size:.62rem;letter-spacing:.04em;text-transform:none;color:var(--muted);background:none;width:auto}
+#notice.min .ney .nmin{display:inline;background:none;padding:0;width:auto}
+#notice .nsum{margin-top:8px;padding:7px 11px;border-radius:12px;background:var(--chip);font-size:.76rem;color:var(--ink)}
+#notice.min .nsum{display:block}
+#notice .ntabs button{min-height:50px;padding:6px 9px 6px}
+#notice .ntabs button>b{font-size:1.2rem}
+#notice .lgrp .lrow{padding:4px 12px;gap:8px}
+#notice .av{width:22px;height:22px;font-size:.56rem}
+#notice .lgrp .lgh{padding:5px 12px 4px}
+#notice .xd{padding-left:0}
 </style>
 </head>
 <body>
@@ -1037,10 +1113,13 @@ function renderNotice(){
   const adjBtns = (l, mode) => CAN_UI() ? `<div class="pbtns${mode === 'cover' ? ' sm' : ''}"><button type="button" class="padj" data-padj="${esc(l.n)}" data-pc="${mode === 'adj' ? esc(clsOf(l.n)) : ''}" data-pm="${mode}">+ ${mode === 'cover' ? 'Cover' : 'Adjust'}</button><button type="button" class="pna" data-na="${esc(l.n)}" data-nk="${mode === 'cover' ? 'cna' : 'na'}">NA</button></div>` : `<span class="pendt${mode === 'cover' ? ' sm' : ''}">Pending</span>`;
   const naCell = (l, k) => CAN_UI() ? `<button type="button" class="natag" data-unna="${esc(l.n)}" data-nk="${k}" title="Tap to undo">Not applicable</button>` : '<span class="natag">Not applicable</span>';
   const xc = t => t ? `<span class="xc">${esc(t)}</span>` : '';
+  const ini = n => String(n || '?').replace(/^(dr|mr|mrs|ms)\.?\s+/i, '').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+  const avc = n => { const k = lcat({n, k: catOfName(n)}); return k === 'Activity' ? 'g3' : grpOf(k) === GRP[1] ? 'g2' : 'g1'; };
+  const av = n => `<span class="av ${avc(n)}" aria-hidden="true">${esc(ini(n))}</span>`;
   const adjRow = ([a,i]) => a.a
-    ? `<div class="xr"${ed('adj',i)}><div class="xl">${xc(a.a)}<span class="xa">${esc(a.f || '')}</span>${a.c ? `<span class="xs">${esc(a.c)}</span>` : ''}</div><div class="xb">${by2(a)}</div></div>`
-    : `<div class="xr"${ed('adj',i)}><div class="xl">${xc(a.c)}<span class="xa">${esc(a.f || ctOf(a.c) || '')}</span>${!a.f && ctOf(a.c) ? '<span class="xs">Class teacher</span>' : ''}</div><div class="xb">${byCls(a)}</div></div>`;
-  const covRow = ([c,i]) => `<div class="xr"${ed('cover',i)}><div class="xl"><span class="xa">${esc(c.f || '')}</span><span class="xd">${esc(c.d || 'All duties')}</span></div><div class="xb">${by(c.n)}</div></div>`;
+    ? `<div class="xr done"${ed('adj',i)}><div class="xl">${av(a.f || a.a)}<span class="xa">${esc(a.f || '')}</span>${xc(a.a)}${a.c ? `<span class="xs">${esc(a.c)}</span>` : ''}</div><div class="xb">${by2(a)}</div></div>`
+    : `<div class="xr done"${ed('adj',i)}><div class="xl">${av(a.f || ctOf(a.c) || a.c)}<span class="xa">${esc(a.f || ctOf(a.c) || '')}</span>${xc(a.c)}${!a.f && ctOf(a.c) ? '<span class="xs">Class teacher</span>' : ''}</div><div class="xb">${byCls(a)}</div></div>`;
+  const covRow = ([c,i]) => `<div class="xr done"${ed('cover',i)}><div class="xl">${av(c.f)}<span class="xa">${esc(c.f || '')}</span><span class="xd">${esc(c.d || 'All duties')}</span></div><div class="xb">${by(c.n)}</div></div>`;
   /* one group of one section: every absentee of that group, then entries whose absent person is not on the leave list */
   const collect = (items, kind, g) => {
     const used = new Set(), rows = []; let pend = 0, n = 0;
@@ -1049,8 +1128,8 @@ function renderNotice(){
       n++;
       const mine = items.map((x,i) => [x,i]).filter(([x], k) => !used.has(k) && same1(x.f, l.n));
       mine.forEach(([,i]) => used.add(i));
-      const left = kind === 'cover' ? `<span class="xa">${esc(l.n)}</span>${stt(l)}<span class="xd">${esc(dutiesOf(l.n).join(' · '))}</span>`
-                                    : `${g === GRP[0] ? xc(clsOf(l.n)) : ''}<span class="xa">${esc(l.n)}</span>${stt(l)}`;
+      const left = kind === 'cover' ? `${av(l.n)}<span class="xa">${esc(l.n)}</span>${stt(l)}<span class="xd">${esc(dutiesOf(l.n).join(' · '))}</span>`
+                                    : `${av(l.n)}<span class="xa">${esc(l.n)}</span>${g === GRP[0] ? xc(clsOf(l.n)) : ''}${stt(l)}`;
       if (mine.length) rows.push(...mine.map(kind === 'cover' ? covRow : adjRow));
       else if (l[kind === 'cover' ? 'cna' : 'na']) rows.push(`<div class="xr na"><div class="xl">${left}</div><div class="xb">${naCell(l, kind === 'cover' ? 'cna' : 'na')}</div></div>`);
       else { pend++; rows.push(`<div class="xr pend"><div class="xl">${left}</div><div class="xb">${adjBtns(l, kind === 'cover' ? 'cover' : lcat(l) === 'Activity' ? 'act' : g === GRP[1] ? 'ops' : 'adj')}</div></div>`); }
@@ -1061,16 +1140,17 @@ function renderNotice(){
   };
   const S = {adj: GRP.map(g => [g, collect(adj, 'adj', g)]), cover: GRP.map(g => [g, collect(cv, 'cover', g)])};
   const pendOf = k => S[k].reduce((t, [, r]) => t + r.pend, 0);
-  const tabs = [['leave', 'Leaves', `<span class="cnt">${lv.length}</span>`], ['adj', 'Adjustment', pendOf('adj') ? `<span class="pendc">${pendOf('adj')}</span>` : adj.length ? '<span class="okc">✓</span>' : ''],
-    ['cover', 'Duty Cover', pendOf('cover') ? `<span class="pendc sm">${pendOf('cover')}</span>` : cv.length ? '<span class="okc">✓</span>' : ''], ['team', 'Team', '']];
+  const kp = (n, done) => n ? `<b>${n}</b>` : done ? '<b class="ok">✓</b>' : '<b class="z">0</b>';
+  const tabs = [['leave', 'On leave', kp(lv.length)], ['adj', pendOf('adj') ? 'To adjust' : 'Adjustment', kp(pendOf('adj'), adj.length)],
+    ['cover', pendOf('cover') ? 'To cover' : 'Duty cover', kp(pendOf('cover'), cv.length)], ['team', 'Team', `<b class="tmi">${STAFF_LIST.length}</b>`]];
   if (!tabs.some(t => t[0] === NTAB)) NTAB = 'leave';
   let pane = '';
   if (NTAB === 'team') pane = teamHTML();
   else if (NTAB === 'leave'){
-    pane = !lv.length ? `<p class="none">No staff on leave for this day.</p>` : GRP.map(g => { const ls = lv.filter(l => grpOf(lcat(l)) === g); if (!ls.length) return '';
+    pane = !lv.length ? `<p class="none">No staff on leave for this day.</p>` : GRP.map((g, gi) => { const ls = lv.filter(l => grpOf(lcat(l)) === g); if (!ls.length) return '';
       const order = l => CATS.indexOf(lcat(l));
-      return `<div class="lgrp"><div class="lgh">${esc(g[1])} <span class="cnt">${ls.length}</span></div>` + ls.slice().sort((x, y) => order(x) - order(y) || x.n.localeCompare(y.n)).map(l =>
-        `<div class="lrow"><span class="xa">${esc(l.n)}</span><span class="lm">${esc(({'Operations':'Operations','Admin':'Administration','Activity':'Co-curricular','Support Staff':'Support Staff'})[lcat(l)] || (CAT_LABEL[lcat(l)] || lcat(l)).replace(/s$/, ''))}${clsOf(l.n) ? ` · <b>CT ${esc(clsOf(l.n))}</b>` : ''}</span>${stKey(l) ? `<span class="lst">${esc(stLabel(l))}</span>` : ''}</div>`).join('') + `</div>`; }).join('');
+      return `<div class="lgrp lg${gi + 1}"><div class="lgh"><i></i>${esc(g[1])} <span class="cnt">${ls.length}</span></div>` + ls.slice().sort((x, y) => order(x) - order(y) || x.n.localeCompare(y.n)).map(l =>
+        `<div class="lrow">${av(l.n)}<span class="xa">${esc(l.n)}</span><span class="lm">${esc(({'Operations':'Operations','Admin':'Administration','Activity':'Co-curricular','Support Staff':'Support Staff'})[lcat(l)] || (CAT_LABEL[lcat(l)] || lcat(l)).replace(/s$/, ''))}${clsOf(l.n) ? ` · <b>CT ${esc(clsOf(l.n))}</b>` : ''}</span>${stKey(l) ? `<span class="lst">${esc(stLabel(l))}</span>` : ''}</div>`).join('') + `</div>`; }).join('');
   } else {
     const groups = S[NTAB].filter(([, r]) => r.n);
     if (!groups.length) pane = `<p class="none">${NTAB === 'cover' ? 'Nobody on leave holds a duty today.' : 'Nothing to adjust for this day.'}</p>`;
@@ -1087,13 +1167,13 @@ function renderNotice(){
   const ntf = notifyBox();
   $('#notice').innerHTML = `
     <div class="nhead">
-      <button class="nav" id="prevDay" aria-label="Previous day">‹</button>
-      <div class="ntitle"><h2>${rel?rel+' · ':''}${esc(nice(DAY))}</h2><button type="button" class="nmin" id="nMin" aria-expanded="${!NMIN}">${NMIN ? '▾ Show details' : '▴ Hide details'}<span>${esc(nSummary())}</span></button></div>
-      <button class="nav" id="nextDay" aria-label="Next day">›</button>
+      <div class="ntitle"><span class="ney">${rel || 'Staff leaves'}<button type="button" class="nmin" id="nMin" aria-expanded="${!NMIN}">${NMIN ? '▾ Show details' : '▴ Hide details'}</button></span><h2>${esc(nice(DAY))}</h2></div>
+      <button class="nav" id="prevDay" aria-label="Previous day">‹</button><button class="nav" id="nextDay" aria-label="Next day">›</button>
     </div>
+    ${NMIN ? `<div class="nsum">${esc(nSummary())}</div>` : ''}
     <div class="nbody">
     ${myBox()}${ciLine}
-    <div class="ntabs" role="tablist">${tabs.map(([k, l, b]) => `<button type="button" role="tab" data-ntab="${k}" aria-selected="${k === NTAB}">${l}${b}</button>`).join('')}</div>
+    <div class="ntabs" role="tablist">${tabs.map(([k, l, b]) => `<button type="button" role="tab" class="k-${k}" data-ntab="${k}" aria-selected="${k === NTAB}">${b}<span>${l}</span></button>`).join('')}</div>
     <div class="npane" id="npane">${pane}</div>
     ${ntf && NTAB !== 'team' ? `<details class="ntfd"><summary>📲 Notify staff <span class="cnt">${affected().length}</span></summary>${ntf}</details>` : ''}
     <div class="nbtns">
