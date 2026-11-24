@@ -179,28 +179,30 @@ const ITEMS=['Book','Notebook','Content Notebook','Homework Notebook','Practice 
 const IT_SHORT={'Book':'Book','Notebook':'Notebook','Content Notebook':'Content NB','Homework Notebook':'Homework NB','Practice Notebook':'Practice NB','Assignment':'Assignment','Test Notebook':'Test NB'};
 const NB4=['Book','Notebook','Assignment','Test Notebook'], NB3=['Notebook','Assignment','Test Notebook'];
 const SUBJ=[
- {n:'English I',d:'English',c:[1,10],i:c=>c<=5?NB4:NB3},
- {n:'English II',d:'English',c:[1,10],i:c=>c<=5?['Book','Assignment','Test Notebook']:['Assignment','Test Notebook']},
- {n:'English',d:'English',c:[11,11],i:()=>NB3},
+ {n:'English I',d:'English',c:[1,10],i:()=>NB4},
+ {n:'English II',d:'English',c:[1,10],i:()=>['Book','Assignment','Test Notebook']},
+ {n:'English',d:'English',c:[11,11],i:()=>NB4},
  {n:'EVS',d:'Science',c:[1,2],i:()=>NB4},
- {n:'Science',d:'Science',c:[3,10],i:c=>c<=5?NB4:NB3},
- {n:'S.St.',d:'S.St.',c:[3,10],i:c=>c<=5?NB4:NB3},
- {n:'Maths',d:'Maths',c:[1,10],i:c=>c<=5?NB4:(c===6||c>=9)?['Content Notebook','Homework Notebook','Practice Notebook','Assignment','Test Notebook']:['Content Notebook','Practice Notebook','Assignment','Test Notebook']},
+ {n:'Science',d:'Science',c:[3,10],i:()=>NB4},
+ {n:'S.St.',d:'S.St.',c:[3,10],i:()=>NB4},
+ {n:'Maths',d:'Maths',c:[1,10],i:c=>c<=5?NB4:(c===6||c>=9)?['Book','Notebook','Content Notebook','Homework Notebook','Practice Notebook','Assignment','Test Notebook']:['Book','Notebook','Content Notebook','Practice Notebook','Assignment','Test Notebook']},
  {n:'GK',d:'GK',c:[1,8],i:c=>c<=5?['Book','Test Notebook']:['Test Notebook','Book']},
  {n:'Computer',d:'Computer',c:[1,10],i:()=>['Book','Notebook','Test Notebook']},
  {n:'Hindi I',d:'Hindi',c:[1,8],i:c=>c<=2?NB4:['Book','Notebook','Test Notebook']},
  {n:'Hindi II',d:'Hindi',c:[2,8],i:c=>c<=5?['Book','Test Notebook']:['Book','Assignment','Test Notebook']},
  {n:'Hindi',d:'Hindi',c:[9,10],i:()=>NB4},
  {n:'Sanskrit',d:'Sanskrit',c:[2,9],i:()=>['Book','Test Notebook']},
- {n:'Business Studies',d:'Commerce',c:[11,11],i:()=>NB3},
- {n:'Accountancy',d:'Commerce',c:[11,11],i:()=>NB3},
- {n:'Economics',d:'Commerce',c:[11,11],i:()=>NB3},
- {n:'Statistics',d:'Commerce',c:[11,11],i:()=>NB3},
- {n:'IP',d:'Computer',c:[11,11],i:()=>['Notebook','Test Notebook']}
+ {n:'Business Studies',d:'Commerce',c:[11,11],i:()=>NB4},
+ {n:'Accountancy',d:'Commerce',c:[11,11],i:()=>NB4},
+ {n:'Economics',d:'Commerce',c:[11,11],i:()=>NB4},
+ {n:'Statistics',d:'Commerce',c:[11,11],i:()=>NB4},
+ {n:'IP',d:'Computer',c:[11,11],i:()=>['Book','Notebook','Test Notebook']}
 ];
 const subjectsFor=c=>SUBJ.filter(s=>c>=s.c[0]&&c<=s.c[1]);
 const subjDef=(c,n)=>subjectsFor(c).find(s=>s.n===n);
-function itemsFor(c,n){const o=CFG.items&&CFG.items[c+'|'+n];if(o&&o.length)return o;const d=subjDef(c,n);return d?d.i(c):NB3}
+let _seen=null,_seenN=-1;
+function seenItems(){const k=Object.keys(DB);if(_seen&&_seenN===k.length)return _seen;const m={};k.forEach(p=>{const e=DB[p];if(e&&e.sec&&e.subj&&e.item){const key=+e.sec.slice(0,-1)+'|'+e.subj;(m[key]=m[key]||new Set()).add(e.item)}});_seen=m;_seenN=k.length;return m}
+function itemsFor(c,n){const o=CFG.items&&CFG.items[c+'|'+n];const d=subjDef(c,n);let r=(o&&o.length)?o.slice():d?d.i(c):NB3.slice();const sn=seenItems()[c+'|'+n];if(sn)sn.forEach(i=>{if(ITEMS.includes(i)&&!r.includes(i))r.push(i)});return ITEMS.filter(i=>r.includes(i))}
 /* ---------- teachers (same maps as the Teacher Prep & Checking apps) ---------- */
 const CT={'1A':'Sunita','1B':'Priyanshi Bhojak','1C':'Kanika','2A':'Deepmala','2B':'Deepali','2C':'Chhavi','3A':'Tina','3B':'Vahnisvari','3C':'Saroj','4A':'Pooja','4B':'Priya Shekhawat','4C':'Gauri','5A':'Anuradha','5B':'Reema','5C':'Devanshi Saini'};
 const HT={A:'Geeta',B:'Preeti',C:'Anita'};
@@ -210,7 +212,9 @@ const ADMIN_DEF=['Harsh Yadav'];
 const secL=(cl,lt)=>{const o=[];cl.forEach(c=>[...lt].forEach(l=>o.push(c+l)));return o};
 const PLDEF=[{n:'Sanjana',t:'Program Manager',s:secL([1,2],'ABC')},{n:'Neetu',t:'Program Manager',s:secL([3],'ABC')},{n:'Divyanshi Jain',t:'Program Manager',s:secL([4],'ABC')},{n:'Diksha',t:'Program Manager',s:secL([5],'ABC')},
  {n:'Poonam',t:'Program Leader',s:secL([6,7],'ABC')},{n:'Garima',t:'Program Leader',s:['8A','8B','8C','9A','9B']},{n:'Sarita',t:'Program Leader',s:['10A','10B','11A']}];
-function plSet(){const f=first(ME),set=new Set();PLDEF.forEach(p=>{if(first(p.n)===f)p.s.forEach(x=>set.add(x))});return set}
+const CMDEF=[{n:'Yashika',a:['yashir'],s:secL([1],'ABC')},{n:'Manisha',s:secL([2],'ABC')},{n:'Vijay Raj',a:['vijayraj'],s:secL([3],'ABC')},{n:'Komal',s:secL([4],'ABC')},{n:'Mansi',s:secL([5],'ABC').concat(secL([8],'ABC'))},{n:'Rashami',a:['rashmi','rashmi'],s:secL([6],'ABC')},{n:'Tanushri',s:secL([7],'ABC')},{n:'Pooja',s:secL([8,9],'ABC')},{n:'Upendra',a:['upinder','upender','upindra'],s:['10A','10B','11A']},{n:'Saba',s:'ALL'},{n:'Karishma',s:'ALL'}];
+const cmOf=()=>{const f=first(ME);return CMDEF.filter(p=>[first(p.n)].concat(p.a||[]).includes(f))};
+function plSet(){const f=first(ME),set=new Set();PLDEF.forEach(p=>{if(first(p.n)===f)p.s.forEach(x=>set.add(x))});cmOf().forEach(p=>(p.s==='ALL'?Object.keys(ROSTER):p.s).forEach(x=>set.add(x)));return set}
 function teacherDef(sec,subj){
   const c=+sec.slice(0,-1),l=sec.slice(-1),d=(subjDef(c,subj)||{}).d||subj;
   if(c<=5){if(d==='Hindi'||d==='Sanskrit')return HT[l];if(subj==='Computer'&&c>=3)return 'Himanshi';return CT[sec]||''}
@@ -299,7 +303,7 @@ const IC={check:'<svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 
 IC.rec=IC.rep;IC.men=IC.stu;
 const NAV=[['Record',[['check','Check','Record checks and marks'],['rec','Class Record','Complete record of a section: books, notebooks, assignments, tests']]],['Insights',[['dash','Dashboard','Rates, trends and what needs attention'],['rep','Reports','Defaulters, summaries and report cards'],['stu','Students','Search a student and open the record']]],['Admin',[['men','Mentors','Pick a mentor to see their classes, dashboard and reports'],['set','Setup','Teachers, items, lessons and preview']]]];
 const TITLES={};NAV.forEach(g=>g[1].forEach(t=>TITLES[t[0]]=[t[1],t[2]]));
-function roleOf(){if(isAdmin())return 'Director';const p=PLDEF.find(x=>first(x.n)===first(ME));if(p)return p.t;if(mineSet().size)return 'Teacher';return 'Staff'}
+function roleOf(){if(isAdmin())return 'Director';const p=PLDEF.find(x=>first(x.n)===first(ME));if(p)return p.t;if(cmOf().length)return 'Class Manager';if(mineSet().size)return 'Teacher';return 'Staff'}
 function chrome(){
   ensureSel();
   $('segSw').innerHTML='<button class="chip" data-seg="P" aria-pressed="'+(U.seg==='P')+'">Primary 1–5</button><button class="chip" data-seg="S" aria-pressed="'+(U.seg==='S')+'">Secondary 6–11</button>';
@@ -489,7 +493,7 @@ function overlayHTML(){
 function renderSheet(){const el=$('sheet');if(!el)return;el.innerHTML=overlayHTML();document.body.classList.toggle('lock',!!el.innerHTML);
   const i=$('smk');if(i)setTimeout(()=>{i.focus();i.select()},60)}
 /* ---------- DASHBOARD ---------- */
-function scopeOpts(){const o=[];if(plSet().size)o.push(['pl','My PL classes']);if(mineSet().size)o.push(['mine',(U.mentor&&isAdmin())?U.mentor+'’s classes':'My classes']);o.push(['sec','Section '+curSec()]);o.push(['cls','Class '+U.cls+' · all sections']);o.push(['seg',U.seg==='P'?'All Primary':'All Secondary']);if(isAdmin())o.push(['all','Whole school']);return o}
+function scopeOpts(){const o=[];if(plSet().size)o.push(['pl',(!PLDEF.some(x=>first(x.n)===first(ME))&&cmOf().length)?'My CM classes':'My PL classes']);if(mineSet().size)o.push(['mine',(U.mentor&&isAdmin())?U.mentor+'’s classes':'My classes']);o.push(['sec','Section '+curSec()]);o.push(['cls','Class '+U.cls+' · all sections']);o.push(['seg',U.seg==='P'?'All Primary':'All Secondary']);if(isAdmin())o.push(['all','Whole school']);return o}
 function scopeNow(){const o=scopeOpts().map(x=>x[0]);if(!U.scope||!o.includes(U.scope))U.scope=plSet().size?'pl':mineSet().size?'mine':(isAdmin()?'seg':'sec');return U.scope}
 function cutoff(){if(U.per==='all')return '';const d=new Date();d.setDate(d.getDate()-(+U.per));return isoD(d)}
 function inScope(r,ignorePer){
