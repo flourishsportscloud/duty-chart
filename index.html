@@ -526,6 +526,9 @@ header.top>.tabs{flex:1 1 100%;order:3}
 #notice .av{width:22px;height:22px;font-size:.56rem}
 #notice .lgrp .lgh{padding:5px 12px 4px}
 #notice .xd{padding-left:0}
+
+#notice .tmsec{font-size:.62rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--fu,#5E3585);margin:10px 2px 5px}
+#notice details.tm.sub{margin-left:10px}
 </style>
 </head>
 <body>
@@ -843,17 +846,21 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbyxWYwmvDDlIR6VjS2W4209
 <script type="text/plain" id="appsrc">
 const Z = {gate:'Gate & entry',transport:'Transport',disc:'Discipline & rooms',floor:'Corridors',time:'Late comers & free staff',stay:'Stayback',sports:'Sports'};
 const COL = {gate:'var(--gate)',transport:'var(--transport)',disc:'var(--disc)',floor:'var(--floor)',time:'var(--time)',stay:'var(--stay)',sports:'var(--sports)'};
-const CATS = ['Pre Primary Teacher','Primary Teacher','Secondary Teacher','Hindi Teacher','Computer Teacher','Admin','Operations','PL','CM','Floor Manager','Activity','Support Staff'];
-const CAT_LABEL = {'Pre Primary Teacher':'Pre Primary Teachers','Primary Teacher':'Primary Teachers','Secondary Teacher':'Secondary Teachers','Hindi Teacher':'Hindi Teachers','Computer Teacher':'Computer Teachers','Admin':'Administration','Operations':'Operations','PL':'Program Leaders','Teacher':'Teachers','Admin & PL':'Admin & PL','CM':'Class Managers','Floor Manager':'Primary Managers','Activity':'Co-curricular','Support Staff':'Support Staff'};
+const CATS = ['Pre Primary Teacher','Primary Teacher','Secondary Teacher','Hindi Teacher','Computer Teacher','Admin','Operations','PL','CM','Primary Manager','Floor Manager','Activity','Support Staff'];
+const CAT_LABEL = {'Pre Primary Teacher':'Pre Primary Teachers','Primary Teacher':'Primary Teachers','Secondary Teacher':'Secondary Teachers','Hindi Teacher':'Hindi Teachers','Computer Teacher':'Computer Teachers','Admin':'Administration','Operations':'Operations','PL':'Program Leaders','Teacher':'Teachers','Admin & PL':'Admin & PL','CM':'Class Managers','Primary Manager':'Primary Managers','Floor Manager':'Floor Managers','Activity':'Co-curricular','Support Staff':'Support Staff'};
 /* [full name, designation, category] – from the Members list, 25 Sep 2026 */
 const STAFF_LIST = [["Ajita Upadhyay", "Hindi Teacher", "Hindi Teacher"], ["Akash Gurjar", "Wushu Coach", "Activity"], ["Amit Sanwal", "Mathematics Teacher", "Secondary Teacher"], ["Anamika Shrimali", "Teacher", "Pre Primary Teacher"], ["Anita Sharma", "Hindi Teacher", "Hindi Teacher"], ["Anoop Gahlot", "Operational Manager", "Admin"], ["Anuradha Chaudhary", "Teacher", "Primary Teacher"], ["Archana Choudhary", "German Teacher", "Secondary Teacher"], ["Asha Rao", "Floor Manager", "Floor Manager"], ["Bhagyashree Rathore", "Assistant Teacher", "Pre Primary Teacher"], ["Bharti Ratawa", "Hindi Teacher", "Hindi Teacher"], ["Bhavyadeep Soni", "Keyboard Instructor", "Activity"], ["Bhawishya Joshi", "Lawn Tennis Coach", "Activity"], ["Bhupendra Yogi", "Acting Instructor", "Activity"], ["Bhuwan Bhatt", "Ukulele & Guitar Instructor", "Activity"], ["Chandan Soni", "Store Incharge", "Admin"], ["Chandani Chayal", "Class Manager", "CM"], ["Chhavi Vinaik", "Teacher", "Primary Teacher"], ["Chotulal", "Guard", "Support Staff"], ["Deepali Tiwari", "Teacher", "Primary Teacher"], ["Deepmala Rathore", "Teacher", "Primary Teacher"], ["Devanshi Saini", "Teacher", "Primary Teacher"], ["Diksha Singh Raghuwanshi", "Floor Manager", "Floor Manager"], ["Dilshad", "Teacher", "Pre Primary Teacher"], ["Divyanshi Jain", "Floor Manager", "Floor Manager"], ["Dr. Garima Khatri", "Program Leader", "PL"], ["Gauri Adhana", "Teacher", "Primary Teacher"], ["Geeta Panwar", "Hindi Teacher", "Hindi Teacher"], ["Gokul Vyas", "Guitar Coach", "Activity"], ["Harsh Yadav", "Transport Manager", "Admin"], ["Harshvardhan Soni", "Parents Relation Officer", "Admin"], ["Himanshi Negi", "Computer Teacher", "Computer Teacher"], ["Himanshu Singh", "Basketball Coach", "Activity"], ["Himanshu Singh Bhadoria", "Faculty – Informatics Practices", "Secondary Teacher"], ["Ishita", "Social Science Teacher", "Secondary Teacher"], ["Jai Pandla", "Operational Manager", "Admin"], ["Jatan Solanki", "Guard", "Support Staff"], ["Jatin Sankhla", "Social Science Teacher", "Secondary Teacher"], ["Jitendra Karwa", "Karate Coach", "Activity"], ["Jitesh Mehendiratta", "Faculty – Accountancy", "Secondary Teacher"], ["Juhi Ahuja", "Teacher", "Pre Primary Teacher"], ["Jyotshna Jayan", "English Teacher", "Secondary Teacher"], ["Kamal", "Extra Driver", "Support Staff"], ["Kanhaiya Lal Swami", "Cricket Coach", "Activity"], ["Kanika Gahlot", "Teacher", "Primary Teacher"], ["Karishma Suthar", "Class Manager", "CM"], ["Kavita Gupta", "Abacus Instructor", "Activity"], ["Khanaiya Lal Gujrati", "Guard", "Support Staff"], ["Komal Damani", "Teacher", "Pre Primary Teacher"], ["Komal Suthar", "Class Manager", "CM"], ["Kritika Pareek", "Wushu Coach", "Activity"], ["Lohit Tailong", "Taekwondo Coach", "Activity"], ["Madhu Mathur", "Mathematics Teacher", "Secondary Teacher"], ["Mahak Chaudhary", "Teacher", "Pre Primary Teacher"], ["Manisha Chauhan", "Class Manager", "CM"], ["Manisha Sharma", "Faculty – Economics", "Secondary Teacher"], ["Manmohan Singh", "Skating Coach", "Activity"], ["Mansi Singh Panwar", "Classical Dance Instructor", "Activity"], ["Mansi Soni", "Class Manager", "CM"], ["Mansi Yadav", "Teacher", "Secondary Teacher"], ["Megha Shekhawat", "Parents Relation Officer", "Admin"], ["Monika Rajpurohit", "Social Science Teacher", "Secondary Teacher"], ["Mukul Jangid", "Accountant", "Admin"], ["Mukul Parihar", "Photography Instructor & Cinematographer", "Activity"], ["Nahida", "Head of Co-Curricular Activities", "Admin"], ["Nandini Shekhawat", "Teacher", "Pre Primary Teacher"], ["Narendra Dara", "Office Exceutive", "Admin"], ["Navratan", "Guard", "Support Staff"], ["Neelam Rajwani", "Culinary Skills Instructor", "Activity"], ["Neetu Dara", "Floor Manager", "Floor Manager"], ["Neha Kumari", "Mathematics Teacher", "Secondary Teacher"], ["Neha Sethia", "Program Leader", "PL"], ["Nisha", "Science Teacher", "Secondary Teacher"], ["Nishant Harsh", "Manager", "Activity"], ["Niviya Singh Bhati", "Table Tennis Coach", "Activity"], ["Pallavi Joshi", "Science Teacher", "Secondary Teacher"], ["Pooja Sharma", "Teacher", "Primary Teacher"], ["Poojal Shekhawat", "Teacher", "Pre Primary Teacher"], ["Poonam Gaur", "Hindi Teacher", "Hindi Teacher"], ["Poonam Rathore", "Teacher", "Pre Primary Teacher"], ["Poonam Sharda", "Program Leader", "PL"], ["Prashant Devra", "Graphic Designer", "Admin"], ["Prashant Verma", "Basketball Coach", "Activity"], ["Preeti Choudhary", "Hindi Teacher", "Hindi Teacher"], ["Preeti Jain", "Parents Relation Officer", "Admin"], ["Priya Bagri", "Teacher", "Pre Primary Teacher"], ["Priya Shekhawat", "Teacher", "Primary Teacher"], ["Priyanka Bhargava", "Medical Officer", "Admin"], ["Priyanka Sand", "Teacher", "Pre Primary Teacher"], ["Priyanshi Bhojak", "English Teacher", "Primary Teacher"], ["Radha Soni", "Social Science Teacher", "Secondary Teacher"], ["Radheyshyam", "Guard", "Support Staff"], ["Rahul Yadav", "Staff", "Admin"], ["Raj Vyas", "Archery Coach", "Activity"], ["Rajeev Nagal", "Content Designer", "Admin"], ["Ram Singh Rathore", "French Teacher", "Secondary Teacher"], ["Rashmi Rathore", "Program Leader", "PL"], ["Rashmi Singh", "Class Manager", "CM"], ["Reema Tiwari", "Teacher", "Primary Teacher"], ["Rekha", "Teacher", "Pre Primary Teacher"], ["Renuka Tak", "Art Teacher", "Activity"], ["Richa Sharma", "Computer Teacher", "Computer Teacher"], ["Ritanshu Sharma", "Cricket Coach", "Activity"], ["Ritika Purohit", "Science Teacher", "Secondary Teacher"], ["Saba Panwar", "Class Manager", "CM"], ["Sahil Kumar", "Shooting Coach", "Activity"], ["Sakil Gouri", "Western Dance Instructor", "Activity"], ["Sanjana Sarswat", "Floor Manager", "Floor Manager"], ["Santosh Yadav", "Staff", "Admin"], ["Sarita Saini", "Program Leader", "PL"], ["Saroj", "Teacher", "Primary Teacher"], ["Shaan Siddiqui", "English Teacher", "Secondary Teacher"], ["Shailesh Joshi", "Social Science Teacher", "Secondary Teacher"], ["Shally Taneja", "Program Leader", "PL"], ["Sharda Yadav", "Staff", "Admin"], ["Shikha Sharma", "Art Teacher", "Activity"], ["Shivangi Gupta", "Teacher", "Pre Primary Teacher"], ["Shivika Ranjan", "Arts & Textile Desigining Instructor", "Activity"], ["Shobha Sharma", "Hindi Teacher", "Hindi Teacher"], ["Shreya", "Science Teacher", "Secondary Teacher"], ["Shubhangi", "Dean - Academics", "Admin"], ["Sonika Lalwani", "Teacher", "Pre Primary Teacher"], ["Sourabh Tripathi", "Floor Manager", "Floor Manager"], ["Suman Bishnoi", "Floor Manager", "Floor Manager"], ["Sunita Nirban", "Teacher", "Primary Teacher"], ["Surender Yadav", "Chairperson", "Admin"], ["Swati Sehgal", "English Teacher", "Secondary Teacher"], ["Tanushree Purohit", "Class Manager", "CM"], ["Tina Sangtani", "Teacher", "Primary Teacher"], ["Tripti", "Hindi Teacher", "Hindi Teacher"], ["Upender Singh Shekhawat", "Class Manager", "CM"], ["Vahnisvari Bika", "Teacher", "Primary Teacher"], ["Vaibhav Pandey", "Tabla Instructor", "Activity"], ["Vaishali Rathore", "Parents Relation Officer", "Admin"], ["Vijay Raj Soni", "Class Manager", "CM"], ["Vipul Vijay", "Mathematics Teacher", "Secondary Teacher"], ["Vishwabandhu", "Extra Driver", "Support Staff"], ["Yashika Gupta", "Class Manager", "CM"], ["Yavnika Dembla", "English Teacher", "Secondary Teacher"], ["Yogesh Purohit", "Harmonium Instructor", "Activity"]];
 /* Staff who have left the school: off the staff list, the team list and every picker (their old leave records keep the saved category) */
-const LEFT_STAFF = ['Bhagyashree Rathore','Shivika Ranjan'];
-for (let i = STAFF_LIST.length - 1; i >= 0; i--) if (LEFT_STAFF.includes(STAFF_LIST[i][0])) STAFF_LIST.splice(i, 1);
-/* Team (category) of each person. TEAM_FIX = decided in chat; the Team tab can move anyone (saved for everyone). */
-const TEAM_FIX = {'Anoop Gahlot':'Operations','Jai Pandla':'Operations'};
-STAFF_LIST.forEach(x => { x[3] = TEAM_FIX[x[0]] || x[2]; x[2] = x[3]; });
-function applyTeam(){ const mv = ((typeof ROSTER !== 'undefined' && ROSTER._team) || {}).cat || {}; STAFF_LIST.forEach(x => { x[2] = mv[x[0]] || x[3]; }); }
+/* Team (category) of each person. TEAM_FIX = decided in chat; '_left' = has left the school.
+   The Team tab can move anyone, including to or from "Left the school" (saved for everyone).
+   x[3] = default team, x[4] = real category (kept for old leave records of staff who left), x.left = has left now. */
+const TEAM_FIX = {'Anoop Gahlot':'Operations','Jai Pandla':'Operations',
+  'Sanjana Sarswat':'Primary Manager','Neetu Dara':'Primary Manager','Divyanshi Jain':'Primary Manager','Diksha Singh Raghuwanshi':'Primary Manager',
+  'Bhagyashree Rathore':'_left','Shivika Ranjan':'_left'};
+STAFF_LIST.forEach(x => { x[4] = x[2]; x[3] = TEAM_FIX[x[0]] || x[2]; });
+function applyTeam(){ let mv = {}; try { mv = (ROSTER._team || {}).cat || {}; } catch(e){}
+  STAFF_LIST.forEach(x => { const t = mv[x[0]] || x[3]; x.left = t === '_left'; x[2] = x.left ? (x[4] === '_left' ? 'Primary Teacher' : (TEAM_FIX[x[0]] && TEAM_FIX[x[0]] !== '_left' ? TEAM_FIX[x[0]] : x[4])) : t; }); }
+applyTeam();
 /* Co-curricular segments: [segment, [[activity, [staff…]], …]] */
 const SEGS = [
  ['Sports', [['Skating',['Manmohan Singh']],['Cricket',['Kanhaiya Lal Swami','Ritanshu Sharma']],['Table Tennis',['Niviya Singh Bhati']],['Archery',['Raj Vyas']],['Shooting',['Sahil Kumar']],['Lawn Tennis',['Bhawishya Joshi']],['Basketball',['Himanshu Singh']]]],
@@ -1083,18 +1090,22 @@ function nSummary(){
 let NTAB = 'leave', NG = {adj: '', cover: ''};
 try { NTAB = sessionStorage.getItem('dutyNTab') || 'leave'; } catch(e){}
 const TEAMS = [['Pre Primary Teacher','Pre-primary Teachers'],['Primary Teacher','Primary Teachers'],['Secondary Teacher','Secondary Teachers'],['Hindi Teacher','Hindi Teachers'],['Computer Teacher','Computer Teachers'],
-  ['CM','Class Managers'],['Floor Manager','Primary Managers'],['PL','Program Leaders'],['Activity','Co-curricular'],['Operations','Operations'],['Admin','Administration'],['Support Staff','Support Staff']];
+  ['CM','Class Managers'],['Primary Manager','Primary Managers','Managers'],['Floor Manager','Floor Managers','Managers'],['PL','Program Leaders'],['Activity','Co-curricular'],['Operations','Operations'],['Admin','Administration'],['Support Staff','Support Staff']];
 let TEAM_OPEN = '';
 function teamHTML(){
   const can = CAN_EDIT && isAdmin();
-  const opts = cur => TEAMS.map(([k, l]) => `<option value="${esc(k)}"${k === cur ? ' selected' : ''}>${esc(l)}</option>`).join('');
-  const lc = new Set(LEFT_STAFF);
-  return `<p class="hint" style="margin:2px 0 10px">Every staff member by team. ${can ? 'If someone is in the wrong team, choose the right one – it is saved for everyone and used for leaves and adjustments.' : 'Ask the Director or an in-charge to correct a wrong team.'}</p>` +
-    TEAMS.map(([k, l]) => { const ms = STAFF_LIST.filter(x => x[2] === k).sort((a, b) => a[0].localeCompare(b[0])); if (!ms.length) return '';
+  const opts = cur => TEAMS.map(([k, l, sec]) => `<option value="${esc(k)}"${k === cur ? ' selected' : ''}>${esc(l)}</option>`).join('') + `<option value="_left"${cur === '_left' ? ' selected' : ''}>Left the school</option>`;
+  const row = (x, cur, sub) => `<div class="tmr"><span class="tn"><b>${esc(x[0])}</b><small>${esc(sub || ((x[2] === 'Primary Manager' && /floor manager/i.test(x[1]) ? 'Primary Manager' : x[1]) + (clsOf(x[0]) ? ' · CT ' + clsOf(x[0]) : '')))}</small></span>${can ? `<select data-mv="${esc(x[0])}" aria-label="Team of ${esc(x[0])}">${opts(cur)}</select>` : ''}</div>`;
+  let lastSec = '';
+  const live = STAFF_LIST.filter(x => !x.left), gone = STAFF_LIST.filter(x => x.left).sort((a, b) => a[0].localeCompare(b[0]));
+  return `<p class="hint" style="margin:2px 0 10px">Every staff member by team. ${can ? 'If someone is in the wrong team, or has left the school, choose it in the box next to the name – it is saved for everyone and used for leaves and adjustments.' : 'Ask the Director or an in-charge to correct a wrong team.'}</p>` +
+    TEAMS.map(([k, l, sec]) => { const ms = live.filter(x => x[2] === k).sort((a, b) => a[0].localeCompare(b[0]));
+      const head = sec && sec !== lastSec ? `<div class="tmsec">${esc(sec)}</div>` : ''; lastSec = sec || '';
+      if (!ms.length) return head;
       const moved = ms.filter(x => x[3] !== x[2]).length;
-      return `<details class="tm"${TEAM_OPEN === k ? ' open' : ''} data-tk="${esc(k)}"><summary><span>${esc(l)}</span><span class="cnt">${ms.length}</span>${moved ? `<small class="mvd">${moved} moved</small>` : ''}</summary>` +
-        ms.map(x => `<div class="tmr"><span class="tn"><b>${esc(x[0])}</b><small>${esc(x[1])}${clsOf(x[0]) ? ' · CT ' + esc(clsOf(x[0])) : ''}</small></span>${can ? `<select data-mv="${esc(x[0])}" aria-label="Team of ${esc(x[0])}">${opts(k)}</select>` : ''}</div>`).join('') + `</details>`; }).join('') +
-    `<details class="tm left"><summary><span>Left the school</span><span class="cnt">${lc.size}</span></summary>${[...lc].map(n => `<div class="tmr"><span class="tn"><b>${esc(n)}</b><small>Duties now with Shivangi Gupta</small></span></div>`).join('')}</details>`;
+      return head + `<details class="tm${sec ? ' sub' : ''}"${TEAM_OPEN === k ? ' open' : ''} data-tk="${esc(k)}"><summary><span>${esc(l)}</span><span class="cnt">${ms.length}</span>${moved ? `<small class="mvd">${moved} moved</small>` : ''}</summary>` +
+        ms.map(x => row(x, k)).join('') + `</details>`; }).join('') +
+    `<details class="tm left"${TEAM_OPEN === '_left' ? ' open' : ''} data-tk="_left"><summary><span>Left the school</span><span class="cnt">${gone.length}</span></summary>${gone.map(x => row(x, '_left', x[1] + (['Bhagyashree Rathore','Shivika Ranjan'].includes(x[0]) ? ' · duties now with Shivangi Gupta' : ' · choose a team to bring back'))).join('') || '<p class="hint" style="padding:8px 12px;margin:0">Nobody.</p>'}</details>`;
 }
 function renderNotice(){
   applyTeam();
@@ -1210,7 +1221,7 @@ function renderNotice(){
     const t = JSON.parse(JSON.stringify(ROSTER._team || {})); t.cat = t.cat || {};
     if (sel.value === x[3]) delete t.cat[n]; else t.cat[n] = sel.value;
     TEAM_OPEN = sel.value; save(DAILY, DAY, null, {...ROSTER, _team: t});
-    toast(n + ' → ' + (TEAMS.find(z => z[0] === sel.value) || [, sel.value])[1]);
+    toast(n + ' → ' + (sel.value === '_left' ? 'Left the school' : (TEAMS.find(z => z[0] === sel.value) || [, sel.value])[1]));
   });
 }
 function setDay(d){ DAY = d; LV = leaveMap(); renderNotice(); render(TAB); doSearch(); }
@@ -1373,7 +1384,7 @@ function relevant(F, shift, act){
     const list = STAFF_LIST.filter(s => subjOf(s) === sub).map(s => s[0]).filter(ok).map(item);
     if (list.length) out.push({h: 'Same subject · ' + sub, list});
   }
-  if (Fst && ['CM','Floor Manager'].includes(Fst[2])){
+  if (Fst && ['CM','Floor Manager','Primary Manager'].includes(Fst[2])){
     const list = STAFF_LIST.filter(s => s[2] === Fst[2]).map(s => s[0]).filter(ok).map(item);
     if (list.length) out.push({h: 'Other ' + CAT_LABEL[Fst[2]], list});
   }
@@ -1508,7 +1519,7 @@ try { WHO = localStorage.getItem('dutyWho') || ''; } catch(e){}
 const sameP = (a, b) => a && b && (key(a) === key(b) || sameName(a, b) || sameName(b, a));
 const byParts = ar => String(areaBy(ar) || '').split(/\s*[\/,&]\s*/).filter(Boolean);
 /* full power: owner, the named list, every Floor Manager, and every class / floor incharge */
-const isAdmin = () => IS_OWNER || (WHO && (ADMINS.some(a => sameP(WHO, a)) || (STAFF_BY.get(key(WHO)) || [])[2] === 'Floor Manager' || AREAS.some(ar => byParts(ar).some(b => sameP(WHO, b)))));
+const isAdmin = () => IS_OWNER || (WHO && (ADMINS.some(a => sameP(WHO, a)) || ['Floor Manager','Primary Manager'].includes((STAFF_BY.get(key(WHO)) || [])[2]) || AREAS.some(ar => byParts(ar).some(b => sameP(WHO, b)))));
 const myAreas = () => WHO ? AREAS.filter(ar => byParts(ar).some(b => sameP(WHO, b))).map(ar => ar.id) : [];
 const CAN_ALL = () => CAN_EDIT && isAdmin();
 /* view-only visitors can still fill everything – their Save becomes "Send on WhatsApp" */
@@ -1652,7 +1663,7 @@ function canon(n, cat){
 }
 const OLDCAT = {'Teacher':'Secondary Teacher','Admin & PL':'Admin'};
 const GRP = [['teach','Teachers',['Pre Primary Teacher','Primary Teacher','Secondary Teacher','Hindi Teacher','Computer Teacher','Teacher']],
-  ['ops','Operations',['Admin','Operations','PL','CM','Floor Manager','Support Staff','Admin & PL']],
+  ['ops','Operations',['Admin','Operations','PL','CM','Primary Manager','Floor Manager','Support Staff','Admin & PL']],
   ['cocur','Co-curricular',['Activity']]];
 const lcat = l => (resolve(l.n, l.k) || [])[2] || OLDCAT[l.k] || l.k || 'Secondary Teacher';
 const catOfName = (n, fallback) => { const s = resolve(n, fallback); return s ? s[2] : (OLDCAT[fallback] || fallback || 'Secondary Teacher'); };
@@ -1699,7 +1710,7 @@ function parseCheckins(txt){
 function parseNote(txt){
   const out = {date:null, leave:[], cover:[], adj:[]};
   let sec = null, cat = 'Secondary Teacher', LATE_SEC = false;
-  const catOf = s => /hindi/i.test(s) ? 'Hindi Teacher' : /computer/i.test(s) ? 'Computer Teacher' : /pre[\s-]*primary|nursery|\b[lu]kg\b|play\s*group/i.test(s) ? 'Pre Primary Teacher' : /primary/i.test(s) ? 'Primary Teacher' : /teach/i.test(s) ? 'Secondary Teacher' : /\bpl\b|program\s*lead/i.test(s) ? 'PL' : /admin/i.test(s) ? 'Admin' : /^\W*cm\b|class\s*manager/i.test(s) ? 'CM' : /floor/i.test(s) ? 'Floor Manager' : /coach|instructor|sport|music|dance|curricular/i.test(s) ? 'Activity' : /activit/i.test(s) ? 'Activity' : /support|guard|driver/i.test(s) ? 'Support Staff' : null;
+  const catOf = s => /primary\s*manager|\bpms?\b/i.test(s) ? 'Primary Manager' : /operation/i.test(s) ? 'Operations' : /hindi/i.test(s) ? 'Hindi Teacher' : /computer/i.test(s) ? 'Computer Teacher' : /pre[\s-]*primary|nursery|\b[lu]kg\b|play\s*group/i.test(s) ? 'Pre Primary Teacher' : /primary/i.test(s) ? 'Primary Teacher' : /teach/i.test(s) ? 'Secondary Teacher' : /\bpl\b|program\s*lead/i.test(s) ? 'PL' : /admin/i.test(s) ? 'Admin' : /^\W*cm\b|class\s*manager/i.test(s) ? 'CM' : /floor/i.test(s) ? 'Floor Manager' : /coach|instructor|sport|music|dance|curricular/i.test(s) ? 'Activity' : /activit/i.test(s) ? 'Activity' : /support|guard|driver/i.test(s) ? 'Support Staff' : null;
   const addLeave = raw => raw.replace(/\([^)]*\)/g, m => m.replace(/,/g, ' ')).split(/,|\band\b/i).forEach(p => {
     const half = /(first|1st|pehl\w*)\s*half/i.test(p) ? 'first' : /(second|2nd|dusr\w*)\s*half/i.test(p) ? 'second' : /half/i.test(p), lm = p.match(/\blate\b(?:[^0-9)]*(\d{1,2}[:.]\d{2}|\d{1,2}\s*(?:am|pm)))?/i), n = canon(p.replace(/^[\s*•\-–·]+/,'').replace(/\(.*$/,'').replace(/\b(late|till|upto|up to|by|arriv\w*|coming)\b.*$/i,'').replace(/\d.*$/,'').replace(/[\-–:]+\s*$/,''), cat);
     const tm2 = p.match(/(\d{1,2}[:.]\d{2}|\d{1,2}\s*(?:am|pm))/i);
@@ -1770,12 +1781,12 @@ function drawPicker(){
   const pk = n => { const st = STAFF_BY.get(key(n)); return `<button type="button" class="pk${onKeys.has(key(n))?' on':''}" data-pick="${esc(n)}"><b>${esc(n)}</b><small>${esc(st?st[1]:'Co-curricular')}</small></button>`; };
   if (!f && PICK_CAT === 'SEG'){
     const inSeg = new Set(SEGS.flatMap(([, list]) => list.flatMap(([, ns]) => ns)).map(key));
-    const other = STAFF_LIST.filter(x => x[2] === 'Activity' && !inSeg.has(key(x[0])));
+    const other = STAFF_LIST.filter(x => !x.left && x[2] === 'Activity' && !inSeg.has(key(x[0])));
     $('#pickList').innerHTML = SEGS.map(([seg, list]) => `<div class="pseg">${esc(seg)}</div>` + list.filter(([,ns]) => ns.length).map(([a, ns]) => ns.map(n => pk(n).replace('<small>', `<small>${esc(a)} · `)).join('')).join('')).join('') +
       (other.length ? `<div class="pseg">Other coaches &amp; instructors</div>` + other.map(x => pk(x[0])).join('') : '');
     return;
   }
-  const list = STAFF_LIST.filter(s => f ? key(s[0]).includes(f) : s[2] === PICK_CAT);
+  applyTeam(); const list = STAFF_LIST.filter(s => !s.left && (f ? key(s[0]).includes(f) : s[2] === PICK_CAT));
   $('#pickList').innerHTML = list.map(s => `<button type="button" class="pk${onKeys.has(key(s[0]))?' on':''}" data-pick="${esc(s[0])}"><b>${esc(s[0])}</b><small>${esc(s[1])}</small></button>`).join('') || '<p class="none">No match.</p>';
 }
 function drawEditor(){
