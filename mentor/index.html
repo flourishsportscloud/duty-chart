@@ -202,13 +202,13 @@ const subjectsFor=c=>SUBJ.filter(s=>c>=s.c[0]&&c<=s.c[1]);
 const subjDef=(c,n)=>subjectsFor(c).find(s=>s.n===n);
 function itemsFor(c,n){const o=CFG.items&&CFG.items[c+'|'+n];if(o&&o.length)return o;const d=subjDef(c,n);return d?d.i(c):NB3}
 /* ---------- teachers (same maps as the Teacher Prep & Checking apps) ---------- */
-const CT={'1A':'Sunita','1B':'Priyanshi Bhojak','1C':'Kanika','2A':'Deepmala','2B':'Deepali','2C':'Chhavi','3A':'Tina','3B':'Vahnisvari','3C':'Saroj','4A':'Pooja','4B':'Priya Shekhawat','4C':'Gauri','5A':'Anuradha','5B':'Reema','5C':'Devanshi'};
+const CT={'1A':'Sunita','1B':'Priyanshi Bhojak','1C':'Kanika','2A':'Deepmala','2B':'Deepali','2C':'Chhavi','3A':'Tina','3B':'Vahnisvari','3C':'Saroj','4A':'Pooja','4B':'Priya Shekhawat','4C':'Gauri','5A':'Anuradha','5B':'Reema','5C':'Devanshi Saini'};
 const HT={A:'Geeta',B:'Preeti',C:'Anita'};
 const BY={'English':{A:'Swati',B:'Yavnika',C:'Jyotshna'},'Hindi':{A:'Tripti',B:'Ajita',C:'Bharti'},'Sanskrit':{A:'Tripti',B:'Ajita',C:'Bharti'},'S.St.':{A:'Shailesh',B:'Ishita',C:'Monika'},'Science':{A:'Pallavi',B:'Shreya',C:'Ritika'}};
 const MATHS={'6A':'Amit','6B':'Madhu','6C':'Neha Kumari','7A':'Vipul','7B':'Madhu','7C':'Neha Kumari','8A':'Vipul','8B':'Amit','8C':'Neha Kumari','9A':'Amit','9B':'Vipul','10A':'Vipul','10B':'Amit'};
 const ADMIN_DEF=['Harsh Yadav'];
 const secL=(cl,lt)=>{const o=[];cl.forEach(c=>[...lt].forEach(l=>o.push(c+l)));return o};
-const PLDEF=[{n:'Sanjana',t:'Program Manager',s:secL([1,2],'ABC')},{n:'Neetu',t:'Program Manager',s:secL([3],'ABC')},{n:'Divyanshi',t:'Program Manager',s:secL([4],'ABC')},{n:'Diksha',t:'Program Manager',s:secL([5],'ABC')},
+const PLDEF=[{n:'Sanjana',t:'Program Manager',s:secL([1,2],'ABC')},{n:'Neetu',t:'Program Manager',s:secL([3],'ABC')},{n:'Divyanshi Jain',t:'Program Manager',s:secL([4],'ABC')},{n:'Diksha',t:'Program Manager',s:secL([5],'ABC')},
  {n:'Poonam',t:'Program Leader',s:secL([6,7],'ABC')},{n:'Garima',t:'Program Leader',s:['8A','8B','8C','9A','9B']},{n:'Sarita',t:'Program Leader',s:['10A','10B','11A']}];
 function plSet(){const f=first(ME),set=new Set();PLDEF.forEach(p=>{if(first(p.n)===f)p.s.forEach(x=>set.add(x))});return set}
 function teacherDef(sec,subj){
