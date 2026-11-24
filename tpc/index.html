@@ -827,7 +827,7 @@ let dClass=null, dEdit=null, dAdd=false, dConfirm=null;
 const dPath=id=>'status/'+PFX+'d.'+id;
 const okUrl=u=>/^https:\/\/(drive|docs)\.google\.com\/\S+$/.test(u)&&u.length<=140;
 function dRow(id,title,where,custom){
-  const n=noteOf(dPath(id))||{}, url=okUrl(n.u||'')?n.u:'', head=true, wrap=el('div',{class:'docrow'});
+  const n=Object.assign({},dSeedUrl(id)?{u:dSeedUrl(id)}:{},noteOf(dPath(id))||{}), url=okUrl(n.u||'')?n.u:'', head=true, wrap=el('div',{class:'docrow'});
   wrap.append(el('div',{class:'secrow',style:'cursor:default'},el('span',{class:'cls',text:where}),
     el('span',{class:'sn'},el('b',{text:title}),el('span',{class:'note',text:url?'PDF attached':'Not attached yet'})),
     el('span',{class:'toolr'},url?el('a',{class:'btn xs',href:url,target:'_blank',rel:'noopener'},'Open'):null,
@@ -852,6 +852,7 @@ function renderDocs(){
   const card=el('div',{class:'card'}), list=el('div',{class:'secs'});
   list.append(dRow('lp-'+dClass,'Learning plan','Class '+dClass));
   secs.forEach(cs=>list.append(dRow('pi-'+cs,'Parent Insight Chart',cs)));
+  if(dClass==='10') secs.forEach(cs=>list.append(dRow('ds-'+cs,'Pre-board date sheet',cs))); else list.append(dRow('ds-'+dClass,'PA 2 date sheet','Class '+dClass));
   Object.keys(DOCS).filter(p=>p.indexOf(dPath('x'))===0).sort().forEach(p=>{ const n=noteOf(p); if(!n||n.rm||n.c!==dClass) return; list.append(dRow(p.slice(dPath('').length),n.t||'Document',n.w||'Class '+dClass,{t:n.t,c:n.c,w:n.w||''})); });
   card.append(list); box.append(card);
   box.append(el('p',{class:'note',text:head?'Any staff member can attach documents, as many as needed. Files stay in Google Drive; this page only keeps the link, and who can open a file is decided by its sharing setting in Drive.':''}));
@@ -978,6 +979,7 @@ function renderDash2(all){
   box.append(el('p',{class:'note',text:'A WhatsApp message lists everything pending for that person: preparation, checking and mentor tasks. "Send on WhatsApp" opens WhatsApp for you to choose the contact.'}));
 }
 
+const DSEED={"lp-1":"1Mu6GaTIKsWAyGlhz0zGPffo6HncKUGXU","lp-2":"1r4cc8j5IZKPlApb0P3nOoZBYiqQt_4bD","lp-3":"17OmNVED2BFuHonz7WWeckuSc8kXmfr1x","lp-4":"11RzNX21LMWM2an-FbaZ72NeGGoMt34Uv","lp-5":"1O8iXgcDh-ClcJosjhvuSAiuyFbuiHbza","lp-6":"1wFJy--SaeX_lKyfVoVThoJjFLeyEcZpm","lp-7":"15y5ih7HtnIo5Jn5UBapif1QQa1OprtgD","lp-8":"1Z1gwgUOVEyegOy7b7cnx9rka6FnjJJe-","pi-1A":"1OtMiY6HTTkFqPWO6zxIfMrw0Og6qbuGf","pi-1B":"15FYISZVyJikiVlMvJFsIVEWsSC-j3MaZ","pi-1C":"1L8tCTMSIGT3KJJhY5lNFTfqzTXKf6Wjp","pi-2A":"1Wag6DYhv16J_TOzD_XCG8Z1Kq3zK1kSj","pi-2B":"1ZY8JzJhP73vfCvN7bv_Pw0ptZUO0Nx7i","pi-2C":"11iRz6SSfzHZrDM5Ule58piL62EJ_QQPy","pi-3A":"19rpaFxuhfZU4YUsm7Tm2uDTdz2jePOdD","pi-3B":"13hj2XlJZ0ggCHbhUXhhh3zcMbylkJOHM","pi-3C":"1VYNOUL4esSQtEiVgMcepBCDg69xFMg5c","pi-4A":"17WDAbtKSbdRKYK_70bQO-I7WkVm8yHL-","pi-4B":"12BLWeIuHAZNqtyBfIAm3Pk-aP8VLnnYs","pi-4C":"1APEvDKUluX5irx1K74EvFC_ppidl59Sr","pi-5A":"1eSV0Ilxk2gtCDjR2O0-06IEIseF0_cUz","pi-5B":"16tJgJ2jB9LFkr9zJ_z_D0JMl0K9raCkt","pi-5C":"1iWBHz6GFDn0q24TwHstP1yurD1G4Za2N","pi-6A":"1TPPuiAWKSvcTkPYxssGBuGeJC58YV2_P","pi-6B":"1CYRpXl3pLlAh7l8-Ho5IjVXv4azAEaYn","pi-6C":"1wF9LRpTK7ZEt5QB1wyzZ07edXe-JJJpK","pi-7A":"1C0Jz-VNo62vy5bnkQ4cjp7L4SxxCCxBg","pi-7B":"1zCEc_fzi5ccfUm9bRSMZzmhh5Y8B6_NL","pi-7C":"1nNh0hb-7HfA8p5m9v9R2AyW_FXcIqDUY","pi-8A":"17B24HuLp7btzYhhLgB3c0EiJkO8FzW1V","pi-8B":"1qp04Lv9BPMegqyWomGm84-Pdh_vP-Cdf","pi-8C":"11ZRChTGIocOxWLOmtYD9rcerhqXEmzTQ","pi-9A":"1fhKyheB7vXwEOxojbDV3vXm419-uNph1","pi-9B":"1oQ0Ei6_yyy1lLUFD810NHOAdYpvJg7iU","pi-10A":"1Qrk9RAeTcqExx5BUrP5bjCqb7P3cH8xf","pi-10B":"1DWlEKnNCH0ephif1Gx6uo_GWwtPFxl6n","pi-11A":"1RyuEb1cEvC2BM9q05TECXIF5-2v5S741","ds-1":"1NY1s_7MszYMNiyct8l8ScEk5trBcGRW5","ds-2":"12V25g5SMfVZybFiR6lJlqZOqeEKfjm5t","ds-3":"1VBjoE-vZcAwb52chPYkeoCUO7OnIka1R","ds-4":"1zL-1_pEUgsd8m23_SL1GuaFkU7i2_bdN","ds-5":"1fUk1OQ5xu38f18wCwW35G-Fo-i4K9gFt","ds-6":"1PMu33N67V5_QLBhozR9oyRoOFRua6o6x","ds-7":"1GGwZ5OmwetQpSjadbrLptfjQ_150ow9v","ds-8":"1Fn2tdTqvfY2LZbZZF9adp4So8zA2R8ij","ds-10A":"1kRZCsz4yQUFinkaumAm5MJHIvhbdis0Q","ds-10B":"1VFiYAHQ-ub8uv7FQ72XD2_YnDx9CrHTU"}, dSeedUrl=id=>DSEED[id]?'https://drive.google.com/file/d/'+DSEED[id]+'/view':'';
 /* ---------- Learning resources: PPT, video and lesson-plan links, class-wise and subject-wise ---------- */
 let lClass=null,lSub='All',lType='All',lAdd=false,lPlay=null,lConfirm=null,lForm={y:'p',s:'',l:''};
 const lPath=id=>'status/'+PFX+'l.'+id;
