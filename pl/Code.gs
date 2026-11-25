@@ -123,6 +123,7 @@ function save_(token,id,patch){
       j.cells[key]={s:obs.length?"D":"",by:name,at:now,l:0,obs:obs};n++;return;
     }
     const s=["","D","N","A"].indexOf(c.s)>=0?c.s:"";
+    const old_=j.cells[key];if(old_&&Array.isArray(old_.obs)&&old_.obs.length&&c.s!=="A"){n++;return}   // never wipe observation times with a plain tick
     j.cells[key]={s:s,by:name,at:now,l:c.l?1:0};n++;
   });
   Object.keys((patch&&patch.rem)||{}).forEach(k=>{

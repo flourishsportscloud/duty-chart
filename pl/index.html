@@ -684,7 +684,8 @@ function schedule(id,key){(pend[id]=pend[id]||new Set()).add(key);clearTimeout(t
 function flush(id){
   clearTimeout(timers[id]);const keys=pend[id];if(!keys||!keys.size)return;pend[id]=new Set();
   const doc=S.docs[id];const patch={cells:{},rem:{}};
-  keys.forEach(k=>{if(doc.rem[k])patch.rem[k]=clone(doc.rem[k]);if(doc.cells[k])patch.cells[k]=clone(doc.cells[k])});
+  keys.forEach(k=>{if(doc.rem[k])patch.rem[k]=clone(doc.rem[k]);
+    const c=doc.cells[k];if(c&&!c.obs&&!(ROWMAP[S.mode][k.split('__')[0]]||{item:{}}).item.multi)patch.cells[k]=clone(c)});   // timed observations travel only as "add"/"pop" — a remark must never overwrite their times
   persist(id,patch);
 }
 function flushAll(){Object.keys(pend).forEach(flush)}
@@ -695,7 +696,8 @@ function onRemInput(el){
   if(f==='ac'){const ak='ac-'+key;doc.rem[ak]={n:'',x:el.value,by:whoName(),at:Date.now()};schedule(id,ak);return}  // optional action note, own key so it never changes the tick
   const e=doc.rem[key]||{n:'',x:''};e[f]=el.value;e.by=whoName();e.at=Date.now();doc.rem[key]=e;
   const has=(e.n!==''&&e.n!=null)||String(e.x||'').trim()!=='';
-  if(has&&!(doc.cells[key]&&doc.cells[key].s))doc.cells[key]=mkCell(rk,'D',Date.now(),mode,date);
+  const multi=(ROWMAP[mode][rk]||{item:{}}).item.multi;
+  if(has&&!multi&&!(doc.cells[key]&&doc.cells[key].s))doc.cells[key]=mkCell(rk,'D',Date.now(),mode,date);
   schedule(id,key);
 }
 

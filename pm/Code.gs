@@ -131,6 +131,7 @@ function pmSave_(token,id,patch){
       j.cells[key]={s:na?"A":(obs.length?"D":""),by:name,at:now,l:0,obs:obs};if(na)j.cells[key].na=1;n++;return;
     }
     const s=["","D","N","A"].indexOf(c.s)>=0?c.s:"";
+    const old_=j.cells[key];if(old_&&Array.isArray(old_.obs)&&old_.obs.length&&c.s!=="A"){n++;return}   // never wipe observation times with a plain tick
     const o={s:s,by:name,at:now,l:c.l?1:0};
     if(c.n!==undefined){o.n=(c.n===""||c.n==null||isNaN(Number(c.n)))?"":String(Number(c.n))}
     j.cells[key]=o;n++;

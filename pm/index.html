@@ -699,15 +699,17 @@ function onRemInput(el){
   const plId=el.dataset.pl,rk=el.dataset.row,sec=el.dataset.sec,f=el.dataset.f;
   if(!canAct(plId))return;
   const mode=ROWMAP[rk].mode;const dd=mode==='wk'?S.wk:S.date;const id=docId(plId,mode,dd),doc=ensureDoc(id,plId,mode,dd),key=rk+'__'+sec;
+  let cellNew=false;
   if(f==='num'){
     const v=el.value;doc.cells[key]={s:v!==''?'D':'',n:v,by:whoName(),at:Date.now(),l:0};
   }else{
     const e=doc.rem[key]||{x:''};e[f]=el.value;e.by=whoName();e.at=Date.now();doc.rem[key]=e;
     const has=(e.n!==''&&e.n!=null)||String(e.x||'').trim()!=='';
-    if(!ROWMAP[rk].tl&&!/^med-/.test(rk)&&has&&!(doc.cells[key]&&doc.cells[key].s==='D'))doc.cells[key]=mkCell(rk,'D',Date.now(),mode==='wk');
+    if(!ROWMAP[rk].tl&&!ROWMAP[rk].item.multi&&!/^med-/.test(rk)&&has&&!(doc.cells[key]&&doc.cells[key].s==='D')){doc.cells[key]=mkCell(rk,'D',Date.now(),mode==='wk');cellNew=true}
   }
   const t=typed[id]=typed[id]||{cells:{},rem:{}};
-  if(doc.rem[key])t.rem[key]=clone(doc.rem[key]);if(doc.cells[key])t.cells[key]=clone(doc.cells[key]);
+  if(doc.rem[key])t.rem[key]=clone(doc.rem[key]);
+  if((f==='num'||cellNew)&&doc.cells[key]&&!doc.cells[key].obs)t.cells[key]=clone(doc.cells[key]);   // never resend a timed-observation cell: its times would be lost
   schedule(id,key);
 }
 
