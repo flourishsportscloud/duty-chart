@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FIS Parent Connect</title>
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Parent Connect"><meta name="theme-color" content="#1B3156">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="../fis/fis-logo-180.png">
+<link rel="icon" href="../fis/fis-logo-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -328,12 +332,11 @@ var FULL=['harsh yadav','surender yadav','shubhangi','santosh yadav','sharda yad
  'saba','saba panwar','karishma suthar','karishma','chandani chayal','chandani',
  'asha rao','asha'];
 GH.allowed=function(){
-  var n=String(GH.who.name||'').trim().toLowerCase(),r=String(GH.who.role||'').toLowerCase();
-  if(n==='rahul yadav'||n==='rahul')return['director'];
-  n=n.replace(/\s+/g,' ');
-  if(r==='admin'||FULL.indexOf(n)>=0)return['admin'];
-  if(/^(pl|cm|cmh|pm)$/.test(r))return['coord'];
-  return['teacher'];
+  var n=String(GH.who.name||'').trim().toLowerCase().replace(/\s+/g,' '),r=String(GH.who.role||'').toLowerCase();
+  if(n==='rahul yadav'||n==='rahul')return['director','admin','coord','teacher'];
+  if(r==='admin'||FULL.indexOf(n)>=0)return['admin','coord','teacher'];
+  if(/^(pl|cm|cmh|pm)$/.test(r))return['coord','teacher'];
+  return['teacher','coord'];
 };
 GH.logout=function(){ld(K);ld(W);ld('pc2_me');location.reload()};
 GH.gate=function(){
@@ -469,6 +472,8 @@ function caseOf(r){const a=[],cm=r.ct==='Complain'||r.ct==='Concern',t=r.t||'';
   if(r.ct==='Request')a.push('Requests');
   return a}
 const dayLbl=d=>d===todayISO()?'Today':d===addDays(todayISO(),-1)?'Yesterday':fmtS(d);
+const DESIG=[['director','director','','Director','Sees everything'],['admin','admin','','Administration / Front Office','All data, all departments'],['ops','admin','','Operations','All data, all departments'],['mgmt','admin','','Management / Dean / Principal','All data, all departments'],['cmh','coord','','CMH (Class Manager Head)','Own class group(s)'],['cm','coord','','Class Manager','Own class group(s)'],['pl','coord','','Program Leader (PL)','Own class group(s)'],['fm','coord','','Floor Manager','Own class group(s)'],['pm','coord','','Primary Manager','Own class group(s)'],['ct','teacher','Class Teacher','Class teacher','Own class / section'],['st','teacher','Maths','Subject teacher','Own subject and classes'],['coach','teacher','Co-curricular','Co-curricular coach','Co-curricular']];
+const DESIG_BY=Object.fromEntries(DESIG.map(d=>[d[0],d]));
 const ROLE_NAME=Object.fromEntries(ROLES.map(r=>[r[0],r[1]]));
 const PAL=['#1B3156','#2B9BD6','#572686','#EFA11D','#E91D69','#68C0EA','#243D69','#8a6bb3'];
 const ICON={ov:'<path d="M3 12 12 4l9 8M5 10v10h14V10"/>',fb:'<path d="M4 5h16v11H9l-5 4z"/>',fu:'<circle cx="12" cy="12" r="8"/><path d="m8.5 12 2.5 2.5 4.5-5"/>',ca:'<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>',ch:'<path d="M7 7h12l-3-3M17 17H5l3 3"/>',cl:'<path d="M4 20v-2a4 4 0 0 1 4-4h2a4 4 0 0 1 4 4v2M9 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6M17 11a2.5 2.5 0 1 0 0-5M20 20v-1.5a3.5 3.5 0 0 0-2.5-3.3"/>'};
@@ -487,7 +492,7 @@ function reasons(r){const a=[];if(r.fu)a.push('Marked for follow-up');if(r.ar)a.
 function ownerOf(r){const s=(r.sub||[])[0];if(s&&s!=='Academics')return s==='Co-curricular'?'Co-curricular teacher':s+' teacher';if(r.dp==='Co Curricular'||r.dp==='Competition')return'Co-curricular teacher';return r.g?'Coordinator':'Administration'}
 const myKey=()=>ME.role==='coord'?'Coordinator':ME.role==='admin'?'Administration':ME.role==='teacher'?(ME.subject==='Class Teacher'?'Class teacher':ME.subject==='Co-curricular'?'Co-curricular teacher':ME.subject+' teacher'):'';
 const isDir=()=>(REAL||ME).role==='director';
-const roleLbl=()=>ME.role==='coord'?'Coordinator / PL':ROLE_NAME[ME.role];
+const roleLbl=()=>ME.desig&&DESIG_BY[ME.desig]?DESIG_BY[ME.desig][3]:ME.role==='coord'?'Coordinator / PL':ROLE_NAME[ME.role];
 const owner=id=>(FU[id]&&FU[id].owner)||ownerOf(D.byId[id]);
 
 async function boot(){
@@ -1038,10 +1043,10 @@ function vLogin(){
   let h='<div class="loginw"><div class="loginc"><div class="row" style="gap:12px"><div style="width:44px;height:44px;background:var(--navy);border-radius:12px;padding:3px">'+MARK+'</div><div><h2 style="margin:0;font-size:19px;color:var(--navy)">Parent Connect</h2><div class="mut" style="font-size:12.5px">Flourish International School, Bikaner</div></div></div>'
   +'<div class="banner" style="margin-top:16px">Contains names of students and parents. Staff use only.</div>'
   +'<label class="lbl">Your name</label><input type="text" id="lgname"'+(window.GH?' readonly':'')+' value="'+esc(m.name)+'" placeholder="e.g. Mansi Sharma">'
-  +'<div class="roles">'+ROLES.filter(r=>!window.GH||GH.allowed().includes(r[0])).map(r=>'<button class="role '+(m.role===r[0]?'on':'')+'" data-a="role" data-v="'+r[0]+'"><b>'+r[1]+'</b><small>'+r[2]+'</small></button>').join('')+'</div>';
+  +'<label class="lbl">Choose your role</label><div class="roles">'+DESIG.filter(d=>!window.GH||GH.allowed().includes(d[1])).map(d=>'<button class="role '+((m.desig||(DESIG.find(x=>x[1]===m.role)||[])[0])===d[0]?'on':'')+'" data-a="role" data-v="'+d[0]+'"><b>'+d[3]+'</b><small>'+d[4]+'</small></button>').join('')+'</div>';
   if(m.role==='coord')h+='<label class="lbl">My class group(s)</label><div class="chips">'+GROUPS.map(g=>'<button class="chip '+(m.groups.includes(g)?'on':'')+'" data-a="lgg" data-v="'+g+'">'+g+'</button>').join('')+'</div>';
   if(m.role==='teacher'){
-    h+='<label class="lbl">My subject. Matching feedback reaches me automatically</label><div class="chips">'+SUBJECTS.map(s=>'<button class="chip '+(m.subject===s?'on':'')+'" data-a="lgs" data-v="'+s+'">'+s+'</button>').join('')+'</div>';
+    if((m.desig||'st')==='st')h+='<label class="lbl">My subject. Matching feedback reaches me automatically</label><div class="chips">'+SUBJECTS.map(s=>'<button class="chip '+(m.subject===s?'on':'')+'" data-a="lgs" data-v="'+s+'">'+s+'</button>').join('')+'</div>';
     h+='<label class="lbl" style="margin-top:12px">My classes / sections'+(m.subject==='Class Teacher'?' (required)':' (optional, empty means all)')+'</label><div class="chips">'+allc.map(c=>'<button class="chip '+(m.classes.includes(c)?'on':'')+'" data-a="lgc" data-v="'+c+'">'+c+'</button>').join('')+'</div>';
   }
   return h+'<div style="margin-top:20px"><button class="btn pri" data-a="enter">Enter Parent Connect</button>'+(window.GH?'<button class="btn" style="margin-left:8px" data-a="signout">Sign out</button>':'')+'</div></div></div>';
@@ -1122,7 +1127,7 @@ document.addEventListener('click',e=>{
     case'prlist':printList();break;case'prstu':printStudent();break;
     case'switch':REAL=null;if(ME&&ME.va)ME=null;window._lg=null;view='login';render();break;
     case'signout':GH.logout();break;
-    case'role':{const n=$('#lgname');if(n)window._lg.name=n.value;window._lg.role=v;render();break}
+    case'role':{const n=$('#lgname');if(n)window._lg.name=n.value;const d=DESIG_BY[v];window._lg.desig=v;window._lg.role=d[1];if(d[2])window._lg.subject=d[2];render();break}
     case'lgg':{window._lg.name=$('#lgname').value;const g=window._lg.groups,i=g.indexOf(v);i<0?g.push(v):g.splice(i,1);render();break}
     case'lgs':{window._lg.name=$('#lgname').value;window._lg.subject=v;render();break}
     case'lgc':{window._lg.name=$('#lgname').value;const g=window._lg.classes,i=g.indexOf(v);i<0?g.push(v):g.splice(i,1);render();break}
@@ -1130,7 +1135,7 @@ document.addEventListener('click',e=>{
       if(!m.name){toast('Please enter your name');break}
       if(m.role==='coord'&&!m.groups.length){toast('Select at least one class group');break}
       if(m.role==='teacher'&&m.subject==='Class Teacher'&&!m.classes.length){toast('Select your class or section');break}
-      REAL=null;ME={role:m.role,name:m.name,groups:m.groups.slice(),subject:m.subject,classes:m.classes.slice()};LS.set('pc2_me',ME);saveMe();F=newF();syncCM();fuSeg=ME.role==='teacher'?myKey():'';view='ov';render();break}
+      REAL=null;ME={role:m.role,desig:m.desig||'',name:m.name,groups:m.groups.slice(),subject:m.subject,classes:m.classes.slice()};LS.set('pc2_me',ME);saveMe();F=newF();syncCM();fuSeg=ME.role==='teacher'?myKey():'';view='ov';render();break}
   }
 });
 document.addEventListener('change',e=>{
@@ -1352,7 +1357,7 @@ let UID='',ME_WAIT=!LS.get('pc2_me');
 async function restoreMe(){
   try{const U=await claude.use('user');if(!U||!U.id)return;UID=await U.id()||'';if(!UID||!DB)return;
     if(!ME){const s=await DB.collection('data/users/'+UID).doc('me').get();const v=s&&(typeof s.data==='function'?s.data():s.data);
-      if(v&&v.name&&v.role){ME={role:v.role,name:v.name,groups:v.groups||[],subject:v.subject||'',classes:v.classes||[]};LS.set('pc2_me',ME);F=newF();syncCM();fuSeg=ME.role==='teacher'?myKey():'';view='ov'}}
+      if(v&&v.name&&v.role){ME={role:v.role,desig:v.desig||'',name:v.name,groups:v.groups||[],subject:v.subject||'',classes:v.classes||[]};LS.set('pc2_me',ME);F=newF();syncCM();fuSeg=ME.role==='teacher'?myKey():'';view='ov'}}
     else saveMe()}catch(e){}
 }
 function saveMe(){try{if(DB&&UID&&ME&&!ME.va)DB.collection('data/users/'+UID).doc('me').set({role:ME.role,name:ME.name,groups:ME.groups||[],subject:ME.subject||'',classes:ME.classes||[]})}catch(e){}}
