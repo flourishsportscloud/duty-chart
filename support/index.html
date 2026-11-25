@@ -15,19 +15,19 @@
   --bg:#f1f4f8;--card:#ffffff;--ink:#14202c;--mute:#586676;--line:#dce3ec;--soft:#e8eef6;
   --acc:#1d5fd0;--accT:#ffffff;
   --ok:#11794a;--okbg:#dcf4e6;--warn:#9a5a05;--warnbg:#fcebc9;--bad:#bb2d25;--badbg:#fde0dc;
-  --gGuard:#3b4cc2;--gClean:#0c7667;--gEve:#7a45c9;--gWater:#0a76a3;--gGarden:#4a7710;
+  --gGuard:#3b4cc2;--gClean:#0c7667;--gHelp:#b03a74;--gEve:#7a45c9;--gWater:#0a76a3;--gGarden:#4a7710;
   font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#0f1721;--card:#18222e;--ink:#e8eef6;--mute:#9aa8b8;--line:#2a3745;--soft:#223040;
   --acc:#6ea1ff;--accT:#08111d;
   --ok:#59d79a;--okbg:#14382a;--warn:#f2b45a;--warnbg:#3d2c10;--bad:#ff8f86;--badbg:#431b18;
-  --gGuard:#8e9bff;--gClean:#4fd1bd;--gEve:#b79bff;--gWater:#5cc4f0;--gGarden:#9bd14d;color-scheme:dark}}
+  --gGuard:#8e9bff;--gClean:#4fd1bd;--gHelp:#f08cbf;--gEve:#b79bff;--gWater:#5cc4f0;--gGarden:#9bd14d;color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0f1721;--card:#18222e;--ink:#e8eef6;--mute:#9aa8b8;--line:#2a3745;--soft:#223040;
   --acc:#6ea1ff;--accT:#08111d;
   --ok:#59d79a;--okbg:#14382a;--warn:#f2b45a;--warnbg:#3d2c10;--bad:#ff8f86;--badbg:#431b18;
-  --gGuard:#8e9bff;--gClean:#4fd1bd;--gEve:#b79bff;--gWater:#5cc4f0;--gGarden:#9bd14d;color-scheme:dark}
+  --gGuard:#8e9bff;--gClean:#4fd1bd;--gHelp:#f08cbf;--gEve:#b79bff;--gWater:#5cc4f0;--gGarden:#9bd14d;color-scheme:dark}
 html{padding-block:env(safe-area-inset-top,0px) env(safe-area-inset-bottom,0px)}
 img{max-width:100%}[hidden]{display:none!important}
 body{margin:0}
@@ -229,13 +229,14 @@ const FISDB=(()=>{
 const G={
  guard:{label:'Guards',ico:'🛡️',c:'var(--gGuard)',every:120,tg:0,h0:7,h1:16},
  clean:{label:'Housekeeping',ico:'🧹',c:'var(--gClean)',every:30,tg:2,h0:7,h1:16},
+ helper:{label:'Floor Helpers',ico:'🧺',c:'var(--gHelp)',every:60,tg:0,h0:7,h1:16},
  eve:{label:'Evening Housekeeping',ico:'🌆',c:'var(--gEve)',every:60,tg:1,h0:14,h1:21},
  water:{label:'Waterman',ico:'💧',c:'var(--gWater)',every:60,tg:1,h0:7,h1:16},
  garden:{label:'Gardener',ico:'🌿',c:'var(--gGarden)',every:120,tg:1,h0:7,h1:16}
 };
-const GK=['guard','clean','eve','water','garden'];
+const GK=['guard','clean','helper','eve','water','garden'];
 const FLOORS=['Admin','LG','Ground','First','Second','Third','Outside','Other'];
-const PHOTO={guard:'opt',clean:'req',eve:'req',water:'req',garden:'req'};
+const PHOTO={guard:'opt',clean:'req',helper:'req',eve:'req',water:'req',garden:'req'};
 const FORMS={
  guard:[
   {k:'where',l:'Where was he found?',o:['At gate','Guard room','Patrolling','!Not at post']},
@@ -253,7 +254,7 @@ const FORMS={
   {k:'doing',l:'What was the work?',o:['Watering','Weeding','Planting','Resting','!Not found']},
   {k:'quality',l:'Work quality',o:['Good','Average','!Poor']}]
 };
-FORMS.eve=FORMS.clean;
+FORMS.eve=FORMS.clean;FORMS.helper=FORMS.clean;
 const WFL=['Admin','LG','Ground','First','Second','Third','Staff','Other'];
 const DEFW=(()=>{const a=[{id:'w_admin',name:'Admin block',floor:'Admin',cub:0},{id:'w_front',name:'Front office',floor:'Admin',cub:0}];['LG','Ground','First','Second','Third'].forEach(f=>['Left','Right'].forEach(x=>a.push({id:'w_'+f.toLowerCase()+'_'+x[0].toLowerCase(),name:f+' floor – '+x+' side',floor:f,cub:0})));a.push({id:'w_staff',name:'Staff room washrooms',floor:'Staff',cub:0});return a})();
 const WASHF=[
@@ -299,8 +300,8 @@ async function initDb(){
   const paint=(s,n)=>{lv.textContent=s==='live'?'live':s==='offline'?'offline · '+n+' waiting':s==='setup'?'setting up':'connecting';lv.className='live'+(s==='live'?' on':'')};
   FISDB.onState(paint);
   ['log','visits','routine','wash'].forEach(c=>db.collection(c).onSnapshot(s=>{const m={};rows(s).forEach(r=>{m[r._id]=r});D[c]=m;rsoon()}));
-  db.collection('cfg').onSnapshot(s=>{rows(s).forEach(r=>{if(r._id==='staff')staff=r.list||[];if(r._id==='washrooms')washrooms=r.list||null});rsoon()});
-  FISDB.start();paint(FISDB.state(),FISDB.pending());
+  db.collection('cfg').onSnapshot(s=>{rows(s).forEach(r=>{if(r._id==='staff')staff=r.list||[];if(r._id==='attcfg')attCfg=r;if(r._id==='washrooms')washrooms=r.list||null});rsoon()});
+  FISDB.start();paint(FISDB.state(),FISDB.pending());loadDuty();
 }
 function put(coll,id,obj){
   if(!db){toast('Not connected – not saved');return Promise.resolve()}
@@ -357,7 +358,7 @@ const overdue=p=>{const s=sinceVisit(p);return !!s&&s.min>G[p.group].every};
 function sheet(o){
   return new Promise(res=>{
     const L=$('layer'),st={};o.fields.forEach(f=>st[f.k]=f.val==null?'':f.val);
-    let pic=null,pid=o.photoId||'',arm=false;
+    let pic=null,pid=o.photoId||'',arm=false;const mp=(o.photoIds||[]).slice(),mn=[];
     const close=v=>{L.innerHTML='';res(v)};
     const draw=()=>{
       const fh=o.fields.map(f=>{
@@ -366,7 +367,9 @@ function sheet(o){
         if(f.type==='ta')return `<div class="fl">${esc(f.l)}</div><textarea id="f_${f.k}" rows="${f.rows||3}" data-i="${f.k}" placeholder="${esc(f.ph||'')}">${esc(st[f.k])}</textarea>`;
         return `<div class="fl">${esc(f.l)}</div><input id="f_${f.k}" data-i="${f.k}" type="${f.type||'text'}" value="${esc(st[f.k])}" placeholder="${esc(f.ph||'')}">`}).join('');
       let ph='';
-      if(o.photo&&o.photo!=='none'){
+      if(o.photo==='multi'||o.photo==='multireq'){
+        ph=`<div class="fl">Photos ${o.photo==='multireq'?'(at least one)':'(optional)'} · ${mp.length+mn.length}</div><div class="row">${mp.map((x,i)=>`<div style="position:relative"><img class="th s" data-ph="${esc(x)}" alt="photo"><button type="button" class="btn bad sm" data-rmo="${i}" style="min-height:28px;padding:0 8px;position:absolute;top:-6px;right:-6px">✕</button></div>`).join('')}${mn.map((x,i)=>`<div style="position:relative"><img class="th s" src="${x}" alt="new photo"><button type="button" class="btn bad sm" data-rmn="${i}" style="min-height:28px;padding:0 8px;position:absolute;top:-6px;right:-6px">✕</button></div>`).join('')}</div><button type="button" class="btn sec" id="spm" style="margin-top:8px">📷 Add photo</button>`;
+      }else if(o.photo&&o.photo!=='none'){
         ph=`<div class="fl">Photo ${o.photo==='req'?'(needed)':'(optional)'}</div><button type="button" class="btn sec" id="sp">📷 ${pic||pid?'Take again':'Take photo'}</button>${pic?`<img class="pv" src="${pic}" alt="new photo">`:pid?`<img class="pv" data-ph="${esc(pid)}" alt="photo">`:''}`;
       }
       L.innerHTML=`<div class="modal" id="bd"><div class="box"><h3>${esc(o.title)}</h3>${o.sub?`<div class="hint">${esc(o.sub)}</div>`:''}${fh}${ph}
@@ -378,8 +381,11 @@ function sheet(o){
       L.querySelectorAll('.ch[data-mk]').forEach(b=>b.onclick=()=>{const a=st[b.dataset.mk],i=a.indexOf(b.dataset.mv);if(i>=0)a.splice(i,1);else a.push(b.dataset.mv);draw()});
       L.querySelectorAll('[data-i]').forEach(e=>e.oninput=()=>{st[e.dataset.i]=e.value});
       const sp=L.querySelector('#sp');if(sp)sp.onclick=async()=>{const d=await pickPhoto();if(d){pic=d;draw()}};
+      const spm=L.querySelector('#spm');if(spm)spm.onclick=async()=>{const d=await pickPhoto();if(d){mn.push(d);draw()}};
+      L.querySelectorAll('[data-rmo]').forEach(b=>b.onclick=()=>{mp.splice(+b.dataset.rmo,1);draw()});
+      L.querySelectorAll('[data-rmn]').forEach(b=>b.onclick=()=>{mn.splice(+b.dataset.rmn,1);draw()});
       L.querySelector('#scn').onclick=()=>close(null);
-      L.querySelector('#sok').onclick=()=>{const m=o.validate?o.validate(st,pic,pid):'';if(m){toast(m);return}close({st,pic,pid,del:false})};
+      L.querySelector('#sok').onclick=()=>{const m=o.validate?o.validate(st,pic||mn[0],pid||mp[0]):'';if(m){toast(m);return}close({st,pic,pid,pics:mn,pids:mp,del:false})};
       const sd=L.querySelector('#sdl');if(sd)sd.onclick=()=>{if(!arm){arm=true;draw();return}close({del:true})};
     };
     draw();
@@ -513,21 +519,22 @@ async function bulkFlow(){
 }
 async function washFlow(w,v){
   if(!(await needName()))return;
-  const cl=people('clean').map(p=>p.name).concat(['Evening team','Not known']);
-  const F=[{k:'who',l:'Who cleaned it?',type:'chips',o:cl,val:v?v.who:''}];
+  const cl=people('clean').concat(people('helper'),people('eve')).map(p=>p.name).concat(['Evening team','Not known']);
+  const known=v&&v.who&&cl.indexOf(v.who)>=0;
+  const F=[{k:'who',l:'Who cleaned it? (tap a name)',type:'chips',o:cl,val:known?v.who:''},{k:'whoT',l:'…or type any name(s)',type:'text',val:v&&!known?v.who:'',ph:'e.g. Gita Devi and Kamla Bai'}];
   WASHF.forEach(x=>F.push({k:x.k,l:x.l,type:'chips',o:x.o,val:v&&v.f?v.f[x.k]:''}));
   F.push({k:'cubno',l:'Which cubicle has a problem? (optional)',type:'text',val:v?v.cubno:''});
   F.push({k:'remark',l:'Remark – repair, damage, smell, cleaning, toiletries',type:'ta',val:v?v.remark:'',ph:'Write what you saw'});
   if(v)F.push({k:'t',l:'Time',type:'time',val:v.t});
-  const r=await sheet({title:(v?'Edit – ':'Inspect – ')+w.name,sub:v?'':'Time is saved automatically: '+hhmm(),fields:F,photo:'req',photoId:v&&v.ph,del:!!v,ok:'Save inspection',
+  const r=await sheet({title:(v?'Edit – ':'Inspect – ')+w.name,sub:v?'':'Time is saved automatically: '+hhmm(),fields:F,photo:'multireq',photoIds:v?(v.phs&&v.phs.length?v.phs:(v.ph?[v.ph]:[])):[],del:!!v,ok:'Save inspection',
     validate:(s,pic,pid)=>(!pic&&!pid)?'Take a photo of the washroom':''});
   if(!r)return;
   if(r.del){del('wash',v.id);return}
-  const ph=r.pic?await savePhoto(r.pic):r.pid;
+  const phs=r.pids.slice();for(const d of r.pics)phs.push(await savePhoto(d));const ph=phs[0]||'';
   const f={};WASHF.forEach(x=>{if(r.st[x.k])f[x.k]=r.st[x.k]});
   const base=v?clone(v):{id:'w'+uid(),date:S.date,t:hhmm(),by:S.me,wid:w.id,wname:w.name,floor:w.floor||''};
   if(v&&r.st.t)base.t=r.st.t;
-  save('wash',base.id,Object.assign(base,{who:r.st.who||'',f,cubno:r.st.cubno||'',remark:r.st.remark||'',ph}));
+  save('wash',base.id,Object.assign(base,{who:(r.st.whoT||'').trim()||r.st.who||'',f,cubno:r.st.cubno||'',remark:r.st.remark||'',ph,phs}));
   toast('Inspection saved '+base.t);
 }
 async function wsFlow(w){
@@ -541,6 +548,318 @@ async function wsFlow(w){
   else list.push({id:'w'+uid(),name:r.st.name,floor:r.st.floor,cub:+r.st.cub||0});
   washrooms=list;rsoon();put('cfg','washrooms',{list});
 }
+/* ---------- floor helpers: daily floor chart (attendance, floor, washroom after departure) ---------- */
+const HFL=['LG','Ground','First','Second','Third','Admin'];
+const flName=f=>f==='Admin'?'Admin block':f+' floor';
+function chartDoc(d=S.date){
+  const id='fh_'+d,x=D.routine[id];
+  if(x&&x.rows)return clone(x);
+  const prev=Object.values(D.routine).filter(r=>r.type==='floorchart'&&r.date<d).sort((a,b)=>b.date.localeCompare(a.date))[0];
+  const doc={id,date:d,type:'floorchart',rows:{},washBy:{},fresh:true,from:prev?prev.date:''};
+  people('helper').forEach(p=>{const o=prev&&prev.rows&&prev.rows[p.id];doc.rows[p.id]={att:'',floor:o?o.floor:'',wash:o?o.wash:'Yes'}});
+  if(prev&&prev.washBy)doc.washBy=clone(prev.washBy);
+  return doc;
+}
+function hrow(doc,p){return doc.rows[p.id]||(doc.rows[p.id]={att:'',floor:'',wash:'Yes'})}
+function saveChart(doc){delete doc.fresh;doc.last=new Date().toISOString();doc.lastBy=S.me;save('routine',doc.id,doc)}
+function floorPlan(doc){
+  const ps=people('helper'),out={};
+  HFL.forEach(f=>out[f]={on:[],wash:[]});
+  ps.forEach(p=>{const r=hrow(doc,p);if(r.att!=='A'&&r.floor&&out[r.floor]){out[r.floor].on.push(p);if(r.wash==='Yes')out[r.floor].wash.push(p.name)}});
+  HFL.forEach(f=>{const o=out[f],b=doc.washBy&&doc.washBy[f];if(o.on.length&&!o.wash.length&&b)o.by=b});
+  return out;
+}
+function helperText(doc){
+  const fp=floorPlan(doc),ps=people('helper');
+  const lines=['*Floor Helpers – '+fmtD(doc.date)+'*'];
+  HFL.forEach(f=>{const o=fp[f];if(!o.on.length)return;
+    lines.push('','*'+flName(f)+'*: '+o.on.map(p=>p.name).join(', '),'Washroom after departure: '+(o.wash.length?o.wash.join(', '):o.by?o.by:'NOT ASSIGNED'))});
+  const ab=ps.filter(p=>hrow(doc,p).att==='A').map(p=>p.name),na=ps.filter(p=>{const r=hrow(doc,p);return r.att!=='A'&&!r.floor}).map(p=>p.name);
+  if(ab.length)lines.push('','Absent: '+ab.join(', '));
+  if(na.length)lines.push('','No floor given: '+na.join(', '));
+  return lines.join('\n');
+}
+function rHelperChart(doc){
+  const fp=floorPlan(doc),ps=people('helper');
+  const pres=ps.filter(p=>hrow(doc,p).att==='P').length,ab=ps.filter(p=>hrow(doc,p).att==='A'),un=ps.filter(p=>hrow(doc,p).att==='');
+  const noWash=HFL.filter(f=>fp[f].on.length&&!fp[f].wash.length&&!fp[f].by);
+  let h=`<div class="tiles"><div class="tile"><b>${pres}/${ps.length}</b><small>present</small></div><div class="tile"><b style="color:${ab.length?'var(--bad)':'var(--ok)'}">${ab.length}</b><small>absent</small></div><div class="tile"><b style="color:${noWash.length?'var(--bad)':'var(--ok)'}">${noWash.length}</b><small>washroom not assigned</small></div></div>`;
+  if(doc.fresh&&doc.from)h+=`<div class="hint" style="margin-bottom:10px">Floors are copied from ${fmtD(doc.from)}. ${sup()?'Mark attendance to confirm today’s chart.':'Not confirmed by the supervisor yet.'}</div>`;
+  h+=HFL.map(f=>{const o=fp[f];if(!o.on.length)return '';
+    const ws=o.wash.length?o.wash.map(n=>`<span class="tag ok">${esc(n)}</span>`).join(' '):o.by?`<span class="tag warn">${esc(o.by)} (covering)</span>`:'<span class="tag bad">Not assigned</span>';
+    return `<div class="wr ${o.wash.length||o.by?'ok':'bad'}"><div class="h"><b style="font-size:17px">${esc(flName(f))}</b><span class="hint">${o.on.length} helper${o.on.length>1?'s':''}</span></div>
+     <div class="tg">${o.on.map(p=>{const r=hrow(doc,p);return `<span class="tag ${r.att==='P'?'ok':''}">${esc(p.name)}${r.att==='P'?' ✓':''}</span>`}).join('')}</div>
+     <div style="margin-top:6px;font-size:14px">Washroom after departure: ${ws}</div>
+     ${sup()&&!o.wash.length?`<button class="btn sm sec" data-act="hwb" data-v="${f}" style="margin-top:8px">${o.by?'Change':'Choose'} who does the washroom</button>`:''}</div>`}).join('');
+  if(!HFL.some(f=>fp[f].on.length))h+=`<div class="card empty">No floor given yet.${sup()?' Open “Attendance & floors”.':''}</div>`;
+  if(ab.length)h+=`<div class="card"><b>Absent</b><div class="tg">${ab.map(p=>`<span class="tag bad">${esc(p.name)}</span>`).join('')}</div></div>`;
+  const nf=ps.filter(p=>{const r=hrow(doc,p);return r.att!=='A'&&!r.floor});
+  if(nf.length)h+=`<div class="card"><b>No floor given</b><div class="tg">${nf.map(p=>`<span class="tag warn">${esc(p.name)}</span>`).join('')}</div></div>`;
+  if(un.length&&!doc.fresh)h+=`<div class="hint">Attendance not marked: ${un.map(p=>esc(p.name)).join(', ')}</div>`;
+  h+=`<button class="btn sec" data-act="hcopy" style="width:100%;margin-top:10px">Copy chart for WhatsApp</button>`;
+  return h;
+}
+function rHelperEdit(doc){
+  const ps=people('helper');
+  let h=`<div class="row sp" style="margin-bottom:10px"><span class="hint">Tap to mark. Saved straight away.</span><button class="btn ok sm" data-act="hallp">All present</button></div>`;
+  h+=ps.map(p=>{const r=hrow(doc,p);
+    return `<div class="card" style="padding:12px"><div class="row sp"><b style="font-size:17px">${esc(p.name)}</b>
+      <div class="row"><button class="ch ${r.att==='P'?'on':''}" data-act="hatt" data-p="${p.id}" data-v="P">Present</button><button class="ch bad ${r.att==='A'?'on':''}" data-act="hatt" data-p="${p.id}" data-v="A">Absent</button></div></div>
+      ${r.att==='A'?'':`<div class="fl" style="margin-top:10px">Floor</div><div class="chipset">${HFL.map(f=>`<button class="ch ${r.floor===f?'on':''}" data-act="hfl" data-p="${p.id}" data-v="${f}">${esc(f)}</button>`).join('')}</div>
+      <div class="fl">Washroom after departure?</div><div class="chipset"><button class="ch ${r.wash==='Yes'?'on':''}" data-act="hws" data-p="${p.id}" data-v="Yes">Yes</button><button class="ch bad ${r.wash==='No'?'on':''}" data-act="hws" data-p="${p.id}" data-v="No">No</button></div>`}</div>`}).join('');
+  return h;
+}
+function rHelpers(){
+  const ps=people('helper');
+  if(!ps.length)return `<div class="card empty">No floor helpers added yet.<br><br>${sup()?'<button class="btn" data-act="tab" data-v="setup">Add names in Setup</button>':'The supervisor will add the names.'}</div>`;
+  const doc=chartDoc(),v=sup()?(S.view.helper||'chart'):'chart';
+  let h='';
+  if(sup())h+=`<div class="chips">${[['chart','Floor chart'],['edit','Attendance & floors']].map(x=>`<button class="${v===x[0]?'on':''}" data-act="gview" data-v="${x[0]}">${x[1]}</button>`).join('')}</div>`;
+  return h+(v==='edit'?rHelperEdit(doc):rHelperChart(doc));
+}
+function helperHome(){
+  const ps=people('helper'),doc=chartDoc(today()),fp=floorPlan(doc);
+  const pres=ps.filter(p=>hrow(doc,p).att==='P').length,nw=HFL.filter(f=>fp[f].on.length&&!fp[f].wash.length&&!fp[f].by).length,fl=HFL.filter(f=>fp[f].on.length).length;
+  return `<button class="gcard" style="--c:${G.helper.c}" data-act="grp" data-v="helper"><div class="t"><i>${G.helper.ico}</i>${G.helper.label}</div>
+   <div class="m"><span><b>${pres}/${ps.length}</b> present</span><span>Floors <b>${fl}</b></span><span>Chart <b>${doc.fresh?'not confirmed':'ready'}</b></span></div>
+   ${nw?`<div class="m"><span class="tag bad">${nw} floor washroom${nw>1?'s':''} not assigned</span></div>`:''}</button>`;
+}
+async function washByFlow(f){
+  const doc=chartDoc(),ps=people('helper').filter(p=>hrow(doc,p).att==='P');
+  const cl=people('clean').concat(people('eve')).map(p=>p.name);
+  const opts=ps.map(p=>p.name).concat(cl.filter(n=>!ps.some(p=>p.name===n)));
+  if(!opts.length){toast('Mark attendance first');return}
+  const r=await sheet({title:'Washroom – '+flName(f),sub:'Nobody on this floor is doing the washroom after departure. Who will do it?',fields:[{k:'w',l:'Choose',type:'chips',o:opts,val:doc.washBy[f]||''}],photo:'none',ok:'Save',del:!!doc.washBy[f]});
+  if(!r)return;
+  doc.washBy=doc.washBy||{};if(r.del||!r.st.w)delete doc.washBy[f];else doc.washBy[f]=r.st.w;saveChart(doc);
+}
+/* ---------- Staff Attendance (all school staff: check in · lunch out · lunch in · check out, marked by supervisors) ----------
+   Staff list = the Leaves & Duty Cover team list (team changes, "left the school" and the day's leaves are read from it).
+   Records: routine/sa_<date>_<team> {type:'staffatt',date,team,rows:{<id>:{in,lo,li,out,st,note,b:{field:[by,iso]},h:[[field,old,new,by,iso]]}}}
+   Settings: cfg/attcfg {sups,inBy,outAfter,lunch,lunchMax,extra,hide} */
+const ATT_STAFF=[["Ajita Upadhyay","Hindi Teacher","Hindi Teacher"],["Akash Gurjar","Wushu Coach","Activity"],["Amit Sanwal","Mathematics Teacher","Secondary Teacher"],["Anamika Shrimali","Teacher","Pre Primary Teacher"],["Anita Sharma","Hindi Teacher","Hindi Teacher"],["Anoop Gahlot","Operational Manager","Operations"],["Anuradha Chaudhary","Teacher","Primary Teacher"],["Archana Choudhary","German Teacher","Secondary Teacher"],["Asha Rao","Floor Manager","Floor Manager"],["Bharti Ratawa","Hindi Teacher","Hindi Teacher"],["Bhavyadeep Soni","Keyboard Instructor","Activity"],["Bhawishya Joshi","Lawn Tennis Coach","Activity"],["Bhupendra Yogi","Acting Instructor","Activity"],["Bhuwan Bhatt","Ukulele & Guitar Instructor","Activity"],["Chandan Soni","Store Incharge","Admin"],["Chandani Chayal","Class Manager","CM"],["Chhavi Vinaik","Teacher","Primary Teacher"],["Chotulal","Guard","Support Staff"],["Deepali Tiwari","Teacher","Primary Teacher"],["Deepmala Rathore","Teacher","Primary Teacher"],["Devanshi Saini","Teacher","Primary Teacher"],["Diksha Singh Raghuwanshi","Floor Manager","Primary Manager"],["Dilshad","Teacher","Pre Primary Teacher"],["Divyanshi Jain","Floor Manager","Primary Manager"],["Dr. Garima Khatri","Program Leader","PL"],["Gauri Adhana","Teacher","Primary Teacher"],["Geeta Panwar","Hindi Teacher","Hindi Teacher"],["Gokul Vyas","Guitar Coach","Activity"],["Harsh Yadav","Transport Manager","Admin"],["Harshvardhan Soni","Parents Relation Officer","Admin"],["Himanshi Negi","Computer Teacher","Computer Teacher"],["Himanshu Singh","Basketball Coach","Activity"],["Himanshu Singh Bhadoria","Faculty – Informatics Practices","Secondary Teacher"],["Ishita","Social Science Teacher","Secondary Teacher"],["Jai Pandla","Operational Manager","Operations"],["Jatan Solanki","Guard","Support Staff"],["Jatin Sankhla","Social Science Teacher","Secondary Teacher"],["Jitendra Karwa","Karate Coach","Activity"],["Jitesh Mehendiratta","Faculty – Accountancy","Secondary Teacher"],["Juhi Ahuja","Teacher","Pre Primary Teacher"],["Jyotshna Jayan","English Teacher","Secondary Teacher"],["Kamal","Extra Driver","Support Staff"],["Kanhaiya Lal Swami","Cricket Coach","Activity"],["Kanika Gahlot","Teacher","Primary Teacher"],["Karishma Suthar","Class Manager","CM"],["Kavita Gupta","Abacus Instructor","Activity"],["Khanaiya Lal Gujrati","Guard","Support Staff"],["Komal Damani","Teacher","Pre Primary Teacher"],["Komal Suthar","Class Manager","CM"],["Kritika Pareek","Wushu Coach","Activity"],["Lohit Tailong","Taekwondo Coach","Activity"],["Madhu Mathur","Mathematics Teacher","Secondary Teacher"],["Mahak Chaudhary","Teacher","Pre Primary Teacher"],["Manisha Chauhan","Class Manager","CM"],["Manisha Sharma","Faculty – Economics","Secondary Teacher"],["Manmohan Singh","Skating Coach","Activity"],["Mansi Singh Panwar","Classical Dance Instructor","Activity"],["Mansi Soni","Class Manager","CM"],["Mansi Yadav","Teacher","Secondary Teacher"],["Megha Shekhawat","Parents Relation Officer","Admin"],["Monika Rajpurohit","Social Science Teacher","Secondary Teacher"],["Mukul Jangid","Accountant","Admin"],["Mukul Parihar","Photography Instructor & Cinematographer","Activity"],["Nahida","Head of Co-Curricular Activities","Admin"],["Nandini Shekhawat","Teacher","Pre Primary Teacher"],["Narendra Dara","Office Exceutive","Admin"],["Navratan","Guard","Support Staff"],["Neelam Rajwani","Culinary Skills Instructor","Activity"],["Neetu Dara","Floor Manager","Primary Manager"],["Neha Kumari","Mathematics Teacher","Secondary Teacher"],["Neha Sethia","Program Leader","PL"],["Nisha","Science Teacher","Secondary Teacher"],["Nishant Harsh","Manager","Activity"],["Niviya Singh Bhati","Table Tennis Coach","Activity"],["Pallavi Joshi","Science Teacher","Secondary Teacher"],["Pooja Sharma","Teacher","Primary Teacher"],["Poojal Shekhawat","Teacher","Pre Primary Teacher"],["Poonam Gaur","Hindi Teacher","Hindi Teacher"],["Poonam Rathore","Teacher","Pre Primary Teacher"],["Poonam Sharda","Program Leader","PL"],["Prashant Devra","Graphic Designer","Admin"],["Prashant Verma","Basketball Coach","Activity"],["Preeti Choudhary","Hindi Teacher","Hindi Teacher"],["Preeti Jain","Parents Relation Officer","Admin"],["Priya Bagri","Teacher","Pre Primary Teacher"],["Priya Shekhawat","Teacher","Primary Teacher"],["Priyanka Bhargava","Medical Officer","Admin"],["Priyanka Sand","Teacher","Pre Primary Teacher"],["Priyanshi Bhojak","English Teacher","Primary Teacher"],["Radha Soni","Social Science Teacher","Secondary Teacher"],["Radheyshyam","Guard","Support Staff"],["Rahul Yadav","Staff","Admin"],["Raj Vyas","Archery Coach","Activity"],["Rajeev Nagal","Content Designer","Admin"],["Ram Singh Rathore","French Teacher","Secondary Teacher"],["Rashmi Rathore","Program Leader","PL"],["Rashmi Singh","Class Manager","CM"],["Reema Tiwari","Teacher","Primary Teacher"],["Rekha","Teacher","Pre Primary Teacher"],["Renuka Tak","Art Teacher","Activity"],["Richa Sharma","Computer Teacher","Computer Teacher"],["Ritanshu Sharma","Cricket Coach","Activity"],["Ritika Purohit","Science Teacher","Secondary Teacher"],["Saba Panwar","Class Manager","CM"],["Sahil Kumar","Shooting Coach","Activity"],["Sakil Gouri","Western Dance Instructor","Activity"],["Sanjana Sarswat","Floor Manager","Primary Manager"],["Santosh Yadav","Staff","Admin"],["Sarita Saini","Program Leader","PL"],["Saroj","Teacher","Primary Teacher"],["Shaan Siddiqui","English Teacher","Secondary Teacher"],["Shailesh Joshi","Social Science Teacher","Secondary Teacher"],["Shally Taneja","Program Leader","PL"],["Sharda Yadav","Staff","Admin"],["Shikha Sharma","Art Teacher","Activity"],["Shivangi Gupta","Teacher","Pre Primary Teacher"],["Shobha Sharma","Hindi Teacher","Hindi Teacher"],["Shreya","Science Teacher","Secondary Teacher"],["Shubhangi","Dean - Academics","Admin"],["Sonika Lalwani","Teacher","Pre Primary Teacher"],["Sourabh Tripathi","Floor Manager","Floor Manager"],["Suman Bishnoi","Floor Manager","Floor Manager"],["Sunita Nirban","Teacher","Primary Teacher"],["Surender Yadav","Chairperson","Admin"],["Swati Sehgal","English Teacher","Secondary Teacher"],["Tanushree Purohit","Class Manager","CM"],["Tina Sangtani","Teacher","Primary Teacher"],["Tripti","Hindi Teacher","Hindi Teacher"],["Upender Singh Shekhawat","Class Manager","CM"],["Vahnisvari Bika","Teacher","Primary Teacher"],["Vaibhav Pandey","Tabla Instructor","Activity"],["Vaishali Rathore","Parents Relation Officer","Admin"],["Vijay Raj Soni","Class Manager","CM"],["Vipul Vijay","Mathematics Teacher","Secondary Teacher"],["Vishwabandhu","Extra Driver","Support Staff"],["Yashika Gupta","Class Manager","CM"],["Yavnika Dembla","English Teacher","Secondary Teacher"],["Yogesh Purohit","Harmonium Instructor","Activity"]];
+const DUTY_API='https://script.google.com/macros/s/AKfycbyxWYwmvDDlIR6VjS2W4209yu-72ex0vfNlRThchzInQ_pCIWO1ACbH31iuOdk410_JkA/exec';
+const ATEAMS=[['Admin','Administration'],['Operations','Operations'],['Primary Manager','Primary Managers'],['Floor Manager','Floor Managers'],['PL','Program Leaders'],['CM','Class Managers'],
+  ['Pre Primary Teacher','Pre-primary Teachers'],['Primary Teacher','Primary Teachers'],['Secondary Teacher','Secondary Teachers'],['Hindi Teacher','Hindi Teachers'],['Computer Teacher','Computer Teachers'],
+  ['Activity','Co-curricular'],['Support Staff','Support Staff'],['Other','Other']];
+const ATCOL={'Admin':'#1F2D5A','Operations':'#5F3585','Primary Manager':'#D23D63','Floor Manager':'#D23D63','PL':'#5F3585','CM':'#2E7DAF','Pre Primary Teacher':'#C77A1E','Primary Teacher':'#2E8C5E','Secondary Teacher':'#1F6E9E','Hindi Teacher':'#B24A7A','Computer Teacher':'#3A7F8C','Activity':'#C2562B','Support Staff':'#5F6B7A','Other':'#5F6B7A'};
+const ADEF={sups:['Harsh Yadav','Jai Pandla','Anoop Gahlot','Sanjana Sarswat','Neetu Dara','Divyanshi Jain','Diksha Singh Raghuwanshi','Asha Rao','Sourabh Tripathi','Suman Bishnoi'],
+  inBy:'07:45',outAfter:'14:30',lunch:true,lunchMax:30,extra:[],hide:[]};
+const ALBL={in:'Check in',lo:'Lunch out',li:'Lunch in',out:'Check out'};
+let attCfg=null,duty=null;const AS={v:'mark',q:'',team:'',show:'all',month:today().slice(0,7)};
+const anorm=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+const aslug=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'').slice(0,40);
+const acfg=()=>{const c=attCfg||{},o={};Object.keys(ADEF).forEach(k=>o[k]=c[k]!=null&&!(k==='sups'&&!c[k].length)?c[k]:ADEF[k]);return o};
+const t12=v=>{if(!v)return '';const h=+v.slice(0,2);return ((h+11)%12+1)+':'+v.slice(3)+(h<12?' am':' pm')};
+const adur=m=>m==null||m<0?'':Math.floor(m/60)+'h '+pad(m%60)+'m';
+const ainit=n=>{const p=n.replace(/^(dr|mr|mrs|ms)\.?\s+/i,'').split(/\s+/);return (p[0][0]+(p[1]?p[1][0]:'')).toUpperCase()};
+const ateamL=k=>(ATEAMS.find(z=>z[0]===k)||[k,k])[1];
+const ateamO=k=>{const i=ATEAMS.findIndex(z=>z[0]===k);return i<0?99:i};
+/* who may mark: a supervisor on the attendance list (first names and Jay/Anup spellings accepted) */
+function canAtt(){
+  if(!sup())return false;if(S.role==='Director')return true;
+  const me=anorm(S.me),f=me.split(' ')[0],al={jay:'jai',anup:'anoop'};const ff=al[f]||f;
+  return acfg().sups.some(n=>{const x=anorm(n);return x===me||x.split(' ')[0]===ff})}
+function aStaff(){
+  const c=acfg(),hide={},mv=(duty&&duty.team)||{};c.hide.forEach(n=>hide[anorm(n)]=1);
+  const seen={};return ATT_STAFF.concat(c.extra).map(x=>({name:x[0],des:x[1]||'',team:mv[x[0]]||x[2]||'Other',id:aslug(x[0])}))
+    .filter(x=>x.team!=='_left'&&!hide[anorm(x.name)]&&!seen[x.id]&&(seen[x.id]=1));
+}
+const aid=(d,team)=>'sa_'+d+'_'+aslug(team);
+function arec(d,p){const x=D.routine[aid(d,p.team)];return (x&&x.rows&&x.rows[p.id])||{}}
+function aLeave(d,name){const x=duty&&duty.daily&&duty.daily[d];if(!x||!x.leave)return null;const n=anorm(name),f=n.split(' ')[0];
+  return x.leave.find(l=>{const y=anorm(l.n);return y===n||(y.indexOf(' ')<0&&y===f)})||null}
+function astat(d,p){
+  const r=arec(d,p),c=acfg(),lv=aLeave(d,p.name);
+  const o={r,lv,late:!!(r.in&&mins(r.in)>mins(c.inBy)),early:!!(r.out&&mins(r.out)<mins(c.outAfter)&&r.st!=='HD'),longL:!!(r.lo&&r.li&&mins(r.li)-mins(r.lo)>c.lunchMax),k:'notin',l:'Not in yet',cls:''};
+  if(r.st==='A')return Object.assign(o,{k:'absent',l:'Absent',cls:'bad'});
+  if(!r.in&&(r.st==='L'||lv))return Object.assign(o,{k:'leave',l:lv&&r.st!=='L'?'On leave'+(lv.half?' · '+lv.half:''):'On leave',cls:'lv'});
+  if(r.out)Object.assign(o,{k:'out',l:'Left '+t12(r.out),cls:''});
+  else if(r.lo&&!r.li)Object.assign(o,{k:'lunch',l:'At lunch',cls:'lun'});
+  else if(r.in)Object.assign(o,{k:'in',l:'In school',cls:'ok'});
+  else if(d<today())Object.assign(o,{k:'nomark',l:'Not marked',cls:'bad'});
+  if(r.st==='HD')o.l+=' · Half day';
+  return o;
+}
+function amark(p,f,msg){
+  if(!canAtt()){toast('Only the attendance supervisors can mark. Ask the Director to add you in Setup.');return}
+  const d=S.date,id=aid(d,p.team),doc=clone(D.routine[id]||{id,type:'staffatt',date:d,team:p.team,rows:{}}),r=doc.rows[p.id]||{},iso=new Date().toISOString();
+  r.b=r.b||{};Object.keys(f).forEach(k=>{if(ALBL[k]){if(r[k]&&r[k]!==f[k])(r.h=r.h||[]).push([k,r[k],f[k],S.me,iso]);r.b[k]=[S.me,iso]}r[k]=f[k]});
+  if(r.h&&r.h.length>30)r.h=r.h.slice(-30);
+  doc.rows[p.id]=r;doc.last=iso;doc.lastBy=S.me;save('routine',id,doc);if(msg)toast(msg);
+}
+function loadDuty(){
+  try{const c=JSON.parse(localStorage.getItem('sa_duty')||'null');if(c&&Date.now()-c.t<10*60e3)duty=c.v}catch(e){}
+  fetch(DUTY_API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:'boot',args:[]})}).then(r=>r.json()).then(j=>{
+    if(!j.ok)return;const b=j.v||{},daily={},from=shiftD(today(),-70);
+    Object.keys(b.daily||{}).forEach(d=>{if(d>=from)daily[d]={leave:(b.daily[d].leave||[]).map(l=>({n:l.n,half:l.half||''}))}});
+    duty={daily,team:(((b.roster||{})._team)||{}).cat||{}};try{localStorage.setItem('sa_duty',JSON.stringify({t:Date.now(),v:duty}))}catch(e){}rsoon();
+  }).catch(()=>{});
+}
+function acounts(list){const c={notin:0,in:0,lunch:0,out:0,leave:0,absent:0,nomark:0,late:0};list.forEach(p=>{const s=astat(S.date,p);c[s.k]++;if(s.late)c.late++});return c}
+const ahours=r=>{if(!r.in||!r.out)return null;let m=mins(r.out)-mins(r.in);if(r.lo&&r.li)m-=Math.max(0,mins(r.li)-mins(r.lo));return m};
+function attHome(){
+  const all=aStaff(),c=acounts(all),past=S.date<today();
+  return `<button class="gcard" style="--c:#1F2D5A" data-act="tab" data-v="att"><div class="t"><i>🕘</i>Staff Attendance</div>
+    <div class="m"><span><b>${c.in+c.lunch+c.out}/${all.length}</b> came in</span><span>Late <b>${c.late}</b></span><span>Leave <b>${c.leave}</b></span><span>Absent <b>${c.absent}</b></span></div>
+    ${c.notin+c.nomark?`<div class="m"><span class="tag ${past?'bad':'warn'}">${c.notin+c.nomark} ${past?'not marked':'not in yet'}</span></div>`:''}</button>`;
+}
+function rAtt(){
+  const subs=[['mark','Mark'],['day','Day register'],['month','Monthly']];
+  let h=`<div class="chips">${subs.map(x=>`<button class="${AS.v===x[0]?'on':''}" data-act="a-v" data-v="${x[0]}">${x[1]}</button>`).join('')}</div>`;
+  if(!canAtt())h+=`<div class="card hint">You can see attendance. Marking is done by ${esc(acfg().sups.map(n=>n.split(' ')[0]).join(', '))}. The Director can change this list in Setup.</div>`;
+  return h+(AS.v==='day'?aDay():AS.v==='month'?aMonth():aMark());
+}
+function aTools(all){
+  return `<div class="row" style="margin-bottom:10px;flex-wrap:nowrap"><input type="search" id="a-q" placeholder="Search a name…" value="${esc(AS.q)}" style="flex:1;min-width:0;padding:11px 12px;border:1px solid var(--line);border-radius:12px;font:inherit;font-size:16px;background:var(--card);color:var(--ink)">
+   <select id="a-team" style="max-width:46%;padding:11px 8px;border:1px solid var(--line);border-radius:12px;font:inherit;font-size:15px;background:var(--card);color:var(--ink)"><option value="">All teams (${all.length})</option>${ATEAMS.filter(t=>all.some(p=>p.team===t[0])).map(t=>`<option value="${esc(t[0])}" ${AS.team===t[0]?'selected':''}>${esc(t[1])}</option>`).join('')}</select></div>`;
+}
+function aMark(){
+  const all=aStaff(),c=acounts(all),cf=acfg(),past=S.date<today();
+  const K=[['notin',past?'Not marked':'Not in yet','var(--mute)',c.notin+c.nomark],['in','In school','var(--ok)',c.in],['lunch','At lunch','var(--gEve)',c.lunch],['out','Left','var(--acc)',c.out],['leave','On leave','var(--gWater)',c.leave],['absent','Absent','var(--bad)',c.absent]];
+  if(!cf.lunch)K.splice(2,1);
+  let h=dateBar()+`<div class="tiles">${K.map(k=>`<button class="tile" data-act="a-show" data-v="${k[0]}" style="${AS.show===k[0]?'outline:2px solid '+k[2]+';outline-offset:-1px':''}"><b style="color:${k[2]}">${k[3]}</b><small>${k[1]}</small></button>`).join('')}</div>`+aTools(all);
+  if(AS.show!=='all')h+=`<div class="row sp" style="margin:-2px 0 8px"><span class="hint">Showing: ${esc(K.find(k=>k[0]===AS.show)?K.find(k=>k[0]===AS.show)[1]:'')}</span><button class="btn sec sm" data-act="a-show" data-v="all">Show everyone</button></div>`;
+  else if(c.late)h+=`<p class="hint" style="margin:-2px 0 8px">${c.late} came after ${t12(cf.inBy)} (amber).</p>`;
+  const q=anorm(AS.q),list=all.filter(p=>{if(AS.team&&p.team!==AS.team)return false;if(q&&anorm(p.name+' '+p.des).indexOf(q)<0)return false;if(AS.show==='all')return true;const k=astat(S.date,p).k;return AS.show==='notin'?(k==='notin'||k==='nomark'):k===AS.show});
+  if(!list.length)return h+`<div class="card empty">Nobody here.</div>`;
+  const gr={};list.forEach(p=>(gr[p.team]=gr[p.team]||[]).push(p));
+  Object.keys(gr).sort((a,b)=>ateamO(a)-ateamO(b)).forEach(t=>{const g=gr[t].sort((a,b)=>a.name.localeCompare(b.name)),n=g.filter(p=>arec(S.date,p).in).length;
+    h+=`<div class="row sp" style="margin:14px 0 6px"><b style="font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)">${esc(ateamL(t))}</b><small class="hint">${n} / ${g.length} in</small></div>`+g.map(aRow).join('')});
+  return h;
+}
+function abtn(p,k,s){
+  const r=s.r,v=r[k],lun=k==='lo'||k==='li';
+  if(v){const warn=(k==='in'&&s.late)||(k==='out'&&s.early)||(k==='li'&&s.longL),by=r.b&&r.b[k]?r.b[k][0].split(' ')[0]:'';
+    return `<button class="hc ${warn?'warn':lun?'':'ok'}" style="border:0;min-height:46px;${lun&&!warn?'background:var(--soft);color:var(--gEve)':''}" data-act="a-edit" data-id="${p.id}" data-k="${k}"><b>${t12(v)}</b><small>${ALBL[k]}${by?' · '+esc(by):''}</small></button>`}
+  return `<button class="hc" style="border:1.5px ${k==='in'?'solid var(--acc)':'dashed var(--line)'};background:var(--card);min-height:46px;${k==='in'?'color:var(--acc)':''}" data-act="a-tap" data-id="${p.id}" data-k="${k}"><b style="font-size:13.5px">${ALBL[k]}</b><small>tap = now</small></button>`;
+}
+function aRow(p){
+  const s=astat(S.date,p),cf=acfg();
+  const tag=`<span class="tag ${s.cls==='ok'?'ok':s.cls==='bad'?'bad':''}" style="${s.cls==='lv'?'background:var(--soft);color:var(--gWater)':s.cls==='lun'?'background:var(--soft);color:var(--gEve)':''}">${esc(s.l)}</span>`;
+  let h=`<div class="card" style="padding:10px;margin-bottom:8px"><div class="row" style="flex-wrap:nowrap"><span style="width:36px;height:36px;border-radius:50%;flex:none;display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px;background:${ATCOL[p.team]||'#5F6B7A'}">${esc(ainit(p.name))}</span>
+    <div style="flex:1;min-width:0"><b style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.name)}</b><small class="hint" style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.des)}</small></div>${tag}
+    <button class="btn sec sm" style="min-height:36px;padding:0 10px" data-act="a-person" data-id="${p.id}" aria-label="More for ${esc(p.name)}">⋯</button></div>`;
+  if(s.k==='absent'||(s.k==='leave'&&!s.r.in))h+=`<div class="strip" style="gap:6px"><button class="hc" style="border:1.5px solid var(--acc);background:var(--card);color:var(--acc);min-height:44px" data-act="a-tap" data-id="${p.id}" data-k="in"><b style="font-size:13.5px">Came in</b><small>tap = now</small></button><button class="hc" style="border:0;min-height:44px" data-act="a-person" data-id="${p.id}"><b style="font-size:13.5px">Change</b><small>status · note</small></button></div>`;
+  else h+=`<div class="strip" style="gap:6px">${abtn(p,'in',s)}${cf.lunch?abtn(p,'lo',s)+abtn(p,'li',s):''}${abtn(p,'out',s)}</div>`;
+  const n=[];if(s.late)n.push(`<span style="color:var(--warn);font-weight:700">Late (after ${t12(cf.inBy)})</span>`);if(s.early)n.push(`<span style="color:var(--warn);font-weight:700">Left before ${t12(cf.outAfter)}</span>`);
+  if(s.longL)n.push(`<span style="color:var(--warn);font-weight:700">Lunch ${adur(mins(s.r.li)-mins(s.r.lo))}</span>`);if(s.r.note)n.push('📝 '+esc(s.r.note));if(s.r.h&&s.r.h.length)n.push(`Edited ${s.r.h.length}×`);
+  if(n.length)h+=`<div class="hint" style="margin-top:7px">${n.join(' · ')}</div>`;
+  return h+`</div>`;
+}
+function aDay(){
+  const all=aStaff(),cf=acfg(),c=acounts(all),past=S.date<today();
+  let h=dateBar()+`<div class="card"><b>${c.in+c.lunch+c.out}</b> came in · <b>${c.late}</b> late · <b>${c.leave}</b> on leave · <b>${c.absent}</b> absent · <b>${c.notin+c.nomark}</b> ${past?'not marked':'not in yet'}
+    <div class="row" style="margin-top:10px"><button class="btn sec sm" data-act="a-copy">Copy for WhatsApp</button><button class="btn sec sm" data-act="a-csv">Download Excel (CSV)</button></div></div>`;
+  const gr={};all.forEach(p=>(gr[p.team]=gr[p.team]||[]).push(p));
+  const th='padding:7px 8px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--mute);background:var(--soft);white-space:nowrap',td='padding:7px 8px;border-top:1px solid var(--line);white-space:nowrap;font-variant-numeric:tabular-nums';
+  h+=`<div class="card" style="padding:0;overflow-x:auto"><table style="border-collapse:collapse;width:100%;font-size:14px"><tr><th style="${th}">Name</th><th style="${th}">In</th>${cf.lunch?`<th style="${th}">Lunch out</th><th style="${th}">Lunch in</th>`:''}<th style="${th}">Out</th><th style="${th}">Hours</th><th style="${th}">Status</th><th style="${th}">Marked by</th></tr>`;
+  Object.keys(gr).sort((a,b)=>ateamO(a)-ateamO(b)).forEach(t=>{h+=`<tr><td colspan="${cf.lunch?8:6}" style="${td};font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);background:var(--soft)">${esc(ateamL(t))}</td></tr>`;
+    gr[t].sort((a,b)=>a.name.localeCompare(b.name)).forEach(p=>{const s=astat(S.date,p),r=s.r,w='color:var(--warn);font-weight:700';
+      h+=`<tr><td style="${td};white-space:normal;min-width:130px"><b>${esc(p.name)}</b><div class="hint" style="font-size:12px">${esc(p.des)}</div></td><td style="${td};${s.late?w:''}">${t12(r.in)}</td>${cf.lunch?`<td style="${td}">${t12(r.lo)}</td><td style="${td};${s.longL?w:''}">${t12(r.li)}</td>`:''}<td style="${td};${s.early?w:''}">${t12(r.out)}</td><td style="${td}">${adur(ahours(r))}</td><td style="${td}">${esc(s.l)}</td><td style="${td}">${esc(r.b&&r.b.in?r.b.in[0]:'')}</td></tr>`})});
+  return h+`</table></div>`;
+}
+const amonthDates=ym=>{const o=[];let d=pd(ym+'-01');while(dkey(d).slice(0,7)===ym){o.push(dkey(d));d=new Date(d.getFullYear(),d.getMonth(),d.getDate()+1)}return o};
+const amarked=d=>Object.values(D.routine).some(x=>x.type==='staffatt'&&x.date===d&&Object.values(x.rows||{}).some(r=>r.in));
+function amStats(p,ym){
+  const o={P:0,A:0,L:0,HD:0,late:0,early:0,nm:0,ins:[],outs:[],m:0},td=today();
+  amonthDates(ym).forEach(d=>{if(d>td)return;const r=arec(d,p),s=astat(d,p);
+    if(r.st==='A')o.A++;else if(r.in){o.P++;if(r.st==='HD')o.HD++;if(s.late)o.late++;if(s.early)o.early++;o.ins.push(mins(r.in));if(r.out)o.outs.push(mins(r.out));o.m+=ahours(r)||0}
+    else if(r.st==='L'||s.lv)o.L++;else if(pd(d).getDay()!==0&&d<td&&amarked(d))o.nm++});
+  return o;
+}
+const aavg=a=>{if(!a.length)return '';const m=Math.round(a.reduce((x,y)=>x+y,0)/a.length);return t12(pad(Math.floor(m/60))+':'+pad(m%60))};
+const amBar=()=>`<div class="datebar"><button data-act="a-m" data-v="-1">◀</button><b>${pd(AS.month+'-01').toLocaleDateString('en-IN',{month:'long',year:'numeric'})}</b><button data-act="a-m" data-v="1">▶</button></div>`;
+function aMonth(){
+  const all=aStaff(),q=anorm(AS.q),cf=acfg();
+  let h=amBar()+aTools(all)+`<p class="hint" style="margin:0 0 8px">Late = in after ${t12(cf.inBy)}. Not marked = a school day with no entry. Tap a name for the calendar. <button class="btn sec sm" data-act="a-csvm" style="margin-left:4px">Download CSV</button></p>`;
+  const gr={};all.filter(p=>(!AS.team||p.team===AS.team)&&(!q||anorm(p.name).indexOf(q)>=0)).forEach(p=>(gr[p.team]=gr[p.team]||[]).push(p));
+  const th='padding:7px 8px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--mute);background:var(--soft);white-space:nowrap',td='padding:7px 8px;border-top:1px solid var(--line);white-space:nowrap;font-variant-numeric:tabular-nums';
+  h+=`<div class="card" style="padding:0;overflow-x:auto"><table style="border-collapse:collapse;width:100%;font-size:14px"><tr>${['Name','Present','Late','Absent','Leave','Not marked','Avg in','Avg out','Hours'].map(x=>`<th style="${th}">${x}</th>`).join('')}</tr>`;
+  Object.keys(gr).sort((a,b)=>ateamO(a)-ateamO(b)).forEach(t=>{h+=`<tr><td colspan="9" style="${td};font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);background:var(--soft)">${esc(ateamL(t))}</td></tr>`;
+    gr[t].sort((a,b)=>a.name.localeCompare(b.name)).forEach(p=>{const o=amStats(p,AS.month);
+      h+=`<tr><td style="${td};white-space:normal;min-width:130px"><button data-act="a-cal" data-id="${p.id}" style="border:0;background:none;padding:0;text-align:left;font-weight:700;color:var(--acc)">${esc(p.name)}</button><div class="hint" style="font-size:12px">${esc(p.des)}</div></td><td style="${td};color:var(--ok);font-weight:700">${o.P}${o.HD?` <small>(${o.HD} half)</small>`:''}</td><td style="${td};${o.late?'color:var(--warn);font-weight:700':''}">${o.late}</td><td style="${td};${o.A?'color:var(--bad);font-weight:700':''}">${o.A}</td><td style="${td}">${o.L}</td><td style="${td};${o.nm?'color:var(--bad);font-weight:700':''}">${o.nm}</td><td style="${td}">${aavg(o.ins)}</td><td style="${td}">${aavg(o.outs)}</td><td style="${td}">${o.m?Math.round(o.m/60)+'h':''}</td></tr>`})});
+  return h+`</table></div>`;
+}
+function aCal(p){
+  const ds=amonthDates(AS.month),first=pd(ds[0]).getDay(),o=amStats(p,AS.month),td=today();
+  let h=`<div class="hint" style="margin:6px 0 10px"><b>${o.P}</b> present · <b>${o.late}</b> late · <b>${o.A}</b> absent · <b>${o.L}</b> leave${o.ins.length?' · in on average '+aavg(o.ins):''}</div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">`+['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(x=>`<div class="hint" style="text-align:center;font-size:11px;font-weight:700">${x}</div>`).join('');
+  for(let i=0;i<first;i++)h+='<div></div>';
+  ds.forEach(d=>{const r=arec(d,p),s=astat(d,p);let bg='var(--soft)',t='';
+    if(d>td)bg='transparent';else if(r.st==='A'){bg='var(--badbg)';t='Absent'}else if(r.in){bg=s.late?'var(--warnbg)':'var(--okbg)';t=t12(r.in).replace(/ (a|p)m/,'$1')+(r.out?'<br>'+t12(r.out).replace(/ (a|p)m/,'$1'):'')}else if(s.k==='leave'){bg='var(--soft)';t='Leave'}
+    h+=`<div style="border-radius:9px;min-height:50px;padding:4px;font-size:11px;background:${bg};border:1px solid var(--line);${d>td?'opacity:.35':''}"><b style="display:block;font-size:13px">${+d.slice(8)}</b>${t}</div>`});
+  return h+`</div><p class="hint">Green = on time · amber = late · red = absent</p>`;
+}
+function aShow(html){const L=$('layer');L.innerHTML=`<div class="modal" id="abd"><div class="box">${html}</div></div>`;L.querySelector('#abd').onclick=e=>{if(e.target.id==='abd')L.innerHTML=''}}
+const aClose=()=>{$('layer').innerHTML=''};
+function aEdit(p,k){
+  const r=arec(S.date,p),by=r.b&&r.b[k];
+  aShow(`<h3>${ALBL[k]} · ${esc(p.name)}</h3><div class="hint">${esc(fmtD(S.date))}${by?' · marked by '+esc(by[0])+' at '+new Date(by[1]).toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'}):''}</div>
+    <div class="fl">Time</div><input type="time" id="a-t" value="${esc(r[k]||hhmm())}">
+    <div class="row" style="margin-top:18px"><button class="btn" style="flex:1" data-act="a-savet" data-id="${p.id}" data-k="${k}">Save</button>${r[k]?`<button class="btn bad" data-act="a-clr" data-id="${p.id}" data-k="${k}">Clear</button>`:''}<button class="btn sec" data-act="a-close">Cancel</button></div>`);
+}
+function aPerson(p){
+  const r=arec(S.date,p),s=astat(S.date,p),st=r.st||'';
+  const bys=r.b?Object.keys(r.b).filter(k=>ALBL[k]&&r[k]).map(k=>`<div>${ALBL[k]} ${t12(r[k])} – ${esc(r.b[k][0])}</div>`).join(''):'';
+  const hist=(r.h||[]).slice().reverse().map(x=>`<div>${ALBL[x[0]]||x[0]}: ${t12(x[1])||'–'} → ${t12(x[2])||'–'} · ${esc(x[3])}, ${new Date(x[4]).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'})}</div>`).join('');
+  aShow(`<h3>${esc(p.name)}</h3><div class="hint">${esc(p.des)} · ${esc(fmtD(S.date))}</div>
+    ${s.lv?`<div class="tag" style="margin-top:8px;background:var(--soft);color:var(--gWater)">On leave in Leaves &amp; Duty Cover${s.lv.half?' ('+esc(s.lv.half)+')':''}</div>`:''}
+    <div class="fl">Status</div><div class="chipset" id="a-st">${[['','Normal'],['A','Absent'],['L','On leave'],['HD','Half day']].map(x=>`<button type="button" class="ch ${st===x[0]?'on':''}" data-ast="${x[0]}">${x[1]}</button>`).join('')}</div>
+    <div class="fl">Note (optional)</div><input id="a-note" value="${esc(r.note||'')}" placeholder="e.g. Doctor visit, permission from Principal">
+    <div class="row" style="margin-top:18px"><button class="btn" style="flex:1" data-act="a-savep" data-id="${p.id}">Save</button><button class="btn sec" data-act="a-cal" data-id="${p.id}">Month</button><button class="btn sec" data-act="a-close">Close</button></div>
+    ${bys||hist?`<div class="hint" style="margin-top:14px;border-top:1px solid var(--line);padding-top:8px">${bys}${hist?'<div style="margin-top:6px"><b>Changes</b></div>'+hist:''}</div>`:''}`);
+}
+function aCalShow(p){aShow(`<div class="row sp"><h3>${esc(p.name)}</h3><button class="btn sec sm" data-act="a-close">Close</button></div><div class="hint">${esc(p.des)}</div>`+amBar().replace(/data-act="a-m"/g,`data-act="a-mc" data-id="${p.id}"`)+aCal(p))}
+function aRows(){const cf=acfg();return aStaff().sort((a,b)=>ateamO(a.team)-ateamO(b.team)||a.name.localeCompare(b.name)).map(p=>{const s=astat(S.date,p),r=s.r;
+  return [p.name,p.des,ateamL(p.team),t12(r.in),cf.lunch?t12(r.lo):'',cf.lunch?t12(r.li):'',t12(r.out),adur(ahours(r)),s.l+(s.late?' · Late':''),r.b&&r.b.in?r.b.in[0]:'',r.note||'']})}
+const acsv=rows=>rows.map(r=>r.map(v=>{v=String(v==null?'':v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}).join(',')).join('\n');
+function adl(name,text){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+text],{type:'text/csv'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>a.remove(),500)}
+function attSetup(){
+  const c=acfg();
+  return `<div class="row sp" style="margin:14px 0 10px"><h2 style="font-size:16px">🕘 Staff Attendance</h2></div><div class="card">
+   <div class="fl" style="margin-top:0">Who marks attendance</div><div class="chipset">${c.sups.map(n=>`<span class="tag" style="font-size:13.5px;padding:6px 10px">${esc(n)}${S.role==='Director'?` <button data-act="a-rmsup" data-v="${esc(n)}" style="border:0;background:none;color:var(--bad);font-weight:800;padding:0 0 0 4px">✕</button>`:''}</span>`).join('')}</div>
+   ${S.role==='Director'?`<div class="row" style="margin-top:8px;flex-wrap:nowrap"><input id="a-addsup" list="a-dl" placeholder="Add a name…" style="flex:1;min-width:0;padding:11px;border:1px solid var(--line);border-radius:12px;font:inherit;background:var(--bg);color:var(--ink)"><button class="btn sm" data-act="a-addsup">Add</button></div><datalist id="a-dl">${aStaff().map(p=>`<option value="${esc(p.name)}">`).join('')}</datalist>
+   <div class="kv" style="margin-top:12px"><label><small>Late after</small><input type="time" id="a-in" value="${esc(c.inBy)}" style="width:100%;padding:9px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit"></label><label><small>Check out from</small><input type="time" id="a-out" value="${esc(c.outAfter)}" style="width:100%;padding:9px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit"></label>
+   <label><small>Lunch allowed (min)</small><input type="number" id="a-lm" min="0" max="180" value="${esc(c.lunchMax)}" style="width:100%;padding:9px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit"></label><label><small>Lunch out / in buttons</small><select id="a-lu" style="width:100%;padding:9px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit"><option value="1" ${c.lunch?'selected':''}>Show</option><option value="0" ${!c.lunch?'selected':''}>Hide</option></select></label></div>
+   <button class="btn sm" data-act="a-savecfg">Save timings</button>
+   <div class="fl">Add a staff member (not in the Leaves &amp; Duty Cover list)</div><div class="row" style="flex-wrap:nowrap"><input id="a-nn" placeholder="Full name" style="flex:1;min-width:0;padding:11px;border:1px solid var(--line);border-radius:12px;font:inherit;background:var(--bg);color:var(--ink)"><select id="a-nt" style="max-width:45%;padding:11px 6px;border:1px solid var(--line);border-radius:12px;font:inherit;background:var(--bg);color:var(--ink)">${ATEAMS.map(t=>`<option value="${esc(t[0])}">${esc(t[1])}</option>`).join('')}</select><button class="btn sm" data-act="a-addst">Add</button></div>
+   ${c.extra.length?`<div class="chipset" style="margin-top:8px">${c.extra.map(x=>`<span class="tag" style="font-size:13.5px;padding:6px 10px">${esc(x[0])} <button data-act="a-rmst" data-v="${esc(x[0])}" style="border:0;background:none;color:var(--bad);font-weight:800;padding:0 0 0 4px">✕</button></span>`).join('')}</div>`:''}`
+   :`<p class="hint" style="margin:8px 0 0">Late after <b>${t12(c.inBy)}</b> · check out from <b>${t12(c.outAfter)}</b> · lunch allowed <b>${c.lunchMax} min</b>. Only the Director changes this.</p>`}
+   <p class="hint" style="margin:10px 0 0">The staff list, teams and leaves come from Leaves &amp; Duty Cover.</p></div>`;
+}
+function attSave(c){attCfg=c;rsoon();put('cfg','attcfg',c).then(()=>toast('Saved'))}
+document.addEventListener('click',e=>{
+  const st=e.target.closest('[data-ast]');if(st){st.parentNode.querySelectorAll('.ch').forEach(x=>x.classList.toggle('on',x===st));return}
+  const b=e.target.closest('[data-act^="a-"]');if(!b)return;e.stopPropagation();
+  const a=b.dataset.act,v=b.dataset.v,p=b.dataset.id?aStaff().find(x=>x.id===b.dataset.id):null;
+  if(a==='a-v'){AS.v=v;render()}
+  else if(a==='a-show'){AS.show=AS.show===v?'all':v;render()}
+  else if(a==='a-tap'&&p){const k=b.dataset.k;if(S.date!==today()){aEdit(p,k);return}const f={};f[k]=hhmm();const r=arec(S.date,p);if(k==='in'&&(r.st==='A'||r.st==='L'))f.st='';amark(p,f,p.name.split(' ')[0]+' · '+ALBL[k]+' '+t12(f[k]))}
+  else if(a==='a-edit'&&p)aEdit(p,b.dataset.k);
+  else if(a==='a-savet'&&p){const t=$('a-t').value;if(!/^\d{2}:\d{2}$/.test(t)){toast('Pick a time');return}const f={};f[b.dataset.k]=t;aClose();amark(p,f,'Saved')}
+  else if(a==='a-clr'&&p){const f={};f[b.dataset.k]='';aClose();amark(p,f,'Cleared')}
+  else if(a==='a-person'&&p)aPerson(p);
+  else if(a==='a-savep'&&p){const on=document.querySelector('#a-st .ch.on');const f={st:on?on.dataset.ast:'',note:$('a-note').value.trim().slice(0,200)};aClose();amark(p,f,'Saved')}
+  else if(a==='a-cal'&&p)aCalShow(p);
+  else if(a==='a-close')aClose();
+  else if(a==='a-m'||a==='a-mc'){const d=pd(AS.month+'-15');AS.month=dkey(new Date(d.getFullYear(),d.getMonth()+(+v),15)).slice(0,7);if(a==='a-mc'&&p)aCalShow(p);render()}
+  else if(a==='a-copy'){const rows=aRows(),c=acounts(aStaff());let t=`*Staff Attendance – ${fmtD(S.date)}*\nCame in: ${c.in+c.lunch+c.out} · Late: ${c.late} · Leave: ${c.leave} · Absent: ${c.absent} · Not marked: ${c.notin+c.nomark}\n`;
+    const L=(h,f,g)=>{const x=rows.filter(f);if(x.length)t+=`\n*${h}*\n`+x.map(g).join('\n')+'\n'};
+    L('Late',r=>/Late/.test(r[8]),r=>'• '+r[0]+' – '+r[3]);L('Absent',r=>/^Absent/.test(r[8]),r=>'• '+r[0]);L('On leave',r=>/^On leave/.test(r[8]),r=>'• '+r[0]);L('Not marked',r=>/^Not/.test(r[8]),r=>'• '+r[0]);
+    (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Copied – paste in WhatsApp')).catch(()=>aShow(`<h3>Copy this</h3><textarea rows="14">${esc(t)}</textarea><button class="btn sec" style="margin-top:10px" data-act="a-close">Close</button>`))}
+  else if(a==='a-csv')adl('Staff attendance '+S.date+'.csv',acsv([['Name','Designation','Team','In','Lunch out','Lunch in','Out','Hours','Status','Check-in marked by','Note']].concat(aRows())));
+  else if(a==='a-csvm'){const rr=[['Name','Designation','Team','Present','Half days','Late','Left early','Absent','Leave','Not marked','Avg in','Avg out','Hours']];
+    aStaff().sort((x,y)=>ateamO(x.team)-ateamO(y.team)||x.name.localeCompare(y.name)).forEach(p=>{const o=amStats(p,AS.month);rr.push([p.name,p.des,ateamL(p.team),o.P,o.HD,o.late,o.early,o.A,o.L,o.nm,aavg(o.ins),aavg(o.outs),Math.round(o.m/60)])});adl('Staff attendance '+AS.month+'.csv',acsv(rr))}
+  else if(a==='a-rmsup'){const c=acfg();c.sups=c.sups.filter(n=>n!==v);attSave(c)}
+  else if(a==='a-addsup'){const n=$('a-addsup').value.trim();if(!n)return;const c=acfg();if(c.sups.indexOf(n)<0)c.sups=c.sups.concat([n]);attSave(c)}
+  else if(a==='a-savecfg'){const c=acfg();c.inBy=$('a-in').value||c.inBy;c.outAfter=$('a-out').value||c.outAfter;c.lunchMax=Math.max(0,+$('a-lm').value||0);c.lunch=$('a-lu').value==='1';attSave(c)}
+  else if(a==='a-addst'){const n=$('a-nn').value.trim();if(!n){toast('Type a name');return}const c=acfg();c.extra=c.extra.concat([[n,'',$('a-nt').value]]);attSave(c)}
+  else if(a==='a-rmst'){const c=acfg();c.extra=c.extra.filter(x=>x[0]!==v);attSave(c)}
+},true);
+document.addEventListener('input',e=>{if(e.target.id==='a-q'){AS.q=e.target.value;const pos=e.target.selectionStart;render();const el=$('a-q');if(el){el.focus();try{el.setSelectionRange(pos,pos)}catch(x){}}}});
+document.addEventListener('change',e=>{if(e.target.id==='a-team'){AS.team=e.target.value;render()}});
+
+
 /* ---------- views ---------- */
 const statusOf=p=>{
   const d=activeDate(p),l=getLog(p,d);
@@ -593,8 +912,10 @@ function rHome(){
   const t=today();let on=0,all=0,vis=0,due=0;
   staff.forEach(p=>{all++;const l=getLog(p,activeDate(p));if(l.in&&!l.out)on++;vis+=vOf(p,t).length;if(overdue(p))due++});
   let h=`<div class="tiles"><div class="tile"><b>${on}/${all}</b><small>on duty now</small></div><div class="tile"><b>${vis}</b><small>visits today</small></div><div class="tile"><b style="color:${due?'var(--bad)':'var(--ok)'}">${due}</b><small>need a visit</small></div></div>`;
+  if(sup())h+=attHome();
   if(!staff.length)return h+`<div class="card empty">No staff added yet.<br><br>${sup()?'<button class="btn" data-act="tab" data-v="setup">Add staff in Setup</button>':'A supervisor will add the staff list.'}</div>`;
   h+=GK.map(g=>{
+    if(g==='helper')return people('helper').length?helperHome():'';
     const ps=people(g),inN=ps.filter(p=>{const l=getLog(p,activeDate(p));return l.in&&!l.out}).length,vs=ps.reduce((n,p)=>n+vOf(p,t).length,0),dn=ps.filter(overdue).length;
     let last='';ps.forEach(p=>vOf(p,t).forEach(v=>{if(!last||v.t>last)last=v.t}));
     return `<button class="gcard" style="--c:${G[g].c}" data-act="grp" data-v="${g}"><div class="t"><i>${G[g].ico}</i>${G[g].label}</div>
@@ -629,6 +950,7 @@ function rRoster(ps){
 function rGroup(){
   const g=S.group,ps=people(g);
   let h=dateBar();
+  if(g==='helper')return h+rHelpers();
   if(!ps.length)return h+`<div class="card empty">No ${G[g].label.toLowerCase()} staff yet.<br><br>${sup()?'<button class="btn" data-act="tab" data-v="setup">Add in Setup</button>':''}</div>`;
   const multi=(g==='clean'||g==='eve');
   const v=S.view[g]||(g==='eve'?'roster':'people');
@@ -678,6 +1000,7 @@ function rLog(){
   h+=`<div class="row sp" style="margin-bottom:10px"><b>${vs.length} visit${vs.length===1?'':'s'}</b><button class="btn sec sm" data-act="copy">Copy table</button></div>`;
   return h+(vs.map(v=>vcard(v,true)).join('')||`<div class="card empty">No supervisor visits logged on this day.</div>`);
 }
+const wphs=(v,cls)=>(v.phs&&v.phs.length?v.phs:(v.ph?[v.ph]:[])).map(x=>img(x,cls)).join('');
 const washBad=v=>WASHF.filter(x=>{const val=v.f&&v.f[x.k];return val&&x.o.indexOf('!'+val)>=0}).map(x=>v.f[x.k]);
 function washTags(v){
   const t=[];if(v.who)t.push(`<span class="tag">Cleaned by ${esc(v.who)}</span>`);
@@ -695,13 +1018,13 @@ function rWash(){
     h+=`<div class="fh">${esc(f)}${f==='Admin'||f==='Staff'||f==='Other'?'':' floor'}</div>`;
     fl[f].forEach(w=>{
       const l=lastOf(w),b=l?washBad(l):[];
-      h+=`<div class="wr ${l?(b.length?'bad':'ok'):''}"><div class="h"><div><b>${esc(w.name)}</b><div class="hint">${w.cub?w.cub+' cubicles · ':''}${l?'Checked '+esc(l.t)+(isT?' · '+ago(Math.max(0,nowM()-mins(l.t))):'')+' · by '+esc(l.by||'?'):'Not checked yet'}</div></div>${l&&l.ph?img(l.ph,'s'):''}</div>
-       ${l?`<div class="tg">${washTags(l)}</div>${l.remark?`<div class="hint">${esc(l.remark)}</div>`:''}`:''}
+      h+=`<div class="wr ${l?(b.length?'bad':'ok'):''}"><div class="h"><div><b>${esc(w.name)}</b><div class="hint">${w.cub?w.cub+' cubicles · ':''}${l?'Checked '+esc(l.t)+(isT?' · '+ago(Math.max(0,nowM()-mins(l.t))):'')+' · by '+esc(l.by||'?'):'Not checked yet'}</div></div></div>
+       ${l?`<div class="row" style="margin-top:6px">${wphs(l,'s')}</div><div class="tg">${washTags(l)}</div>${l.remark?`<div class="hint">${esc(l.remark)}</div>`:''}`:''}
        <button class="btn sm" data-act="winspect" data-v="${w.id}" style="margin-top:8px">🧭 Inspect now</button></div>`;
     });
   });
   h+=`<div class="fh">All inspections ${isT?'today':'on this day'} (${ins.length})</div>`;
-  h+=ins.slice().reverse().map(v=>`<button class="vis" data-act="editwash" data-v="${esc(v.id)}"><div class="h"><b>${esc(v.t)}</b><small>${esc(v.wname)} · by ${esc(v.by||'?')}</small></div><div class="tg">${washTags(v)}</div>${v.remark?`<p>${esc(v.remark)}</p>`:''}${img(v.ph)}</button>`).join('')||`<div class="card empty">No washroom inspection logged yet.</div>`;
+  h+=ins.slice().reverse().map(v=>`<button class="vis" data-act="editwash" data-v="${esc(v.id)}"><div class="h"><b>${esc(v.t)}</b><small>${esc(v.wname)} · by ${esc(v.by||'?')}</small></div><div class="tg">${washTags(v)}</div>${v.remark?`<p>${esc(v.remark)}</p>`:''}<div class="row">${wphs(v,'')}</div></button>`).join('')||`<div class="card empty">No washroom inspection logged yet.</div>`;
   return h;
 }
 function floorSummary(ps){
@@ -717,7 +1040,7 @@ function rDash(){
   h+=`<div class="card"><h2>Supervisor visits</h2>${ks.length?`<table style="width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums"><tr style="text-align:left;color:var(--mute)"><th>Supervisor</th><th>Visits</th><th>First</th><th>Last</th></tr>${ks.map(k=>{const t=by[k].slice().sort();return `<tr><td style="padding:6px 0"><b>${esc(k)}</b></td><td>${t.length}</td><td>${t[0]}</td><td>${t[t.length-1]}</td></tr>`}).join('')}</table>`:'<div class="empty">No visits yet.</div>'}</div>`;
   const wch=ws.filter(w=>wi.some(i=>i.wid===w.id)).length,wbad=ws.filter(w=>{const l=wi.filter(i=>i.wid===w.id).pop();return l&&washBad(l).length}).length;
   h+=`<button class="gcard" style="--c:var(--gWater)" data-act="tab" data-v="wash"><div class="t"><i>🚻</i>Washrooms</div><div class="m"><span><b>${wch}/${ws.length}</b> checked</span><span><b style="color:${wbad?'var(--bad)':'var(--ok)'}">${wbad}</b> with problems</span></div></button>`;
-  GK.forEach(g=>{const ps=people(g);if(!ps.length)return;h+=`<h2 style="margin:14px 0 8px;font-size:16px">${G[g].ico} ${G[g].label}</h2>`+(g==='eve'?floorSummary(ps):ps.map(pcard).join(''))});
+  GK.forEach(g=>{const ps=people(g);if(!ps.length)return;h+=`<h2 style="margin:14px 0 8px;font-size:16px">${G[g].ico} ${G[g].label}</h2>`+(g==='helper'?rHelperChart(chartDoc()):g==='eve'?floorSummary(ps):ps.map(pcard).join(''))});
   return h;
 }
 function rSetup(){
@@ -727,23 +1050,25 @@ function rSetup(){
   GK.forEach(g=>{const ps=people(g);if(!ps.length)return;h+=`<div class="card"><h2>${G[g].ico} ${G[g].label} (${ps.length})</h2>`+ps.map(p=>`<div class="row sp" style="padding:6px 0;border-top:1px solid var(--line)"><div><b>${esc(p.name)}</b><div class="hint">${esc(p.role||'')}${g==='guard'?' · '+esc(p.shift||'Day'):''} · ${defTasks(p).length} daily tasks</div></div><button class="btn sec sm" data-act="sedit" data-v="${p.id}">Edit</button></div>`).join('')+`</div>`});
   h+=`<div class="row sp" style="margin:14px 0 10px"><h2 style="font-size:16px">Washrooms (${WL().length})</h2><button class="btn sm" data-act="wsadd">＋ Add</button></div><div class="card">`+WL().map(w=>`<div class="row sp" style="padding:6px 0;border-top:1px solid var(--line)"><div><b>${esc(w.name)}</b><div class="hint">${esc(w.floor)}${w.cub?' · '+w.cub+' cubicles':''}</div></div><button class="btn sec sm" data-act="wsedit" data-v="${w.id}">Edit</button></div>`).join('')+`</div>`;
   h+=`<p class="hint">Open a person to give daily tasks with a time limit. Removing a person keeps all past records.</p>`;
+  h+=attSetup();
   return h;
 }
 function render(){
-  if(!sup()&&(S.tab==='log'||S.tab==='dash'||S.tab==='wash'))S.tab='home';
+  if(!sup()&&(S.tab==='log'||S.tab==='dash'||S.tab==='wash'||S.tab==='att'))S.tab='home';
   const t=S.tab;let title='Support Staff',sub='Flourish International School',back=false,body='';
   if(t==='home'){
     if(S.pid){const p=staff.find(x=>x.id===S.pid);title=p?p.name:'';sub=p?G[p.group].label:'';back=true;body=rPerson()}
-    else if(S.group){title=G[S.group].ico+' '+G[S.group].label;sub='Tap a person';back=true;body=rGroup()}
+    else if(S.group){title=G[S.group].ico+' '+G[S.group].label;sub=S.group==='helper'?'Who is on which floor today':'Tap a person';back=true;body=rGroup()}
     else{title='Support Staff';sub='Today · '+fmtD(today());body=rHome()}
-  }else if(t==='wash'){title='Washrooms';sub='Inspect, photo and remark';body=rWash()}
+  }else if(t==='att'){title='🕘 Staff Attendance';sub='Check in · Lunch · Check out';body=rAtt()}
+  else if(t==='wash'){title='Washrooms';sub='Inspect, photo and remark';body=rWash()}
   else if(t==='log'){title='Visit log';sub='Every supervisor visit';body=rLog()}
   else if(t==='dash'){title='Dashboard';sub='Who was visited, and when';body=rDash()}
   else{title='Setup';sub='Staff and daily areas';body=rSetup()}
   $('ttl').textContent=title;$('sub').textContent=sub;
   const app=$('app');
   app.innerHTML=(back?`<button class="back" data-act="back" style="margin-bottom:10px">◀ Back</button>`:'')+body;
-  $('nav').innerHTML=(sup()?[['home','🏠','Home'],['wash','🚻','Washrooms'],['log','📋','Visit log'],['dash','📊','Dashboard'],['setup','⚙️','Setup']]:[['home','🏠','Home'],['setup','👤','Me']]).map(x=>`<button class="${t===x[0]?'on':''}" data-act="tab" data-v="${x[0]}"><i>${x[1]}</i>${x[2]}</button>`).join('');
+  $('nav').innerHTML=(sup()?[['home','🏠','Home'],['att','🕘','Staff'],['wash','🚻','Washrooms'],['log','📋','Visit log'],['dash','📊','Dashboard'],['setup','⚙️','Setup']]:[['home','🏠','Home'],['setup','👤','Me']]).map(x=>`<button class="${t===x[0]?'on':''}" data-act="tab" data-v="${x[0]}"><i>${x[1]}</i>${x[2]}</button>`).join('');
   hydrate();
 }
 
@@ -765,6 +1090,11 @@ document.addEventListener('click',async e=>{
   else if(a==='etime'&&p)await timeFlow(p,v);
   else if(a==='att'&&p){mutLog(p,S.date,l=>{l.att=v;if(v==='A'){l.in='';l.out=''}});if(v==='A'&&sup())await transferFlow(p,true)}
   else if(a==='gview'){S.view[S.group]=v;render()}
+  else if(a==='hatt'||a==='hfl'||a==='hws'){const q=staff.find(x=>x.id===b.dataset.p);if(q){const doc=chartDoc(),r=hrow(doc,q);
+    if(a==='hatt'){r.att=r.att===v?'':v;mutLog(q,S.date,l=>{l.att=r.att;if(r.att==='A'){l.in='';l.out=''}})}else if(a==='hfl')r.floor=v;else r.wash=v;saveChart(doc)}}
+  else if(a==='hallp'){const doc=chartDoc();people('helper').forEach(q=>{const r=hrow(doc,q);if(r.att!=='A'){r.att='P'}});saveChart(doc);toast('All marked present (absent ones kept)')}
+  else if(a==='hwb')await washByFlow(v);
+  else if(a==='hcopy'){try{await navigator.clipboard.writeText(helperText(chartDoc()));toast('Copied – paste in WhatsApp')}catch(err){toast('Copy not allowed here')}}
   else if(a==='qin'){const q=staff.find(x=>x.id===v);if(q)await inFlow(q)}
   else if(a==='qout'){const q=staff.find(x=>x.id===v);if(q)await outFlow(q)}
   else if(a==='transfer'&&p)await transferFlow(p,false);
