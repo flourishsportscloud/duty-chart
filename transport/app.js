@@ -237,14 +237,14 @@ function modeLabel(k){return k.walk?modeOf(k):VBY[k.v].l}
 const PL_NAMES=["Poonam Ma'am (PL)","Garima Ma'am (PL)","Renu Harsh Ma'am (PL)"];
 const PM_NAMES=["Sanjana Ma'am (PM)","Neetu Ma'am (PM)","Divyanshi Ma'am (PM)","Diksha Ma'am (PM)"];
 const CM_NAMES=["Mansi Ma'am (CM)","Rashami Ma'am (CM)","Pooja Ma'am (CM)","Upendra Sir (CM)","Saba Ma'am (CM)"];
-function meTeacher(){const n=(window.FIS_ME||'').trim();return n?n+' (Teacher)':''}
-function fillSbBy(){$('sbBy').innerHTML=byOpts(LS.get('sbBy',ALLBY),[['PL – Classes 6 to 11',PL_NAMES],['PM – Classes 1 to 5',PM_NAMES],['Front Office',FO_NAMES],['Managers',mgrNames()]])}
+function meTeacher(){const n=(window.FIS_ME||'').trim();return n?n+' (Staff)':''}
+function fillSbBy(){$('sbBy').innerHTML=byOpts(LS.get('sbBy','__ME'),[['PL – Classes 6 to 11',PL_NAMES],['PM – Classes 1 to 5',PM_NAMES],['Front Office',FO_NAMES],['Managers',mgrNames()]])}
 function fillStaffSelects(){
   const opts=(cur)=>'<option'+(cur===ALL_V?' selected':'')+'>'+ALL_V+'</option><optgroup label="Vehicle duty staff">'+STAFF.map(s=>'<option'+(s===cur?' selected':'')+'>'+esc(s)+'</option>').join('')+'</optgroup>'+
     (S.managers.length?'<optgroup label="Managers – all vehicles">'+S.managers.map(s=>'<option'+(s===cur?' selected':'')+'>'+esc(s)+'</option>').join('')+'</optgroup>':'');
   $('dutyStaff').innerHTML=opts(LS.get('staff',STAFF[0]));
   $('depStaff').innerHTML=opts(LS.get('depStaff',LS.get('staff',STAFF[0])));
-  $('gateBy').innerHTML=byOpts(LS.get('gateBy',ALLBY),[['Front Office',FO_NAMES],['Managers',mgrNames()]]);
+  $('gateBy').innerHTML=byOpts(LS.get('gateBy','__ME'),[['Front Office',FO_NAMES],['Managers',mgrNames()]]);
 }
 
 /* ===== shared: class names, marked-by, class picker, class strips ===== */
@@ -256,7 +256,12 @@ function fmtDL(d){return new Date(d+'T00:00').toLocaleDateString('en-IN',{weekda
 const byName=(a,b)=>a.name.localeCompare(b.name);
 const ALLBY='__ALL';
 function mgrNames(){return S.managers.map(m=>m+' (Manager)')}
-function byOpts(cur,groups){return '<option value="'+ALLBY+'"'+(cur===ALLBY?' selected':'')+'>All</option>'+groups.map(g=>g[1].length?'<optgroup label="'+g[0]+'">'+g[1].map(s=>'<option'+(s===cur?' selected':'')+'>'+esc(s)+'</option>').join('')+'</optgroup>':'').join('')}
+function byOpts(cur,groups){const me=(window.FIS_ME||'').trim();const base=x=>String(x).split(' (')[0].trim().toLowerCase();
+  const all=groups.flatMap(g=>g[1]);let mine=me?all.find(x=>base(x)===me.toLowerCase()):null;
+  if(me&&!mine){mine=me+' (Staff)';groups=[['You – signed in',[mine]]].concat(groups)}
+  if(cur==='__ME')cur=mine||ALLBY;
+  if(cur&&cur!==ALLBY&&!groups.some(g=>g[1].includes(cur)))groups=groups.concat([['Earlier choice',[cur]]]);
+  return '<option value="'+ALLBY+'"'+(cur===ALLBY?' selected':'')+'>All (view only)</option>'+groups.map(g=>g[1].length?'<optgroup label="'+g[0]+'">'+g[1].map(s=>'<option'+(s===cur?' selected':'')+'>'+esc(s)+'</option>').join('')+'</optgroup>':'').join('')}
 function needBy(id){if($(id).value!==ALLBY)return false;toast('Choose your name in "Marked by" to mark');return true}
 function byShort(b){return String(b||'').replace(/ \((Front Office|Gate|PL|PM|Manager)\)/,'')}
 function cpGet(key){S.cp=S.cp||{};if(!S.cp[key])S.cp[key]=(LS.get('cp_'+key,[])||[]).filter(c=>CLASSES.includes(c));return S.cp[key]}
@@ -475,9 +480,11 @@ function sbHow(k){const st=kidStatus(k.id);const g=st.g||{};const o=g.out&&g.out
   if(o==='SB')return '<span class="tag t-SB">Stay back – Front Office</span>';
   return ''}
 const SBV={true:['Staying','SB'],false:['Not staying','U'],A:['Absent','A'],D:['Doubt','LATE']};
+function sbRem(id){return (((S.sb[seg(KID[id].cls)]||{}).rems)||{})[id]}
+function sbRemHtml(k){const r=sbRem(k.id);return '<div class="sbrem">'+(r?'<span>💬 <b>'+esc(r.t)+'</b> <i>– '+esc(byShort(r.by||''))+' '+esc(r.time||'')+'</i></span>':'')+'<button class="sbo sm" data-sbrem="'+k.id+'">'+(r?'Edit remark':'+ Remark')+'</button></div>'}
 function sbRow(k){const dv=sbDraftOf(k.id),v=sbVal(k.id);const b=(val,code,lbl,c)=>'<button class="sbo'+(v===val?' on '+c:'')+'" data-sbv="'+k.id+'|'+code+'">'+lbl+'</button>';
   return nrow(esc(k.name),dots([esc(modeLabel(k)),S.sbReg[k.id]?'Regular list':'Today only',sbHow(k),dv!==undefined?'<b style="color:var(--late)">not saved</b>':''])+
-    '<div class="sbopts">'+b(true,'S','Staying','s')+b(false,'N','Not staying','n')+b('A','A','Absent','a')+b('D','D','Doubt','d')+'</div>',
+    '<div class="sbopts">'+b(true,'S','Staying','s')+b(false,'N','Not staying','n')+b('A','A','Absent','a')+b('D','D','Doubt','d')+'</div>'+sbRemHtml(k),
     v===undefined?'<span class="sbdash">–</span>':'<span class="tag t-'+SBV[v][1]+'">'+SBV[v][0]+'</span>')}
 function renderSB(){
   if(document.activeElement!==$('sbBy'))fillSbBy();
@@ -504,7 +511,7 @@ function renderSBSum(){
   list.forEach(c=>{const ks=sbCands(c);if(!ks.length)return;const g={s:[],d:[],n:[],a:[],u:[]};
     ks.forEach(k=>{const v=sbDay(k.id);const fo=((S.gate[k.id]||{}).out||{}).type==='SB';(v==='D'&&!fo?g.d:v===true||(v===undefined&&fo)?g.s:v===false?g.n:v==='A'?g.a:g.u).push(k)});
     Object.keys(T).forEach(x=>T[x]+=g[x].length);const d=S.sb[seg(c)];
-    const ln=(arr,t,cc)=>arr.length?'<div class="sumline"><span class="tag t-'+cc+'">'+t+' · '+arr.length+'</span><ol>'+arr.map(k=>'<li><b>'+esc(k.name)+'</b><i>'+dots([esc(modeLabel(k)),sbHow(k)])+'</i></li>').join('')+'</ol></div>':'';
+    const ln=(arr,t,cc)=>arr.length?'<div class="sumline"><span class="tag t-'+cc+'">'+t+' · '+arr.length+'</span><ol>'+arr.map(k=>'<li><b>'+esc(k.name)+'</b><i>'+dots([esc(modeLabel(k)),sbHow(k),sbRem(k.id)?'💬 '+esc(sbRem(k.id).t)+' – '+esc(byShort(sbRem(k.id).by||'')):''])+'</i></li>').join('')+'</ol></div>':'';
     h+='<div class="cstrip"><span>'+esc(clsName(c))+'</span><small>'+g.s.length+' staying</small></div>'+ln(g.s,'Staying','SB')+ln(g.d,'Doubt – confirm with parent','LATE')+ln(g.n,'Not staying','U')+ln(g.a,'Absent','A')+ln(g.u,'Not marked','U')+(d&&d.by?'<p class="muted" style="margin:6px 6px 0">Marked by '+esc(byShort(d.by))+' '+esc(d.time||'')+'</p>':'')});
   $('sbSumH').innerHTML=catHead('Stay Back Summary',T.s,'SB')+'<div class="sbcount"><span class="tag t-SB">Staying '+T.s+'</span><span class="tag t-LATE">Doubt '+T.d+'</span><span class="tag t-U">Not staying '+T.n+'</span><span class="tag t-A">Absent '+T.a+'</span><span class="tag t-U">– Not marked '+T.u+'</span></div>';
   $('sbSum').innerHTML=h||'<p class="muted empty">Nothing to show.</p>';
@@ -532,7 +539,7 @@ function ssVal(id){const d=ssDraftOf(id);return d!==undefined?d:ssDayVal(id)}
 const SSV={P:['Attended','P'],N:['Not attended','A'],A:['Absent','U']};
 function ssWhy(m){return m.src==='poor'?(m.pp===false?'<span class="tag t-U">Improved – not in latest poor list</span>':'<span class="tag t-A">Poor performer'+(m.run?' · '+m.run+' low in a row':'')+'</span>'):'<span class="tag t-GOWALK">Added by '+esc(byShort(m.by||'PL'))+'</span>'}
 function renderSS(){
-  if(document.activeElement!==$('ssBy'))$('ssBy').innerHTML=byOpts(LS.get('ssBy',ALLBY),[['PL – Classes 6 to 11',PL_NAMES],['PM – Classes 1 to 5',PM_NAMES],['Managers',mgrNames()]]);
+  if(document.activeElement!==$('ssBy'))$('ssBy').innerHTML=byOpts(LS.get('ssBy','__ME'),[['PL – Classes 6 to 11',PL_NAMES],['PM – Classes 1 to 5',PM_NAMES],['Managers',mgrNames()]]);
   const ae=document.activeElement;if(!(ae&&$('ssCp').contains(ae)&&ae.classList.contains('cpq')))$('ssCp').innerHTML=cpHtml('ss',SS_GRADES());
   const mode=$('ssMode').value,view=$('ssBy').value===ALLBY;const P=S.ssPull||{};const meta=S.ssList._meta||{};
   ssLoadTests();const rs=SSR.st;const un=SSR.unm||[];
@@ -665,10 +672,10 @@ function morningNames(list){
 
 async function saveSBClass(sg,by){const dr=(S.sbDraft||{})[sg];if(!dr)return;const ids=Object.keys(dr);if(!ids.length)return;const c=KID[ids[0]].cls;const cur=S.sb[sg]||{};const kids=Object.assign({},cur.kids||{});
   ids.forEach(id=>{kids[id]=dr[id]});
-  await store.set('att/'+S.date+'/sb/'+sg,{cls:c,kids,by:by||$('sbBy').value||'PL',time:nowT(),ts:Date.now()});delete S.sbDraft[sg];toast(clsName(c)+' stay back saved')}
+  await store.set('att/'+S.date+'/sb/'+sg,Object.assign({},cur,{cls:c,kids,by:by||$('sbBy').value||'PL',time:nowT(),ts:Date.now()}));delete S.sbDraft[sg];toast(clsName(c)+' stay back saved')}
 async function setDaySB(id,val,by){const c=KID[id].cls;const p='att/'+S.date+'/sb/'+seg(c);const cur=S.sb[seg(c)]||{};const kids=Object.assign({},cur.kids||{});
   kids[id]=val;
-  await store.set(p,{cls:c,kids,by:by||$('sbBy').value||'PL',time:nowT(),ts:Date.now()});}
+  await store.set(p,Object.assign({},cur,{cls:c,kids,by:by||$('sbBy').value||'PL',time:nowT(),ts:Date.now()}));}
 
 /* DASHBOARD */
 function renderDash(){
@@ -1094,8 +1101,8 @@ function histTag(n,word){return n?'<span class="tag '+(n>=3?'t-A':'t-LATE')+'">'
 function gateRows(key,test){return Object.values(KID).filter(k=>cpHas(key,k.cls)&&test(S.gate[k.id]||{})).map(k=>({k,g:S.gate[k.id]}))}
 function findRes(q,rowFn){if(q.length<2)return '';const r=Object.values(KID).filter(k=>k.name.toLowerCase().includes(q)).sort(byName).slice(0,25);return r.length?r.map(rowFn).join(''):'<p class="muted">No student found.</p>'}
 function renderLate(){
-  const cur=LS.get('lateBy',ALLBY);
-  if(document.activeElement!==$('lateBy'))$('lateBy').innerHTML=byOpts(cur,[['Gate',LATE_NAMES],['Front Office',FO_NAMES],['Teacher (you – logged in)',meTeacher()?[meTeacher()]:[]],['PL – Classes 6 to 11',PL_NAMES],['PM – Classes 1 to 5',PM_NAMES],['CM – Class Managers',CM_NAMES],['Managers',mgrNames()]]);
+  const cur=LS.get('lateBy','__ME');
+  if(document.activeElement!==$('lateBy'))$('lateBy').innerHTML=byOpts(cur,[['Gate',LATE_NAMES],['Front Office',FO_NAMES],['You – signed in',meTeacher()?[meTeacher()]:[]],['PL – Classes 6 to 11',PL_NAMES],['PM – Classes 1 to 5',PM_NAMES],['CM – Class Managers',CM_NAMES],['Managers',mgrNames()]]);
   $('lateCut').textContent=hm12(S.lateAfter);
   const q=($('lateQ').value||'').trim().toLowerCase();
   $('lateRes').innerHTML=findRes(q,k=>{const st=kidStatus(k.id);const h=lateHist(k.id);return '<div class="kid" data-pick="'+k.id+'" data-foby="late" style="cursor:pointer"><div class="nm"><div>'+esc(k.name)+'</div><span>'+esc(clsName(k.cls))+' · '+esc(modeLabel(k))+'</span>'+(h.length?'<span style="font-size:12px;color:var(--late)">Late: '+h.map(x=>esc(fmtD(x.d).replace(/^\w+, /,''))+(x.t?' '+esc(x.t):'')).join(' · ')+'</span>':'')+'</div><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end"><span class="tag t-'+(st.IN==='W'?'U':st.IN)+'">'+esc(LBL[st.IN]||st.IN)+'</span>'+histTag(h.length,'late')+'</div></div>'});
@@ -1104,7 +1111,7 @@ function renderLate(){
   $('lateToday').innerHTML=catHead('Late Comers – '+fmtDL(S.date),rows.length,'LATE')+strips(rows,r=>nrow(esc(r.k.name),dots([esc(modeLabel(r.k)),esc(r.g.rem),r.g.by?'by '+esc(byShort(r.g.by)):'']),'<span class="tag t-LATE">'+esc(r.g.in.time||'')+'</span>'+histTag(lateHist(r.k.id).length,'late')),{attr:r=>' data-pick="'+r.k.id+'" data-foby="late"',empty:'No late comers in the selected classes.'});
 }
 function renderEarly(){
-  const cur=LS.get('earlyBy',ALLBY);
+  const cur=LS.get('earlyBy','__ME');
   if(document.activeElement!==$('earlyBy'))$('earlyBy').innerHTML=byOpts(cur,[['Front Office',FO_NAMES],['Gate',LATE_NAMES],['PL – Classes 6 to 11',PL_NAMES],['PM – Classes 1 to 5',PM_NAMES],['Managers',mgrNames()]]);
   const q=($('earlyQ').value||'').trim().toLowerCase();
   $('earlyRes').innerHTML=findRes(q,k=>{const st=kidStatus(k.id);return '<div class="kid" data-pick="'+k.id+'" data-foby="early" style="cursor:pointer"><div class="nm"><div>'+esc(k.name)+'</div><span>'+esc(clsName(k.cls))+' · '+esc(modeLabel(k))+'</span></div><span class="tag t-'+(st.OUT||'U')+'">'+esc(st.OUT?LBL[st.OUT]:(st.IN==='A'?'Absent':'—'))+'</span></div>'});
@@ -1114,8 +1121,8 @@ function renderEarly(){
 }
 function unifTxt(u){return (u.items||[]).map(i=>UNIFL[i]||i).join(', ')}
 function renderUnif(){
-  const me=meTeacher();let cur=LS.get('unifBy',null);if(!cur)cur=me||ALLBY;
-  if(document.activeElement!==$('unifBy'))$('unifBy').innerHTML=byOpts(cur,[['Teacher (you – logged in)',me?[me]:[]],['PL – Classes 6 to 11',PL_NAMES],['PM – Classes 1 to 5',PM_NAMES],['CM – Class Managers',CM_NAMES],['Gate',LATE_NAMES],['Front Office',FO_NAMES],['Managers',mgrNames()]]);
+  const me=meTeacher();let cur=LS.get('unifBy',null);if(!cur)cur=me||'__ME';
+  if(document.activeElement!==$('unifBy'))$('unifBy').innerHTML=byOpts(cur,[['You – signed in',me?[me]:[]],['PL – Classes 6 to 11',PL_NAMES],['PM – Classes 1 to 5',PM_NAMES],['CM – Class Managers',CM_NAMES],['Gate',LATE_NAMES],['Front Office',FO_NAMES],['Managers',mgrNames()]]);
   const q=($('unifQ').value||'').trim().toLowerCase();
   const hl=h=>h.length?'<span class="hl">'+h.map(x=>esc(fmtD(x.d).replace(/^\w+, /,''))+': '+esc(unifTxt(x.u))).join(' · ')+'</span>':'';
   $('unifRes').innerHTML=findRes(q,k=>{const h=unifHist(k.id);return '<div class="kid" data-unif="'+k.id+'" style="cursor:pointer"><div class="nm"><div>'+esc(k.name)+'</div><span>'+esc(clsName(k.cls))+' · '+esc(modeLabel(k))+'</span>'+(h.length?'<span style="font-size:12px;color:var(--late)">'+h.map(x=>esc(fmtD(x.d).replace(/^\w+, /,''))+': '+esc(unifTxt(x.u))).join(' · ')+'</span>':'')+'</div><div>'+histTag(h.length,'defaulter')+'</div></div>'});
@@ -1276,6 +1283,9 @@ document.addEventListener('click',async e=>{
   if(t.dataset.cpall!==undefined){cpSet(t.dataset.cpall,[]);return}
   if(t.dataset.cpg){const [key,g]=t.dataset.cpg.split('|');const secs=CLASSES.filter(c=>c.split(' - ')[0]===g);const a=new Set(cpGet(key));const all=secs.every(c=>a.has(c));secs.forEach(c=>all?a.delete(c):a.add(c));cpSet(key,[...a]);return}
   if(t.dataset.cps){const [key,c]=t.dataset.cps.split('|');const a=new Set(cpGet(key));a.has(c)?a.delete(c):a.add(c);cpSet(key,[...a]);return}
+  if(t.dataset.sbrem){if(needBy('sbBy'))return;const id=t.dataset.sbrem;const r=sbRem(id);const txt=prompt('Remark for '+KID[id].name+' (leave empty to remove)',r?r.t:'');if(txt===null)return;
+    const c=KID[id].cls,sg=seg(c),cur=S.sb[sg]||{cls:c,kids:{}};const rems=Object.assign({},cur.rems||{});if(txt.trim())rems[id]={t:txt.trim(),by:$('sbBy').value,time:nowT()};else delete rems[id];
+    await store.set('att/'+S.date+'/sb/'+sg,Object.assign({},cur,{cls:c,rems,ts:Date.now()}));toast(txt.trim()?'Remark saved':'Remark removed');render();return}
   if(t.dataset.sbv){if(needBy('sbBy'))return;const [id,code]=t.dataset.sbv.split('|');const v=code==='S'?true:code==='N'?false:code==='D'?'D':'A';const sg=seg(KID[id].cls);S.sbDraft=S.sbDraft||{};const d=S.sbDraft[sg]=S.sbDraft[sg]||{};
     if(d[id]===v||(!(id in d)&&sbDay(id)===v))delete d[id];else if(sbDay(id)===v)delete d[id];else d[id]=v;if(!Object.keys(d).length)delete S.sbDraft[sg];render();return}
   if(t.dataset.sball){if(needBy('sbBy'))return;const c=t.dataset.sball,sg=seg(c);S.sbDraft=S.sbDraft||{};const d=S.sbDraft[sg]=S.sbDraft[sg]||{};sbCands(c).forEach(k=>{if(sbVal(k.id)===undefined)d[k.id]=true});if(!Object.keys(d).length)delete S.sbDraft[sg];render();return}
