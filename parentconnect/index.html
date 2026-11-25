@@ -319,6 +319,7 @@ GH.api=async function(fn,args){
   catch(e){if(e.auth&&!GH._x){GH._x=1;ld(K);location.reload()}throw e}
 };
 /* Full access: exact names as in the Diary login (lower case). Diary role admin (= front office) always has it. */
+var NAMES=["Ajita", "Amit", "Anita", "Anuradha", "Archana", "Bharti", "chhavi", "Deepali", "Deepmala", "Devanshi", "Diksha Singh", "Divyanshi Jain", "Garima Mathur", "Gauri", "Geeta", "Harsh Yadav", "Harshvardhan Soni", "Himanshi", "Himanshi Negi", "Himanshu", "Ishita", "Jatin", "Jitesh", "Jyotshna", "Kanika", "Karishma suthar", "Komal Suthar", "Madhu", "Manisha Chauhan", "Manisha Sharma", "Mansi Soni", "Mansi yadav", "Megha Shekhawat", "Monika", "Monika Rajpurohit", "Neetu Dara", "Neha", "Neha Sethia", "Nisha", "Pallavi", "Pooja", "Pooja Chauhan", "Poonam", "Poonam Gaur", "Preeti", "Preeti Jain", "Priya", "Priya Shekhawat", "Priyanshi", "Radha", "Rahul", "Rahul Yadav", "Rashmi Singh", "Reema", "Richa", "Richa Sharma", "Ritika", "Saba", "Saba panwar", "Sanjana Sarswat", "Santosh Yadav", "Sarita Saini", "Saroj", "Shaan", "Shailesh", "Shally Taneja", "Sharda Yadav", "Shobha", "Shreya", "Shubhangi", "Sunita Bidawat", "Swati", "tanushree", "Tanushreee", "tina", "Tripti", "Upendra", "Vaishali Rathore", "Vaneshwari", "Vijay Raj Soni", "Vipul", "Yashika Gupta", "Yavnika"];
 var FULL=['harsh yadav','surender yadav','shubhangi','santosh yadav','sharda yadav','nahida','anahida',
  'anoop gahlot','anoop','jai pandla','jai','chandan soni','chandan','narendra dara','narendra',
  'megha shekhawat','harshvardhan soni','preeti jain','vaishali rathore',
@@ -328,7 +329,7 @@ var FULL=['harsh yadav','surender yadav','shubhangi','santosh yadav','sharda yad
  'asha rao','asha'];
 GH.allowed=function(){
   var n=String(GH.who.name||'').trim().toLowerCase(),r=String(GH.who.role||'').toLowerCase();
-  if(n==='rahul yadav')return['director'];
+  if(n==='rahul yadav'||n==='rahul')return['director'];
   n=n.replace(/\s+/g,' ');
   if(r==='admin'||FULL.indexOf(n)>=0)return['admin'];
   if(/^(pl|cm|cmh|pm)$/.test(r))return['coord'];
@@ -347,8 +348,8 @@ GH.gate=function(){
       app.innerHTML='<div class="loginw"><div class="loginc"><div style="font-size:19px;font-weight:800;color:var(--navy)">Parent Connect</div>'
        +'<div class="mut" style="font-size:12.5px;margin-bottom:12px">Flourish International School, Bikaner</div>'
        +'<div class="banner">Contains names of students and parents. Staff use only.</div>'
-       +'<label class="lbl">Name</label><input type="text" id="gn" autocomplete="username" placeholder="Same name as in the Diary app">'
-       +'<label class="lbl">Password</label><input type="password" id="gp" autocomplete="current-password" placeholder="Same password as in the Diary app">'
+       +'<label class="lbl">Name</label><input type="text" id="gn" list="gnl" autocomplete="username" autocapitalize="words" autocorrect="off" spellcheck="false" placeholder="Start typing, then pick your name"><datalist id="gnl">'+NAMES.map(function(x){return'<option value="'+x+'">'}).join('')+'</datalist>'
+       +'<label class="lbl">Password</label><input type="password" id="gp" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Same password as in the Diary app">'
        +(msg?'<div style="color:#b3123f;font-size:13px;margin-top:10px">'+msg.replace(/</g,'&lt;')+'</div>':'')
        +'<div style="margin-top:18px"><button class="btn pri" id="gb">Sign in</button></div>'
        +'<div class="mut" style="font-size:12px;margin-top:10px">Use the same login you use for the Diary app. You stay signed in on this phone or computer.</div></div></div>';
@@ -357,12 +358,12 @@ GH.gate=function(){
       async function submit(){
         lastN=n.value;go.disabled=true;go.textContent='Signing in…';
         try{
-          var r=await call('login',[n.value,p.value],'');
+          var nm=n.value.replace(/\s+/g,' ').trim();var r=await call('login',[nm,p.value],'');
           var prev=(GH.who.name||'').toLowerCase();
           GH.tok=r.token;GH.who={name:r.name,role:r.role};ls(K,GH.tok);ls(W,GH.who);
           if(prev&&prev!==r.name.toLowerCase()){ld('pc2_me');try{ME=null;ME_WAIT=true}catch(e){}}
           done();
-        }catch(e){msg=e.message||'Could not sign in';paint()}
+        }catch(e){var m=e.message||'Could not sign in';if(/No login for this name/i.test(m))m='No login found for this name. Pick your name from the list. If you are not in the list, set your password once in the Diary app (First time? Set your password) and ask FO to approve it.';else if(/Wrong password/i.test(m))m='Wrong password. Use the password you set in the Diary app.';else if(/waiting for the admin/i.test(m))m='Your Diary login is waiting for FO approval.';else if(/reset/i.test(m))m='Your password was reset. Set a new one in the Diary app (First time? Set your password), then come back.';else if(/fetch|network|Failed/i.test(m))m='No connection. Check your internet and try again.';msg=m;paint()}
       }
       go.onclick=submit;p.onkeydown=n.onkeydown=function(e){if(e.key==='Enter')submit()};
       (n.value?p:n).focus();
