@@ -312,6 +312,15 @@ details.rules summary{font-size:14px}
 .pdfwrap{display:grid;gap:6px;margin-top:6px}.pdfv{position:relative;height:72vh;min-height:420px;border-radius:12px;overflow:hidden;background:#EEE;border:1px solid var(--line,#ddd)}.pdfv iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .upw{display:grid;gap:3px;margin-top:5px;font-weight:400}.upf{font-size:12.5px;max-width:100%}
 .rmt{display:inline-flex;align-items:center;padding:4px}.rmt input{width:20px;height:20px}
+
+.sw.eight,.sw.nine{grid-template-columns:repeat(auto-fit,minmax(118px,1fr))}
+@media (max-width:640px){.sw.eight,.sw.nine{grid-template-columns:repeat(3,minmax(0,1fr))}.sw.eight button,.sw.nine button{font-size:13.5px;padding:10px 2px;white-space:nowrap}}
+.stu{display:grid;gap:7px;padding:11px 12px;border-radius:14px;background:var(--paper2,#F1EFEA);border:1px solid var(--line,#E2DED5)}
+.stuh{display:flex;justify-content:space-between;align-items:center;gap:8px}.stuh b{font-size:15px}
+.chip.got{background:#E2F2E9;color:#1F6B43;border-color:#BFE0CC}
+.srule{margin:2px 0;padding:9px 12px;border-radius:12px;background:#FDF5E4;border:1px solid #F1D9A6;font-size:13.5px;color:#6B4A0C}
+.lbk{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding-top:6px;border-top:1px dashed var(--line,#ddd)}.lbk .sn{display:grid;min-width:0}
+.qrow{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);align-items:center}.qrow input{width:100%}.sdate{max-width:170px}
 </style>
 </head><body class="locked">
 
@@ -332,6 +341,9 @@ details.rules summary{font-size:14px}
       <button type="button" id="seg-mentor" aria-pressed="false">Mentor tasks<small>Daily, weekend, class</small></button>
       <button type="button" id="seg-docs" aria-pressed="false">Documents<small>Class-wise PDFs</small></button>
       <button type="button" id="seg-res" aria-pressed="false">Resources<small>PPT, video, plans</small></button>
+      <button type="button" id="seg-cert" aria-pressed="false">Certificates<small>weekly, per child</small></button>
+      <button type="button" id="seg-lib" aria-pressed="false">Library<small>issue and return</small></button>
+      <button type="button" id="seg-award" aria-pressed="false">Awards<small>achievements</small></button>
       <button type="button" id="seg-dash" aria-pressed="false">Dashboard<small>Pending work</small></button>
     </div>
   </div>
@@ -359,6 +371,7 @@ details.rules summary{font-size:14px}
   <div id="mentorView" class="stack" hidden></div>
   <div id="docsView" class="stack" hidden></div>
   <div id="resView" class="stack" hidden></div>
+  <div id="stuView" class="stack" hidden></div>
 </div></main>
 
 <script>
@@ -584,9 +597,10 @@ function allStaff(all){ const m=new Map(); all.forEach(r=>{ if(!m.has(r.t)) m.se
 
 function render(){
   ['mid','sen'].forEach(k=>$('wing-'+k).setAttribute('aria-pressed',String(wing===k)));
-  ['prep','check','mentor','docs','res','dash'].forEach(k=>$('seg-'+k).setAttribute('aria-pressed',String(seg===k)));
+  ['prep','check','mentor','docs','res','cert','lib','award','dash'].forEach(k=>$('seg-'+k).setAttribute('aria-pressed',String(seg===k)));
   $('todayPill').textContent=nice(TODAY);
   const all=records(); all.forEach(r=>r.st=stat(r));
+  $('stuView').hidden=!STU[seg]; if(STU[seg]){ $('listView').hidden=true; $('dashView').hidden=true; $('mentorView').hidden=true; $('docsView').hidden=true; $('resView').hidden=true; renderStu(); return; }
   $('resView').hidden=seg!=='res'; if(seg==='res'){ $('listView').hidden=true; $('dashView').hidden=true; $('mentorView').hidden=true; $('docsView').hidden=true; renderRes(); return; }
   $('docsView').hidden=seg!=='docs'; if(seg==='docs'){ $('listView').hidden=true; $('dashView').hidden=true; $('mentorView').hidden=true; renderDocs(); return; }
   $('mentorView').hidden=seg!=='mentor'; if(seg==='mentor'){ $('listView').hidden=true; $('dashView').hidden=true; renderMentor(); return; } window.mBusy=false;
@@ -751,7 +765,7 @@ function renderDash(all){
 }
 
 ['mid','sen'].forEach(k=>$('wing-'+k).addEventListener('click',()=>{wing=k;teacher='All';grade='All';picking=editing=null;render()}));
-['prep','check','mentor','docs','res','dash'].forEach(k=>$('seg-'+k).addEventListener('click',()=>{seg=k;picking=editing=null;render()}));
+['prep','check','mentor','docs','res','cert','lib','award','dash'].forEach(k=>$('seg-'+k).addEventListener('click',()=>{seg=k;picking=editing=null;render()}));
 $('leftOnly').addEventListener('click',()=>{leftOnly=!leftOnly;render()});
 $('manage').addEventListener('click',()=>{manage=!manage;editing=confirmKey=null;render()});
 /* ---------- Mentor tasks: daily, weekend and class tasks per section ---------- */
@@ -1060,18 +1074,138 @@ function bulkBar(box,all){ [...box.childNodes].forEach(n=>{ if(n.nodeType===3&&n
 
 /* ---------- direct upload of PDF / PPT (shown only when the saving script supports it) ---------- */
 let CAN_UP=false, UP_MAX=15;
-async function checkCaps(){ try{ const c=await call('caps'); CAN_UP=!!(c&&c.upload); UP_MAX=(c&&c.maxMb)||15; if(CAN_UP&&!window.mBusy&&!picking&&!editing) render(); }catch(e){ CAN_UP=false; } }
+async function checkCaps(){ try{ const c=await call('caps'); CAN_UP=!!(c&&c.upload); CAN_STU=!!(c&&c.students); UP_MAX=(c&&c.maxMb)||15; if((CAN_UP||CAN_STU)&&!window.mBusy&&!picking&&!editing) render(); }catch(e){ CAN_UP=false; } }
 function upBtn(target,accept){ if(!CAN_UP) return el('span',{hidden:''}); const inp=el('input',{type:'file',accept,class:'upf'}), st=el('span',{class:'note'},'Or upload the file from this phone or computer (up to '+UP_MAX+' MB)');
-  inp.addEventListener('change',()=>{ const f=inp.files&&inp.files[0]; if(!f) return; if(f.size>UP_MAX*1048576){ toast('This file is larger than '+UP_MAX+' MB.',1); inp.value=''; return; }
-    st.textContent='Uploading '+f.name+' …'; inp.disabled=true; const rd=new FileReader();
+  inp.addEventListener('change',async()=>{ const f=inp.files&&inp.files[0]; if(!f) return; if(f.size>UP_MAX*1048576&&!/^image\//.test(f.type)){ toast('This file is larger than '+UP_MAX+' MB.',1); inp.value=''; return; }
+    st.textContent='Uploading '+f.name+' …'; inp.disabled=true;
+    if(/^image\//.test(f.type)){ try{ const bm=await createImageBitmap(f), k=Math.min(1,1400/Math.max(bm.width,bm.height)), cv=document.createElement('canvas'); cv.width=Math.round(bm.width*k); cv.height=Math.round(bm.height*k); cv.getContext('2d').drawImage(bm,0,0,cv.width,cv.height); const url=cv.toDataURL('image/jpeg',0.82); const v=await call('upload',[f.name.replace(/\.[A-Za-z0-9]+$/,'')+'.jpg','image/jpeg',url.split(',')[1],TOKEN]); target.value=v.url; st.textContent='Photo uploaded. Now save it below.'; toast('Photo uploaded'); inp.disabled=false; return; }catch(e){} }
+    const rd=new FileReader();
     rd.onload=async()=>{ try{ const b64=String(rd.result).split(',')[1]||''; const v=await call('upload',[f.name,f.type,b64,TOKEN]); target.value=v.url; st.textContent='Uploaded: '+f.name+'. Now save it below.'; toast('File uploaded'); }catch(e){ st.textContent='Could not upload. '+(e.message||''); toast(e.message||'Could not upload.',1); } inp.disabled=false; };
     rd.onerror=()=>{ st.textContent='Could not read the file.'; inp.disabled=false; }; rd.readAsDataURL(f); });
   return el('span',{class:'upw'},inp,st); }
 
+/* ---------- student records: weekly certificates, library, awards (names come from the school sheet after login, never from this page) ---------- */
+const STU={cert:'Weekly certificates',lib:'Library',award:'Awards'};
+let CAN_STU=false, ROSTER=null, SD={}, SREV=0, stuSec=null, stuErr='', stuLoading=false, stuDate='', stuForm=null, stuConfirm=null, stuBusyOp=false, certSort='roll', certOpen=null, certCatsEdit=false, libView='kids';
+const sD=iso=>{ const m=String(iso||'').match(/^(\d{4})-(\d\d)-(\d\d)$/); return m?(+m[3])+' '+MO[+m[2]-1]:''; };
+const sid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const CERT_DEFAULT=['Best Handwriting','Best Artist','Most Creative','Most Innovative','Most Improved'];
+const catsPath=()=>'s/cfg/cats-'+PFX.replace(/[^a-z0-9]/g,'');
+const certCats=()=>{ const c=(SD[catsPath()]||{}).list; return Array.isArray(c)&&c.length?c:CERT_DEFAULT; };
+const sItems=p=>Array.isArray((SD[p]||{}).items)?SD[p].items:[];
+const sMine=x=>canDash()||isMe(String(x.by||''));
+const sDay=()=>/^\d{4}-\d\d-\d\d$/.test(stuDate)?stuDate:TODAY;
+function sTake(v){ (v.docs||[]).forEach(d=>{ SD[d.p]=d.j; }); if(v.rev) SREV=v.rev; }
+async function stuLoad(){ if(stuLoading) return; stuLoading=true; stuErr=''; try{ if(!ROSTER) ROSTER=await call('roster',[TOKEN]); sTake(await call('spull',[0,TOKEN])); }catch(e){ stuErr=e.message||'Could not load.'; } stuLoading=false; if(STU[seg]) render(); }
+async function stuPull(){ if(!CAN_STU||!ROSTER||document.hidden||stuBusyOp) return; try{ const v=await call('spull',[SREV,TOKEN]); if((v.docs||[]).length){ sTake(v); if(STU[seg]&&!stuForm&&!certCatsEdit) render(); } }catch(e){} }
+async function sop(path,op,payload,msg){ if(stuBusyOp) return false; stuBusyOp=true; let ok=false; try{ const v=await call('sop',[path,op,payload,TOKEN]); SD[path]=v.j; ok=true; if(msg) toast(msg); }catch(e){ toast(e.message||'Could not save. Please try again.',1); } stuBusyOp=false; render(); return ok; }
+const poll0=poll; poll=async function(){ await poll0(); if(STU[seg]) stuPull(); };
+function stuDateRow(label){ const f=el('input',{type:'date',value:sDay(),max:'2099-12-31',class:'sdate'}); f.addEventListener('change',()=>{ stuDate=f.value; }); return el('div',{class:'frow'},el('span',{class:'flab',text:'Date'}),el('div',{class:'toolr'},f,el('span',{class:'note',text:label}))); }
+function renderStu(){
+  const box=$('stuView'); box.replaceChildren(); window.mBusy=!!(stuForm||certCatsEdit);
+  if(SECTIONS[wing].indexOf(stuSec)<0) stuSec=SECTIONS[wing].find(cs=>isMe(mentorOf(cs)))||SECTIONS[wing][0];
+  const cls=stuSec.replace(/[A-C]$/,'');
+  box.append(el('div',{class:'chips','aria-label':'Class'},...GRADES[wing].map(c=>el('button',{type:'button',class:'chip','aria-pressed':String(cls===c),onclick:()=>{ stuSec=SECTIONS[wing].find(cs=>cs.replace(/[A-C]$/,'')===c); stuForm=stuConfirm=certOpen=null; render(); }},'Class '+c))));
+  box.append(el('div',{class:'frow'},el('span',{class:'flab',text:'Section'}),el('div',{class:'chips'},...SECTIONS[wing].filter(cs=>cs.replace(/[A-C]$/,'')===cls).map(cs=>el('button',{type:'button',class:'chip sm','aria-pressed':String(stuSec===cs),onclick:()=>{ stuSec=cs; stuForm=stuConfirm=certOpen=null; render(); }},cs+(isMe(mentorOf(cs))?' · my class':''))))));
+  if(!CAN_STU){ box.append(el('div',{class:'empty',text:STU[seg]+' is being switched on. It will open here as soon as the school sheet is connected.'})); return; }
+  if(!ROSTER){ if(stuErr) box.append(el('div',{class:'empty'},stuErr+' ',el('button',{type:'button',class:'btn xs',onclick:()=>{stuErr='';render()}},'Try again'))); else { box.append(el('div',{class:'empty',text:'Loading the student list…'})); stuLoad(); } return; }
+  const names=ROSTER[stuSec]||[]; if(!names.length){ box.append(el('div',{class:'empty',text:'There is no student list for '+stuSec+' yet.'})); return; }
+  if(seg==='cert') renderCert(box,names); else if(seg==='lib') renderLib(box,names); else renderAward(box,names);
+}
+/* ---- weekly certificates ---- */
+function renderCert(box,names){
+  const path='s/cert/'+stuSec, items=sItems(path), cats=certCats(), of=i=>items.filter(x=>x.i===i), none=names.filter((n,i)=>!of(i).length).length;
+  box.append(el('div',{class:'tools'},el('h2',{class:'lt'},'Weekly certificates · '+stuSec,el('small',{text:items.length+' given so far · '+(none?none+' of '+names.length+' children have none yet':'every child has at least one')})),
+    el('button',{type:'button',class:'chip sm','aria-pressed':String(certCatsEdit),onclick:()=>{certCatsEdit=!certCatsEdit;render()}},'Certificate names')));
+  if(certCatsEdit){ const f=el('input',{id:'cc-new',type:'text',maxlength:'28',placeholder:'e.g. Best Reader'});
+    box.append(el('div',{class:'panel'},el('h2',{text:'Certificate names'}),el('div',{class:'toolr'},...cats.map(c=>el('button',{type:'button',class:'chip sm',onclick:()=>{ if(cats.length<2) return toast('Keep at least one certificate.',1); if(stuConfirm==='cc|'+c){ stuConfirm=null; sop(catsPath(),'put',{list:cats.filter(x=>x!==c)},'Removed'); } else { stuConfirm='cc|'+c; render(); } }},stuConfirm==='cc|'+c?'Confirm: remove '+c:c+' ×'))),
+      el('div',{class:'form'},el('label',{},'Add a certificate',f)),el('div',{class:'toolr'},el('button',{type:'button',class:'btn',onclick:()=>{ const v=cut(f.value,28); if(!v){f.focus();return} if(cats.indexOf(v)>=0||cats.length>=8) return toast(cats.length>=8?'Keep to 8 certificates at most.':'Already in the list.',1); sop(catsPath(),'put',{list:cats.concat([v])},'Added'); }},'Add'),el('button',{type:'button',class:'btn ghost',onclick:()=>{certCatsEdit=false;stuConfirm=null;render()}},'Close')),
+      el('p',{class:'note',text:'These names are shared by all sections of this app. Certificates already given stay on record.'}))); }
+  box.append(stuDateRow('of the certificate'));
+  box.append(el('div',{class:'frow'},el('span',{class:'flab',text:'Order'}),el('div',{class:'chips'},...[['roll','Roll order'],['few','Fewest first']].map(([k,l])=>el('button',{type:'button',class:'chip sm','aria-pressed':String(certSort===k),onclick:()=>{certSort=k;render()}},l)))));
+  if(none) box.append(el('p',{class:'srule',text:'Give first to the children marked “None yet”. Every child should receive one before anyone gets a second.'}));
+  const order=names.map((n,i)=>i); if(certSort==='few') order.sort((a,b)=>of(a).length-of(b).length||a-b);
+  const give=(i,c,force)=>{ const key=i+'|'+c, othersNone=names.filter((n,j)=>j!==i&&!of(j).length).length;
+    if(!force&&of(i).length&&othersNone>0&&stuConfirm!==key){ stuConfirm=key; render(); toast(othersNone+' children have no certificate yet. Tap again to give this one anyway.',1); return; }
+    stuConfirm=null; certOpen=null; sop(path,'add',{id:sid(),i,n:names[i],c,d:sDay()},'Certificate given'); };
+  const card=el('div',{class:'card'}), list=el('div',{class:'secs'});
+  order.forEach(i=>{ const mine=of(i), all=[...new Set(cats.concat(mine.map(x=>x.c)))], row=el('div',{class:'stu'});
+    row.append(el('div',{class:'stuh'},el('b',{text:(i+1)+'. '+names[i]}),el('span',{class:'tag '+(mine.length?'ok':'late'),text:mine.length?mine.length+' so far':'None yet'})));
+    row.append(el('div',{class:'toolr'},...all.map(c=>{ const got=mine.filter(x=>x.c===c).sort((a,b)=>a.d<b.d?-1:1), key=i+'|'+c;
+      return got.length?el('button',{type:'button',class:'chip sm got','aria-pressed':'true',onclick:()=>{certOpen=certOpen===key?null:key;stuConfirm=null;render()}},'✓ '+c+' · '+sD(got[got.length-1].d)+(got.length>1?' ×'+got.length:''))
+        :el('button',{type:'button',class:'chip sm',onclick:()=>give(i,c)},stuConfirm===key?'Tap again to give':c); })));
+    if(certOpen&&certOpen.indexOf(i+'|')===0){ const c=certOpen.slice(String(i).length+1), got=mine.filter(x=>x.c===c);
+      row.append(el('div',{class:'editbox'},...got.map(x=>el('div',{class:'toolr'},el('span',{class:'note',text:c+' given on '+sD(x.d)+(x.by?' by '+String(x.by).split(' ')[0]:'')}),
+          sMine(x)?el('button',{type:'button',class:'btn warn xs',onclick:()=>{ if(stuConfirm==='rm|'+x.id){ stuConfirm=null; sop(path,'del',{id:x.id},'Removed'); } else { stuConfirm='rm|'+x.id; render(); } }},stuConfirm==='rm|'+x.id?'Confirm':'Remove'):null)),
+        el('p',{class:'note',text:'This child already has this certificate. Prefer a different one next time.'}),
+        el('div',{class:'toolr'},el('button',{type:'button',class:'btn ghost xs',onclick:()=>give(i,c,true)},'Give again on '+sD(sDay())),el('button',{type:'button',class:'btn ghost xs',onclick:()=>{certOpen=null;render()}},'Close')))); }
+    list.append(row); });
+  card.append(list); box.append(card);
+}
+/* ---- library ---- */
+const libAll=()=>Object.keys(SD).filter(p=>p.indexOf('s/lib/'+stuSec+'/')===0).reduce((a,p)=>a.concat(sItems(p).map(x=>Object.assign({},x,{_p:p}))),[]);
+function renderLib(box,names){
+  const all=libAll(), out=all.filter(x=>!x.rec), mPath=d=>'s/lib/'+stuSec+'/'+d.slice(0,7);
+  box.append(el('div',{class:'tools'},el('h2',{class:'lt'},'Library · '+stuSec,el('small',{text:out.length+' '+(out.length===1?'book is':'books are')+' with children · '+all.length+' issued in all'}))));
+  box.append(stuDateRow('of issue or return'));
+  box.append(el('div',{class:'frow'},el('span',{class:'flab',text:'View'}),el('div',{class:'chips'},...[['kids','Children'],['quick','Issue to many'],['hist','History']].map(([k,l])=>el('button',{type:'button',class:'chip sm','aria-pressed':String(libView===k),onclick:()=>{libView=k;stuForm=k==='quick'?{k:'quick'}:null;stuConfirm=null;render()}},l)))));
+  const photo=x=>x.img?el('a',{class:'btn ghost xs',href:x.img,target:'_blank',rel:'noopener'},'Photo'):null;
+  if(libView==='quick'){ const free=names.map((n,i)=>i).filter(i=>!out.some(x=>x.i===i)), card=el('div',{class:'card'}), list=el('div',{class:'secs'});
+    if(!free.length){ box.append(el('div',{class:'empty',text:'Every child already has a book. Mark books as received first.'})); return; }
+    free.forEach(i=>list.append(el('label',{class:'stu qrow'},el('b',{text:(i+1)+'. '+names[i]}),el('input',{type:'text',maxlength:'60',placeholder:'Book title','data-i':String(i),class:'lq'}))));
+    card.append(list); box.append(card);
+    box.append(el('div',{class:'toolr'},el('button',{type:'button',class:'btn',onclick:()=>{ const d=sDay(), rows=[...document.querySelectorAll('#stuView .lq')].map(f=>({i:+f.dataset.i,t:cut(f.value,60)})).filter(r=>r.t).map(r=>({id:sid(),i:r.i,n:names[r.i],t:r.t,iss:d}));
+        if(!rows.length) return toast('Type the book title for at least one child.',1); sop(mPath(d),'addm',rows,rows.length+(rows.length===1?' book':' books')+' issued').then(ok=>{ if(ok){ libView='kids'; stuForm=null; render(); } }); }},'Issue the books typed above on '+sD(sDay()))),
+      el('p',{class:'note',text:'Only children without a book are listed. Leave a box empty to skip that child. Price, photo and remark can be added from “Children”.'}));
+    return; }
+  if(libView==='hist'){ if(!all.length){ box.append(el('div',{class:'empty',text:'No books issued in this section yet.'})); return; }
+    const card=el('div',{class:'card'}), list=el('div',{class:'secs'});
+    all.slice().sort((a,b)=>a.iss<b.iss?1:a.iss>b.iss?-1:a.i-b.i).forEach(x=>list.append(el('div',{class:'stu'},el('div',{class:'stuh'},el('b',{text:x.t}),el('span',{class:'tag '+(x.rec?'ok':'soon'),text:x.rec?'Received '+sD(x.rec):'With the child'})),
+      el('span',{class:'note',text:(x.i+1)+'. '+(names[x.i]||x.n||'')+' · issued '+sD(x.iss)+(x.p?' · ₹'+x.p:'')+(x.r?' · '+x.r:'')}),
+      el('div',{class:'toolr'},photo(x),sMine(x)?el('button',{type:'button',class:'btn ghost xs',onclick:()=>{ if(stuConfirm==='rm|'+x.id){ stuConfirm=null; sop(x._p,'del',{id:x.id},'Removed'); } else { stuConfirm='rm|'+x.id; render(); } }},stuConfirm==='rm|'+x.id?'Confirm: remove':'Remove'):null))));
+    card.append(list); box.append(card); return; }
+  const card=el('div',{class:'card'}), list=el('div',{class:'secs'});
+  names.forEach((n,i)=>{ const mine=out.filter(x=>x.i===i).sort((a,b)=>a.iss<b.iss?1:-1), x=mine[0], row=el('div',{class:'stu'}), open=stuForm&&stuForm.k==='lib'&&stuForm.i===i;
+    row.append(el('div',{class:'stuh'},el('b',{text:(i+1)+'. '+n}),x?el('span',{class:'tag soon',text:'Has a book'}):el('span',{class:'tag',text:'No book'})));
+    mine.forEach(b=>row.append(el('div',{class:'lbk'},el('span',{class:'sn'},el('b',{text:b.t}),el('span',{class:'note',text:'Issued '+sD(b.iss)+(b.p?' · ₹'+b.p:'')+(b.r?' · '+b.r:'')})),
+      el('span',{class:'toolr'},photo(b),el('button',{type:'button',class:'btn xs',onclick:()=>sop(b._p,'upd',{id:b.id,rec:sDay()},'Marked received')},'Received'),el('button',{type:'button',class:'btn ghost xs',onclick:()=>{stuForm=stuForm&&stuForm.id===b.id?null:{k:'lib',i,id:b.id};render()}},'Edit')))));
+    if(!open) row.append(el('div',{class:'toolr'},el('button',{type:'button',class:'btn ghost xs',onclick:()=>{stuForm={k:'lib',i};render()}},x?'Issue another book':'Issue a book')));
+    else { const cur=stuForm.id?mine.find(b=>b.id===stuForm.id)||{}:{}, fT=el('input',{id:'lb-t',type:'text',maxlength:'60',placeholder:'Title of the book',value:cur.t||''}), fP=el('input',{id:'lb-p',type:'number',inputmode:'numeric',min:'0',max:'99999',placeholder:'e.g. 250',value:cur.p||''}),
+        fD=el('input',{id:'lb-d',type:'date',value:cur.iss||sDay()}), fR=el('input',{id:'lb-r',type:'text',maxlength:'80',placeholder:'e.g. cover slightly torn',value:cur.r||''}), fI=el('input',{id:'lb-img',type:'url',placeholder:'Filled when the photo is uploaded',value:cur.img||'',readonly:''});
+      row.append(el('div',{class:'editbox'},el('div',{class:'form'},el('label',{},'Book title',fT),el('label',{},'Issue date',fD),el('label',{},'Price (₹)',fP),el('label',{},'Remark',fR),CAN_UP?el('label',{},'Photo of the front cover',fI,upBtn(fI,'image/*')):null),
+        el('div',{class:'toolr'},el('button',{type:'button',class:'btn',onclick:()=>{ const t=cut(fT.value,60), d=/^\d{4}-\d\d-\d\d$/.test(fD.value)?fD.value:sDay(); if(!t){fT.focus();return}
+            const e={i,n,t,iss:d,r:cut(fR.value,80),img:okUrl(fI.value)?fI.value:''}; const p=Math.round(+fP.value||0); e.p=p>0?p:0;
+            if(stuForm.id){ e.id=stuForm.id; stuForm=null; sop(cur._p,'upd',e,'Saved'); } else { e.id=sid(); stuForm=null; sop(mPath(d),'add',e,'Book issued'); } }},stuForm.id?'Save':'Issue book'),
+          el('button',{type:'button',class:'btn ghost',onclick:()=>{stuForm=null;render()}},'Cancel')))); }
+    list.append(row); });
+  card.append(list); box.append(card);
+}
+/* ---- awards ---- */
+const AW_FIELD=['Sports','Music','Dance','Art','Academics','Olympiad','Other'], AW_LEVEL=['School','Inter-school','District','State','National','Other'];
+function renderAward(box,names){
+  const path='s/award/'+stuSec, items=sItems(path), kids=new Set(items.map(x=>x.i)).size, open=stuForm&&stuForm.k==='award';
+  box.append(el('div',{class:'tools'},el('h2',{class:'lt'},'Awards · '+stuSec,el('small',{text:items.length+' '+(items.length===1?'award':'awards')+' recorded for '+kids+' '+(kids===1?'child':'children')})),
+    el('button',{type:'button',class:'chip sm','aria-pressed':String(!!open),onclick:()=>{stuForm=open?null:{k:'award'};render()}},'Add award')));
+  if(open){ const fS=el('select',{id:'aw-s'},...names.map((n,i)=>el('option',{value:String(i)},(i+1)+'. '+n))), fT=el('input',{id:'aw-t',type:'text',maxlength:'60',placeholder:'e.g. Inter-school Karate Championship'}),
+      fF=el('select',{id:'aw-f'},...AW_FIELD.map(x=>el('option',{value:x},x))), fL=el('select',{id:'aw-l'},...AW_LEVEL.map(x=>el('option',{value:x},x))), fP=el('input',{id:'aw-p',type:'text',maxlength:'30',placeholder:'e.g. Gold medal, 1st position'}), fD=el('input',{id:'aw-d',type:'date',value:sDay()}), fR=el('input',{id:'aw-r',type:'text',maxlength:'80',placeholder:'Optional'});
+    box.append(el('div',{class:'panel'},el('h2',{text:'Add an award'}),el('div',{class:'form'},el('label',{},'Student',fS),el('label',{},'Award or event',fT),el('label',{},'Field',fF),el('label',{},'Level',fL),el('label',{},'Position or medal',fP),el('label',{},'Date',fD),el('label',{},'Remark',fR)),
+      el('div',{class:'toolr'},el('button',{type:'button',class:'btn',onclick:()=>{ const t=cut(fT.value,60), i=+fS.value; if(!t){fT.focus();return}
+          sop(path,'add',{id:sid(),i,n:names[i],t,f:fF.value,l:fL.value,pos:cut(fP.value,30),d:/^\d{4}-\d\d-\d\d$/.test(fD.value)?fD.value:sDay(),r:cut(fR.value,80)},'Award added').then(ok=>{ if(ok){ fT.value='';fP.value='';fR.value=''; } }); }},'Add award'),
+        el('button',{type:'button',class:'btn ghost',onclick:()=>{stuForm=null;render()}},'Close')))); }
+  if(!items.length){ box.append(el('div',{class:'empty',text:'No awards recorded for '+stuSec+' yet. Select “Add award” when a child wins in sports, music, dance or any competition.'})); return; }
+  const card=el('div',{class:'card'}), list=el('div',{class:'secs'});
+  names.forEach((n,i)=>{ const mine=items.filter(x=>x.i===i).sort((a,b)=>a.d<b.d?1:-1); if(!mine.length) return; const row=el('div',{class:'stu'});
+    row.append(el('div',{class:'stuh'},el('b',{text:(i+1)+'. '+n}),el('span',{class:'tag ok',text:mine.length+(mine.length===1?' award':' awards')})));
+    mine.forEach(x=>row.append(el('div',{class:'lbk'},el('span',{class:'sn'},el('b',{text:x.t}),el('span',{class:'note',text:[x.f,x.l,x.pos,sD(x.d),x.r].filter(Boolean).join(' · ')})),
+      el('span',{class:'toolr'},sMine(x)?el('button',{type:'button',class:'btn ghost xs',onclick:()=>{ if(stuConfirm==='rm|'+x.id){ stuConfirm=null; sop(path,'del',{id:x.id},'Removed'); } else { stuConfirm='rm|'+x.id; render(); } }},stuConfirm==='rm|'+x.id?'Confirm':'Remove'):null))));
+    list.append(row); });
+  card.append(list); box.append(card);
+}
+
 let outArm=0; $('meBtn').addEventListener('click',()=>{ if(!ME) return; if(Date.now()-outArm<4000){ setToken(''); lock(); outArm=0; } else { outArm=Date.now(); $('meBtn').textContent='Tap again to log out'; } });
 $('gateF').addEventListener('submit',async e=>{ e.preventDefault(); const n=$('gateN').value.trim(), w=$('gateW').value; if(!n){$('gateE').textContent='Type your name.';return} if(!w){$('gateE').textContent='Enter your password.';return}
   $('gateGo').disabled=true; $('gateE').textContent=''; try{ const r=await dcall('login',[n,w]); setToken(r.token); enter(r.state.me); }catch(x){ $('gateE').textContent=x.message||'Could not log in.'; } $('gateGo').disabled=false; });
-const render0=render; render=function(){ $('meBtn').textContent=ME?ME+' · log out':'Not logged in'; const cd=canDash(), sd=$('seg-dash'); sd.hidden=!cd; sd.parentNode.className='sw '+(cd?'six':'five'); if(!cd&&seg==='dash') seg='prep'; if(ME) render0(); };
+const render0=render; render=function(){ $('meBtn').textContent=ME?ME+' · log out':'Not logged in'; const cd=canDash(), sd=$('seg-dash'); sd.hidden=!cd; sd.parentNode.className='sw '+(cd?'nine':'eight'); if(!cd&&seg==='dash') seg='prep'; if(ME) render0(); };
 checkLogin(); setInterval(poll,10000); document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll()});
 </script>
 </body></html>

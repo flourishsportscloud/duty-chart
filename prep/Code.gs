@@ -56,17 +56,37 @@ function write_(path, obj, who, what){
   log_(who, path, what || 'saved'); return rev;
 }
 /* ---- uploads (PDF, PPT and similar) ---- */
-const UPLOAD_MAX_MB = 15, UPLOAD_EXT = ['pdf','ppt','pptx','pps','ppsx','doc','docx','xls','xlsx','jpg','jpeg','png'];
+const UPLOAD_MAX_MB = 15, UPLOAD_EXT = ['pdf','ppt','pptx','pps','ppsx','doc','docx','xls','xlsx','jpg','jpeg','png','heic','webp'];
 const DIARY_API = 'https://script.google.com/macros/s/AKfycbyvWTDOKOQ8F0vD-oy9vchmq04GdhfZfgtpomgWg73rIa13gmkrFkpZsvQl9ISZKrSFQw/exec';
 function uploadFolder_(){ const p = props_(); let id = p.getProperty('UPLOAD_FOLDER');
   if(id){ try{ return DriveApp.getFolderById(id); }catch(e){} }
   const f = DriveApp.createFolder('FIS Teacher Preparation and Checking - Uploads'); p.setProperty('UPLOAD_FOLDER', f.getId()); return f; }
-// only someone logged in to the staff (Diary) login may upload
+// only someone logged in to the staff (Diary) login may upload or open student records; the answer is remembered for 20 minutes
 function staffToken_(token){ token = String(token || ''); if(token.length < 8) fail('Please log in again.');
+  const cache = CacheService.getScriptCache(), key = 'tk' + Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, token)).slice(0, 40);
+  const hit = cache.get(key); if(hit){ try{ return JSON.parse(hit); }catch(e){} }
   let j = null; try{ j = JSON.parse(UrlFetchApp.fetch(DIARY_API, {method: 'post', contentType: 'text/plain', payload: JSON.stringify({fn: 'state', args: [token, Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd'), '']}), followRedirects: true, muteHttpExceptions: true}).getContentText()); }catch(e){}
-  if(!j || !j.ok || !j.v || !j.v.me) fail('Please log in again.'); return j.v.me; }
+  if(!j || !j.ok || !j.v || !j.v.me) fail('Please log in again.');
+  const me = {name: String(j.v.me.name || ''), role: String(j.v.me.role || '')}; cache.put(key, JSON.stringify(me), 1200); return me; }
+/* ---- student records: weekly certificates, library, awards (kept in the SDocs tab; student names never go to GitHub) ---- */
+const ROSTER_SHEET = '1YJFmyT1jLnEl6o3UyddLs_C3kPoDw2U0ihqZouW9k4M';   // "Mentor Student Record Data" – Roster tab (Class | Section | Name)
+const SPATH_RE = /^s\/(?:(?:cert|award)\/(?:[1-9]|1[01])[ABC]|lib\/(?:[1-9]|1[01])[ABC]\/\d{4}-\d\d|cfg\/[a-z0-9-]{2,20})$/;
+const SHEAD = ['key','rev','updated','by','json1','json2'];
+function sSheet_(){ const ss = ss_(); let sh = ss.getSheetByName('SDocs'); if(!sh){ sh = ss.insertSheet('SDocs'); sh.getRange(1,1,1,SHEAD.length).setValues([SHEAD]).setFontWeight('bold'); sh.setFrozenRows(1); } return sh; }
+function sRev_(next){ const p = props_(); let r = Number(p.getProperty('srev') || 0); if(next){ r++; p.setProperty('srev', String(r)); } return r; }
+function sRead_(test){ const sh = sSheet_(), n = sh.getLastRow() - 1; if(n < 1) return [];
+  return sh.getRange(2,1,n,SHEAD.length).getValues().filter(v => test(String(v[0]), Number(v[1]))).map(v => { let j = null; try{ j = JSON.parse(String(v[4]) + String(v[5])); }catch(e){} return j ? {p: String(v[0]), j: j} : null; }).filter(Boolean); }
+function sWrite_(path, obj, who){ const json = JSON.stringify(obj); if(json.length > CHUNK*2) fail('This list is too large to save.');
+  const sh = sSheet_(), rev = sRev_(true), row = [path, rev, new Date().toISOString(), who, json.slice(0, CHUNK), json.slice(CHUNK)];
+  const r = rowOf_(sh, path); if(r) sh.getRange(r,1,1,row.length).setValues([row]); else sh.appendRow(row); return rev; }
+function sClean_(e){ const o = {}; Object.keys(e || {}).slice(0, 14).forEach(k => { if(!/^[a-z]{1,4}$/.test(k)) return; const v = e[k];
+  if(typeof v === 'number' && isFinite(v)) o[k] = v; else if(typeof v === 'string') o[k] = v.slice(0, 200); }); return o; }
+function roster_(){ const cache = CacheService.getScriptCache(), hit = cache.get('roster'); if(hit){ try{ return JSON.parse(hit); }catch(e){} }
+  const sh = SpreadsheetApp.openById(props_().getProperty('ROSTER_SHEET') || ROSTER_SHEET).getSheetByName('Roster'); if(!sh || sh.getLastRow() < 2) fail('The student list is not available yet. Ask the Director.');
+  const out = {}; sh.getRange(2,1,sh.getLastRow()-1,3).getValues().forEach(r => { const c = String(r[0]).trim(), x = String(r[1]).trim().toUpperCase(), n = String(r[2]).trim(); if(c && x && n) (out[c + x] = out[c + x] || []).push(n); });
+  try{ cache.put('roster', JSON.stringify(out), 600); }catch(e){} return out; }
 /* Run once from the editor after updating: asks for the Drive and web permissions that uploads need. */
-function authorizeUploads(){ uploadFolder_(); UrlFetchApp.fetch(DIARY_API, {muteHttpExceptions: true}); return 'Uploads are ready.'; }
+function authorizeUploads(){ uploadFolder_(); UrlFetchApp.fetch(DIARY_API, {muteHttpExceptions: true}); sSheet_(); const n = Object.keys(roster_()).length; return 'Uploads and student records are ready. Sections in the student list: ' + n; }
 const API = {
   me(who){ return {name: who, admin: isAdmin_(who)}; },
   all(){ return {rev: rev_(), docs: read_(() => true)}; },
@@ -99,7 +119,7 @@ const API = {
     return {rev: write_(path, obj, who, 'plan saved')};
   },
   // what this deployment can do (the pages show the upload button only when this answers)
-  caps(){ return {upload: 1, maxMb: UPLOAD_MAX_MB}; },
+  caps(){ return {upload: 1, maxMb: UPLOAD_MAX_MB, students: 1}; },
   // a PDF / PPT / sheet chosen on a phone: saved in the school's Drive upload folder, viewable by link, link returned
   upload(name, mime, b64, token, who){
     name = String(name || '').replace(/[\\/:*?"<>|\u0000-\u001f]/g, ' ').trim().slice(0, 120); mime = String(mime || '');
@@ -115,6 +135,20 @@ const API = {
     log_(who, 'upload', name + ' (' + f.getId() + ')');
     return {id: f.getId(), url: 'https://drive.google.com/file/d/' + f.getId() + '/view', name: name};
   },
+  // ---- student records (every call needs the staff login token) ----
+  roster(token){ staffToken_(token); return roster_(); },
+  spull(since, token){ staffToken_(token); since = Number(since) || 0; const rev = sRev_(); if(since >= rev) return {rev: rev, docs: []}; return {rev: rev, docs: sRead_((p, r) => r > since)}; },
+  // one change to one list: add / addm (several) / upd / del an item, or put a whole settings record
+  sop(path, op, payload, token){ const me = staffToken_(token), who = me.name; if(!SPATH_RE.test(String(path || ''))) fail('Bad record.');
+    const cur = (sRead_(p => p === path)[0] || {}).j || {}, now = Date.now(); let items = Array.isArray(cur.items) ? cur.items : [];
+    if(op === 'put'){ if(path.indexOf('s/cfg/') !== 0 || !payload || typeof payload !== 'object' || Array.isArray(payload)) fail('Bad record.'); const o = payload; o.by = who; o.at = now; return {rev: sWrite_(path, o, who), j: o}; }
+    if(path.indexOf('s/cfg/') === 0) fail('Bad record.');
+    const stamp = e => { e = sClean_(e); if(!/^[a-z0-9]{6,16}$/.test(String(e.id || ''))) fail('Bad record.'); return e; };
+    if(op === 'add' || op === 'addm'){ (op === 'add' ? [payload] : (Array.isArray(payload) ? payload.slice(0, 60) : [])).forEach(e => { e = stamp(e); if(items.some(x => x.id === e.id)) return; e.by = who; e.at = now; items.push(e); }); }
+    else if(op === 'upd'){ const e = stamp(payload), x = items.filter(y => y.id === e.id)[0]; if(!x) fail('This entry is no longer there. Refresh and try again.'); Object.keys(e).forEach(k => { if(k !== 'id' && k !== 'by' && k !== 'at') x[k] = e[k]; }); x.uby = who; x.uat = now; }
+    else if(op === 'del'){ const id = String((payload || {}).id || ''); items = items.filter(x => x.id !== id); }
+    else fail('Bad request.');
+    const o = {items: items}; const rev = sWrite_(path, o, who); log_(who, path, op); return {rev: rev, j: o}; },
   // one-time import of a lesson file (plans and earlier marks) prepared by Claude
   importFile(data, who){
     if(!isAdmin_(who)) fail('Only the Dean or the Director can load a lesson file.');
@@ -128,13 +162,14 @@ function doPost(e){
   let req = {}; try{ req = JSON.parse(e.postData.contents); }catch(x){}
   const out = o => ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
   const fn = API[req.fn]; if(!fn) return out({ok: false, err: 'Unknown request.'});
-  const write = ['merge','set','importFile'].indexOf(req.fn) >= 0, lock = LockService.getScriptLock();
+  const write = ['merge','set','importFile','sop'].indexOf(req.fn) >= 0, lock = LockService.getScriptLock();
   try{
     let args = req.args || [];
     const who = who_(req.who);
     if(req.fn === 'me') args = [who];
     else if(req.fn === 'importFile') args = [args[0], who];
     else if(req.fn === 'upload') args = args.slice(0, 4).concat([who]);
+    else if(req.fn === 'sop') args = args.slice(0, 4);
     else if(write) args = args.slice(0, 2).concat([who]);
     if(write && !lock.tryLock(25000)) return out({ok: false, err: 'Server busy, trying again.'});
     return out({ok: true, v: fn.apply(null, args)});
