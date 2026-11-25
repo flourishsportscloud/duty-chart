@@ -6,7 +6,7 @@ Staff sign in with the **same name and password as the Diary app**. No Claude ac
 2. Paste all of `Code.gs` over the default file. Save.
 3. Choose the function `setupParentConnect` and press Run. Allow the permissions. This creates the "Parent Connect Data" sheet that holds follow-ups, remarks, acknowledgements and profiles. It only reads the two source sheets and never writes to them.
 4. Deploy > New deployment > Web app. Execute as: **Me**. Who has access: **Anyone**. Copy the `/exec` URL.
-5. In `index.html` replace `__API__` (one place, near the top of the first script) with that URL. Commit.
+5. Done: the /exec URL is already set in `index.html`.
 6. In `fis/index.html` change the Parent Connect tile `status` to `live`.
 
 Notes

@@ -301,7 +301,7 @@ select[data-cf]{width:100%}
 /* Parent Connect — GitHub Pages client layer: Diary-password login + Apps Script API (replaces the Claude runtime) */
 (function(){
 "use strict";
-var API=new URLSearchParams(location.search).get('api')||"__API__";
+var API=new URLSearchParams(location.search).get('api')||"https://script.google.com/macros/s/AKfycbz7s2dv7a3mtqyvLodOfr-X6aiALC3QsdEqhkDxqgl826kFHKjsKYGvCxFGjlNhqqcMfw/exec";
 var K='pc_tok',W='pc_who';
 function lg(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}}
 function ls(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
