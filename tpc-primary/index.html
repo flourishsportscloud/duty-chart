@@ -392,7 +392,7 @@ const PTEST=[
 
 /* ---------- Staff: class teachers by section; Hindi teachers by A / B / C ---------- */
 const SEC=['A','B','C'];
-const CT={'1A':'Sunita','1B':'Priyanshi Bhojak','1C':'Kanika','2A':'Deepmala','2B':'Deepali','2C':'Chhavi','3A':'Tina','3B':'Vaneshwari','3C':'Saroj','4A':'Pooja','4B':'Priya Shekhawat','4C':'Gauri','5A':'Anuradha','5B':'Reema','5C':'Divyanshi'};
+const CT={'1A':'Sunita','1B':'Priyanshi Bhojak','1C':'Kanika','2A':'Deepmala','2B':'Deepali','2C':'Chhavi','3A':'Tina','3B':'Vaneshwari','3C':'Saroj','4A':'Pooja','4B':'Priya Shekhawat','4C':'Gauri','5A':'Anuradha','5B':'Reema','5C':'Devanshi'};
 const HT={A:'Geeta',B:'Preeti',C:'Anita'};
 const isHindi=s=>/^Hindi/.test(s);
 function teacherOf(s,cs){ if(isHindi(s)) return HT[cs.slice(-1)]; if(s==='Computer'&&+cs.slice(0,-1)>=3) return 'Himanshi'; return CT[cs]||'To be assigned'; }
@@ -453,7 +453,7 @@ DUE.forEach(([t,cs,sb,l,item,dept])=>{
   if(!r){ const id='c|list|'+t+'|'+cs+'|'+sb+'|'+(l||'');
     r=BASE.find(x=>x.id===id);
     if(!r){ r=mkRec('check',LIST_DAY,cs,sb,l||'Notebook',null,[]); r.id=id; r.key='check|list|'+cs+'|'+sb+'|'+(l||''); r.due=LIST_DAY; r.els.forEach(e=>e.due=LIST_DAY); r.listed=true; if(dept) r.g=dept; BASE.push(r); } }
-  r.t=t; let e=r.els.find(e=>e.name===item); if(!e){ e={id:r.id+'|'+item,name:item,due:r.due}; r.els.push(e); }
+  r.t=({'Divyanshi':'Devanshi'})[t]||t; let e=r.els.find(e=>e.name===item); if(!e){ e={id:r.id+'|'+item,name:item,due:r.due}; r.els.push(e); }
   PEND[e.id]=1; r.forceIn=true;
 });
 
