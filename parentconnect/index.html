@@ -318,10 +318,19 @@ GH.api=async function(fn,args){
   try{return await call(fn,args,GH.tok)}
   catch(e){if(e.auth&&!GH._x){GH._x=1;ld(K);location.reload()}throw e}
 };
+/* Full access: exact names as in the Diary login (lower case). Diary role admin (= front office) always has it. */
+var FULL=['harsh yadav','surender yadav','shubhangi','santosh yadav','sharda yadav','nahida','anahida',
+ 'anoop gahlot','anoop','jai pandla','jai','chandan soni','chandan','narendra dara','narendra',
+ 'megha shekhawat','harshvardhan soni','preeti jain','vaishali rathore',
+ 'sanjana sarswat','neetu dara','divyanshi jain','diksha singh raghuwanshi','diksha singh',
+ 'rashmi purushottam','rashmi rathore','neha sethia',
+ 'saba','saba panwar','karishma suthar','karishma','chandani chayal','chandani',
+ 'asha rao','asha'];
 GH.allowed=function(){
   var n=String(GH.who.name||'').trim().toLowerCase(),r=String(GH.who.role||'').toLowerCase();
-  if(n==='harsh yadav')return['director'];
-  if(r==='admin')return['admin'];
+  if(n==='rahul yadav')return['director'];
+  n=n.replace(/\s+/g,' ');
+  if(r==='admin'||FULL.indexOf(n)>=0)return['admin'];
   if(/^(pl|cm|cmh|pm)$/.test(r))return['coord'];
   return['teacher'];
 };
@@ -441,7 +450,7 @@ const ago=s=>{const n=diffDays(s,todayISO());return n<=0?'today':n===1?'yesterda
 const GROUPS=['Pre-Primary','Class 1-2','Class 3-5','Class 6-7','Class 8-9','Class 10-11'];
 const SUBJECTS=['Maths','Hindi','English','Science','SST','Computer','Sanskrit','French/German','Co-curricular','Class Teacher'];
 const OWNERS=['Maths teacher','Hindi teacher','English teacher','Science teacher','SST teacher','Computer teacher','Sanskrit teacher','French/German teacher','Co-curricular teacher','Class teacher','Coordinator','Administration'];
-const ROLES=[['director','Director','Sees everything'],['coord','Coordinator / PL','Own class group(s)'],['admin','Administration','All departments and calls'],['teacher','Teacher','Own subject or class']];
+const ROLES=[['director','Director','Sees everything'],['coord','Coordinator / PL','Own class group(s)'],['admin','Management / Front Office','All data, all departments, remarks and calls'],['teacher','Teacher','Own subject or class']];
 const SRC_LBL={Studybase:'Studybase',Call:'Call received',Diary:'Diary remark',Desk:'Front office desk',Internal:'Internal'};
 const srcName=m=>SRC_LBL[m]||m;
 const CASES=['Complaints','Academic complaints','Behavioural','Medical cases','Admission enquiries','HR','Transport','Fee and documents','Requests'];
