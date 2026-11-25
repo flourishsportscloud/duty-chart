@@ -429,6 +429,13 @@ body.drvmode .datebox,body.drvmode .prog,body.drvmode #tabs,body.drvmode #subtab
 .vrb .ok2{border:1.5px solid var(--done);color:var(--done)}.vrb .ok2.on{background:var(--done);color:#fff}.vrb .bad2{border:1.5px solid var(--miss);color:var(--miss)}.vrb .bad2.on{background:var(--miss);color:#fff}
 .card2.warn{border-top-color:var(--gold);background:#FFF8E8}.card2.warn p{margin:6px 0 10px;font-size:13px;color:#6b5a2e}
 @media (max-width:420px){.tabs.cats button{font-size:10px}.tabs.cats.c7 button{font-size:9px;letter-spacing:-.02em;padding:7px 0}}
+.isev{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:1px 6px;vertical-align:middle}.isev.red{background:var(--miss);color:#fff}.isev.gold{background:#F3E2B3;color:#6b4e00}.isev.blu{background:#E3EAF5;color:var(--navy)}
+.issr.off{border-top-color:var(--miss)}.issr.fixed{opacity:.75;border-top-color:var(--done)}.issd{font-size:15px;line-height:1.45;margin-top:2px;white-space:pre-wrap}
+.istb{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.istb button{font:inherit;font-weight:700;font-size:13px;border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:7px 4px;cursor:pointer;color:var(--ink)}
+.istb button small{display:block;font-weight:500;font-size:11px;color:var(--muted)}.istb .on.s-open{background:var(--miss);border-color:var(--miss);color:#fff}.istb .on.s-work{background:var(--gold);border-color:var(--gold);color:#fff}.istb .on.s-fixed{background:var(--done);border-color:var(--done);color:#fff}.istb .on small{color:#fff}
+.islog{margin-top:8px;border-left:3px solid var(--line);padding-left:10px;font-size:13px}.islog div{padding:3px 0}
+.issf select,.issf textarea{width:100%;font:inherit;font-size:15px;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:#fff}.issf .h{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.lnk{background:none;border:0;color:var(--miss);font:inherit;font-size:12.5px;text-decoration:underline;cursor:pointer;padding:0}
 </style>
 </head>
 <body>
@@ -481,6 +488,7 @@ body.drvmode .datebox,body.drvmode .prog,body.drvmode #tabs,body.drvmode #subtab
   <div class="pane" data-pane="vans" hidden><div id="vanBody"></div></div>
   <div class="pane" data-pane="drv" hidden><div id="drvBody"></div></div>
   <div class="pane" data-pane="vrev" hidden><div id="vrevBody"></div></div>
+  <div class="pane" data-pane="issues" hidden><div id="issBody"></div></div>
   <div class="pane" data-pane="uniform" hidden><div id="regBody"></div></div>
   <div class="pane" data-pane="plan" hidden>
   <section class="win" id="nplSec">
@@ -535,7 +543,7 @@ body.drvmode .datebox,body.drvmode .prog,body.drvmode #tabs,body.drvmode #subtab
 </div>
 <script>
 /* Self-update: phones keep an old copy of this page for a while, so check for a newer build and reload */
-const APP_V="202611241500";
+const APP_V="202611251200";
 (function(){let busy=false;async function chk(){if(busy||location.protocol==="file:")return;busy=true;
   try{const t=await (await fetch(location.pathname+"?nc="+Date.now(),{cache:"no-store"})).text(),m=t.match(/const APP_V="(\d+)"/);
     if(m&&m[1]!==APP_V){const u=new URL(location.href);u.searchParams.set("v",m[1]);location.replace(u.toString())}}catch(e){}busy=false}
@@ -717,7 +725,7 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",
 const fmt=d=>{const[y,m,dd]=d.split("-");return dd+"/"+m+"/"+y};
 
 function render(){
-  const fa=document.activeElement, fid=fa&&fa.id&&/^(note-|nj-|wn-|vn-|ro-|rt-|pt-|vc-|vci-|npl-|tk-|tkw-|tkadd-|rep-|cover-|se-|ve-|sv-|eod-|tc-|sup-|wa-|vr-|sal-)/.test(fa.id)?fa.id:null, sel=fid&&(fa.tagName==="INPUT"||fa.tagName==="TEXTAREA")?[fa.selectionStart,fa.selectionEnd]:null;
+  const fa=document.activeElement, fid=fa&&fa.id&&/^(note-|nj-|wn-|vn-|ro-|rt-|pt-|vc-|vci-|npl-|tk-|tkw-|tkadd-|rep-|cover-|se-|ve-|sv-|eod-|tc-|sup-|wa-|vr-|sal-|iss-)/.test(fa.id)?fa.id:null, sel=fid&&(fa.tagName==="INPUT"||fa.tagName==="TEXTAREA")?[fa.selectionStart,fa.selectionEnd]:null;
   renderInner(); renderStaff(); ensureMonth(); renderReg(); renderVC(); renderSal(); renderVeh(); renderSvc(); renderEod(); renderNpl();
   if(fid){const el=$(fid);if(el){el.focus();if(sel)try{el.setSelectionRange(sel[0],sel[1])}catch(e){}}}
 }
@@ -1065,7 +1073,7 @@ const hi=id=>((roster.hi||{})[id]||"").trim()||HI[id]||personName(id,id);
 function tmrData(){const nd=nextDay(date);if(tmr.d!==nd){if(!db)return null;tmr={d:nd,data:null,loading:true};db.doc("reports/"+nd).get().then(x=>{if(tmr.d===nd){tmr.data=x.exists?x.data():{att:{},cover:{}};tmr.loading=false;render()}}).catch(()=>{if(tmr.d===nd){tmr.data={att:{},cover:{}};tmr.loading=false;render()}});return null}if(tmr.loading)return null;if(!tmr.data)tmr.data={att:{},cover:{}};tmr.data.att=tmr.data.att||{};tmr.data.cover=tmr.data.cover||{};return tmr.data}
 function idByName(nm){const k=String(nm||"").trim().toLowerCase();if(!k)return null;const all=[...SLOTS.map(x=>x.id),...RES.map(r=>r.id)];return all.find(id=>(roster.name[id]||"").trim().toLowerCase()===k)||null}
 /* ---- tabs & dashboard ---- */
-const TABS=[["dash","Dashboard"],["att","Attendance & Check-in"],["staffl","Staff list & changes"],["vcheck","Vehicle Check"],["vans","Vans"],["tasks","Daily Checklist"],["sup","सुपरवाइज़र कार्य"],["wash","Sunday Washing"],["plan","Next-Day Plan"],["uniform","Absentee & Uniform"],["docs","Documents"],["service","Service"],["salary","Salary"],["history","History"],["drv","Driver app"],["vrev","Check review"]];
+const TABS=[["dash","Dashboard"],["att","Attendance & Check-in"],["staffl","Staff list & changes"],["vcheck","Vehicle Check"],["vans","Vans"],["tasks","Daily Checklist"],["sup","सुपरवाइज़र कार्य"],["wash","Sunday Washing"],["plan","Next-Day Plan"],["uniform","Absentee & Uniform"],["docs","Documents"],["service","Service"],["salary","Salary"],["history","History"],["drv","Driver app"],["vrev","Check review"],["issues","Vehicle issues"]];
 const PANE_SEC={plan:"nplSec",docs:"vehSec",service:"svcSec",salary:"salSec"};
 let tab=(()=>{const h=location.hash.slice(1);if(TABS.some(t=>t[0]===h))return h;try{const v=localStorage.getItem("td_tab");return TABS.some(t=>t[0]===v)?v:"dash"}catch(e){return"dash"}})();
 function tabBadges(){const b={};try{
@@ -1076,6 +1084,7 @@ function tabBadges(){const b={};try{
   b.sup=SUPS.reduce((n,[w])=>n+supStats(w).late,0);
   if(isSun(date)&&date<=todayIST())b.wash=washStats().left;
   try{const V=vrStats();if(V.late)b.vrev=V.tot-V.rev}catch(e){}
+  try{b.issues=issNeed().length}catch(e){}
   if(svcState==="ok")b.service=Object.keys(SV).filter(id=>svcCalc(SV[id]).st!=="ok").length;
  }catch(e){}return b}
 function showTab(k){tab=k;try{localStorage.setItem("td_tab",k)}catch(e){}if(PANE_SEC[k])closed.delete(PANE_SEC[k]);
@@ -1436,7 +1445,7 @@ const CATS=[["home","🏠","Dashboard","डैशबोर्ड",[["dash","Dire
  ["staff","👥","Staff","स्टाफ",[["att","Check-in / out"],["uniform","Registers"],["staffl","Staff list & changes"]]],
  ["duty","✅","Duties","कार्य",[["tasks","Daily checklist"],["sup","Supervisor duties"]]],
  ["fleet","🚌","Drivers","ड्राइवर",[["drv","Driver app"],["vcheck","Vehicle check"],["vans","Vans · route"]]],
- ["sfleet","🧑‍✈️","Review","सुपरवाइज़र",[["vrev","Check review"],["docs","Documents"],["service","Service"],["wash","Sunday washing"]]],
+ ["sfleet","🧑‍✈️","Review","सुपरवाइज़र",[["issues","Vehicle issues"],["vrev","Check review"],["docs","Documents"],["service","Service"],["wash","Sunday washing"]]],
  ["plan","📅","Next day","कल का प्लान",[["plan","Next-day plan"]]],
  ["pay","🔒","Salary","वेतन",[["salary","Salary"]]]];
 const catOf=k=>CATS.find(c=>c[4].some(x=>x[0]===k))||CATS[0];
@@ -1534,6 +1543,7 @@ function renderDash(){const el=$("dashBody");if(!el||tab!=="dash")return;loadCR(
     return `<div class="nl">${bad.map(r=>row(esc(r.v.label)+" · "+esc(r.v.driver),r.v.phone?esc(r.v.phone):"",r.lt?"Started "+h12(r.x.ms)+" (+"+r.lt+" min)":esc(r.t),"red")).join("")}${run.map(r=>row(esc(r.v.label)+" · "+esc(r.v.driver),r.x.loc&&r.x.loc.lat?`<a href="${mapLink(r.x.loc)}" target="_blank" rel="noopener">📍 location ${h12(r.x.loc.t)}</a>`:"no location",esc(r.t),"amb")).join("")}</div>
      ${!bad.length&&!run.length?`<div class="empty2">✓ ${isSun(date)?"Sunday":rows.filter(r=>r.x.me).length+" of "+L.length+" vans finished the morning route; none late"}</div>`:""}
      <div class="legend" style="margin:6px 0 0">${rows.filter(r=>r.x.me).length}/${L.length} morning routes over · ${rows.filter(r=>r.x.ae).length}/${L.length} afternoon routes over</div>`})()}</div>
+  ${issDash()}
   <div class="sec-t"><i>🚌</i><b>Fleet</b></div>
   <div class="dg">
    <div class="card2"><div class="sh"><b>Vehicle check · ${dS(date)}</b><small>${V.done}/${V.tot} checked</small></div>${list(V.bad.map(x=>row(esc(x.v.label),esc(x.l),esc(x.n||"Problem"),"red")),isSun(date)?"Sunday":"No problems reported")}</div>
@@ -1705,6 +1715,7 @@ function renderDrv(){const b=$("drvBody");if(!b||tab!=="drv")return;
      <div class="vcc" style="border:0;margin:0;padding:0">${vcItemsHTML(v)}</div>
      <div class="rvw ${R.s||""}">${R.s?`सुपरवाइज़र ने देखा: <b>${R.s==="ok"?"✓ ठीक":"✗ समस्या"}</b> · ${esc(R.by||"")} ${R.at?h12(R.at):""}${R.n?"<br>"+esc(R.n):""}`:"सुपरवाइज़र ने अभी नहीं देखा · not reviewed yet"}</div></div>
     <div class="card2"><div class="sh"><b>आपकी गाड़ी के कागज़ात और सर्विस</b><small>${esc(vehNoOf(vid)||"vehicle number not linked")}</small></div>${docs+sv||`<div class="empty2">${vehState==="ok"?"Vehicle number not linked — office: Fleet review › vehicle no.":"Loading…"}</div>`}</div>`:""}
+   ${v?(()=>{const L=issOpen().filter(x=>x.v===v.id);return L.length?`<div class="card2 warn"><b>🛠 आपकी गाड़ी की समस्या · open issues</b>${L.map(x=>`<p>${x.sev==="off"?'<span class="isev red">गाड़ी नहीं चलेगी</span> ':""}<b>${esc((ISS_T.find(q=>q[0]===x.type)||ISS_T[6])[2])}</b> — ${esc(x.desc)} · ${esc((ISS_ST.find(q=>q[0]===(x.st||"open"))||ISS_ST[0])[2])}</p>`).join("")}</div>`:""})():""}
    <div class="card2"><div class="sh"><b>सभी गाड़ियाँ · बकाया काम</b><small>documents &amp; service due</small></div>${all.length?`<div class="nl">${all.map(x=>`<div><span class="who">${esc(vehLabelOfKey(x.k)||"")} ${esc((veh[x.k]||SV[x.k]||{}).no||x.k)}<small>${esc(x.t)}</small></span><span class="v ${x.st==="exp"||x.st==="none"?"red":"amb"}">${esc(x.why)}</span></div>`).join("")}</div>`:`<div class="empty2">✓ सब ठीक · nothing due</div>`}</div>`;fin()}
 document.addEventListener("click",async e=>{if(!e.target.closest("#drvCopy"))return;const l=location.origin+location.pathname.replace(/index\.html$/,"")+"?driver=1";try{await navigator.clipboard.writeText(l);setStatus("Driver link copied")}catch(x){setStatus(l)}});
 /* supervisor review of vehicle checks */
@@ -1769,7 +1780,81 @@ salLock=function(){const adm=FISDB.isAdmin(),need=FISDB.salPin()==="need",ok=adm
   if(adm&&need){if(!$("sal-pin"))L.innerHTML=`<div class="card2 lock2"><div class="ic">🔒</div><b>Salary PIN</b><p>Enter the salary PIN (only Harsh Yadav and Rahul Yadav have it).</p><div class="ped" style="justify-content:center"><input type="password" id="sal-pin" inputmode="numeric" autocomplete="off" style="max-width:160px"><button class="btn primary" id="salPinGo">Open</button></div><div id="salPinMsg" style="color:var(--miss);font-size:13px;margin-top:6px"></div></div>`;return}
   L.innerHTML=`<div class="card2 lock2"><div class="ic">🔒</div><b>Salary is private</b><p>Only Harsh Yadav and Rahul Yadav can open salaries.</p></div>`};
 if(DRV_MODE){document.body.classList.add("drvmode");tab="drv";const h=document.querySelector(".brand h1");if(h)h.innerHTML="<small>FIS · Transport</small>ड्राइवर ऐप · Driver";document.title="Driver · FIS"}
-const _r4=render;render=function(){if(DRV_MODE&&tab!=="drv")tab="drv";_r4();renderDrv();renderVrev()};
+/* ===== v5: vehicle issues (repair · maintenance · out of order · audit) ===== */
+let ISS={},issF="open",issForm=null,issLoaded=false;
+const ISS_T=[["out","Out of order","बंद / खराब"],["mech","Mechanical fault","मैकेनिकल खराबी"],["repair","Repair","मरम्मत"],["maint","Maintenance","रखरखाव"],["audit","Audit finding","ऑडिट में मिला"],["acc","Accident / damage","दुर्घटना / टूट-फूट"],["other","Other","अन्य"]];
+const ISS_S=[["off","Off road","गाड़ी नहीं चलेगी","red"],["urg","Urgent","जल्दी ठीक करें","gold"],["norm","Normal","सामान्य","blu"]];
+const ISS_ST=[["open","Open","खुला"],["work","At mechanic","मैकेनिक के पास"],["fixed","Fixed","ठीक हो गया"]];
+const issList=()=>Object.entries(ISS).filter(([k,v])=>v&&v.v).map(([id,v])=>Object.assign({id},v));
+const issOpen=()=>issList().filter(x=>x.st!=="fixed");
+function issVehs(){const L=VEH.map(v=>({id:v.id,label:v.label,no:vehNoOf(v.id)}));try{vanList().forEach(v=>L.push({id:"van:"+v.id,label:v.label+" (private)",no:v.no||""}))}catch(e){}return L}
+const issVL=id=>{const v=issVehs().find(x=>x.id===id);return v?v.label:String(id||"").replace(/^txt:/,"")};
+const nowStamp=()=>todayIST()+" "+nowHM();
+const daysOpen=x=>Math.max(0,dayDiff(String(x.at||"").slice(0,10))*-1);
+function issSave(id,patch){ISS[id]=Object.assign({},ISS[id]||{},patch);if(db)db.doc("roster/issues").update({i:{[id]:patch}}).then(()=>setStatus("Saved")).catch(()=>setStatus("Could not save — try again."))}
+function issAuto(){const L=[],add=(vid,k,t,d,sev,src)=>L.push({vid,k,t,d,sev,src});const openKeys=new Set(issList().filter(x=>x.st!=="fixed"&&x.ak).map(x=>x.ak));
+  // vehicle check ✗ in the last 7 days whose latest mark is still ✗
+  const days=[];for(let i=0;i<7;i++){const d=addDays(todayIST(),-i);days.push(d)}
+  VEH.forEach(v=>vciList().forEach(([k,ic,h,e])=>{for(const d of days){const r=d===date?state:dayRec(d);const x=((r.vc||{})[v.id]||{})[k];if(x&&x.s){if(x.s==="bad")add(v.id,"vc."+v.id+"."+k+"."+d,"Vehicle check ✗ · "+e,(x.n||"Problem marked")+" · "+dS(d)+(x.by?" · "+x.by:""),"urg","Driver check");break}}}));
+  VEH.forEach(v=>{const r=(state.vcr||{})[v.id]||{};if(r.s==="bad")add(v.id,"vr."+v.id+"."+date,"Supervisor: problem found",(r.n||"No remark")+" · "+(r.by||""),"urg","Supervisor review")});
+  if(vehState==="ok")VEH.forEach(v=>{const k=vehKey(v.id);if(!k||!veh[k])return;DOCS.forEach(([d,lab])=>{const[st,txt]=docState(veh[k][d]);if(st==="exp"||st==="none")add(v.id,"doc."+k+"."+d,lab+" "+(st==="exp"?"expired":"missing"),txt,"off","Documents");else if(st==="due")add(v.id,"doc."+k+"."+d,lab+" due",txt,"norm","Documents")})});
+  if(svcState==="ok")VEH.forEach(v=>{const k=vehKey(v.id);if(!k||!SV[k])return;const c=svcCalc(SV[k]);if(c.st==="exp")add(v.id,"svc."+k,"Service overdue",c.why,"urg","Service");else if(c.st==="due")add(v.id,"svc."+k,"Service due soon",c.why,"norm","Service")});
+  return L.map(x=>Object.assign(x,{logged:openKeys.has(x.k)}))}
+function issNeed(){const M={};const put=(vid,o)=>{(M[vid]=M[vid]||{vid,iss:[],auto:[],off:false}),o.iss?M[vid].iss.push(o.iss):M[vid].auto.push(o.auto)};
+  issOpen().forEach(x=>{put(x.v,{iss:x});if(x.sev==="off")M[x.v].off=true});issAuto().filter(a=>!a.logged).forEach(a=>{put(a.vid,{auto:a});if(a.sev==="off")M[a.vid].off=true});
+  return Object.values(M).sort((a,b)=>(b.off-a.off)||(b.iss.length+b.auto.length)-(a.iss.length+a.auto.length))}
+const sevB=s=>{const x=ISS_S.find(q=>q[0]===s)||ISS_S[2];return `<span class="isev ${x[3]}">${x[1]}</span>`};
+const typL=t=>(ISS_T.find(q=>q[0]===t)||ISS_T[6])[1];
+function issRow(x){const st=ISS_ST.find(q=>q[0]===(x.st||"open"))||ISS_ST[0],d=daysOpen(x);
+  return `<div class="card2 issr ${x.sev||""} ${x.st||"open"}"><div class="sh"><b>${esc(issVL(x.v))}</b><small>${esc(typL(x.type))} · ${sevB(x.sev)}</small></div>
+   <div class="issd">${esc(x.desc||"")}</div>
+   <div class="legend" style="margin:4px 0 8px">Reported by ${esc(x.by||"—")} · ${esc(x.at||"")}${x.src&&x.src!=="Manual"?" · from "+esc(x.src):""}${x.st!=="fixed"?` · <b style="white-space:nowrap;color:${d>=3?"var(--miss)":"inherit"}">${d} day${d===1?"":"s"} open</b>`:` · fixed ${esc(x.fixedAt||"")}`}${x.eta&&x.st!=="fixed"?" · expected back "+fmt(x.eta):""}</div>
+   <div class="istb">${ISS_ST.map(([k,l,h])=>`<button class="${(x.st||"open")===k?"on":""} s-${k}" data-iss="${x.id}|${k}">${l}<small>${h}</small></button>`).join("")}</div>
+   ${(x.log||[]).length?`<div class="islog">${x.log.map(l=>`<div><b>${esc(l.t)}</b> · ${esc(l.by||"")}<br>${esc(l.n)}</div>`).join("")}</div>`:""}
+   ${x.st!=="fixed"?`<div style="display:flex;gap:6px;margin-top:8px"><input class="note" style="flex:1" id="iss-n-${x.id}" placeholder="Update · e.g. sent to garage, part ordered"><button class="mic" data-mic="iss-n-${x.id}" aria-label="Speak">🎤</button><button class="btn sm primary" data-issn="${x.id}">Add</button></div>
+   <div class="ped" style="margin:8px 0 0"><label style="font-size:12px;color:var(--muted)">Expected back <input type="date" id="iss-eta-${x.id}" data-iseta="${x.id}" value="${esc(x.eta||"")}"></label></div>`:""}
+   ${FISDB.isAdmin()?`<button class="lnk" data-issdel="${x.id}" style="margin-top:6px">Delete</button>`:""}</div>`}
+function renderIss(){const b=$("issBody");if(!b||tab!=="issues")return;
+  const all=issList(),open=all.filter(x=>x.st!=="fixed"),off=open.filter(x=>x.sev==="off"),work=open.filter(x=>x.st==="work"),A=issAuto(),An=A.filter(a=>!a.logged),N=issNeed();
+  const F=issF==="all"?all:issF==="fixed"?all.filter(x=>x.st==="fixed"):issF==="work"?work:open;
+  F.sort((a,b)=>String(b.at).localeCompare(String(a.at)));
+  const f=issForm;
+  b.innerHTML=`<div class="pg-h"><h2>Vehicle issues</h2><span>repair · maintenance · out of order · mechanical fault · audit findings</span><button class="btn sm primary" data-issnew style="margin-left:auto">＋ Report an issue</button></div>
+  <div class="kp">${[["Vehicles need attention",N.length,N.length?"red":"grn"],["Off road",off.length,off.length?"red":"grn"],["Open issues",open.length,open.length?"gold":"grn"],["At mechanic",work.length,work.length?"gold":"grn"],["From fleet data",An.length,An.length?"gold":"grn"]].map(([l,n,c])=>`<button class="${c}"><span>${l}</span><b>${n}</b></button>`).join("")}</div>
+  ${f?`<div class="card2 issf"><div class="sh"><b>Report an issue</b><small>${esc(nowStamp())}</small></div>
+    <label class="h">Vehicle<select id="iss-f-v"><option value="">— choose vehicle —</option>${issVehs().map(v=>`<option value="${v.id}" ${f.v===v.id?"selected":""}>${esc(v.label)}${v.no?" · "+esc(v.no):""}</option>`).join("")}</select></label>
+    <div class="h" style="margin-top:8px">What kind</div><div class="chips2">${ISS_T.map(([k,l,h])=>`<button class="${f.type===k?"on":""}" data-isft="${k}">${l}</button>`).join("")}</div>
+    <div class="h" style="margin-top:8px">How serious</div><div class="chips2">${ISS_S.map(([k,l,h])=>`<button class="${f.sev===k?"on":""}" data-isfs="${k}">${l} · ${h}</button>`).join("")}</div>
+    <div style="display:flex;gap:6px;margin-top:8px"><textarea class="note" style="flex:1;min-height:64px" id="iss-f-d" placeholder="What is the problem? · समस्या लिखें">${esc(f.desc||"")}</textarea><button class="mic" data-mic="iss-f-d" aria-label="Speak">🎤</button></div>
+    <div style="display:flex;gap:8px;margin-top:10px"><button class="btn primary" data-issadd>Save issue</button><button class="btn" data-isscancel>Cancel</button></div></div>`:""}
+  <div class="sec-t"><i>🛠</i><b>Vehicles needing attention</b></div>
+  ${N.length?`<div class="card2"><div class="nl">${N.map(n=>`<div><span class="who">${esc(issVL(n.vid))}${n.off?' <span class="isev red">Off road</span>':""}<small>${n.iss.map(x=>esc(typL(x.type))+": "+esc(x.desc||"")).concat(n.auto.map(a=>esc(a.t))).slice(0,3).join(" · ")}</small></span><span class="v ${n.off?"red":"amb"}">${n.iss.length} logged${n.auto.length?" · "+n.auto.length+" flag"+(n.auto.length>1?"s":""):""}</span></div>`).join("")}</div></div>`:`<div class="allok">✓ All vehicles fine</div>`}
+  <div class="sec-t"><i>📋</i><b>Issue list</b></div>
+  <div class="chips2">${[["open","Open · "+open.length],["work","At mechanic · "+work.length],["fixed","Fixed"],["all","All"]].map(([k,l])=>`<button class="${issF===k?"on":""}" data-issf="${k}">${l}</button>`).join("")}</div>
+  ${issLoaded?(F.map(issRow).join("")||`<div class="allok">Nothing in this list.</div>`):`<div class="empty2">Loading…</div>`}
+  <div class="sec-t"><i>📡</i><b>From fleet data</b><span style="font-size:12px;color:var(--muted);margin-left:6px">driver checks · supervisor review · documents · service</span></div>
+  ${A.length?`<div class="card2"><div class="nl">${A.map((a,i)=>`<div><span class="who">${esc(issVL(a.vid))} · ${esc(a.t)}<small>${esc(a.d)} · ${esc(a.src)}</small></span>${a.logged?`<span class="v grn">logged</span>`:`<button class="btn sm" data-issauto="${i}">＋ Log</button>`}</div>`).join("")}</div></div>`:`<div class="allok">✓ No problems in fleet data</div>`}`}
+document.addEventListener("click",e=>{const t=e.target.closest("[data-issnew],[data-isscancel],[data-isft],[data-isfs],[data-issadd],[data-issf],[data-iss],[data-issn],[data-issauto],[data-issdel]");if(!t)return;e.stopPropagation();
+  const D=t.dataset,keep=()=>{if(!issForm)return;const v=$("iss-f-v"),d=$("iss-f-d");if(v)issForm.v=v.value;if(d)issForm.desc=d.value};
+  if("issnew" in D){issForm={v:"",type:"",sev:"urg",desc:""};render();setTimeout(()=>{const x=$("iss-f-v");x&&x.scrollIntoView({block:"center"})},50);return}
+  if("isscancel" in D){issForm=null;render();return}
+  if(D.isft){keep();issForm.type=D.isft;render();return}
+  if(D.isfs){keep();issForm.sev=D.isfs;render();return}
+  if(D.issf){issF=D.issf;render();return}
+  if(D.issauto!=null){const a=issAuto()[+D.issauto];if(!a)return;issForm={v:a.vid,type:a.src==="Documents"?"other":a.src==="Service"?"maint":"repair",sev:a.sev,desc:a.t+" — "+a.d,ak:a.k,src:a.src};render();window.scrollTo({top:0,behavior:"smooth"});return}
+  if("issadd" in D){keep();const f=issForm;if(!f.v){setStatus("Choose the vehicle.");return}if(!f.type){setStatus("Choose what kind of issue.");return}if(!String(f.desc||"").trim()){setStatus("Write the problem.");return}
+    const id="i"+Date.now().toString(36);issSave(id,{v:f.v,type:f.type,sev:f.sev||"norm",desc:f.desc.trim(),by:db&&db.who?db.who():"",at:nowStamp(),st:"open",src:f.src||"Manual",ak:f.ak||"",log:[]});issForm=null;issF="open";render();return}
+  if(D.iss){const[id,st]=D.iss.split("|"),x=ISS[id];if(!x)return;const log=(x.log||[]).concat([{t:nowStamp(),by:db&&db.who?db.who():"",n:"Status: "+(ISS_ST.find(q=>q[0]===st)||[])[1]}]);
+    issSave(id,{st,log,fixedAt:st==="fixed"?nowStamp():""});render();return}
+  if(D.issn){const i=$("iss-n-"+D.issn),x=ISS[D.issn];if(!i||!x||!i.value.trim())return;issSave(D.issn,{log:(x.log||[]).concat([{t:nowStamp(),by:db&&db.who?db.who():"",n:i.value.trim()}])});i.value="";render();return}
+  if(D.issdel){if(!FISDB.isAdmin())return;ISS[D.issdel]=null;if(db)db.doc("roster/issues").update({i:{[D.issdel]:null}});render();return}
+},true);
+document.addEventListener("change",e=>{const id=e.target.dataset&&e.target.dataset.iseta;if(id)issSave(id,{eta:e.target.value})});
+function issDash(){const N=issNeed(),off=N.filter(n=>n.off),open=issOpen();if(!N.length)return"";
+  return `<div class="sec-t"><i>🛠</i><b>Vehicles needing attention · ${N.length}</b><button class="btn sm" data-go="issues" style="margin-left:auto">Open</button></div>
+  <div class="card2"><div class="nl">${N.slice(0,10).map(n=>`<div><span class="who">${esc(issVL(n.vid))}${n.off?' <span class="isev red">Off road</span>':""}<small>${n.iss.map(x=>esc(typL(x.type))+": "+esc(x.desc||"")+" · "+daysOpen(x)+"d").concat(n.auto.map(a=>esc(a.t))).slice(0,2).join(" · ")}</small></span><span class="v ${n.off?"red":"amb"}">${n.iss.length?n.iss.length+" open":"flag"}</span></div>`).join("")}</div>${N.length>10?`<div class="legend" style="margin:6px 0 0">+ ${N.length-10} more</div>`:""}</div>`}
+
+const _r4=render;render=function(){if(DRV_MODE&&tab!=="drv")tab="drv";_r4();renderDrv();renderVrev();renderIss()};
 
 $("date").value=date; render(); loadHistory();
 setInterval(()=>{if(date===todayIST()&&!document.activeElement?.matches("input,textarea"))render()},60000);
@@ -1777,6 +1862,7 @@ setInterval(()=>{if(date===todayIST()&&!document.activeElement?.matches("input,t
   subscribe(); loadHistory(); loadSal(); loadVeh(); loadSvc();
   if(db)db.doc("roster/tasks").onSnapshot(x=>{if(tkEdit)return;const d=x.exists?x.data():null;if(d&&Array.isArray(d.w)){applyTasks(d.w);render()}},()=>{});
   if(db)db.doc("roster/sup").onSnapshot(s=>{supTpl=s.exists?s.data():null;render()},()=>{});
+  if(db)db.doc("roster/issues").onSnapshot(s=>{const ae=document.activeElement;if(ae&&ae.id&&ae.id.startsWith("iss-")&&issLoaded)return;const d=s.exists?s.data():{};ISS={};Object.entries(d.i||{}).forEach(([k,v])=>{if(v)ISS[k]=v});issLoaded=true;render()},()=>{issLoaded=true});
   if(db)db.doc("roster/wash").onSnapshot(s=>{const d=s.exists?s.data():null;washTpl=d&&Array.isArray(d.list)?d.list:null;render()},()=>{});
   let preFix=false;
   if(db)db.doc("roster/main").onSnapshot(s=>{const ae=document.activeElement?.dataset;if(ae&&(ae.r||ae.pre))return;const d=s.exists?s.data():{};roster={veh:{...(d.veh||{})},area:{...(d.area||{})},name:{...(d.name||{})},phone:{...(d.phone||{})},hi:{...(d.hi||{})},pre:Array.isArray(d.pre)?d.pre:[],mig:{...(d.mig||{})},g:{...(d.g||{})},rtm:{...(d.rtm||{})},rta:{...(d.rta||{})},cleaner:{...(d.cleaner||{})},vci:Array.isArray(d.vci)?d.vci:null,reporters:Array.isArray(d.reporters)?d.reporters:null,hist:Array.isArray(d.hist)?d.hist:[],vans:Array.isArray(d.vans)?d.vans:null,vanNotice:d.vanNotice||""};
