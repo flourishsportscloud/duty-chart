@@ -201,7 +201,7 @@ const GAS=(()=>{
 })();
 
 /* ---------- state ---------- */
-const S={date:todayStr(),view:(v=>['duty','late','unif','early','sb','day','dep','dash','school','alloc'].includes(v)?v:'school')(LS.get('view','duty')),veh:{},gate:{},sb:{},alloc:{},sbReg:{},walkReg:{},out:{},derr:{},sbSeg:LS.get('sbSeg','sb'),ss:{},ssList:{},managers:[],privVan:{},lateAfter:'07:45',openVeh:null,depVeh:null};
+const S={date:todayStr(),view:(v=>['duty','late','unif','early','lunch','sb','day','dep','dash','school','alloc'].includes(v)?v:'school')(LS.get('view','duty')),veh:{},gate:{},sb:{},alloc:{},sbReg:{},walkReg:{},out:{},derr:{},sbSeg:LS.get('sbSeg','sb'),ss:{},ssList:{},managers:[],privVan:{},lateAfter:'07:45',openVeh:null,depVeh:null};
 let unsubs=[];
 function subscribeDate(){
   unsubs.forEach(u=>u&&u());unsubs=[];
@@ -329,7 +329,7 @@ function vehStats(v){
 
 /* ---------- views ---------- */
 function setView(v){if(!NAV.nav&&S.view&&S.view!==v&&NAV.ready){NAV.stack.push(S.view);if(NAV.stack.length>20)NAV.stack.shift()}S.view=v;LS.set('view',v);document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
-  ['ss','duty','late','unif','early','sb','day','dep','dash','school','alloc'].forEach(x=>$('v-'+x).classList.toggle('hide',x!==v));
+  ['ss','duty','late','unif','early','lunch','sb','day','dep','dash','school','alloc'].forEach(x=>$('v-'+x).classList.toggle('hide',x!==v));
 render()}
 
 let RB=0,RP=false,lastTouch=0;
@@ -341,6 +341,7 @@ function render(){
   if(S.view==='ss')renderSS();
   if(S.view==='late')renderLate();
   if(S.view==='early')renderEarly();
+  if(S.view==='lunch')renderLunch();
   if(S.view==='day')renderDay();
   if(S.view==='unif')renderUnif();
   if(S.view==='dash')renderDash();
@@ -1092,7 +1093,7 @@ function schoolRows(){const c=$('schCls').value,m=$('schMode').value,f=$('schSt'
 const MG={key:'',data:{},loading:false};
 async function loadMonthGate(){const dates=periodDates('month').filter(d=>d!==S.date);const key=dates.join(',')+'#'+(S.recTick||0);if(MG.key===key||MG.loading)return;
   MG.loading=true;MG.key=key;const data={};if(store.prefetch)await store.prefetch(dates);await Promise.all(dates.map(async d=>{data[d]=await store.getCol('att/'+d+'/gate')}));
-  MG.data=data;MG.loading=false;if(['late','unif','early','day'].includes(S.view))render()}
+  MG.data=data;MG.loading=false;if(['late','unif','early','lunch','day'].includes(S.view))render()}
 function monthGate(){loadMonthGate();const out=Object.assign({},MG.data);out[S.date]=S.gate;return out}
 function lateHist(id){const m=monthGate();return Object.keys(m).sort().filter(d=>{const g=(m[d]||{})[id];return g&&g.in&&g.in.type==='LATE'}).map(d=>({d,t:m[d][id].in.time}))}
 function unifHist(id){const m=monthGate();return Object.keys(m).sort().filter(d=>{const g=(m[d]||{})[id];return g&&g.unif&&g.unif.items&&g.unif.items.length}).map(d=>({d,u:m[d][id].unif}))}
@@ -1110,6 +1111,37 @@ function renderLate(){
   const rows=gateRows('late',g=>g.in&&g.in.type==='LATE');
   $('lateToday').innerHTML=catHead('Late Comers – '+fmtDL(S.date),rows.length,'LATE')+strips(rows,r=>nrow(esc(r.k.name),dots([esc(modeLabel(r.k)),esc(r.g.rem),r.g.by?'by '+esc(byShort(r.g.by)):'']),'<span class="tag t-LATE">'+esc(r.g.in.time||'')+'</span>'+histTag(lateHist(r.k.id).length,'late')),{attr:r=>' data-pick="'+r.k.id+'" data-foby="late"',empty:'No late comers in the selected classes.'});
 }
+/* ===== LUNCH BOXES ===== */
+function lunchOf(id){return (S.gate[id]||{}).lunch||null}
+function lunchState(L){return !L?'':L.del?'DEL':'WAIT'}
+async function lunchSet(id,fn){const path='att/'+S.date+'/gate/'+id;const g=Object.assign({},S.gate[id]||{});const L=fn(Object.assign({},g.lunch||{}));
+  if(L)g.lunch=L;else delete g.lunch;g.ts=Date.now();
+  if(!Object.keys(g).some(k=>k!=='ts'))await store.del(path);else await store.set(path,g)}
+function lunchApprCur(){return LS.get('lunchAppr','N')}
+function renderLunch(){
+  if(document.activeElement!==$('lunchBy'))$('lunchBy').innerHTML=byOpts(LS.get('lunchBy','__ME'),[['Front Office',FO_NAMES],['Gate',LATE_NAMES],['PL – Classes 6 to 11',PL_NAMES],['PM – Classes 1 to 5',PM_NAMES],['Managers',mgrNames()]]);
+  const ap=lunchApprCur();
+  $('lunchAppr').innerHTML='<button class="sbo'+(ap==='N'?' on l':'')+'" data-lappr="N">Without approval</button><button class="sbo'+(ap==='Y'?' on s':'')+'" data-lappr="Y">Approved</button>';
+  const q=($('lunchQ').value||'').trim().toLowerCase();
+  $('lunchRes').innerHTML=findRes(q,k=>{const L=lunchOf(k.id);return '<div class="kid"><div class="nm"><div>'+esc(k.name)+'</div><span>'+esc(clsName(k.cls))+' · '+esc(modeLabel(k))+'</span></div>'+
+    (L?'<span class="tag t-'+(L.del?'P':'LATE')+'">'+(L.del?'Delivered '+esc(L.del.time):'Received '+esc(L.recv.time))+'</span>':'<button class="btn sm" data-lrecv="'+k.id+'">Lunch received</button>')+'</div>'});
+  const ae=document.activeElement;if(!(ae&&$('lunchCp').contains(ae)&&ae.classList.contains('cpq')))$('lunchCp').innerHTML=cpHtml('lunch');
+  const f=LS.get('lunchF','');const all=gateRows('lunch',g=>!!g.lunch);
+  const cnt={WAIT:all.filter(r=>!r.g.lunch.del).length,DEL:all.filter(r=>r.g.lunch.del).length,Y:all.filter(r=>r.g.lunch.appr).length,N:all.filter(r=>!r.g.lunch.appr).length};
+  $('lunchF').innerHTML=[['','All',all.length],['WAIT','To deliver',cnt.WAIT],['DEL','Delivered',cnt.DEL],['Y','Approved',cnt.Y],['N','Without approval',cnt.N]].map(x=>'<button class="cpc'+(f===x[0]?' on':'')+'" data-lfilt="'+x[0]+'">'+x[1]+' · '+x[2]+'</button>').join('');
+  const rows=all.filter(r=>{const L=r.g.lunch;return !f||(f==='WAIT'&&!L.del)||(f==='DEL'&&L.del)||(f==='Y'&&L.appr)||(f==='N'&&!L.appr)});
+  const view=$('lunchBy').value===ALLBY;
+  $('lunchToday').innerHTML=catHead('Lunch Boxes – '+fmtDL(S.date),all.length,'SB')+'<div class="sbcount"><span class="tag t-LATE">To deliver '+cnt.WAIT+'</span><span class="tag t-P">Delivered '+cnt.DEL+'</span><span class="tag t-SB">Approved '+cnt.Y+'</span><span class="tag t-U">Without approval '+cnt.N+'</span></div>'+
+    strips(rows,r=>{const L=r.g.lunch;
+      return nrow(esc(r.k.name),dots(['Received '+esc(L.recv.time)+' · '+esc(byShort(L.recv.by)),L.del?'Delivered '+esc(L.del.time)+' · '+esc(byShort(L.del.by)):'',esc(modeLabel(r.k))])+(L.rem?'<br>💬 <b>'+esc(L.rem)+'</b>'+(L.remBy?' <i>– '+esc(byShort(L.remBy))+'</i>':''):'')+
+        (view?'':'<div class="sbopts c4l">'+(L.del?'<button class="sbo on s" data-ldel="'+r.k.id+'">Delivered ✓</button>':'<button class="sbo" data-ldel="'+r.k.id+'">Lunch delivered</button>')+
+        '<button class="sbo'+(L.appr?' on s':'')+'" data-lap="'+r.k.id+'">'+(L.appr?'Approved ✓':'Approve')+'</button><button class="sbo" data-lrem="'+r.k.id+'">'+(L.rem?'Edit remark':'+ Remark')+'</button><button class="sbo" data-lundo="'+r.k.id+'">Remove</button></div>'),
+        '<span class="tag t-'+(L.del?'P':'LATE')+'">'+(L.del?'Delivered':'To deliver')+'</span><span class="tag t-'+(L.appr?'SB':'U')+'">'+(L.appr?'Approved':'Without approval')+'</span>')},
+      {empty:'No lunch boxes'+(f?' in this view':'')+' today.'});
+}
+function lunchText(){const rows=gateRows('lunch',g=>!!g.lunch);let t='*FIS Lunch Boxes – '+fmtDL(S.date)+'*\n';const by={};rows.forEach(r=>(by[r.k.cls]=by[r.k.cls]||[]).push(r));
+  CLASSES.filter(c=>by[c]).forEach(c=>{t+='\n*'+clsName(c)+'*\n';by[c].sort((a,b)=>a.k.name.localeCompare(b.k.name)).forEach((r,i)=>{const L=r.g.lunch;t+=(i+1)+'. '+r.k.name+' – received '+L.recv.time+(L.del?', delivered '+L.del.time:', *not delivered yet*')+(L.appr?' (approved)':' (without approval)')+(L.rem?' – '+L.rem:'')+'\n'})});
+  return t+'\nTotal: '+rows.length}
 function renderEarly(){
   const cur=LS.get('earlyBy','__ME');
   if(document.activeElement!==$('earlyBy'))$('earlyBy').innerHTML=byOpts(cur,[['Front Office',FO_NAMES],['Gate',LATE_NAMES],['PL – Classes 6 to 11',PL_NAMES],['PM – Classes 1 to 5',PM_NAMES],['Managers',mgrNames()]]);
@@ -1162,17 +1194,18 @@ function renderSchool(){
 /* DAY SUMMARY */
 function dayData(){const ks=Object.values(KID).filter(k=>cpHas('day',k.cls));const G=k=>S.gate[k.id]||{};
   return {late:ks.filter(k=>G(k).in&&G(k).in.type==='LATE').map(k=>({k,g:G(k)})),early:ks.filter(k=>G(k).out&&G(k).out.type==='EARLY').map(k=>({k,g:G(k)})),
-    sb:ks.filter(k=>{const s=kidStatus(k.id);return s.present&&s.OUT==='SB'&&!sbDoubt(k.id)}).map(k=>({k,g:G(k)})),doubt:ks.filter(k=>sbDoubt(k.id)).map(k=>({k,g:G(k)})),ss:ks.filter(k=>ssDayVal(k.id)==='P').map(k=>({k,g:G(k)})),unif:ks.filter(k=>G(k).unif&&(G(k).unif.items||[]).length).map(k=>({k,g:G(k)}))}}
+    sb:ks.filter(k=>{const s=kidStatus(k.id);return s.present&&s.OUT==='SB'&&!sbDoubt(k.id)}).map(k=>({k,g:G(k)})),doubt:ks.filter(k=>sbDoubt(k.id)).map(k=>({k,g:G(k)})),ss:ks.filter(k=>ssDayVal(k.id)==='P').map(k=>({k,g:G(k)})),unif:ks.filter(k=>G(k).unif&&(G(k).unif.items||[]).length).map(k=>({k,g:G(k)})),lunch:ks.filter(k=>G(k).lunch).map(k=>({k,g:G(k)}))}}
 function sbSrc(k){const v=sbDay(k.id);const d=S.sb[seg(k.cls)]||{};if(((S.gate[k.id]||{}).out||{}).type==='SB')return 'Front Office';if(v===true)return 'Marked by '+byShort(d.by||'PL');if(v==='D')return 'Doubt – to confirm';return 'Regular list – not marked yet'}
 function renderDay(){
   $('dayH').textContent='Day Summary – '+fmtDL(S.date);cpRender('dayCp','day');const D=dayData();
-  const kp=[['Late Comers',D.late.length,'LATE'],['Early Leavers',D.early.length,'EARLY'],['Stay Back',D.sb.length,'SB'],['Stay Back Doubt',D.doubt.length,'LATE'],['Errors',errRows([S.date]).length,'A'],['Uniform Defaulters',D.unif.length,'A']];
+  const kp=[['Late Comers',D.late.length,'LATE'],['Early Leavers',D.early.length,'EARLY'],['Stay Back',D.sb.length,'SB'],['Stay Back Doubt',D.doubt.length,'LATE'],['Errors',errRows([S.date]).length,'A'],['Uniform Defaulters',D.unif.length,'A'],['Lunch Boxes',D.lunch.length,'SB']];
   $('dayBody').innerHTML='<div class="daykp">'+kp.map(x=>'<div class="c-'+x[2]+'"><b>'+x[1]+'</b><span>'+x[0]+'</span></div>').join('')+'</div>'+
     '<div class="card">'+catHead('Late Comers',D.late.length,'LATE')+strips(D.late,r=>nrow(esc(r.k.name),dots([esc(modeLabel(r.k)),esc(r.g.rem),r.g.by?'by '+esc(byShort(r.g.by)):'']),'<span class="tag t-LATE">'+esc(r.g.in.time||'')+'</span>'),{empty:'No late comers.'})+'</div>'+
     '<div class="card">'+catHead('Early Leavers',D.early.length,'EARLY')+strips(D.early,r=>nrow(esc(r.k.name),dots(['Regular: '+esc(modeLabel(r.k)),r.g.rem?'<b>'+esc(r.g.rem)+'</b>':'',r.g.by?'by '+esc(byShort(r.g.by)):'']),'<span class="tag t-EARLY">Left '+esc(r.g.out.time||'')+'</span>'),{empty:'No early leavers.'})+'</div>'+
     '<div class="card">'+catHead('Stay Back',D.sb.length,'SB')+strips(D.sb,r=>nrow(esc(r.k.name),dots([esc(modeLabel(r.k)),esc(sbSrc(r.k))]),''),{empty:'No stay back students.'})+'</div>'+
     '<div class="card">'+errHtml(errRows([S.date]).filter(r=>!r.k||cpHas('day',r.k.cls)),'day','Errors of the Day')+'</div>'+
     '<div class="card">'+catHead('Stay Back Doubt – confirm with parent',D.doubt.length,'LATE')+strips(D.doubt,r=>nrow(esc(r.k.name),dots([esc(modeLabel(r.k)),'Marked by '+esc(byShort((S.sb[seg(r.k.cls)]||{}).by||''))]),''),{empty:'No doubt cases.'})+'</div>'+
+    '<div class="card">'+catHead('Lunch Boxes',D.lunch.length,'SB')+strips(D.lunch,r=>{const L=r.g.lunch;return nrow(esc(r.k.name),dots(['Received '+esc(L.recv.time),L.del?'Delivered '+esc(L.del.time):'<b style="color:var(--late)">Not delivered yet</b>',L.appr?'Approved':'Without approval',esc(L.rem||'')]),'')},{empty:'No lunch boxes today.'})+'</div>'+
     '<div class="card">'+catHead('Uniform Defaulters',D.unif.length,'A')+strips(D.unif,r=>nrow(esc(r.k.name),'<span class="tag t-A" style="white-space:normal">'+esc(unifTxt(r.g.unif))+'</span><br>'+dots([esc(modeLabel(r.k)),esc(r.g.unif.rem),r.g.unif.by?'Logged by '+esc(r.g.unif.by)+(r.g.unif.time?' '+esc(r.g.unif.time):''):'']),''),{empty:'No uniform defaulters.'})+'</div>';
 }
 function dayText(){const D=dayData();const a=cpGet('day');let t='*FIS Day Summary – '+fmtDL(S.date)+'*'+(a.length?'\nClasses: '+a.map(secLbl).join(', '):'')+'\n';
@@ -1182,6 +1215,7 @@ function dayText(){const D=dayData();const a=cpGet('day');let t='*FIS Day Summar
   blk('Early Leavers',D.early,r=>' – '+(r.g.out.time||'')+(r.g.rem?' – '+r.g.rem:'')+' ('+modeLabel(r.k)+')');
   blk('Stay Back',D.sb,r=>' ('+modeLabel(r.k)+')');
   blk('Stay Back Doubt',D.doubt,r=>' ('+modeLabel(r.k)+')');
+  blk('Lunch Boxes',D.lunch,r=>' – '+(r.g.lunch.del?'delivered '+r.g.lunch.del.time:'not delivered')+(r.g.lunch.appr?' (approved)':' (without approval)'));
   blk('Uniform Defaulters',D.unif,r=>' – '+unifTxt(r.g.unif));
   return t}
 function schoolText(){const rows=schoolRows();const d=new Date(S.date+'T00:00');
@@ -1272,8 +1306,9 @@ document.addEventListener('click',async e=>{
   if(t.dataset.gerrdel!==undefined){const g=S.gate[gatePick]||{};const errs=(g.errs||[]).slice();errs.splice(+t.dataset.gerrdel,1);await store.set('att/'+S.date+'/gate/'+gatePick,Object.assign({},g,{errs,ts:Date.now()}));toast('Error removed');renderFO();return}
   if(t.id==='gSave'){const g=S.gate[gatePick]||{};const d=gDraft||{in:g.in&&g.in.type||null,out:g.out&&g.out.type||null};
     const path='att/'+S.date+'/gate/'+gatePick;
-    if(!d.in&&!d.out){if(g.unif)await store.set(path,{unif:g.unif,ts:Date.now()});else await store.del(path)}
-    else{const body={by:foBy||$('gateBy').value,rem:$('gRem').value.trim(),ts:Date.now()};if(g.unif)body.unif=g.unif;
+    const keep={};Object.keys(g).forEach(k=>{if(!['in','out','by','rem','ts'].includes(k))keep[k]=g[k]});
+    if(!d.in&&!d.out){if(Object.keys(keep).length)await store.set(path,Object.assign(keep,{ts:Date.now()}));else await store.del(path)}
+    else{const body=Object.assign(keep,{by:foBy||$('gateBy').value,rem:$('gRem').value.trim(),ts:Date.now()});
       if(d.in)body.in={type:d.in,time:hm12($('gInT').value||nowHM())};
       if(d.out)body.out={type:d.out,time:hm12($('gOutT').value||nowHM())};
       await store.set(path,body)}
@@ -1283,6 +1318,14 @@ document.addEventListener('click',async e=>{
   if(t.dataset.cpall!==undefined){cpSet(t.dataset.cpall,[]);return}
   if(t.dataset.cpg){const [key,g]=t.dataset.cpg.split('|');const secs=CLASSES.filter(c=>c.split(' - ')[0]===g);const a=new Set(cpGet(key));const all=secs.every(c=>a.has(c));secs.forEach(c=>all?a.delete(c):a.add(c));cpSet(key,[...a]);return}
   if(t.dataset.cps){const [key,c]=t.dataset.cps.split('|');const a=new Set(cpGet(key));a.has(c)?a.delete(c):a.add(c);cpSet(key,[...a]);return}
+  if(t.dataset.lappr){LS.set('lunchAppr',t.dataset.lappr);render();return}
+  if(t.dataset.lfilt!==undefined){LS.set('lunchF',t.dataset.lfilt);render();return}
+  if(t.id==='lunchCopy'){await copyTxt(lunchText());return}
+  if(t.dataset.lrecv){if(needBy('lunchBy'))return;const id=t.dataset.lrecv,by=$('lunchBy').value;await lunchSet(id,L=>({recv:{time:nowT(),by},del:null,appr:lunchApprCur()==='Y',rem:L.rem||'',remBy:L.remBy||''}));toast(KID[id].name+' – lunch received');$('lunchQ').value='';render();return}
+  if(t.dataset.ldel){if(needBy('lunchBy'))return;const id=t.dataset.ldel,by=$('lunchBy').value;await lunchSet(id,L=>Object.assign(L,{del:L.del?null:{time:nowT(),by}}));toast(KID[id].name+(lunchOf(id).del?' – lunch delivered':' – delivery undone'));render();return}
+  if(t.dataset.lap){if(needBy('lunchBy'))return;const id=t.dataset.lap,by=$('lunchBy').value;await lunchSet(id,L=>Object.assign(L,{appr:!L.appr,apprBy:by}));render();return}
+  if(t.dataset.lrem){if(needBy('lunchBy'))return;const id=t.dataset.lrem;const L0=lunchOf(id)||{};const txt=prompt('Remark for '+KID[id].name+' (leave empty to remove)',L0.rem||'');if(txt===null)return;await lunchSet(id,L=>Object.assign(L,{rem:txt.trim(),remBy:$('lunchBy').value}));render();return}
+  if(t.dataset.lundo){if(needBy('lunchBy'))return;const id=t.dataset.lundo;if(!confirm('Remove the lunch entry of '+KID[id].name+'?'))return;await lunchSet(id,()=>null);toast('Lunch entry removed');render();return}
   if(t.dataset.sbrem){if(needBy('sbBy'))return;const id=t.dataset.sbrem;const r=sbRem(id);const txt=prompt('Remark for '+KID[id].name+' (leave empty to remove)',r?r.t:'');if(txt===null)return;
     const c=KID[id].cls,sg=seg(c),cur=S.sb[sg]||{cls:c,kids:{}};const rems=Object.assign({},cur.rems||{});if(txt.trim())rems[id]={t:txt.trim(),by:$('sbBy').value,time:nowT()};else delete rems[id];
     await store.set('att/'+S.date+'/sb/'+sg,Object.assign({},cur,{cls:c,rems,ts:Date.now()}));toast(txt.trim()?'Remark saved':'Remark removed');render();return}
@@ -1335,6 +1378,7 @@ document.addEventListener('change',async e=>{
   if(t.id==='sbBy'){LS.set('sbBy',t.value);render()}
   if(t.id==='lateBy'){LS.set('lateBy',t.value)}
   if(t.id==='earlyBy'){LS.set('earlyBy',t.value)}
+  if(t.id==='lunchBy'){LS.set('lunchBy',t.value);render()}
   if(t.id==='ssBy'){LS.set('ssBy',t.value);render()}
   if(t.id==='ssMode'){render()}
   if(t.id==='ssRun'){const run=+t.value||2;await store.set('config/ss-_meta',Object.assign({},S.ssList._meta||{},{run,by:$('ssBy').value,ts:Date.now()}));SSR.runUsed=null;S.ssSynced='';render();ssAutoSync();return}
@@ -1355,6 +1399,7 @@ document.addEventListener('change',async e=>{
   if(t.dataset.alloc){const map=Object.assign({},S.alloc);const v=VBY[t.dataset.alloc];if(t.value===defaultStaff(v))delete map[v.k];else map[v.k]=t.value;await store.set('config/alloc',{map,ts:Date.now()});toast(v.l+' → '+t.value)}
 });
 $('unifQ').addEventListener('input',()=>{clearTimeout(window._uq);window._uq=setTimeout(renderUnif,200)});
+$('lunchQ').addEventListener('input',()=>{clearTimeout(window._lq);window._lq=setTimeout(renderLunch,200)});
 $('earlyQ').addEventListener('input',()=>{clearTimeout(window._eq);window._eq=setTimeout(renderEarly,200)});
 document.addEventListener('input',e=>{const t=e.target;if(t.dataset&&t.dataset.cpq){S.cpQ=S.cpQ||{};S.cpQ[t.dataset.cpq]=t.value;const b=t.parentElement.querySelector('[data-cpbox]');if(b)b.innerHTML=cpSecs(t.dataset.cpq)}});
 document.addEventListener('toggle',e=>{const t=e.target;if(t.dataset&&t.dataset.cpd){S.cpOpen=S.cpOpen||{};S.cpOpen[t.dataset.cpd]=t.open}},true);

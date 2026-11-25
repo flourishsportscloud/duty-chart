@@ -221,6 +221,7 @@ html,body{overscroll-behavior-y:contain}
 button,nav,.vcard,.chip,.cpc,.sbo,.tg,.opt,.tag,.pill,.cstrip,.recseg,.kid,.nrow,.daykp,.kpi,label{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
 .sbrem{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:7px;font-size:12.5px;color:var(--ink)}.sbrem i{font-style:normal;color:var(--mute)}.sbo.sm{padding:5px 10px;font-size:11.5px;flex:none}
+.sbopts.c4l{grid-template-columns:repeat(2,minmax(0,1fr));max-width:420px}.sbo.on.l{background:#a8670a;border-color:#a8670a;color:#fff}
 </style>
 </head>
 <body>
@@ -237,9 +238,10 @@ input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:tex
     <button data-v="late"><b>3</b>Late Comers</button>
     <button data-v="unif"><b>4</b>Uniform</button>
     <button data-v="early"><b>5</b>Early Leavers</button>
-    <button data-v="sb"><b>6</b>Stay Back</button>
-    <button data-v="day"><b>7</b>Day Summary</button>
-    <button data-v="dep"><b>8</b>Departure</button>
+    <button data-v="lunch"><b>6</b>Lunch</button>
+    <button data-v="sb"><b>7</b>Stay Back</button>
+    <button data-v="day"><b>8</b>Day Summary</button>
+    <button data-v="dep"><b>9</b>Departure</button>
     <button data-v="dash">Reports</button>
     <button data-v="alloc">Settings</button>
   </nav>
@@ -293,6 +295,18 @@ input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:tex
     </div>
     <div class="card"><div id="earlyCp"></div></div>
     <div class="card" id="earlyToday"></div>
+  </section>
+  <section id="v-lunch" class="hide">
+    <div class="card">
+      <h2>Lunch Boxes</h2>
+      <div class="row"><div><label class="f">Marked by</label><select id="lunchBy" style="min-width:220px"></select></div></div>
+      <label class="f" style="margin-top:10px">Lunch box dropped</label><div class="sbopts c2" id="lunchAppr" style="margin-top:4px"></div>
+      <p class="muted" style="margin:8px 0 0">Type the child's name and tap <b>Lunch received</b>. Then tap <b>Lunch delivered</b> when it reaches the child.</p>
+      <div class="row" style="margin-top:10px"><input type="search" id="lunchQ" placeholder="Search student name…" style="flex:1" autocomplete="off"></div>
+      <div id="lunchRes"></div>
+    </div>
+    <div class="card"><div class="cprow" id="lunchF" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div><div id="lunchCp"></div><div class="row" style="margin-top:10px"><button class="btn ghost sm" id="lunchCopy">Copy List (WhatsApp)</button></div></div>
+    <div class="card" id="lunchToday"></div>
   </section>
   <section id="v-day" class="hide">
     <div class="card"><h2 id="dayH">Day Summary</h2><div id="dayCp"></div><div class="row" style="margin-top:12px"><button class="btn ghost sm" id="dayCopy">Copy Summary (WhatsApp)</button></div></div>
@@ -425,7 +439,7 @@ input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:tex
   window.FIS_LOGOUT=function(){['token','me','roster','gcache','grev'].forEach(k=>localStorage.removeItem(K(k)));location.reload()};   // unsent changes (goutbox) are kept
   window.FIS_RELOGIN=function(){if(!window.FIS_R){localStorage.removeItem(K('token'));return}if(!$('fisLogin').classList.contains('hide'))return;$('fisLogin').classList.remove('hide');$('fisLN').value=get('me')||'';$('fisLE').textContent='Your login has expired. Log in again – nothing you entered is lost.'};
   const $=id=>document.getElementById(id);
-  function startApp(r){window.FIS_R=r;window.FIS_ME=get('me')||'';const s=document.createElement('script');s.src='app.js?v=202611271100';s.onload=()=>{$('fisBoot').remove();try{if(window.caches)caches.open('fis-entry-exit-v1').then(c=>c.addAll([location.pathname+location.search,s.src])).catch(()=>{})}catch(e){}};document.body.appendChild(s)}
+  function startApp(r){window.FIS_R=r;window.FIS_ME=get('me')||'';const s=document.createElement('script');s.src='app.js?v=202611271400';s.onload=()=>{$('fisBoot').remove();try{if(window.caches)caches.open('fis-entry-exit-v1').then(c=>c.addAll([location.pathname+location.search,s.src])).catch(()=>{})}catch(e){}};document.body.appendChild(s)}
   function showLogin(msg){$('fisBoot').classList.add('hide');$('fisLogin').classList.remove('hide');$('fisLE').textContent=msg||'';if(!API_URL)$('fisLE').textContent='This app is being set up. Please try again later.'}
   $('fisLoginF').addEventListener('submit',async e=>{e.preventDefault();const n=$('fisLN').value.trim(),p=$('fisLP').value;
     if(n.length<3||!p){$('fisLE').textContent='Type your full name and the password.';return}
