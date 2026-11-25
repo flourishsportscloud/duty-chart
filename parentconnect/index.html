@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FIS Parent Connect</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#1B3156;--navy2:#14233F;--navy3:#243D69;--mag:#E91D69;--mag-d:#C9135A;--mag-t:#FDE8F0;--pur:#572686;--pur-t:#EFE8F6;--amb:#EFA11D;--amb-t:#FDF1DC;--sky:#2B9BD6;--sky-l:#68C0EA;--sky-t:#E4F4FC;--ok:#1E9E6A;--ok-t:#E3F5EC;--bad:#D93A4B;--bad-t:#FCE9EB;--bg:#F3F5FA;--card:#fff;--ink:#18223A;--mut:#667391;--line:#E2E7F0}
+*{box-sizing:border-box}html,body{margin:0}
+body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:14px;line-height:1.45;color:var(--ink);background:var(--bg);font-variant-numeric:tabular-nums}
+button,select,input,textarea{font:inherit;color:inherit}
+.shell{display:flex;min-height:100vh}
+.side{width:236px;flex:none;background:linear-gradient(180deg,#1B3156,#14233F);position:fixed;top:0;bottom:0;left:0;display:flex;flex-direction:column;padding:18px 12px 24px;overflow-y:auto;z-index:30}
+.side:after{content:"";position:fixed;left:0;bottom:0;width:236px;height:5px;background:linear-gradient(90deg,#E91D69 0 25%,#EFA11D 25% 50%,#68C0EA 50% 75%,#572686 75% 100%)}
+.logo{display:flex;align-items:center;gap:10px;padding:2px 8px 18px;color:#fff}
+.logo svg{width:38px;height:38px;flex:none}
+.logo b{display:block;font-size:15.5px;font-weight:800;letter-spacing:.2px;line-height:1.1}
+.logo small{font-size:10.5px;color:#9FB0D6;letter-spacing:.8px;text-transform:uppercase}
+.sl{font-size:10.5px;text-transform:uppercase;letter-spacing:1.1px;color:#7D8FB6;font-weight:700;padding:14px 10px 6px}
+.nav{display:flex;align-items:center;gap:11px;width:100%;background:none;border:0;border-left:3px solid transparent;border-radius:10px;padding:9px 10px;color:#C3CDE4;font-size:13.5px;font-weight:600;cursor:pointer;text-align:left;margin-bottom:2px}
+.nav svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.nav:hover{background:rgba(255,255,255,.07)}
+.nav.on{background:rgba(233,29,105,.16);color:#fff;border-left-color:var(--mag)}
+.nav .cnt{margin-left:auto;background:var(--mag);color:#fff;border-radius:99px;font-size:11px;font-weight:700;padding:1px 8px}
+.main{margin-left:236px;flex:1;min-width:0}
+.top{background:#fff;border-bottom:1px solid var(--line);padding:12px 26px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:20}
+.top h1{margin:0;font-size:19px;font-weight:700;color:var(--navy);line-height:1.2}
+.top .sub{color:var(--mut);font-size:12.5px}
+.sp{flex:1}
+.pill-u{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:99px;padding:4px 14px 4px 4px;background:#fff;cursor:pointer}
+.av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--mag),var(--pur));color:#fff;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center}
+.pill-u b{font-size:12.5px;display:block;line-height:1.1;color:var(--navy)}.pill-u small{color:var(--mut);font-size:11px}
+.sync{font-size:11.5px;font-weight:600;border-radius:99px;padding:3px 10px}
+.sync.s{background:var(--ok-t);color:#14724d}.sync.l{background:var(--amb-t);color:#8a5a06}
+.work{padding:22px 26px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 1px 2px rgba(20,35,63,.05),0 6px 20px rgba(20,35,63,.06);padding:18px}
+.card h3{margin:0 0 12px;font-size:14.5px;font-weight:700;color:var(--navy)}
+.card h3 small{font-weight:500;color:var(--mut);font-size:12px;margin-left:6px}
+.banner{background:var(--amb-t);border:1px solid #F4D79B;color:#7a5006;border-radius:10px;padding:8px 14px;font-size:12.5px;margin-bottom:16px}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:1.6fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g21{grid-template-columns:1fr 1fr}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:16px}
+.kpi{background:#fff;border:1px solid var(--line);border-top:3px solid var(--navy3);border-radius:14px;padding:13px 15px;box-shadow:0 1px 2px rgba(20,35,63,.05),0 6px 20px rgba(20,35,63,.06);cursor:pointer;position:relative}
+.kpi.sky{border-top-color:var(--sky)}.kpi.pur{border-top-color:var(--pur)}.kpi.amb{border-top-color:var(--amb)}.kpi.mag{border-top-color:var(--mag)}.kpi.ok{border-top-color:var(--ok)}
+.kpi .l{font-size:11.5px;color:var(--mut);font-weight:600}
+.kpi .v{font-size:27px;font-weight:800;color:var(--navy);line-height:1.15;margin-top:2px}
+.kpi .d{font-size:11.5px;color:var(--mut);margin-top:2px}
+.kpi .d.up{color:var(--bad)}.kpi .d.dn{color:var(--ok)}
+.kpi svg.sp1{position:absolute;right:12px;top:12px;width:70px;height:26px}
+.bar{display:grid;grid-template-columns:118px 1fr 44px;gap:10px;align-items:center;padding:4px 0;font-size:12.5px;cursor:pointer;border-radius:6px}
+.bar:hover{background:var(--bg)}
+.bar .t{height:9px;background:#EEF1F8;border-radius:5px;overflow:hidden}.bar .t i{display:block;height:100%;border-radius:5px}
+.bar b{text-align:right;color:var(--navy)}
+.btn{border:1px solid var(--line);background:#fff;color:var(--navy);border-radius:10px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer}
+.btn:hover{background:var(--bg)}
+.btn.pri{background:var(--mag);border-color:var(--mag);color:#fff;box-shadow:0 4px 12px rgba(233,29,105,.28)}.btn.pri:hover{background:var(--mag-d)}
+.btn.navy{background:var(--navy);border-color:var(--navy);color:#fff}.btn.navy:hover{background:var(--navy3)}
+.btn.sm{padding:5px 11px;font-size:12px}
+.chip{border:1px solid var(--line);background:#fff;border-radius:99px;padding:6px 13px;font-size:12.5px;font-weight:600;color:var(--mut);cursor:pointer;white-space:nowrap}
+.chip.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.lbl{display:block;font-size:11px;font-weight:700;color:var(--mut);margin:0 0 4px}
+select,input[type=text],input[type=date],input[type=search],textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13px;background:#fff}
+select:focus,input:focus,textarea:focus{outline:2px solid var(--sky-t);border-color:var(--sky)}
+.fg{display:grid;grid-template-columns:repeat(auto-fit,minmax(138px,1fr));gap:10px;margin-top:12px}
+.st{display:inline-block;border-radius:99px;padding:2px 9px;font-size:11.5px;font-weight:600;white-space:nowrap}
+.st.ok{background:var(--ok-t);color:#14724d}.st.bad{background:var(--bad-t);color:#a52433}.st.warn{background:var(--amb-t);color:#8a5a06}.st.info{background:var(--sky-t);color:#17719f}.st.cat{background:var(--pur-t);color:var(--pur)}.st.nu{background:#EEF1F8;color:var(--navy3)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#F7F9FC;color:var(--mut);font-size:12px;text-transform:uppercase;letter-spacing:.6px;font-weight:700;text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr:hover{background:#F7F9FD}tr.cl{cursor:pointer}
+.tw{overflow-x:auto}
+.clip{max-width:380px;color:#3b4764}
+.ov{position:fixed;inset:0;background:rgba(20,35,63,.5);z-index:60;display:flex;justify-content:flex-end}
+.ov.c{justify-content:center;align-items:center;padding:16px}
+.drawer{background:#fff;width:480px;max-width:100%;height:100%;overflow-y:auto;padding:22px;box-shadow:-10px 0 40px rgba(20,35,63,.25)}
+.mod{background:#fff;border-radius:14px;padding:22px;width:440px;max-width:100%;max-height:92vh;overflow:auto;box-shadow:0 20px 60px rgba(20,35,63,.35)}
+.mod h2,.drawer h2{margin:0 0 4px;font-size:17px;color:var(--navy)}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;margin:14px 0}
+.kv .k{font-size:11px;color:var(--mut);font-weight:700}.kv .vv{font-weight:600;color:var(--navy)}
+.quote{background:var(--bg);border-left:3px solid var(--sky);border-radius:8px;padding:11px 13px;white-space:pre-wrap;word-break:break-word}
+.tl{border-left:2px solid var(--line);margin:8px 0 0 6px;padding-left:14px}
+.tl div{position:relative;margin-bottom:10px;font-size:12.5px}.tl div:before{content:"";position:absolute;left:-20px;top:5px;width:9px;height:9px;border-radius:50%;background:var(--ok)}
+.tl div.s:before{background:var(--sky)}.tl div.c:before{background:var(--navy3)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.att{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.att:last-child{border:0}.att .m{flex:1;min-width:0}.att b{color:var(--navy)}
+.att .x{font-size:12px;color:var(--mut);white-space:nowrap}
+.mut{color:var(--mut)}.empty{text-align:center;color:var(--mut);padding:34px 10px}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;border-radius:10px;padding:10px 18px;font-weight:600;font-size:13px;z-index:90;box-shadow:0 8px 24px rgba(20,35,63,.35)}
+.loginw{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(160deg,#1B3156,#14233F)}
+.loginc{background:#fff;border-radius:14px;padding:26px;width:560px;max-width:100%;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.roles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.role{text-align:left;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:11px 13px;cursor:pointer}
+.role b{display:block;color:var(--navy)}.role small{color:var(--mut)}.role.on{border-color:var(--navy);background:var(--sky-t)}
+.legend{display:flex;gap:14px;font-size:11.5px;color:var(--mut);margin-top:6px}.legend i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px}
+@media(max-width:980px){
+ .shell{display:block}
+ .side{position:static;width:auto;flex-direction:row;align-items:center;padding:8px 10px 12px;gap:4px;overflow-x:auto}
+ .side:after{position:absolute;width:100%}
+ .logo{padding:0 10px 0 4px}.logo small,.sl{display:none}
+ .nav{width:auto;white-space:nowrap;border-left:0;border-bottom:3px solid transparent;border-radius:10px 10px 0 0;margin:0}
+ .nav.on{border-bottom-color:var(--mag)}
+ .main{margin-left:0}.top{position:static;padding:12px 16px;flex-wrap:wrap}.work{padding:16px}
+ .g2,.g3,.g21{grid-template-columns:1fr}
+ .drawer{width:100%}
+}
+
+.pillrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.pillrow .chip{font-size:13px;padding:7px 14px}
+.lblrow{font-size:12px;font-weight:700;color:var(--mut);margin:14px 0 6px}
+.scroll{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
+.scroll .chip{flex:none}
+.chip small{opacity:.7;font-weight:600;margin-left:4px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:16px 0}
+.tile{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 1px 2px rgba(20,35,63,.05),0 6px 20px rgba(20,35,63,.06);cursor:pointer;border-top:3px solid var(--navy3)}
+.tile .l{font-size:12.5px;color:var(--mut);font-weight:600}.tile .v{font-size:32px;font-weight:800;color:var(--navy);line-height:1.1;margin:2px 0}.tile .s{font-size:12.5px;color:var(--mut)}
+.tile.mag{border-top-color:var(--mag)}.tile.sky{border-top-color:var(--sky)}.tile.amb{border-top-color:var(--amb)}.tile.pur{border-top-color:var(--pur)}
+.fc{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 2px rgba(20,35,63,.05);border-left:4px solid var(--line)}
+.fc.High{border-left-color:var(--bad)}.fc.Medium{border-left-color:var(--amb)}
+.fc .hd{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.fc .hd b{color:var(--navy);font-size:14.5px}.fc .hd .dt{margin-left:auto;color:var(--mut);font-size:12px}
+.fc .tx{margin:8px 0;white-space:pre-wrap;word-break:break-word;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}
+.fc .ft{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.dots{display:inline-flex;gap:3px;vertical-align:middle}.dots i{width:9px;height:9px;border-radius:50%;background:var(--ok)}
+.seg{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:16px}
+.segc{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;cursor:pointer;box-shadow:0 1px 2px rgba(20,35,63,.05)}
+.segc.on{border-color:var(--navy);box-shadow:0 0 0 2px var(--sky-t)}
+.segc b{display:block;color:var(--navy);margin-bottom:6px}.segc .r{display:flex;justify-content:space-between;font-size:12.5px;color:var(--mut)}.segc .r span:last-child{font-weight:700;color:var(--navy)}
+.hint{background:var(--sky-t);border:1px solid #bfe3f5;color:#17719f;border-radius:10px;padding:10px 14px;font-size:13px;margin:12px 0}
+.crumb{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--mut);margin-bottom:10px;flex-wrap:wrap}.crumb a{color:var(--sky);cursor:pointer;font-weight:600}
+.cr{cursor:pointer}.cr:hover{background:#F7F9FD}
+td.n,th.n{text-align:right}
+@media(max-width:980px){
+ .side{position:fixed;top:auto;bottom:0;left:0;right:0;width:auto;height:64px;flex-direction:row;justify-content:space-around;padding:4px 6px 10px;overflow:visible;z-index:40}
+ .side:after{position:absolute;width:100%;bottom:0}
+ .logo,.sl{display:none}
+ .nav{flex-direction:column;gap:2px;font-size:11px;padding:6px 4px;border-left:0;border-bottom:0;margin:0;flex:1;justify-content:center;text-align:center;position:relative;border-radius:10px}
+ .nav.on{border:0}
+ .nav .cnt{position:absolute;top:2px;right:18%;margin:0;font-size:10px;padding:0 6px}
+ .main{margin-left:0;padding-bottom:76px}
+}
+.dcard{display:grid;grid-template-columns:1fr 290px;gap:24px;align-items:start}
+.cal .ch{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;color:var(--navy)}
+.cal .cg{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal .cg i{display:block;text-align:center;font-style:normal;font-size:11px;color:#7a869c;font-weight:700;padding:2px 0}
+.cal .cg button{border:1px solid #e3e8f2;background:#fff;border-radius:8px;padding:3px 0;cursor:pointer;font:inherit;color:#8a94a8;line-height:1.1;min-height:36px}
+.cal .cg button b{display:block;font-size:12px;color:var(--navy);font-weight:600}
+.cal .cg button small{display:block;font-size:10px;color:#7a869c;min-height:11px}
+.cal .cg button.has{background:#eef3fb}
+.cal .cg button.td b{color:var(--mag)}
+.cal .cg button.sel{background:var(--navy);border-color:var(--navy)}
+.cal .cg button.sel b,.cal .cg button.sel small{color:#fff}
+.cal .cg button:hover{border-color:var(--navy)}
+@media(max-width:980px){.dcard{grid-template-columns:1fr}}
+.lk{cursor:pointer;color:var(--navy)}.lk:hover{text-decoration:underline;color:var(--mag)}
+.sug{display:flex;gap:10px;align-items:center;padding:9px 6px;border-bottom:1px solid #eef1f7;cursor:pointer}.sug:hover{background:#f3f5fa}.sug .mut{margin-left:auto;font-size:12px}
+.thread{margin-top:10px;border-top:1px dashed #d6dcea;padding-top:10px}
+.rem{background:#f6f8fc;border-radius:10px;padding:9px 12px;margin-bottom:8px}
+.rem .rh{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12.5px}
+.rem .rh a{cursor:pointer;color:#0e5f8a;font-weight:700;font-size:12px}
+.rem .rt{margin-top:4px;font-size:13.5px;white-space:pre-wrap;color:#27324a}
+.rin{display:flex;gap:8px;align-items:flex-end}.rin textarea{flex:1}
+.ds{display:flex;flex-wrap:wrap;gap:4px;margin-top:10px}
+.ds span{width:30px;height:34px;border-radius:8px;border:1px solid #dfe5f1;background:#f6f8fc;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px;color:#8a94a8;position:relative}
+.ds span small{font-size:10px;line-height:1}
+.ds span.ok{background:#e4f6ec;border-color:#9bd8b5;color:#14804a;font-weight:700}
+.ds span.miss{background:#fdecee;border-color:#f3b4ba}
+.ds span.now{border:2px solid var(--mag)}
+.ds em{position:absolute;top:-5px;right:-4px;background:var(--navy);color:#fff;border-radius:8px;font-size:9px;padding:0 4px;font-style:normal}
+tr.cr.on td{background:#eef3fb}
+#pr{display:none}
+@media print{
+ body.printing #app,body.printing .ov,body.printing .toast{display:none!important}
+ body.printing #pr{display:block;font-family:'Plus Jakarta Sans',Arial,sans-serif;color:#111;padding:6px}
+ #pr h1{font-size:16px;margin:0;color:#1B3156}#pr h2{font-size:14px;margin:2px 0}#pr h3{font-size:12.5px;margin:14px 0 6px}#pr p{font-size:11px;margin:2px 0 8px;color:#444}
+ #pr .pt{width:100%;border-collapse:collapse;font-size:10px}#pr .pt th,#pr .pt td{border:1px solid #bbb;padding:3px 5px;text-align:left;vertical-align:top}#pr .pt th{background:#eef1f7}
+ #pr .pf{margin-top:14px;font-size:9px;color:#666}
+}
+.cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+.srcseg{display:flex;gap:8px;overflow-x:auto;margin-bottom:16px;padding-bottom:2px}
+.srcseg button{flex:1;min-width:130px;background:#fff;border:1px solid #dfe5f1;border-radius:12px;padding:10px 12px;text-align:left;cursor:pointer;font:inherit;color:var(--navy)}
+.srcseg button b{display:block;font-size:13.5px}.srcseg button small{font-size:20px;font-weight:700;color:var(--navy)}
+.srcseg button.on{background:var(--navy);color:#fff;border-color:var(--navy)}.srcseg button.on small{color:#fff}
+.dh{margin:18px 0 8px;font-weight:700;color:var(--navy);font-size:13.5px;display:flex;gap:8px;align-items:center}.dh small{background:#e6ebf5;border-radius:10px;padding:1px 8px;font-size:11.5px}
+.st.src{font-weight:700;color:#fff}
+.st.s-Studybase{background:#572686}.st.s-Call{background:#2B9BD6}.st.s-Diary{background:#c98512}.st.s-Desk{background:#1B3156}
+.ak{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.ak .a{font-size:12px;border-radius:8px;padding:3px 9px}.ak .a.ok{background:#e4f6ec;color:#14804a}.ak .a.w{background:#fff4dc;color:#8a5a00}
+.callban{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#fff4dc;border:1px solid #f0c978;border-left:5px solid var(--amb);border-radius:12px;padding:11px 14px;margin-bottom:14px;cursor:pointer;color:#5b3b00;font-size:13.5px}
+.ths{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}.th{width:84px;height:84px;object-fit:cover;border-radius:10px;border:1px solid #dfe5f1;cursor:zoom-in}
+.lightbox{background:#fff;border-radius:14px;padding:12px;max-width:92vw;max-height:92vh;display:flex;flex-direction:column;gap:10px;align-items:center}.lightbox img{max-width:86vw;max-height:78vh;border-radius:8px}
+input[type=file]{padding:8px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<style>
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px}
+.tile{background:#fff;border:1px solid #e3e8f2;border-radius:12px;padding:10px 12px}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.scard{background:#fff;border:1px solid #e3e8f2;border-radius:14px;padding:12px 14px;cursor:pointer}
+.scard:hover{border-color:var(--navy);box-shadow:0 2px 8px rgba(30,53,96,.1)}
+.scard b{color:var(--navy);font-size:15px;display:block;margin-bottom:6px}.scard .chs{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px}
+tr.clk{cursor:pointer}tr.clk:hover td{background:#f4f7fc}
+.actl{margin-top:8px;font-size:13px;background:#eef6ff;border-left:3px solid #2B9BD6;border-radius:8px;padding:7px 10px}
+.actl.none{background:#fdf0f3;border-left-color:#E91D69;color:#8a1236}
+.st.s-Internal{background:#E91D69}
+.ins h3 small{font-weight:500;color:#7a869c;margin-left:6px;font-size:12px}
+.ins .prof{font-size:14px;margin:6px 0 10px;color:#243d69}
+.ins .ib{margin-top:10px;border-radius:10px;padding:8px 10px;background:#f6f8fc}
+.ins .ib.nd{background:#fdf0f3}.ins .ib.py{background:#f3eefa}.ins .ib.mn{background:#eef6ff}.ins .ib.ad{background:#f1f8f4}
+.ins .ih{font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:4px;cursor:default}.ins summary.ih{cursor:pointer}.ins .ih small{color:#7a869c}
+.ins ul{margin:0;padding-left:18px;font-size:13.5px}.ins .ii{font-size:13.5px;padding:4px 0;border-top:1px dashed #dfe5f1}.ins .ii:first-of-type{border-top:0}
+.ins .itag{display:inline-block;margin-left:8px;font-size:11px;font-weight:700;color:#572686;background:#efe3fa;border-radius:20px;padding:1px 8px;white-space:nowrap}
+select[data-cf]{width:100%}
+</style>
+<style>
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px}
+.tile{background:#fff;border:1px solid #e3e8f2;border-radius:12px;padding:10px 12px}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.scard{background:#fff;border:1px solid #e3e8f2;border-radius:14px;padding:12px 14px;cursor:pointer}
+.scard:hover{border-color:var(--navy);box-shadow:0 2px 8px rgba(30,53,96,.1)}
+.scard b{color:var(--navy);font-size:15px;display:block;margin-bottom:6px}.scard .chs{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px}
+tr.clk{cursor:pointer}tr.clk:hover td{background:#f4f7fc}
+.actl{margin-top:8px;font-size:13px;background:#eef6ff;border-left:3px solid #2B9BD6;border-radius:8px;padding:7px 10px}
+.actl.none{background:#fdf0f3;border-left-color:#E91D69;color:#8a1236}
+.st.s-Internal{background:#E91D69}
+.ins h3 small{font-weight:500;color:#7a869c;margin-left:6px;font-size:12px}
+.ins .prof{font-size:14px;margin:6px 0 10px;color:#243d69}
+.ins .ib{margin-top:10px;border-radius:10px;padding:8px 10px;background:#f6f8fc}
+.ins .ib.nd{background:#fdf0f3}.ins .ib.py{background:#f3eefa}.ins .ib.mn{background:#eef6ff}.ins .ib.ad{background:#f1f8f4}
+.ins .ih{font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:4px;cursor:default}.ins summary.ih{cursor:pointer}.ins .ih small{color:#7a869c}
+.ins ul{margin:0;padding-left:18px;font-size:13.5px}.ins .ii{font-size:13.5px;padding:4px 0;border-top:1px dashed #dfe5f1}.ins .ii:first-of-type{border-top:0}
+.ins .itag{display:inline-block;margin-left:8px;font-size:11px;font-weight:700;color:#572686;background:#efe3fa;border-radius:20px;padding:1px 8px;white-space:nowrap}
+select[data-cf]{width:100%}
+</style>
+<style>
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px}
+.tile{background:#fff;border:1px solid #e3e8f2;border-radius:12px;padding:10px 12px}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.scard{background:#fff;border:1px solid #e3e8f2;border-radius:14px;padding:12px 14px;cursor:pointer}
+.scard:hover{border-color:var(--navy);box-shadow:0 2px 8px rgba(30,53,96,.1)}
+.scard b{color:var(--navy);font-size:15px;display:block;margin-bottom:6px}.scard .chs{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px}
+tr.clk{cursor:pointer}tr.clk:hover td{background:#f4f7fc}
+.actl{margin-top:8px;font-size:13px;background:#eef6ff;border-left:3px solid #2B9BD6;border-radius:8px;padding:7px 10px}
+.actl.none{background:#fdf0f3;border-left-color:#E91D69;color:#8a1236}
+.st.s-Internal{background:#E91D69}
+.ins h3 small{font-weight:500;color:#7a869c;margin-left:6px;font-size:12px}
+.ins .prof{font-size:14px;margin:6px 0 10px;color:#243d69}
+.ins .ib{margin-top:10px;border-radius:10px;padding:8px 10px;background:#f6f8fc}
+.ins .ib.nd{background:#fdf0f3}.ins .ib.py{background:#f3eefa}.ins .ib.mn{background:#eef6ff}.ins .ib.ad{background:#f1f8f4}
+.ins .ih{font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:4px;cursor:default}.ins summary.ih{cursor:pointer}.ins .ih small{color:#7a869c}
+.ins ul{margin:0;padding-left:18px;font-size:13.5px}.ins .ii{font-size:13.5px;padding:4px 0;border-top:1px dashed #dfe5f1}.ins .ii:first-of-type{border-top:0}
+.ins .itag{display:inline-block;margin-left:8px;font-size:11px;font-weight:700;color:#572686;background:#efe3fa;border-radius:20px;padding:1px 8px;white-space:nowrap}
+select[data-cf]{width:100%}
+</style>
+<style>
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px}
+.tile{background:#fff;border:1px solid #e3e8f2;border-radius:12px;padding:10px 12px}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.scard{background:#fff;border:1px solid #e3e8f2;border-radius:14px;padding:12px 14px;cursor:pointer}
+.scard:hover{border-color:var(--navy);box-shadow:0 2px 8px rgba(30,53,96,.1)}
+.scard b{color:var(--navy);font-size:15px;display:block;margin-bottom:6px}.scard .chs{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px}
+tr.clk{cursor:pointer}tr.clk:hover td{background:#f4f7fc}
+.actl{margin-top:8px;font-size:13px;background:#eef6ff;border-left:3px solid #2B9BD6;border-radius:8px;padding:7px 10px}
+.actl.none{background:#fdf0f3;border-left-color:#E91D69;color:#8a1236}
+.st.s-Internal{background:#E91D69}
+.ins h3 small{font-weight:500;color:#7a869c;margin-left:6px;font-size:12px}
+.ins .prof{font-size:14px;margin:6px 0 10px;color:#243d69}
+.ins .ib{margin-top:10px;border-radius:10px;padding:8px 10px;background:#f6f8fc}
+.ins .ib.nd{background:#fdf0f3}.ins .ib.py{background:#f3eefa}.ins .ib.mn{background:#eef6ff}.ins .ib.ad{background:#f1f8f4}
+.ins .ih{font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:4px;cursor:default}.ins summary.ih{cursor:pointer}.ins .ih small{color:#7a869c}
+.ins ul{margin:0;padding-left:18px;font-size:13.5px}.ins .ii{font-size:13.5px;padding:4px 0;border-top:1px dashed #dfe5f1}.ins .ii:first-of-type{border-top:0}
+.ins .itag{display:inline-block;margin-left:8px;font-size:11px;font-weight:700;color:#572686;background:#efe3fa;border-radius:20px;padding:1px 8px;white-space:nowrap}
+select[data-cf]{width:100%}
+</style>
+<style>
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px}
+.tile{background:#fff;border:1px solid #e3e8f2;border-radius:12px;padding:10px 12px}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.scard{background:#fff;border:1px solid #e3e8f2;border-radius:14px;padding:12px 14px;cursor:pointer}
+.scard:hover{border-color:var(--navy);box-shadow:0 2px 8px rgba(30,53,96,.1)}
+.scard b{color:var(--navy);font-size:15px;display:block;margin-bottom:6px}.scard .chs{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px}
+tr.clk{cursor:pointer}tr.clk:hover td{background:#f4f7fc}
+.actl{margin-top:8px;font-size:13px;background:#eef6ff;border-left:3px solid #2B9BD6;border-radius:8px;padding:7px 10px}
+.actl.none{background:#fdf0f3;border-left-color:#E91D69;color:#8a1236}
+.st.s-Internal{background:#E91D69}
+.ins h3 small{font-weight:500;color:#7a869c;margin-left:6px;font-size:12px}
+.ins .prof{font-size:14px;margin:6px 0 10px;color:#243d69}
+.ins .ib{margin-top:10px;border-radius:10px;padding:8px 10px;background:#f6f8fc}
+.ins .ib.nd{background:#fdf0f3}.ins .ib.py{background:#f3eefa}.ins .ib.mn{background:#eef6ff}.ins .ib.ad{background:#f1f8f4}
+.ins .ih{font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:4px;cursor:default}.ins summary.ih{cursor:pointer}.ins .ih small{color:#7a869c}
+.ins ul{margin:0;padding-left:18px;font-size:13.5px}.ins .ii{font-size:13.5px;padding:4px 0;border-top:1px dashed #dfe5f1}.ins .ii:first-of-type{border-top:0}
+.ins .itag{display:inline-block;margin-left:8px;font-size:11px;font-weight:700;color:#572686;background:#efe3fa;border-radius:20px;padding:1px 8px;white-space:nowrap}
+select[data-cf]{width:100%}
+</style>
+<script>
+/* Parent Connect — GitHub Pages client layer: Diary-password login + Apps Script API (replaces the Claude runtime) */
+(function(){
+"use strict";
+var API=new URLSearchParams(location.search).get('api')||"__API__";
+var K='pc_tok',W='pc_who';
+function lg(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}}
+function ls(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function ld(k){try{localStorage.removeItem(k)}catch(e){}}
+var GH=window.GH={tok:lg(K)||'',who:lg(W)||{}};
+async function call(fn,args,tok){
+  if(API.indexOf('__API')===0)throw new Error('This app is not connected to its server yet. See SETUP.md.');
+  var r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:fn,args:args||[],code:tok||''})});
+  var j=await r.json();
+  if(!j.ok){var e=new Error(j.error||'Something went wrong');e.auth=!!j.auth;throw e}
+  return j.data;
+}
+GH.api=async function(fn,args){
+  try{return await call(fn,args,GH.tok)}
+  catch(e){if(e.auth&&!GH._x){GH._x=1;ld(K);location.reload()}throw e}
+};
+GH.allowed=function(){
+  var n=String(GH.who.name||'').trim().toLowerCase(),r=String(GH.who.role||'').toLowerCase();
+  if(n==='harsh yadav')return['director'];
+  if(r==='admin')return['admin'];
+  if(/^(pl|cm|cmh|pm)$/.test(r))return['coord'];
+  return['teacher'];
+};
+GH.logout=function(){ld(K);ld(W);ld('pc2_me');location.reload()};
+GH.gate=function(){
+  return new Promise(async function(done){
+    var app=document.getElementById('app');
+    if(GH.tok){
+      try{var me=await call('ping',[],GH.tok);GH.who={name:me.name,role:me.role};ls(W,GH.who);return done()}
+      catch(e){if(!e.auth&&GH.who.name)return done();GH.tok='';ld(K)}
+    }
+    var msg='',lastN='';
+    function paint(){
+      app.innerHTML='<div class="loginw"><div class="loginc"><div style="font-size:19px;font-weight:800;color:var(--navy)">Parent Connect</div>'
+       +'<div class="mut" style="font-size:12.5px;margin-bottom:12px">Flourish International School, Bikaner</div>'
+       +'<div class="banner">Contains names of students and parents. Staff use only.</div>'
+       +'<label class="lbl">Name</label><input type="text" id="gn" autocomplete="username" placeholder="Same name as in the Diary app">'
+       +'<label class="lbl">Password</label><input type="password" id="gp" autocomplete="current-password" placeholder="Same password as in the Diary app">'
+       +(msg?'<div style="color:#b3123f;font-size:13px;margin-top:10px">'+msg.replace(/</g,'&lt;')+'</div>':'')
+       +'<div style="margin-top:18px"><button class="btn pri" id="gb">Sign in</button></div>'
+       +'<div class="mut" style="font-size:12px;margin-top:10px">Use the same login you use for the Diary app. You stay signed in on this phone or computer.</div></div></div>';
+      var go=document.getElementById('gb'),n=document.getElementById('gn'),p=document.getElementById('gp');
+      n.value=lastN||GH.who.name||'';
+      async function submit(){
+        lastN=n.value;go.disabled=true;go.textContent='Signing in…';
+        try{
+          var r=await call('login',[n.value,p.value],'');
+          var prev=(GH.who.name||'').toLowerCase();
+          GH.tok=r.token;GH.who={name:r.name,role:r.role};ls(K,GH.tok);ls(W,GH.who);
+          if(prev&&prev!==r.name.toLowerCase()){ld('pc2_me');try{ME=null;ME_WAIT=true}catch(e){}}
+          done();
+        }catch(e){msg=e.message||'Could not sign in';paint()}
+      }
+      go.onclick=submit;p.onkeydown=n.onkeydown=function(e){if(e.key==='Enter')submit()};
+      (n.value?p:n).focus();
+    }
+    paint();
+  });
+};
+/* ---- shared storage: same calls the app made to the Claude db, served by the Apps Script ---- */
+var C={},VER=0,subs=[],started=false,first=false,busy=false;
+function snap(col){var m=C[col]||{};return{docs:Object.keys(m).filter(function(i){return m[i]}).map(function(i){return{id:i,data:function(){return m[i]}}})}}
+async function pull(){
+  if(busy)return;busy=true;
+  try{
+    var r=await GH.api('sync',[VER]),ch={};
+    if(!r.same){VER=r.ver;Object.keys(r.rows).forEach(function(k){var i=k.indexOf('/'),c=k.slice(0,i),id=k.slice(i+1);(C[c]=C[c]||{})[id]=r.rows[k];ch[c]=1})}
+    subs.forEach(function(s){if(!first||ch[s.col])s.cb(snap(s.col))});
+    first=true;
+  }catch(e){subs.forEach(function(s){s.err&&s.err(e)})}
+  finally{busy=false}
+}
+function start(){if(started)return;started=true;pull();setInterval(function(){if(!document.hidden)pull()},10000)}
+var DB={
+  collection:function(name){
+    var m=/^data\/users\/([^\/]+)/.exec(name);
+    if(m)return{doc:function(){return{
+      get:async function(){var v=await GH.api('get',['profiles',m[1]]);return v?{data:function(){return v}}:null},
+      set:async function(v){await GH.api('set',['profiles',m[1],v])}}}};
+    return{onSnapshot:function(cb,err){subs.push({col:name,cb:cb,err:err});start();return function(){}}};
+  },
+  doc:function(path){var i=path.indexOf('/'),c=path.slice(0,i),id=path.slice(i+1);
+    return{set:async function(v){await GH.api('set',[c,id,v]);(C[c]=C[c]||{})[id]=v}}}
+};
+var SL=function(n){return String(n).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,60)||'staff'};
+window.claude={use:async function(k){
+  if(k==='db')return DB;
+  if(k==='user')return{id:async function(){return SL(GH.who.name)}};
+  throw new Error('not available');
+}};
+/* ---- Parent Insight PDFs: server sends the file, the browser reads the text ---- */
+var pdfP=null,V='3.11.174',CDN='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/'+V+'/';
+function loadPdf(){
+  return pdfP||(pdfP=new Promise(function(res,rej){
+    var s=document.createElement('script');s.src=CDN+'pdf.min.js';
+    s.onload=async function(){try{var t=await fetch(CDN+'pdf.worker.min.js').then(function(r){return r.text()});
+      pdfjsLib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(new Blob([t],{type:'text/javascript'}));res(pdfjsLib)}catch(e){pdfP=null;rej(e)}};
+    s.onerror=function(){pdfP=null;rej(new Error('pdf.js could not be loaded'))};document.head.appendChild(s);
+  }));
+}
+GH.pdfText=async function(lib,data){
+  var pdf=await lib.getDocument({data:data,useSystemFonts:true,verbosity:0}).promise,out='';
+  for(var p=1;p<=pdf.numPages;p++){
+    var tc=await(await pdf.getPage(p)).getTextContent();
+    var its=tc.items.filter(function(i){return i.str!==''}).map(function(i){return{s:i.str,x:i.transform[4],y:i.transform[5]}});
+    its.sort(function(a,b){return b.y-a.y||a.x-b.x});
+    var lines=[];its.forEach(function(it){var L=lines[lines.length-1];if(L&&Math.abs(L.y-it.y)<2.5)L.its.push(it);else lines.push({y:it.y,its:[it]})});
+    lines.forEach(function(L,i){L.its.sort(function(a,b){return a.x-b.x});if(i&&lines[i-1].y-L.y>15)out+='\n';out+=L.its.map(function(x){return x.s}).join('')+'\n'});
+  }
+  return out;
+};
+GH.insightText=async function(id){
+  var a=await Promise.all([loadPdf(),GH.api('insight',[id])]),bin=atob(a[1].b64),u=new Uint8Array(bin.length);
+  for(var i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+  return GH.pdfText(a[0],u);
+};
+})();
+
+</script>
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const LS={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],WD=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const pad=n=>String(n).padStart(2,'0');
+const isoOf=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const dOf=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const addDays=(s,n)=>{const d=dOf(s);d.setDate(d.getDate()+n);return isoOf(d)};
+const diffDays=(a,b)=>Math.round((dOf(b)-dOf(a))/864e5);
+const fmtD=s=>{if(!s)return'';const d=dOf(s);return WD[d.getDay()]+' '+d.getDate()+' '+MON[d.getMonth()]};
+const fmtS=s=>{const d=dOf(s);return d.getDate()+' '+MON[d.getMonth()]};
+const fmtDY=s=>{if(!s)return'';const d=dOf(s);return d.getDate()+' '+MON[d.getMonth()]+' '+d.getFullYear()};
+const fmtT=ms=>{const d=new Date(ms);return d.getDate()+' '+MON[d.getMonth()]+', '+(d.getHours()%12||12)+':'+pad(d.getMinutes())+(d.getHours()<12?' am':' pm')};
+const todayISO=()=>isoOf(new Date());
+const ago=s=>{const n=diffDays(s,todayISO());return n<=0?'today':n===1?'yesterday':n+' days ago'};
+const GROUPS=['Pre-Primary','Class 1-2','Class 3-5','Class 6-7','Class 8-9','Class 10-11'];
+const SUBJECTS=['Maths','Hindi','English','Science','SST','Computer','Sanskrit','French/German','Co-curricular','Class Teacher'];
+const OWNERS=['Maths teacher','Hindi teacher','English teacher','Science teacher','SST teacher','Computer teacher','Sanskrit teacher','French/German teacher','Co-curricular teacher','Class teacher','Coordinator','Administration'];
+const ROLES=[['director','Director','Sees everything'],['coord','Coordinator / PL','Own class group(s)'],['admin','Administration','All departments and calls'],['teacher','Teacher','Own subject or class']];
+const SRC_LBL={Studybase:'Studybase',Call:'Call received',Diary:'Diary remark',Desk:'Front office desk',Internal:'Internal'};
+const srcName=m=>SRC_LBL[m]||m;
+const CASES=['Complaints','Academic complaints','Behavioural','Medical cases','Admission enquiries','HR','Transport','Fee and documents','Requests'];
+const KW_MED=/\b(fever|unwell|injur\w*|ill health|vomit\w*|doctor|medic\w*|hospital|surgery|fractur\w*|allerg\w*|sick|hurt|cough|pain|stomach|headache|dizz\w*)\b/i;
+const KW_BEH=/\b(bully\w*|fight\w*|misbehav\w*|abus\w*|aggressive|disturb\w*|beat|hitting|troubl\w*|teas\w*|naughty|indiscipline|rude)\b/i;
+function caseOf(r){const a=[],cm=r.ct==='Complain'||r.ct==='Concern',t=r.t||'';
+  if(cm)a.push('Complaints');
+  if((cm&&['Academics','Books','Exam'].includes(r.dp))||(cm&&r.weak))a.push('Academic complaints');
+  if(r.dp==='Behavioural'||KW_BEH.test(t))a.push('Behavioural');
+  if(r.dp==='Health'||KW_MED.test(t))a.push('Medical cases');
+  if(r.dp==='Admission'||r.ct==='Enquiry')a.push('Admission enquiries');
+  if(r.dp==='HR')a.push('HR');
+  if(r.dp==='Transport')a.push('Transport');
+  if(r.dp==='Fee'||r.dp==='Documents')a.push('Fee and documents');
+  if(r.ct==='Request')a.push('Requests');
+  return a}
+const dayLbl=d=>d===todayISO()?'Today':d===addDays(todayISO(),-1)?'Yesterday':fmtS(d);
+const ROLE_NAME=Object.fromEntries(ROLES.map(r=>[r[0],r[1]]));
+const PAL=['#1B3156','#2B9BD6','#572686','#EFA11D','#E91D69','#68C0EA','#243D69','#8a6bb3'];
+const ICON={ov:'<path d="M3 12 12 4l9 8M5 10v10h14V10"/>',fb:'<path d="M4 5h16v11H9l-5 4z"/>',fu:'<circle cx="12" cy="12" r="8"/><path d="m8.5 12 2.5 2.5 4.5-5"/>',ca:'<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>',ch:'<path d="M7 7h12l-3-3M17 17H5l3 3"/>',cl:'<path d="M4 20v-2a4 4 0 0 1 4-4h2a4 4 0 0 1 4 4v2M9 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6M17 11a2.5 2.5 0 1 0 0-5M20 20v-1.5a3.5 3.5 0 0 0-2.5-3.3"/>'};
+const ico=k=>'<svg viewBox="0 0 24 24">'+ICON[k]+'</svg>';
+
+let D={f:[],c:[],h:[],byId:{},cById:{}},ME=LS.get('pc2_me'),REAL=null,FU=LS.get('pc2_fu')||{},CS=LS.get('pc2_cs')||{},REM=LS.get('pc2_rm')||{},ACK=LS.get('pc2_ak')||{},CQ=LS.get('pc2_cq')||{},ADD=LS.get('pc2_ad')||{},DB=null,SYNC='local';
+let rqMode='req',rqSeg='',SEEN=new Set(Object.keys(LS.get('pc2_cq')||{})),SEENI=0;
+let hv='cases',CM='',calA=null,STK='',prevView='fb',RO={};
+let view='ov',shown=30,fuTab='chk',callTab='open',fuSeg='',showStaff=false;
+let F={per:'7',from:'',to:'',cl:[],c:[],dp:'',ct:'',m:'',p:'',q:'',cs:'',ak:'',rb:''};
+
+const cbase=c=>{const m=(c||'').match(/^(PG|Nur|LKG|UKG|\d+)/);return m?m[1]:'—'};
+function crank(c){const b=['PG','Nur','LKG','UKG'];const m=c.match(/^(PG|Nur|LKG|UKG)(?: ?([A-D]))?$/);if(m)return b.indexOf(m[1])*10+(m[2]?m[2].charCodeAt(0)-64:0);const n=c.match(/^(\d+)([A-D])?$/);return n?100+(+n[1])*10+(n[2]?n[2].charCodeAt(0)-64:0):999}
+const brank=b=>b==='—'?9999:crank(b);
+function reasons(r){const a=[];if(r.fu)a.push('Marked for follow-up');if(r.ar)a.push('Action required');if(r.p==='High')a.push('High priority');if(r.ct==='Concern'||r.ct==='Complain')a.push(r.ct);if(r.weak)a.push('Learning concern');if(r.open)a.push('Open status');return a}
+function ownerOf(r){const s=(r.sub||[])[0];if(s&&s!=='Academics')return s==='Co-curricular'?'Co-curricular teacher':s+' teacher';if(r.dp==='Co Curricular'||r.dp==='Competition')return'Co-curricular teacher';return r.g?'Coordinator':'Administration'}
+const myKey=()=>ME.role==='coord'?'Coordinator':ME.role==='admin'?'Administration':ME.role==='teacher'?(ME.subject==='Class Teacher'?'Class teacher':ME.subject==='Co-curricular'?'Co-curricular teacher':ME.subject+' teacher'):'';
+const isDir=()=>(REAL||ME).role==='director';
+const roleLbl=()=>ME.role==='coord'?'Coordinator / PL':ROLE_NAME[ME.role];
+const owner=id=>(FU[id]&&FU[id].owner)||ownerOf(D.byId[id]);
+
+async function boot(){
+  if(window.GH)await GH.gate();
+  $('#app').innerHTML='<div class="empty">Loading Parent Connect…</div>';
+  try{
+    const[f,c,h]=window.GH?[[],[],[]]:await Promise.all(['feedback.json','calls.json','changes.json'].map(u=>fetch(u).then(r=>r.json())));
+    D.f=f.map(x=>({id:x[0],d:x[1],n:x[2],c:x[3],g:x[4],dp:x[5],ct:x[6],m:x[7],t:x[8],p:x[9],fu:x[10],ar:x[11],s:x[12],sub:x[13],weak:x[14],open:x[15],by:x[16]}));
+    let dj=[];if(!window.GH)try{dj=await fetch('diary.json').then(r=>r.json())}catch(e){}
+    SNAP={fb:f,calls:c,changes:h,diary:dj};
+    dj.forEach(x=>D.f.push({id:x[0],d:x[1],n:x[2],c:x[3],g:x[4],dp:x[5],ct:x[6],m:x[7],t:x[8],p:x[9],fu:x[10],ar:x[11],s:x[12],sub:x[13],weak:x[14],open:x[15],by:x[16],dapp:1}));
+    D.f.forEach(r=>{if(r.m==='Other')r.m='Desk';r.why=reasons(r);r.cb=cbase(r.c);r.cs=caseOf(r);D.byId[r.id]=r});
+    D.c=c.map(x=>({id:x[0],d:x[1],n:x[2],c:x[3],g:x[4],dp:x[5],t:x[6],rq:x[7],mk:x[8],by:x[9],st:x[10],rm:x[11]}));
+    D.c.forEach(r=>{r.cb=cbase(r.c);D.cById[r.id]=r});
+    D.h=h.map(x=>({id:x[0],d:x[1],n:x[2],c:x[3],g:x[4],dp:x[5],ty:x[6],fr:x[7],to:x[8],st:x[9]}));D.h.forEach(r=>r.cb=cbase(r.c));
+    D.last=D.f.reduce((m,r)=>r.d>m?r.d:m,'');CM=D.last.slice(0,7);mergeAdded();mergeCalls();
+  }catch(e){$('#app').innerHTML='<div class="empty">Could not load the data files. Please reopen the app.</div>';return}
+  if(window.GH){$('#app').innerHTML='<div class="empty">Loading the latest feedback…</div>';await liveSync()}render();setTimeout(()=>{if(ME_WAIT){ME_WAIT=false;render()}},6000);initDB();if(!window.GH)liveSync();setInterval(()=>{if(!document.hidden)liveSync()},300000);
+}
+async function initDB(){
+  try{if(!(window.claude&&claude.use)){ME_WAIT=false;render();return}DB=await claude.use('db')}catch(e){DB=null}
+  if(!DB){SYNC='local';paintSync();ME_WAIT=false;render();return}
+  await restoreMe();ME_WAIT=false;render(true);
+  const watch=(name,store,key,cb)=>{try{DB.collection(name).onSnapshot(snap=>{
+    const m={};const take=d=>{const v=typeof d.data==='function'?d.data():d.data;if(v)m[d.id]=v};
+    const docs=snap.docs||[];if(docs.length)docs.forEach(take);else if(typeof snap.forEach==='function')snap.forEach(take);
+    Object.assign(store,m);LS.set(key,store);SYNC='shared';paintSync();cb&&cb(m);const ae=document.activeElement;if(ae&&/^(TEXTAREA|INPUT|SELECT)$/.test(ae.tagName))return;if(!document.querySelector('.ov'))render(true);
+  },()=>{SYNC='local';paintSync()})}catch(e){SYNC='local';paintSync()}};
+  watch('followups',FU,'pc2_fu');watch('calls',CS,'pc2_cs');watch('remarks',REM,'pc2_rm');watch('added',ADD,'pc2_ad',mergeAdded);watch('acks',ACK,'pc2_ak');watch('callreq',CQ,'pc2_cq',onCQ);watch('retag',RT,'pc2_rt',applyRT);
+}
+async function save(coll,store,key,id){
+  LS.set(key,store);
+  if(DB){try{await DB.doc(coll+'/'+id).set(store[id]);SYNC='shared'}catch(e){SYNC='local';toast('Saved on this device only. Ask the Director for edit access.')}paintSync()}
+}
+const saveFU=id=>save('followups',FU,'pc2_fu',id),saveCS=id=>save('calls',CS,'pc2_cs',id),saveREM=id=>save('remarks',REM,'pc2_rm',id),saveADD=id=>save('added',ADD,'pc2_ad',id),saveACK=id=>save('acks',ACK,'pc2_ak',id),saveCQ=id=>save('callreq',CQ,'pc2_cq',id);
+function grpOf(c){const b=cbase(c);if(['PG','Nur','LKG','UKG'].includes(b))return'Pre-Primary';const n=+b;return!n?'':n<=2?'Class 1-2':n<=5?'Class 3-5':n<=7?'Class 6-7':n<=9?'Class 8-9':n<=11?'Class 10-11':''}
+function mergeCalls(){D.c=D.c.filter(x=>!x.app);Object.keys(CQ).forEach(k=>{const q=CQ[k];if(!q)return;D.c.push({id:'Q'+k,d:q.d,n:q.n,c:q.c,g:grpOf(q.c),dp:q.reason,t:q.t,rq:q.rqBy+' ('+q.role+')',rqBy:q.rqBy,mk:'',by:'',st:'',rm:'',app:1,urg:q.urg,due:q.due,at:q.at,imgs:q.imgs||[],cb:cbase(q.c),fb:q.fb})});D.cById={};D.c.forEach(c=>D.cById[c.id]=c)}
+function onCQ(m){const first=!SEENI;Object.keys(m).forEach(k=>{if(!SEEN.has(k)){SEEN.add(k);if(!first&&ME&&m[k].rqBy!==ME.name&&ME.role!=='teacher')toast('New call request: '+m[k].n+' ('+m[k].c+')'+(m[k].urg==='Urgent'?' · URGENT':'')+' · by '+m[k].rqBy,7000)}});SEENI=1;mergeCalls()}
+function mergeAdded(){D.f=D.f.filter(r=>!r.add);Object.keys(ADD).forEach(k=>{const a=ADD[k];if(!a)return;const r={id:'X'+k,d:a.d,n:a.n,c:a.c,g:grpOf(a.c),dp:a.dp,ct:a.ct,m:a.m,t:a.t,imgs:a.imgs||[],rc:a.rc||'',p:a.p,fu:a.p==='High'?1:0,ar:0,s:'',sub:a.sub?[a.sub]:[],weak:0,open:0,by:a.by,add:1};r.why=reasons(r);r.cb=cbase(r.c);if(r.m==='Other')r.m='Desk';r.cs=caseOf(r);D.f.push(r)});D.byId={};D.f.forEach(r=>D.byId[r.id]=r);applyRT()}
+
+/* ---- live data from Google Drive (read-only) ---- */
+let SNAP={fb:[],calls:[],changes:[],diary:[]},LIVE={st:'idle',at:0,n:0,msg:'',busy:0};
+const FB_ID='1DAx096q0BtPAEsBI2AAtxYtGyEmHEXqFaLpghy_rhSA',DR_ID='1S7VX3L-TYGNfi5_dd3HyktdH1u7o-9gb_uXTMV8mpwI',XLSX='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+function paintLive(){const e=$('#lv');if(!e)return;const t=LIVE.st;
+  const hm=LIVE.at?new Date(LIVE.at).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true,timeZone:'Asia/Kolkata'}):'';
+  e.textContent=t==='ok'?'Live · '+hm+(LIVE.n?' · +'+LIVE.n+' new':''):t==='load'?'Updating…':''+(LIVE.msg||'not connected');
+  e.className='sync '+(t==='ok'?'s':'l');e.title=t==='ok'?'Read from the sheets at '+hm+'. Tap to refresh.':'Tap to try again. Showing the saved copy up to '+fmtD(D.last)+'.'}
+function findZip(o,d){if(typeof o==='string'){if(o.startsWith('UEsD'))return o;const t=o.trim();if(t[0]==='{'||t[0]==='['){try{return findZip(JSON.parse(t),d)}catch(e){}}return null}
+  if(o&&typeof o==='object'&&(d||0)<7){for(const k of Object.keys(o)){const r=findZip(o[k],(d||0)+1);if(r)return r}}return null}
+function b64u8(b){const bin=atob(b),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u}
+const lvMsg=c=>({needs_reauth:'reconnect Drive',server_not_connected:'not connected',selection_required:'choose Drive',not_in_manifest:'not allowed',approval_required:'needs approval',blocked_by_policy:'blocked',consent_required:'not allowed',not_granted:'not available',capability_disabled:'not available',capability_removed:'not available'}[c]||'could not read');
+async function liveSync(manual){
+  if(LIVE.busy)return;LIVE.busy=1;
+  try{
+    let df,a={status:'fulfilled'},b={status:'fulfilled'};
+    if(window.GH){LIVE.st='load';paintLive();df=await GH.api('data',[!!manual])}else{
+    let mcp=null;try{mcp=window.claude&&claude.use?await claude.use('mcp'):null}catch(e){}
+    if(!mcp||!window.PCLive){LIVE.st='na';LIVE.msg='not available here';return}
+    LIVE.st='load';paintLive();
+    const get=async id=>{const r=await mcp.callTool('Google Drive','download_file_content',{fileId:id,exportMimeType:XLSX},{cache:manual?{staleTime:0,gcTime:60000,refresh:true}:{staleTime:120000,gcTime:600000}});const z=findZip(r);if(!z)throw{code:'unreadable',message:'Drive sent the file in a form the app cannot read'};return PCLive.parseXlsx(b64u8(z))};
+    [a,b]=await Promise.allSettled([get(FB_ID),get(DR_ID)]);
+    if(a.status==='rejected'&&b.status==='rejected'){const c=(a.reason&&a.reason.code)||'';LIVE.st='err';LIVE.msg=lvMsg(c);console.warn('Drive live failed',a.reason);return}
+    df=PCLive.diff(a.status==='fulfilled'?a.value:null,b.status==='fulfilled'?b.value:null,SNAP);
+    }
+    // drop earlier live rows, add the current ones
+    D.f=D.f.filter(r=>{if(r.live){delete D.byId[r.id];return false}return true});
+    D.c=D.c.filter(r=>{if(r.live){delete D.cById[r.id];return false}return true});
+    D.h=D.h.filter(r=>!r.live);
+    df.fb.concat(df.diary).forEach(x=>{const r={id:x[0],d:x[1],n:x[2],c:x[3],g:x[4],dp:x[5],ct:x[6],m:x[7],t:x[8],p:x[9],fu:x[10],ar:x[11],s:x[12],sub:x[13],weak:x[14],open:x[15],by:x[16],live:1};if(x[0].slice(0,2)==='DK')r.dapp=1;if(r.m==='Other')r.m='Desk';r.why=reasons(r);r.cb=cbase(r.c);r.cs=caseOf(r);D.f.push(r);D.byId[r.id]=r});
+    df.calls.forEach(x=>{const r={id:x[0],d:x[1],n:x[2],c:x[3],g:x[4],dp:x[5],t:x[6],rq:x[7],mk:x[8],by:x[9],st:x[10],rm:x[11],live:1};r.cb=cbase(r.c);D.c.push(r);D.cById[r.id]=r});
+    df.changes.forEach(x=>{const r={id:x[0],d:x[1],n:x[2],c:x[3],g:x[4],dp:x[5],ty:x[6],fr:x[7],to:x[8],st:x[9],live:1};r.cb=cbase(r.c);D.h.push(r)});
+    const n=window.GH?0:df.fb.length+df.diary.length+df.calls.length+df.changes.length,changed=(window.GH?df.at!==LIVE.dat:n!==LIVE.n)||manual;LIVE.dat=df.at;
+    LIVE.n=n;LIVE.at=Date.now();LIVE.st=(a.status==='fulfilled'&&b.status==='fulfilled')?'ok':'ok';
+    if(a.status==='rejected'||b.status==='rejected'){LIVE.msg=''}
+    D.last=D.f.reduce((m,r)=>r.d>m?r.d:m,'');if(!CM)CM=D.last.slice(0,7);mergeAdded();mergeCalls();
+    const ae=document.activeElement;if(!(ae&&/^(TEXTAREA|INPUT|SELECT)$/.test(ae.tagName))&&!document.querySelector('.ov')&&(changed||D.liveFirst!==1))render(true);
+    D.liveFirst=1;if(manual)toast(n?n+' new record'+(n>1?'s':'')+' from the sheets':'Up to date with the sheets');
+  }catch(e){LIVE.st='err';LIVE.msg=window.GH?String(e&&e.message||'not connected').slice(0,60):lvMsg(e&&e.code);console.warn('live failed',e)}
+  finally{LIVE.busy=0;paintLive()}
+}
+function paintSync(){const e=$('#sync');if(e){e.textContent=SYNC==='shared'?'Shared live':'This device only';e.className='sync '+(SYNC==='shared'?'s':'l')}}
+
+/* ---------- scope ---------- */
+function inScope(r){
+  if(!ME)return false;
+  if(r.add&&r.by===ME.name)return true;
+  if(ME.role==='director'||ME.role==='admin')return true;
+  if(ME.role==='coord')return ME.groups.includes(r.g);
+  const cl=ME.classes||[];
+  if(ME.subject==='Class Teacher')return cl.includes(r.c);
+  const ok=ME.subject==='Co-curricular'?(r.dp==='Co Curricular'||r.dp==='Competition'):(r.sub||[]).includes(ME.subject);
+  return ok&&(!cl.length||cl.includes(r.c));
+}
+const canCalls=()=>ME&&(ME.role!=='teacher'||ME.subject==='Class Teacher');
+function fuVisible(id){const r=D.byId[id];if(!r||!inScope(r))return false;if(ME.role==='teacher')return owner(id)===myKey()||FU[id].by===ME.name;return true}
+
+/* ---------- dates in plain words ---------- */
+function range(){
+  const t=todayISO();
+  switch(F.per){case'today':return[t,t];case'yest':{const y=addDays(t,-1);return[y,y]}case'7':return[addDays(t,-6),t];case'month':return[t.slice(0,8)+'01',t];case'pick':return[F.from||'0000',F.to||F.from||'9999'];case'day':return[F.from,F.from];default:return['0000','9999']}
+}
+function perLabel(){const[a,b]=range();if(F.per==='all')return'All dates';if(a===b)return fmtD(a)+' '+dOf(a).getFullYear();return fmtD(a)+' to '+fmtD(b)}
+/* ---------- calendar & dates ---------- */
+function dayCounts(){const m={};D.f.forEach(r=>{if(inScope(r))m[r.d]=(m[r.d]||0)+1});return m}
+function syncCM(){const b=range()[1];CM=((b&&b<'9999'&&b<=todayISO())?b:D.last).slice(0,7)}
+function calHTML(){
+  const[y,m]=CM.split('-').map(Number),off=(new Date(y,m-1,1).getDay()+6)%7,n=new Date(y,m,0).getDate(),cn=dayCounts(),[a,b]=range(),t=todayISO();
+  let h='<div class="cal"><div class="ch"><button class="btn sm" data-a="cm" data-v="-1">‹</button><b>'+MON[m-1]+' '+y+'</b><button class="btn sm" data-a="cm" data-v="1">›</button></div><div class="cg">'+['M','T','W','T','F','S','S'].map(x=>'<i class="w">'+x+'</i>').join('');
+  for(let i=0;i<off;i++)h+='<i></i>';
+  for(let d=1;d<=n;d++){const iso=y+'-'+pad(m)+'-'+pad(d),c=cn[iso]||0;h+='<button class="'+(F.per!=='all'&&iso>=a&&iso<=b?'sel ':'')+(iso===t?'td ':'')+(c?'has':'')+'" data-a="calday" data-v="'+iso+'" title="'+c+' feedback"><b>'+d+'</b><small>'+(c||'')+'</small></button>'}
+  return h+'</div><div class="mut" style="font-size:11.5px;margin-top:6px">'+(calA?'Tap a second date to finish the range.':'Tap a date. Tap two dates for a range. Small number is feedback received.')+'</div></div>';
+}
+function dateBar(){
+  const per=[['today','Today'],['yest','Yesterday'],['7','Last 7 days'],['month','This month'],['all','All dates'],['pick','Pick dates']];
+  let h='<div class="dcard"><div><div class="pillrow">'+per.map(p=>'<button class="chip '+((F.per===p[0]||(p[0]==='pick'&&F.per==='day'))?'on':'')+'" data-a="per" data-v="'+p[0]+'">'+p[1]+'</button>').join('')+'</div>';
+  h+='<div class="row" style="margin-top:12px"><div><label class="lbl">From</label><input type="date" id="c1" value="'+esc(F.from)+'"></div><div><label class="lbl">To</label><input type="date" id="c2" value="'+esc(F.to||F.from)+'"></div></div>';
+  h+='<div class="mut" style="margin-top:10px;font-size:12.5px">Showing <b style="color:var(--navy)">'+esc(perLabel())+'</b>.<br>Data is up to <b style="color:var(--navy)">'+fmtD(D.last)+'</b>.</div></div>'+calHTML()+'</div>';
+  return'<div class="card" style="margin-bottom:16px">'+h+'</div>';
+}
+function noDataHint(n){
+  if(n)return'';const[a,b]=range();if(b<D.last||F.per==='all')return'';
+  return'<div class="hint">Nothing for '+esc(perLabel())+' yet. The latest data is from '+fmtD(D.last)+'. <a style="color:#0e5f8a;font-weight:700;cursor:pointer" data-a="day" data-v="'+D.last+'">Show '+fmtS(D.last)+'</a></div>';
+}
+
+/* ---------- filtering ---------- */
+const stKey=r=>r.n+'|'+r.c;
+function fb(ign){
+  ign=ign||[];const rg=range(),q=F.q.toLowerCase();
+  return D.f.filter(r=>{
+    if(!inScope(r)||r.d<rg[0]||r.d>rg[1])return false;
+    if(!ign.includes('cl')&&F.cl.length&&!F.cl.includes(r.cb))return false;
+    if(!ign.includes('c')&&F.c.length&&!F.c.includes(r.c))return false;
+    if(!ign.includes('dp')&&F.dp&&r.dp!==F.dp)return false;
+    if(!ign.includes('ct')&&F.ct&&r.ct!==F.ct)return false;
+    if(!ign.includes('m')&&F.m&&r.m!==F.m)return false;
+    if(!ign.includes('p')&&F.p&&r.p!==F.p)return false;
+    if(!ign.includes('cs')&&F.cs&&!r.cs.includes(F.cs))return false;
+    if(F.ak==='wait'&&akItems(r.id).some(x=>x.role===akRole()))return false;
+    if(F.ak==='done'&&!akItems(r.id).some(x=>x.role===akRole()))return false;
+    if(q&&!(r.n+' '+r.t+' '+r.c+' '+r.m+' '+(r.s||'')).toLowerCase().includes(q))return false;
+    return true;
+  }).sort((x,y)=>y.d<x.d?-1:y.d>x.d?1:0);
+}
+const cScope=x=>inScope({g:x.g,c:x.c,dp:x.dp,sub:[]});
+const clSel=r=>(!F.cl.length||F.cl.includes(r.cb))&&(!F.c.length||F.c.includes(r.c));
+const callScope=c=>c.rqBy===ME.name||(ME.role==='teacher'&&!canCalls()?false:cScope(c));
+const callList=()=>{const rg=range();return D.c.filter(r=>callScope(r)&&clSel(r)&&(!F.rb||r.rqBy===F.rb)&&(!F.q||(r.n+' '+r.t).toLowerCase().includes(F.q.toLowerCase()))&&((r.d>=rg[0]&&r.d<=rg[1])||!callDone(r))).sort((x,y)=>(y.urg==='Urgent')-(x.urg==='Urgent')||(y.d<x.d?-1:y.d>x.d?1:0))};
+const callDone=c=>!!CS[c.id]&&CS[c.id].done||(!CS[c.id]&&c.st==='Done');
+function tally(arr,f){const m={};arr.forEach(r=>{const k=f(r);if(k)m[k]=(m[k]||0)+1});return Object.entries(m).sort((a,b)=>b[1]-a[1])}
+function toast(m,ms){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),ms||2600)}
+function bars(rows,act,key,color){
+  const mx=Math.max(1,...rows.map(r=>r[1]));
+  return rows.map(r=>'<div class="bar" data-a="'+act+'" data-k="'+key+'" data-v="'+esc(r[0])+'"><span>'+esc(r[0])+'</span><span class="t"><i style="width:'+Math.max(3,r[1]/mx*100)+'%;background:'+color+'"></i></span><b>'+r[1].toLocaleString()+'</b></div>').join('')||'<div class="mut">Nothing in this selection</div>';
+}
+const priP=p=>p?'<span class="st '+(p==='High'?'bad':p==='Medium'?'warn':'info')+'">'+p+'</span>':'';
+const dots=n=>n?'<span class="dots">'+Array.from({length:Math.min(n,8)},()=>'<i></i>').join('')+'</span>':'';
+const srcP=m=>'<span class="st src s-'+esc(m)+'">'+esc(srcName(m))+'</span>';
+
+/* ---------- follow-up days ---------- */
+const dayOf=ms=>isoOf(new Date(ms));
+const checkedOn=(id,d)=>(FU[id].checks||[]).some(c=>dayOf(c.at)===d);
+const fuStart=id=>dayOf(FU[id].at);
+function fuPill(id){
+  const v=FU[id];if(!v)return'';const t=todayISO();
+  if(v.st==='closed')return'<span class="st ok">Done</span>';
+  if(v.due<t)return'<span class="st bad">Ended '+fmtS(v.due)+'</span>';
+  return'<span class="st info">Until '+fmtS(v.due)+'</span>';
+}
+function strip(id){
+  const v=FU[id],s=fuStart(id),e=v.due>s?v.due:s,n=Math.min(diffDays(s,e)+1,45),t=todayISO(),by={};
+  (v.checks||[]).forEach(c=>{const d=dayOf(c.at);by[d]=(by[d]||0)+1});
+  let h='<div class="ds">';
+  for(let i=0;i<n;i++){const d=addDays(s,i),k=by[d]||0;h+='<span class="'+(k?'ok':d<t?'miss':d===t?'now':'')+'" title="'+fmtD(d)+(k?' · checked '+k+'×':d<t?' · missed':'')+'"><small>'+dOf(d).getDate()+'</small>'+(k?'✓'+(k>1?'<em>'+k+'</em>':''):'')+'</span>'}
+  return h+'</div>';
+}
+function fuSummary(id){
+  const v=FU[id],s=fuStart(id),t=todayISO(),tot=diffDays(s,v.due)+1,no=Math.max(1,Math.min(diffDays(s,t)+1,tot)),n=(v.checks||[]).length;
+  let missed=0;for(let i=0;i<Math.min(diffDays(s,t),tot);i++)if(!checkedOn(id,addDays(s,i)))missed++;
+  return'<b style="color:var(--navy)">Day '+no+' of '+tot+'</b> · Checked '+n+' time'+(n===1?'':'s')+(missed?' · <span style="color:var(--red);font-weight:700">Missed '+missed+' day'+(missed>1?'s':'')+'</span>':'')+(v.st==='open'&&v.due>=t?(checkedOn(id,t)?' · <span style="color:var(--green);font-weight:700">Checked today</span>':' · <span style="color:var(--mag);font-weight:700">Not checked today</span>'):'');
+}
+
+/* ---------- remarks (chat under every feedback) ---------- */
+const remItems=id=>(REM[id]&&REM[id].items)||[];
+function thread(id){
+  const it=remItems(id);
+  return'<div class="thread" data-th="'+id+'">'+(it.length?it.map(x=>'<div class="rem"><div class="rh"><b>'+esc(x.by)+'</b><span class="st nu">'+esc(x.role)+'</span>'+(x.act?'<span class="st '+(x.st==='done'?'ok':'warn')+'">Action · '+(x.st==='done'?'Done':'In progress')+'</span>':'')+'<span class="mut">'+fmtT(x.at)+(x.ed?' · edited':'')+'</span>'+((x.by===ME.name||isDir())?'<span class="sp"></span><a data-a="remedit" data-id="'+id+'" data-r="'+x.id+'">Edit</a><a data-a="remdel" data-id="'+id+'" data-r="'+x.id+'">Delete</a>':'')+'</div><div class="rt">'+esc(x.text)+'</div></div>').join(''):'<div class="mut" style="font-size:12.5px;margin-bottom:8px">No remarks yet. Teacher, PL or admin can write one.</div>')
+  +'<div class="rin"><textarea rows="2" id="rt-'+id+'" placeholder="Write a remark…"></textarea><button class="btn pri sm" data-a="remadd" data-id="'+id+'">Send</button></div></div>';
+}
+function refreshThreads(id){document.querySelectorAll('[data-th="'+id+'"]').forEach(e=>{e.outerHTML=thread(id)})}
+
+/* ---------- acknowledgements ---------- */
+const AK={teacher:'Teacher',pl:'PL',admin:'Administration',director:'Director'};
+const akRole=()=>ME.role==='teacher'?'teacher':ME.role==='coord'?'pl':ME.role==='admin'?'admin':'director';
+const akItems=id=>(ACK[id]&&ACK[id].items)||[];
+function akStrip(r){
+  const it=akItems(r.id),slots=['teacher','pl','admin'].concat(it.some(x=>x.role==='director')?['director']:[]);
+  return'<div class="ak">'+slots.map(k=>{const x=it.filter(z=>z.role===k);if(x.length){const l=x[x.length-1];return'<span class="a ok"><b>'+AK[k]+'</b> ✓ '+esc(l.by)+' · '+fmtT(l.at)+(x.length>1?' +'+(x.length-1):'')+'</span>'}return'<span class="a w"><b>'+AK[k]+'</b> waiting · '+ago(r.d)+'</span>'}).join('')+'</div>';
+}
+function akBtn(r){const mine=akItems(r.id).some(x=>x.by===ME.name&&x.role===akRole());return mine?'<span class="st ok">You acknowledged</span>':'<button class="btn sm navy" data-a="ack" data-id="'+r.id+'">Acknowledge</button>'}
+function ackDo(id){ACK[id]=ACK[id]||{items:[]};ACK[id].items.push({role:akRole(),by:ME.name,at:Date.now()});saveACK(id);toast('Acknowledged by '+ME.name+' as '+AK[akRole()]);render(true);if(document.querySelector('.drawer'))openDrawer(id)}
+const waitTxt=ms=>{const m=Math.max(0,Math.round((Date.now()-ms)/6e4));return m<60?m+' min':m<1440?Math.round(m/60)+' h':Math.round(m/1440)+' days'};
+
+/* ---------- cards ---------- */
+function fbCard(r){
+  const v=FU[r.id],nr=remItems(r.id).length;
+  let h='<div class="fc '+esc(r.p)+'"><div class="hd"><b class="lk" data-a="stu" data-v="'+esc(stKey(r))+'">'+esc(r.n||'—')+'</b><span class="st nu">'+esc(r.c)+'</span>'+srcP(r.m)+'<span class="dt">'+fmtD(r.d)+' · '+ago(r.d)+'</span></div>'
+  +'<div class="tx" data-a="open" data-id="'+r.id+'">'+esc(r.t)+'</div>'+imgsH(r)+akStrip(r)+'<div class="ft" style="margin-top:8px"><span class="st cat">'+esc(r.ct)+'</span><span class="st nu">'+esc(r.dp)+'</span>'+priP(r.p)+'<span class="sp"></span>';
+  h+=akBtn(r)+(isCase(r)?'<button class="btn sm" data-a="actrec" data-id="'+r.id+'">Record action</button>':'')+'<button class="btn sm" data-a="mvreq" data-id="'+r.id+'">'+(RT[r.id]&&RT[r.id].ct==='Request'?'Request: '+esc(RT[r.id].rc):'Move to Requests')+'</button>'+'<button class="btn sm" data-a="reqcall" data-id="'+r.id+'">Call parent</button><button class="btn sm" data-a="rto" data-id="'+r.id+'">Remarks'+(nr?' ('+nr+')':'')+'</button>';
+  if(v)h+=fuPill(r.id)+(v.checks&&v.checks.length?' <span class="mut" style="font-size:12px">Checked '+v.checks.length+'×</span>':'')+'<button class="btn sm" data-a="open" data-id="'+r.id+'">Open</button>';
+  else h+=(r.why.length?'<span class="st warn" title="'+esc(r.why.join(', '))+'">Needs follow-up</span>':'')+'<button class="btn sm '+(r.why.length?'pri':'')+'" data-a="fup" data-id="'+r.id+'">Follow up</button>';
+  h+='</div>';
+  if(RO[r.id])h+=thread(r.id);
+  return h+'</div>';
+}
+function fuCard(id){
+  const r=D.byId[id],v=FU[id],t=todayISO(),ct=checkedOn(id,t);
+  let h='<div class="fc"><div class="hd"><b class="lk" data-a="stu" data-v="'+esc(stKey(r))+'">'+esc(r.n)+'</b><span class="st nu">'+esc(r.c)+'</span><span class="st cat">'+esc(owner(id))+'</span><span class="dt">'+fuPill(id)+'</span></div>'
+  +'<div class="tx" data-a="open" data-id="'+id+'">'+esc(v.note?v.note+' — '+r.t:r.t)+'</div>'+strip(id)
+  +'<div class="ft" style="margin-top:8px"><span style="font-size:12.5px">'+fuSummary(id)+'</span><span class="sp"></span>';
+  if(v.st==='open'){
+    h+=v.due>=t?'<button class="btn pri sm" data-a="chk" data-id="'+id+'">'+(ct?'Check again':'Check today')+'</button>':'<button class="btn pri sm" data-a="due" data-id="'+id+'">Extend days</button>';
+    h+='<button class="btn sm" data-a="rto" data-id="'+id+'">Remarks'+(remItems(id).length?' ('+remItems(id).length+')':'')+'</button><button class="btn navy sm" data-a="cls" data-id="'+id+'">Mark done</button>';
+  }else h+='<button class="btn sm" data-a="reo" data-id="'+id+'">Reopen</button>';
+  h+='</div>';if(RO[id])h+=thread(id);
+  return h+'</div>';
+}
+function callCard(c){
+  const s=CS[c.id],done=callDone(c),att=(s&&s.att)||[],t=todayISO(),late=!done&&c.due&&c.due<t;
+  const OUT={ok:'Spoke to parent',na:'No answer',nr:'Not reachable',cb:'Will call back'};
+  let h='<div class="fc'+(c.urg==='Urgent'&&!done?' High':'')+'"><div class="hd"><b class="lk" data-a="stu" data-v="'+esc(c.n+'|'+c.c)+'">'+esc(c.n)+'</b><span class="st nu">'+esc(c.c)+'</span><span class="st cat">'+esc(c.dp)+'</span>'+(c.urg==='Urgent'?'<span class="st bad">Urgent</span>':'')+'<span class="dt">'+(c.at?fmtT(c.at)+(done?'':' · waiting '+waitTxt(c.at)):fmtD(c.d)+' · '+ago(c.d))+'</span></div>'
+  +'<div class="tx" style="cursor:default;-webkit-line-clamp:5">'+esc(c.t)+'</div>';
+  if(c.imgs&&c.imgs.length)h+='<div class="ths">'+c.imgs.map(i=>'<img class="th" data-a="img" alt="attachment" src="'+esc(i.id?'/_blob/'+i.id:i.u)+'">').join('')+'</div>';
+  h+='<div class="mut" style="font-size:12.5px;margin-top:6px">'+(c.rq?'Requested by '+esc(c.rq):'')+(c.due?' · Call by '+fmtS(c.due)+(late?' (late)':''):'')+(c.mk?' · Call made '+esc(c.mk):'')+(c.by?' · By '+esc(c.by):'')+(c.rm?' · '+esc(c.rm):'')+(att.length?' · Tried '+att.length+'× (last: '+esc(OUT[att[att.length-1].out]||'')+')':'')+'</div>'
+  +'<div class="ft" style="margin-top:8px">'+(done?'<span class="st ok">Call done</span>'+(s&&s.done?'<span class="mut" style="font-size:12px">'+fmtT(s.at)+' by '+esc(s.by)+(s.note?' · '+esc(s.note):'')+'</span>':''):'<span class="st '+(late?'bad':'warn')+'">Call pending</span>')+'<span class="sp"></span>'
+  +(done?(s&&s.done?'<button class="btn sm" data-a="callre" data-id="'+c.id+'">Undo</button>':''):'<button class="btn pri sm" data-a="calldone" data-id="'+c.id+'">Call result</button>')+'</div></div>';
+  return h;
+}
+
+/* ---------- tables ---------- */
+const COLS=[['Feedback',a=>a.length],['Studybase',a=>a.filter(r=>r.m==='Studybase').length],['Call',a=>a.filter(r=>r.m==='Call').length],['Diary',a=>a.filter(r=>r.m==='Diary').length],['Desk',a=>a.filter(r=>r.m==='Desk').length],['Internal',a=>a.filter(r=>r.m==='Internal').length],['Request',a=>a.filter(r=>r.ct==='Request').length],['Query',a=>a.filter(r=>r.ct==='Query').length],['Concern',a=>a.filter(r=>r.ct==='Concern'||r.ct==='Complain').length],['Follow-up',a=>a.filter(r=>r.why.length&&!FU[r.id]).length]];
+function mx(head,rows,cols,act,k){
+  if(!rows.length)return'<div class="empty card">Nothing in this selection.</div>';
+  return'<div class="card"><div class="tw"><table><thead><tr><th>'+head+'</th>'+cols.map(c=>'<th class="n">'+c[0]+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr class="cr" data-a="'+act+'"'+(k?' data-k="'+k+'"':'')+' data-v="'+esc(r[1])+'"><td><b style="color:var(--navy)">'+esc(r[0])+'</b></td>'+cols.map(c=>'<td class="n">'+c[1](r[2],r[1])+'</td>').join('')+'</tr>').join('')+'</tbody></table></div></div>';
+}
+function groupBy(L,f){const m={};L.forEach(r=>{const k=f(r);if(k!=null)(m[k]=m[k]||[]).push(r)});return m}
+
+/* ---------- home ---------- */
+const HV=[['cases','Cases'],['sum','Numbers'],['cat','Types'],['cls','Classes'],['dep','Departments'],['day','Days'],['stu','Students']];
+function caseCard(key,L){
+  const x=L.filter(r=>r.cs.includes(key));
+  let h='<div class="card cc"><h3>'+esc(key)+'<small>'+x.length+' in this period</small></h3>';
+  h+=x.length?x.slice(0,4).map(r=>'<div class="att" data-a="open" data-id="'+r.id+'"><div class="m"><b>'+esc(r.n)+'</b> <span class="st nu">'+esc(r.c)+'</span> '+srcP(r.m)+'<div class="mut" style="font-size:12.5px">'+esc(r.t.slice(0,110))+(r.t.length>110?'…':'')+'</div></div><div class="x mut" style="font-size:12px">'+dayLbl(r.d)+'</div></div>').join('')+'<div style="margin-top:10px"><button class="btn sm" data-a="case" data-v="'+esc(key)+'">'+(x.length>4?'See all '+x.length+' cases':'Open this category')+'</button></div>':'<div class="empty" style="padding:18px 0">No cases in this period.</div>';
+  return h+'</div>';
+}
+function vHome(){
+  const L=fb(),t=todayISO();
+  const mine=Object.keys(FU).filter(id=>FU[id].st==='open'&&fuVisible(id)),pend=mine.filter(id=>FU[id].due>=t&&!checkedOn(id,t)),ended=mine.filter(id=>FU[id].due<t);
+  const sug=L.filter(r=>r.why.length&&!FU[r.id]).length,calls=canCalls()?callList().filter(c=>!callDone(c)).length:null;
+  let h=stuFinder()+dateBar()+noDataHint(L.length);
+  h+='<div class="pillrow" style="margin-bottom:14px"><button class="chip" data-a="fu" data-v="sug">Needs follow-up<small>'+sug+'</small></button><button class="chip" data-a="fu" data-v="chk">Check today<small>'+pend.length+'</small></button><button class="chip" data-a="fu" data-v="over">Follow-ups ended<small>'+ended.length+'</small></button>'+'<button class="chip" data-a="go" data-v="ca">Calls to make<small>'+callList().filter(c=>!callDone(c)).length+'</small></button><button class="chip" data-a="flt" data-k="ak" data-v="wait">Waiting for '+AK[akRole()]+' acknowledgement<small>'+L.filter(r=>!akItems(r.id).some(x=>x.role===akRole())).length+'</small></button></div>';
+  h+='<div class="scroll" style="margin-bottom:14px">'+HV.map(x=>'<button class="chip '+(hv===x[0]?'on':'')+'" data-a="hv" data-v="'+x[0]+'">'+x[1]+'</button>').join('')+'</div>';
+  const src=tally(L,r=>r.m);
+  if(hv==='cat')h+=mx('Type',tally(L,r=>r.ct).map(x=>[x[0],x[0],L.filter(r=>r.ct===x[0])]),COLS,'flt','ct');
+  else if(hv==='dep')h+=mx('Department',tally(L,r=>r.dp).map(x=>[x[0],x[0],L.filter(r=>r.dp===x[0])]),COLS,'flt','dp');
+  else if(hv==='cls'){const g=groupBy(L,r=>r.cb),cb=groupBy(callList(),r=>r.cb);h+=mx('Class',Object.keys(g).sort((a,b)=>brank(a)-brank(b)).map(k=>[k==='—'?'Enquiries':k,k,g[k]]),COLS.concat([['Calls made',(a,k)=>(cb[k]||[]).length]]),'cl')}
+  else if(hv==='day'){const g=groupBy(L,r=>r.d);h+=mx('Date',Object.keys(g).sort().reverse().slice(0,45).map(k=>[fmtD(k),k,g[k]]),COLS,'day')}
+  else if(hv==='stu'){const g=groupBy(L,r=>r.n?stKey(r):null);h+=mx('Student (most feedback first)',Object.keys(g).sort((a,b)=>g[b].length-g[a].length).slice(0,25).map(k=>[k.replace('|','  ·  '),k,g[k]]),COLS,'stu')}
+  else{
+    const attn=[];ended.forEach(id=>attn.push({r:D.byId[id],tag:'<span class="st bad">Follow-up ended. Extend or close</span>'}));pend.slice(0,6).forEach(id=>attn.push({r:D.byId[id],tag:'<span class="st warn">Check today</span>'}));
+    L.filter(r=>r.p==='High'&&!FU[r.id]).slice(0,6).forEach(r=>attn.push({r,tag:'<span class="st warn">High priority</span>'}));
+    const rems=[];Object.keys(REM).forEach(id=>{const r=D.byId[id];if(r&&inScope(r))remItems(id).forEach(x=>rems.push({r,x}))});rems.sort((a,b)=>b.x.at-a.x.at);
+    if(hv==='sum'){
+      h+='<div class="grid g21"><div><div class="card"><h3>Needs attention<small>'+attn.length+'</small></h3>'+(attn.length?attn.slice(0,8).map(x=>'<div class="att" data-a="open" data-id="'+x.r.id+'"><div class="m"><b>'+esc(x.r.n)+'</b> <span class="st nu">'+esc(x.r.c)+'</span><div class="mut" style="font-size:12.5px">'+esc(x.r.t.slice(0,100))+(x.r.t.length>100?'…':'')+'</div></div><div class="x">'+x.tag+'</div></div>').join(''):'<div class="empty">Nothing needs attention right now.</div>')+'</div>'
+      +'<div class="card" style="margin-top:16px"><h3>Latest remarks<small>'+rems.length+'</small></h3>'+(rems.length?rems.slice(0,6).map(z=>'<div class="att" data-a="open" data-id="'+z.r.id+'"><div class="m"><b>'+esc(z.r.n)+'</b> <span class="st nu">'+esc(z.r.c)+'</span><div class="mut" style="font-size:12.5px">'+esc(z.x.by)+': '+esc(z.x.text.slice(0,110))+'</div></div><div class="x mut" style="font-size:12px">'+fmtT(z.x.at)+'</div></div>').join(''):'<div class="empty">No remarks written yet.</div>')+'</div></div>'
+      +'<div class="card"><h3>By type</h3>'+bars(tally(L,r=>r.ct).slice(0,8),'flt','ct','#572686')+'<h3 style="margin-top:16px">By source</h3>'+bars(src,'flt','m','#2B9BD6')+'<h3 style="margin-top:16px">By department</h3>'+bars(tally(L,r=>r.dp).slice(0,8),'flt','dp','#EFA11D')+'<h3 style="margin-top:16px">By class</h3>'+bars(Object.entries(Object.fromEntries(Object.entries(groupBy(L,r=>r.cb)).sort((a,b)=>brank(a[0])-brank(b[0])).map(e=>[e[0]==='—'?'Enquiries':e[0],e[1].length]))),'flt','cl','#1B3156')+'</div></div>';
+    }else{
+      if(attn.length)h+='<div class="card" style="margin-bottom:16px"><h3>Needs attention<small>'+attn.length+'</small></h3>'+attn.slice(0,5).map(x=>'<div class="att" data-a="open" data-id="'+x.r.id+'"><div class="m"><b>'+esc(x.r.n)+'</b> <span class="st nu">'+esc(x.r.c)+'</span> '+srcP(x.r.m)+'<div class="mut" style="font-size:12.5px">'+esc(x.r.t.slice(0,110))+'</div></div><div class="x">'+x.tag+'</div></div>').join('')+'</div>';
+      h+='<div class="cgrid">'+CASES.map(k=>caseCard(k,L)).join('');
+      if(canCalls()){const rg=range(),H=D.h.filter(r=>r.d>=rg[0]&&r.d<=rg[1]&&cScope(r)).sort((x,y)=>y.d<x.d?-1:1);
+        h+='<div class="card cc"><h3>Change requests<small>'+H.length+' in this period</small></h3>'+(H.length?H.slice(0,4).map(r=>'<div class="att" data-a="chg"><div class="m"><b>'+esc(r.n)+'</b> <span class="st nu">'+esc(r.c)+'</span><div class="mut" style="font-size:12.5px">'+esc(r.dp+' · '+r.ty+': '+r.fr+' to '+r.to)+'</div></div><div class="x"><span class="st '+(r.st==='Approved'?'ok':r.st==='Denied'?'bad':'warn')+'">'+esc(r.st)+'</span></div></div>').join('')+'<div style="margin-top:10px"><button class="btn sm" data-a="chg">Open change requests</button></div>':'<div class="empty" style="padding:18px 0">None in this period.</div>')+'</div>'}
+      h+='</div>';
+    }
+  }
+  return h;
+}
+
+/* ---------- student ---------- */
+function stuFinder(){return'<div class="card" style="margin-bottom:16px"><label class="lbl">Find a student. See all feedback in one place</label><input type="search" id="sq" placeholder="Type a student name" autocomplete="off"><div id="sugs"></div></div>'}
+function stuList(q){const m={};D.f.forEach(r=>{if(inScope(r)&&r.n&&r.n.toLowerCase().includes(q)){const k=stKey(r);m[k]=(m[k]||0)+1}});return Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,10)}
+function vStudent(){
+  const[n,c]=STK.split('|'),f=D.f.filter(r=>r.n===n&&r.c===c&&inScope(r)),ca=D.c.filter(x=>x.n===n&&x.c===c&&callScope(x)),ch=D.h.filter(x=>x.n===n&&x.c===c&&cScope(x)&&canCalls());
+  const items=f.map(r=>({d:r.d,k:'f',r})).concat(ca.map(r=>({d:r.d,k:'c',r})),ch.map(r=>({d:r.d,k:'h',r}))).sort((a,b)=>b.d<a.d?-1:b.d>a.d?1:0);
+  const open=f.filter(r=>FU[r.id]&&FU[r.id].st==='open').length;
+  let h='<div class="row" style="margin-bottom:14px"><button class="btn sm" data-a="back">‹ Back</button><span class="sp"></span><button class="btn" data-a="prstu">Print student sheet</button></div>';
+  h+='<div class="card" style="margin-bottom:16px"><div class="row" style="justify-content:space-between"><div><h2 style="margin:0;color:var(--navy)">'+esc(n)+'</h2><div class="mut">Class '+esc(c)+'</div></div></div><div class="row" style="gap:26px;margin-top:12px">'
+  +[['Feedback',f.length],['Studybase',f.filter(r=>r.m==='Studybase').length],['Call',f.filter(r=>r.m==='Call').length],['Diary',f.filter(r=>r.m==='Diary').length],['Desk',f.filter(r=>r.m==='Desk').length],['Internal',f.filter(r=>r.m==='Internal').length],['Follow-ups open',open],['School calls',ca.length],['Changes',ch.length]].map(x=>'<div><div class="mut" style="font-size:12px">'+x[0]+'</div><b style="font-size:22px;color:var(--navy)">'+x[1]+'</b></div>').join('')+'</div></div>';
+  h+=insPanel(c,n);
+  h+=items.length?items.map(i=>{
+    if(i.k==='f')return fbCard(i.r);
+    if(i.k==='c'){const c=i.r;return'<div class="fc"><div class="hd"><b>School call</b><span class="st cat">'+esc(c.dp)+'</span><span class="dt">'+fmtD(c.d)+'</span></div><div class="tx" style="cursor:default">'+esc(c.t)+'</div><div class="ft">'+(callDone(c)?'<span class="st ok">Call done</span>':'<span class="st bad">Call pending</span>')+(c.mk?'<span class="mut" style="font-size:12px">Call made '+esc(c.mk)+(c.by?' by '+esc(c.by):'')+'</span>':'')+(CS[c.id]&&CS[c.id].note?'<span class="mut" style="font-size:12px">'+esc(CS[c.id].note)+'</span>':'')+'</div></div>'}
+    const x=i.r;return'<div class="fc"><div class="hd"><b>Change request</b><span class="st cat">'+esc(x.dp+' · '+x.ty)+'</span><span class="dt">'+fmtD(x.d)+'</span></div><div class="tx" style="cursor:default">'+esc(x.fr)+' to '+esc(x.to)+'</div><div class="ft"><span class="st '+(x.st==='Approved'?'ok':x.st==='Denied'?'bad':'warn')+'">'+esc(x.st)+'</span></div></div>';
+  }).join(''):'<div class="empty card">Nothing found for this student.</div>';
+  return h;
+}
+
+/* ---------- feedback ---------- */
+function classBar(){
+  const rows=D.f.filter(inScope);const bs=[...new Set(rows.map(r=>r.cb))].sort((a,b)=>brank(a)-brank(b));
+  let h='<div class="lblrow">Class (tap several to combine)</div><div class="scroll"><button class="chip '+(!F.cl.length?'on':'')+'" data-a="cl" data-v="">All classes</button>'+bs.map(b=>'<button class="chip '+(F.cl.includes(b)?'on':'')+'" data-a="cl" data-v="'+esc(b)+'">'+(b==='—'?'Enquiries':esc(b))+'</button>').join('')+'</div>';
+  if(F.cl.length&&!(F.cl.length===1&&F.cl[0]==='—')){const secs=[...new Set(rows.filter(r=>F.cl.includes(r.cb)).map(r=>r.c))].sort((a,b)=>crank(a)-crank(b));if(secs.length>1)h+='<div class="lblrow">Section (tap several)</div><div class="scroll"><button class="chip '+(!F.c.length?'on':'')+'" data-a="sec" data-v="">All sections</button>'+secs.map(s=>'<button class="chip '+(F.c.includes(s)?'on':'')+'" data-a="sec" data-v="'+esc(s)+'">'+esc(s)+'</button>').join('')+'</div>'}
+  return h;
+}
+function summaryTable(){
+  const bySec=!!F.cl.length;const L=fb(['c']);
+  const key=r=>bySec?r.c:r.cb;
+  const keys=[...new Set(L.map(key))].sort((a,b)=>(bySec?crank(a)-crank(b):brank(a)-brank(b)));
+  if(!keys.length)return'';
+  const row=k=>{const x=L.filter(r=>key(r)===k),on=bySec?F.c.includes(k):F.cl.includes(k);return'<tr class="cr'+(on?' on':'')+'" data-a="'+(bySec?'sec':'cl')+'" data-v="'+esc(k)+'"><td><b style="color:var(--navy)">'+(k==='—'?'Enquiries':esc(k))+'</b></td><td class="n">'+x.length+'</td><td class="n">'+x.filter(r=>r.m==='Diary').length+'</td><td class="n">'+x.filter(r=>r.m==='Call').length+'</td><td class="n">'+x.filter(r=>r.m==='Studybase').length+'</td><td class="n">'+x.filter(r=>r.ct==='Request').length+'</td><td class="n">'+x.filter(r=>r.ct==='Query').length+'</td><td class="n">'+x.filter(r=>r.ct==='Concern'||r.ct==='Complain').length+'</td><td class="n">'+x.filter(r=>r.why.length&&!FU[r.id]).length+'</td></tr>'};
+  return'<div class="card" style="margin-bottom:16px"><h3>'+(bySec?'Sections of '+esc(F.cl.join(', ')):'All classes')+'<small>tap rows to select more than one</small></h3><div class="tw"><table><thead><tr><th>'+(bySec?'Section':'Class')+'</th><th class="n">Feedback</th><th class="n">Diary</th><th class="n">Call</th><th class="n">Studybase</th><th class="n">Request</th><th class="n">Query</th><th class="n">Concern</th><th class="n">Follow-up</th></tr></thead><tbody>'+keys.map(row).join('')+'</tbody></table></div></div>';
+}
+function chipRow(label,key,opts,all){
+  const cur=F[key];
+  return'<div class="lblrow">'+label+'</div><div class="scroll"><button class="chip '+(!cur?'on':'')+'" data-a="flt" data-k="'+key+'" data-v="">'+all+'</button>'+opts.map(o=>'<button class="chip '+(cur===o[0]?'on':'')+'" data-a="flt" data-k="'+key+'" data-v="'+esc(o[0])+'">'+esc(o[0])+'<small>'+o[1]+'</small></button>').join('')+'</div>';
+}
+function callsBlock(){
+  const all=callList(),done=all.filter(callDone),open=all.filter(c=>!callDone(c)),sel=callTab==='done'?done:open;
+  let h='<div class="hint">Call requests and calls made to parents. A call is complete only when someone marks “Call done”.</div>';
+  h+='<div class="scroll" style="margin-bottom:14px"><button class="chip '+(callTab==='open'?'on':'')+'" data-a="ctab" data-v="open">To call<small>'+open.length+'</small></button><button class="chip '+(callTab==='done'?'on':'')+'" data-a="ctab" data-v="done">Done<small>'+done.length+'</small></button></div>';
+  return h+(sel.length?sel.slice(0,shown).map(callCard).join('')+(sel.length>shown?'<div style="text-align:center;margin:14px 0"><button class="btn" data-a="more">Show more</button></div>':''):'<div class="empty card">No calls here.</div>');
+}
+function srcSeg(){
+  const c=Object.fromEntries(tally(fb(['m']),r=>r.m)),tot=Object.values(c).reduce((a,b)=>a+b,0),cl=callList(),po=cl.filter(x=>!callDone(x)).length,pd=cl.filter(callDone).length;
+  const b=(v,l,n,on,a,extra)=>'<button class="'+(on?'on':'')+'" data-a="'+(a||'flt')+'" '+(a?'':'data-k="m" ')+'data-v="'+v+'"><b>'+l+'</b><small>'+n+'</small></button>';
+  const mk=F.m==='made';
+  return'<div class="srcseg">'+b('','All sources',tot,!F.m)+b('Studybase','Studybase',c.Studybase||0,F.m==='Studybase')+b('Call','Calls received',c.Call||0,F.m==='Call')+b('Diary','Diary remarks',c.Diary||0,F.m==='Diary')+b('Desk','Front office desk',c.Desk||0,F.m==='Desk')+b('Internal','Internal',c.Internal||0,F.m==='Internal')+b('open','Call requests',po,mk&&callTab==='open','mseg')+b('done','Calls made',pd,mk&&callTab==='done','mseg')+'</div>';
+}
+function listHTML(L){
+  const t=todayISO(),y=addDays(t,-1),cnt={};L.forEach(r=>cnt[r.d]=(cnt[r.d]||0)+1);
+  let last='',h='';
+  L.slice(0,shown).forEach(r=>{if(r.d!==last){last=r.d;h+='<div class="dh">'+(r.d===t?'Today':r.d===y?'Yesterday':fmtD(r.d))+'<small>'+cnt[r.d]+'</small></div>'}h+=fbCard(r)});
+  return h;
+}
+function vFeedback(){
+  const made=F.m==='made';
+  const L=made?[]:fb();
+  let h=stuFinder()+srcSeg()+dateBar()+'<div class="card" style="margin-bottom:16px">';
+  if(!made){
+    h+=chipRow('Department','dp',tally(fb(['dp']),r=>r.dp),'All departments').replace('</div></div>',(canCalls()?'<button class="chip" data-a="chg">Change requests</button>':'')+'</div></div>');
+    h+='<div class="lblrow">Case</div><div class="scroll"><button class="chip '+(!F.cs?'on':'')+'" data-a="flt" data-k="cs" data-v="">All cases</button>'+CASES.map(k=>[k,fb(['cs']).filter(r=>r.cs.includes(k)).length]).filter(x=>x[1]||F.cs===x[0]).map(o=>'<button class="chip '+(F.cs===o[0]?'on':'')+'" data-a="flt" data-k="cs" data-v="'+esc(o[0])+'">'+esc(o[0])+'<small>'+o[1]+'</small></button>').join('')+'</div>';
+    h+=chipRow('Type','ct',tally(fb(['ct']),r=>r.ct),'All types');
+    h+='<div class="lblrow">Acknowledgement</div><div class="scroll"><button class="chip '+(!F.ak?'on':'')+'" data-a="flt" data-k="ak" data-v="">All</button><button class="chip '+(F.ak==='wait'?'on':'')+'" data-a="flt" data-k="ak" data-v="wait">Waiting for '+AK[akRole()]+'</button><button class="chip '+(F.ak==='done'?'on':'')+'" data-a="flt" data-k="ak" data-v="done">Acknowledged by '+AK[akRole()]+'</button></div>';
+  }
+  const noClass=!made&&L.length&&L.every(r=>r.cb==='—');
+  if(!noClass)h+=classBar();
+  h+='<div class="row" style="margin-top:14px"><div style="flex:1;min-width:180px"><label class="lbl">Search</label><input type="search" id="q" placeholder="Student name or word" value="'+esc(F.q)+'"></div></div>';
+  h+='<div class="row" style="margin-top:12px"><button class="btn" data-a="prlist">Print this list</button><span class="sp"></span><button class="btn sm" data-a="clr">Clear filters</button></div></div>';
+  if(made)return h+callsBlock();
+  h+=noDataHint(L.length);
+  if(!noClass&&(F.c.length||F.cl.length===1)){
+    const calls=canCalls()?callList().length:0;
+    h+='<div class="card" style="margin-bottom:16px"><h3>'+esc((F.c.length?F.c:F.cl).join(', '))+'<small>everything in this period</small></h3><div class="row" style="gap:26px">'+[['Feedback',L.length],['Studybase',L.filter(r=>r.m==='Studybase').length],['Calls received',L.filter(r=>r.m==='Call').length],['Diary remarks',L.filter(r=>r.m==='Diary').length],['Front desk',L.filter(r=>r.m==='Desk').length],['Need follow-up',L.filter(r=>r.why.length&&!FU[r.id]).length]].map(x=>'<div><div class="mut" style="font-size:12px">'+x[0]+'</div><b style="font-size:24px;color:var(--navy)">'+x[1]+'</b></div>').join('')+(canCalls()?'<div style="cursor:pointer" data-a="flt" data-k="m" data-v="made"><div class="mut" style="font-size:12px">Calls made</div><b style="font-size:24px;color:var(--navy)">'+calls+'</b></div>':'')+'</div></div>';
+  }
+  if(!noClass&&!F.c.length)h+=summaryTable();
+  h+='<div class="sec" style="margin:6px 0 10px"><h3 style="margin:0;font-size:15px;color:var(--navy)">'+(F.cs?esc(F.cs)+' · ':'')+'Latest first <span class="mut" style="font-weight:500">'+L.length.toLocaleString()+'</span></h3></div>';
+  h+=L.length?listHTML(L)+(L.length>shown?'<div style="text-align:center;margin:14px 0"><button class="btn" data-a="more">Show more ('+(L.length-shown).toLocaleString()+' left)</button></div>':''):'<div class="empty card">No feedback for this selection.</div>';
+  return h;
+}
+
+/* ---------- follow-ups ---------- */
+function vFollow(){
+  const t=todayISO(),vis=Object.keys(FU).filter(fuVisible);
+  if(fuSeg===''&&ME.role==='teacher')fuSeg=myKey();
+  const bySeg=s=>vis.filter(id=>s==='all'||!s||owner(id)===s);
+  const openIn=s=>bySeg(s).filter(id=>FU[id].st==='open');
+  const pendIn=s=>openIn(s).filter(id=>FU[id].due>=t&&!checkedOn(id,t));
+  const timesIn=s=>bySeg(s).reduce((a,id)=>a+(FU[id].checks||[]).length,0);
+  const owners=OWNERS.filter(o=>vis.some(id=>owner(id)===o));
+  const segc=(k,lbl)=>'<div class="segc '+((fuSeg||'all')===k?'on':'')+'" data-a="seg" data-v="'+esc(k)+'"><b>'+esc(lbl)+'</b><div class="r"><span>Open</span><span>'+openIn(k).length+'</span></div><div class="r"><span>Check today</span><span>'+pendIn(k).length+'</span></div><div class="r"><span>Times checked</span><span>'+timesIn(k)+'</span></div></div>';
+  let h='';
+  if(ME.role!=='teacher')h+='<div class="seg">'+segc('all','Everyone')+owners.map(o=>segc(o,o)).join('')+'</div>';
+  else h+='<div class="hint">Your follow-ups: <b>'+esc(fuSeg)+'</b>. Tap “Check today” each day you check the child.</div>';
+  const seg=fuSeg||'all',items=bySeg(seg);
+  const open=items.filter(id=>FU[id].st==='open'),chk=open.filter(id=>FU[id].due>=t&&!checkedOn(id,t)),ended=open.filter(id=>FU[id].due<t),done=items.filter(id=>FU[id].st==='closed');
+  const sugAll=fb().filter(r=>r.why.length&&!FU[r.id]&&(seg==='all'||ownerOf(r)===seg));
+  const tabs=[['chk','Check today',chk.length],['open','All open',open.length],['over','Ended',ended.length],['done','Done',done.length],['sug','Needs follow-up',sugAll.length]];
+  h+='<div class="scroll" style="margin-bottom:14px">'+tabs.map(x=>'<button class="chip '+(fuTab===x[0]?'on':'')+'" data-a="fut" data-v="'+x[0]+'">'+x[1]+'<small>'+x[2]+'</small></button>').join('')+'</div>';
+  if(fuTab==='sug'){
+    h+=dateBar()+'<div class="hint">Picked automatically (high priority, concern, complaint, learning concern or action required) and sent to the right group. Tap “Follow up” and choose for how many days.</div>';
+    h+=sugAll.length?sugAll.slice(0,shown).map(fbCard).join('')+(sugAll.length>shown?'<div style="text-align:center;margin:14px 0"><button class="btn" data-a="more">Show more</button></div>':''):'<div class="empty card">Nothing needs a follow-up in this period.</div>';
+  }else{
+    if(fuTab==='chk')h+='<div class="hint">Children to check today. Tap “Check today” after you check. A follow-up keeps running for all the days you chose.</div>';
+    const sel=fuTab==='chk'?chk:fuTab==='open'?open:fuTab==='over'?ended:done;
+    sel.sort((a,b)=>(FU[a].due||'')<(FU[b].due||'')?-1:1);
+    h+=sel.length?sel.map(fuCard).join(''):'<div class="empty card">No follow-ups here. Start one from the Feedback tab.</div>';
+  }
+  if(isDir()&&ME.role==='director'){
+    h+='<div style="margin-top:22px"><button class="btn sm" data-a="staff">'+(showStaff?'Hide':'Show')+' staff activity (Director only)</button></div>';
+    if(showStaff){
+      const m={};Object.keys(FU).forEach(id=>{const v=FU[id];const a=m[v.by]=m[v.by]||{n:v.by,s:0,c:0,d:0,last:0};a.s++;if(v.st==='closed')a.d++;(v.checks||[]).forEach(c=>{const b=m[c.by]=m[c.by]||{n:c.by,s:0,c:0,d:0,last:0};b.c++;b.last=Math.max(b.last,c.at)})});
+      const rows=Object.values(m).sort((a,b)=>b.c-a.c);
+      h+='<div class="card" style="margin-top:12px"><h3>Staff activity</h3>'+(rows.length?'<div class="tw"><table><thead><tr><th>Name</th><th class="n">Started</th><th class="n">Times checked</th><th class="n">Marked done</th><th>Last check</th></tr></thead><tbody>'+rows.map(a=>'<tr><td><b style="color:var(--navy)">'+esc(a.n)+'</b></td><td class="n">'+a.s+'</td><td class="n">'+a.c+'</td><td class="n">'+a.d+'</td><td>'+(a.last?fmtT(a.last):'—')+'</td></tr>').join('')+'</tbody></table></div>':'<div class="empty">No activity yet.</div>')+'</div>';
+    }
+  }
+  return h;
+}
+
+function vCalls(){
+  if(callTab==='recv'&&!canCalls())callTab='open';
+  const all=callList(),open=all.filter(c=>!callDone(c)),done=all.filter(callDone),rec=fb(['m']).filter(r=>r.m==='Call');
+  const rbs=[...new Set(D.c.filter(c=>c.app&&callScope(c)).map(c=>c.rqBy))].sort();
+  let h='<div class="row" style="margin-bottom:14px"><button class="btn pri" data-a="reqcall">+ Request a call to parent</button><span class="sp"></span></div>'+dateBar()+'<div class="card" style="margin-bottom:16px">'+classBar()+'<div class="row" style="margin-top:12px"><div style="flex:1;min-width:200px"><label class="lbl">Search</label><input type="search" id="q" placeholder="Student name or word" value="'+esc(F.q)+'"></div>'+(rbs.length>1?'<div style="flex:1;min-width:200px"><label class="lbl">Requested by</label><select data-f="rb"><option value="">Everyone</option>'+rbs.map(x=>'<option '+(F.rb===x?'selected':'')+'>'+esc(x)+'</option>').join('')+'</select></div>':'')+'</div></div>';
+  h+='<div class="scroll" style="margin-bottom:14px"><button class="chip '+(callTab==='open'?'on':'')+'" data-a="ctab" data-v="open">To call<small>'+open.length+'</small></button><button class="chip '+(callTab==='done'?'on':'')+'" data-a="ctab" data-v="done">Calls made<small>'+done.length+'</small></button>'+(canCalls()?'<button class="chip '+(callTab==='recv'?'on':'')+'" data-a="ctab" data-v="recv">Calls received<small>'+rec.length+'</small></button>':'')+'</div>';
+  if(callTab==='recv')return h+'<div class="hint">Calls parents made to school. They are feedback with source “Call received”.</div>'+(rec.length?listHTML(rec)+(rec.length>shown?'<div style="text-align:center;margin:14px 0"><button class="btn" data-a="more">Show more</button></div>':''):'<div class="empty card">No calls received in this period.</div>');
+  const sel=callTab==='open'?open:done;
+  h+='<div class="hint">'+(callTab==='open'?'Pending calls always stay here until someone records the result. Urgent first.':'Calls already made.')+'</div>';
+  return h+(sel.length?sel.slice(0,shown).map(callCard).join('')+(sel.length>shown?'<div style="text-align:center;margin:14px 0"><button class="btn" data-a="more">Show more ('+(sel.length-shown)+' left)</button></div>':''):'<div class="empty card">No calls here.</div>');
+}
+const RQCATS=['Transport change','Co-curricular change','Learning resource','Books and notebooks (stock)','Call to teacher','Uniform','Leave and pickup','Permission','Documents','Other'];
+function reqCat(r){const t=r.t||'';
+  if(r.rc)return r.rc;
+  if(r.ct==='Call Arrange'||/\b(call|talk|speak|meet|appointment)\b[^.]{0,40}\b(teacher|ma'?am|mam|sir)\b|\b(teacher|ma'?am|mam)\b[^.]{0,40}\b(call|talk|speak|meet)\b/i.test(t))return'Call to teacher';
+  if(/\b(ppt|pdf|video|recording|worksheet|study material|notes|resource|link)\b/i.test(t))return'Learning resource';
+  if(r.dp==='Books'||/\b(notebook|note book|copy|copies|book|books)\b/i.test(t))return'Books and notebooks (stock)';
+  if(r.dp==='Uniform')return'Uniform';
+  if(r.dp==='Transport')return'Transport change';
+  if(['Co Curricular','Competition','Academy','Event'].includes(r.dp))return'Co-curricular change';
+  if(r.dp==='Leave')return'Leave and pickup';
+  if(/\b(permission|permit|allow|exempt|excuse)\b/i.test(t))return'Permission';
+  if(r.dp==='Documents')return'Documents';
+  return'Other'}
+function reqList(){const rg=range(),q=F.q.toLowerCase();return D.f.filter(r=>(r.ct==='Request'||r.ct==='Call Arrange')&&inScope(r)&&r.d>=rg[0]&&r.d<=rg[1]&&clSel(r)&&(!q||(r.n+' '+r.t).toLowerCase().includes(q))).sort((x,y)=>y.d<x.d?-1:y.d>x.d?1:0)}
+function vRequests(){
+  const tabs=[['req','Requests']].concat(canCalls()?[['chg','Changes (transport, co-curricular)']]:[]);
+  if(rqMode==='chg'&&!canCalls())rqMode='req';
+  let h='<div class="scroll" style="margin-bottom:14px">'+tabs.map(x=>'<button class="chip '+(rqMode===x[0]?'on':'')+'" data-a="rqm" data-v="'+x[0]+'">'+x[1]+'</button>').join('')+'</div>'+dateBar()+'<div class="card" style="margin-bottom:16px">'+classBar()+'<div class="row" style="margin-top:12px"><div style="flex:1;min-width:200px"><label class="lbl">Search</label><input type="search" id="q" placeholder="Student name or word" value="'+esc(F.q)+'"></div></div></div>';
+  if(rqMode==='chg'){
+    const rg=range();let L=D.h.filter(r=>r.d>=rg[0]&&r.d<=rg[1]&&cScope(r)&&clSel(r)).sort((x,y)=>y.d<x.d?-1:1);
+    const dps=tally(L,r=>r.dp);if(rqSeg)L=L.filter(r=>r.dp===rqSeg);
+    h+='<div class="lblrow">Change of</div><div class="scroll"><button class="chip '+(!rqSeg?'on':'')+'" data-a="rqs" data-v="">All<small>'+dps.reduce((a,b)=>a+b[1],0)+'</small></button>'+dps.map(x=>'<button class="chip '+(rqSeg===x[0]?'on':'')+'" data-a="rqs" data-v="'+esc(x[0])+'">'+esc(x[0])+'<small>'+x[1]+'</small></button>').join('')+'</div>';
+    h+='<div class="hint">Changes asked by parents: transport, co-curricular, academy and class. '+L.length+' in this period.</div>';
+    return h+(L.length?'<div class="card"><div class="tw"><table><thead><tr><th>Date</th><th>Student</th><th>Class</th><th>Type</th><th>From</th><th>To</th><th>Status</th></tr></thead><tbody>'+L.slice(0,shown).map(r=>'<tr><td>'+fmtS(r.d)+'</td><td><b class="lk" data-a="stu" data-v="'+esc(r.n+'|'+r.c)+'">'+esc(r.n)+'</b></td><td><span class="st nu">'+esc(r.c)+'</span></td><td>'+esc(r.dp+' · '+r.ty)+'</td><td>'+esc(r.fr)+'</td><td>'+esc(r.to)+'</td><td><span class="st '+(r.st==='Approved'?'ok':r.st==='Denied'?'bad':'warn')+'">'+esc(r.st)+'</span></td></tr>').join('')+'</tbody></table></div>'+(L.length>shown?'<div style="text-align:center;margin-top:14px"><button class="btn" data-a="more">Show more</button></div>':'')+'</div>':'<div class="empty card">No changes in this period.</div>');
+  }
+  let L=reqList();const cats=RQCATS.map(k=>[k,L.filter(r=>reqCat(r)===k).length]).filter(x=>x[1]||rqSeg===x[0]);if(rqSeg)L=L.filter(r=>reqCat(r)===rqSeg);
+  h+='<div class="lblrow">Request for</div><div class="scroll"><button class="chip '+(!rqSeg?'on':'')+'" data-a="rqs" data-v="">All requests<small>'+cats.reduce((a,b)=>a+b[1],0)+'</small></button>'+cats.map(x=>'<button class="chip '+(rqSeg===x[0]?'on':'')+'" data-a="rqs" data-v="'+esc(x[0])+'">'+esc(x[0])+'<small>'+x[1]+'</small></button>').join('')+'</div>';
+  h+='<div class="hint">Every request can be acknowledged, followed up, remarked on, or turned into a call to the parent.</div><div style="margin-bottom:12px"><button class="btn pri sm" data-a="newreq">+ New request</button></div>';
+  return h+(L.length?listHTML(L)+(L.length>shown?'<div style="text-align:center;margin:14px 0"><button class="btn" data-a="more">Show more ('+(L.length-shown)+' left)</button></div>':''):'<div class="empty card">No requests in this period.</div>');
+}
+
+/* ---------- print ---------- */
+function printDoc(title,sub,body){
+  let p=$('#pr');if(!p){p=document.createElement('div');p.id='pr';document.body.appendChild(p)}
+  p.innerHTML='<h1>Flourish International School, Bikaner</h1><h2>'+esc(title)+'</h2><p>'+esc(sub)+'</p>'+body+'<p class="pf">Printed '+fmtT(Date.now())+' by '+esc(ME.name)+'. Staff use only. Contains student and parent information.</p>';
+  document.body.classList.add('printing');
+  try{window.print()}catch(e){toast('Printing is not available here. Use the browser print option.')}
+  setTimeout(()=>document.body.classList.remove('printing'),800);
+}
+const remTxt=id=>remItems(id).map(x=>x.by+' ('+fmtS(dayOf(x.at))+'): '+x.text).join(' | ');
+const fuTxt=id=>{const v=FU[id];if(!v)return'';return(v.st==='closed'?'Done':'Open until '+fmtS(v.due))+', checked '+(v.checks||[]).length+'×'};
+function ptable(head,rows){return'<table class="pt"><thead><tr>'+head.map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map(c=>'<td>'+esc(c)+'</td>').join('')+'</tr>').join('')+'</tbody></table>'}
+function printList(){
+  const L=fb(),sel=(F.c.length?F.c:F.cl).join(', ')||'All classes';
+  let b='<h3>Feedback ('+L.length+')</h3>'+ptable(['Date','Student','Class','Source','Type','Dept','Feedback','Follow-up','Remarks'],L.map(r=>[fmtS(r.d),r.n,r.c,srcName(r.m),r.ct,r.dp,r.t,fuTxt(r.id),remTxt(r.id)]));
+  {const C=callList();b+='<h3>School calls ('+C.length+')</h3>'+ptable(['Date','Student','Class','Reason','Call made','By','Status'],C.map(c=>[fmtS(c.d),c.n,c.c,c.t,c.mk||'',c.by||'',callDone(c)?'Done':'Pending']))}
+  printDoc('Feedback report: '+sel,perLabel(),b);
+}
+function printStudent(){
+  const[n,c]=STK.split('|'),f=D.f.filter(r=>r.n===n&&r.c===c&&inScope(r)).sort((a,b)=>b.d<a.d?-1:1),ca=D.c.filter(x=>x.n===n&&x.c===c&&callScope(x));
+  let b='<h3>Feedback ('+f.length+')</h3>'+ptable(['Date','Source','Type','Dept','Feedback','Follow-up','Remarks'],f.map(r=>[fmtDY(r.d),srcName(r.m),r.ct,r.dp,r.t,fuTxt(r.id),remTxt(r.id)]));
+  if(ca.length)b+='<h3>School calls ('+ca.length+')</h3>'+ptable(['Date','Reason','Call made','By','Status','Note'],ca.map(x=>[fmtDY(x.d),x.t,x.mk||'',x.by||'',callDone(x)?'Done':'Pending',(CS[x.id]&&CS[x.id].note)||x.rm||'']));
+  printDoc(n+' · Class '+c,'All feedback, calls and follow-ups',b);
+}
+
+/* ---------- drawer & modals ---------- */
+function overlay(html,center){const o=document.createElement('div');o.className='ov'+(center?' c':'');o.innerHTML=html;o.addEventListener('click',e=>{if(e.target===o)o.remove()});document.body.appendChild(o);return o}
+function openDrawer(id){
+  const r=D.byId[id],v=FU[id];document.querySelectorAll('.ov').forEach(x=>x.remove());
+  let h='<div class="drawer"><div class="row" style="justify-content:space-between;align-items:flex-start"><div><h2 class="lk" data-a="stu" data-v="'+esc(stKey(r))+'">'+esc(r.n||'Student')+'</h2><div class="row" style="margin-top:4px"><span class="st nu">'+esc(r.c)+'</span><span class="st cat">'+esc(r.ct)+'</span>'+priP(r.p)+(v?fuPill(id):'')+'</div></div><button class="btn sm" data-a="xo">Close</button></div>'
+  +'<div class="kv"><div><div class="k">Date</div><div class="vv">'+fmtD(r.d)+', '+ago(r.d)+'</div></div><div><div class="k">Source</div><div class="vv">'+esc(srcName(r.m))+'</div></div><div><div class="k">Department</div><div class="vv">'+esc(r.dp)+'</div></div><div><div class="k">Goes to</div><div class="vv">'+esc(v?owner(id):ownerOf(r))+'</div></div></div>'
+  +'<div class="k mut" style="font-size:11px;font-weight:700;margin-bottom:5px">Feedback'+(r.by?' · '+(r.dapp?'marked by ':'added by ')+esc(r.by):'')+'</div><div class="quote">'+esc(r.t)+'</div>'+imgsH(r);
+  if(r.s)h+='<div class="kv" style="grid-template-columns:1fr"><div><div class="k">Status in sheet</div><div class="vv">'+esc(r.s)+'</div></div></div>';
+  if(r.why.length&&!v)h+='<div class="banner" style="margin:14px 0 0">Needs follow-up: '+esc(r.why.join(', '))+'</div>';
+  h+='<h3 style="margin:20px 0 6px;font-size:14.5px;color:var(--navy)">Acknowledgement</h3>'+akStrip(r)+'<div class="row" style="margin-top:8px">'+akBtn(r)+'<button class="btn sm" data-a="reqcall" data-id="'+id+'">Request a call to parent</button><button class="btn sm" data-a="mvreq" data-id="'+id+'">'+(RT[id]&&RT[id].ct==='Request'?'Request: '+esc(RT[id].rc):'Move to Requests')+'</button></div>';
+  h+='<h3 style="margin:20px 0 6px;font-size:14.5px;color:var(--navy)">Remarks</h3>'+thread(id);
+  h+='<h3 style="margin:20px 0 6px;font-size:14.5px;color:var(--navy)">Follow-up</h3>';
+  if(!v)h+='<div class="mut" style="margin-bottom:10px">Not started yet.</div><button class="btn pri" data-a="fup" data-id="'+id+'">Start follow-up</button>';
+  else{
+    h+='<div style="font-size:13px">'+fuSummary(id)+'</div>'+strip(id)+'<div class="mut" style="font-size:12.5px;margin-top:8px">Started by '+esc(v.by)+', '+fmtT(v.at)+' · Goes to '+esc(owner(id))+(v.note?'<br>Reason: '+esc(v.note):'')+'</div><div class="tl">'
+    +(v.checks||[]).map(c=>'<div>Checked '+fmtT(c.at)+' by '+esc(c.by)+(c.note?'<br><span class="mut">'+esc(c.note)+'</span>':'')+'</div>').join('')+(v.st==='closed'&&v.closed?'<div class="c">Done '+fmtT(v.closed.at)+' by '+esc(v.closed.by)+(v.closed.note?'<br><span class="mut">'+esc(v.closed.note)+'</span>':'')+'</div>':'')+'</div>'
+    +'<div class="row" style="margin-top:14px">'+(v.st==='open'?'<button class="btn pri" data-a="chk" data-id="'+id+'">Check today</button><button class="btn" data-a="due" data-id="'+id+'">Extend days</button><button class="btn navy" data-a="cls" data-id="'+id+'">Mark done</button>':'<button class="btn" data-a="reo" data-id="'+id+'">Reopen</button>')+'</div>';
+  }
+  overlay(h+'</div>');
+}
+function formModal(title,body,ok,fn,reopen){
+  const o=overlay('<div class="mod"><h2>'+esc(title)+'</h2>'+body+'<div class="row" style="justify-content:flex-end;margin-top:16px"><button class="btn" data-x>Cancel</button><button class="btn pri" data-ok>'+esc(ok)+'</button></div></div>',true);
+  o.querySelector('[data-x]').onclick=()=>o.remove();
+  o.querySelector('[data-ok]').onclick=()=>{const v={};o.querySelectorAll('[name]').forEach(i=>v[i.name]=i.value);if(fn(v)!==false){o.remove();if(reopen)openDrawer(reopen);render(true)}};
+  const f=o.querySelector('textarea,input');if(f)f.focus();
+}
+const lab=(t,x)=>'<label class="lbl" style="margin-top:12px">'+t+'</label>'+x;
+const sel=(n,arr,cur)=>'<select name="'+n+'">'+arr.map(o=>{const a=Array.isArray(o)?o:[o,o];return'<option value="'+esc(a[0])+'" '+(a[0]===cur?'selected':'')+'>'+esc(a[1])+'</option>'}).join('')+'</select>';
+const dr=id=>document.querySelector('.drawer')?id:null;
+function startFU(id){
+  const r=D.byId[id],auto=ownerOf(r);
+  formModal('Follow up: '+r.n,lab('Who follows up',sel('owner',OWNERS,auto))+lab('Keep checking for',sel('days',[['1','1 day'],['3','3 days'],['5','5 days'],['7','7 days'],['10','10 days'],['14','14 days'],['30','30 days']],'7'))+lab('Or pick an end date (optional)','<input type="date" name="due">')+lab('What should be checked?','<textarea name="note" rows="3" placeholder="e.g. Weak in Maths. Check notebook every day">'+esc(r.weak?'Learning concern: monitor progress':'')+'</textarea>')+'<div class="mut" style="font-size:12.5px;margin-top:8px">You will check once or more every day. Each check is counted.</div>','Start follow-up',v=>{const due=v.due&&v.due>=todayISO()?v.due:addDays(todayISO(),+v.days-1);FU[id]={st:'open',by:ME.name,role:ME.role,owner:v.owner,at:Date.now(),due,note:v.note.trim(),checks:[]};saveFU(id);toast('Follow-up started until '+fmtS(due)+'. Sent to '+v.owner)},dr(id));
+}
+function checkFU(id){formModal('Check today',lab('What did you see? (optional)','<textarea name="note" rows="3" placeholder="e.g. Notebook complete, improving"></textarea>')+'<div class="mut" style="margin-top:10px;font-size:12.5px">Saved with time: '+fmtT(Date.now())+' by '+esc(ME.name)+'</div>','Save check',v=>{const x=FU[id];x.checks=(x.checks||[]).concat([{at:Date.now(),by:ME.name,note:v.note.trim()}]);saveFU(id);toast('Checked '+x.checks.length+' time'+(x.checks.length===1?'':'s')+' so far')},dr(id))}
+function dueFU(id){const b=FU[id].due>todayISO()?FU[id].due:todayISO();formModal('Keep checking longer',lab('Keep checking until','<input type="date" name="due" value="'+addDays(b,7)+'">')+'<div class="row" style="margin-top:8px">'+[3,7,14].map(n=>'<span class="mut" style="font-size:12.5px">Tip: today + '+n+' days = '+fmtS(addDays(todayISO(),n))+'</span>').join('')+'</div>','Save',v=>{if(!v.due)return false;FU[id].due=v.due;saveFU(id)},dr(id))}
+function closeFU(id){formModal('Mark done',lab('Closing note (optional)','<textarea name="note" rows="3" placeholder="e.g. Child has improved, parent informed"></textarea>'),'Mark done',v=>{FU[id].st='closed';FU[id].closed={at:Date.now(),by:ME.name,note:v.note.trim()};saveFU(id);toast('Follow-up done')},dr(id))}
+function reopenFU(id){FU[id].st='open';delete FU[id].closed;if(FU[id].due<todayISO())FU[id].due=addDays(todayISO(),6);saveFU(id);toast('Reopened');render(true);if(document.querySelector('.drawer'))openDrawer(id)}
+function remAdd(id){
+  const ta=document.getElementById('rt-'+id),tx=ta&&ta.value.trim();if(!tx){toast('Write a remark first');return}
+  REM[id]=REM[id]||{items:[]};REM[id].items.push({id:Date.now().toString(36),at:Date.now(),by:ME.name,role:roleLbl(),text:tx});saveREM(id);render(true);refreshThreads(id);toast('Remark added');
+}
+function remEdit(id,rid){const x=remItems(id).find(z=>z.id===rid);if(!x)return;formModal('Edit remark','<textarea name="t" rows="4">'+esc(x.text)+'</textarea>','Save',v=>{if(!v.t.trim())return false;x.text=v.t.trim();x.ed=Date.now();saveREM(id);setTimeout(()=>refreshThreads(id),0)})}
+function remDel(id,rid){formModal('Delete this remark?','<div class="mut">This cannot be undone.</div>','Delete',()=>{REM[id].items=REM[id].items.filter(z=>z.id!==rid);saveREM(id);setTimeout(()=>refreshThreads(id),0)})}
+function shrink(f,max,q){return new Promise(res=>{const img=new Image(),u=URL.createObjectURL(f);img.onload=()=>{const k=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(u);c.toBlob(b=>res(b),'image/jpeg',q)};img.onerror=()=>res(null);img.src=u})}
+async function putImg(f){
+  try{const A=window.claude&&claude.use?await claude.use('assets'):null;if(A){const b=await shrink(f,1100,.72);if(b){const r=await A.upload(b);if(r&&r.id)return{id:r.id}}}}catch(e){}
+  const b2=await shrink(f,640,.5);if(!b2)return null;return new Promise(res=>{const fr=new FileReader();fr.onload=()=>res({u:fr.result});fr.readAsDataURL(b2)});
+}
+const CALLWHY=['Academic concern','Behaviour','Health or medical','Absence or leave','Homework or notebook','Fee or documents','Transport','Admission','Meeting with teacher','Other'];
+function reqCallModal(fid){
+  const r=fid?D.byId[fid]:null,stu=[...new Set(D.f.filter(inScope).map(x=>x.n).filter(Boolean))].sort(),cls=[...new Set(D.f.map(x=>x.c).filter(c=>c&&c!=='—'))].sort((a,b)=>crank(a)-crank(b));
+  formModal('Request a call to parent',lab('Student name','<input name="n" list="dl2" autocomplete="off" value="'+esc(r?r.n:'')+'" placeholder="Start typing a name"><datalist id="dl2">'+stu.map(s=>'<option value="'+esc(s)+'">').join('')+'</datalist>')+lab('Class and section',sel('c',cls,r?r.c:cls[0]))
+  +'<div class="row"><div style="flex:1">'+lab('Reason',sel('reason',CALLWHY,r?(r.cs.includes('Medical cases')?'Health or medical':r.cs.includes('Behavioural')?'Behaviour':r.cs.includes('Academic complaints')?'Academic concern':'Other'):'Academic concern'))+'</div><div style="flex:1">'+lab('How soon',sel('urg',[['Normal','Normal'],['Urgent','Urgent. Call today']],'Normal'))+'</div></div>'
+  +lab('Call by (date)','<input type="date" name="due" value="'+todayISO()+'">')+lab('What should be said or asked?','<textarea name="t" rows="3" placeholder="e.g. Please tell the parent about the incomplete notebooks">'+esc(r?'About: '+r.t.slice(0,160):'')+'</textarea>')
+  +lab('Attach image (optional, up to 3)','<input type="file" id="cqimg" accept="image/*" multiple>'),'Send request',v=>{
+    if(!v.n.trim()){toast('Enter the student name');return false}
+    if(!v.t.trim()){toast('Write what the call is about');return false}
+    const files=[...(document.getElementById('cqimg').files||[])].slice(0,3),id=Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+    const rec={d:todayISO(),n:v.n.trim(),c:v.c,reason:v.reason,t:v.t.trim(),urg:v.urg,due:v.due||todayISO(),rqBy:ME.name,role:roleLbl(),at:Date.now(),imgs:[],fb:fid||''};
+    toast(files.length?'Uploading image and sending request…':'Sending request…');
+    (async()=>{for(const f of files){const i=await putImg(f);if(i)rec.imgs.push(i)}SEEN.add(id);CQ[id]=rec;mergeCalls();saveCQ(id);toast('Call requested for '+rec.n+(rec.urg==='Urgent'?' · urgent':''),4000);render(true)})();
+  });
+}
+function callDoneModal(id){const c=D.cById[id];formModal('Call result: '+c.n,lab('Result',sel('out',[['ok','Spoke to parent. Call done'],['na','No answer. Try again'],['nr','Number not reachable. Try again'],['cb','Parent will call back. Try again']],'ok'))+lab('Note (optional)','<textarea name="note" rows="3" placeholder="e.g. Parent informed, will visit Monday"></textarea>')+'<div class="mut" style="margin-top:10px;font-size:12.5px">Saved with time: '+fmtT(Date.now())+' by '+esc(ME.name)+'</div>','Save',v=>{const prev=CS[id]||{},att=(prev.att||[]).concat([{at:Date.now(),by:ME.name,out:v.out,note:v.note.trim()}]);CS[id]=v.out==='ok'?{done:true,at:Date.now(),by:ME.name,note:v.note.trim(),out:'ok',att}:{done:false,at:Date.now(),by:ME.name,note:v.note.trim(),out:v.out,att};saveCS(id);toast(v.out==='ok'?'Call done':'Saved. Call stays in To call')})}
+function callUndo(id){const p=CS[id]||{};CS[id]={done:false,at:Date.now(),by:ME.name,note:'',att:p.att||[]};saveCS(id);render(true)}
+function viewAsModal(){
+  const opts=[['admin:','Administration (all departments)']].concat(GROUPS.map(g=>['coord:'+g,'Coordinator / PL · '+g]),SUBJECTS.map(s=>['teacher:'+s,(s==='Class Teacher'?'Class teacher':s+' teacher')]));
+  formModal('View as',lab('See the app exactly as this person sees it',sel('r',opts,'teacher:Maths'))+'<div class="mut" style="font-size:12.5px;margin-top:8px">Nothing is saved for this view. Use “Back to Director” to return.</div>','Open view',v=>{
+    const[k,x]=v.r.split(':');REAL=REAL||ME;ME={role:k,name:REAL.name,groups:k==='coord'?[x]:[],subject:k==='teacher'?x:'',classes:[],va:true};view='ov';F=newF();fuSeg=k==='teacher'?myKey():'';
+  });
+}
+const MARK='<svg viewBox="0 0 48 48"><defs><linearGradient id="lg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E91D69"/><stop offset="1" stop-color="#572686"/></linearGradient></defs><rect x="2" y="2" width="44" height="44" rx="12" fill="#fff" opacity=".08"/><path d="M24 6 40 12v12c0 9-7 15-16 18C15 39 8 33 8 24V12z" fill="none" stroke="url(#lg1)" stroke-width="2.6"/><path d="M17 33V16h13M17 24h9" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/><circle cx="33" cy="32" r="3" fill="#EFA11D"/><circle cx="37" cy="25" r="2.2" fill="#68C0EA"/></svg>';
+function vLogin(){
+  const allc=[...new Set(D.f.map(r=>r.c).filter(c=>c&&c!=='—'))].sort((a,b)=>crank(a)-crank(b));
+  const m=window._lg||{role:(ME&&ME.role)||(window.GH?GH.allowed()[0]:'director'),name:(ME&&ME.name)||(window.GH?GH.who.name:''),groups:(ME&&ME.groups)||[],subject:(ME&&ME.subject)||'Maths',classes:(ME&&ME.classes)||[]};window._lg=m;
+  let h='<div class="loginw"><div class="loginc"><div class="row" style="gap:12px"><div style="width:44px;height:44px;background:var(--navy);border-radius:12px;padding:3px">'+MARK+'</div><div><h2 style="margin:0;font-size:19px;color:var(--navy)">Parent Connect</h2><div class="mut" style="font-size:12.5px">Flourish International School, Bikaner</div></div></div>'
+  +'<div class="banner" style="margin-top:16px">Contains names of students and parents. Staff use only.</div>'
+  +'<label class="lbl">Your name</label><input type="text" id="lgname"'+(window.GH?' readonly':'')+' value="'+esc(m.name)+'" placeholder="e.g. Mansi Sharma">'
+  +'<div class="roles">'+ROLES.filter(r=>!window.GH||GH.allowed().includes(r[0])).map(r=>'<button class="role '+(m.role===r[0]?'on':'')+'" data-a="role" data-v="'+r[0]+'"><b>'+r[1]+'</b><small>'+r[2]+'</small></button>').join('')+'</div>';
+  if(m.role==='coord')h+='<label class="lbl">My class group(s)</label><div class="chips">'+GROUPS.map(g=>'<button class="chip '+(m.groups.includes(g)?'on':'')+'" data-a="lgg" data-v="'+g+'">'+g+'</button>').join('')+'</div>';
+  if(m.role==='teacher'){
+    h+='<label class="lbl">My subject. Matching feedback reaches me automatically</label><div class="chips">'+SUBJECTS.map(s=>'<button class="chip '+(m.subject===s?'on':'')+'" data-a="lgs" data-v="'+s+'">'+s+'</button>').join('')+'</div>';
+    h+='<label class="lbl" style="margin-top:12px">My classes / sections'+(m.subject==='Class Teacher'?' (required)':' (optional, empty means all)')+'</label><div class="chips">'+allc.map(c=>'<button class="chip '+(m.classes.includes(c)?'on':'')+'" data-a="lgc" data-v="'+c+'">'+c+'</button>').join('')+'</div>';
+  }
+  return h+'<div style="margin-top:20px"><button class="btn pri" data-a="enter">Enter Parent Connect</button>'+(window.GH?'<button class="btn" style="margin-left:8px" data-a="signout">Sign out</button>':'')+'</div></div></div>';
+}
+function scopeLabel(){if(ME.role==='coord')return ME.groups.join(', ');if(ME.role==='teacher')return ME.subject+(ME.classes.length?' · '+ME.classes.join(', '):'');return ME.role==='director'?'Whole school':'All departments'}
+const TITLES={ov:['Home','Cases by category. Latest first'],fb:['Feedback','Studybase, calls received, diary remarks, front desk and calls made'],fu:['Follow-ups','Daily checks. Who follows which child'],rq:['Requests','Books, notebooks, call to teacher, transport and co-curricular changes'],ca:['Calls','Call requests, calls made and calls received'],st:['Student','All feedback, calls and changes in one place'],cl:['Class','Every child, every case and the action taken']};
+const newF=()=>({per:'7',from:'',to:'',cl:[],c:[],dp:'',ct:'',m:'',p:'',q:'',cs:'',ak:'',rb:''});
+function callBanner(p){
+  if(ME.role==='teacher'||!p.length||view==='ca')return'';
+  const u=p.filter(c=>c.urg==='Urgent').length,old=p.filter(c=>c.at).sort((a,b)=>a.at-b.at)[0];
+  return'<div class="callban" data-a="go" data-v="ca"><b>'+p.length+' call'+(p.length>1?'s':'')+' waiting</b>'+(u?' · <span style="color:#b3123f">'+u+' urgent</span>':'')+(old?' · oldest request waiting '+waitTxt(old.at):'')+'<span class="sp"></span><span class="btn sm navy">Open calls</span></div>';
+}
+function render(keep){
+  const y=window.scrollY;
+  if(!ME&&ME_WAIT){$('#app').innerHTML='<div class="empty">Opening Parent Connect…</div>';return}
+  if(!ME||view==='login'){view='login';$('#app').innerHTML=vLogin();return}
+  const nOpen=Object.keys(FU).filter(id=>FU[id].st==='open'&&fuVisible(id)).length;
+  const pend=callList().filter(c=>!callDone(c)&&(c.app||c.d>=addDays(todayISO(),-7))),nav=[['ov','Home'],['fb','Feedback'],['ca','Calls',pend.length],['rq','Requests'],['cl','Class'],['fu','Follow-ups',nOpen]]
+  if(!nav.find(n=>n[0]===view)&&view!=='st')view='ov';
+  const body=view==='ov'?vHome():view==='fb'?vFeedback():view==='fu'?vFollow():view==='ca'?vCalls():view==='st'?vStudent():view==='cl'?vClass():vRequests();
+  const nv=view==='st'?(prevView||'fb'):view;
+  const ini=ME.name.split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  $('#app').innerHTML='<div class="shell"><aside class="side"><div class="logo">'+MARK+'<div><b>Parent Connect</b><small>FIS · Bikaner</small></div></div>'
+  +nav.map(n=>'<button class="nav '+(nv===n[0]?'on':'')+'" data-a="go" data-v="'+n[0]+'">'+ico(n[0])+n[1]+(n[2]?'<span class="cnt">'+n[2]+'</span>':'')+'</button>').join('')+'</aside>'
+  +'<div class="main"><div class="top"><div><h1>'+TITLES[view][0]+'</h1><div class="sub">'+TITLES[view][1]+'</div></div><span class="sp"></span><button class="btn pri sm" data-a="add">+ Add feedback</button><button class="btn sm" data-a="paste">Paste from Studybase</button>'+(isDir()&&!ME.va?'<button class="btn sm" data-a="va">View as…</button>':'')+'<span class="sync" id="sync"></span><button class="sync" id="lv" data-a="lvref" title="Read the Feedback and Diary sheets from Google Drive now"></button><div class="pill-u" data-a="switch" title="Switch user"><div class="av">'+esc(ini)+'</div><div><b>'+esc(ME.name)+'</b><small>'+esc(roleLbl())+' · '+esc(scopeLabel())+'</small></div></div></div>'
+  +'<div class="work">'+callBanner(pend)+(ME.va?'<div class="banner" style="margin-bottom:14px;display:flex;gap:12px;align-items:center">Viewing as '+esc(roleLbl()+' · '+scopeLabel())+'<span class="sp"></span><button class="btn sm navy" data-a="vaback">Back to Director</button></div>':'')+body+'</div></div></div>';
+  paintSync();paintLive();if(keep)window.scrollTo(0,y);
+}
+
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-a]');if(!t)return;
+  const a=t.dataset.a,v=t.dataset.v,id=t.dataset.id,reset=()=>{shown=30},toF=()=>{if(view==='ov'||view==='st')view='fb'};
+  const tog=(arr,x)=>{const i=arr.indexOf(x);i<0?arr.push(x):arr.splice(i,1)};
+  switch(a){
+    case'per':F.per=v;if(v!=='pick'){F.from=F.to=''}calA=null;syncCM();reset();render();break;
+    case'day':F.per='day';F.from=v;F.to=v;calA=null;CM=v.slice(0,7);toF();reset();render();window.scrollTo(0,0);break;
+    case'cm':{let[y,m]=CM.split('-').map(Number);m+=+v;if(m<1){m=12;y--}if(m>12){m=1;y++}CM=y+'-'+pad(m);render(true);break}
+    case'calday':if(!calA){F.per='pick';F.from=F.to=v;calA=v}else{F.per='pick';F.from=calA<v?calA:v;F.to=calA<v?v:calA;calA=null}reset();render(true);break;
+    case'cl':if(v===''){F.cl=[];F.c=[]}else if(view==='ov'){F.cl=[v==='Enquiries'?'—':v];F.c=[];toF()}else{tog(F.cl,v);if(!F.cl.includes(v))F.c=F.c.filter(s=>cbase(s)!==v)}reset();render();if(view==='fb'&&t.closest('.bar'))window.scrollTo(0,0);break;
+    case'sec':if(v==='')F.c=[];else{tog(F.c,v);if(!F.cl.includes(cbase(v)))F.cl.push(cbase(v))}reset();render();break;
+    case'clr':F=Object.assign(newF(),{per:F.per,from:F.from,to:F.to});reset();render();break;
+    case'case':F.cs=v;view='fb';reset();render();window.scrollTo(0,0);break;
+    case'go':if(view!=='st')prevView=view;view=v;reset();if(v==='cl')clInit();if(v==='fu'&&ME.role==='teacher')fuSeg=myKey();render();window.scrollTo(0,0);break;
+    case'fu':view='fu';fuTab=v;reset();render();window.scrollTo(0,0);break;
+    case'flt':{const k=t.dataset.k;if(k==='cl'){F.cl=[v==='Enquiries'?'—':v];F.c=[]}else F[k]=v;toF();reset();render();window.scrollTo(0,0);break}
+    case'hv':hv=v;render(true);break;
+    case'ack':ackDo(id);break;
+    case'reqcall':reqCallModal(id);break;
+    case'mseg':F.m='made';callTab=v;reset();render();break;
+    case'chg':view='rq';rqMode='chg';rqSeg='';reset();render();window.scrollTo(0,0);break;
+    case'rqm':rqMode=v;rqSeg='';reset();render();break;
+    case'rqs':rqSeg=v;reset();render();break;
+    case'lvref':liveSync(true);break;
+    case'img':{const o=overlay('<div class="lightbox"><img src="'+esc(t.src)+'" alt="attachment"><button class="btn sm" data-a="xo">Close</button></div>',true);break}
+    case'stu':document.querySelectorAll('.ov').forEach(x=>x.remove());if(view!=='st')prevView=view;STK=v;view='st';loadIns(v.split('|')[1]);render();window.scrollTo(0,0);break;
+    case'back':view=prevView||'fb';render();window.scrollTo(0,0);break;
+    case'more':shown+=30;render(true);break;
+    case'fut':fuTab=v;reset();render();break;
+    case'seg':fuSeg=v;reset();render();break;
+    case'staff':showStaff=!showStaff;render(true);break;
+    case'ctab':callTab=v;reset();render();break;
+    case'open':openDrawer(id);break;
+    case'xo':document.querySelectorAll('.ov').forEach(x=>x.remove());break;
+    case'fup':startFU(id);break;case'chk':checkFU(id);break;case'due':dueFU(id);break;case'cls':closeFU(id);break;case'reo':reopenFU(id);break;
+    case'calldone':callDoneModal(id);break;case'callre':callUndo(id);break;
+    case'rto':RO[id]=!RO[id];render(true);break;
+    case'remadd':remAdd(id);break;case'remedit':remEdit(id,t.dataset.r);break;case'remdel':remDel(id,t.dataset.r);break;
+    case'add':addModal();break;
+    case'paste':pasteModal();break;
+    case'newreq':addModal({ct:'Request'});break;
+    case'clsel':CLS=v;view='cl';loadIns(v);shown=30;render();window.scrollTo(0,0);break;
+    case'clm':CLM=v;shown=30;render();break;
+    case'cft':{const k=t.dataset.k;if(k==='clear')CF={st:'',src:'',dp:'',stu:'',q:''};else CF[k]=(CF[k]===v&&k==='stu')?'':v;shown=30;render(true);break}
+    case'actrec':actModal(id);break;
+    case'mvreq':mvReqModal(id);break;
+    case'va':viewAsModal();break;
+    case'vaback':ME=REAL;REAL=null;F=newF();view='ov';fuSeg='';render();break;
+    case'prlist':printList();break;case'prstu':printStudent();break;
+    case'switch':REAL=null;if(ME&&ME.va)ME=null;window._lg=null;view='login';render();break;
+    case'signout':GH.logout();break;
+    case'role':{const n=$('#lgname');if(n)window._lg.name=n.value;window._lg.role=v;render();break}
+    case'lgg':{window._lg.name=$('#lgname').value;const g=window._lg.groups,i=g.indexOf(v);i<0?g.push(v):g.splice(i,1);render();break}
+    case'lgs':{window._lg.name=$('#lgname').value;window._lg.subject=v;render();break}
+    case'lgc':{window._lg.name=$('#lgname').value;const g=window._lg.classes,i=g.indexOf(v);i<0?g.push(v):g.splice(i,1);render();break}
+    case'enter':{const m=window._lg;m.name=$('#lgname').value.trim();
+      if(!m.name){toast('Please enter your name');break}
+      if(m.role==='coord'&&!m.groups.length){toast('Select at least one class group');break}
+      if(m.role==='teacher'&&m.subject==='Class Teacher'&&!m.classes.length){toast('Select your class or section');break}
+      REAL=null;ME={role:m.role,name:m.name,groups:m.groups.slice(),subject:m.subject,classes:m.classes.slice()};LS.set('pc2_me',ME);saveMe();F=newF();syncCM();fuSeg=ME.role==='teacher'?myKey():'';view='ov';render();break}
+  }
+});
+document.addEventListener('change',e=>{
+  const t=e.target;
+  if(t.dataset&&t.dataset.f){F[t.dataset.f]=t.value;shown=30;render(true)}
+  else if(t.dataset&&t.dataset.cf){CF[t.dataset.cf]=t.value;shown=30;render(true)}
+  else if(t.id==='c1'||t.id==='c2'){const a=$('#c1').value,b=$('#c2').value;if(a||b){F.per='pick';F.from=a||b;F.to=b||a;if(F.to<F.from)F.to=F.from;calA=null;syncCM();shown=30;render(true)}}
+  else if(t.name==='n'&&t.closest('.mod')){const cs=[...new Set(D.f.filter(r=>r.n===t.value&&r.c!=='—').map(r=>r.c))],s=t.closest('.mod').querySelector('select[name=c]');if(cs.length===1&&s)s.value=cs[0]}
+});
+let qt;document.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.id==='q'){clearTimeout(qt);const v=t.value;qt=setTimeout(()=>{F.q=v;shown=30;render(true);const q=$('#q');if(q){q.focus();q.setSelectionRange(v.length,v.length)}},350)}
+  else if(t.id==='cfq'){clearTimeout(qt);const v=t.value;qt=setTimeout(()=>{CF.q=v;shown=30;render(true);const q=$('#cfq');if(q){q.focus();q.setSelectionRange(v.length,v.length)}},350)}
+  else if(t.id==='sq'){const q=t.value.trim().toLowerCase(),s=$('#sugs');if(!s)return;s.innerHTML=q.length<2?'':(stuList(q).map(x=>{const[n,c]=x[0].split('|');return'<div class="sug" data-a="stu" data-v="'+esc(x[0])+'"><b>'+esc(n)+'</b> <span class="st nu">'+esc(c)+'</span><span class="mut">'+x[1]+' feedback</span></div>'}).join('')||'<div class="mut" style="padding:8px">No student found.</div>')}
+});
+/* ===== Parent Insight (read from Drive) ===== */
+const INS_ID={PGA:'16rJcscqJGxXG4rOlVdbFIMU_FaY4XCK6',PGB:'1R7K7TrVNhXH4pKKe9ZjeEQHUbtiBGWMv',NurA:'1MID5ov4TDlQYbFHK7_qSZDavUx9KDZ0B',NurB:'11pcLsRzWmZIiX1bLn7q6q6_qu4IP-hDn',LKGA:'1kCPcZRtTAszKzfp7RoOBU2bMIX3t9IEU',LKGB:'1Gxh-gwKMlxmMtjDjvloKROZJwS-G62mN',UKGA:'1P5qixS2oaTR7h58Q8TIW9WfoC9ZzN6iW',UKGB:'14ng345Vb6k8rz7vVoI-sDoSD3292JWKY','1A':'1OtMiY6HTTkFqPWO6zxIfMrw0Og6qbuGf','1B':'15FYISZVyJikiVlMvJFsIVEWsSC-j3MaZ','1C':'1L8tCTMSIGT3KJJhY5lNFTfqzTXKf6Wjp','2A':'1Wag6DYhv16J_TOzD_XCG8Z1Kq3zK1kSj','2B':'1ZY8JzJhP73vfCvN7bv_Pw0ptZUO0Nx7i','2C':'11iRz6SSfzHZrDM5Ule58piL62EJ_QQPy','3A':'19rpaFxuhfZU4YUsm7Tm2uDTdz2jePOdD','3B':'13hj2XlJZ0ggCHbhUXhhh3zcMbylkJOHM','3C':'1VYNOUL4esSQtEiVgMcepBCDg69xFMg5c','4A':'17WDAbtKSbdRKYK_70bQO-I7WkVm8yHL-','4B':'12BLWeIuHAZNqtyBfIAm3Pk-aP8VLnnYs','4C':'1APEvDKUluX5irx1K74EvFC_ppidl59Sr','5A':'1eSV0Ilxk2gtCDjR2O0-06IEIseF0_cUz','5B':'16tJgJ2jB9LFkr9zJ_z_D0JMl0K9raCkt','5C':'1iWBHz6GFDn0q24TwHstP1yurD1G4Za2N','6A':'1TPPuiAWKSvcTkPYxssGBuGeJC58YV2_P','6B':'1CYRpXl3pLlAh7l8-Ho5IjVXv4azAEaYn','6C':'1wF9LRpTK7ZEt5QB1wyzZ07edXe-JJJpK','7A':'1C0Jz-VNo62vy5bnkQ4cjp7L4SxxCCxBg','7B':'1zCEc_fzi5ccfUm9bRSMZzmhh5Y8B6_NL','7C':'1nNh0hb-7HfA8p5m9v9R2AyW_FXcIqDUY','8A':'17B24HuLp7btzYhhLgB3c0EiJkO8FzW1V','8B':'1qp04Lv9BPMegqyWomGm84-Pdh_vP-Cdf','8C':'11ZRChTGIocOxWLOmtYD9rcerhqXEmzTQ','9A':'1fhKyheB7vXwEOxojbDV3vXm419-uNph1','9B':'1oQ0Ei6_yyy1lLUFD810NHOAdYpvJg7iU','10A':'1Qrk9RAeTcqExx5BUrP5bjCqb7P3cH8xf','10B':'1DWlEKnNCH0ephif1Gx6uo_GWwtPFxl6n','11A':'1RyuEb1cEvC2BM9q05TECXIF5-2v5S741'};
+const INS={};
+const insKey=c=>(c||'').replace(/\s+/g,'');
+const nk=s=>String(s||'').toLowerCase().replace(/[^a-z]/g,'');
+const cz=s=>String(s||'').replace(/\s+/g,' ').trim();
+const TAGRE=/(Daily\)|\bPY\b|\bO[123]\b)[^·]*·.*$/;
+function cleanTag(t){t=cz(t);if(/^PY\b/.test(t))return'Previous year '+t.replace(/^PY\s*/,'');return t.replace(/^Daily\)\s*/,'').replace(/^(?:O\d\s*)+/,'').trim()}
+function insItems(paras){const out=[];let buf=[];
+  paras.forEach(p0=>{const p=cz(p0);if(!p)return;const m=TAGRE.exec(p);
+    if(m){const pre=p.slice(0,m.index).trim();if(pre)buf.push(pre);out.push({t:buf.join(' '),tag:cleanTag(m[0])});buf=[]}else buf.push(p)});
+  if(buf.length)out.push({t:buf.join(' '),tag:''});return out}
+function parseInsight(tx){
+  const out={students:{},upto:'',n:0};
+  const m0=/Daily feedback to (\d{1,2} \w+ \d{4})/.exec(tx);if(m0)out.upto=m0[1];
+  const re=/S[ \t]*T[ \t]*U[ \t]*D[ \t]*E[ \t]*N[ \t]*T[ \t]*(?:\d[ \t]*)+O[ \t]*F[ \t]*(?:\d[ \t]*)+([^\n]*)/g,hs=[];let m;
+  while((m=re.exec(tx)))hs.push({i:m.index,e:m.index+m[0].length,n:cz(m[1])});
+  hs.forEach((h,k)=>{
+    let blk=tx.slice(h.e,k+1<hs.length?hs[k+1].i:tx.length);blk=blk.replace(/Flourish International School\s*·\s*Parent Insight[^\n]*/,'').replace(/\n[^\n]{0,10}·\s*$/,'\n');
+    let name=h.n,open=0;const secs={};let cur='',seen=0;
+    blk.split('\n').forEach(line=>{const l=line.trim();if(!l&&!cur)return;
+      const o=/^(\d+)\s*O\s*P\s*E\s*N$/.exec(l);if(o&&!cur){open=+o[1];return}
+      const sq=l.replace(/\s+/g,'').toUpperCase();let s='';
+      if(sq==='PARENT')s='parent';else if(sq==='MENTORACTION')s='mentor';else if(sq==='NEEDSFOLLOW-UP')s='needs';else if(sq==='ADDRESSED')s='addr';else if(/^PREVIOUSYEARS?$/.test(sq))s='py';
+      if(s){cur=s;secs[s]='';return}
+      if(!cur&&!name&&l){name=cz(l);return}
+      if(cur)secs[cur]+=line+'\n'});
+    if(!name)return;
+    const paras=k=>(secs[k]||'').split(/\n\s*\n/);
+    const mentor=cz((secs.mentor||'').replace(/\n/g,' ')).split(/[\uE000-\uF8FF\u2022]/).map(cz).filter(Boolean);
+    out.students[nk(name)]={n:name,open,profile:cz((secs.parent||'').replace(/\n/g,' ')),mentor,needs:insItems(paras('needs')),addr:insItems(paras('addr')),py:insItems(paras('py'))};out.n++});
+  return out}
+function findFC(o,d){if(!o)return null;if(typeof o==='string'){const t=o.trim();if(t[0]==='{'||t[0]==='['){try{const r=findFC(JSON.parse(t),d);if(r)return r}catch(e){}}if(/S\s*T\s*U\s*D\s*E\s*N\s*T/.test(o)&&o.length>300&&o.indexOf('"fileContent"')<0)return o;return null}
+  if(typeof o==='object'&&(d||0)<7){if(typeof o.fileContent==='string')return o.fileContent;for(const k of Object.keys(o)){const r=findFC(o[k],(d||0)+1);if(r)return r}}return null}
+async function loadIns(c,force){
+  const k=insKey(c);if(!INS_ID[k])return;const e=INS[k]=INS[k]||{};if(e.busy)return;
+  const ls=LS.get('pc2_ins_'+k);if(ls&&ls.d&&!e.data){e.data=ls.d;e.at=ls.at;e.st='ok'}
+  if(e.data&&!force&&Date.now()-e.at<6*3600e3)return;
+  e.busy=1;if(!e.data)e.st='load';
+  try{
+    let mcp=null;try{mcp=window.GH?{callTool:async()=>({gh:await GH.insightText(INS_ID[k])})}:window.claude&&claude.use?await claude.use('mcp'):null}catch(x){}
+    if(!mcp)throw{code:'not_granted'};
+    const r=await mcp.callTool('Google Drive','read_file_content',{fileId:INS_ID[k]},{cache:force?{staleTime:0,gcTime:60000,refresh:true}:{staleTime:600000,gcTime:3600000}});
+    const tx=r&&r.gh?r.gh:findFC(r);if(!tx)throw{code:'unreadable'};
+    const d=parseInsight(tx);if(!d.n)throw{code:'unreadable'};
+    e.data=d;e.at=Date.now();e.st='ok';LS.set('pc2_ins_'+k,{d,at:e.at});
+  }catch(x){if(!e.data){e.st='err';e.msg=lvMsg(x&&x.code)}console.warn('insight failed',x)}
+  finally{e.busy=0;if((view==='cl'||view==='st')&&!document.querySelector('.ov')&&!/^(TEXTAREA|INPUT|SELECT)$/.test((document.activeElement||{}).tagName||''))render(true)}
+}
+function insFind(d,n){if(!d)return null;const k=nk(n);if(d.students[k])return d.students[k];
+  const t=String(n||'').toLowerCase().split(/\s+/).filter(x=>x.length>1);
+  for(const s of Object.values(d.students)){const u=s.n.toLowerCase().split(/\s+/);if(t.length>=2&&t.every(x=>u.includes(x)))return s;if(t.length>=2&&u.length>=2&&u.every(x=>t.includes(x)))return s}
+  return null}
+const tagH=t=>t?'<span class="itag">'+esc(t)+'</span>':'';
+function insBlock(title,arr,cls){return arr.length?'<div class="ib '+cls+'"><div class="ih">'+title+' <small>'+arr.length+'</small></div>'+arr.map(x=>'<div class="ii">'+esc(x.t)+tagH(x.tag)+'</div>').join('')+'</div>':''}
+function insPanel(c,n){
+  const k=insKey(c);if(!INS_ID[k])return'';const e=INS[k];
+  const link='<a href="https://drive.google.com/file/d/'+INS_ID[k]+'/view" target="_blank" rel="noopener">Open the PDF</a>';
+  if(!e||(!e.data&&e.st==='load'))return'<div class="card ins" style="margin-bottom:16px"><h3>Parent Insight</h3><div class="mut">Reading the Parent Insight chart from Drive…</div></div>';
+  if(!e.data)return'<div class="card ins" style="margin-bottom:16px"><h3>Parent Insight</h3><div class="mut">Could not read the chart ('+esc(e.msg||'not available')+'). Ask the Director to share the Drive folder with you. '+link+'</div></div>';
+  const s=insFind(e.data,n);
+  if(!s)return'<div class="card ins" style="margin-bottom:16px"><h3>Parent Insight <small>to '+esc(e.data.upto)+'</small></h3><div class="mut">This child is not in the Class '+esc(c)+' chart (new admission after the chart, or the name is spelled differently). '+link+'</div></div>';
+  return'<div class="card ins" style="margin-bottom:16px"><h3>Parent Insight <small>OHM and daily feedback till '+esc(e.data.upto)+'</small></h3>'
+   +(s.profile?'<div class="prof">'+esc(s.profile)+'</div>':'')
+   +(s.mentor.length?'<div class="ib mn"><div class="ih">Mentor action</div><ul>'+s.mentor.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul></div>':'')
+   +insBlock('Needs follow-up',s.needs,'nd')+insBlock('Previous years',s.py,'py')
+   +(s.addr.length?'<details class="ib ad"><summary class="ih">Addressed <small>'+s.addr.length+'</small></summary>'+s.addr.map(x=>'<div class="ii">'+esc(x.t)+tagH(x.tag)+'</div>').join('')+'</details>':'')
+   +'<div class="mut" style="font-size:11.5px;margin-top:8px">Read from the class Parent Insight chart on Drive. Newer feedback is in the list below.</div></div>';
+}
+
+/* ===== Class segment: Overview and Action ===== */
+let CLS='',CLM='ov',CF={st:'',src:'',dp:'',stu:'',q:''};
+const CASE_TYPES=['Complain','Concern','Request','Call Arrange'];
+const isCase=r=>!!(r.why&&r.why.length)||!!FU[r.id]||CASE_TYPES.includes(r.ct);
+const actItems=id=>remItems(id).filter(x=>x.act);
+function actOf(id){if(FU[id]&&FU[id].st==='closed')return'done';const a=actItems(id);return a.length?a[a.length-1].st:'none'}
+const lastAct=id=>{const a=actItems(id);return a.length?a[a.length-1]:null};
+const ACT_L={none:'No action yet',prog:'In progress',done:'Done'};
+const actPill=s=>'<span class="st '+(s==='done'?'ok':s==='prog'?'warn':'bad')+'">'+ACT_L[s]+'</span>';
+function myClasses(){
+  let L;if(ME.role==='teacher'&&ME.classes&&ME.classes.length)L=ME.classes.slice();else L=[...new Set(D.f.filter(inScope).map(r=>r.c).filter(c=>c&&c!=='—'))];
+  return[...new Set(L)].sort((a,b)=>crank(a)-crank(b))}
+function clInit(){const L=myClasses();if(!CLS||!L.includes(CLS))CLS=L[0]||'';if(CLS)loadIns(CLS)}
+const caseRows=c=>D.f.filter(r=>r.c===c&&inScope(r)&&isCase(r)).sort((a,b)=>b.d<a.d?-1:b.d>a.d?1:0);
+function stat(rows){const o={n:rows.length,none:0,prog:0,done:0,last:0,oldest:''};rows.forEach(r=>{const s=actOf(r.id);o[s]++;const la=lastAct(r.id);if(la&&la.at>o.last)o.last=la.at;if(s==='none'&&(!o.oldest||r.d<o.oldest))o.oldest=r.d});return o}
+function tile(l,v,c){return'<div class="tile"><div class="mut" style="font-size:12px">'+l+'</div><b style="font-size:24px;color:'+(c||'var(--navy)')+'">'+v+'</b></div>'}
+function rosterOf(c){
+  const m={};D.f.filter(r=>r.c===c&&inScope(r)&&r.n).forEach(r=>{(m[r.n]=m[r.n]||[]).push(r)});
+  const e=INS[insKey(c)];if(e&&e.data&&(ME.role!=='teacher'||ME.subject==='Class Teacher'||!(ME.classes||[]).length||true)&&canCalls())Object.values(e.data.students).forEach(s=>{if(!Object.keys(m).some(n=>nk(n)===nk(s.n)))m[s.n]=[]});
+  return m}
+function vClass(){
+  const L=myClasses();if(!L.length)return'<div class="empty card">No class found for you yet. Ask the Director to check your login.</div>';
+  if(!CLS||!L.includes(CLS))CLS=L[0];
+  let h='<div class="scroll" style="margin-bottom:12px">'+L.map(c=>'<button class="chip '+(c===CLS?'on':'')+'" data-a="clsel" data-v="'+esc(c)+'">'+esc(c)+'</button>').join('')+'</div>';
+  h+='<div class="scroll" style="margin-bottom:14px"><button class="chip '+(CLM==='ov'?'on':'')+'" data-a="clm" data-v="ov">Overview</button><button class="chip '+(CLM==='ac'?'on':'')+'" data-a="clm" data-v="ac">Action</button></div>';
+  return h+(CLM==='ov'?clOverview():clAction());
+}
+function clOverview(){
+  const m=rosterOf(CLS),names=Object.keys(m).sort(),e=INS[insKey(CLS)];
+  const q=(CF.q||'').toLowerCase(),shownN=names.filter(n=>!q||n.toLowerCase().includes(q));
+  let h='<div class="hint">Every child in Class '+esc(CLS)+'. Tap a child to see all feedback, calls, parent insight and actions in one place.'+(e&&e.data?' Parent Insight chart read till '+esc(e.data.upto)+'.':e&&e.st==='load'?' Reading the Parent Insight chart…':'')+'</div>';
+  h+='<div class="card" style="margin-bottom:14px"><label class="lbl">Find a child in this class</label><input type="search" id="cfq" placeholder="Type a name" value="'+esc(CF.q)+'"></div>';
+  if(!names.length)return h+'<div class="empty card">No feedback found for this class yet.</div>';
+  h+='<div class="sgrid">'+shownN.map(n=>{
+    const rows=m[n],cs=rows.filter(isCase),st=stat(cs),ins=e&&e.data?insFind(e.data,n):null,last=rows.reduce((a,r)=>r.d>a?r.d:a,'');
+    return'<div class="scard" data-a="stu" data-v="'+esc(n+'|'+CLS)+'"><b>'+esc(n)+'</b><div class="chs"><span class="st nu">'+rows.length+' feedback</span>'+(st.none?'<span class="st bad">'+st.none+' no action</span>':'')+(st.prog?'<span class="st warn">'+st.prog+' in progress</span>':'')+(st.done?'<span class="st ok">'+st.done+' done</span>':'')+(ins&&ins.open?'<span class="st cat">'+ins.open+' open in insight</span>':'')+'</div><small class="mut">'+(last?'Last feedback '+fmtS(last)+' · '+ago(last):'No feedback this year')+'</small></div>'}).join('')+'</div>';
+  return h;
+}
+function clAction(){
+  const all=caseRows(CLS),stA=stat(all);
+  let rows=all.filter(r=>(!CF.st||actOf(r.id)===CF.st)&&(!CF.src||r.m===CF.src)&&(!CF.dp||r.dp===CF.dp)&&(!CF.stu||r.n===CF.stu)&&(!CF.q||(r.n+' '+r.t).toLowerCase().includes(CF.q.toLowerCase())));
+  let h='<div class="hint">Cases from every source (Studybase, calls, diary, front desk, internal) for Class '+esc(CLS)+'. Record what you did, with date and time, so the work is visible. This shows effort in progress, it is not a score.</div>';
+  h+='<div class="tiles">'+tile('Cases',stA.n)+tile('No action yet',stA.none,stA.none?'#b3123f':'')+tile('In progress',stA.prog,'#b86e00')+tile('Done',stA.done,'#18794e')+tile('Last action',stA.last?fmtT(stA.last):'—')+tile('Waiting longest',stA.oldest?diffDays(stA.oldest,todayISO())+' days':'—')+'</div>';
+  const L=myClasses();
+  if(L.length>1){h+='<div class="card" style="margin-bottom:16px"><h3>All my classes<small>work in progress</small></h3><div class="tw"><table><thead><tr><th>Class</th><th>Cases</th><th>No action</th><th>In progress</th><th>Done</th><th>Actioned</th><th>Last action</th></tr></thead><tbody>'
+    +L.map(c=>{const s=stat(caseRows(c));return'<tr class="clk" data-a="clsel" data-v="'+esc(c)+'"><td><b>'+esc(c)+'</b></td><td>'+s.n+'</td><td>'+s.none+'</td><td>'+s.prog+'</td><td>'+s.done+'</td><td>'+(s.n?Math.round((s.prog+s.done)*100/s.n)+'%':'—')+'</td><td>'+(s.last?fmtT(s.last):'—')+'</td></tr>'}).join('')+'</tbody></table></div></div>'}
+  const byS={};all.forEach(r=>{(byS[r.n]=byS[r.n]||[]).push(r)});
+  h+='<div class="card" style="margin-bottom:16px"><h3>Children with cases<small>tap a name to filter</small></h3><div class="tw"><table><thead><tr><th>Child</th><th>Cases</th><th>No action</th><th>In progress</th><th>Done</th><th>Last action</th></tr></thead><tbody>'
+    +Object.keys(byS).sort((a,b)=>stat(byS[b]).none-stat(byS[a]).none||a.localeCompare(b)).map(n=>{const s=stat(byS[n]);return'<tr class="clk" data-a="cft" data-k="stu" data-v="'+esc(n)+'"><td><b>'+esc(n)+'</b></td><td>'+s.n+'</td><td>'+s.none+'</td><td>'+s.prog+'</td><td>'+s.done+'</td><td>'+(s.last?fmtT(s.last):'—')+'</td></tr>'}).join('')+'</tbody></table></div></div>';
+  const sc=(k,arr,lbl)=>'<div class="scroll" style="margin-bottom:8px">'+arr.map(x=>'<button class="chip '+(CF[k]===x[0]?'on':'')+'" data-a="cft" data-k="'+k+'" data-v="'+esc(x[0])+'">'+esc(x[1])+'</button>').join('')+'</div>';
+  const srcs=[...new Set(all.map(r=>r.m))],dps=[...new Set(all.map(r=>r.dp))].sort();
+  h+=sc('st',[['','All status'],['none','No action yet'],['prog','In progress'],['done','Done']])+sc('src',[['','All sources']].concat(srcs.map(s=>[s,srcName(s)])))
+   +'<div class="row" style="margin-bottom:12px"><div style="flex:1;min-width:180px"><select data-cf="dp"><option value="">All departments</option>'+dps.map(d=>'<option '+(CF.dp===d?'selected':'')+'>'+esc(d)+'</option>').join('')+'</select></div><div style="flex:1;min-width:180px"><input type="search" id="cfq" placeholder="Search child or word" value="'+esc(CF.q)+'"></div>'+((CF.st||CF.src||CF.dp||CF.stu||CF.q)?'<button class="btn sm" data-a="cft" data-k="clear" data-v="">Clear filters</button>':'')+'</div>';
+  h+=rows.length?rows.slice(0,shown).map(actCard).join('')+(rows.length>shown?'<div style="text-align:center;margin:14px 0"><button class="btn" data-a="more">Show more ('+(rows.length-shown)+' left)</button></div>':''):'<div class="empty card">No cases match.</div>';
+  return h;
+}
+function actCard(r){
+  const s=actOf(r.id),la=lastAct(r.id),n=actItems(r.id).length;
+  return'<div class="fc '+esc(r.p)+'"><div class="hd"><b class="lk" data-a="stu" data-v="'+esc(stKey(r))+'">'+esc(r.n||'—')+'</b><span class="st nu">'+esc(r.c)+'</span>'+srcP(r.m)+actPill(s)+'<span class="dt">'+fmtD(r.d)+' · '+ago(r.d)+'</span></div>'
+  +'<div class="tx" data-a="open" data-id="'+r.id+'">'+esc(r.t)+'</div>'+imgsH(r)
+  +(la?'<div class="actl"><b>'+esc(la.by)+'</b> · '+fmtT(la.at)+(n>1?' · '+n+' actions':'')+'<br>'+esc(la.text)+'</div>':'<div class="actl none">No action recorded yet. Waiting '+Math.max(0,diffDays(r.d,todayISO()))+' day(s).</div>')
+  +'<div class="ft" style="margin-top:8px"><span class="st cat">'+esc(r.ct)+'</span><span class="st nu">'+esc(r.dp)+'</span><span class="sp"></span><button class="btn pri sm" data-a="actrec" data-id="'+r.id+'">Record action</button><button class="btn sm" data-a="open" data-id="'+r.id+'">Open</button></div></div>';
+}
+const QCH=['Spoke to the child','Informed the parent','Checked notebook or practice','Gave extra practice','Counselled','Referred to coordinator','Monitoring daily'];
+function actModal(id){
+  const r=D.byId[id];
+  formModal('Record action: '+(r.n||''),'<div class="quote" style="margin:0 0 6px;max-height:90px;overflow:auto">'+esc(r.t)+'</div>'
+    +'<div class="chips" style="margin-top:10px">'+QCH.map(x=>'<button type="button" class="chip qch">'+esc(x)+'</button>').join('')+'</div>'
+    +lab('What did you do?','<textarea name="t" rows="3" placeholder="e.g. Maths practice checked. Gave 10 sums daily."></textarea>')
+    +lab('Status',sel('st',[['prog','In progress. I am still working on it'],['done','Done. Concern addressed']],'prog'))
+    +'<div class="mut" style="margin-top:10px;font-size:12.5px">Saved with date and time: '+fmtT(Date.now())+' by '+esc(ME.name)+'</div>','Save action',v=>{
+      if(!v.t.trim()){toast('Write what you did');return false}
+      REM[id]=REM[id]||{items:[]};REM[id].items.push({id:Date.now().toString(36),at:Date.now(),by:ME.name,role:roleLbl(),text:v.t.trim(),act:1,st:v.st});saveREM(id);toast('Action saved '+fmtT(Date.now()))});
+  document.querySelectorAll('.mod .qch').forEach(b=>b.onclick=()=>{const ta=document.querySelector('.mod textarea[name=t]');ta.value=(ta.value?ta.value.replace(/\s*$/,'')+'. ':'')+b.textContent;ta.focus()});
+}
+const imgsH=r=>r.imgs&&r.imgs.length?'<div class="ths">'+r.imgs.map(i=>'<img class="th" data-a="img" alt="attachment" src="'+esc(i.id?'/_blob/'+i.id:i.u)+'">').join('')+'</div>':'';
+
+/* ===== Paste many (Studybase, calls, desk) ===== */
+function parsePaste(tx,defCls,defDate){
+  const known=new Map();D.f.forEach(r=>{if(r.n)known.set(r.n.toLowerCase().replace(/\s+/g,' '),r)});
+  const rows=[];
+  tx.split(/\r?\n/).forEach(line=>{if(!line.trim())return;
+    let cells=line.split(/\t|\s*\|\s*/).map(s=>s.trim()).filter(Boolean);if(cells.length===1)cells=line.split(/\s{3,}/).map(s=>s.trim()).filter(Boolean);
+    let d='',c='',n='';const rest=[];
+    cells.forEach(x=>{
+      let m=/^(\d{4}-\d{2}-\d{2})$|^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/.exec(x);
+      if(m&&!d){d=m[1]||((m[4].length===2?'20'+m[4]:m[4])+'-'+pad(m[3])+'-'+pad(m[2]));return}
+      m=/^(PG|NURSERY|NUR|LKG|UKG|\d{1,2})\s*[- ]?\s*([A-E])?$/i.exec(x);
+      if(m&&!c){c=normCls((m[1].toUpperCase()==='NURSERY'?'NUR':m[1])+(m[2]||''));return}
+      if(!n&&known.has(x.toLowerCase().replace(/\s+/g,' '))){n=known.get(x.toLowerCase().replace(/\s+/g,' ')).n;return}
+      rest.push(x)});
+    rest.sort((a,b)=>b.length-a.length);const t=rest.shift()||'';
+    if(!n){const k=rest.find(x=>/^[A-Za-z][A-Za-z .'-]{2,40}$/.test(x));if(k)n=k}
+    if(!c&&n&&known.has(n.toLowerCase()))c=known.get(n.toLowerCase()).c;
+    rows.push({d:d||defDate,n,c:c||defCls,t,ok:!!(n&&(c||defCls)&&t.length>3)})});
+  return rows}
+function pasteModal(){
+  const cls=[...new Set(D.f.map(r=>r.c).filter(c=>c&&c!=='—'))].sort((a,b)=>crank(a)-crank(b));
+  const srcs=[['Studybase','Studybase'],['Call','Call received'],['Desk','Front office desk'],['Diary','Diary remark']].concat(ME.role!=='teacher'?[['Internal','Internal (in-house / in-person)']]:[]);
+  formModal('Paste many feedback',lab('Source (required)',sel('m',[['','Select source']].concat(srcs),''))
+    +'<div class="row"><div style="flex:1">'+lab('Class if the rows have none',sel('c',[['','Not set']].concat(cls.map(x=>[x,x])),''))+'</div><div style="flex:1">'+lab('Date if the rows have none','<input type="date" name="d" value="'+todayISO()+'">')+'</div></div>'
+    +lab('Paste rows from Studybase or a sheet','<textarea name="t" rows="8" placeholder="One feedback per line. Columns can be: date, student name, class, feedback (tab or | separated)"></textarea>')
+    +'<div class="mut" style="font-size:12.5px;margin-top:8px">You will see a check list before anything is added.</div>','Check rows',v=>{
+      if(!v.m){toast('Select the source first');return false}
+      if(!v.t.trim()){toast('Paste the rows first');return false}
+      const rows=parsePaste(v.t,v.c,v.d);if(!rows.length){toast('No rows found');return false}
+      const good=rows.filter(r=>r.ok);
+      setTimeout(()=>formModal('Check '+rows.length+' rows','<div class="mut" style="margin-bottom:8px">'+good.length+' ready to add'+(rows.length-good.length?', '+(rows.length-good.length)+' skipped (name, class or text missing)':'')+'. Source: '+esc(srcName(v.m))+'</div><div class="tw" style="max-height:300px;overflow:auto"><table><thead><tr><th></th><th>Date</th><th>Child</th><th>Class</th><th>Feedback</th></tr></thead><tbody>'+rows.map(r=>'<tr><td>'+(r.ok?'✓':'⚠')+'</td><td>'+esc(r.d?fmtS(r.d):'')+'</td><td>'+esc(r.n)+'</td><td>'+esc(r.c)+'</td><td>'+esc(r.t.slice(0,120))+'</td></tr>').join('')+'</tbody></table></div>',
+        good.length?'Add '+good.length:'Close',()=>{if(!good.length)return true;good.forEach((r,i)=>{const id=(Date.now()+i).toString(36)+Math.random().toString(36).slice(2,4);ADD[id]={d:r.d||todayISO(),n:r.n,c:r.c,dp:'General',ct:'Informative Update',m:v.m,t:r.t,p:'Low',sub:'',by:ME.name,role:roleLbl(),at:Date.now()};saveADD(id)});mergeAdded();toast(good.length+' added')}),50)});
+}
+/* ===== Add feedback (all sources, request category, images) ===== */
+function addModal(pre){
+  pre=pre||{};
+  const stu=[...new Set(D.f.filter(inScope).map(r=>r.n).filter(Boolean))].sort(),cls=[...new Set(D.f.map(r=>r.c).filter(c=>c&&c!=='—'))].sort((a,b)=>crank(a)-crank(b)),deps=tally(D.f,r=>r.dp).map(x=>x[0]),cts=[...new Set(tally(D.f,r=>r.ct).map(x=>x[0]).concat(['Request']))];
+  const srcs=[['','Select source'],['Studybase','Studybase'],['Call','Call received'],['Diary','Diary remark'],['Desk','Front office desk']].concat(ME.role!=='teacher'?[['Internal','Internal (in-house / in-person)']]:[]);
+  formModal(pre.ct==='Request'?'New request':'Add feedback',lab('Student name','<input name="n" list="dl" placeholder="Start typing a name" autocomplete="off"><datalist id="dl">'+stu.map(s=>'<option value="'+esc(s)+'">').join('')+'</datalist>')+lab('Class and section',sel('c',cls,cls[0]))
+  +'<div class="row"><div style="flex:1">'+lab('Source (required)',sel('m',srcs,pre.m||''))+'</div><div style="flex:1">'+lab('Date','<input type="date" name="d" value="'+todayISO()+'">')+'</div></div>'
+  +'<div class="row"><div style="flex:1">'+lab('Type',sel('ct',cts,pre.ct||'Informative Update'))+'</div><div style="flex:1">'+lab('Priority',sel('p',['Low','Medium','High'],'Low'))+'</div></div>'
+  +'<div class="row"><div style="flex:1">'+lab('Department',sel('dp',deps,'General'))+'</div><div style="flex:1">'+lab('Subject teacher (optional)',sel('sub',[['','None']].concat(SUBJECTS.filter(s=>s!=='Class Teacher').map(s=>[s,s])),''))+'</div></div>'
+  +lab('Request category (only when Type is Request)',sel('rc',[['','Decide automatically']].concat(RQCATS.map(x=>[x,x])),''))
+  +lab('Feedback','<textarea name="t" rows="4" placeholder="What did the parent say, or what was written in the diary?"></textarea>')
+  +lab('Attach image (optional, up to 3)','<input type="file" id="addimg" accept="image/*" multiple>')
+  +'<div class="mut" style="font-size:12.5px;margin-top:10px">Saved with date and time by '+esc(ME.name)+'. Many rows at once? Use "Paste from Studybase".</div>','Add',v=>{
+    if(!v.m){toast('Select the source first');return false}
+    if(!v.n.trim()||!v.t.trim()){toast('Student name and feedback are required');return false}
+    const files=[...(document.getElementById('addimg').files||[])].slice(0,3),id=Date.now().toString(36);
+    const rec={d:v.d||todayISO(),n:v.n.trim(),c:v.c,dp:v.dp,ct:v.ct,m:v.m,t:v.t.trim(),p:v.p,sub:v.sub,rc:v.ct==='Request'?v.rc:'',by:ME.name,role:roleLbl(),at:Date.now(),imgs:[]};
+    toast(files.length?'Uploading image and saving…':'Feedback added');
+    (async()=>{for(const f of files){const i=await putImg(f);if(i)rec.imgs.push(i)}ADD[id]=rec;mergeAdded();saveADD(id);if(files.length)toast('Feedback added');render(true)})();
+  });
+}
+/* ===== Stay signed in ===== */
+let UID='',ME_WAIT=!LS.get('pc2_me');
+async function restoreMe(){
+  try{const U=await claude.use('user');if(!U||!U.id)return;UID=await U.id()||'';if(!UID||!DB)return;
+    if(!ME){const s=await DB.collection('data/users/'+UID).doc('me').get();const v=s&&(typeof s.data==='function'?s.data():s.data);
+      if(v&&v.name&&v.role){ME={role:v.role,name:v.name,groups:v.groups||[],subject:v.subject||'',classes:v.classes||[]};LS.set('pc2_me',ME);F=newF();syncCM();fuSeg=ME.role==='teacher'?myKey():'';view='ov'}}
+    else saveMe()}catch(e){}
+}
+function saveMe(){try{if(DB&&UID&&ME&&!ME.va)DB.collection('data/users/'+UID).doc('me').set({role:ME.role,name:ME.name,groups:ME.groups||[],subject:ME.subject||'',classes:ME.classes||[]})}catch(e){}}
+
+function normCls(v){let s=String(v).replace(/\./g,'').replace(/\s+/g,'').toUpperCase(),m=/^(NUR|PG|LKG|UKG)([A-C]?)$/.exec(s);if(m)return(m[1]==='NUR'?'Nur':m[1])+(m[2]?' '+m[2]:'');m=/^(\d{1,2})([A-E]?)$/.exec(s);return m?m[1]+m[2]:String(v).trim()}
+
+/* ===== Move a feedback to Requests ===== */
+let RT=LS.get('pc2_rt')||{};
+const saveRT=id=>save('retag',RT,'pc2_rt',id);
+function applyRT(){Object.keys(RT).forEach(id=>{const r=D.byId&&D.byId[id];if(!r)return;const t=RT[id];if(r._ct0===undefined)r._ct0=r.ct;if(t&&t.ct==='Request'){r.ct='Request';r.rc=t.rc||''}else{r.ct=r._ct0;r.rc=''}})}
+function mvReqModal(id){
+  const r=D.byId[id],cur=RT[id]&&RT[id].ct==='Request'?RT[id].rc:'';
+  formModal(cur?'Change request category':'Move to Requests','<div class="quote" style="margin:0 0 6px;max-height:90px;overflow:auto">'+esc(r.t)+'</div>'
+    +lab('Request category',sel('rc',[['','Not a request (remove from Requests)']].concat(RQCATS.map(x=>[x,x])),cur||reqCat(Object.assign({},r,{rc:'',ct:'Request'}))))
+    +'<div class="mut" style="font-size:12.5px;margin-top:10px">Saved with date and time by '+esc(ME.name)+'. The original feedback stays as it is.</div>','Save',v=>{
+      RT[id]=v.rc?{ct:'Request',rc:v.rc,by:ME.name,at:Date.now()}:{ct:'',rc:'',by:ME.name,at:Date.now()};
+      if(!v.rc&&r._ct0!==undefined){r.ct=r._ct0;r.rc=''}applyRT();saveRT(id);toast(v.rc?'Moved to Requests: '+v.rc:'Removed from Requests')},dr(id));
+}
+
+boot();
+
+</script>
+</body>
+</html>
