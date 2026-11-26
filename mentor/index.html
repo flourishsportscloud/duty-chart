@@ -3,7 +3,7 @@
 <meta name="robots" content="noindex">
 <title>FIS Mentor Student Performance Record</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"></noscript>
 <link rel="icon" href="../fis/fis-logo-192.png"><link rel="apple-touch-icon" href="../fis/fis-logo-180.png"><meta name="theme-color" content="#1B3156">
 <style>
 :root{--navy:#1B3156;--navy2:#14233F;--navy3:#243D69;--mag:#E91D69;--mag-d:#C9135A;--mag-t:#FDE8F0;--pur:#572686;--pur-t:#EFE8F6;--amb:#EFA11D;--amb-t:#FDF1DC;--sky:#2B9BD6;--sky-l:#68C0EA;--sky-t:#E4F4FC;--ok:#1E9E6A;--ok-t:#E3F5EC;--bad:#D93A4B;--bad-t:#FCE9EB;--bg:#F3F5FA;--card:#fff;--ink:#18223A;--mut:#667391;--line:#E2E7F0;
@@ -246,23 +246,26 @@ async function call(fn,args){
   if(!j.ok){if(j.login&&fn!=='login'){TOKEN=null;lsPut('token',null);showGate()}throw new Error(j.err==='LOGIN'?'Please log in again.':j.err)}
   return j.v;
 }
-let syncMsg='';
+let syncMsg='',lastSync=0,lastErr='';
+function statusText(){const n=Object.keys(OUT).length;if(!API_URL)return 'Saved on this phone';if(navigator.onLine===false)return 'Offline · '+n+' change'+(n===1?'':'s')+' waiting';if(lastErr)return '⚠ '+lastErr+(n?' · '+n+' waiting':'');if(n)return 'Saving… '+n+' pending';return 'Synced ✓'+(lastSync?' '+pad(new Date(lastSync).getHours())+':'+pad(new Date(lastSync).getMinutes()):'')}
 function setSync(m){syncMsg=m;const e=$('syncSt');if(e)e.textContent=m}
+addEventListener('online',()=>{setSync(statusText());if(TOKEN){flush();pull()}});addEventListener('offline',()=>setSync(statusText()));
 let _pt=null;
 function persist(){_dv++;clearTimeout(_pt);_pt=setTimeout(persistNow,350)}
 function persistNow(){clearTimeout(_pt);_pt=null;lsPut('docs',DB);lsPut('out',OUT)}
 addEventListener('pagehide',persistNow);
-function putDoc(d){DB[d.p]=d;if(API_URL)OUT[d.p]=d;persist();flushSoon()}
-function delDoc(p){delete DB[p];if(API_URL)OUT[p]={del:1,p};persist();flushSoon()}
+addEventListener('beforeunload',e=>{if(API_URL&&Object.keys(OUT).length){persistNow();e.preventDefault();e.returnValue='Some changes are not saved yet.';return e.returnValue}});
+function putDoc(d){DB[d.p]=d;if(API_URL){OUT[d.p]=d;lsPut('out',OUT)}persist();flushSoon();setSync(statusText())}
+function delDoc(p){delete DB[p];if(API_URL){OUT[p]={del:1,p};lsPut('out',OUT)}persist();flushSoon();setSync(statusText())}
 let ft=null;function flushSoon(){clearTimeout(ft);ft=setTimeout(flush,600)}
-let flushing=false;
+let flushing=false,retryN=0;
 async function flush(){
   if(!API_URL||flushing||!TOKEN)return;flushing=true;
   try{let again=false;for(const p of Object.keys(OUT)){const d=OUT[p],snap=JSON.stringify(d);if(d.del)await call('del',[p,{}]);else{const b=Object.assign({},d);delete b.p;await call('set',[p,b])}
       if(OUT[p]===d&&JSON.stringify(d)===snap)delete OUT[p];else again=true;persist()}
-    setSync(again?'Saving…':'Saved ✓');if(again)flushSoon()}
-  catch(e){setSync(e.net?'Offline · '+Object.keys(OUT).length+' waiting':'⚠ '+e.message)}
-  flushing=false;
+    lastErr='';lastSync=Date.now();setSync(statusText());if(again)flushSoon()}
+  catch(e){lastErr=e.net?'':e.message;setSync(statusText());if(!e.net||navigator.onLine!==false)setTimeout(flushSoon,Math.min(60000,5000*(1<<Math.min(retryN++,4))))}
+  flushing=false;if(!Object.keys(OUT).length)retryN=0;
 }
 const stab=o=>JSON.stringify(o,(k,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.keys(v).sort().reduce((a,c)=>(a[c]=v[c],a),{}):v);
 let lastTouch=0,needRefresh=false;
@@ -275,13 +278,16 @@ async function pull(){
   if(!API_URL||!TOKEN)return;
   try{const r=await call('pull',[REV,fromDay()]);let ch=false;
     r.docs.forEach(x=>{if(OUT[x.p])return;if(!x.del&&DB[x.p]&&x.p!=='config/setup'&&x.p!=='config/lessons'&&stab(DB[x.p])===stab(Object.assign({p:x.p},x.j)))return;ch=true;if(x.del)delete DB[x.p];else if(x.p==='config/setup'){CFG=x.j;lsPut('cfg',CFG)}else if(x.p==='config/lessons'){LESSONS=x.j;lsPut('lessons',LESSONS)}else DB[x.p]=Object.assign({p:x.p},x.j)});
-    REV=r.rev;lsPut('rev',REV);persist();if(ch){if(busy())needRefresh=true;else softRender()}}catch(e){if(e.net)setSync('Offline')}
+    REV=r.rev;lsPut('rev',REV);lastSync=Date.now();persist();if(ch){if(busy())needRefresh=true;else softRender()}}catch(e){if(e.net)setSync('Offline')}
 }
 async function loadRoster(){if(!API_URL||!TOKEN)return;try{const r=await call('roster');if(r&&Object.keys(r).length){ROSTER=r;lsPut('roster',r)}}catch(e){}}
 function saveCfg(){lsPut('cfg',CFG);if(API_URL){OUT['config/setup']=Object.assign({p:'config/setup'},CFG);persist();flushSoon()}}
 function saveLessons(){lsPut('lessons',LESSONS);if(API_URL){OUT['config/lessons']=Object.assign({p:'config/lessons'},LESSONS);persist();flushSoon()}}
 /* ---------- records ---------- */
 const CODES={C:{t:'✓',n:'Checked',k:'ok'},I:{t:'IC',n:'Incomplete',k:'ic'},N:{t:'NS',n:'Not submitted',k:'ns'},A:{t:'A',n:'Absent',k:'ab'},W:{t:'P',n:'Pasting',k:'ps'}};
+const ERRS=[];
+addEventListener('error',e=>{ERRS.push((e.message||'error')+' @'+(e.lineno||0));if(ERRS.length>20)ERRS.shift();try{toast('Something went wrong — your saved data is safe. Reload if it looks wrong.')}catch(_){}});
+addEventListener('unhandledrejection',e=>{ERRS.push('promise: '+((e.reason&&e.reason.message)||e.reason));if(ERRS.length>20)ERRS.shift()});
 let _dv=0;const _dc={};
 const docs=k=>{const c=_dc[k];if(c&&c.v===_dv)return c.a;const a=Object.values(DB).filter(d=>d&&d.k===k);_dc[k]={v:_dv,a};return a};
 const entriesFor=(sec,subj)=>docs('e').filter(e=>e.sec===sec&&(!subj||e.subj===subj)).sort((a,b)=>b.date.localeCompare(a.date)||b.ts-a.ts);
@@ -590,7 +596,7 @@ function repTestRows(ts){
   return Object.values(M).sort((a,b)=>secSort(a.sec,b.sec)||a.subj.localeCompare(b.subj)).map(o=>[o.sec,o.subj,String(o.n),o.c?[(o.sum/o.c).toFixed(0)+'%',o.sum/o.c<60?R_RED:'']:'—',[String(o.low),o.low?R_RED:''],String(o.ng),String(o.ab)]);
 }
 function repPick(){
-  const secAll=Object.keys(ROSTER).sort(secSort),subAll=[...new Set(segClasses(U.seg).flatMap(c=>subjectsFor(c).map(x=>x.n)))],itAll=['Book','Notebook','Assignment','Test Notebook','Content Notebook','Homework Notebook','Practice Notebook'];
+  const secAll=Object.keys(ROSTER).sort(secSort),subAll=[...new Set(segClasses(U.seg).reduce((a,c)=>a.concat(subjectsFor(c).map(x=>x.n)),[]))],itAll=['Book','Notebook','Assignment','Test Notebook','Content Notebook','Homework Notebook','Practice Notebook'];
   const row=(lab,g,all,cur)=>'<div class="row" style="margin-top:6px"><span class="lab">'+lab+'</span><div class="scroll"><button class="chip sm" data-act="rclr" data-g="'+g+'" aria-pressed="'+(!(cur&&cur.length))+'">All</button>'+all.map(o=>'<button class="chip sm" data-act="rtog" data-g="'+g+'" data-v="'+esc(o)+'" aria-pressed="'+!!(cur&&cur.includes(o))+'">'+esc(IT_SHORT[o]||o)+'</button>').join('')+'</div></div>';
   return '<div class="card" style="padding:10px"><div class="small muted">Tap one or several. “All” clears the choice.</div>'+row('Sections','rsecs',secAll.filter(x=>segOf(x)===U.seg),U.rsecs)+row('Subjects','rsubs',subAll,U.rsubs)+row('Items','ritems',itAll,U.ritems)+'</div>';
 }
@@ -997,7 +1003,8 @@ function backOne(){
   if(U.tab==='check'&&U.subj){U.subj='';return}
   if(U.mentor){U.mentor='';U.scope='';U.tab='men';return}
 }
-let hDepth=0,ignorePop=false;
+let hDepth=0,ignorePop=false,exitAt=0;
+try{if(!(history.state&&history.state.fis)){history.replaceState({fis:1,d:0,base:1},'');history.pushState({fis:1,d:0,home:1},'')}}catch(e){}
 const navDepth=()=>(U.stu?1:0)+((U.form||U.open)?1:0)+((U.tab==='check'&&U.subj)?1:0);
 function syncHistory(){
   const d=navDepth(),b=$('bkBtn');if(b)b.classList.toggle('hide',d===0&&!U.mentor);
@@ -1006,6 +1013,9 @@ function syncHistory(){
 }
 addEventListener('popstate',e=>{
   if(ignorePop){ignorePop=false;return}
+  if(e.state&&e.state.base&&hDepth===0){
+    if(Date.now()-exitAt<2500){exitAt=0;try{history.back()}catch(x){}return}
+    exitAt=Date.now();toast('Press Back again to exit');try{history.pushState({fis:1,d:0,home:1},'')}catch(x){}return}
   const t=(e.state&&e.state.d)||0;
   if(t>=hDepth){hDepth=t;render();return}
   hDepth=t;backOne();render();
@@ -1141,9 +1151,14 @@ $('gf').addEventListener('submit',async ev=>{
 });
 async function boot(){render();await loadRoster();await pull();await flush();render();}
 if(API_URL?!TOKEN:!ME)showGate();else{boot()}
-setInterval(()=>{if(!document.hidden&&TOKEN){flush();pull()}},15000);
+(function poll(){setTimeout(()=>{if(!document.hidden&&TOKEN&&navigator.onLine!==false){flush();pull()}poll()},25000+Math.floor(Math.random()*10000))})();
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&TOKEN){flush();pull()}});
 render();
+try{if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')){navigator.serviceWorker.register('sw.js').then(reg=>{
+  const ask=w=>{const b=document.createElement('div');b.className='banner';b.style.cssText='position:fixed;left:8px;right:8px;bottom:8px;z-index:99;cursor:pointer;text-align:center';b.textContent='New version available — tap to refresh';b.onclick=()=>{persistNow();w.postMessage('skip')};document.body.appendChild(b)};
+  if(reg.waiting&&navigator.serviceWorker.controller)ask(reg.waiting);
+  reg.addEventListener('updatefound',()=>{const w=reg.installing;if(w)w.addEventListener('statechange',()=>{if(w.state==='installed'&&navigator.serviceWorker.controller)ask(w)})});
+  let rl=false;const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(rl||!had)return;rl=true;location.reload()})}).catch(()=>{})}}catch(e){}
 })();
 
 </script></body></html>
