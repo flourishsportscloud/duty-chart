@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+<head><script src="../fis/shell.js?v=3"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light">
@@ -1424,7 +1424,7 @@ const BUILD = "202611231417";
 (function(){
   const run = () => fetch(location.pathname + "?v=" + Date.now(), {cache:"no-store"}).then(r => r.text()).then(t => {
     const m = t.match(/const BUILD = "(\d+)"/);
-    if (m && m[1] !== BUILD) location.replace(location.pathname + "?v=" + m[1] + location.hash);
+    if (m && m[1] !== BUILD) { var nu = location.pathname + "?v=" + m[1] + location.hash; if (window.FIS && FIS.newVersion) FIS.newVersion(nu); else location.replace(nu); }
   }).catch(() => {});
   run(); document.addEventListener("visibilitychange", () => { if (!document.hidden) run(); });
 })();
