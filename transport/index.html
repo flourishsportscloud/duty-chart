@@ -424,7 +424,7 @@ input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:tex
   window.FIS_LOGOUT=function(){['token','me','roster','gcache','grev'].forEach(k=>localStorage.removeItem(K(k)));location.reload()};   // unsent changes (goutbox) are kept
   window.FIS_RELOGIN=function(){if(!window.FIS_R){localStorage.removeItem(K('token'));return}if(!$('fisLogin').classList.contains('hide'))return;$('fisLogin').classList.remove('hide');$('fisLN').value=get('me')||'';$('fisLE').textContent='Your login has expired. Log in again – nothing you entered is lost.'};
   const $=id=>document.getElementById(id);
-  function startApp(r){window.FIS_R=r;window.FIS_ME=get('me')||'';const s=document.createElement('script');s.src='app.js?v=202611271000';s.onload=()=>{$('fisBoot').remove();try{if(window.caches)caches.open('fis-entry-exit-v1').then(c=>c.addAll([location.pathname+location.search,s.src])).catch(()=>{})}catch(e){}};document.body.appendChild(s)}
+  function startApp(r){window.FIS_R=r;window.FIS_ME=get('me')||'';const s=document.createElement('script');s.src='app.js?v=202611271100';s.onload=()=>{$('fisBoot').remove();try{if(window.caches)caches.open('fis-entry-exit-v1').then(c=>c.addAll([location.pathname+location.search,s.src])).catch(()=>{})}catch(e){}};document.body.appendChild(s)}
   function showLogin(msg){$('fisBoot').classList.add('hide');$('fisLogin').classList.remove('hide');$('fisLE').textContent=msg||'';if(!API_URL)$('fisLE').textContent='This app is being set up. Please try again later.'}
   $('fisLoginF').addEventListener('submit',async e=>{e.preventDefault();const n=$('fisLN').value.trim(),p=$('fisLP').value;
     if(n.length<3||!p){$('fisLE').textContent='Type your full name and the password.';return}
