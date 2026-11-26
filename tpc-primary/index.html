@@ -5,7 +5,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
 <link rel="icon" href="../fis/fis-logo-192.png"><link rel="apple-touch-icon" href="../fis/fis-logo-180.png"><meta name="theme-color" content="#152952">
 <style>
 html{-webkit-text-size-adjust:100%}body{margin:0}
@@ -321,7 +321,23 @@ details.rules summary{font-size:14px}
 .srule{margin:2px 0;padding:9px 12px;border-radius:12px;background:#FDF5E4;border:1px solid #F1D9A6;font-size:13.5px;color:#6B4A0C}
 .lbk{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding-top:6px;border-top:1px dashed var(--line,#ddd)}.lbk .sn{display:grid;min-width:0}
 .qrow{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);align-items:center}.qrow input{width:100%}.sdate{max-width:170px}
+
+html,body{overscroll-behavior-y:contain}
+button,.chip,.tab,.st,.sw,.tag,.pill,.me,.back,label.chip{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+input,textarea,select{-webkit-user-select:text;user-select:text}
+#botbar{position:fixed;left:10px;bottom:10px;z-index:60;display:flex;gap:8px;align-items:center;pointer-events:none}
+#botbar>*{pointer-events:auto}
+#backBtn{border:0;border-radius:999px;padding:9px 14px;font:600 13px Inter,system-ui,sans-serif;background:#152952;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+#netchip{border-radius:999px;padding:5px 11px;font:600 11.5px Inter,system-ui,sans-serif;background:#E2F2E9;color:#1F6B43;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+#netchip.busy{background:#EAF1FB;color:#1F4E8B}#netchip.warn{background:#FBF0DC;color:#855610}#netchip.bad{background:#FBE5EA;color:#A32342}
+body.locked #botbar{display:none}
 </style>
+<script>
+if(!Element.prototype.replaceChildren){ var rc=function(){ while(this.lastChild) this.removeChild(this.lastChild); if(arguments.length) this.append.apply(this,arguments); }; Element.prototype.replaceChildren=rc; DocumentFragment.prototype.replaceChildren=rc; }
+if(!Array.prototype.flat){ Array.prototype.flat=function(){ return [].concat.apply([],this); }; }
+if(!Array.prototype.flatMap){ Array.prototype.flatMap=function(f,t){ return [].concat.apply([],this.map(f,t)); }; }
+if(!Element.prototype.closest){ Element.prototype.closest=function(s){ var e=this; while(e&&e.nodeType===1){ if((e.matches||e.msMatchesSelector).call(e,s)) return e; e=e.parentElement; } return null; }; }
+</script>
 </head><body class="locked">
 
 <header class="band">
@@ -351,6 +367,7 @@ details.rules summary{font-size:14px}
 
 <div id="gate"><form id="gateF"><div class="glogo"><img src="../fis/fis-logo-192.png" alt="FIS logo"></div><h2>Teacher Preparation and Checking Reporting (Primary)</h2><div class="gsub">Flourish International School · Classes 1–5</div><p class="note">Use the same name and password as the Diary app.</p><input id="gateN" type="text" autocomplete="username" placeholder="Your name" maxlength="40"><input id="gateW" type="password" autocomplete="current-password" placeholder="Password"><p class="note" id="gateE" style="color:var(--late-ink)"></p><button class="btn" type="submit" id="gateGo">Log in</button><p class="note">No password yet? Set one in the <a href="../diary/" style="color:var(--today)">Diary app</a> first; the admin approves it once.</p></form></div>
 <div id="toast" hidden role="status"></div>
+<div id="botbar"><button type="button" id="backBtn" hidden>‹ Back</button><span id="netchip" class="ok" role="status">Saved</span></div>
 <main><div class="wrap">
   <div id="listView" class="stack">
     <div class="chips" id="subjects" aria-label="Subject"></div>
@@ -465,21 +482,51 @@ let DOCS={}, REV=0, ME='', LOADED=false, OV={subAdd:[],subRm:{}};
 let TOKEN='', ROLE=''; try{TOKEN=localStorage.getItem('diary-token')||''}catch(e){}
 const DIARY_URL=new URLSearchParams(location.search).get('dapi')||'https://script.google.com/macros/s/AKfycbyvWTDOKOQ8F0vD-oy9vchmq04GdhfZfgtpomgWg73rIa13gmkrFkpZsvQl9ISZKrSFQw/exec';
 async function dcall(fn,args){ const r=await fetch(DIARY_URL,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn,args:args||[]})}); const j=await r.json(); if(!j.ok) throw new Error(j.err||'Could not log in.'); return j.v; }
-function setToken(t){ TOKEN=t||''; try{ if(TOKEN) localStorage.setItem('diary-token',TOKEN); else localStorage.removeItem('diary-token'); }catch(e){} }
-function enter(me){ ME=me.name; ROLE=me.role||''; document.body.classList.remove('locked'); $('gate').hidden=true; $('gateW').value=''; render(); loadAll(); }
-function lock(msg){ ME=''; ROLE=''; LOADED=false; DOCS={}; document.body.classList.add('locked'); $('gate').hidden=false; $('gateE').textContent=msg||''; }
-async function checkLogin(){ if(!TOKEN){ lock(); return; } try{ const st=await dcall('state',[TOKEN,TODAY,'']); if(st&&st.me) enter(st.me); else { setToken(''); lock('Please log in again.'); } }catch(e){ if(/log in again/i.test(e.message)){ setToken(''); lock('Please log in again.'); } else lock('Could not check your login. Check the internet connection and reload.'); } }
+function setToken(t){ TOKEN=t||''; if(TOKEN) LS.set('diary-token',TOKEN); else { LS.del('diary-token'); LS.del(K_ME); } }
+function enter(me){ const first=!ME; ME=me.name; ROLE=me.role||''; LS.set(K_ME,JSON.stringify({name:ME,role:ROLE,t:h36(TOKEN)})); document.body.classList.remove('locked'); $('gate').hidden=true; $('gateW').value=''; if(first){ render(); loadAll(); } }
+function lock(msg){ ME=''; ROLE=''; LOADED=false; DOCS={}; SRV={}; document.body.classList.add('locked'); $('gate').hidden=false; $('gateE').textContent=msg||''; }
+async function checkLogin(){ if(!TOKEN){ lock(); return; }
+  let known=null; try{ known=JSON.parse(LS.get(K_ME)||'null'); }catch(e){} if(known&&known.name&&known.t===h36(TOKEN)) enter(known);   // open at once; the login is confirmed in the background
+  try{ const st=await dcall('state',[TOKEN,TODAY,'']); if(st&&st.me){ const ch=ME&&(ME!==st.me.name||ROLE!==(st.me.role||'')); enter(st.me); if(ch) render(); } else { setToken(''); lock('Please log in again.'); } }
+  catch(e){ if(/log in again/i.test(e.message)){ setToken(''); lock('Please log in again.'); } else if(!ME) lock('Could not check your login. Check the internet connection and reload.'); } }
 const h36=s=>{let a=5381,b=52711;for(let i=0;i<s.length;i++){const c=s.charCodeAt(i);a=(a*33^c)>>>0;b=(b*33^c)>>>0}return a.toString(36)+b.toString(36)};
 const dpath=id=>'status/'+PFX+'r.'+h36(id);
-async function call(fn,args){ const r=await fetch(API_URL,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn,args:args||[],who:ME})}); const j=await r.json(); if(!j.ok) throw new Error(j.err||'Could not save.'); return j.v; }
-function take(v){ let ch=false; (v.docs||[]).forEach(d=>{ if(d.p.indexOf('status/'+PFX)!==0) return; ch=true; if(d.del) delete DOCS[d.p]; else DOCS[d.p]=d.j; }); if(v.rev) REV=v.rev; return ch; }
+async function call(fn,args,who){ let r,j; try{ r=await fetch(API_URL,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn,args:args||[],who:who||ME})}); j=await r.json(); }catch(e){ const x=new Error('No connection to the school sheet.'); x.net=true; throw x; } if(!j.ok){ const x=new Error(j.err||'Could not save.'); x.server=true; throw x; } return j.v; }
+function take(v){ let ch=false; (v.docs||[]).forEach(d=>{ if(d.p.indexOf('status/'+PFX)!==0) return; ch=true; if(d.del) delete SRV[d.p]; else SRV[d.p]=d.j; }); if(v.rev) REV=v.rev; if(ch){ reapply(); saveCache(); } return ch; }
 let toastT; function toast(m,err){ const t=$('toast'); t.textContent=m; t.className=err?'err':''; t.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>t.hidden=true,err?6000:2200); }
-async function loadAll(){ try{ take(await call('all')); LOADED=true; render(); checkCaps(); }catch(e){ toast('Could not load saved updates. Check the internet connection.',1); } }
-async function poll(){ if(document.hidden||!LOADED) return; try{ if(take(await call('sync',[REV]))&&!picking&&!editing&&!manage&&!window.mBusy&&!rmkEdit) render(); }catch(e){} }
-async function push(path,fields,msg){ if(!ME){ lock(); return; }
-  const old=DOCS[path]; DOCS[path]=Object.assign({},old||{},fields); render();
-  try{ const v=await call('merge',[path,fields]); DOCS[path]=v.j; if(v.rev) REV=Math.max(REV,v.rev); render(); if(msg) toast(msg); }
-  catch(e){ if(old) DOCS[path]=old; else delete DOCS[path]; render(); toast(e.message||'Could not save. Please try again.',1); } }
+async function loadAll(){ if(!LOADED&&loadCache()){ LOADED=true; render(); }
+  try{ let v=LOADED?await call('sync',[REV]):await call('all'); if(LOADED&&Number(v.rev)<REV){ SRV={}; v=await call('all'); } take(v); if(!LOADED){ LOADED=true; reapply(); } softRender(); checkCaps(); pump(); }catch(e){ if(!LOADED) toast('Could not load saved updates. Check the internet connection.',1); else checkCaps(); } netChip(); }
+async function poll(){ if(document.hidden||!ME) return; if(!LOADED){ loadAll(); return; } try{ if(take(await call('sync',[REV]))) softRender(); if(OUT.length) pump(); }catch(e){} netChip(); }
+/* ---------- reliable saving: every change waits in an outbox on this phone until the school sheet confirms it ---------- */
+let SRV={}, OUT=[], pumping=false, netBad=0, retryT=0, lastTouch=0, softT=0, cacheT=0, storeFull=false;
+const LS={get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }, set(k,v){ try{ localStorage.setItem(k,v); return true; }catch(e){ return false; } }, del(k){ try{ localStorage.removeItem(k); }catch(e){} }};
+const K_OUT='tpc-out-'+PFX, K_DOCS='tpc-docs-'+PFX, K_ME='tpc-me';
+try{ OUT=JSON.parse(LS.get(K_OUT)||'[]')||[]; if(!Array.isArray(OUT)) OUT=[]; }catch(e){ OUT=[]; }
+function reapply(){ const d=Object.assign({},SRV); OUT.forEach(o=>{ d[o.path]=Object.assign({},d[o.path]||{},o.fields,o.local||{}); }); DOCS=d; }
+function saveOut(){ const ok=LS.set(K_OUT,JSON.stringify(OUT)); if(!ok&&OUT.length&&!storeFull){ storeFull=true; toast('This phone’s storage is full. Keep this page open until “Saved” shows, or the last changes may be lost.',1); } if(ok) storeFull=false; netChip(); }
+function saveCache(){ clearTimeout(cacheT); cacheT=setTimeout(()=>{ if(LOADED) LS.set(K_DOCS,JSON.stringify({rev:REV,docs:SRV})); },1500); }
+function loadCache(){ try{ const c=JSON.parse(LS.get(K_DOCS)||'null'); if(c&&c.docs&&typeof c.docs==='object'){ SRV=c.docs; REV=Number(c.rev)||0; reapply(); return true; } }catch(e){} return false; }
+function netChip(){ const c=$('netchip'); if(!c) return; const n=OUT.length; let t='Saved', k='ok';
+  if(n&&!navigator.onLine){ t='Offline · '+n+(n===1?' change':' changes')+' pending'; k='warn'; }
+  else if(n&&netBad>1){ t='Save failed · retrying ('+n+' pending)'; k='bad'; }
+  else if(n){ t='Saving…'+(n>1?' ('+n+')':''); k='busy'; }
+  else if(!navigator.onLine){ t='Offline'; k='warn'; }
+  c.textContent=t; c.className=k; }
+const uiBusy=()=>{ const a=document.activeElement; return !!(picking||editing||manage||window.mBusy||rmkEdit||(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))||Date.now()-lastTouch<4000); };
+function softRender(){ clearTimeout(softT); if(uiBusy()){ softT=setTimeout(softRender,1200); return; } const y=window.pageYOffset; render(); if(Math.abs(window.pageYOffset-y)>2) window.scrollTo(0,y); }
+['touchstart','touchmove','pointerdown','keydown','wheel','scroll'].forEach(ev=>window.addEventListener(ev,()=>{ lastTouch=Date.now(); },{passive:true,capture:true}));
+async function pump(){ if(pumping||!OUT.length||!ME) return; pumping=true; clearTimeout(retryT);
+  while(OUT.length){ const o=OUT[0]; netChip();
+    try{ const v=await call('merge',[o.path,o.fields],o.who); SRV[o.path]=v.j; OUT.shift(); netBad=0; saveOut(); reapply(); saveCache(); softRender(); }
+    catch(e){ if(e.server){ OUT.shift(); saveOut(); reapply(); render(); toast((e.message||'Could not save.')+' This change was not saved.',1); continue; }
+      netBad++; netChip(); pumping=false; retryT=setTimeout(pump,Math.min(30000,2000*Math.pow(2,Math.min(netBad,4)))+Math.random()*1000); return; } }
+  pumping=false; netChip(); }
+function push(path,fields,msg){ if(!ME){ lock(); return; }
+  const local={}; Object.keys(fields).forEach(k=>{ local[k+'_by']=ME; local[k+'_at']=Date.now(); });
+  OUT.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),path,fields,local,who:ME}); saveOut(); reapply(); render(); if(msg) toast(navigator.onLine?msg:msg+' on this phone · will be sent when online'); pump(); }
+window.addEventListener('online',()=>{ netBad=0; netChip(); pump(); poll(); }); window.addEventListener('offline',netChip);
+window.addEventListener('beforeunload',e=>{ if(OUT.length){ e.preventDefault(); e.returnValue=''; } });
+window.addEventListener('pagehide',()=>{ if(LOADED) LS.set(K_DOCS,JSON.stringify({rev:REV,docs:SRV})); });
 const noteOf=p=>{ try{ return JSON.parse((DOCS[p]||{}).note||'') }catch(e){ return null } };
 const CH_SLOT={'Notebook':'lp','Assignment':'viva','Test notebook':'test','Test':'test','Book':'book','Book Exercise':'epl','Google Sheets':'key'}, FREE=['ppt','video','obs','key','epl','book'];
 function slotOf(r,e){ if(r.kind==='prep') return ELEMS.find(x=>x[1]===e.name)[0];
@@ -1033,7 +1080,8 @@ const sDay=()=>/^\d{4}-\d\d-\d\d$/.test(stuDate)?stuDate:TODAY;
 function sTake(v){ (v.docs||[]).forEach(d=>{ SD[d.p]=d.j; }); if(v.rev) SREV=v.rev; }
 async function stuLoad(){ if(stuLoading) return; stuLoading=true; stuErr=''; try{ if(!ROSTER) ROSTER=await call('roster',[TOKEN]); sTake(await call('spull',[0,TOKEN])); }catch(e){ stuErr=e.message||'Could not load.'; } stuLoading=false; if(STU[seg]) render(); }
 async function stuPull(){ if(!CAN_STU||!ROSTER||document.hidden||stuBusyOp) return; try{ const v=await call('spull',[SREV,TOKEN]); if((v.docs||[]).length){ sTake(v); if(STU[seg]&&!stuForm&&!certCatsEdit) render(); } }catch(e){} }
-async function sop(path,op,payload,msg){ if(stuBusyOp) return false; stuBusyOp=true; let ok=false; try{ const v=await call('sop',[path,op,payload,TOKEN]); SD[path]=v.j; ok=true; if(msg) toast(msg); }catch(e){ toast(e.message||'Could not save. Please try again.',1); } stuBusyOp=false; render(); return ok; }
+let sopChain=Promise.resolve(), sopN=0;
+function sop(path,op,payload,msg){ sopN++; stuBusyOp=true; const run=async()=>{ let ok=false; for(let k=0;k<3&&!ok;k++){ try{ const v=await call('sop',[path,op,payload,TOKEN]); SD[path]=v.j; ok=true; if(msg) toast(msg); }catch(e){ if(e.server||k===2){ toast((e.message||'Could not save.')+' Please try again.',1); break; } await new Promise(r=>setTimeout(r,1500*(k+1))); } } sopN--; stuBusyOp=sopN>0; render(); return ok; }; sopChain=sopChain.then(run,run); return sopChain; }
 const poll0=poll; poll=async function(){ await poll0(); if(STU[seg]) stuPull(); };
 function stuDateRow(label){ const f=el('input',{type:'date',value:sDay(),max:'2099-12-31',class:'sdate'}); f.addEventListener('change',()=>{ stuDate=f.value; }); return el('div',{class:'frow'},el('span',{class:'flab',text:'Date'}),el('div',{class:'toolr'},f,el('span',{class:'note',text:label}))); }
 function renderStu(){
@@ -1137,10 +1185,38 @@ function renderAward(box,names){
   card.append(list); box.append(card);
 }
 
+/* ---------- Back: one step at a time inside the app; the phone's Back button leaves only from the first screen, on a second press ---------- */
+let navStack=[], navLast=null, navFromBack=false, exitT=0;
+const routeStr=()=>'#/'+seg+'/'+wing;
+function closeOverlay(){ let hit=false; const set=(c,f)=>{ if(c){ f(); hit=true; } };
+  set(picking,()=>{picking=null}); set(editing,()=>{editing=null}); set(rmkEdit,()=>{rmkEdit=null});
+  if(!hit){ set(mPick||mEdit,()=>{mPick=mEdit=null}); set(dEdit||dAdd||dView,()=>{dEdit=null;dAdd=false;dView=null}); set(lAdd||lPlay,()=>{lAdd=false;lPlay=null}); set(stuForm||certCatsEdit||certOpen,()=>{stuForm=null;certCatsEdit=false;certOpen=null}); }
+  if(!hit){ set(manage,()=>{manage=false}); set(mManage,()=>{mManage=false}); }
+  return hit; }
+function goBack(){ if(closeOverlay()){ render(); return true; }
+  if(navStack.length){ const p=navStack.pop(); navFromBack=true; seg=p.seg; wing=p.wing; render(); window.scrollTo(0,p.y||0); return true; } return false; }
+function navInit(){ const m=location.hash.match(/^#\/([a-z]+)\/([a-z0-9]+)/); if(m){ if($('seg-'+m[1])) seg=m[1]; if(GRADES[m[2]]) wing=m[2]; }
+  try{ history.replaceState({tpc:0},'',routeStr()); history.pushState({tpc:1},'',routeStr()); }catch(e){}
+  window.addEventListener('popstate',()=>{ const arm=()=>{ try{ history.pushState({tpc:1},'',routeStr()); }catch(e){} };
+    if(goBack()){ arm(); return; }
+    if(Date.now()-exitT<2500){ history.back(); return; }
+    exitT=Date.now(); arm(); toast('Press back again to leave this app'); });
+  $('backBtn').addEventListener('click',()=>{ goBack(); }); }
+function navTrack(){ const cur={seg,wing}; if(navLast&&(navLast.seg!==cur.seg||navLast.wing!==cur.wing)){ if(!navFromBack){ navStack.push({seg:navLast.seg,wing:navLast.wing,y:navLast.y||0}); if(navStack.length>25) navStack.shift(); } try{ history.replaceState({tpc:1},'',routeStr()); }catch(e){} }
+  navFromBack=false; navLast={seg:cur.seg,wing:cur.wing,y:window.pageYOffset}; $('backBtn').hidden=!navStack.length; }
+window.addEventListener('scroll',()=>{ if(navLast) navLast.y=window.pageYOffset; },{passive:true});
+/* ---------- friendly message instead of a silent failure ---------- */
+let errShown=0; function oops(m){ try{ const l=JSON.parse(LS.get('tpc-errors')||'[]'); l.push([new Date().toISOString(),String(m).slice(0,200)]); LS.set('tpc-errors',JSON.stringify(l.slice(-20))); }catch(e){} if(Date.now()-errShown>15000){ errShown=Date.now(); toast('Something went wrong on this screen. Your saved work is safe. Please try again.',1); } }
+window.addEventListener('error',e=>oops(e.message||'error')); window.addEventListener('unhandledrejection',e=>oops((e.reason&&e.reason.message)||e.reason||'rejection'));
+document.addEventListener('contextmenu',e=>{ if(e.target.closest&&e.target.closest('button,a,.chip,.tab,.st,.sw')&&!e.target.closest('input,textarea')) e.preventDefault(); });
+
 let outArm=0; $('meBtn').addEventListener('click',()=>{ if(!ME) return; if(Date.now()-outArm<4000){ setToken(''); lock(); outArm=0; } else { outArm=Date.now(); $('meBtn').textContent='Tap again to log out'; } });
 $('gateF').addEventListener('submit',async e=>{ e.preventDefault(); const n=$('gateN').value.trim(), w=$('gateW').value; if(!n){$('gateE').textContent='Type your name.';return} if(!w){$('gateE').textContent='Enter your password.';return}
   $('gateGo').disabled=true; $('gateE').textContent=''; try{ const r=await dcall('login',[n,w]); setToken(r.token); enter(r.state.me); }catch(x){ $('gateE').textContent=x.message||'Could not log in.'; } $('gateGo').disabled=false; });
-const render0=render; render=function(){ $('meBtn').textContent=ME?ME+' · log out':'Not logged in'; const cd=canDash(), sd=$('seg-dash'); sd.hidden=!cd; sd.parentNode.className='sw '+(cd?'nine':'eight'); if(!cd&&seg==='dash') seg='prep'; if(ME) render0(); };
-checkLogin(); setInterval(poll,10000); document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll()});
+const render0=render; render=function(){ navTrack(); $('meBtn').textContent=ME?ME+' · log out':'Not logged in'; const cd=canDash(), sd=$('seg-dash'); sd.hidden=!cd; sd.parentNode.className='sw '+(cd?'nine':'eight'); if(!cd&&seg==='dash') seg='prep'; if(ME) render0(); };
+navInit(); netChip(); checkLogin();
+(function loop(){ setTimeout(()=>{ poll(); loop(); },20000+Math.random()*10000); })();   // other people's changes: every 20–30 seconds, never while the page is hidden
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden){ poll(); } else if(LOADED){ LS.set(K_DOCS,JSON.stringify({rev:REV,docs:SRV})); } });
+if('serviceWorker' in navigator&&location.protocol==='https:'){ window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); }); }
 </script>
 </body></html>
