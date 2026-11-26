@@ -67,12 +67,21 @@ function pubComplaint(c){
   return {id:c.id,floor:c.floor,area:c.area,text:c.text,category:c.category,kind:c.kind,priority:c.priority,vendor:c.vendor,date:c.date,
     hasPhoto:!!c.photo,hasDonePhoto:!!c.donePhoto,thread:threadOf(c),by:c.by,at:c.at,status:c.status,remark:c.remark,eta:c.eta,etaDays:c.etaDays,etaSet:c.etaSet,doneDate:c.doneDate,doneAt:c.doneAt};
 }
+// a cheap fingerprint of everything a phone can see: if it has not changed, the phone does not need the data again
+function sigOf(ctx){
+  let n=0,mx="";
+  Object.values(ctx.DB.Complaints).forEach(c=>{n++;const t=c.touched||c.updatedAt||c.at||"";if(t>mx)mx=t});
+  const cfg=JSON.stringify([ctx.DB.Config.team||0,ctx.DB.Config.directors||0,ctx.DB.Config.vendors||0]);
+  return n+"|"+mx+"|"+ctx.today+"|"+cfg.length+cfg.slice(0,200);
+}
 function publicState(ctx,me){
   const DB=ctx.DB,cutoff=addDays(ctx.today,-WINDOW_DAYS),complaints={};
   if(me)Object.values(DB.Complaints).forEach(c=>{
+    if(c.deleted)return;
     if(c.status!=="done"||c.date>=cutoff||(c.doneDate&&c.doneDate>=cutoff))complaints[c.id]=pubComplaint(c);
   });
   return {
+    sig:sigOf(ctx),
     today:ctx.today,cutoff,
     me:me?{name:me.name,role:me.role}:null,
     team:listOf(DB,"team",DEFAULT_TEAM),directors:listOf(DB,"directors",DEFAULT_DIRECTORS),
@@ -108,11 +117,22 @@ const LOGGED_KEYS=["floor","area","text","category","kind","priority"];
 const MANAGER_KEYS=["vendor","remark","date","eta","status"];
 
 const API={
-  state(ctx,token){return publicState(ctx,readToken(ctx.H,ctx.secret,ctx.DB,token,ctx.now))},
+  state(ctx,token,sig){
+    const me=readToken(ctx.H,ctx.secret,ctx.DB,token,ctx.now);
+    if(me&&sig&&sig===sigOf(ctx))return {same:true,sig:sig,today:ctx.today,me:{name:me.name,role:me.role}};
+    return publicState(ctx,me);
+  },
+  // the phone reports an error it could not show; written to the Log tab
+  logError(ctx,token,msg){
+    ctx.log(str(token,40)||"?","error","",str(msg,300));
+    return {ok:true};
+  },
 
   addComplaint(ctx,token,c){
     const me=needWriter(ctx,token);c=c||{};
-    const rec={id:ctx.H.uid(),thread:"",floor:"",area:"",text:"",category:"Others",kind:"complaint",priority:"normal",vendor:"",date:ctx.today,photo:"",
+    const cid=/^[A-Za-z0-9]{8,40}$/.test(String(c.id||""))?String(c.id):"";
+    if(cid&&ctx.DB.Complaints[cid])return publicState(ctx,me); // the same request was already received (double tap or retry)
+    const rec={id:cid||ctx.H.uid(),thread:"",deleted:"",touched:"",floor:"",area:"",text:"",category:"Others",kind:"complaint",priority:"normal",vendor:"",date:ctx.today,photo:"",
       by:me.name,at:new Date(ctx.now).toISOString(),status:"open",remark:"",eta:"",etaDays:null,etaSet:"",doneDate:"",updatedBy:"",updatedAt:""};
     LOGGED_KEYS.forEach(k=>{if(c[k]!=null&&c[k]!=="")rec[k]=c[k]});
     // reuse the validation by passing only the keys that were sent
@@ -130,15 +150,16 @@ const API={
       if(p.length>MAX_PHOTO||!/^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(p))fail("The photo could not be saved. Try a smaller photo.");
       rec.photo=ctx.photos.save(p);
     }
-    ctx.DB.Complaints[rec.id]=rec;ctx.dirty.Complaints=true;
+    ctx.DB.Complaints[rec.id]=rec;ctx.touch(rec.id);
     ctx.log(me.name,"add",rec.id,rec.floor+" · "+rec.text.slice(0,60));
     return publicState(ctx,me);
   },
 
   // staff: only their own complaint, only on the day they entered it; manager: any field of any complaint
-  editComplaint(ctx,token,id,patch){
+  // base (optional) holds the values the phone saw when it made the edit; if someone else has changed one of the same fields since, the edit is refused with CONFLICT
+  editComplaint(ctx,token,id,patch,base){
     const me=needWriter(ctx,token),mgr=me.role==="manager";
-    const rec=ctx.DB.Complaints[str(id,40)];if(!rec)fail("This complaint no longer exists.");
+    const rec=ctx.DB.Complaints[str(id,40)];if(!rec||rec.deleted)fail("This complaint no longer exists.");
     const P=patch||{},keys=Object.keys(P);
     if(!keys.length)return publicState(ctx,me);
     if(!mgr){
@@ -149,28 +170,34 @@ const API={
       if(MANAGER_KEYS.includes(k)){if(!mgr)fail("Only the maintenance team can change "+k+".")}
       else if(!LOGGED_KEYS.includes(k))fail("Unknown field.");
     });
+    if(base&&typeof base==="object")keys.forEach(k=>{
+      if(!(k in base))return;
+      const cur=String(rec[k]==null?"":rec[k]);
+      if(cur!==String(base[k]==null?"":base[k])&&cur!==String(P[k]==null?"":P[k]))
+        fail("CONFLICT|"+JSON.stringify({id:rec.id,field:k,by:rec.updatedBy||rec.by,value:cur}));
+    });
+    const was={};keys.forEach(k=>{was[k]=rec[k]});
     const before=JSON.stringify(rec);
     applyLogged(rec,P);
     if(mgr)applyManager(ctx,rec,P);
     if(JSON.stringify(rec)!==before){
       rec.updatedBy=me.name;rec.updatedAt=new Date(ctx.now).toISOString();
-      ctx.dirty.Complaints=true;
-      ctx.log(me.name,"edit",rec.id,keys.map(k=>k+"="+String(P[k]).slice(0,30)).join("; "));
+      ctx.touch(rec.id);
+      ctx.log(me.name,"edit",rec.id,keys.map(k=>k+": "+String(was[k]==null?"":was[k]).slice(0,30)+" → "+String(P[k]).slice(0,30)).join("; "));
     }
     return publicState(ctx,me);
   },
 
   deleteComplaint(ctx,token,id){
     const me=needWriter(ctx,token),mgr=me.role==="manager";
-    id=str(id,40);const rec=ctx.DB.Complaints[id];if(!rec)return publicState(ctx,me);
+    id=str(id,40);const rec=ctx.DB.Complaints[id];if(!rec||rec.deleted)return publicState(ctx,me);
     if(!mgr){
       if(rec.by!==me.name)fail("Only "+rec.by+" or the maintenance manager can delete this.");
       if(ctx.dateOf(rec.at)!==ctx.today)fail("Locked: ask the maintenance manager to delete it.");
     }
-    if(rec.photo)ctx.photos.trash(rec.photo);
-    if(rec.donePhoto)ctx.photos.trash(rec.donePhoto);
-    delete ctx.DB.Complaints[id];ctx.dirty.Complaints=true;
-    ctx.log(me.name,"delete",id,rec.floor+" · "+rec.text.slice(0,60));
+    // soft delete: the row and its photos stay in the sheet/Drive, hidden from the app, so nothing is ever lost for good
+    rec.deleted=new Date(ctx.now).toISOString();rec.updatedBy=me.name;rec.updatedAt=rec.deleted;ctx.touch(rec.id);
+    ctx.log(me.name,"delete",id,rec.floor+" · "+rec.area+" · "+rec.text.slice(0,80)+" · status "+rec.status);
     return publicState(ctx,me);
   },
 
@@ -179,7 +206,7 @@ const API={
   photo(ctx,token,id,kind){
     needUser(ctx,token);
     const rec=ctx.DB.Complaints[str(id,40)],f=kind==="done"?"donePhoto":"photo";
-    if(!rec||!rec[f])fail("There is no photo for this complaint.");
+    if(!rec||rec.deleted||!rec[f])fail("There is no photo for this complaint.");
     return {data:ctx.photos.get(rec[f])};
   },
 
@@ -188,7 +215,7 @@ const API={
     const me=needUser(ctx,token);if(me.role!=="manager")fail("Only the maintenance team can add the completion photo.");
     const rec=ctx.DB.Complaints[str(id,40)];if(!rec)fail("This complaint no longer exists.");
     if(photo===""||photo==null){
-      if(rec.donePhoto){ctx.photos.trash(rec.donePhoto);rec.donePhoto="";ctx.dirty.Complaints=true;ctx.log(me.name,"done-photo-removed",rec.id,"")}
+      if(rec.donePhoto){ctx.photos.trash(rec.donePhoto);rec.donePhoto="";ctx.touch(rec.id);ctx.log(me.name,"done-photo-removed",rec.id,"")}
       return publicState(ctx,me);
     }
     if(rec.status!=="done")fail("Mark the complaint Done first, then add the completion photo.");
@@ -198,7 +225,7 @@ const API={
     rec.donePhoto=ctx.photos.save(p);
     if(old)ctx.photos.trash(old);
     rec.updatedBy=me.name;rec.updatedAt=new Date(ctx.now).toISOString();
-    ctx.dirty.Complaints=true;ctx.log(me.name,"done-photo",rec.id,rec.floor+" · "+rec.text.slice(0,60));
+    ctx.touch(rec.id);ctx.log(me.name,"done-photo",rec.id,rec.floor+" · "+rec.text.slice(0,60));
     return publicState(ctx,me);
   },
 
@@ -207,7 +234,7 @@ const API={
     const me=needUser(ctx,token);
     if(!isoDate(date))fail("Pick a valid date.");
     const out={};
-    Object.values(ctx.DB.Complaints).forEach(c=>{if(c.date===date)out[c.id]=pubComplaint(c)});
+    Object.values(ctx.DB.Complaints).forEach(c=>{if(c.date===date&&!c.deleted)out[c.id]=pubComplaint(c)});
     return {date,complaints:out};
   },
 
@@ -231,17 +258,19 @@ const API={
   },
 
   // anyone: a follow-up remark (second, third...) or a reminder on a pending item
-  addRemark(ctx,token,id,text,type){
+  addRemark(ctx,token,id,text,type,opId){
     const me=needUser(ctx,token);
-    const rec=ctx.DB.Complaints[str(id,40)];if(!rec)fail("This complaint no longer exists.");
+    const rec=ctx.DB.Complaints[str(id,40)];if(!rec||rec.deleted)fail("This complaint no longer exists.");
     const isRem=type==="reminder";
+    opId=str(opId,40);
     text=str(text,300);
     if(!isRem&&!text)fail("Type the remark.");
     if(isRem&&rec.status==="done")fail("This is already done.");
     const t=threadOf(rec);
-    t.push({by:me.name,at:new Date(ctx.now).toISOString(),type:isRem?"reminder":"remark",text:text});
+    if(opId&&t.some(e=>e.op===opId))return publicState(ctx,me); // already received
+    t.push({by:me.name,at:new Date(ctx.now).toISOString(),type:isRem?"reminder":"remark",text:text,op:opId});
     rec.thread=JSON.stringify(t.slice(-MAX_THREAD));
-    ctx.dirty.Complaints=true;ctx.log(me.name,isRem?"reminder":"remark",rec.id,text.slice(0,60));
+    ctx.touch(rec.id);ctx.log(me.name,isRem?"reminder":"remark",rec.id,text.slice(0,60));
     return publicState(ctx,me);
   },
 };
@@ -255,7 +284,7 @@ function runApi(ctx,fn,args){
 const TZ="Asia/Kolkata";
 const COLS={
   Users:["name","role","status","salt","hash","ver","requestedAt","approvedAt","approvedBy"],
-  Complaints:["id","date","floor","area","text","category","kind","priority","status","vendor","remark","eta","by","at","photo","doneDate","etaDays","etaSet","updatedBy","updatedAt","donePhoto","doneAt","thread"],
+  Complaints:["id","date","floor","area","text","category","kind","priority","status","vendor","remark","eta","by","at","photo","doneDate","etaDays","etaSet","updatedBy","updatedAt","donePhoto","doneAt","thread","deleted","touched"],
   Config:["name","json"],
   Log:["time","who","action","item","detail"],
 };
@@ -288,9 +317,26 @@ function loadDB_(){
   });
   return DB;
 }
-function saveDB_(DB,dirty){
+// writes only the rows that changed (one setValues per changed row, one append for all new rows)
+function upsertComplaints_(DB,ids){
+  const sh=sheet_("Complaints"),cols=COLS.Complaints,n=sh.getLastRow()-1;
+  const index={};
+  if(n>0)sh.getRange(2,1,n,1).getDisplayValues().forEach((r,i)=>{index[r[0]]=i+2});
+  const fresh=[];
+  ids.forEach(id=>{
+    const o=DB.Complaints[id];if(!o)return;
+    const row=cols.map(c=>o[c]==null?"":o[c]);
+    if(index[id])sh.getRange(index[id],1,1,cols.length).setNumberFormat("@").setValues([row]);
+    else fresh.push(row);
+  });
+  if(fresh.length)sh.getRange(Math.max(2,sh.getLastRow()+1),1,fresh.length,cols.length).setNumberFormat("@").setValues(fresh);
+}
+function saveDB_(DB,dirty,touched){
   if(dirty.Users)write_("Users",DB.Users);
-  if(dirty.Complaints)write_("Complaints",Object.values(DB.Complaints).sort((a,b)=>(a.date+a.at)<(b.date+b.at)?-1:1));
+  if(dirty.Complaints){
+    if(touched&&touched.size)upsertComplaints_(DB,Array.from(touched));
+    else write_("Complaints",Object.values(DB.Complaints).sort((a,b)=>(a.date+a.at)<(b.date+b.at)?-1:1));
+  }
   if(dirty.Config)write_("Config",Object.entries(DB.Config).map(([name,v])=>({name,json:JSON.stringify(v)})));
 }
 function secret_(){
@@ -328,13 +374,13 @@ function doPost(e){
     const req=JSON.parse(e.postData.contents||"{}");
     const readOnly=req.fn==="state"||req.fn==="photo"||req.fn==="day";
     if(!readOnly)lock.waitLock(20000);
-    const DB=loadDB_(),dirty={},logs=[];
+    const DB=loadDB_(),dirty={},logs=[],touched=new Set();
     const now=Date.now();
-    const ctx={DB,dirty,H:H_,photos:PHOTOS_,secret:secret_(),now,today:Utilities.formatDate(new Date(now),TZ,"yyyy-MM-dd"),
+    const ctx={DB,dirty,touched,touch:id=>{dirty.Complaints=true;touched.add(id);const r=DB.Complaints[id];if(r)r.touched=new Date(now).toISOString()},H:H_,photos:PHOTOS_,secret:secret_(),now,today:Utilities.formatDate(new Date(now),TZ,"yyyy-MM-dd"),
       dateOf:iso=>iso?Utilities.formatDate(new Date(iso),TZ,"yyyy-MM-dd"):"",
       log:(who,action,item,detail)=>logs.push([Utilities.formatDate(new Date(now),TZ,"yyyy-MM-dd HH:mm"),who,action,item,detail])};
     const v=runApi(ctx,req.fn,req.args);
-    saveDB_(DB,dirty);
+    saveDB_(DB,dirty,touched);
     if(logs.length){const sh=sheet_("Log");sh.getRange(sh.getLastRow()+1,1,logs.length,5).setValues(logs)}
     out={ok:true,v};
   }catch(err){out={ok:false,err:String(err&&err.message||err)}}

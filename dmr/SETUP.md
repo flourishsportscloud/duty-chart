@@ -33,3 +33,13 @@ Overview (clickable tiles, performance, trend, location, category, waiting time)
 ## Updating the script later
 
 After pasting a new `Code.gs`: **Deploy → Manage deployments → ✏️ Edit → Version: New version → Deploy**. The URL stays the same.
+
+## Reliability (how saving works)
+- Every change is stored on the phone first (IndexedDB, with a localStorage copy), then sent in order. The top chip shows Saved / Saving / Offline / N changes pending / Save failed - retrying.
+- Closing the app or losing the network never loses a change. It is sent when the connection returns; each change has an ID, so the server ignores duplicates (double tap, retry).
+- Two people changing the same field: the second person is asked "<name> already changed <field>. Keep theirs or use mine?". Different fields merge silently.
+- Delete is soft (the row stays in the sheet, marked deleted). The Log sheet records who, what and when. Use the Admin tab CSV for a backup.
+- The screen refreshes only when someone else's change arrives, and never while you type, have a form open, or touched the screen in the last 4 seconds.
+- Back button: one screen at a time; at Home, press Back twice to exit. Reload keeps the same screen.
+- After pushing a new Code.gs you MUST redeploy: Deploy -> Manage deployments -> pencil -> New version -> Deploy. The page shows a warning if the script is out of date.
+- Old sheets still load: missing columns (deleted, touched, thread) are added automatically.
