@@ -20,3 +20,9 @@ Paste the new `pm/Code.gs` and redeploy (**Deploy → Manage deployments → ✏
 - Saves and photos now find their row with a TextFinder instead of reading whole sheets, so they stay fast as the Photos tab grows.
 - Photos are written before the lock is taken and carry a phone-side id, so automatic retries never create duplicates. New `pmPhotos` call loads up to 12 thumbnails at once.
 - New: per-child medical log (`med` in each Day Plan record: Noted + Follow-up times), Washroom NA, Class Timeline activity field (`a`).
+
+## Reliability (26 Nov 2026)
+- Saves go through a queue kept on the phone (`pmplan_q_<user>` in localStorage): each patch has an id (`pid`), survives reload/offline, retries with backoff. The server keeps the last 80 pids per record and applies each once.
+- Busy-server errors (lock, timeout, quota) are retried; only real refusals ("Only today's plan…") drop a change, with a message.
+- Medical cases are soft-deleted (kept in `medDel`); every save is logged in the Log tab with the change itself.
+- `sw.js`: network-first app shell, "New version — tap to refresh". Bump `VERSION` when index.html changes.

@@ -123,6 +123,8 @@ function pmSave_(token,id,patch){
   const me=pmMe_(token);const name=me.name;
   const c0=pmCheck_(me,id);const d=readDoc_(id);const j=d.j;
   const now=Date.now();let n=0;
+  const pid=str_(patch&&patch.pid,40);j.pids=Array.isArray(j.pids)?j.pids:[];
+  if(pid&&j.pids.indexOf(pid)>=0)return out_(c0,c0.mode==="wk"?c0.date:wkOf_(c0.date),j);   // same save sent twice (lost reply): apply once
   Object.keys((patch&&patch.cells)||{}).forEach(k=>{
     const c=patch.cells[k]||{};const key=str_(k,80);
     if(Array.isArray(c.ops)){                        // timed checks: the server stamps each one; "na" toggles NA
@@ -153,10 +155,11 @@ function pmSave_(token,id,patch){
     else if(m.op==="fu"&&e.fu.length<10){e.fu.push({at:now,by:name});n++}
     else if(m.op==="unfu"){e.fu.pop();n++}
     else if(m.op==="note"){e.x=str_(m.x,300);n++}
-    else if(m.op==="del"){j.med=j.med.filter(x=>x.id!==mid);n++}
+    else if(m.op==="del"){j.medDel=(j.medDel||[]).concat([Object.assign({},e,{delBy:name,delAt:now})]).slice(-60);j.med=j.med.filter(x=>x.id!==mid);n++}   // soft delete: kept in medDel
   });
+  if(pid){j.pids.push(pid);if(j.pids.length>80)j.pids=j.pids.slice(-80)}
   const wk=writeDoc_(d,c0,now);
-  log_(name,id,n+" change(s)");
+  log_(name,id,n+" change(s) "+str_(JSON.stringify({cells:patch&&patch.cells,rem:patch&&patch.rem,med:patch&&patch.med}),1500));   // audit: who, when, what
   return out_(c0,wk,j);
 }
 function pmSetTime_(token,b,v){

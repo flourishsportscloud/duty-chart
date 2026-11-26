@@ -6,10 +6,15 @@
 <meta name="theme-color" content="#1F2D5A">
 <link rel="icon" href="../fis/fis-icon-192.png">
 <title>PM Reports</title>
-<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'"><noscript><link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"></noscript>
 <style>
 :root{--navy:#1b2a5c;--navy2:#26397d;--bg:#eef1f7;--card:#fff;--ink:#1d2433;--mut:#6b7488;--line:#dfe4ee;--green:#1e9e5a;--red:#d64545;--grey:#8d96a8;--amber:#c97b00;--blue:#3a63c8}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{overscroll-behavior-y:contain}
+button,.box,.day,.chip,.tm-chip,.st,.cnt,.sbox,.plc,nav,.seg,.mini,.bh,.ph,.tmc{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+.bkb{border:0;background:#fff;color:var(--navy);font-weight:800;font-size:13px;padding:4px 10px;border-radius:99px;margin-right:2px}
+.bkb[hidden]{display:none}
 body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
 header{background:var(--navy);color:#fff;padding:10px 12px 8px;position:sticky;top:0;z-index:20}
 .h1{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
@@ -369,7 +374,7 @@ input.cwin,select.cwin{font:inherit;font-size:13px;border:1px solid #c7cfe2;bord
 </head>
 <body>
 <header>
-  <div class="h1"><h1><a href="../fis/">‹ FIS</a><img class="hlogo" src="../fis/fis-logo-192.png" alt="FIS"><span>PM Reports<small>Flourish International School</small></span></h1>
+  <div class="h1"><h1><button id="bkBtn" class="bkb" data-act="goback" hidden aria-label="Back">‹ Back</button><a href="../fis/">‹ FIS</a><img class="hlogo" src="../fis/fis-logo-192.png" alt="FIS"><span>PM Reports<small>Flourish International School</small></span></h1>
     <div class="who" id="whobox"></div></div>
   <div class="sub"><div class="seg" id="modeseg"></div><span class="chip" id="conn"></span></div>
 </header>
@@ -504,7 +509,11 @@ function dueOf(b){const t=S.times[b.id];if(t==='none')return null;if(t&&t!=='def
 /* ================= STORAGE (Google Sheet "PM Plan Data" via pm/Code.gs — see pm/SETUP.md) ================= */
 const API_URL=new URLSearchParams(location.search).get('api')||'https://script.google.com/macros/s/AKfycbxViQm3zVut9JJe1Z-jAbsEU1yfNXzf3SjajRRN_S7ANl1XFYmSBHzuixePxVzDAn6wGw/exec';
 const lkey=()=>'pmplan_gh_v2_'+(S.me?S.me.id:'');
-function saveLocal(){try{localStorage.setItem(lkey(),JSON.stringify({docs:S.docs,times:S.times}))}catch(e){}}
+let storeWarned=false;
+function lsSet(k,v){try{localStorage.setItem(k,v);return true}catch(e){if(!storeWarned){storeWarned=true;showMsg('⚠ Phone storage is full — free some space, or changes made offline may be lost.')}return false}}
+let _slT=null;
+function saveLocal(){clearTimeout(_slT);_slT=setTimeout(saveLocalNow,400)}
+function saveLocalNow(){clearTimeout(_slT);_slT=null;lsSet(lkey(),JSON.stringify({docs:S.docs,times:S.times}))}
 function loadLocal(){try{const o=JSON.parse(localStorage.getItem(lkey())||'null');if(o){S.docs=o.docs||{};S.times=o.times||{}}}catch(e){}}
 function setConn(c){if(S.conn!==c){S.conn=c;paintConn()}}
 let msgTimer=null;
@@ -520,8 +529,16 @@ async function api(fn,args){
   if(!j.ok){const er=new Error(j.err||'Something went wrong.');er.server=true;if(/log in again|not for PM Plan/i.test(er.message)&&fn!=='login'){logout(true)}throw er}
   return j.v;
 }
-const unacked={},inflight={};
-const hasPend=u=>!!(u&&(Object.keys(u.cells).length||Object.keys(u.rem).length||(u.med&&u.med.length)));
+/* Save queue: one list of patches per record. Every patch has its own id (pid) so a resend after a lost
+   reply is not applied twice. The queue is kept on the phone, so nothing is lost on reload, app close or offline. */
+const Q={};const lastAck={};const sending={};
+const qkey=()=>'pmplan_q_'+(S.me?S.me.id:'');
+const qid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+const emptyP=()=>({pid:qid(),cells:{},rem:{},med:[]});
+function saveQ(){const o={};Object.keys(Q).forEach(id=>{if(Q[id].length)o[id]=Q[id]});lsSet(qkey(),JSON.stringify(o));paintConn()}
+function loadQ(){try{const o=JSON.parse(localStorage.getItem(qkey())||'null')||{};Object.keys(o).forEach(id=>{Q[id]=(o[id]||[]).map(e=>Object.assign(emptyP(),e,{sending:false}))})}catch(e){}}
+const pendCount=()=>Object.keys(Q).reduce((n,id)=>n+(Q[id]||[]).length,0);
+const hasPend=id=>!!(Q[id]&&Q[id].length);
 function applyMed(list,m,by){
   const e=list.find(x=>x.id===m.id);const now=Date.now();
   if(m.op==='add'&&!e)list.push({id:m.id,name:m.name,sec:m.sec,x:m.x||'',ack:{at:now,by:by},fu:[]});
@@ -534,50 +551,61 @@ function applyMed(list,m,by){
 }
 function overlay(id,doc){
   doc.cells=doc.cells||{};doc.rem=doc.rem||{};doc.med=doc.med||[];
-  [inflight[id],unacked[id],typed[id]].forEach(u=>{if(u){
-    Object.keys(u.cells).forEach(k=>{const c=u.cells[k];doc.cells[k]=c.ops?applyOps(doc.cells[k],c.ops,whoName()):clone(c)});
-    Object.assign(doc.rem,clone(u.rem));
-    (u.med||[]).forEach(m=>{doc.med=applyMed(doc.med,m,whoName())})}});
+  (Q[id]||[]).concat(typed[id]?[typed[id]]:[]).forEach(u=>{
+    Object.keys(u.cells||{}).forEach(k=>{const c=u.cells[k];doc.cells[k]=c.ops?applyOps(doc.cells[k],c.ops,whoName()):clone(c)});
+    Object.assign(doc.rem,clone(u.rem||{}));
+    (u.med||[]).forEach(m=>{doc.med=applyMed(doc.med,m,whoName())})});
   return doc;
 }
 function persist(id,patch){
-  const u=unacked[id]=unacked[id]||{cells:{},rem:{},med:[]};u.med=u.med||[];
+  const q=Q[id]=Q[id]||[];let u=q[q.length-1];
+  if(!u||u.tried||u.sending){u=emptyP();q.push(u)}      // never add to a patch the server may already have seen
   (patch.med||[]).forEach(m=>u.med.push(clone(m)));
   Object.keys(patch.cells||{}).forEach(k=>{const c=clone(patch.cells[k]);
     if(c.ops&&u.cells[k]&&u.cells[k].ops)u.cells[k].ops=u.cells[k].ops.concat(c.ops);else u.cells[k]=c});
   Object.assign(u.rem,clone(patch.rem||{}));
-  saveLocal();
+  saveQ();saveLocal();
   if(!API_URL)return;
-  enqueue(id,()=>sendDoc(id));
+  kick(id);
 }
+function kick(id){if(!sending[id]&&hasPend(id))enqueue(id,()=>sendDoc(id))}
+const RETRYABLE=/lock|timed? ?out|too many|try again|service|internal|exception|busy|unavailable|quota|offline/i;
+let retryN=0,lastErr='';
 async function sendDoc(id){
-  const u=unacked[id];if(!hasPend(u))return;
-  inflight[id]=u;unacked[id]={cells:{},rem:{},med:[]};
-  try{
-    const doc=await api('pmSave',[id,u]);
-    delete inflight[id];if(u.med&&u.med.length&&!('med' in doc))showMsg('Medical cases need the new server script (pm/Code.gs) — ask the Director to update it.');
-    S.docs[id]=overlay(id,doc);setConn('live');saveLocal();render();
-  }catch(e){
-    delete inflight[id];
-    if(e.server){showMsg(e.message);poll()}
-    else{const n=unacked[id];Object.keys(n.cells).forEach(k=>{const c=n.cells[k];if(c.ops&&u.cells[k]&&u.cells[k].ops)u.cells[k].ops=u.cells[k].ops.concat(c.ops);else u.cells[k]=c});
-      unacked[id]={cells:u.cells,rem:Object.assign(u.rem,n.rem),med:(u.med||[]).concat(n.med||[])};setConn('err');retrySoon()}
+  if(sending[id])return;
+  while(hasPend(id)){
+    const u=Q[id][0];u.sending=true;u.tried=true;sending[id]=true;saveQ();
+    try{
+      const doc=await api('pmSave',[id,{pid:u.pid,cells:u.cells,rem:u.rem,med:u.med}]);
+      if(Q[id][0]===u)Q[id].shift();lastAck[id]=Date.now();retryN=0;lastErr='';
+      if(u.med&&u.med.length&&!('med' in doc))showMsg('Medical cases need the new server script (pm/Code.gs) — ask the Director to update it.');
+      S.docs[id]=overlay(id,doc);setConn('live');saveQ();saveLocal();softRender();
+    }catch(e){
+      u.sending=false;
+      if(e.server&&!RETRYABLE.test(e.message)){if(Q[id][0]===u)Q[id].shift();saveQ();showMsg('Not saved: '+e.message);sending[id]=false;poll();return}
+      lastErr=e.server?e.message:'';setConn('err');saveQ();sending[id]=false;retrySoon();return;
+    }finally{sending[id]=false}
   }
 }
-let retryT=null;function retrySoon(){clearTimeout(retryT);retryT=setTimeout(()=>{Object.keys(unacked).forEach(id=>{if(hasPend(unacked[id]))enqueue(id,()=>sendDoc(id))})},4000)}
+let retryT=null;
+function retrySoon(){clearTimeout(retryT);const ms=Math.min(60000,4000*Math.pow(2,Math.min(retryN++,4)))+Math.floor(Math.random()*2000);
+  retryT=setTimeout(()=>{Object.keys(Q).forEach(kick)},ms)}
 let polling=false;
 async function poll(){
-  if(!API_URL||polling||!S.token)return;polling=true;const wk=S.wk;
+  if(!API_URL||polling||!S.token)return;polling=true;const wk=S.wk;const t0=Date.now();
   try{
-    Object.keys(unacked).forEach(id=>{if(hasPend(unacked[id]))enqueue(id,()=>sendDoc(id))});
+    Object.keys(Q).forEach(kick);
     const v=await api('pmState',[wk]);
+    let changed=false;
     if(wk===S.wk){
-      Object.keys(S.docs).forEach(id=>{if(S.docs[id].wk===wk&&!v.docs[id]&&!hasPend(unacked[id])&&!inflight[id])delete S.docs[id]});
-      Object.keys(v.docs).forEach(id=>{S.docs[id]=overlay(id,v.docs[id])});
-      S.times=v.times||{};
-      if(v.me){S.me=Object.assign(S.me||{},v.me);try{localStorage.setItem('pmplan_me',JSON.stringify(S.me))}catch(e){}}
+      const fresh=id=>!hasPend(id)&&!sending[id]&&!((lastAck[id]||0)>t0);   // never overwrite a record saved after this read began
+      Object.keys(S.docs).forEach(id=>{if(S.docs[id].wk===wk&&!v.docs[id]&&fresh(id)){delete S.docs[id];changed=true}});
+      Object.keys(v.docs).forEach(id=>{if(!fresh(id)&&S.docs[id])return;const nd=overlay(id,v.docs[id]);
+        if(!S.docs[id]||JSON.stringify(S.docs[id])!==JSON.stringify(nd)){S.docs[id]=nd;changed=true}});
+      const nt=v.times||{};if(JSON.stringify(nt)!==JSON.stringify(S.times)){S.times=nt;changed=true}
+      if(v.me){S.me=Object.assign(S.me||{},v.me);lsSet('pmplan_me',JSON.stringify(S.me))}
     }
-    setConn('live');saveLocal();render();
+    lastSync=Date.now();lastErr='';setConn('live');if(changed){saveLocal();softRender()}
   }catch(e){setConn('err')}
   finally{polling=false}
 }
@@ -585,10 +613,13 @@ function subscribeWeek(wk){poll()}
 function setSession(v){
   S.token=v.token;S.me=v.me;S.who=v.me.id;S.docs={};S.times={};
   try{localStorage.setItem('pmplan_token',S.token);localStorage.setItem('pmplan_me',JSON.stringify(S.me))}catch(e){}
-  S.tab=S.me.senior?'dash':S.me.id;loadLocal();
+  S.tab=S.me.senior?'dash':S.me.id;loadLocal();loadQ();Object.keys(S.docs).forEach(id=>{S.docs[id]=overlay(id,S.docs[id])});Object.keys(Q).forEach(kick);
 }
 function logout(expired){
+  if(!expired&&pendCount()&&!confirmLogout()){return}
+  flushAll();saveQ();   // unsent changes stay on this phone and are sent at the next login
   try{localStorage.removeItem(lkey());localStorage.removeItem('pmplan_token');localStorage.removeItem('pmplan_me')}catch(e){}
+  Object.keys(Q).forEach(k=>delete Q[k]);
   S.token='';S.me=null;S.who='';S.docs={};S.view=null;S.users=null;
   render(true);if(expired)showMsg('Please log in again.');
 }
@@ -638,12 +669,13 @@ function persistCfg(patch){
   });
 }
 function initDb(){
-  loadLocal();
+  loadLocal();loadQ();Object.keys(S.docs).forEach(id=>{S.docs[id]=overlay(id,S.docs[id])});
   if(!API_URL){setConn('local');render();return}
   if(S.me)S.tab=S.me.senior?'dash':S.me.id;
   render();poll();
-  setInterval(()=>{if(!document.hidden)poll()},20000);
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll()});
+  (function loop(){setTimeout(()=>{if(!document.hidden&&navigator.onLine!==false)poll();loop()},20000+Math.floor(Math.random()*10000))})();
+  document.addEventListener('visibilitychange',()=>{if(document.hidden){flushAll();saveLocalNow();saveQ()}else poll()});
+  addEventListener('online',()=>{retryN=0;Object.keys(Q).forEach(kick);poll();paintConn()});addEventListener('offline',paintConn);
 }
 
 /* ================= MUTATIONS ================= */
@@ -740,15 +772,25 @@ const dayStats=(date,list)=>sumStats(list.map(pl=>stats(getDoc(pl,S.mode,date),p
 function wkDone(pl,wk,rows){rows=rows||WKROWS;const d=getWkDoc(pl,wk);let n=0;rows.forEach(r=>{const v=cellS(d,r.key,'x');if(v==='D'||v==='A')n++});return n}
 
 /* ================= RENDER ================= */
+let lastSync=0;
 function paintConn(){
-  const el=document.getElementById('conn');
-  const m={live:['Live · shared','live'],local:['Setting up · this device only','loc'],err:["Can't reach server · will retry",'err'],init:['Connecting…','']}[S.conn]||['',''];
+  const el=document.getElementById('conn');if(!el)return;const n=pendCount();const pl=n===1?'':'s';let m;
+  if(!API_URL)m=['Saved on this phone','loc'];
+  else if(navigator.onLine===false)m=['Offline'+(n?' · '+n+' change'+pl+' waiting':''),'loc'];
+  else if(S.conn==='err')m=[(lastErr?'⚠ Server busy':"Can't reach server")+(n?' · '+n+' waiting · retrying':' · retrying'),'err'];
+  else if(n)m=['Saving… '+n+' change'+pl,'loc'];
+  else if(S.conn==='live')m=['Saved ✓ · live','live'];
+  else m=['Connecting…',''];
   el.textContent=m[0];el.className='chip '+m[1];
 }
-function typing(){const a=document.activeElement;return !!(a&&a.classList&&(a.classList.contains('remin')||a.classList.contains('medin')||a.classList.contains('cwin')))}
+function typing(){const a=document.activeElement;return !!(a&&a.matches&&a.matches('input,textarea,select'))}
+let lastTouch=0,needRender=false;
+['pointerdown','touchstart','touchmove','keydown','wheel'].forEach(ev=>addEventListener(ev,()=>{lastTouch=Date.now()},{passive:true,capture:true}));
+const busy=()=>typing()||Date.now()-lastTouch<4000||!!document.querySelector('.phview');
+function softRender(){if(busy()){needRender=true;return}needRender=false;render()}
 function render(force){
-  if(typing()&&!force){S.dirty=true;return}
-  S.dirty=false;paintTop();
+  if(typing()&&!force){S.dirty=true;needRender=true;return}
+  S.dirty=false;needRender=false;paintTop();syncHistory();
   const root=document.getElementById('root');
   if(!S.me){root.innerHTML=loginHTML();return}
   if(S.view==='pw'){root.innerHTML=pwHTML();return}
@@ -1372,11 +1414,43 @@ function showPhoto(id){
   d.addEventListener('click',()=>d.remove());document.body.appendChild(d);
 }
 
+/* ================= BACK (phone and on-screen) ================= */
+const navDepth=()=>!S.me?0:(S.view?1:0)+((S.me.senior&&S.tab!=='dash')?1:0);
+let hDepth=0,ignorePop=0,exitAt=0;
+try{if(!(history.state&&history.state.pm)){history.replaceState({pm:1,d:0,base:1},'');history.pushState({pm:1,d:0},'')}else hDepth=history.state.d||0}catch(e){}
+function syncHistory(){
+  const d=navDepth();const b=document.getElementById('bkBtn');if(b)b.hidden=d===0;
+  try{while(hDepth<d){history.pushState({pm:1,d:++hDepth},'')}
+    if(hDepth>d){const n=hDepth-d;hDepth=d;ignorePop+=1;history.go(-n)}}catch(e){}
+}
+function backOne(){
+  if(S.view){S.view=null;S.users=null;return true}
+  if(S.me&&S.me.senior&&S.tab!=='dash'){S.tab='dash';return true}
+  return false;
+}
+addEventListener('popstate',e=>{
+  if(ignorePop){ignorePop--;return}
+  const st=e.state||{};
+  if(st.base){
+    if(backOne()){hDepth=0;try{history.pushState({pm:1,d:0},'')}catch(x){}render(true);return}
+    if(Date.now()-exitAt<2500){exitAt=0;try{history.back()}catch(x){}return}
+    exitAt=Date.now();showOk('Press Back again to leave PM Reports');try{history.pushState({pm:1,d:0},'')}catch(x){}return;
+  }
+  const t=st.d||0;if(t>=hDepth){hDepth=t;return}
+  hDepth=t;flushAll();backOne();render(true);window.scrollTo(0,0);
+});
+function goBack(){if(hDepth>0)history.back();else if(backOne())render(true)}
+function confirmLogout(){const n=pendCount();return window.confirm?window.confirm(n+' change'+(n===1?' is':'s are')+' not sent yet. They stay on this phone and are sent when you log in again. Log out anyway?'):true}
+addEventListener('beforeunload',e=>{flushAll();saveLocalNow();saveQ();if(pendCount()){e.preventDefault();e.returnValue='Some changes are not sent yet.';return e.returnValue}});
+addEventListener('error',e=>{try{showMsg('Something went wrong on this screen — your saved data is safe. Reload if it looks wrong.')}catch(_){}});
+addEventListener('unhandledrejection',()=>{});
+
 /* ================= EVENTS ================= */
 document.addEventListener('click',ev=>{
   const t=ev.target.closest('[data-act]');if(!t)return;
   const a=t.dataset.act;
   if(a==='login'){doLogin();return}
+  if(a==='goback'){goBack();return}
   if(a==='logout'){logout();return}
   if(a==='view'){S.view=S.view===t.dataset.v?null:t.dataset.v;S.users=null;render(true);window.scrollTo(0,0);return}
   if(a==='closeview'){S.view=null;render(true);return}
@@ -1430,9 +1504,16 @@ document.addEventListener('focusout',ev=>{
   if(ev.target.classList&&ev.target.classList.contains('remin')){flushAll();setTimeout(()=>{if(!typing()&&S.dirty)render(true)},80)}
 });
 document.addEventListener('keydown',ev=>{if(ev.key==='Enter'&&ev.target.id==='lpw')doLogin()});
-window.addEventListener('pagehide',flushAll);
-setInterval(()=>render(),30000);
+window.addEventListener('pagehide',()=>{flushAll();saveLocalNow();saveQ()});
+document.addEventListener('contextmenu',ev=>{if(!ev.target.closest('input,textarea,[contenteditable]'))ev.preventDefault()});
+setInterval(()=>{if(needRender||S.dirty){if(!busy())render()}},2500);
+let lastMin=nowMin();setInterval(()=>{const m=nowMin();if(m!==lastMin&&m%5===0&&!S.view){lastMin=m;softRender()}},20000);   // due-time labels; only when not touching
 render(true);initDb();
+try{if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.serviceWorker.register('sw.js').then(reg=>{
+  const ask=w=>{if(document.getElementById('upd'))return;const b=document.createElement('div');b.id='upd';b.style.cssText='position:fixed;left:8px;right:8px;bottom:8px;z-index:99;background:#1b2a5c;color:#fff;padding:10px;border-radius:10px;text-align:center;font-weight:700';b.textContent='New version — tap to refresh';b.onclick=()=>{flushAll();saveLocalNow();saveQ();w.postMessage('skip')};document.body.appendChild(b)};
+  if(reg.waiting&&navigator.serviceWorker.controller)ask(reg.waiting);
+  reg.addEventListener('updatefound',()=>{const w=reg.installing;if(w)w.addEventListener('statechange',()=>{if(w.state==='installed'&&navigator.serviceWorker.controller)ask(w)})});
+  let rl=false;const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(rl||!had)return;rl=true;location.reload()})}).catch(()=>{})}}catch(e){}
 </script>
 </body>
 </html>
