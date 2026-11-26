@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+<head><script src="../fis/shell.js?v=3"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="icon" href="../fis/fis-logo-192.png">
@@ -546,7 +546,7 @@ body.drvmode .datebox,body.drvmode .prog,body.drvmode #tabs,body.drvmode #subtab
 const APP_V="202611251200";
 (function(){let busy=false;async function chk(){if(busy||location.protocol==="file:")return;busy=true;
   try{const t=await (await fetch(location.pathname+"?nc="+Date.now(),{cache:"no-store"})).text(),m=t.match(/const APP_V="(\d+)"/);
-    if(m&&m[1]!==APP_V){const u=new URL(location.href);u.searchParams.set("v",m[1]);location.replace(u.toString())}}catch(e){}busy=false}
+    if(m&&m[1]!==APP_V){const u=new URL(location.href);u.searchParams.set("v",m[1]);if(window.FIS&&FIS.newVersion)FIS.newVersion(u.toString());else location.replace(u.toString())}}catch(e){}busy=false}
   chk();document.addEventListener("visibilitychange",()=>{if(!document.hidden)chk()});setInterval(chk,10*60000)})();
 </script>
 <script>

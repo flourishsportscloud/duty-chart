@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+<head><script src="../fis/shell.js?v=3"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Transport Helpdesk · FIS</title>
@@ -635,7 +635,7 @@ document.addEventListener('change',ev=>{const t=ev.target,d=t.dataset;render.for
 });
 document.addEventListener('keydown',ev=>{if(ev.key==='Enter'&&(ev.target.id==='lp'||ev.target.id==='ln'))$('lgo').click();if(ev.key==='Escape'&&S.open){S.open=null;render.force=true;render()}});
 /* self-update */
-(function(){async function chk(){if(location.protocol==='file:')return;try{const t=await (await fetch(location.pathname+'?nc='+Date.now(),{cache:'no-store'})).text(),m=t.match(/const APP_V="(\d+)"/);if(m&&m[1]!==APP_V){const u=new URL(location.href);u.searchParams.set('v',m[1]);location.replace(u.toString())}}catch(e){}}
+(function(){async function chk(){if(location.protocol==='file:')return;try{const t=await (await fetch(location.pathname+'?nc='+Date.now(),{cache:'no-store'})).text(),m=t.match(/const APP_V="(\d+)"/);if(m&&m[1]!==APP_V){const u=new URL(location.href);u.searchParams.set('v',m[1]);if(window.FIS&&FIS.newVersion)FIS.newVersion(u.toString());else location.replace(u.toString())}}catch(e){}}
   chk();document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()})})();
 const c=LS.get('cache');if(c&&S.token){S.entries=c.entries||[];S.docs=c.docs||{};S.at=c.at||''}
 const ct=LS.get('td');if(ct&&ct.docs)S.td=ct.docs;
