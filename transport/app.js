@@ -143,7 +143,7 @@ const GAS=(()=>{
   // field-level difference (two levels deep) between what the server had and what we have now
   const isObj=v=>v&&typeof v==='object'&&!Array.isArray(v);
   function diff(a,b,dep){a=a||{};const P={};let any=false;
-    Object.keys(b).forEach(k=>{if(!(k in a)){(P.s=P.s||{})[k]=b[k];any=true}else if(!same(a[k],b[k])){
+    Object.keys(b).forEach(k=>{if(!(k in a)){if((dep||0)<2&&isObj(b[k])&&Object.keys(b[k]).length){const sp=diff({},b[k],(dep||0)+1);(P.o=P.o||{})[k]=sp;any=true}else{(P.s=P.s||{})[k]=b[k];any=true}}else if(!same(a[k],b[k])){
       if((dep||0)<2&&isObj(a[k])&&isObj(b[k])){const sp=diff(a[k],b[k],(dep||0)+1);if(sp){(P.o=P.o||{})[k]=sp;any=true}}else{(P.s=P.s||{})[k]=b[k];any=true}}});
     Object.keys(a).forEach(k=>{if(!(k in b)){(P.d=P.d||[]).push(k);any=true}});
     return any?P:null}
@@ -153,7 +153,7 @@ const GAS=(()=>{
   async function flush(){
     while(outbox.length){const o=outbox[0];inflight=o;status();
       let op=o.op,args;
-      if(op==='set'&&'base' in o&&o.base!=null&&!noPatch){const d=diff(o.base,o.v);if(!d){drop(o);inflight=null;continue}op='patch';args=[o.p,d,o.id]}
+      if(op==='set'&&'base' in o&&!noPatch){const d=diff(o.base||{},o.v);if(!d){drop(o);inflight=null;continue}op='patch';args=[o.p,d,o.id]}
       else args=op==='set'?[o.p,o.v,o.id]:[o.p];
       try{const r=await call(op,args);offline=false;failN=0;clock(r);savedAt=Date.now();
         const newer=outbox.some(x=>x!==o&&x.p===o.p);
