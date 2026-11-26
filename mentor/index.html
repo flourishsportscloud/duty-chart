@@ -180,23 +180,24 @@ const IT_SHORT={'Book':'Book','Notebook':'Notebook','Content Notebook':'Content 
 const NB4=['Book','Notebook','Assignment','Test Notebook'], NB3=['Notebook','Assignment','Test Notebook'];
 const SUBJ=[
  {n:'English I',d:'English',c:[1,10],i:()=>NB4},
- {n:'English II',d:'English',c:[1,10],i:()=>['Book','Assignment','Test Notebook']},
+ {n:'English II',d:'English',c:[1,10],i:()=>NB4},
  {n:'English',d:'English',c:[11,11],i:()=>NB4},
  {n:'EVS',d:'Science',c:[1,2],i:()=>NB4},
  {n:'Science',d:'Science',c:[3,10],i:()=>NB4},
  {n:'S.St.',d:'S.St.',c:[3,10],i:()=>NB4},
- {n:'Maths',d:'Maths',c:[1,10],i:c=>c<=5?NB4:['Book','Notebook','Content Notebook','Homework Notebook','Practice Notebook','Assignment','Test Notebook']},
- {n:'GK',d:'GK',c:[1,8],i:c=>c<=5?['Book','Test Notebook']:['Test Notebook','Book']},
- {n:'Computer',d:'Computer',c:[1,10],i:()=>['Book','Notebook','Test Notebook']},
- {n:'Hindi I',d:'Hindi',c:[1,8],i:c=>c<=2?NB4:['Book','Notebook','Test Notebook']},
- {n:'Hindi II',d:'Hindi',c:[2,8],i:c=>c<=5?['Book','Test Notebook']:['Book','Assignment','Test Notebook']},
+ {n:'Maths',d:'Maths',c:[1,10],i:c=>c<=5?NB4:ITEMS.slice()},
+ {n:'GK',d:'GK',c:[1,8],i:()=>NB4},
+ {n:'Computer',d:'Computer',c:[1,10],i:()=>NB4},
+ {n:'Hindi I',d:'Hindi',c:[1,8],i:()=>NB4},
+ {n:'Hindi II',d:'Hindi',c:[2,8],i:()=>NB4},
  {n:'Hindi',d:'Hindi',c:[9,10],i:()=>NB4},
- {n:'Sanskrit',d:'Sanskrit',c:[2,9],i:()=>['Book','Test Notebook']},
+ {n:'Sanskrit',d:'Sanskrit',c:[2,9],i:()=>NB4},
+ {n:'Foreign Language',d:'Foreign Language',c:[6,10],i:()=>NB4},
  {n:'Business Studies',d:'Commerce',c:[11,11],i:()=>NB4},
  {n:'Accountancy',d:'Commerce',c:[11,11],i:()=>NB4},
  {n:'Economics',d:'Commerce',c:[11,11],i:()=>NB4},
  {n:'Statistics',d:'Commerce',c:[11,11],i:()=>NB4},
- {n:'IP',d:'Computer',c:[11,11],i:()=>['Book','Notebook','Test Notebook']}
+ {n:'IP',d:'Computer',c:[11,11],i:()=>NB4}
 ];
 const subjectsFor=c=>SUBJ.filter(s=>c>=s.c[0]&&c<=s.c[1]);
 const subjDef=(c,n)=>subjectsFor(c).find(s=>s.n===n);
@@ -229,7 +230,7 @@ function teacherOf(sec,subj){const o=CFG.teach&&CFG.teach[sec+'|'+subj];return o
 /* ---------- state ---------- */
 let CFG=lsGet('cfg',{}), LESSONS=lsGet('lessons',{}), ROSTER=lsGet('roster',null)||SAMPLE, DB=lsGet('docs',{}), OUT=lsGet('out',{}), REV=lsGet('rev',0);
 let TOKEN=lsGet('token',null), ME=lsGet('me','');
-const U=Object.assign({seg:'P',cls:1,sec:'A',tab:'check',subj:'',dept:'',scope:'',per:'30',dsub:'chk',pview:'subj',open:null,form:null,q:'',stu:null,more:false},lsGet('ui',{}));
+const U=Object.assign({seg:'P',cls:1,sec:'A',tab:'check',subj:'',dept:'',scope:'',per:'30',dsub:'chk',pview:'rec',dmode:'mix',open:null,form:null,q:'',stu:null,more:false},lsGet('ui',{}));
 if(U.tab==='perf')U.tab='check';
 const saveUI=()=>lsPut('ui',{seg:U.seg,cls:U.cls,sec:U.sec,tab:U.tab,subj:U.subj,scope:U.scope,per:U.per});
 function sampleRoster(){const r={};for(let c=1;c<=11;c++)(c===11?['A']:(c===9||c===10)?['A','B']:['A','B','C']).forEach(s=>{r[c+s]=Array.from({length:c>=9?20:30},(_,i)=>'Student '+(i+1)+' ('+c+s+')')});return r}
@@ -386,7 +387,7 @@ function viewCheck(){
   if(!U.subj){
     const rs=docs('e').filter(e=>e.sec===sec),rt=docs('t').filter(t=>t.sec===sec),wk=dayAgo(7),w=zero();rs.filter(e=>e.date>=wk).forEach(e=>addT(w,tally(e)));
     const op=followItems().filter(x=>x.e.sec===sec&&x.c!=='A').length,rr=rateOf(w);
-    let h='<div class="kpis">'+kpi('Checks this week',rs.filter(e=>e.date>=wk).length,sec+' · all subjects','#1B3156')+kpi('Completion rate',rr==null?'—':rr.toFixed(0)+'%','of submitted work checked','#1E9E6A')+kpi('Open defaulters',op,'not submitted / incomplete','#D93A4B')+kpi('Tests this week',rt.filter(t=>t.date>=wk).length,'marks recorded','#572686')+'</div><div class="stepcap"><span class="stepn">1</span>Choose the subject <span class="muted">· '+sec+' · '+nOf(sec)+' students</span></div><div class="tiles2">';
+    let h='<div class="kpis">'+kpi('Checks this week',rs.filter(e=>e.date>=wk).length,sec+' · all subjects','#1B3156')+kpi('Completion rate',rr==null?'—':rr.toFixed(0)+'%','of submitted work checked','#1E9E6A')+kpi('Open defaulters',op,'not submitted / incomplete','#D93A4B')+kpi('Tests this week',rt.filter(t=>t.date>=wk).length,'marks recorded','#572686')+'</div>'+recentBar(sec)+'<div class="stepcap"><span class="stepn">1</span>Choose the subject <span class="muted">· '+sec+' · '+nOf(sec)+' students</span></div><div class="tiles2">';
     subjectsFor(U.cls).forEach(x=>{const es=entriesFor(sec,x.n),ts=testsFor(sec,x.n),last=es.concat(ts).map(r=>r.date).sort().pop();
       h+='<button class="stile" style="--c:'+colOf(x.d)+'" data-act="subj" data-v="'+esc(x.n)+'"><b>'+esc(x.n)+'</b><small>'+esc(teacherOf(sec,x.n)||'Teacher not set')+'</small><small>'+(last?(es.length+ts.length)+' records · last '+fD(last):'No records yet')+'</small></button>'});
     return h+'</div>';
@@ -495,16 +496,18 @@ function renderSheet(){const el=$('sheet');if(!el)return;el.innerHTML=overlayHTM
 /* ---------- DASHBOARD ---------- */
 function scopeOpts(){const o=[];if(plSet().size)o.push(['pl',(!PLDEF.some(x=>first(x.n)===first(ME))&&cmOf().length)?'My CM classes':'My PL classes']);if(mineSet().size)o.push(['mine',(U.mentor&&isAdmin())?U.mentor+'’s classes':'My classes']);o.push(['sec','Section '+curSec()]);o.push(['cls','Class '+U.cls+' · all sections']);o.push(['seg',U.seg==='P'?'All Primary':'All Secondary']);if(isAdmin())o.push(['all','Whole school']);return o}
 function scopeNow(){const o=scopeOpts().map(x=>x[0]);if(!U.scope||!o.includes(U.scope))U.scope=plSet().size?'pl':mineSet().size?'mine':(isAdmin()?'seg':'sec');return U.scope}
-function cutoff(){if(U.per==='all')return '';const d=new Date();d.setDate(d.getDate()-(+U.per));return isoD(d)}
+function cutoff(){if(U.per==='all')return '';if(U.per==='custom')return U.rfrom||'';const d=new Date();d.setDate(d.getDate()-(+U.per));return isoD(d)}
 function inScope(r,ignorePer){
-  const sc=scopeNow();
-  if(sc==='pl'){if(!plSet().has(r.sec))return false}
+  const sc=scopeNow(),rp=U.tab==='rep',rs=rp&&U.rsecs&&U.rsecs.length;
+  if(rp){if(U.rsubs&&U.rsubs.length&&!U.rsubs.includes(r.subj))return false;if(rs&&!U.rsecs.includes(r.sec))return false;if(U.ritems&&U.ritems.length&&!U.ritems.includes(r.k==='t'?'Test Notebook':r.item))return false}
+  if(rs){}
+  else if(sc==='pl'){if(!plSet().has(r.sec))return false}
   else if(sc==='mine'){if(!mineSet().has(r.sec+'|'+r.subj))return false}
   else if(sc==='sec'){if(r.sec!==curSec())return false}
   else if(sc==='cls'){if(+r.sec.slice(0,-1)!==U.cls)return false}
   else if(sc==='seg'){if(segOf(r.sec)!==U.seg)return false}
   if(U.dept){const d=(subjDef(+r.sec.slice(0,-1),r.subj)||{}).d;if(d!==U.dept)return false}
-  if(!ignorePer){const c=cutoff();if(c&&r.date<c)return false}
+  if(!ignorePer){const c=cutoff();if(c&&r.date<c)return false;if(U.per==='custom'&&U.rto&&r.date>U.rto)return false}
   return true;
 }
 function deptList(){const set=new Set();subjectsFor(U.cls).forEach(x=>set.add(x.d));if(scopeNow()!=='sec'){segClasses(U.seg).forEach(c=>subjectsFor(c).forEach(x=>set.add(x.d)))}return [...set]}
@@ -546,7 +549,7 @@ function dashCheck(){
   all.forEach(e=>{if(e.date>=d7)addT(a,tally(e));else if(e.date>=d14)addT(b,tally(e))});
   const ra=rateOf(a),rb=rateOf(b),dl=(ra!=null&&rb!=null)?ra-rb:null,r=rateOf(tot);
   let h='<div class="kpis">'+kpi('Completion rate',r==null?'—':r.toFixed(0)+'%',dl==null?'of submitted work checked':'<span class="'+(dl>=0?'up':'dn')+'">'+(dl>=0?'▲ ':'▼ ')+Math.abs(dl).toFixed(1)+' pts</span> vs previous 7 days','#1B3156')
-   +kpi('Checked',tot.C,'entries marked ✓','#1E9E6A')+kpi('Incomplete',tot.I,'IC — to be completed','#EFA11D')+kpi('Not submitted',tot.N,'NS — follow up','#D93A4B')+kpi('Absent',tot.A,'absent on the day','#2B9BD6')+kpi('Not marked',tot.P,'still to mark','#572686')+'</div>';
+   +kpi('Checked',tot.C,'entries marked ✓','#1E9E6A')+kpi('Incomplete',tot.I,'IC — to be completed','#EFA11D')+kpiA('kns',kpi('Not submitted',tot.N,'NS — tap to see the list','#D93A4B'))+kpiA('knm',kpi('Not marked',tot.P,'still to mark — tap to see','#572686'))+'</div>';
   const subj=Object.keys(bySubj).sort().map(k=>({l:k,v:rateOf(bySubj[k].t)==null?0:rateOf(bySubj[k].t),c:'#1B3156'}));
   const days=Object.keys(byDay).sort().slice(-14).map(d=>({l:fD(d),v:rateOf(byDay[d].t)}));
   h+='<div class="cols2"><div class="card chart"><h3>Completion by subject</h3>'+svgBars(subj)+'</div><div class="card chart"><h3>Completion trend by date</h3>'+svgLine(days)+'</div></div>';
@@ -556,14 +559,29 @@ function dashCheck(){
   h+='<div class="cols2"><div class="card"><h3>Needs attention</h3><div class="small muted" style="margin-bottom:6px">Students with pending work older than two days</div>'+attnList(8)+'</div>';
   const pend=es.filter(e=>tally(e).P>0).sort((x,y)=>x.date.localeCompare(y.date));
   h+='<div class="card"><h3>Checks with students still unmarked · '+pend.length+'</h3>'+(pend.length?pend.slice(0,8).map(e=>'<button class="entry" data-act="gofix" data-k="e" data-p="'+esc(e.p)+'" style="padding:9px 12px"><div class="eh"><b>'+e.sec+' · '+esc(e.subj)+' · '+esc(e.item)+'</b><span class="badge ic">'+tally(e).P+' left</span></div><div class="small muted">'+fD(e.date)+' · '+esc(lessonLabel(e))+'</div></button>').join(''):'<div class="muted small">Every check is fully marked.</div>')+'</div></div>';
-  h+='<div class="card"><h3>Breakdown</h3><div class="tw"><table><tr><th>By item</th><th class="n">Checks</th><th class="n">✓</th><th class="n">IC</th><th class="n">NS</th><th class="n">A</th><th class="n">Unmkd</th><th class="n">Done</th></tr>'+ITEMS.filter(i=>byItem[i]).map(i=>trow(esc(i),byItem[i].t,byItem[i].n)).join('')+'</table></div>';
-  h+='<div class="tw" style="margin-top:12px"><table><tr><th>By subject</th><th class="n">Checks</th><th class="n">✓</th><th class="n">IC</th><th class="n">NS</th><th class="n">A</th><th class="n">Unmkd</th><th class="n">Done</th></tr>'+Object.keys(bySubj).sort().map(s=>trow(esc(s),bySubj[s].t,bySubj[s].n)).join('')+'</table></div></div>';
+  h+='<div class="card"><h3>Breakdown</h3><div class="tw"><table><tr><th>By item</th><th class="n">Checks</th><th class="n">✓</th><th class="n">IC</th><th class="n">NS</th><th class="n">A</th><th class="n">Unmkd</th><th class="n">Done</th></tr>'+ITEMS.filter(i=>byItem[i]).map(i=>trow('<a data-act="dritem" data-v="'+esc(i)+'" style="cursor:pointer;color:var(--navy);font-weight:700">'+esc(i)+' ›</a>',byItem[i].t,byItem[i].n)).join('')+'</table></div>';
+  h+='<div class="tw" style="margin-top:12px"><table><tr><th>By subject</th><th class="n">Checks</th><th class="n">✓</th><th class="n">IC</th><th class="n">NS</th><th class="n">A</th><th class="n">Unmkd</th><th class="n">Done</th></tr>'+Object.keys(bySubj).sort().map(s=>trow('<a data-act="drsub" data-v="'+esc(s)+'" style="cursor:pointer;color:var(--navy);font-weight:700">'+esc(s)+' ›</a>',bySubj[s].t,bySubj[s].n)).join('')+'</table></div></div>';
   return h;
 }
 /* ---------- REPORTS ---------- */
-const RTYPES=[['def','Defaulters','Not submitted / incomplete'],['cls','Class summary','Per class and subject'],['low','Low performers','Below minimum marks'],['card','Class report card','Student × subject'],['tst','Test results','Every test, with averages'],['day','Date-wise','Day by day']];
+const RTYPES=[['cls','Class summary','Checking by item + performance'],['def','Defaulters','Not submitted / incomplete'],['low','Low performers','Below minimum marks'],['card','Class report card','Student × subject'],['tst','Test results','Every test, with averages'],['day','Date-wise','Day by day']];
 const secSort=(a,b)=>parseInt(a)-parseInt(b)||String(a).localeCompare(String(b));
 const R_RED='red',R_AMB='amb';
+function repItemRows(es,ts){
+  const M={};es.forEach(e=>{const k=e.sec+'|'+e.subj;const o=(M[k]=M[k]||{sec:e.sec,subj:e.subj,it:{}});const t=tally(e);addT(o.it[e.item]=o.it[e.item]||zero(),t)});
+  ts.forEach(t=>{const k=t.sec+'|'+t.subj;const o=(M[k]=M[k]||{sec:t.sec,subj:t.subj,it:{}});o.tn=(o.tn||0)+1;const r=tstat(t);o.tl=(o.tl||0)+r.low});
+  const f=t=>t?'✓'+t.C+' · NS '+t.N+' · IC '+t.I+(t.P?' · unmkd '+t.P:''):'—';
+  return Object.values(M).sort((a,b)=>secSort(a.sec,b.sec)||a.subj.localeCompare(b.subj)).map(o=>[o.sec,o.subj,f(o.it['Book']),f(o.it['Notebook']),f(o.it['Assignment']),o.tn?o.tn+' tests · '+o.tl+' below min':'—']);
+}
+function repTestRows(ts){
+  const M={};ts.forEach(t=>{const k=t.sec+'|'+t.subj;const o=(M[k]=M[k]||{sec:t.sec,subj:t.subj,n:0,sum:0,c:0,low:0,ng:0,ab:0});const r=tstat(t),st=testStats(t);o.n++;o.low+=r.low;o.ng+=r.NG;o.ab+=r.A;if(st.avg!=null){o.sum+=st.avg;o.c++}});
+  return Object.values(M).sort((a,b)=>secSort(a.sec,b.sec)||a.subj.localeCompare(b.subj)).map(o=>[o.sec,o.subj,String(o.n),o.c?[(o.sum/o.c).toFixed(0)+'%',o.sum/o.c<60?R_RED:'']:'—',[String(o.low),o.low?R_RED:''],String(o.ng),String(o.ab)]);
+}
+function repPick(){
+  const secAll=Object.keys(ROSTER).sort(secSort),subAll=[...new Set(segClasses(U.seg).flatMap(c=>subjectsFor(c).map(x=>x.n)))],itAll=['Book','Notebook','Assignment','Test Notebook','Content Notebook','Homework Notebook','Practice Notebook'];
+  const row=(lab,g,all,cur)=>'<div class="row" style="margin-top:6px"><span class="lab">'+lab+'</span><div class="scroll"><button class="chip sm" data-act="rclr" data-g="'+g+'" aria-pressed="'+(!(cur&&cur.length))+'">All</button>'+all.map(o=>'<button class="chip sm" data-act="rtog" data-g="'+g+'" data-v="'+esc(o)+'" aria-pressed="'+!!(cur&&cur.includes(o))+'">'+esc(IT_SHORT[o]||o)+'</button>').join('')+'</div></div>';
+  return '<div class="card" style="padding:10px"><div class="small muted">Tap one or several. “All” clears the choice.</div>'+row('Sections','rsecs',secAll.filter(x=>segOf(x)===U.seg),U.rsecs)+row('Subjects','rsubs',subAll,U.rsubs)+row('Items','ritems',itAll,U.ritems)+'</div>';
+}
 function repSub(){const o=scopeOpts().find(x=>x[0]===scopeNow());return (o?o[1]:'')+(U.dept?' · '+U.dept:'')+' · '+(U.per==='all'?'All dates':'Last '+U.per+' days')+' · '+fD(today())}
 function buildRep(k){
   const es=docs('e').filter(e=>inScope(e)),ts=docs('t').filter(t=>inScope(t)),sub=repSub();
@@ -580,7 +598,9 @@ function buildRep(k){
     const row=(a,o)=>[a,String(o.st.size),[String(o.t.N),o.t.N?R_RED:''],[String(o.t.I),o.t.I?R_AMB:''],String(o.t.C),String(o.n),pcell(o.t)];
     return{title:'Class summary',sub:sub,tables:[
       {h:'By class',cols:['Class','Students defaulting','Not submitted','Incomplete','Checked','Checks','Done'],rows:Object.keys(C).sort(secSort).map(s=>row(s,C[s])),none:'No records.'},
-      {h:'By class and subject',cols:['Class','Subject','Students defaulting','Not submitted','Incomplete','Checked','Checks','Done'],rows:Object.values(S).sort((a,b)=>secSort(a.sec,b.sec)||a.subj.localeCompare(b.subj)).map(o=>{const r=row(o.sec,o);r.splice(1,0,o.subj);return r}),none:'No records.'}]};
+      {h:'By class and subject',cols:['Class','Subject','Students defaulting','Not submitted','Incomplete','Checked','Checks','Done'],rows:Object.values(S).sort((a,b)=>secSort(a.sec,b.sec)||a.subj.localeCompare(b.subj)).map(o=>{const r=row(o.sec,o);r.splice(1,0,o.subj);return r}),none:'No records.'},
+      {h:'Checking by item (Book · Notebook · Assignment · Test)',cols:['Class','Subject','Book','Notebook','Assignment','Test Notebook'],rows:repItemRows(es,ts),none:'No records.'},
+      {h:'Performance (tests)',cols:['Class','Subject','Tests','Average','Below minimum','Not given','Absent'],rows:repTestRows(ts),none:'No tests in this view.'}]};
   }
   if(k==='low'){
     const rows=[];ts.forEach(t=>{for(let s=1;s<=nOf(t.sec);s++)if(isLow(t,s)){const sk=streakAt(t.sec,t.subj,s,t);rows.push({sec:t.sec,s,r:[t.sec,nameOf(t.sec,s),t.subj,lessonLabel(t)+' · '+fD(t.date),fmtN(t.m[s])+'/'+t.max,[pctOf(t,s).toFixed(0)+'%',R_RED],fmtN(minOf(t)),[sk>=2?'Low '+sk+' tests in a row':'',sk>=2?R_RED:'']]})}});
@@ -618,12 +638,12 @@ function repWA(R){
 }
 function filterBar(){
   let h='<div class="card" style="padding:10px"><div class="row"><span class="lab">Show</span><div class="scroll">'+scopeOpts().map(o=>'<button class="chip sm" data-act="scope" data-v="'+o[0]+'" aria-pressed="'+(scopeNow()===o[0])+'">'+esc(o[1])+'</button>').join('')+'</div></div>';
-  h+='<div class="row" style="margin-top:6px"><span class="lab">Period</span><div class="scroll">'+[['7','7 days'],['30','30 days'],['90','90 days'],['all','All']].map(o=>'<button class="chip sm" data-act="per" data-v="'+o[0]+'" aria-pressed="'+(U.per===o[0])+'">'+o[1]+'</button>').join('')+'</div></div>';
+  h+='<div class="row" style="margin-top:6px"><span class="lab">Period</span><div class="scroll">'+[['0','Today'],['7','7 days'],['30','30 days'],['90','90 days'],['all','All'],['custom','Custom']].map(o=>'<button class="chip sm" data-act="per" data-v="'+o[0]+'" aria-pressed="'+(U.per===o[0])+'">'+o[1]+'</button>').join('')+'</div></div>'+(U.per==='custom'?'<div class="row" style="margin-top:6px"><span class="lab">Dates</span><input type="date" data-act="rfrom" value="'+esc(U.rfrom||'')+'"> <input type="date" data-act="rto" value="'+esc(U.rto||'')+'"></div>':'');
   h+='<div class="row" style="margin-top:6px"><span class="lab">Dept</span><div class="scroll"><button class="chip sm" data-act="dept" data-v="" aria-pressed="'+(!U.dept)+'">All</button>'+deptList().map(d=>'<button class="chip sm" data-act="dept" data-v="'+esc(d)+'" aria-pressed="'+(U.dept===d)+'">'+esc(d)+'</button>').join('')+'</div></div></div>';
   return h;
 }
 function viewRep(){
-  const k=U.rep||'def';let h=mBar()+filterBar();
+  const k=U.rep||'cls';let h=mBar()+filterBar()+repPick();
   h+='<div class="rgrid">'+RTYPES.map(o=>'<button class="rtile" data-act="rtype" data-v="'+o[0]+'" aria-pressed="'+(k===o[0])+'"><b>'+o[1]+'</b><small>'+o[2]+'</small></button>').join('')+'</div>';
   const R=buildRep(k);
   h+='<div class="row noprint" style="margin-bottom:10px"><button class="btn sm" data-act="rprint">Print / PDF</button><button class="btn ghost sm" data-act="rtsv">Copy for Excel</button><button class="btn wa sm" data-act="rwa">Copy for WhatsApp</button>'+(k==='def'?'<button class="chip sm" data-act="incA" aria-pressed="'+!!U.incA+'">Include absent</button>':'')+'</div>';
@@ -662,7 +682,8 @@ function repeatConcerns(){
 }
 function dashPerf(){
   const ts=docs('t').filter(t=>inScope(t));
-  let h='<div class="scroll" style="margin-bottom:14px">'+[['subj','Subject-wise'],['date','Date-wise'],['poor','Poor performers'],['cmp','Compare sections']].map(o=>'<button class="chip sm" data-act="pview" data-v="'+o[0]+'" aria-pressed="'+((U.pview||'subj')===o[0])+'">'+o[1]+'</button>').join('')+'</div>';
+  let h='<div class="scroll" style="margin-bottom:14px">'+[['rec','Recent tests'],['subj','Subject-wise'],['date','Date-wise'],['poor','Poor performers'],['cmp','Compare sections']].map(o=>'<button class="chip sm" data-act="pview" data-v="'+o[0]+'" aria-pressed="'+((U.pview||'subj')===o[0])+'">'+o[1]+'</button>').join('')+'</div>';
+  if(U.pview==='rec')return h+statusView('prf');
   if(U.pview==='poor')return h+dashPoor();if(U.pview==='cmp')return h+dashCmp();
   if(!ts.length)return h+'<div class="empty">No test marks in this view yet.</div>';
   let sum=0,k=0,poor=0,ab=0;ts.forEach(t=>{const st=testStats(t);poor+=st.poor;ab+=st.ab;if(st.avg!=null){sum+=st.avg;k++}});
@@ -737,7 +758,95 @@ function recSection(sec){
   }
   return h+'</div>';
 }
-function dashPending(){
+
+/* ---------- STATUS VIEWS: all items · department · class recent (Pending and Performance) ---------- */
+const kpiA=(act,h)=>h.replace('<div class="kpi" style="','<div class="kpi" data-act="'+act+'" style="cursor:pointer;');
+const isPendC=c=>c==='I'||c==='N'||c==='W';
+function pendOf(e){const t=tally(e);return{N:t.N,I:t.I,W:t.W,P:t.P,n:t.N+t.I+t.W+t.P}}
+function defNames(e,lim){lim=lim||5;const o=[];for(let s=1;s<=nOf(e.sec);s++){const c=e.m[s];if(isPendC(c))o.push(nameOf(e.sec,s)+' ('+CODES[c].t+')')}return o.slice(0,lim).join(', ')+(o.length>lim?' +'+(o.length-lim):'')}
+function pendChip(e){const p=pendOf(e);return p.n?'<span class="badge ns">'+[p.N?'NS '+p.N:'',p.I?'IC '+p.I:'',p.W?'P '+p.W:'',p.P?'Unmkd '+p.P:''].filter(Boolean).join(' · ')+'</span>':'<span class="badge ok">✓ clear</span>'}
+function tstat(t){const r={k:0,A:0,NG:0,P:0,low:0};for(let s=1;s<=nOf(t.sec);s++){const v=t.m[s];if(v==null||v==='')r.P++;else if(v==='A')r.A++;else if(v==='NG')r.NG++;else{r.k++;if(isLow(t,s))r.low++}}return r}
+function testChip(t){const r=tstat(t);return '<span class="small">wrote '+r.k+' · not given '+r.NG+' · absent '+r.A+' · <b class="'+(r.low?'red':'')+'">below min '+r.low+'</b>'+(r.P?' · unmarked '+r.P:'')+'</span>'}
+function entRow(e){const p=pendOf(e);return '<button class="entry" data-act="gofix" data-k="e" data-p="'+esc(e.p)+'" style="padding:9px 12px"><div class="eh"><b>'+e.sec+' · '+esc(e.subj)+' · '+esc(e.item)+' · '+esc(lessonLabel(e))+'</b>'+pendChip(e)+'</div><div class="small muted">'+fD(e.date)+' · checked by '+esc(e.by||teacherOf(e.sec,e.subj)||'—')+(p.n-p.P?' · '+esc(defNames(e)):'')+'</div></button>'}
+function tstRow(t){return '<button class="entry" data-act="gofix" data-k="t" data-p="'+esc(t.p)+'" style="padding:9px 12px"><div class="eh"><b>'+t.sec+' · '+esc(t.subj)+' · '+esc(lessonLabel(t))+' <span class="muted" style="font-weight:500">/'+t.max+'</span></b><span class="badge g">'+fD(t.date)+'</span></div><div style="margin-top:3px">'+testChip(t)+'</div></button>'}
+function recentBar(sec){
+  const w=dayAgo(7),all=entriesFor(sec).concat(testsFor(sec));
+  const L=all.filter(r=>r.date>=w||(r.k==='t'?tstat(r).P>0:pendOf(r).n-pendOf(r).P>0)).sort((a,b)=>b.date.localeCompare(a.date)||b.ts-a.ts);
+  let h='<div class="card" style="padding:10px 12px"><div class="eh"><h3 style="margin:0">Recent checking · '+sec+'</h3><span class="badge g">'+L.length+'</span></div><div class="small muted" style="margin:2px 0 8px">Latest checks of this class. A check stays here until its defaulters (NS, IC, P) are cleared.</div>';
+  if(!L.length)return h+'<div class="empty" style="margin:0">Nothing checked in the last 7 days.</div></div>';
+  return h+L.slice(0,8).map(r=>r.k==='t'?tstRow(r):entRow(r)).join('')+(L.length>8?'<div class="small muted">+'+(L.length-8)+' more — open a subject to see all.</div>':'')+'</div>';
+}
+function modeBar(kind){const o=[['mix',kind==='prf'?'All recent':'All items'],['dept','Department'],['sec','Class · recent']];if(kind==='pen')o.push(['gap','Behind sister sections']);
+  let h=chipRow('View',o,'dmode',U.dmode||'mix');
+  if(U.ditem||U.dsubj)h+='<div class="row" style="margin-top:6px"><span class="lab">Filter</span><button class="chip sm" data-act="dclr" aria-pressed="true">'+esc(U.ditem||U.dsubj)+' ✕</button></div>';
+  if(kind==='prf')h+=chipRow('Last',[['3','3 tests'],['4','4 tests'],['5','5 tests']],'pkk',String(U.pk||3));
+  return '<div class="card" style="padding:10px">'+h+'</div>'}
+function lessonRows(list,sec,sb){ // one row per lesson, one cell per item, tap opens the check
+  const its=itemsFor(+sec.slice(0,-1),sb.n),K=U.pk||3,keys=[],seen={};
+  list.slice().sort((a,b)=>b.date.localeCompare(a.date)).forEach(r=>{const k=lkey(r.ls)||lkey(r.lt)||r.date;if(!seen[k]){seen[k]=1;keys.push(k)}});
+  const rows=keys.slice(0,Math.max(K,3)+2).map(k=>{
+    const m=list.filter(r=>(lkey(r.ls)||lkey(r.lt)||r.date)===k),any=m[0];
+    return '<tr><td class="nm" style="cursor:default">'+esc(lessonLabel(any))+'<br><span class="small muted">'+fD(any.date)+'</span></td>'+its.map(it=>{
+      const x=it==='Test Notebook'?m.find(r=>r.k==='t'):m.find(r=>r.k==='e'&&r.item===it);
+      if(!x)return '<td><span class="cc mt">·</span></td>';
+      if(x.k==='t'){const r=tstat(x);return '<td data-act="gofix" data-k="t" data-p="'+esc(x.p)+'" style="cursor:pointer"><span class="cc '+(r.low?'ns':'ok')+'">'+r.k+'</span><br><span class="small '+(r.low?'red':'')+'">&lt;min '+r.low+'</span>'+(r.NG||r.A?'<br><span class="small muted">NG '+r.NG+' · Ab '+r.A+'</span>':'')+'</td>'}
+      const p=pendOf(x);return '<td data-act="gofix" data-k="e" data-p="'+esc(x.p)+'" style="cursor:pointer">'+((p.N+p.I+p.W)?'<span class="cc ns">'+(p.N+p.I+p.W)+'</span>'+(p.P?'<br><span class="small muted">unmkd '+p.P+'</span>':''):p.P?'<span class="cc ic">'+p.P+'</span><br><span class="small muted">unmarked</span>':'<span class="cc ok">✓</span>')+'</td>'}).join('')+'</tr>'});
+  return '<div class="tw"><table class="rtab"><thead><tr><th class="nm">Lesson</th>'+its.map(i=>'<th>'+esc(IT_SHORT[i]||i)+'</th>').join('')+'</tr></thead><tbody>'+rows.join('')+'</tbody></table></div>';
+}
+function statusView(kind){
+  const mode=U.dmode||'mix',secs=secsInScope(),c0=cutoff(),K=U.pk||3;
+  const okD=(sec,subj)=>!U.dept||((subjDef(+sec.slice(0,-1),subj)||{}).d===U.dept);
+  const inc=r=>secs.includes(r.sec)&&(!c0||r.date>=c0)&&okD(r.sec,r.subj)&&(!U.dsubj||r.subj===U.dsubj)&&(!U.per||U.per!=='custom'||!U.rto||r.date<=U.rto);
+  const E=docs('e').filter(inc).filter(e=>!U.ditem||e.item===U.ditem),T=(U.ditem&&U.ditem!=='Test Notebook')?[]:docs('t').filter(inc);
+  const byDate=(a,b)=>b.date.localeCompare(a.date)||(b.ts||0)-(a.ts||0);
+  let h=modeBar(kind);
+  const hdr=(t,b)=>'<div class="eh" style="margin:14px 2px 6px"><h3 style="margin:0">'+t+'</h3>'+(b||'')+'</div>';
+  if(kind==='prf'){
+    if(!T.length)return h+'<div class="empty">No test marks in this view yet.</div>';
+    const secList=secs.slice().sort(secSort);
+    if(mode==='mix'){
+      h+=hdr('Recent tests · all sections','<span class="badge g">'+T.length+'</span>');
+      h+=T.sort(byDate).slice(0,20).map(tstRow).join('');
+    }else if(mode==='dept'){
+      const depts=[...new Set(T.map(t=>(subjDef(+t.sec.slice(0,-1),t.subj)||{}).d||t.subj))].sort();
+      depts.forEach(d=>{h+=hdr(esc(d)+' department');
+        secList.forEach(sec=>{const subs=[...new Set(T.filter(t=>t.sec===sec&&((subjDef(+sec.slice(0,-1),t.subj)||{}).d||t.subj)===d).map(t=>t.subj))].sort();
+          subs.forEach(sb=>{const ts=T.filter(t=>t.sec===sec&&t.subj===sb).sort(byDate).slice(0,K);
+            h+='<div class="card" style="padding:10px 12px"><div class="eh"><b>'+sec+' · '+esc(sb)+'</b><span class="small muted">'+esc(teacherOf(sec,sb)||'')+' · '+ts.length+' tests</span></div>'+ts.map(tstRow).join('')+'</div>'})})});
+    }else{
+      secList.forEach(sec=>{const ts=T.filter(t=>t.sec===sec);if(!ts.length)return;const subs=[...new Set(ts.map(t=>t.subj))].sort();
+        h+=hdr('Class '+sec,'<span class="badge g">'+ts.length+' tests</span>');
+        subs.forEach(sb=>{const l=ts.filter(t=>t.subj===sb).sort(byDate).slice(0,K);h+='<div class="card" style="padding:10px 12px"><div class="eh"><b>'+esc(sb)+'</b><span class="small muted">'+esc(teacherOf(sec,sb)||'')+'</span></div>'+l.map(tstRow).join('')+'</div>'})});
+    }
+    return h;
+  }
+  /* pending (checking) */
+  if(!E.length&&!T.length)return h+'<div class="empty">No checking records in this view yet.</div>';
+  const secList=secs.slice().sort(secSort);
+  if(mode==='mix'){
+    const its=ITEMS.filter(i=>(i==='Test Notebook'?T.length:E.some(e=>e.item===i)));
+    its.forEach(it=>{const rs=it==='Test Notebook'?T:E.filter(e=>e.item===it);
+      const pend=it==='Test Notebook'?rs.reduce((a,t)=>a+tstat(t).P,0):rs.reduce((a,e)=>a+pendOf(e).n,0);
+      h+=hdr(esc(it),'<span class="badge '+(pend?'ns':'ok')+'">'+rs.length+(it==='Test Notebook'?' tests':' checks')+' · '+(pend?pend+' pending':'clear')+'</span>');
+      secList.forEach(sec=>{const l=rs.filter(r=>r.sec===sec).sort((a,b)=>(it==='Test Notebook'?0:(pendOf(b).n>0)-(pendOf(a).n>0))||byDate(a,b)).slice(0,K+1);if(!l.length)return;
+        h+='<div class="card" style="padding:10px 12px"><div class="eh"><b>Class '+sec+'</b><span class="small muted">'+rs.filter(r=>r.sec===sec).length+' total</span></div>'+l.map(r=>r.k==='t'?tstRow(r):entRow(r)).join('')+'</div>'})});
+  }else if(mode==='dept'){
+    const all=E.concat(T),depts=[...new Set(all.map(r=>(subjDef(+r.sec.slice(0,-1),r.subj)||{}).d||r.subj))].sort();
+    depts.forEach(d=>{h+=hdr(esc(d)+' department');
+      secList.forEach(sec=>{const subs=[...new Set(all.filter(r=>r.sec===sec&&((subjDef(+sec.slice(0,-1),r.subj)||{}).d||r.subj)===d).map(r=>r.subj))].sort();
+        subs.forEach(sb=>{const sd=subjDef(+sec.slice(0,-1),sb);if(!sd)return;const l=all.filter(r=>r.sec===sec&&r.subj===sb);
+          const pend=l.reduce((a,r)=>a+(r.k==='t'?0:pendOf(r).n),0);
+          h+='<div class="card" style="padding:10px 12px"><div class="eh"><b>'+sec+' · '+esc(sb)+'</b><span class="badge '+(pend?'ns':'ok')+'">'+(pend?pend+' pending':'clear')+'</span></div><div class="small muted" style="margin:2px 0 6px">Teacher: '+esc(teacherOf(sec,sb)||'not set')+' · NS/IC/P counts are students not yet clear · tap a cell to open</div>'+lessonRows(l,sec,sd)+'</div>'})})});
+  }else{
+    secList.forEach(sec=>{const all=E.concat(T).filter(r=>r.sec===sec);if(!all.length)return;const subs=[...new Set(all.map(r=>r.subj))].sort();
+      const pend=all.reduce((a,r)=>a+(r.k==='t'?0:pendOf(r).n),0);
+      h+=hdr('Class '+sec,'<span class="badge '+(pend?'ns':'ok')+'">'+(pend?pend+' pending':'clear')+'</span>');
+      subs.forEach(sb=>{const l=all.filter(r=>r.subj===sb).sort(byDate).slice(0,K+1);h+='<div class="card" style="padding:10px 12px"><div class="eh"><b>'+esc(sb)+'</b><span class="small muted">'+esc(teacherOf(sec,sb)||'')+'</span></div>'+l.map(r=>r.k==='t'?tstRow(r):entRow(r)).join('')+'</div>'})});
+  }
+  return h;
+}
+function dashPending(){if((U.dmode||'mix')==='gap')return modeBar('pen')+dashGap();return statusView('pen')}
+function dashGap(){
   const secs=secsInScope(),c0=cutoff(),byC={};secs.forEach(s=>{const c=+s.slice(0,-1);(byC[c]=byC[c]||[]).push(s)});
   const res={},cls=Object.keys(byC).map(Number).sort((a,b)=>a-b);let totalMiss=0,secUp=0,secAll=0,anyData=false;
   cls.forEach(c=>{
@@ -942,7 +1051,15 @@ document.addEventListener('click',ev=>{
     case'scope':U.scope=D.v;render();break;
     case'per':U.per=D.v;render();break;
     case'dept':U.dept=D.v;render();break;
-    case'dsub':U.dsub=D.v;render();break;
+    case'dsub':U.dsub=D.v;U.ditem='';U.dsubj='';render();break;
+    case'dmode':U.dmode=D.v;render();break;
+    case'dritem':U.dsub='pen';U.dmode='mix';U.ditem=D.v;U.dsubj='';render();window.scrollTo(0,0);break;
+    case'drsub':U.dsub='pen';U.dmode='dept';U.dsubj=D.v;U.ditem='';render();window.scrollTo(0,0);break;
+    case'dclr':U.ditem='';U.dsubj='';render();break;
+    case'kns':U.dsub='fup';U.fcode='N';render();window.scrollTo(0,0);break;
+    case'knm':U.dsub='pen';U.dmode='mix';U.ditem='';U.dsubj='';render();window.scrollTo(0,0);break;
+    case'rtog':{const a=U[D.g]=U[D.g]||[];const i=a.indexOf(D.v);if(i<0)a.push(D.v);else a.splice(i,1);render();break}
+    case'rclr':U[D.g]=[];render();break;
     case'pview':U.pview=D.v;render();break;
     case'overdue':U.overdue=!U.overdue;render();break;
     case'fitem':U.fitem=D.v;render();break;case'fcode':U.fcode=D.v;render();break;case'fsub':U.fsub=D.v;render();break;
@@ -969,6 +1086,8 @@ document.addEventListener('input',ev=>{
 document.addEventListener('keydown',ev=>{if(ev.key==='Enter'&&ev.target.id==='smk'){ev.preventDefault();const t=U.open&&DB[U.open.p];if(t){putDoc(t);const n=nOf(t.sec),s=U.ro;if(s<n){U.ro=s+1;renderSheet();const r=$('r'+(s+1));if(r)r.scrollIntoView({block:'center'})}else{U.ro=null;renderSheet();toast('All marks entered')}}}});
 document.addEventListener('change',ev=>{
   const el=ev.target,a=el.dataset&&el.dataset.act;
+  if(a==='rfrom'){U.rfrom=el.value;render()}
+  if(a==='rto'){U.rto=el.value;render()}
   if(a==='note'){const e=U.open&&DB[U.open.p];if(e){(e.rm=e.rm||{})[el.dataset.s]=el.value.trim();putDoc(e)}}
   if(el.id==='vasel'&&el.value){ME=el.value;lsPut('me',ME);U.scope='';U.tab='dash';U.dsub='chk';render();toast('Viewing as '+ME)}
   if(a==='teach'){CFG.teach=CFG.teach||{};const v=el.value.trim();if(v)CFG.teach[el.dataset.k]=v;else delete CFG.teach[el.dataset.k];saveCfg();toast('Saved')}
