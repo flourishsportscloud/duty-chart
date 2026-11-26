@@ -35,6 +35,10 @@ body{margin:0}
 body{background:var(--bg);color:var(--ink);font-size:16px;line-height:1.4;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 96px}
 button{font:inherit;color:inherit;cursor:pointer}
+html,body{overscroll-behavior-y:none}
+button,.gcard,.pc,.tile,.nv,.chips,.th,.pv,img{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+input,textarea,select{-webkit-user-select:text;user-select:text}
+.live.bad::before{background:var(--bad)}
 h1,h2,h3{margin:0;text-wrap:balance}
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;align-items:center;gap:10px;padding:12px 0 10px}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
@@ -139,41 +143,90 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 <div id="layer"></div>
 
 <script>
-/* ---------- FIS sync layer: Google Sheet via Apps Script (replaces the artifact database) ---------- */
+/* ---------- FIS sync layer: Google Sheet via Apps Script ----------
+   Saves go into an outbox (kept in IndexedDB, so they survive closing the app or losing network) and are sent one by one.
+   Each save has its own id: a save is never dropped or replaced while it is being sent, and the server applies it only once.
+   With the v2 server, saves send only the changed fields ("merge"), so two people editing the same record keep both changes. */
 const API_URL=new URLSearchParams(location.search).get('api')||'https://script.google.com/macros/s/AKfycbzDf3rfh9w_8CfPygfsswDhjbNbHkfImwp171va5xEz9fWO6B_wHf53xr4pgvx7FFDhow/exec';
 const FISDB=(()=>{
-  const CK='fis_support_cache_v1',OK='fis_support_outbox_v1';
-  let store={},rev=0,outbox=[],busy=false,state=API_URL?'connecting':'setup',blobWant={};
+  const CK='fis_support_cache_v1',OK='fis_support_outbox_v1',KEEP_DAYS=62;
+  let store={},rev=0,outbox=[],busy=false,state=API_URL?'connecting':'setup',blobWant={},sv=0,skew=0,inflight=null,failN=0,retryT=0,persistOK=true,cacheT=0,warned=false;
   const subs={},onState=[];
   const lsGet=k=>{try{return JSON.parse(localStorage.getItem(k)||'null')}catch(e){return null}};
-  const lsSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}};
-  const cp=o=>JSON.parse(JSON.stringify(o));
-  (()=>{const c=lsGet(CK);if(c&&c.store){store=c.store;rev=c.rev||0}const o=lsGet(OK);if(Array.isArray(o))outbox=o})();
-  function saveCache(){
-    const light={};Object.keys(store).forEach(c=>{if(c==='photos'&&API_URL)return;light[c]={};Object.keys(store[c]).forEach(id=>{const v=store[c][id];light[c][id]=(c==='refs'&&API_URL&&v)?Object.assign({},v,{data:undefined}):v})});
-    if(!lsSet(CK,{store:light,rev}))lsSet(CK,{store:{},rev:0});
+  const lsSet=k=>v=>{try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}};
+  const cp=o=>o==null?o:JSON.parse(JSON.stringify(o));
+  const isObj=x=>x&&typeof x==='object'&&!Array.isArray(x);
+  const merge=(b,p)=>{if(!isObj(p))return cp(p);const o=isObj(b)?b:{};Object.keys(p).forEach(k=>{if(p[k]===null)delete o[k];else o[k]=merge(o[k],p[k])});return o};
+  const oid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,10);
+  const warn=m=>{if(typeof toast==='function')toast(m)};
+  const minDate=()=>{const d=new Date(Date.now()+skew-KEEP_DAYS*864e5);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+  /* ---- outbox storage: IndexedDB first, localStorage as fallback ---- */
+  let idb=null;
+  const idbOpen=()=>new Promise(res=>{try{const r=indexedDB.open('fis_support',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>res(null)}catch(e){res(null)}});
+  const idbGet=k=>new Promise(res=>{if(!idb)return res(null);try{const q=idb.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>res(q.result||null);q.onerror=()=>res(null)}catch(e){res(null)}});
+  const idbPut=(k,v)=>new Promise(res=>{if(!idb)return res(false);try{const t=idb.transaction('kv','readwrite');t.objectStore('kv').put(v,k);t.oncomplete=()=>res(true);t.onerror=t.onabort=()=>res(false)}catch(e){res(false)}});
+  async function saveOut(){
+    let ok=await idbPut(OK,cp(outbox));
+    if(ok){try{localStorage.removeItem(OK)}catch(e){}}else ok=lsSet(OK)(outbox);
+    persistOK=ok;if(!ok&&!warned){warned=true;warn('Phone storage is full – unsent changes will be lost if you close the app. Stay online until it says Saved.')}
+    paint();
   }
-  const saveOut=()=>{if(!lsSet(OK,outbox)){/* photos too big for this device's storage: keep in memory only */}};
-  const setState=s=>{state=s;onState.forEach(f=>f(s,outbox.length))};
+  /* ---- local cache (last 2 months only) ---- */
+  function prune(){const cut=minDate();['log','visits','wash','routine','green','issues','tasks'].forEach(c=>{const m=store[c];if(!m)return;Object.keys(m).forEach(id=>{const v=m[id],d=v&&v.date;if(d&&d<cut&&!outbox.some(o=>o.c===c&&o.id===id))delete m[id]})})}
+  function saveCache(){
+    clearTimeout(cacheT);cacheT=0;prune();
+    const light={};Object.keys(store).forEach(c=>{if(c==='photos'&&API_URL)return;light[c]={};Object.keys(store[c]).forEach(id=>{const v=store[c][id];light[c][id]=(c==='refs'&&API_URL&&v)?Object.assign({},v,{data:undefined}):v})});
+    if(!lsSet(CK)({store:light,rev,sv})){lsSet(CK)({store:{},rev:0});if(!warned){warned=true;warn('Phone storage is full. The app still works but opens slower.')}}
+  }
+  const cacheSoon=()=>{if(!cacheT)cacheT=setTimeout(saveCache,800)};
+  (()=>{const c=lsGet(CK);if(c&&c.store){store=c.store;rev=c.rev||0;sv=c.sv||0}const o=lsGet(OK);if(Array.isArray(o))outbox=o})();
+  const ready=idbOpen().then(async d=>{idb=d;const o=await idbGet(OK);if(Array.isArray(o)){const have={};outbox.forEach(x=>{if(x.oid)have[x.oid]=1});o.forEach(x=>{if(!x.oid||!have[x.oid])outbox.push(x)})}outbox.forEach(x=>{if(!x.oid)x.oid=oid()});replayAll()});
+  /* ---- status chip ---- */
+  function paint(){const n=outbox.length;onState.forEach(f=>{try{f(state,n,{busy:!!inflight,failed:failN>0,persist:persistOK})}catch(e){}})}
+  const setState=s=>{state=s;paint()};
   const docs=c=>Object.keys(store[c]||{}).map(id=>({id,data:store[c][id]}));
   const fire=c=>(subs[c]||[]).forEach(f=>{try{f(docs(c))}catch(e){}});
-  const pendingKey=(c,id)=>outbox.some(o=>o.c===c&&o.id===id);
+  /* put the user's unsent changes back on top of a record (used after a server copy arrives) */
+  function replay(c,id){
+    outbox.filter(o=>o.c===c&&o.id===id).forEach(o=>{store[c]=store[c]||{};
+      if(o.op==='set')store[c][id]=cp(o.v);else if(o.op==='del')delete store[c][id];else store[c][id]=merge(cp(store[c][id])||{},o.p)});
+  }
+  function replayAll(){const seen={};outbox.forEach(o=>{const k=o.c+'/'+o.id;if(!seen[k]){seen[k]=1;replay(o.c,o.id)}});Object.keys(store).forEach(fire);paint()}
   async function call(fn,args){
     let r;try{r=await fetch(API_URL,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn,args})})}catch(e){const x=new Error('offline');x.net=1;throw x}
     let j;try{j=JSON.parse(await r.text())}catch(e){const x=new Error('offline');x.net=1;throw x}
-    if(!j.ok){const x=new Error(j.err||'Server error');if(/Unknown request/i.test(x.message))x.setup=1;else if(/busy/i.test(x.message))x.net=1;throw x}
+    if(!j.ok){const x=new Error(j.err||'Server error');if(/Unknown request/i.test(x.message))x.old=1;else if(/busy/i.test(x.message))x.net=1;throw x}
     return j.v;
   }
+  const by=()=>{try{return localStorage.getItem('fis_me')||''}catch(e){return ''}};
   async function flush(){
     while(outbox.length){
-      const o=outbox[0];
-      try{await call(o.op,o.op==='set'?[o.c,o.id,o.v]:[o.c,o.id])}
-      catch(e){if(e.net||e.setup){setState(e.setup?'setup':'offline');return false}
-        if(typeof toast==='function')toast('Not saved: '+e.message)}
-      outbox.shift();saveOut();
+      const o=outbox[0];inflight=o.oid;paint();
+      try{
+        if(o.op==='merge'&&sv<2){ /* old server: send the whole record instead */
+          const full=cp(store[o.c]&&store[o.c][o.id])||merge({},o.p);await call('set',[o.c,o.id,full,{oid:o.oid,by:by()}]);
+        }else{
+          const opt={oid:o.oid,by:by()};
+          const r=await call(o.op,o.op==='set'?[o.c,o.id,o.v,opt]:o.op==='merge'?[o.c,o.id,o.p,opt]:[o.c,o.id,opt]);
+          if(o.op==='merge'&&r&&r.j&&!outbox.some(x=>x!==o&&x.c===o.c&&x.id===o.id)){store[o.c]=store[o.c]||{};if(JSON.stringify(store[o.c][o.id])!==JSON.stringify(r.j)){store[o.c][o.id]=r.j;fire(o.c)}}
+        }
+        failN=0;
+      }catch(e){
+        inflight=null;
+        if(e.net){failN++;setState('offline');retry();return false}
+        if(e.old&&o.op==='merge'){sv=1;continue}            /* server not updated yet: retry as a whole-record save */
+        if(e.old){setState('setup');return false}
+        failN++;
+        if(failN<4){setState('failed');retry();return false}
+        warn('Could not save '+o.c+' ('+e.message+'). Please enter it again.');failN=0;   /* a record the server refuses even after retries */
+      }
+      inflight=null;
+      const i=outbox.findIndex(x=>x.oid===o.oid);if(i>=0)outbox.splice(i,1);
+      await saveOut();
     }
     return true;
   }
+  function retry(){clearTimeout(retryT);const ms=Math.min(60000,2000*Math.pow(2,Math.min(5,failN-1)))+Math.random()*1000;retryT=setTimeout(pull,ms)}
   async function fetchBlobs(){
     const ids=Object.keys(store.refs||{}).filter(id=>store.refs[id]&&store.refs[id]._blob&&!store.refs[id].data&&!blobWant[id]);
     if(!ids.length)return;
@@ -186,33 +239,45 @@ const FISDB=(()=>{
   async function pull(){
     if(!API_URL||busy)return;busy=true;
     try{
+      await ready;
+      if(outbox.length&&state!=='offline')setState('saving');
       if(!(await flush()))return;
-      const d=await call('sync',[rev]),ch={};
+      const d=await call('sync',[rev,rev?'':minDate()]),ch={};
+      if(d.v)sv=d.v;if(d.t)skew=d.t-Date.now();
       d.docs.forEach(x=>{
-        if(pendingKey(x.c,x.id))return;
         store[x.c]=store[x.c]||{};
+        const before=JSON.stringify(store[x.c][x.id]);
         if(x.del)delete store[x.c][x.id];
         else{const old=store[x.c][x.id];if(x.c==='refs'&&old&&old.data&&old.t===x.j.t)x.j.data=old.data;store[x.c][x.id]=x.j}
-        ch[x.c]=1;
+        replay(x.c,x.id);
+        if(JSON.stringify(store[x.c][x.id])!==before)ch[x.c]=1;      /* only redraw when something really changed */
       });
       if(d.rev<rev){store={};Object.keys(subs).forEach(c=>ch[c]=1);rev=0;busy=false;return pull()}
-      rev=d.rev;saveCache();Object.keys(ch).forEach(fire);setState('live');fetchBlobs();
-    }catch(e){setState(e.setup?'setup':'offline')}
-    finally{busy=false}
+      rev=d.rev;cacheSoon();Object.keys(ch).forEach(fire);setState(outbox.length?'saving':'live');fetchBlobs();
+    }catch(e){setState(e.old?'setup':'offline');if(e.net)retry()}
+    finally{busy=false;if(outbox.length&&state==='live')setTimeout(pull,300)}
   }
   function queue(o){
-    outbox=outbox.filter(x=>!(x.c===o.c&&x.id===o.id));outbox.push(o);saveOut();
-    if(!API_URL){saveCache();setState('setup');return Promise.resolve()}
-    setState(state);pull();return Promise.resolve();
+    o.oid=oid();
+    /* a newer whole-record save replaces older ones that are NOT being sent right now */
+    if(o.op==='set'||o.op==='del')outbox=outbox.filter(x=>!(x.c===o.c&&x.id===o.id&&x.oid!==inflight));
+    outbox.push(o);saveOut();
+    if(!API_URL){cacheSoon();setState('setup');return Promise.resolve()}
+    if(state==='live')setState('saving');pull();return Promise.resolve();
   }
-  if(API_URL){setInterval(()=>{if(!document.hidden)pull()},20000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)pull()});addEventListener('online',pull)}
+  let pollT=0;
+  function schedule(){clearTimeout(pollT);pollT=setTimeout(()=>{if(!document.hidden)pull();schedule()},20000+Math.random()*10000)}
+  if(API_URL){schedule();document.addEventListener('visibilitychange',()=>{if(document.hidden)saveCache();else pull()});addEventListener('online',()=>{failN=0;pull()});addEventListener('pagehide',saveCache)}
   return{
     start(){Object.keys(subs).forEach(fire);if(API_URL)pull();else setState('setup')},
     state:()=>state,pending:()=>outbox.length,onState:f=>onState.push(f),
+    now:()=>new Date(Date.now()+skew),
+    call,
     collection(c){return{
       onSnapshot(cb){(subs[c]=subs[c]||[]).push(cb);return()=>{}},
       doc(id){return{
-        set(v){store[c]=store[c]||{};store[c][id]=cp(v);if(!API_URL&&c!=='photos')saveCache();return queue({op:'set',c,id,v:cp(v)})},
+        set(v){store[c]=store[c]||{};store[c][id]=cp(v);return queue({op:'set',c,id,v:cp(v)})},
+        merge(p){store[c]=store[c]||{};store[c][id]=merge(cp(store[c][id])||{},cp(p));return queue({op:'merge',c,id,p:cp(p)})},
         delete(){if(store[c])delete store[c][id];return queue({op:'del',c,id})},
         async get(){
           const loc=store[c]&&store[c][id];if(loc&&(c!=='photos'||loc.data))return{data:loc};
@@ -269,10 +334,11 @@ const ls=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorag
 const $=id=>document.getElementById(id);
 const pad=n=>String(n).padStart(2,'0');
 const dkey=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
-const today=()=>dkey(new Date());
-const hhmm=()=>{const d=new Date();return pad(d.getHours())+':'+pad(d.getMinutes())};
+const NOW=()=>FISDB.now();
+const today=()=>dkey(NOW());
+const hhmm=()=>{const d=NOW();return pad(d.getHours())+':'+pad(d.getMinutes())};
 const mins=t=>{const a=String(t).split(':').map(Number);return a[0]*60+a[1]};
-const nowM=()=>{const d=new Date();return d.getHours()*60+d.getMinutes()};
+const nowM=()=>{const d=NOW();return d.getHours()*60+d.getMinutes()};
 const ago=m=>m<1?'just now':m<60?m+' min ago':Math.floor(m/60)+'h '+(m%60)+'m ago';
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clone=o=>JSON.parse(JSON.stringify(o));
@@ -290,14 +356,18 @@ const D={log:{},visits:{},routine:{},wash:{}};
 let washrooms=null;
 const WL=()=>washrooms&&washrooms.length?washrooms:DEFW;
 const pcache={};
-let rt=0;const rsoon=()=>{clearTimeout(rt);rt=setTimeout(render,80)};
+let rt=0,lastTouch=0;
+['touchstart','pointerdown','wheel'].forEach(ev=>addEventListener(ev,()=>{lastTouch=Date.now()},{passive:true,capture:true}));
+/* hold a background redraw while the user is typing in the page or touched it in the last 4 seconds */
+const uiBusy=()=>{const a=document.activeElement,L=$('layer');if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&!(L&&L.contains(a)))return true;return Date.now()-lastTouch<4000};
+const rsoon=mine=>{clearTimeout(rt);rt=setTimeout(()=>{if(!mine&&uiBusy()){rt=0;setTimeout(()=>rsoon(),1000);return}render()},mine?30:80)};
 
 /* ---------- data ---------- */
 function rows(s){const a=Array.isArray(s)?s:(s&&s.docs)||[];return a.map(d=>{const v=typeof d.data==='function'?d.data():(d.data||d);return Object.assign({},v,{_id:d.id||(v&&v.id)})})}
 function toast(t){const e=document.createElement('div');e.className='toast';e.textContent=t;document.body.appendChild(e);setTimeout(()=>e.remove(),2800)}
 async function initDb(){
   db=FISDB;const lv=$('live');
-  const paint=(s,n)=>{lv.textContent=s==='live'?'live':s==='offline'?'offline · '+n+' waiting':s==='setup'?'setting up':'connecting';lv.className='live'+(s==='live'?' on':'')};
+  const paint=(s,n,x)=>{x=x||{};lv.textContent=s==='setup'?'setting up':s==='offline'?'Offline'+(n?' · '+n+' waiting':''):s==='failed'?'Save failed – retrying':(n||x.busy)?'Saving…'+(n>1?' ('+n+')':''):s==='live'?'Saved':'connecting';lv.className='live'+(s==='live'&&!n?' on':'')+(s==='failed'||(x.persist===false)?' bad':'')};
   FISDB.onState(paint);
   ['log','visits','routine','wash'].forEach(c=>db.collection(c).onSnapshot(s=>{const m={};rows(s).forEach(r=>{m[r._id]=r});D[c]=m;rsoon()}));
   db.collection('cfg').onSnapshot(s=>{rows(s).forEach(r=>{if(r._id==='staff')staff=r.list||[];if(r._id==='attcfg')attCfg=r;if(r._id==='washrooms')washrooms=r.list||null});rsoon()});
@@ -307,11 +377,22 @@ function put(coll,id,obj){
   if(!db){toast('Not connected – not saved');return Promise.resolve()}
   return db.collection(coll).doc(id).set(clone(obj)).catch(()=>toast('Could not save. Ask the Director for edit access.'));
 }
-function save(coll,id,obj){if(D[coll])D[coll][id]=obj;rsoon();return put(coll,id,obj)}
-function del(coll,id){delete D[coll][id];rsoon();if(db)db.collection(coll).doc(id).delete().catch(()=>toast('Could not delete'))}
-function saveStaff(list){staff=list;rsoon();return put('cfg','staff',{list})}
+const isO=x=>x&&typeof x==='object'&&!Array.isArray(x);
+/* the fields that changed between two copies of a record (null = removed) */
+function diff(a,b){if(!isO(a)||!isO(b))return b;const p={};let n=0;
+  Object.keys(b).forEach(k=>{const x=a[k],y=b[k];if(y===undefined||JSON.stringify(x)===JSON.stringify(y))return;p[k]=isO(x)&&isO(y)?diff(x,y):y;n++});
+  Object.keys(a).forEach(k=>{if(!(k in b)||b[k]===undefined){p[k]=null;n++}});return n?p:null}
+/* save only what changed, so two people editing the same record keep both changes */
+function save(coll,id,obj){const old=D[coll]&&D[coll][id];if(D[coll])D[coll][id]=obj;rsoon(true);
+  if(!db){toast('Not connected – not saved');return Promise.resolve()}
+  const pt=old?diff(old,obj):clone(obj);if(!pt)return Promise.resolve();delete pt._id;if(!Object.keys(pt).length)return Promise.resolve();
+  return db.collection(coll).doc(id).merge(pt)}   /* a new record is merged too: two phones creating the same day's record keep both */
+function del(coll,id){delete D[coll][id];rsoon(true);if(db)db.collection(coll).doc(id).delete().catch(()=>toast('Could not delete'))}
+function saveStaff(list){staff=list;rsoon(true);return put('cfg','staff',{list})}
 async function savePhoto(data){if(!data)return '';const id='p'+uid();pcache[id]=data;await put('photos',id,{data,t:new Date().toISOString(),by:S.me});return id}
-async function getPhoto(id){
+const pwant={};
+function getPhoto(id){if(pcache[id])return Promise.resolve(pcache[id]);return pwant[id]||(pwant[id]=getPhoto1(id).finally(()=>{delete pwant[id]}))}
+async function getPhoto1(id){
   if(pcache[id])return pcache[id];if(!db)return null;
   try{const d=await db.collection('photos').doc(id).get();const v=typeof d.data==='function'?d.data():d.data;if(v&&v.data){pcache[id]=v.data;return v.data}}catch(e){}
   return null;
@@ -358,8 +439,9 @@ const overdue=p=>{const s=sinceVisit(p);return !!s&&s.min>G[p.group].every};
 function sheet(o){
   return new Promise(res=>{
     const L=$('layer'),st={};o.fields.forEach(f=>st[f.k]=f.val==null?'':f.val);
-    let pic=null,pid=o.photoId||'',arm=false;const mp=(o.photoIds||[]).slice(),mn=[];
-    const close=v=>{L.innerHTML='';res(v)};
+    let pic=null,pid=o.photoId||'',arm=false,dirty=false;const mp=(o.photoIds||[]).slice(),mn=[];
+    let done=false;const close=(v,fromBack)=>{if(done)return;done=true;L.innerHTML='';modalDone(fromBack);res(v)};
+    modalOpen(()=>{if(dirty){toast('Tap Cancel to close without saving');return false}close(null,true);return true});
     const draw=()=>{
       const fh=o.fields.map(f=>{
         if(f.type==='multi')return `<div class="fl">${esc(f.l)}</div><div class="chipset">${f.o.map(x=>`<button type="button" class="ch ${st[f.k].indexOf(x)>=0?'on':''}" data-mk="${f.k}" data-mv="${esc(x)}">${esc(x)}</button>`).join('')}</div>`;
@@ -376,14 +458,15 @@ function sheet(o){
         <div class="row" style="margin-top:18px"><button class="btn" id="sok" style="flex:1">${esc(o.ok||'Save')}</button><button class="btn sec" id="scn">Cancel</button></div>
         ${o.del?`<button class="btn bad" id="sdl" style="width:100%;margin-top:10px">${arm?'Tap again to delete':'🗑 Delete'}</button>`:''}</div></div>`;
       hydrate();
-      L.querySelector('#bd').onclick=e=>{if(e.target.id==='bd')close(null)};
-      L.querySelectorAll('.ch[data-k]').forEach(b=>b.onclick=()=>{st[b.dataset.k]=st[b.dataset.k]===b.dataset.v?'':b.dataset.v;draw()});
-      L.querySelectorAll('.ch[data-mk]').forEach(b=>b.onclick=()=>{const a=st[b.dataset.mk],i=a.indexOf(b.dataset.mv);if(i>=0)a.splice(i,1);else a.push(b.dataset.mv);draw()});
-      L.querySelectorAll('[data-i]').forEach(e=>e.oninput=()=>{st[e.dataset.i]=e.value});
-      const sp=L.querySelector('#sp');if(sp)sp.onclick=async()=>{const d=await pickPhoto();if(d){pic=d;draw()}};
-      const spm=L.querySelector('#spm');if(spm)spm.onclick=async()=>{const d=await pickPhoto();if(d){mn.push(d);draw()}};
-      L.querySelectorAll('[data-rmo]').forEach(b=>b.onclick=()=>{mp.splice(+b.dataset.rmo,1);draw()});
-      L.querySelectorAll('[data-rmn]').forEach(b=>b.onclick=()=>{mn.splice(+b.dataset.rmn,1);draw()});
+      /* a tap outside the form closes it only if nothing was changed – typed text and photos are never lost */
+      L.querySelector('#bd').onclick=e=>{if(e.target.id!=='bd')return;if(dirty){toast('Tap Cancel to close without saving');return}close(null)};
+      L.querySelectorAll('.ch[data-k]').forEach(b=>b.onclick=()=>{dirty=true;st[b.dataset.k]=st[b.dataset.k]===b.dataset.v?'':b.dataset.v;draw()});
+      L.querySelectorAll('.ch[data-mk]').forEach(b=>b.onclick=()=>{dirty=true;const a=st[b.dataset.mk],i=a.indexOf(b.dataset.mv);if(i>=0)a.splice(i,1);else a.push(b.dataset.mv);draw()});
+      L.querySelectorAll('[data-i]').forEach(e=>e.oninput=()=>{dirty=true;st[e.dataset.i]=e.value});
+      const sp=L.querySelector('#sp');if(sp)sp.onclick=async()=>{const d=await pickPhoto();if(d){dirty=true;pic=d;draw()}};
+      const spm=L.querySelector('#spm');if(spm)spm.onclick=async()=>{const d=await pickPhoto();if(d){dirty=true;mn.push(d);draw()}};
+      L.querySelectorAll('[data-rmo]').forEach(b=>b.onclick=()=>{dirty=true;mp.splice(+b.dataset.rmo,1);draw()});
+      L.querySelectorAll('[data-rmn]').forEach(b=>b.onclick=()=>{dirty=true;mn.splice(+b.dataset.rmn,1);draw()});
       L.querySelector('#scn').onclick=()=>close(null);
       L.querySelector('#sok').onclick=()=>{const m=o.validate?o.validate(st,pic||mn[0],pid||mp[0]):'';if(m){toast(m);return}close({st,pic,pid,pics:mn,pids:mp,del:false})};
       const sd=L.querySelector('#sdl');if(sd)sd.onclick=()=>{if(!arm){arm=true;draw();return}close({del:true})};
@@ -546,7 +629,7 @@ async function wsFlow(w){
   if(w&&r.del)list=list.filter(x=>x.id!==w.id);
   else if(w)list=list.map(x=>x.id===w.id?{id:w.id,name:r.st.name,floor:r.st.floor,cub:+r.st.cub||0}:x);
   else list.push({id:'w'+uid(),name:r.st.name,floor:r.st.floor,cub:+r.st.cub||0});
-  washrooms=list;rsoon();put('cfg','washrooms',{list});
+  washrooms=list;rsoon(true);put('cfg','washrooms',{list});
 }
 /* ---------- floor helpers: daily floor chart (attendance, floor, washroom after departure) ---------- */
 const HFL=['LG','Ground','First','Second','Third','Admin'];
@@ -790,8 +873,10 @@ function aCal(p){
     h+=`<div style="border-radius:9px;min-height:50px;padding:4px;font-size:11px;background:${bg};border:1px solid var(--line);${d>td?'opacity:.35':''}"><b style="display:block;font-size:13px">${+d.slice(8)}</b>${t}</div>`});
   return h+`</div><p class="hint">Green = on time · amber = late · red = absent</p>`;
 }
-function aShow(html){const L=$('layer');L.innerHTML=`<div class="modal" id="abd"><div class="box">${html}</div></div>`;L.querySelector('#abd').onclick=e=>{if(e.target.id==='abd')L.innerHTML=''}}
-const aClose=()=>{$('layer').innerHTML=''};
+function aShow(html){const L=$('layer'),again=!!L.querySelector('#abd');L.innerHTML=`<div class="modal" id="abd"><div class="box">${html}</div></div>`;
+  if(!again)modalOpen(()=>{$('layer').innerHTML='';MODAL.pop();return true});
+  L.querySelector('#abd').onclick=e=>{if(e.target.id==='abd')aClose()}}
+const aClose=()=>{if(!$('layer').innerHTML)return;$('layer').innerHTML='';modalDone(false)};
 function aEdit(p,k){
   const r=arec(S.date,p),by=r.b&&r.b[k];
   aShow(`<h3>${ALBL[k]} · ${esc(p.name)}</h3><div class="hint">${esc(fmtD(S.date))}${by?' · marked by '+esc(by[0])+' at '+new Date(by[1]).toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'}):''}</div>
@@ -827,7 +912,7 @@ function attSetup(){
    :`<p class="hint" style="margin:8px 0 0">Late after <b>${t12(c.inBy)}</b> · check out from <b>${t12(c.outAfter)}</b> · lunch allowed <b>${c.lunchMax} min</b>. Only the Director changes this.</p>`}
    <p class="hint" style="margin:10px 0 0">The staff list, teams and leaves come from Leaves &amp; Duty Cover.</p></div>`;
 }
-function attSave(c){attCfg=c;rsoon();put('cfg','attcfg',c).then(()=>toast('Saved'))}
+function attSave(c){attCfg=c;rsoon(true);put('cfg','attcfg',c).then(()=>toast('Saved'))}
 document.addEventListener('click',e=>{
   const st=e.target.closest('[data-ast]');if(st){st.parentNode.querySelectorAll('.ch').forEach(x=>x.classList.toggle('on',x===st));return}
   const b=e.target.closest('[data-act^="a-"]');if(!b)return;e.stopPropagation();
@@ -1054,10 +1139,12 @@ function rSetup(){
   return h;
 }
 function render(){
+  if(S.follow!==false)S.date=today();   /* stays on today (server clock) until the user picks another day */
+  if(S.pid&&staff.length){const q=staff.find(x=>x.id===S.pid);if(!q)S.pid=null;else if(!S.group)S.group=q.group}
   if(!sup()&&(S.tab==='log'||S.tab==='dash'||S.tab==='wash'||S.tab==='att'))S.tab='home';
   const t=S.tab;let title='Support Staff',sub='Flourish International School',back=false,body='';
   if(t==='home'){
-    if(S.pid){const p=staff.find(x=>x.id===S.pid);title=p?p.name:'';sub=p?G[p.group].label:'';back=true;body=rPerson()}
+    if(S.pid){const p=staff.find(x=>x.id===S.pid);title=p?p.name:'';sub=p?G[p.group].label:'';back=true;body=p?rPerson():'<div class="card empty">Loading…</div>'}
     else if(S.group){title=G[S.group].ico+' '+G[S.group].label;sub=S.group==='helper'?'Who is on which floor today':'Tap a person';back=true;body=rGroup()}
     else{title='Support Staff';sub='Today · '+fmtD(today());body=rHome()}
   }else if(t==='att'){title='🕘 Staff Attendance';sub='Check in · Lunch · Check out';body=rAtt()}
@@ -1066,8 +1153,9 @@ function render(){
   else if(t==='dash'){title='Dashboard';sub='Who was visited, and when';body=rDash()}
   else{title='Setup';sub='Staff and daily areas';body=rSetup()}
   $('ttl').textContent=title;$('sub').textContent=sub;
-  const app=$('app');
+  const app=$('app'),y=window.scrollY;
   app.innerHTML=(back?`<button class="back" data-act="back" style="margin-bottom:10px">◀ Back</button>`:'')+body;
+  if(y&&Math.abs(window.scrollY-y)>2)window.scrollTo(0,y);
   $('nav').innerHTML=(sup()?[['home','🏠','Home'],['att','🕘','Staff'],['wash','🚻','Washrooms'],['log','📋','Visit log'],['dash','📊','Dashboard'],['setup','⚙️','Setup']]:[['home','🏠','Home'],['setup','👤','Me']]).map(x=>`<button class="${t===x[0]?'on':''}" data-act="tab" data-v="${x[0]}"><i>${x[1]}</i>${x[2]}</button>`).join('');
   hydrate();
 }
@@ -1075,15 +1163,15 @@ function render(){
 /* ---------- events ---------- */
 document.addEventListener('click',async e=>{
   const z=e.target.closest('[data-zoom]');
-  if(z&&z.src){e.stopPropagation();e.preventDefault();const L=document.createElement('div');L.className='lb';L.innerHTML=`<img src="${z.src}" alt="photo">`;L.onclick=()=>L.remove();document.body.appendChild(L);return}
+  if(z&&z.src){e.stopPropagation();e.preventDefault();const L=document.createElement('div');L.className='lb';L.innerHTML=`<img src="${z.src}" alt="photo">`;L.onclick=()=>{L.remove();modalDone(false)};document.body.appendChild(L);modalOpen(()=>{L.remove();MODAL.pop();return true});return}
   const b=e.target.closest('[data-act]');if(!b)return;
   const a=b.dataset.act,v=b.dataset.v,p=staff.find(x=>x.id===S.pid);
   try{
-  if(a==='tab'){S.tab=v;S.group=null;S.pid=null;render();window.scrollTo(0,0)}
-  else if(a==='grp'){S.group=v;S.pid=null;render();window.scrollTo(0,0)}
-  else if(a==='pick'){S.group=b.dataset.g;S.pid=v;S.tab='home';render();window.scrollTo(0,0)}
-  else if(a==='back'){if(S.pid)S.pid=null;else S.group=null;render()}
-  else if(a==='dshift'){S.date=shiftD(S.date,+v);render()}
+  if(a==='tab'){S.tab=v;S.group=null;S.pid=null;go()}
+  else if(a==='grp'){S.group=v;S.pid=null;go()}
+  else if(a==='pick'){S.group=b.dataset.g;S.pid=v;S.tab='home';go()}
+  else if(a==='back')goBack();
+  else if(a==='dshift'){S.date=shiftD(S.date,+v);S.follow=S.date===today();render()}
   else if(a==='fg'){S.fg=v;render()}
   else if(a==='in'&&p)await inFlow(p);
   else if(a==='out'&&p)await outFlow(p);
@@ -1120,8 +1208,41 @@ document.addEventListener('click',async e=>{
   }
   }catch(err){toast('Something went wrong. Try again.')}
 });
-render();
-initDb().then(welcome);
+/* ---------- Back button: every screen has its own history entry; phone Back steps back one screen, closes popups first ---------- */
+let MODAL=[],IGN=0,depth=0,exitArm=0;
+function modalOpen(onBack){MODAL.push(onBack);history.pushState({m:1},'',location.hash)}
+function modalDone(fromBack){MODAL.pop();if(!fromBack&&history.state&&history.state.m){IGN++;history.back()}}
+const routeOf=()=>S.tab==='home'?(S.pid?'#p-'+S.pid:S.group?'#g-'+S.group:'#home'):'#'+S.tab;
+function applyRoute(h){h=(h||'').replace(/^#/,'');S.group=null;S.pid=null;
+  if(/^p-/.test(h)){const p=staff.find(x=>x.id===h.slice(2));S.tab='home';if(p){S.pid=p.id;S.group=p.group}else S.pid=h.slice(2)}
+  else if(/^g-/.test(h)){S.tab='home';S.group=G[h.slice(2)]?h.slice(2):null}
+  else S.tab=['att','wash','log','dash','setup'].indexOf(h)>=0?h:'home'}
+function go(){const h=routeOf();if(location.hash!==h){history.pushState({r:1},'',h);depth++}render();window.scrollTo(0,0)}
+function goBack(){if(depth>0){history.back();return}if(S.pid)S.pid=null;else if(S.group)S.group=null;else S.tab='home';history.replaceState({r:1},'',routeOf());render();window.scrollTo(0,0)}
+addEventListener('popstate',e=>{
+  if(IGN){IGN--;return}
+  if(MODAL.length){const f=MODAL[MODAL.length-1];if(f()===false)history.pushState({m:1},'',location.hash);return}
+  const st=e.state||{};
+  if(st.base){
+    if(routeOf()!=='#home'){S.tab='home';S.group=null;S.pid=null;history.pushState({r:1},'','#home');render();return}
+    if(Date.now()-exitArm<2500){history.back();return}
+    exitArm=Date.now();toast('Press back again to exit');history.pushState({r:1},'','#home');return}
+  if(depth>0)depth--;applyRoute(location.hash);render();
+});
+/* ---------- touch: no pull-to-refresh, no long-press menus on buttons and photos (inputs keep selection) ---------- */
+document.addEventListener('contextmenu',e=>{if(!e.target.closest('input,textarea,[contenteditable]'))e.preventDefault()});
+/* ---------- errors: friendly message, sent to the server log ---------- */
+let errN=0;function reportErr(m){if(errN++>5)return;try{if(FISDB&&API_URL)FISDB.call('clientError',[String(m).slice(0,400)+' | '+navigator.userAgent.slice(0,80),S.me]).catch(()=>{})}catch(x){}}
+addEventListener('error',e=>{reportErr((e.message||'error')+' @'+(e.lineno||''))}); /* the shared FIS shell shows the friendly message */
+addEventListener('unhandledrejection',e=>{reportErr('promise: '+(e.reason&&e.reason.message||e.reason))});
+/* ---------- warn before leaving with changes not yet sent ---------- */
+addEventListener('beforeunload',e=>{if(FISDB.pending()){e.preventDefault();e.returnValue='Some changes are not saved yet.';return e.returnValue}});
+/* ---------- start: reload opens the same screen ---------- */
+const startHash=location.hash;
+history.replaceState({base:1},'',startHash||'#home');history.pushState({r:1},'',startHash||'#home');
+applyRoute(startHash);
+try{render()}catch(e){reportErr('first render: '+e.message)}
+initDb().then(()=>{if(startHash&&/^#p-/.test(startHash))applyRoute(startHash);render();return welcome()});
 </script>
 </body>
 </html>
