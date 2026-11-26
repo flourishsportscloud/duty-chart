@@ -40,3 +40,8 @@ The sheet holds student names, classes and transport details of minors. Keep it 
 ## Updating the script later
 
 After pasting a new `Code.gs`: **Deploy → Manage deployments → ✏️ Edit → Version: New version → Deploy**. The URL stays the same.
+
+## Update 26 Nov 2026 – reliability (needs a redeploy of Code.gs)
+Paste the new `Code.gs` into the Apps Script project "Student Entry Exit API", then **Deploy → Manage deployments → Edit (pencil) → Version: New version → Deploy**. The web-app URL stays the same.
+What it adds: `patch` (only changed fields are sent and merged into the current record, so two people on one class or vehicle keep both changes), a short-term change cache so the 20–30 s checks of ~100 phones do not read the whole sheet, server time in every reply, old/new values in the Log tab for each change, and `clientlog` (phone errors are written to the Log tab).
+Until it is redeployed the app still works: it sends whole records as before (no merge).

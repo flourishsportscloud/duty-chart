@@ -83,36 +83,74 @@ function read_(test){
     if(v[4] === true || v[4] === 'TRUE') return {p: v[0], del: 1};
     let j = null; try{ j = JSON.parse(body[i].join('')); }catch(e){} return j ? {p: v[0], j: j} : null; }).filter(Boolean);
 }
+/* ---------- recent changes kept in the script cache, so the 20–30 s checks of 100 phones do not read the whole sheet ---------- */
+const CHG_KEY = 'chg2', CHG_MAX = 90000;
+function chgGet_(){ try{ const v = CacheService.getScriptCache().get(CHG_KEY); return v ? JSON.parse(v) : null; }catch(e){ return null; } }
+function chgAdd_(rev, path, day, obj){   // called inside the write lock
+  try{ const c = CacheService.getScriptCache(); let st = chgGet_();
+    if(!st || st.last !== rev - 1) st = {from: rev, last: rev - 1, items: []};      // gap: start a fresh window from this change
+    st.items.push(obj == null ? {r: rev, p: path, d: day, x: 1} : {r: rev, p: path, d: day, j: obj}); st.last = rev;
+    let s = JSON.stringify(st);
+    while(s.length > CHG_MAX && st.items.length > 1){ st.items.shift(); st.from = st.items[0].r; s = JSON.stringify(st); }
+    if(s.length <= CHG_MAX) c.put(CHG_KEY, s, 21600); else c.remove(CHG_KEY);
+  }catch(e){ try{ CacheService.getScriptCache().remove(CHG_KEY); }catch(x){} }
+}
+function isObj_(v){ return v && typeof v === 'object' && !Array.isArray(v); }
+function patchInto_(doc, P){ doc = isObj_(doc) ? doc : {};
+  if(P.s) Object.keys(P.s).forEach(k => doc[k] = P.s[k]);
+  if(P.d) P.d.forEach(k => delete doc[k]);
+  if(P.o) Object.keys(P.o).forEach(k => doc[k] = patchInto_(doc[k], P.o[k]));
+  return doc; }
+function readOne_(sh, r){ if(!r) return null; const v = sh.getRange(r, 1, 1, HEAD.length + DOC_CHUNKS).getValues()[0];
+  if(v[4] === true || v[4] === 'TRUE') return null; try{ return JSON.parse(v.slice(HEAD.length).join('')); }catch(e){ return null; } }
+function write_(path, obj, who, what){ const p = parts_(path);
+  const json = JSON.stringify(obj); if(json.length > CHUNK*DOC_CHUNKS) fail('This record is too large to save.');
+  const rev = rev_(true), sh = sheet_('Docs');
+  const row = [path, p.coll, "'" + p.day, rev, false, new Date().toISOString()].concat(Array.from({length: DOC_CHUNKS}, (_, i) => json.slice(i*CHUNK, (i+1)*CHUNK)));
+  const r = rowOf_(sh, path); if(r) sh.getRange(r,1,1,row.length).setValues([row]); else sh.appendRow(row);
+  chgAdd_(rev, path, p.day, obj); log_(who, path, what); return rev; }
 const API = {
   login: (name, pw) => login_(name, pw),
   roster(){ return roster_(); },
   // everything for some school days, plus settings
   days(dates){ dates = (Array.isArray(dates) ? dates : []).slice(0, 40); const want = {config: 1}; dates.forEach(d => want[d] = 1);
-    return {rev: rev_(), docs: read_(v => want[v[2]])}; },
+    return {rev: rev_(), docs: read_(v => want[v[2]]), now: Date.now()}; },
   // changes since revision "since", for settings and the given days
   sync(since, dates){ since = Number(since) || 0; const rev = rev_();
-    if(since >= rev) return {rev: rev, docs: []};
+    if(since >= rev) return {rev: rev, docs: [], now: Date.now()};
     const want = {config: 1}; (Array.isArray(dates) ? dates : []).slice(0, 40).forEach(d => want[d] = 1);
-    return {rev: rev, docs: read_(v => Number(v[3]) > since && want[v[2]])}; },
-  set(path, obj, who){ const p = parts_(path);
+    const c = chgGet_();
+    if(c && c.from <= since + 1 && c.last >= rev){   // every change after "since" is in the cache: no sheet read
+      const last = {}; c.items.forEach(it => { if(it.r > since && it.r <= rev && want[it.d]) last[it.p] = it; });
+      return {rev: rev, docs: Object.keys(last).map(p => last[p].x ? {p: p, del: 1} : {p: p, j: last[p].j}), now: Date.now()}; }
+    return {rev: rev, docs: read_(v => Number(v[3]) > since && want[v[2]]), now: Date.now()}; },
+  set(path, obj, who, id){ parts_(path);
     if(!obj || typeof obj !== 'object' || Array.isArray(obj)) fail('Bad record.');
-    const json = JSON.stringify(obj); if(json.length > CHUNK*DOC_CHUNKS) fail('This record is too large to save.');
-    const rev = rev_(true), sh = sheet_('Docs');
-    const row = [path, p.coll, "'" + p.day, rev, false, new Date().toISOString()].concat(Array.from({length: DOC_CHUNKS}, (_, i) => json.slice(i*CHUNK, (i+1)*CHUNK)));
-    const r = rowOf_(sh, path); if(r) sh.getRange(r,1,1,row.length).setValues([row]); else sh.appendRow(row);
-    log_(who, path, 'saved'); return {rev: rev}; },
+    return {rev: write_(path, obj, who, 'saved' + (id ? ' #' + id : '')), j: obj, now: Date.now()}; },
+  // only the changed fields: merged into the server's current copy, so two people on one record keep both changes
+  patch(path, P, who, id){ parts_(path); if(!isObj_(P)) fail('Bad record.');
+    const sh = sheet_('Docs'), cur = readOne_(sh, rowOf_(sh, path)) || {};
+    const old = {}; Object.keys(P.s || {}).concat(P.d || [], Object.keys(P.o || {})).forEach(k => { if(k in cur) old[k] = cur[k]; });
+    const doc = patchInto_(JSON.parse(JSON.stringify(cur)), P);
+    const what = JSON.stringify({id: id || '', new: P, old: old}); 
+    return {rev: write_(path, doc, who, what.length > 4000 ? what.slice(0, 4000) + '…' : what), j: doc, now: Date.now()}; },
+  // errors seen on staff phones, for follow-up
+  clientlog(msg, view, ua, who){ log_(who, 'client', ('error · ' + view + ' · ' + msg + ' · ' + ua).slice(0, 1000)); return {}; },
   del(path, who){ const p = parts_(path); const sh = sheet_('Docs'), r = rowOf_(sh, path); if(!r) return {rev: rev_()};
     const rev = rev_(true); sh.getRange(r,1,1,HEAD.length).setValues([[path, p.coll, "'" + p.day, rev, true, new Date().toISOString()]]);
-    sh.getRange(r,HEAD.length+1,1,DOC_CHUNKS).clearContent(); log_(who, path, 'removed'); return {rev: rev}; }
+    sh.getRange(r,HEAD.length+1,1,DOC_CHUNKS).clearContent(); chgAdd_(rev, path, p.day, null); log_(who, path, 'removed'); return {rev: rev, now: Date.now()}; }
 };
 function doPost(e){
   let req = {}; try{ req = JSON.parse(e.postData.contents); }catch(x){}
   const out = o => ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
   const fn = API[req.fn]; if(!fn) return out({ok: false, err: 'Unknown request.'});
-  const write = req.fn === 'set' || req.fn === 'del', lock = LockService.getScriptLock();
+  const write = req.fn === 'set' || req.fn === 'del' || req.fn === 'patch', lock = LockService.getScriptLock();
   try{
     let args = req.args || [];
-    if(req.fn !== 'login'){ const who = me_(req.token); if(write) args = args.slice(0, 2).concat([who]); }
+    if(req.fn !== 'login'){ const who = me_(req.token);
+      if(req.fn === 'del') args = [args[0], who];
+      else if(write) args = [args[0], args[1], who, args[2]];
+      else if(req.fn === 'clientlog') args = args.slice(0, 3).concat([who]); }
     if(write && !lock.tryLock(25000)) return out({ok: false, err: 'Server busy, trying again.'});
     return out({ok: true, v: fn.apply(null, args)});
   }catch(x){ const m = String(x && x.message || x); return out({ok: false, err: m, login: m === 'LOGIN' ? 1 : 0});

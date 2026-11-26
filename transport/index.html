@@ -214,6 +214,12 @@ table.sst td{vertical-align:top;white-space:normal;padding:10px 6px}table.sst td
 .mk{display:inline-block;font-size:11.5px;font-weight:600;border-radius:6px;padding:2px 7px;margin:4px 4px 0 0;background:#EEF0F4;color:#555;white-space:nowrap}.mk.g{background:#E6F1EA;color:#1F6B47}.mk.r{background:#F8E6EA;color:#A42A47}.mk b.low{color:#A42A47}
 table.ssg th.cur{background:var(--gold);color:var(--navy2)}table.ssg th[data-ssdate]:hover{background:#FBF1DC}
 .sc{display:inline-block;min-width:24px;border-radius:6px;font-weight:800;font-size:12px;padding:2px 4px;text-align:center}.sc.P{background:#2E7D5B;color:#fff}.sc.N{background:var(--a);color:#fff}.sc.A{background:#E5E7EB;color:#555}
+
+/* touch: no pull-to-refresh, no long-press callouts on buttons and tiles; inputs stay selectable */
+html,body{overscroll-behavior-y:contain}
+.tw,.modal,nav{overscroll-behavior:contain}
+button,nav,.vcard,.chip,.cpc,.sbo,.tg,.opt,.tag,.pill,.cstrip,.recseg,.kid,.nrow,.daykp,.kpi,label{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
 </style>
 </head>
 <body>
@@ -409,21 +415,23 @@ table.ssg th.cur{background:var(--gold);color:var(--navy2)}table.ssg th[data-ssd
   const put=(k,v)=>{try{localStorage.setItem(K(k),JSON.stringify(v))}catch(e){}};
   window.FIS_CALL=async function(fn,args){
     if(!API_URL){const x=new Error('offline');x.net=1;throw x}
-    let r,j;
-    try{r=await fetch(API_URL,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn,args:args||[],token:get('token')})});j=await r.json()}
-    catch(e){const x=new Error('offline');x.net=1;throw x}
-    if(!j.ok){if(j.login&&fn!=='login'){window.FIS_LOGOUT();}throw new Error(j.err==='LOGIN'?'Please log in again.':j.err)}
+    let r,j;const ac=window.AbortController?new AbortController():null;const to=ac?setTimeout(()=>ac.abort(),45000):0;
+    try{r=await fetch(API_URL,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn,args:args||[],token:get('token')}),signal:ac?ac.signal:undefined});j=await r.json()}
+    catch(e){const x=new Error('offline');x.net=1;throw x}finally{clearTimeout(to)}
+    if(!j.ok){const x=new Error(j.err==='LOGIN'?'Please log in again.':j.err);if(j.login&&fn!=='login'){x.login=1;window.FIS_RELOGIN()}throw x}
     return j.v;
   };
-  window.FIS_LOGOUT=function(){['token','me','roster','gcache','grev','goutbox'].forEach(k=>localStorage.removeItem(K(k)));location.reload()};
+  window.FIS_LOGOUT=function(){['token','me','roster','gcache','grev'].forEach(k=>localStorage.removeItem(K(k)));location.reload()};   // unsent changes (goutbox) are kept
+  window.FIS_RELOGIN=function(){if(!window.FIS_R){localStorage.removeItem(K('token'));return}if(!$('fisLogin').classList.contains('hide'))return;$('fisLogin').classList.remove('hide');$('fisLN').value=get('me')||'';$('fisLE').textContent='Your login has expired. Log in again – nothing you entered is lost.'};
   const $=id=>document.getElementById(id);
-  function startApp(r){window.FIS_R=r;window.FIS_ME=get('me')||'';const s=document.createElement('script');s.src='app.js?v=202611262330';s.onload=()=>$('fisBoot').remove();document.body.appendChild(s)}
+  function startApp(r){window.FIS_R=r;window.FIS_ME=get('me')||'';const s=document.createElement('script');s.src='app.js?v=202611271000';s.onload=()=>{$('fisBoot').remove();try{if(window.caches)caches.open('fis-entry-exit-v1').then(c=>c.addAll([location.pathname+location.search,s.src])).catch(()=>{})}catch(e){}};document.body.appendChild(s)}
   function showLogin(msg){$('fisBoot').classList.add('hide');$('fisLogin').classList.remove('hide');$('fisLE').textContent=msg||'';if(!API_URL)$('fisLE').textContent='This app is being set up. Please try again later.'}
   $('fisLoginF').addEventListener('submit',async e=>{e.preventDefault();const n=$('fisLN').value.trim(),p=$('fisLP').value;
     if(n.length<3||!p){$('fisLE').textContent='Type your full name and the password.';return}
     $('fisLE').textContent='Checking…';
     try{const v=await window.FIS_CALL('login',[n,p]);put('token',v.token);put('me',v.name);
-      const r=await window.FIS_CALL('roster',[]);put('roster',r);$('fisLogin').remove();$('fisBoot').classList.remove('hide');startApp(r)}
+      if(window.FIS_R){$('fisLogin').classList.add('hide');$('fisLP').value='';window.FIS_ME=v.name;dispatchEvent(new Event('fis-relogin'));return}
+      const r=await window.FIS_CALL('roster',[]);put('roster',r);$('fisLogin').classList.add('hide');$('fisBoot').classList.remove('hide');startApp(r)}
     catch(x){$('fisLE').textContent=x.net?'No network. Check the internet and try again.':x.message}});
   (async()=>{
     if(!get('token'))return showLogin();

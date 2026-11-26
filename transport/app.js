@@ -1,3 +1,9 @@
+/* ---------- safety net: friendly message + server log for any unexpected error ---------- */
+let ERRN=0;function onAppError(m){if(ERRN++>20)return;try{console.error(m)}catch(e){}
+  try{if(ERRN<4&&!window.FIS&&typeof toast==='function')toast('Something went wrong on this screen. Your entries are safe – try again.')}catch(e){}
+  try{if(window.FIS_CALL)window.FIS_CALL('clientlog',[String(m).slice(0,500),(typeof S!=='undefined'&&S.view)||'',String(navigator.userAgent).slice(0,120)]).catch(()=>{})}catch(e){}}
+addEventListener('error',e=>onAppError((e.message||'error')+' @'+String(e.filename||'').split('/').pop()+':'+e.lineno));
+addEventListener('unhandledrejection',e=>onAppError('promise: '+(e.reason&&e.reason.message||e.reason)));
 
 const VEH = window.FIS_R.veh;
 const WALK = window.FIS_R.walk;
@@ -25,12 +31,15 @@ const seg=s=>s.replace(/[^A-Za-z0-9]/g,'_');
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const $=id=>document.getElementById(id);
 function toast(t){const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>e.classList.remove('on'),1800)}
-const nowHM=()=>{const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};
+const NOW=()=>new Date(Date.now()+(window.SRV_OFS||0));
+const nowHM=()=>{const d=NOW();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};
 const hm12=hm=>{if(!hm)return '';const [h,m]=hm.split(':').map(Number);return ((h%12)||12)+':'+String(m).padStart(2,'0')+(h<12?' am':' pm')};
 const to24=s=>{if(!s)return '';const m=String(s).match(/(\d+):(\d+)\s*(am|pm)?/i);if(!m)return '';let h=+m[1];if(m[3]){const pm=m[3].toLowerCase()==='pm';if(pm&&h<12)h+=12;if(!pm&&h===12)h=0}return String(h).padStart(2,'0')+':'+m[2]};
-const nowT=()=>new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
-function todayStr(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
-const LS={get(k,d){try{const v=localStorage.getItem('fisTA:'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('fisTA:'+k,JSON.stringify(v))}catch(e){}}};
+const nowT=()=>NOW().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+function todayStr(){const d=NOW();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+const LS={get(k,d){try{const v=localStorage.getItem('fisTA:'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('fisTA:'+k,JSON.stringify(v));return true}catch(e){return false}}};
+function showWarn(t){try{let w=$('warnBar');if(!w){w=document.createElement('div');w.id='warnBar';w.className='banner';w.style.cssText='background:#FDECEC;color:#8A1C1C;border:1px solid #F5C2C2';const m=document.querySelector('main');m.insertBefore(w,m.firstChild)}w.textContent=t}catch(e){}}
+function storageWarn(){showWarn('Phone storage is full. Keep the app open until the top says Live ✓ so your entries reach the server, and free some space on the phone.')}
 
 /* ---------- store: shared db, or device-only fallback ---------- */
 let DB=null, LOCAL=false;
@@ -69,52 +78,123 @@ const store={
 };
 function setSync(t){ $('sync').textContent=t }
 
-/* ---------- Google Sheet store (FIS hub): same interface as the shared db ---------- */
+/* ---------- Google Sheet store (FIS hub): same interface as the shared db ----------
+   Reliability rules (Nov 2026 audit):
+   - every edit goes into a per-record queue (outbox) that is saved on the phone at once and survives reload;
+   - an edit is never dropped: server errors are retried with backoff, only "bad record" is given up (and shown);
+   - a newer edit of the same record never removes the one being sent;
+   - only the changed fields are sent (patch); the server merges them into its current copy, so two people
+     editing the same class / vehicle do not overwrite each other;
+   - data from other people never replaces a record that still has unsent changes here;
+   - screens are redrawn only when something really changed, and not while the person is typing or touching. */
 const GAS=(()=>{
   const call=window.FIS_CALL;
   const dayOf=p=>p.startsWith('config/')?'config':p.split('/')[1];
   const keep=()=>new Set(['config',S.date,todayStr()]);
+  const clone=v=>v==null?v:JSON.parse(JSON.stringify(v));
+  const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+  const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
   let cache=LS.get('gcache',{}),rev=LS.get('grev',0),outbox=LS.get('goutbox',[]);
   if(LS.get('gver',0)!==2){cache={};rev=0;LS.set('gver',2)}   // v2: reload everything once after the date-matching fix
+  // old queue entries ({op,p,v}) keep working: they get an id and are sent whole
+  outbox=(Array.isArray(outbox)?outbox:[]).filter(o=>o&&o.p).map(o=>Object.assign({id:uid(),t:Date.now()},o));
+  outbox.forEach(o=>{if(o.op==='set')cache[o.p]=clone(o.v);else delete cache[o.p]});
+  const srv={};Object.keys(cache).forEach(p=>{if(!outbox.some(o=>o.p===p))srv[p]=clone(cache[p])});   // last copy the server confirmed
   const loaded=new Set(rev?Object.keys(cache).map(dayOf).concat(['config']):[]);
-  const subs=new Set(),dayP={};let busy=false,state='',lastErr='';
-  function persist(){const k=keep(),c={};Object.keys(cache).forEach(p=>{if(k.has(dayOf(p)))c[p]=cache[p]});LS.set('gcache',c);LS.set('grev',rev);LS.set('goutbox',outbox)}
-  function status(s){if(s===state)return;state=s;setSync(s);const b=$('localBanner');if(b)b.classList.toggle('hide',!/^Offline/.test(s))}
+  const subs=new Set(),dayP={};
+  let busy=false,state='',inflight=null,failN=0,offline=false,noPatch=false,retryT=0,savedAt=0,heldFire=false;
+  let ofs=LS.get('gofs',0);window.SRV_OFS=ofs;
+  function saveBox(){if(!LS.set('goutbox',outbox))storageWarn()}
+  let pT=0;
+  function saveCache(){clearTimeout(pT);pT=0;const k=keep(),c={};Object.keys(cache).forEach(p=>{if(k.has(dayOf(p)))c[p]=cache[p]});
+    if(!LS.set('gcache',c))storageWarn();LS.set('grev',rev)}
+  function persistLater(){if(!pT)pT=setTimeout(saveCache,800)}
+  addEventListener('pagehide',()=>{saveCache();saveBox()});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden){saveCache();saveBox()}});
+  function status(){
+    const n=outbox.length;let s;try{if(window.FIS&&FIS.setPending)FIS.setPending(n)}catch(e){}
+    if(offline)s=n?'Offline – '+n+' change'+(n>1?'s':'')+' pending':'Offline – saved on this phone';
+    else if(failN)s='Save failed – retrying'+(n?' ('+n+')':'');
+    else if(n)s='Saving…'+(n>1?' ('+n+')':'');
+    else s=Date.now()-savedAt<4000?'Saved ✓':'Live ✓';
+    if(s!==state){state=s;setSync(s);const b=$('localBanner');if(b)b.classList.toggle('hide',!offline)}
+    if(s==='Saved ✓')setTimeout(status,4200);
+  }
   function pending(p){return outbox.some(o=>o.p===p)}
-  function apply(docs){let ch=false;(docs||[]).forEach(d=>{if(pending(d.p))return;if(d.del){if(d.p in cache){delete cache[d.p];ch=true}}else{cache[d.p]=d.j;ch=true}});return ch}
-  function fireAll(){subs.forEach(s=>s.fire())}
-  function colSnap(path){const pre=path+'/',docs=[];Object.keys(cache).forEach(p=>{if(p.startsWith(pre)&&!p.slice(pre.length).includes('/')){const v=cache[p];docs.push({id:p.slice(pre.length),data:()=>JSON.parse(JSON.stringify(v))})}});
+  function clock(r){if(r&&r.now){const o=r.now-Date.now();if(Math.abs(o-ofs)>30000||!LS.get('gofs',null)){ofs=Math.abs(o)<120000?0:o;window.SRV_OFS=ofs;LS.set('gofs',ofs)}}}
+  // apply data from the server; returns true when something visible changed
+  function apply(docs){let ch=false;(docs||[]).forEach(d=>{
+      if(d.del){delete srv[d.p];if(pending(d.p))return;if(d.p in cache){delete cache[d.p];ch=true}return}
+      srv[d.p]=d.j;if(pending(d.p))return;
+      if(!same(cache[d.p],d.j)){cache[d.p]=d.j;ch=true}});
+    return ch}
+  // redraw: batch all subscriptions into one render, and hold remote updates while the person is busy
+  function fireNow(){heldFire=false;RB++;try{subs.forEach(s=>s.fire())}finally{RB--}if(RP){RP=false;render()}}
+  function fireRemote(){if(uiBusy()){if(!heldFire){heldFire=true;waitIdle()}return}fireNow()}
+  function waitIdle(){setTimeout(()=>{if(!heldFire)return;if(uiBusy())waitIdle();else fireNow()},900)}
+  function colSnap(path){const pre=path+'/',docs=[];Object.keys(cache).forEach(p=>{if(p.startsWith(pre)&&!p.slice(pre.length).includes('/')){const v=cache[p];docs.push({id:p.slice(pre.length),data:()=>clone(v)})}});
     return {metadata:{fromCache:!loaded.has(dayOf(pre))},docs}}
   function ensure(days){const need=[...new Set(days)].filter(d=>d!=='config'&&!loaded.has(d)&&!dayP[d]);
     if(need.length||(!loaded.has('config')&&!dayP.config)){
-      const p=call('days',[need]).then(r=>{rev=rev?Math.min(rev,r.rev):r.rev;apply(r.docs);loaded.add('config');need.forEach(d=>loaded.add(d));persist();fireAll();status(outbox.length?'Saving…':'Live ✓')})
-        .catch(e=>{status(e.net?'Offline – saved on this phone':'Sync error');throw e}).finally(()=>{need.forEach(d=>delete dayP[d]);if(!need.length)delete dayP.config});
+      const p=call('days',[need]).then(r=>{clock(r);rev=rev?Math.min(rev,r.rev):r.rev;const ch=apply(r.docs);loaded.add('config');need.forEach(d=>loaded.add(d));offline=false;persistLater();fireRemote();status()})
+        .catch(e=>{if(e.net)offline=true;status();throw e}).finally(()=>{need.forEach(d=>delete dayP[d]);if(!need.length)delete dayP.config});
       need.forEach(d=>dayP[d]=p);if(!need.length)dayP.config=p;}
     return Promise.all([...new Set(days)].map(d=>dayP[d]||dayP.config).filter(Boolean)).catch(()=>{});}
+  // field-level difference (two levels deep) between what the server had and what we have now
+  const isObj=v=>v&&typeof v==='object'&&!Array.isArray(v);
+  function diff(a,b,dep){a=a||{};const P={};let any=false;
+    Object.keys(b).forEach(k=>{if(!(k in a)){(P.s=P.s||{})[k]=b[k];any=true}else if(!same(a[k],b[k])){
+      if((dep||0)<2&&isObj(a[k])&&isObj(b[k])){const sp=diff(a[k],b[k],(dep||0)+1);if(sp){(P.o=P.o||{})[k]=sp;any=true}}else{(P.s=P.s||{})[k]=b[k];any=true}}});
+    Object.keys(a).forEach(k=>{if(!(k in b)){(P.d=P.d||[]).push(k);any=true}});
+    return any?P:null}
+  function patchInto(doc,P){doc=isObj(doc)?doc:{};if(P.s)Object.keys(P.s).forEach(k=>doc[k]=clone(P.s[k]));if(P.d)P.d.forEach(k=>delete doc[k]);if(P.o)Object.keys(P.o).forEach(k=>doc[k]=patchInto(doc[k],P.o[k]));return doc}
+  function drop(o){const i=outbox.indexOf(o);if(i>=0)outbox.splice(i,1);saveBox()}
+  function retryLater(){clearTimeout(retryT);retryT=setTimeout(pull,Math.min(30000,1000*Math.pow(2,Math.max(0,Math.min(failN,6)-1)))*(0.8+Math.random()*0.4))}
   async function flush(){
-    while(outbox.length){const o=outbox[0];status('Saving…');
-      try{await call(o.op,o.op==='set'?[o.p,o.v]:[o.p])}
-      catch(e){if(e.net){status('Offline – saved on this phone');return false}if(e.message!==lastErr){lastErr=e.message;toast('Not saved: '+e.message)}}
-      outbox.shift();persist();}
-    return true;}
+    while(outbox.length){const o=outbox[0];inflight=o;status();
+      let op=o.op,args;
+      if(op==='set'&&'base' in o&&o.base!=null&&!noPatch){const d=diff(o.base,o.v);if(!d){drop(o);inflight=null;continue}op='patch';args=[o.p,d,o.id]}
+      else args=op==='set'?[o.p,o.v,o.id]:[o.p];
+      try{const r=await call(op,args);offline=false;failN=0;clock(r);savedAt=Date.now();
+        const newer=outbox.some(x=>x!==o&&x.p===o.p);
+        if(op==='del'){delete srv[o.p]}
+        else{const merged=r&&r.j?r.j:(op==='patch'?patchInto(clone(o.base),args[1]):o.v);srv[o.p]=clone(merged);
+          if(!newer&&!same(cache[o.p],merged)){cache[o.p]=clone(merged);persistLater();drop(o);inflight=null;fireRemote();continue}}
+        drop(o);inflight=null;savedAt=Date.now();
+      }catch(e){inflight=null;
+        if(e.net){offline=true;failN++;status();if(navigator.onLine!==false)retryLater();return false}
+        if(op==='patch'&&/Unknown request/i.test(e.message)){noPatch=true;continue}   // server not updated yet: send whole records this session
+        if(e.login){status();return false}
+        if(/Bad record|too large/i.test(e.message)){const f=LS.get('gfailed',[]);f.push(Object.assign({err:e.message},o));LS.set('gfailed',f.slice(-50));drop(o);
+          showWarn('Could not save one entry ('+e.message+'). It is kept on this phone – tell the Director.');continue}
+        failN++;status();retryLater();return false}}
+    inflight=null;status();return true;}
   async function pull(){if(busy)return;busy=true;
     try{if(!(await flush()))return;
       const days=[...loaded].filter(d=>d!=='config').sort().slice(-40);
-      const r=await call('sync',[rev,days]);
-      if(r.rev<rev){cache={};loaded.clear();rev=0;persist();busy=false;await ensure([...keep()]);return}
-      rev=r.rev;if(apply(r.docs))fireAll();persist();status('Live ✓');
-    }catch(e){status(e.net?'Offline – saved on this phone':'Sync error')}finally{busy=false}}
-  setInterval(()=>{if(!document.hidden)pull()},15000);
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden)pull()});addEventListener('online',pull);
+      const r=await call('sync',[rev,days]);offline=false;clock(r);
+      if(r.rev<rev){Object.keys(cache).forEach(p=>{if(!pending(p))delete cache[p]});loaded.clear();rev=0;saveCache();busy=false;await ensure([...keep()]);return}
+      rev=r.rev;const ch=apply(r.docs);persistLater();status();if(ch)fireRemote();
+    }catch(e){if(e.net)offline=true;status()}finally{busy=false}}
+  // poll every 20–30 s while the screen is visible; pull at once when the phone comes back online or to the app
+  (function tick(){setTimeout(()=>{if(!document.hidden)pull();tick()},20000+Math.random()*10000)})();
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)pull()});addEventListener('online',()=>{offline=false;pull()});
+  addEventListener('fis-relogin',()=>{failN=0;pull()});
   setTimeout(pull,1500);
-  function write(op,p,v){if(op==='set')cache[p]=JSON.parse(JSON.stringify(v));else delete cache[p];
-    outbox=outbox.filter(o=>o.p!==p);outbox.push({op,p,v});persist();fireAll();pull();return Promise.resolve()}
+  function write(op,p,v){
+    const before=pending(p)?undefined:clone(srv[p]);
+    if(op==='set')cache[p]=clone(v);else delete cache[p];
+    const last=outbox.length?outbox.filter(o=>o.p===p).pop():null;
+    if(last&&last!==inflight&&last.op===op&&op==='set'){last.v=clone(v);last.t=Date.now()}   // same record, not yet sent: the newer value includes both edits
+    else{const base=last?(last.op==='set'?clone(last.v):null):before;outbox.push({id:uid(),t:Date.now(),op,p,v:op==='set'?clone(v):undefined,base:base==null?null:base})}
+    saveBox();persistLater();fireNow();status();pull();return Promise.resolve()}
   return {
+    pendingCount:()=>outbox.length,
     collection(path){return {
       onSnapshot(cb){const sub={fire(){cb(colSnap(path))}};subs.add(sub);sub.fire();ensure([dayOf(path+'/')]);return()=>subs.delete(sub)},
       async get(){await ensure([dayOf(path+'/')]);return colSnap(path)}}},
     doc(path){return {
-      onSnapshot(cb){const sub={fire(){const v=cache[path];cb({exists:v!=null,data:()=>JSON.parse(JSON.stringify(v))})}};subs.add(sub);sub.fire();ensure(['config']);return()=>subs.delete(sub)},
+      onSnapshot(cb){const sub={fire(){const v=cache[path];cb({exists:v!=null,data:()=>clone(v)})}};subs.add(sub);sub.fire();ensure(['config']);return()=>subs.delete(sub)},
       set(v){return write('set',path,v)},delete(){return write('del',path)}}},
     prefetch(dates){const need=dates.filter(d=>!loaded.has(d));const parts=[];for(let i=0;i<need.length;i+=31)parts.push(ensure(need.slice(i,i+31)));return Promise.all(parts)}
   };
@@ -243,11 +323,14 @@ function vehStats(v){
 }
 
 /* ---------- views ---------- */
-function setView(v){S.view=v;LS.set('view',v);document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+function setView(v){if(!NAV.nav&&S.view&&S.view!==v&&NAV.ready){NAV.stack.push(S.view);if(NAV.stack.length>20)NAV.stack.shift()}S.view=v;LS.set('view',v);document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
   ['ss','duty','late','unif','early','sb','day','dep','dash','school','alloc'].forEach(x=>$('v-'+x).classList.toggle('hide',x!==v));
 render()}
 
+let RB=0,RP=false,lastTouch=0;
+function uiBusy(){const m=$('modalRoot');return !!(m&&m.firstElementChild)||Date.now()-lastTouch<4000}
 function render(){
+  if(RB){RP=true;return}
   if(S.view==='duty')renderDuty();
   if(S.view==='sb')renderSB();
   if(S.view==='ss')renderSS();
@@ -1227,7 +1310,7 @@ document.addEventListener('change',async e=>{
   if(t.id==='gInT'&&gatePick){const g=S.gate[gatePick]||{};if(!gDraft)gDraft={in:g.in&&g.in.type||null,out:g.out&&g.out.type||null};gDraft.rem=$('gRem').value;gDraft.inT=t.value;gDraft.outT=$('gOutT').value;if(gDraft.in!=='ABS')gDraft.in=t.value>kidCut(gatePick)?'LATE':'PRES';renderFO();return}
   if(t.id==='gOutT'&&gatePick){const g=S.gate[gatePick]||{};if(!gDraft)gDraft={in:g.in&&g.in.type||null,out:g.out&&g.out.type||null};gDraft.rem=$('gRem').value;gDraft.inT=$('gInT').value;gDraft.outT=t.value;gDraft.out='EARLY';renderFO();return}
   if(t.id==='lateAfterPP'){await store.set('config/settings',Object.assign({},S.settings||{},{lateAfter:S.lateAfter,lateAfterPP:t.value||'09:00',left:LEFT,ts:Date.now()}));toast('Pre-Primary late after '+hm12(t.value));return}
-  if(t.id==='signOut'){if(confirm('Sign out of this phone?'))window.FIS_LOGOUT();return}
+  if(t.id==='signOut'){const n=DB&&DB.pendingCount?DB.pendingCount():0;if(confirm(n?n+' change(s) are not sent yet. They stay on this phone and are sent after the next login. Sign out?':'Sign out of this phone?'))window.FIS_LOGOUT();return}
   if(t.id==='lateAfter'){await store.set('config/settings',Object.assign({},S.settings||{},{lateAfter:t.value||'07:45',left:LEFT,ts:Date.now()}));toast('Late after '+hm12(t.value));return}
   if(t.id==='leftAdd'&&t.value){const id=t.value,a=ALLKIDS[id];const nl=Object.assign({},LEFT);nl[id]={name:a.kid[1],cls:a.kid[2],v:a.k,note:'TC',on:S.date};
     await store.set('config/settings',Object.assign({},S.settings||{},{lateAfter:S.lateAfter,left:nl,ts:Date.now()}));toast(a.kid[1]+' removed (left school)');return}
@@ -1268,6 +1351,27 @@ document.addEventListener('toggle',e=>{const t=e.target;if(t.dataset&&t.dataset.
 $('lateQ').addEventListener('input',()=>{clearTimeout(window._lq);window._lq=setTimeout(renderLate,200)});
 $('schQ').addEventListener('input',()=>{clearTimeout(window._sq);window._sq=setTimeout(renderSchool,250)});
 
+/* ---------- phone Back button: closes the card, then the vehicle, then the previous tab; never jumps out ---------- */
+const NAV={stack:[],lastBack:0,nav:false,ready:false};
+function navPush(){try{history.pushState({fis:1},'',location.href.split('#')[0]+'#/'+S.view)}catch(e){}}
+function closeTop(){const m=$('modalRoot');
+  if(m&&m.firstElementChild){const b=m.querySelector('#gx,#mx,#unifClose,.x');if(b)b.click();else{m.innerHTML='';gatePick=null;gDraft=null;modalVeh=null;unifPick=null;unifDraft=null;render()}return true}
+  if(S.view==='duty'&&S.openVeh&&$('backV')){$('backV').click();return true}
+  if(S.view==='dep'&&S.depVeh&&$('depBack')){$('depBack').click();return true}
+  if(NAV.stack.length){NAV.nav=true;try{setView(NAV.stack.pop())}finally{NAV.nav=false}window.scrollTo(0,0);return true}
+  return false}
+addEventListener('popstate',()=>{if(closeTop()){navPush();return}
+  if(Date.now()-NAV.lastBack<2500){history.back();return}
+  NAV.lastBack=Date.now();toast('Press back again to exit');navPush()});
+/* ---------- touch: no pull-to-refresh side effects, no long-press menus, no long-press closing ---------- */
+['touchstart','pointerdown','keydown','input'].forEach(ev=>addEventListener(ev,()=>{lastTouch=Date.now()},{passive:true,capture:true}));
+addEventListener('scroll',()=>{lastTouch=Date.now()},{passive:true});
+addEventListener('contextmenu',e=>{if(!e.target.closest('input,textarea,[contenteditable]'))e.preventDefault()});
+let pressAt=0;addEventListener('pointerdown',()=>{pressAt=Date.now()},{capture:true,passive:true});
+addEventListener('click',e=>{if(e.target.classList&&e.target.classList.contains('modal')&&Date.now()-pressAt>600){e.stopImmediatePropagation();e.preventDefault()}},true);
+/* ---------- warn before leaving with unsent changes ---------- */
+addEventListener('beforeunload',e=>{const n=(DB&&DB.pendingCount)?DB.pendingCount():0;const d=S.sbDraft&&Object.keys(S.sbDraft).length;if(n||d){e.preventDefault();e.returnValue='';return ''}});
+
 /* ---------- init ---------- */
 $('date').value=S.date;
 fillStaffSelects();
@@ -1277,4 +1381,5 @@ fillSbBy();
 function start(){subscribeConfig();subscribeDate();setView(S.view)}
 let started=false;
 DB=GAS;$('whoName').textContent=window.FIS_ME||'';start();
+try{history.replaceState({fis:0},'',location.href.split('#')[0]+'#/'+S.view)}catch(e){}navPush();NAV.ready=true;
 setView(S.view);
