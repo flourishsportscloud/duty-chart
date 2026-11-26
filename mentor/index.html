@@ -130,6 +130,18 @@ table.rt td{vertical-align:top}table.rt td.red{color:var(--bad);font-weight:700}
 .cc{display:inline-block;min-width:26px;border-radius:7px;padding:2px 5px;font-weight:800;font-size:12px}.cc.ok{background:var(--ok-t);color:var(--ok)}.cc.ic{background:var(--amb-t);color:#9A6208}.cc.ns{background:var(--bad-t);color:var(--bad)}.cc.ab{background:var(--ab-bg);color:var(--ab)}.cc.ps{background:#E4F4FC;color:#1B77A8}.cc.lo{background:var(--bad-t);color:var(--bad)}.cc.gd{color:var(--navy)}.cc.mt{color:#B5BED2;font-weight:500}
 .rgrp{border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin-top:8px;background:#fff}.rgrp b{color:var(--navy)}.mis{font-size:12px;color:var(--bad);margin-top:3px}
 
+
+/* filters: same grid everywhere — numbered label column, wrapping chips, no sideways scrolling */
+#view{counter-reset:fr}
+.frow{display:grid;grid-template-columns:92px 1fr;gap:6px 10px;align-items:start;padding:9px 0;border-top:1px solid var(--line)}
+.frow:first-child{border-top:0;padding-top:2px}.frow:last-child{padding-bottom:2px}
+.frow .lab{display:flex;align-items:center;gap:7px;min-height:32px;margin:0;font-size:11px;letter-spacing:.06em}
+.frow .lab::before{counter-increment:fr;content:counter(fr);flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;border-radius:50%;background:var(--navy);color:#fff;font-size:10.5px;letter-spacing:0}
+.fchips{display:flex;flex-wrap:wrap;gap:6px}
+.fchips .chip,.fchips .chip.sm{min-height:32px;display:inline-flex;align-items:center;padding:5px 12px;font-size:12.5px}
+.frow>.btn{justify-self:start}
+.kpis>.kpi:last-child:nth-child(odd){grid-column:1/-1}
+@media(max-width:420px){.frow{grid-template-columns:78px 1fr;gap:6px 8px}}
 /* classroom marking: 4-column tiles, every student on one screen */
 .tgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .tile{all:unset;box-sizing:border-box;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-height:62px;padding:6px 3px;border:1px solid var(--line);border-radius:12px;background:#fff;text-align:center}
@@ -597,7 +609,7 @@ function repTestRows(ts){
 }
 function repPick(){
   const secAll=Object.keys(ROSTER).sort(secSort),subAll=[...new Set(segClasses(U.seg).reduce((a,c)=>a.concat(subjectsFor(c).map(x=>x.n)),[]))],itAll=['Book','Notebook','Assignment','Test Notebook','Content Notebook','Homework Notebook','Practice Notebook'];
-  const row=(lab,g,all,cur)=>'<div class="row" style="margin-top:6px"><span class="lab">'+lab+'</span><div class="scroll"><button class="chip sm" data-act="rclr" data-g="'+g+'" aria-pressed="'+(!(cur&&cur.length))+'">All</button>'+all.map(o=>'<button class="chip sm" data-act="rtog" data-g="'+g+'" data-v="'+esc(o)+'" aria-pressed="'+!!(cur&&cur.includes(o))+'">'+esc(IT_SHORT[o]||o)+'</button>').join('')+'</div></div>';
+  const row=(lab,g,all,cur)=>'<div class="frow"><span class="lab">'+lab+'</span><div class="fchips"><button class="chip sm" data-act="rclr" data-g="'+g+'" aria-pressed="'+(!(cur&&cur.length))+'">All</button>'+all.map(o=>'<button class="chip sm" data-act="rtog" data-g="'+g+'" data-v="'+esc(o)+'" aria-pressed="'+!!(cur&&cur.includes(o))+'">'+esc(IT_SHORT[o]||o)+'</button>').join('')+'</div></div>';
   return '<div class="card" style="padding:10px"><div class="small muted">Tap one or several. “All” clears the choice.</div>'+row('Sections','rsecs',secAll.filter(x=>segOf(x)===U.seg),U.rsecs)+row('Subjects','rsubs',subAll,U.rsubs)+row('Items','ritems',itAll,U.ritems)+'</div>';
 }
 function repSub(){const o=scopeOpts().find(x=>x[0]===scopeNow());return (o?o[1]:'')+(U.dept?' · '+U.dept:'')+' · '+(U.per==='all'?'All dates':'Last '+U.per+' days')+' · '+fD(today())}
@@ -655,9 +667,9 @@ function repWA(R){
   return '*'+R.title+'*\n'+R.sub+'\n\n'+R.tables.map(t=>(t.h?'*'+t.h+'*\n':'')+t.rows.map(r=>r.map(cellT).join(' | ')).join('\n')).join('\n\n');
 }
 function filterBar(){
-  let h='<div class="card" style="padding:10px"><div class="row"><span class="lab">Show</span><div class="scroll">'+scopeOpts().map(o=>'<button class="chip sm" data-act="scope" data-v="'+o[0]+'" aria-pressed="'+(scopeNow()===o[0])+'">'+esc(o[1])+'</button>').join('')+'</div></div>';
-  h+='<div class="row" style="margin-top:6px"><span class="lab">Period</span><div class="scroll">'+[['0','Today'],['7','7 days'],['30','30 days'],['90','90 days'],['all','All'],['custom','Custom']].map(o=>'<button class="chip sm" data-act="per" data-v="'+o[0]+'" aria-pressed="'+(U.per===o[0])+'">'+o[1]+'</button>').join('')+'</div></div>'+(U.per==='custom'?'<div class="row" style="margin-top:6px"><span class="lab">Dates</span><input type="date" data-act="rfrom" value="'+esc(U.rfrom||'')+'"> <input type="date" data-act="rto" value="'+esc(U.rto||'')+'"></div>':'');
-  h+='<div class="row" style="margin-top:6px"><span class="lab">Dept</span><div class="scroll"><button class="chip sm" data-act="dept" data-v="" aria-pressed="'+(!U.dept)+'">All</button>'+deptList().map(d=>'<button class="chip sm" data-act="dept" data-v="'+esc(d)+'" aria-pressed="'+(U.dept===d)+'">'+esc(d)+'</button>').join('')+'</div></div></div>';
+  let h='<div class="card" style="padding:10px"><div class="frow"><span class="lab">Show</span><div class="fchips">'+scopeOpts().map(o=>'<button class="chip sm" data-act="scope" data-v="'+o[0]+'" aria-pressed="'+(scopeNow()===o[0])+'">'+esc(o[1])+'</button>').join('')+'</div></div>';
+  h+='<div class="frow"><span class="lab">Period</span><div class="fchips">'+[['0','Today'],['7','7 days'],['30','30 days'],['90','90 days'],['all','All'],['custom','Custom']].map(o=>'<button class="chip sm" data-act="per" data-v="'+o[0]+'" aria-pressed="'+(U.per===o[0])+'">'+o[1]+'</button>').join('')+'</div></div>'+(U.per==='custom'?'<div class="frow"><span class="lab">Dates</span><div class="fchips"><input type="date" data-act="rfrom" value="'+esc(U.rfrom||'')+'"> <input type="date" data-act="rto" value="'+esc(U.rto||'')+'"></div></div>':'');
+  h+='<div class="frow"><span class="lab">Dept</span><div class="fchips"><button class="chip sm" data-act="dept" data-v="" aria-pressed="'+(!U.dept)+'">All</button>'+deptList().map(d=>'<button class="chip sm" data-act="dept" data-v="'+esc(d)+'" aria-pressed="'+(U.dept===d)+'">'+esc(d)+'</button>').join('')+'</div></div></div>';
   return h;
 }
 function viewRep(){
@@ -682,7 +694,7 @@ function dashFollow(){
   const keys=Object.keys(g).sort((a,b)=>parseInt(a)-parseInt(b)||a.localeCompare(b)||(+a.split('#')[1])-(+b.split('#')[1]));
   const nsN=all.filter(x=>x.c==='N').length,icN=all.filter(x=>x.c==='I').length,odN=all.filter(x=>x.days>=2).length;
   let h='<div class="kpis">'+kpi('Open items',all.length,'to follow up','#1B3156')+kpi('Students',new Set(all.map(x=>x.e.sec+'#'+x.s)).size,'with pending work','#572686')+kpi('Not submitted',nsN,'NS','#D93A4B')+kpi('Incomplete',icN,'IC','#EFA11D')+kpi('Overdue',odN,'pending 2+ days','#D93A4B')+'</div><div class="row" style="margin-bottom:10px"><button class="chip sm" data-act="overdue" aria-pressed="'+!!U.overdue+'">Overdue only (2+ days)</button><button class="btn wa sm" data-act="copyfup">Copy WhatsApp list</button><span class="small muted">'+list.length+' open items · '+keys.length+' students</span></div>';
-  h+='<div class="card" style="padding:10px"><div class="row"><span class="lab">Item</span><div class="scroll">'+[['','All'],['B','Book'],['N','Notebook'],['A','Assignment']].map(o=>'<button class="chip sm" data-act="fitem" data-v="'+o[0]+'" aria-pressed="'+((U.fitem||'')===o[0])+'">'+o[1]+'</button>').join('')+'</div></div><div class="row" style="margin-top:6px"><span class="lab">Status</span><div class="scroll">'+[['','All'],['N','Not submitted'],['I','Incomplete'],['W','Pasting (P)'],['A','Absent']].map(o=>'<button class="chip sm" data-act="fcode" data-v="'+o[0]+'" aria-pressed="'+((U.fcode||'')===o[0])+'">'+o[1]+'</button>').join('')+'</div></div><div class="row" style="margin-top:6px"><span class="lab">Subject</span><div class="scroll"><button class="chip sm" data-act="fsub" data-v="" aria-pressed="'+!U.fsub+'">All</button>'+subsIn.map(x=>'<button class="chip sm" data-act="fsub" data-v="'+esc(x)+'" aria-pressed="'+(U.fsub===x)+'">'+esc(x)+'</button>').join('')+'</div></div></div>';
+  h+='<div class="card" style="padding:10px"><div class="frow"><span class="lab">Item</span><div class="fchips">'+[['','All'],['B','Book'],['N','Notebook'],['A','Assignment']].map(o=>'<button class="chip sm" data-act="fflt" data-v="'+o[0]+'" aria-pressed="'+((U.fitem||'')===o[0])+'">'+o[1]+'</button>').join('')+'</div></div><div class="frow"><span class="lab">Status</span><div class="fchips">'+[['','All'],['N','Not submitted'],['I','Incomplete'],['W','Pasting (P)'],['A','Absent']].map(o=>'<button class="chip sm" data-act="fcode" data-v="'+o[0]+'" aria-pressed="'+((U.fcode||'')===o[0])+'">'+o[1]+'</button>').join('')+'</div></div><div class="frow"><span class="lab">Subject</span><div class="fchips"><button class="chip sm" data-act="fsub" data-v="" aria-pressed="'+!U.fsub+'">All</button>'+subsIn.map(x=>'<button class="chip sm" data-act="fsub" data-v="'+esc(x)+'" aria-pressed="'+(U.fsub===x)+'">'+esc(x)+'</button>').join('')+'</div></div></div>';
   if(U.wa)h+='<div class="card"><h4>Select all and copy</h4><textarea rows="8" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:10px" readonly>'+esc(U.wa)+'</textarea></div>';
   if(!keys.length)h+='<div class="empty">Nothing pending — every IC / NS / Absent has been resolved. 🎉</div>';
   keys.forEach(k=>{const [sec,s]=k.split('#');const items=g[k].sort((a,b)=>a.since-b.since);
@@ -733,12 +745,12 @@ function waFollow(){
 const lkey=ls=>String(ls==null?'':ls).toLowerCase().replace(/lesson|chapter/g,'').replace(/(^|[^a-z0-9])l[-\s.]*(?=\d)/g,'$1').replace(/[^a-z0-9]/g,'');
 const shortL=e=>{const t=lessonLabel(e);return t.length>14?t.slice(0,13)+'…':t};
 const mcell=(t,s)=>{const v=t.m[s];if(typeof v==='number')return '<span class="cc '+(isLow(t,s)?'lo':'gd')+'">'+fmtN(v)+'</span>';if(v==='A')return '<span class="cc ab">Ab</span>';if(v==='NG')return '<span class="cc ab">NG</span>';return '<span class="cc mt">·</span>'};
-function chipRow(lab,opts,act,cur){return '<div class="row" style="margin-top:6px"><span class="lab">'+lab+'</span><div class="scroll">'+opts.map(o=>'<button class="chip sm" data-act="'+act+'" data-v="'+esc(o[0])+'" aria-pressed="'+(cur===o[0])+'">'+esc(o[1])+'</button>').join('')+'</div></div>'}
+function chipRow(lab,opts,act,cur){return '<div class="frow"><span class="lab">'+lab+'</span><div class="fchips">'+opts.map(o=>'<button class="chip sm" data-act="'+act+'" data-v="'+esc(o[0])+'" aria-pressed="'+(cur===o[0])+'">'+esc(o[1])+'</button>').join('')+'</div></div>'}
 function secsInScope(){const sc=scopeNow();return Object.keys(ROSTER).filter(sec=>sc==='pl'?plSet().has(sec):sc==='mine'?[...mineSet()].some(x=>x.startsWith(sec+'|')):sc==='sec'?sec===curSec():sc==='cls'?+sec.slice(0,-1)===U.cls:sc==='seg'?segOf(sec)===U.seg:true).sort(secSort)}
 function viewRec(){
   const c=U.cls,sbs=subjectsFor(c);if(!sbs.find(x=>x.n===U.rs))U.rs=sbs[0].n;
   const its=itemsFor(c,U.rs);if(!its.includes(U.ri))U.ri=its[0];
-  let h='<div class="card" style="padding:10px"><div class="row"><span class="lab">Subject</span><div class="scroll">'+sbs.map(x=>'<button class="chip sm" data-act="rs" data-v="'+esc(x.n)+'" aria-pressed="'+(U.rs===x.n)+'">'+esc(x.n)+'</button>').join('')+'</div></div>';
+  let h='<div class="card" style="padding:10px"><div class="frow"><span class="lab">Subject</span><div class="fchips">'+sbs.map(x=>'<button class="chip sm" data-act="rs" data-v="'+esc(x.n)+'" aria-pressed="'+(U.rs===x.n)+'">'+esc(x.n)+'</button>').join('')+'</div></div>';
   h+=chipRow('View',its.map(i=>[i,IT_SHORT[i]||i]),'ri',U.ri);
   h+=chipRow('Period',[['all','From start (1 Oct)'],['30','30 days'],['14','14 days']],'rper',U.rper||'all');
   h+='<div class="row" style="margin-top:6px"><button class="chip sm" data-act="rall" aria-pressed="'+!!U.rall+'">All sections of Class '+c+'</button></div></div>';
@@ -796,7 +808,7 @@ function recentBar(sec){
 }
 function modeBar(kind){const o=[['mix',kind==='prf'?'All recent':'All items'],['dept','Department'],['sec','Class · recent']];if(kind==='pen')o.push(['gap','Behind sister sections']);
   let h=chipRow('View',o,'dmode',U.dmode||'mix');
-  if(U.ditem||U.dsubj)h+='<div class="row" style="margin-top:6px"><span class="lab">Filter</span><button class="chip sm" data-act="dclr" aria-pressed="true">'+esc(U.ditem||U.dsubj)+' ✕</button></div>';
+  if(U.ditem||U.dsubj)h+='<div class="frow"><span class="lab">Filter</span><div class="fchips"><button class="chip sm" data-act="dclr" aria-pressed="true">'+esc(U.ditem||U.dsubj)+' ✕</button></div></div>';
   if(kind==='prf')h+=chipRow('Last',[['3','3 tests'],['4','4 tests'],['5','5 tests']],'pkk',String(U.pk||3));
   return '<div class="card" style="padding:10px">'+h+'</div>'}
 function lessonRows(list,sec,sb){ // one row per lesson, one cell per item, tap opens the check
@@ -898,7 +910,7 @@ function dashGap(){
 function perfSubs(secs){return [...new Set(docs('t').filter(t=>secs.includes(t.sec)&&(!U.dept||((subjDef(+t.sec.slice(0,-1),t.subj)||{}).d===U.dept))).map(t=>t.subj))].sort()}
 function dashPoor(){
   const secs=secsInScope(),thr=U.pthr||2,K=U.pk||5,subs=perfSubs(secs);
-  let h='<div class="card" style="padding:10px">'+chipRow('Low in',[['1','1+ test'],['2','2+ in a row'],['3','3+ in a row'],['4','4+ in a row']],'pthr',String(thr))+chipRow('Last',[['3','3 tests'],['4','4 tests'],['5','5 tests'],['8','8 tests']],'pkk',String(K))+'<div class="row" style="margin-top:6px"><span class="lab">Subject</span><div class="scroll"><button class="chip sm" data-act="psub" data-v="" aria-pressed="'+!U.psub+'">All subjects</button>'+subs.map(x=>'<button class="chip sm" data-act="psub" data-v="'+esc(x)+'" aria-pressed="'+(U.psub===x)+'">'+esc(x)+'</button>').join('')+'</div></div><div class="small muted" style="margin-top:6px">Marks below the test’s minimum, newest test first. Absent and Not given are skipped. Use the Show and Dept filters above for several sections, classes or departments together.</div></div>';
+  let h='<div class="card" style="padding:10px">'+chipRow('Low in',[['1','1+ test'],['2','2+ in a row'],['3','3+ in a row'],['4','4+ in a row']],'pthr',String(thr))+chipRow('Last',[['3','3 tests'],['4','4 tests'],['5','5 tests'],['8','8 tests']],'pkk',String(K))+'<div class="frow"><span class="lab">Subject</span><div class="fchips"><button class="chip sm" data-act="psub" data-v="" aria-pressed="'+!U.psub+'">All subjects</button>'+subs.map(x=>'<button class="chip sm" data-act="psub" data-v="'+esc(x)+'" aria-pressed="'+(U.psub===x)+'">'+esc(x)+'</button>').join('')+'</div></div><div class="small muted" style="margin-top:6px">Marks below the test’s minimum, newest test first. Absent and Not given are skipped. Use the Show and Dept filters above for several sections, classes or departments together.</div></div>';
   let total=0,cards='';
   secs.forEach(sec=>{
     const n=nOf(sec),bySub=[...new Set(docs('t').filter(t=>t.sec===sec).map(t=>t.subj))].filter(sb=>(!U.psub||sb===U.psub)&&(!U.dept||((subjDef(+sec.slice(0,-1),sb)||{}).d===U.dept))).sort();
@@ -1107,7 +1119,7 @@ document.addEventListener('click',ev=>{
     case'rclr':U[D.g]=[];render();break;
     case'pview':U.pview=D.v;render();break;
     case'overdue':U.overdue=!U.overdue;render();break;
-    case'fitem':U.fitem=D.v;render();break;case'fcode':U.fcode=D.v;render();break;case'fsub':U.fsub=D.v;render();break;
+    case'fflt':U.fitem=D.v;render();break;case'fcode':U.fcode=D.v;render();break;case'fsub':U.fsub=D.v;render();break;
     case'pthr':U.pthr=+D.v;render();break;case'pkk':U.pk=+D.v;render();break;case'psub':U.psub=D.v;render();break;case'csub':U.csub=D.v;render();break;
     case'rs':U.rs=D.v;U.ri='';render();break;case'ri':U.ri=D.v;render();break;case'rper':U.rper=D.v;render();break;case'rall':U.rall=!U.rall;render();break;
     case'copyfup':{const t=waFollow();(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Copied · paste in WhatsApp'),()=>{U.wa=t;render()});break}
