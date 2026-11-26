@@ -75,6 +75,7 @@ function get_(key){
   try{ return JSON.parse(r[1]); }catch(e){ return null; }
 }
 function put_(key, obj, who){
+  if(key.indexOf('config/') !== 0){ obj.upd = Date.now(); obj.updBy = who || ''; }      // who changed it last, and when (server clock)
   const sh = DOCS(); let json = JSON.stringify(obj);
   if(json.length > 46000 && obj.msgs){ while(json.length > 46000 && obj.msgs.length > 2){ obj.msgs.shift(); json = JSON.stringify(obj); } }
   if(json.length > 46000) fail('Too long.');
@@ -163,6 +164,7 @@ function snapshot_(rev){     // the whole list, kept in the script cache until a
   rows_().forEach(r => {
     const k = String(r[0]); let o; try{ o = JSON.parse(r[1]); }catch(e){ return; }
     const id = k.split('/')[1];
+    if(o.del) return;       // soft-deleted: kept in the sheet, hidden in the app
     if(k.indexOf('projects/') === 0){ o.id = id; projects.push(o); } else if(k.indexOf('tasks/') === 0){ o.id = id; tasks.push(o); } else if(k.indexOf('notes/') === 0){ o.id = id; notes.push(o); }
   });
   const out = {projects: projects, tasks: tasks, notes: notes};
@@ -218,13 +220,13 @@ const API = {
     id = String(id||''); const key = 'tasks/' + id; if(!KEY_.test(key)) fail('Bad key.');
     d = d || {};
     return inLock_(() => {
-      const t = get_(key); if(!t) fail('This task no longer exists.');
+      const t = get_(key); if(!t || t.del) fail('This task no longer exists.');
       const isAsg = (t.assignees || []).indexOf(u.id) >= 0, owner = u.admin || t.by === u.id || t.createdBy === u.id;
       if(!(owner || isAsg)) fail('Only the people it is allocated to, whoever gave it, or the Director can act on this task.');
       const text = String(d.text||'').trim().slice(0,800), imgs = cleanImgs_(d.imgs), now = Date.now();
       const open = ['todo','working','rework'].indexOf(t.status) >= 0, closed = t.status === 'done' || t.status === 'declined';
       const setDue = () => { if(day_(d.date)){ t.date = d.date; t.time = /^\d{2}:\d{2}$/.test(d.time||'') ? d.time : t.time; } };
-      let add = null;
+      let add = null, logWhat = act;
       switch(act){
         case 'start':
           if(!(isAsg || owner) || closed) fail('This task is already closed.');
@@ -264,26 +266,33 @@ const API = {
           add = msg_(u, 'say', text, imgs, t.status, d.problem); break;
         case 'edit': {
           if(!owner) fail('Only whoever gave the task or the Director can edit it.');
-          const c = cleanTask_(Object.assign({}, t, d.fields || {}), u, t);
+          const fl = d.fields || {}, was = d.was || {}, clash = [];
+          Object.keys(fl).forEach(k => { if(k in was){ const cur = JSON.stringify(t[k] === undefined ? '' : t[k]), w = JSON.stringify(was[k] === undefined ? '' : was[k]), nw = JSON.stringify(fl[k]); if(cur !== w && cur !== nw) clash.push(k); } });
+          if(clash.length && !d.force) fail('CONFLICT|' + (t.updBy || 'Someone') + '|' + clash.join(','));
+          const before = {}; Object.keys(fl).forEach(k => { before[k] = t[k]; });
+          const c = cleanTask_(Object.assign({}, t, fl), u, t);       // only the fields that were sent change; the rest keep the other person's edits
           if(!c.title || !c.date || !c.assignees.length) fail('Task, deadline and at least one person are needed.');
-          Object.assign(t, c); break; }
+          Object.assign(t, c);
+          try{ logWhat = 'edit ' + JSON.stringify(Object.keys(fl).reduce((o, k) => { if(JSON.stringify(before[k]) !== JSON.stringify(t[k])) o[k] = [before[k], t[k]]; return o; }, {})).slice(0, 380); }catch(x){}
+          break; }
         default: fail('Unknown action.');
       }
       if(add){ strip_(add); t.msgs = (t.msgs || []).concat([add]).slice(-100); }
-      put_(key, t, u.name); log_(u.name, key, act); t.id = id; return t;
+      put_(key, t, u.name); log_(u.name, key, logWhat); t.id = id; return t;
     });
   },
-  ev_del(u, key){
+  ev_del(u, key){       // soft delete: the row stays in the sheet marked deleted, so nothing is ever truly lost
     key = String(key||''); if(!KEY_.test(key)) fail('Bad key.');
     return inLock_(() => {
-      const old = get_(key); if(!old) return {ok: 1};
+      const old = get_(key); if(!old || old.del) return {ok: 1};
       if(key.indexOf('notes/') === 0){ if(old.owner !== u.id) fail('This is a private note.'); }
       else if(!(u.admin || old.createdBy === u.id)) fail('Only the creator or the Director can delete this.');
+      const tomb = o => { o.del = 1; o.delAt = Date.now(); o.delBy = u.name; };
       if(key.indexOf('projects/') === 0){
         const pid = key.split('/')[1];
-        rows_().forEach(r => { if(String(r[0]).indexOf('tasks/') === 0){ try{ if(JSON.parse(r[1]).project === pid) del_(r[0]); }catch(e){} } });
+        rows_().forEach(r => { if(String(r[0]).indexOf('tasks/') === 0){ try{ const o = JSON.parse(r[1]); if(o.project === pid && !o.del){ tomb(o); put_(r[0], o, u.name); } }catch(e){} } });
       }
-      del_(key); log_(u.name, key, 'deleted'); return {ok: 1};
+      tomb(old); put_(key, old, u.name); log_(u.name, key, 'deleted (kept in sheet): ' + String(old.title || '').slice(0, 80)); return {ok: 1};
     });
   },
   ev_img(u, id, thumb, full){
@@ -371,14 +380,24 @@ const API = {
     });
   }
 };
+const WRITES_ = {ev_set: 1, ev_act: 1, ev_note: 1, ev_del: 1, ev_img: 1, ev_members: 1};
 function doPost(e){
   let req = {}; try{ req = JSON.parse(e.postData.contents); }catch(x){}
   const out = o => ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
+  if(req.fn === 'log_err'){        // the app reports its own crashes here (no sign-in needed, limited per hour)
+    try{ const c = CacheService.getScriptCache(), n = Number(c.get('ERRN') || 0); if(n < 60){ c.put('ERRN', String(n + 1), 3600); const a = req.args || [];
+      log_('app-error', String(a[1] || '').slice(0,80), String(a[0] || '').slice(0,300) + ' | ' + String(a[2] || '').slice(0,120)); } }catch(x){}
+    return out({ok: true, v: 1});
+  }
   const fn = API[req.fn]; if(!fn || req.fn === 'constructor') return out({ok: false, err: 'Unknown request.'});
   try{
     const args = req.args || [];
+    const rid = WRITES_[req.fn] && /^[a-z0-9]{6,40}$/.test(String(req.rid || '')) ? 'R_' + req.rid : '';
+    if(rid){ try{ const hit = CacheService.getScriptCache().get(rid); if(hit) return out(JSON.parse(hit)); }catch(x){} }   // the same save sent twice is applied once
     const v = (req.fn === 'login' || req.fn === 'login_info') ? fn.apply(null, args) : fn.apply(null, [user_(req.token)].concat(args));
-    return out({ok: true, v: v});
+    const res = {ok: true, v: v};
+    if(rid){ try{ const j = JSON.stringify(res); CacheService.getScriptCache().put(rid, j.length < 90000 ? j : JSON.stringify({ok: true, v: {dup: 1}}), 21600); }catch(x){} }
+    return out(res);
   }catch(x){ const m = String(x && x.message || x); return out({ok: false, err: m, login: m === 'LOGIN' ? 1 : 0}); }
 }
 function doGet(){ return ContentService.createTextOutput('FIS Tasks & Projects API is running.'); }
