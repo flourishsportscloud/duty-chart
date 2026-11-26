@@ -8,7 +8,7 @@
 <style>
 :root{--navy:#1B3156;--navy2:#14233F;--navy3:#243D69;--mag:#E91D69;--mag-d:#C9135A;--mag-t:#FDE8F0;--pur:#572686;--pur-t:#EFE8F6;--amb:#EFA11D;--amb-t:#FDF1DC;--sky:#2B9BD6;--sky-l:#68C0EA;--sky-t:#E4F4FC;--ok:#1E9E6A;--ok-t:#E3F5EC;--bad:#D93A4B;--bad-t:#FCE9EB;--bg:#F3F5FA;--card:#fff;--ink:#18223A;--mut:#667391;--line:#E2E7F0;
 --surface:#fff;--surface2:#F7F9FD;--muted:var(--mut);--band:var(--navy);--band2:var(--navy2);--gold:var(--amb);--gold-ink:#18223A;--text:var(--ink);--ok-bg:var(--ok-t);--ns:var(--bad);--ns-bg:var(--bad-t);--ic:#B97A0B;--ic-bg:var(--amb-t);--ab:#572686;--ab-bg:#EFE8F6;--f-head:'Plus Jakarta Sans',system-ui,sans-serif;--f-body:'Plus Jakarta Sans',system-ui,sans-serif;--sh:0 1px 2px rgba(20,35,63,.05),0 6px 20px rgba(20,35,63,.06)}
-*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}html,body{overscroll-behavior-y:contain}button,.chip,.stile,.entry,.itile,.srow,.kpi,.navb,.rtile{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 var(--f-body);font-variant-numeric:tabular-nums}
 button{font:inherit;cursor:pointer}input,select,textarea{font:inherit;font-size:16px;color:var(--ink)}
 @media(min-width:980px){input,select,textarea{font-size:13px}}
@@ -149,7 +149,7 @@ table.rt td{vertical-align:top}table.rt td.red{color:var(--bad);font-weight:700}
 <div class="err" id="ge"></div><button class="btn" style="width:100%" type="submit">Log in</button></form></div>
 <div class="app">
 <aside class="side"><div class="brand"><img src="../fis/fis-logo-192.png" alt="" onerror="this.style.visibility='hidden'"><div><b>Mentor Record</b><small>Flourish International School</small></div></div><a class="hublink" href="../fis/">‹ FIS Staff Hub</a><nav id="bn"></nav><div class="strip"></div></aside>
-<div class="main"><header class="topbar"><div><h1 id="pgT"></h1><div class="sub" id="pgS"></div></div><button class="role" id="meBtn"></button></header>
+<div class="main"><header class="topbar"><button class="btn ghost sm hide" id="bkBtn" data-act="gback" aria-label="Back" style="margin-right:8px">‹ Back</button><div style="flex:1;min-width:0"><h1 id="pgT"></h1><div class="sub" id="pgS"></div></div><button class="role" id="meBtn"></button></header>
 <div class="work"><div id="banner"></div>
 <div class="ctx" id="ctx"><div class="grp"><div class="sw" id="segSw"></div></div><div class="grp"><span class="lab">Class</span><div class="scroll" id="clsRow"></div></div><div class="grp"><span class="lab">Section</span><div class="scroll" id="secRow"></div></div><span class="sync" id="syncSt" style="margin-left:auto"></span></div>
 <main id="view"></main></div></div></div>
@@ -173,7 +173,7 @@ const rid=()=>{let s='';while(s.length<6)s+=Math.random().toString(36).slice(2);
 const first=n=>String(n||'').trim().split(/\s+/)[0].toLowerCase().replace(/[^a-z]/g,'');
 const K=k=>'fisMS:'+k;
 const lsGet=(k,d)=>{try{const v=localStorage.getItem(K(k));return v==null?d:JSON.parse(v)}catch(e){return d}};
-const lsPut=(k,v)=>{try{localStorage.setItem(K(k),JSON.stringify(v))}catch(e){}};
+const lsPut=(k,v)=>{try{localStorage.setItem(K(k),JSON.stringify(v))}catch(e){try{const t=document.getElementById('syncSt');if(t)t.textContent='⚠ Phone storage full — free space or records may not be kept'}catch(_){}}};
 /* ---------- catalog: departments, subjects, items checked ---------- */
 const ITEMS=['Book','Notebook','Content Notebook','Homework Notebook','Practice Notebook','Assignment','Test Notebook'];
 const IT_SHORT={'Book':'Book','Notebook':'Notebook','Content Notebook':'Content NB','Homework Notebook':'Homework NB','Practice Notebook':'Practice NB','Assignment':'Assignment','Test Notebook':'Test NB'};
@@ -248,30 +248,42 @@ async function call(fn,args){
 }
 let syncMsg='';
 function setSync(m){syncMsg=m;const e=$('syncSt');if(e)e.textContent=m}
-function persist(){lsPut('docs',DB);lsPut('out',OUT)}
+let _pt=null;
+function persist(){_dv++;clearTimeout(_pt);_pt=setTimeout(persistNow,350)}
+function persistNow(){clearTimeout(_pt);_pt=null;lsPut('docs',DB);lsPut('out',OUT)}
+addEventListener('pagehide',persistNow);
 function putDoc(d){DB[d.p]=d;if(API_URL)OUT[d.p]=d;persist();flushSoon()}
 function delDoc(p){delete DB[p];if(API_URL)OUT[p]={del:1,p};persist();flushSoon()}
 let ft=null;function flushSoon(){clearTimeout(ft);ft=setTimeout(flush,600)}
 let flushing=false;
 async function flush(){
   if(!API_URL||flushing||!TOKEN)return;flushing=true;
-  try{for(const p of Object.keys(OUT)){const d=OUT[p];if(d.del)await call('del',[p,{}]);else{const b=Object.assign({},d);delete b.p;await call('set',[p,b])}delete OUT[p];persist()}setSync('Saved ✓')}
+  try{let again=false;for(const p of Object.keys(OUT)){const d=OUT[p],snap=JSON.stringify(d);if(d.del)await call('del',[p,{}]);else{const b=Object.assign({},d);delete b.p;await call('set',[p,b])}
+      if(OUT[p]===d&&JSON.stringify(d)===snap)delete OUT[p];else again=true;persist()}
+    setSync(again?'Saving…':'Saved ✓');if(again)flushSoon()}
   catch(e){setSync(e.net?'Offline · '+Object.keys(OUT).length+' waiting':'⚠ '+e.message)}
   flushing=false;
 }
+const stab=o=>JSON.stringify(o,(k,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.keys(v).sort().reduce((a,c)=>(a[c]=v[c],a),{}):v);
+let lastTouch=0,needRefresh=false;
+['pointerdown','touchstart','keydown','wheel'].forEach(ev=>addEventListener(ev,()=>{lastTouch=Date.now()},{passive:true,capture:true}));
+const busy=()=>!!(U.open||U.form||U.stu||(document.activeElement&&document.activeElement.matches&&document.activeElement.matches('input,textarea,select'))||Date.now()-lastTouch<4000);
+function softRender(){needRefresh=false;const y=window.scrollY;render();window.scrollTo(0,y)}
+setInterval(()=>{if(needRefresh&&!busy())softRender()},3000);
 function fromDay(){const d=new Date();d.setDate(d.getDate()-120);return isoD(d)}
 async function pull(){
   if(!API_URL||!TOKEN)return;
   try{const r=await call('pull',[REV,fromDay()]);let ch=false;
-    r.docs.forEach(x=>{if(OUT[x.p])return;ch=true;if(x.del)delete DB[x.p];else if(x.p==='config/setup'){CFG=x.j;lsPut('cfg',CFG)}else if(x.p==='config/lessons'){LESSONS=x.j;lsPut('lessons',LESSONS)}else DB[x.p]=Object.assign({p:x.p},x.j)});
-    REV=r.rev;lsPut('rev',REV);persist();if(ch&&!U.open&&!document.activeElement.matches('input,textarea'))render()}catch(e){if(e.net)setSync('Offline')}
+    r.docs.forEach(x=>{if(OUT[x.p])return;if(!x.del&&DB[x.p]&&x.p!=='config/setup'&&x.p!=='config/lessons'&&stab(DB[x.p])===stab(Object.assign({p:x.p},x.j)))return;ch=true;if(x.del)delete DB[x.p];else if(x.p==='config/setup'){CFG=x.j;lsPut('cfg',CFG)}else if(x.p==='config/lessons'){LESSONS=x.j;lsPut('lessons',LESSONS)}else DB[x.p]=Object.assign({p:x.p},x.j)});
+    REV=r.rev;lsPut('rev',REV);persist();if(ch){if(busy())needRefresh=true;else softRender()}}catch(e){if(e.net)setSync('Offline')}
 }
 async function loadRoster(){if(!API_URL||!TOKEN)return;try{const r=await call('roster');if(r&&Object.keys(r).length){ROSTER=r;lsPut('roster',r)}}catch(e){}}
 function saveCfg(){lsPut('cfg',CFG);if(API_URL){OUT['config/setup']=Object.assign({p:'config/setup'},CFG);persist();flushSoon()}}
 function saveLessons(){lsPut('lessons',LESSONS);if(API_URL){OUT['config/lessons']=Object.assign({p:'config/lessons'},LESSONS);persist();flushSoon()}}
 /* ---------- records ---------- */
 const CODES={C:{t:'✓',n:'Checked',k:'ok'},I:{t:'IC',n:'Incomplete',k:'ic'},N:{t:'NS',n:'Not submitted',k:'ns'},A:{t:'A',n:'Absent',k:'ab'},W:{t:'P',n:'Pasting',k:'ps'}};
-const docs=k=>Object.values(DB).filter(d=>d&&d.k===k);
+let _dv=0;const _dc={};
+const docs=k=>{const c=_dc[k];if(c&&c.v===_dv)return c.a;const a=Object.values(DB).filter(d=>d&&d.k===k);_dc[k]={v:_dv,a};return a};
 const entriesFor=(sec,subj)=>docs('e').filter(e=>e.sec===sec&&(!subj||e.subj===subj)).sort((a,b)=>b.date.localeCompare(a.date)||b.ts-a.ts);
 const testsFor=(sec,subj)=>docs('t').filter(e=>e.sec===sec&&(!subj||e.subj===subj)).sort((a,b)=>b.date.localeCompare(a.date)||b.ts-a.ts);
 const nOf=sec=>(ROSTER[sec]||[]).length;
@@ -976,10 +988,32 @@ function loadSeedDocs(){if(!SEED_DOCS||lsGet('real2',0))return;try{Object.keys(D
 if(!API_URL){loadSeedDocs()}
 /* sample data is no longer loaded automatically; real records come from the server */
 /* ---------- render / events ---------- */
+const NAVK=['tab','dsub','dmode','pview','rep','cls','sec','seg','subj','scope','per','dept','ditem','dsubj','fcode','fitem','fsub','mentor','rs','ri'];
+function snapNav(){const o={y:window.scrollY};NAVK.forEach(k=>o[k]=U[k]);return o}
+function backOne(){
+  if(U.stu){U.stu=null;return}
+  if(U.form){U.form=null;U.ro=null;return}
+  if(U.open){U.open=null;U.ro=null;U.edit=false;if(U.ret){const r=U.ret;U.ret=null;NAVK.forEach(k=>{if(r[k]!==undefined)U[k]=r[k]});setTimeout(()=>window.scrollTo(0,r.y||0),30)}return}
+  if(U.tab==='check'&&U.subj){U.subj='';return}
+  if(U.mentor){U.mentor='';U.scope='';U.tab='men';return}
+}
+let hDepth=0,ignorePop=false;
+const navDepth=()=>(U.stu?1:0)+((U.form||U.open)?1:0)+((U.tab==='check'&&U.subj)?1:0);
+function syncHistory(){
+  const d=navDepth(),b=$('bkBtn');if(b)b.classList.toggle('hide',d===0&&!U.mentor);
+  try{while(hDepth<d){history.pushState({d:++hDepth},'')}
+    if(hDepth>d){const n=hDepth-d;hDepth=d;ignorePop=true;history.go(-n)}}catch(e){}
+}
+addEventListener('popstate',e=>{
+  if(ignorePop){ignorePop=false;return}
+  const t=(e.state&&e.state.d)||0;
+  if(t>=hDepth){hDepth=t;render();return}
+  hDepth=t;backOne();render();
+});
 function render(){
   chrome();const v=$('view');document.body.classList.toggle('marking',!!U.open);
   v.innerHTML=U.tab==='check'?viewCheck():U.tab==='dash'?viewDash():U.tab==='rep'?viewRep():U.tab==='rec'?viewRec():U.tab==='stu'?viewStu():U.tab==='men'?viewMen():viewSet();renderSheet();
-  saveUI();
+  saveUI();syncHistory();
 }
 let sureK=null;function sure(k){if(sureK===k){sureK=null;return true}sureK=k;toast('Tap again to confirm');setTimeout(()=>{sureK=null},4000);return false}
 function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),1800)}
@@ -1037,8 +1071,9 @@ document.addEventListener('click',ev=>{
       if(f.k==='e')d={p:'e/'+f.date+'/'+sec+'/'+id,k:'e',sec,date:f.date,subj:U.subj,item:f.item,ls,lt:(f.lt||'').trim(),by:ME,ts:Date.now(),m:{},lg:[],rm:{}};
       else{const mx=parseFloat(f.max);if(!(mx>0)){toast('Enter the maximum marks');break}let mn=parseFloat(f.min);if(!(mn>=0))mn=Math.round(mx*6)/10;if(mn>mx){toast('Minimum cannot be more than maximum');break}d={p:'t/'+f.date+'/'+sec+'/'+id,k:'t',sec,date:f.date,subj:U.subj,item:'Test Notebook',ls,lt:(f.lt||'').trim(),max:mx,min:mn,by:ME,ts:Date.now(),m:{}}}
       putDoc(d);U.open={k:f.k,p:d.p};U.form=null;U.ro=null;render();window.scrollTo(0,0);break}
-    case'open':case'gofix':U.ro=null;U.edit=false;if(a==='gofix'){U.tab='check';const e=DB[D.p];U.cls=+e.sec.slice(0,-1);U.sec=e.sec.slice(-1);U.subj=e.subj;U.seg=U.cls<=5?'P':'S'}U.open={k:D.k,p:D.p};render();window.scrollTo(0,0);break;
-    case'back':U.open=null;U.ro=null;U.edit=false;render();break;
+    case'open':case'gofix':U.ro=null;U.edit=false;if(a==='gofix'){U.ret=snapNav();U.tab='check';const e=DB[D.p];U.cls=+e.sec.slice(0,-1);U.sec=e.sec.slice(-1);U.subj=e.subj;U.seg=U.cls<=5?'P':'S'}U.open={k:D.k,p:D.p};render();window.scrollTo(0,0);break;
+    case'back':backOne();render();break;
+    case'gback':if(hDepth>0)history.back();else{backOne();render()}break;
     case'cyc':{const e=cur;if(!e||Date.now()<(window.__lp||0))break;const s=+D.s;const seq=[null,'C','N','A','I'];if(+e.sec.slice(0,-1)<=5&&/Notebook/.test(e.item)&&!/Test/.test(e.item))seq.push('W');const was=e.m[s]||null;const nx=seq[(seq.indexOf(was)+1)%seq.length];setMark(e,s,nx);if(nx&&nx!=='C'&&U.brush){(e.rm=e.rm||{})[s]=U.brush;putDoc(e)}if((!nx||nx==='C')&&e.rm&&e.rm[s]){delete e.rm[s];putDoc(e)}rowRefresh(e,s);break}
     case'brush':U.brush=(U.brush===D.q)?'':D.q;render();break;
     case'pk':{if(!cur)break;U.ro=+D.s;renderSheet();break}
@@ -1068,7 +1103,7 @@ document.addEventListener('click',ev=>{
     case'copyfup':{const t=waFollow();(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Copied · paste in WhatsApp'),()=>{U.wa=t;render()});break}
     case'stu':U.stu={sec:D.sec,s:+D.s};renderSheet();break;
     case'stuback':U.stu=null;render();break;
-    case'signout':TOKEN=null;lsPut('token',null);ME='';lsPut('me','');DB={};OUT={};REV=0;persist();lsPut('rev',0);showGate();break;
+    case'signout':TOKEN=null;lsPut('token',null);ME='';lsPut('me','');DB={};OUT={};REV=0;persistNow();lsPut('rev',0);showGate();break;
     case'titem':{CFG.items=CFG.items||{};const k=U.cls+'|'+D.n;let cu=itemsFor(U.cls,D.n).slice();cu=cu.includes(D.i)?cu.filter(x=>x!==D.i):cu.concat([D.i]);cu=ITEMS.filter(x=>cu.includes(x));if(!cu.length){toast('Keep at least one item');break}CFG.items[k]=cu;saveCfg();render();break}
     case'lsimport':{const tx=$('lsTxt').value.split('\n');let k=0;tx.forEach(l=>{const p=l.split(',');if(p.length<4)return;const c=p[0].trim(),sub=p[1].trim(),no=p[2].trim(),ti=p.slice(3).join(',').trim();if(!c||!sub||!no)return;const key=c+'|'+sub;(LESSONS[key]=LESSONS[key]||[]).push([no,ti]);k++});if(k){saveLessons();toast(k+' lessons added')}else toast('No valid rows found');render();break}
     case'lsclear':if(sure('ls')){LESSONS={};saveLessons();render()}break;
