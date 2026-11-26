@@ -15,6 +15,8 @@ function setupCheckingDesk(){
   const ss=SS();
   if(!ss.getSheetByName("Docs"))ss.insertSheet("Docs").appendRow(["path","date","json"]);
   if(!ss.getSheetByName("Photos"))ss.insertSheet("Photos").appendRow(["id","chunks"]);
+  if(!ss.getSheetByName("Audit"))ss.insertSheet("Audit").appendRow(["time","who","path","op","old","new"]);
+  if(!ss.getSheetByName("Errors"))ss.insertSheet("Errors").appendRow(["time","who","message","where","device"]);
   const sp=PropertiesService.getScriptProperties();
   if(!sp.getProperty("SECRET"))sp.setProperty("SECRET",Utilities.getUuid()+Utilities.getUuid());
   if(!sp.getProperty("VER"))sp.setProperty("VER","1");
@@ -74,7 +76,8 @@ function doPost(e){
     switch(req.fn){
       case "ping":data=true;break;
       case "sync":data=sync(a[0],a[1]);break;
-      case "set":case "update":data=write(req.fn,a[0],a[1]);break;
+      case "set":case "update":data=write(req.fn,a[0],a[1],a[2],who);break;
+      case "log":data=logError(who,a);break;
       case "putPhoto":data=putPhoto(a[0],a[1]);break;
       case "getPhoto":data=getPhoto(a[0]);break;
       default:throw new Error("unknown call");
@@ -82,13 +85,15 @@ function doPost(e){
     return out({ok:true,data:data});
   }catch(err){
     const m=String(err.message||err);
-    return out({ok:false,error:m,auth:/password|name|log in|login|approv/i.test(m)});
+    // only a real sign-in problem may log the phone out; a busy server or any other error must not
+    const isLogin=(function(){try{const r=JSON.parse(e.postData.contents);return r.fn==="login"||r.fn==="tokenlogin"}catch(x){return false}})();
+    return out({ok:false,error:m,auth:isLogin||m==="Please log in again."});
   }
 }
 function sync(ver,dates){
   const sp=PropertiesService.getScriptProperties(), cur=Number(sp.getProperty("VER")||1);
-  if(Number(ver)===cur)return{same:true};
-  const sh=sheet("Docs"), n=sh.getLastRow()-1, res={ver:cur,days:{},docs:{}};
+  if(Number(ver)===cur)return{same:true,now:Date.now()};
+  const sh=sheet("Docs"), n=sh.getLastRow()-1, res={ver:cur,days:{},docs:{},now:Date.now()};
   if(n<1)return res;
   const head=sh.getRange(2,1,n,2).getValues(), set={}, tz=SS().getSpreadsheetTimeZone();
   const ymd=v=>v instanceof Date?Utilities.formatDate(v,tz,"yyyy-MM-dd"):String(v);
@@ -102,19 +107,36 @@ function sync(ver,dates){
   });
   return res;
 }
-function write(op,path,obj){
+function pick(cur,patch){
+  // the old values of exactly the slot fields this edit touches (for the audit log)
+  const o={};
+  if(patch&&patch.slots&&cur&&cur.slots){Object.keys(patch.slots).forEach(id=>{const c=cur.slots[id],p=patch.slots[id];if(!c){o[id]=null;return}if(p===null||typeof p!=="object"){o[id]=c;return}const q={};Object.keys(p).forEach(k=>{q[k]=c[k]===undefined?null:c[k]});o[id]=q})}
+  return o;
+}
+function write(op,path,obj,opId,who){
   if(!okPath(path))throw new Error("bad path");
   if(obj===null||typeof obj!=="object"||Array.isArray(obj))throw new Error("bad data");
+  const cache=CacheService.getScriptCache(), ck=opId?("op_"+String(opId).slice(0,40)):"";
+  if(ck&&cache.get(ck))return true;               // the same tap/scan arriving twice is applied once
   const lock=LockService.getScriptLock();lock.waitLock(20000);
   try{
-    const sh=sheet("Docs"), row=findRow(sh,path);
+    if(ck&&cache.get(ck))return true;
+    const sh=sheet("Docs"), row=findRow(sh,path), now=Date.now();
+    let cur={};if(row){try{cur=JSON.parse(sh.getRange(row,3).getValue())||{}}catch(x){}}
     let next=obj;
-    if(row&&op==="update"){let cur={};try{cur=JSON.parse(sh.getRange(row,3).getValue())||{}}catch(x){}next=merge(cur,obj)}
+    if(row&&op==="update")next=merge(JSON.parse(JSON.stringify(cur)),obj);
+    if(path.indexOf("days/")===0){next._at=now;next._by=who||""}       // server time + who, never the phone clock
     const j=JSON.stringify(next);if(j.length>48000)throw new Error("too large");
     if(row)sh.getRange(row,3).setValue(j);else{sh.appendRow([path,"",j]);const nr=sh.getLastRow();sh.getRange(nr,2).setNumberFormat("@").setValue(dateOf(path))}
     const sp=PropertiesService.getScriptProperties();
     sp.setProperty("VER",String(Number(sp.getProperty("VER")||1)+1));
+    try{const au=sheet("Audit");if(au)au.appendRow([new Date(now).toISOString(),who||"",path,op,JSON.stringify(pick(cur,obj)).slice(0,2000),JSON.stringify(obj).slice(0,2000)])}catch(x){}
+    if(ck)cache.put(ck,"1",21600);
   }finally{lock.releaseLock()}
+  return true;
+}
+function logError(who,a){
+  try{const sh=sheet("Errors");if(sh&&sh.getLastRow()<2000)sh.appendRow([new Date().toISOString(),who||"",String(a[0]||"").slice(0,300),String(a[1]||"").slice(0,120),String(a[2]||"").slice(0,120)])}catch(x){}
   return true;
 }
 function putPhoto(id,url){

@@ -140,7 +140,7 @@ function local(fn,a){
 function call(fn,args){
   if(PREVIEW)return Promise.resolve(local(fn,args||[]));
   return fetch(API,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:fn,code:CODE,args:args||[]})})
-    .then(function(r){return r.json()}).then(function(j){if(!j.ok){var e=new Error(j.error||'error');e.auth=!!j.auth;throw e}return j.data});
+    .then(function(r){return r.json()}).then(function(j){if(!j.ok){var e=new Error(j.error||'error');e.auth=!!j.auth;e.server=true;throw e}return j.data});
 }
 function merge(a,b){
   if(b===null||typeof b!=='object'||Array.isArray(b))return b;
@@ -148,30 +148,101 @@ function merge(a,b){
   Object.keys(b).forEach(function(k){o[k]=merge(o[k],b[k])});return o;
 }
 if(PREVIEW){L.docs['config/roster']={units:{P1:{cm:'Yashika',reviewer:'Sanjana'},P2:{cm:'Manisha',reviewer:'Sanjana'},P3:{cm:'Vijayaraj',reviewer:'Neetu'},P4:{cm:'Komal',reviewer:'Divyanshi'},P5:{cm:'Mansi',reviewer:'Diksha'},S6:{cm:'Manisha',reviewer:'Sabah'},S7:{cm:'Rashmi',reviewer:'Sabah'},S8:{cm:'Tanushri',reviewer:'Sabah'},S9:{cm:'Mansi',reviewer:'Sabah'},S10:{cm:'Pooja',reviewer:'Sabah'},S11:{cm:'Upinder',reviewer:'Sabah'}}}}
-var cache={days:{},docs:{}},ver=-1,dates=[],qL=[],dL=[],busy=false,again=false,failed=0;
-function snapDays(){var ids=Object.keys(cache.days);return{docs:ids.map(function(id){return{id:id,data:function(){return cache.days[id]}}}),metadata:{fromCache:false}}}
-function snapDoc(p){var v=cache.docs[p];return{exists:!!v,data:function(){return v}}}
-function notify(){qL.forEach(function(l){l.cb(snapDays())});dL.forEach(function(l){l.cb(snapDoc(l.path))})}
-function fail(e){qL.forEach(function(l){l.err&&l.err(e)});dL.forEach(function(l){l.err&&l.err(e)})}
-function poll(force){
-  if(busy){again=true;return}
-  if(force)ver=-1;
-  busy=true;
-  call('sync',[ver,dates]).then(function(d){
-    failed=0;
-    if(!d.same){ver=d.ver;cache.days=d.days||{};cache.docs=d.docs||{};notify()}
-  }).catch(function(e){failed++;if(e.auth){try{localStorage.removeItem('cd_tok')}catch(x){}location.reload();return}if(failed>1)fail(e)})
-  .then(function(){busy=false;if(again){again=false;poll(false)}});
+var cache={days:{},docs:{}},ver=-1,dates=[],qL=[],dL=[],busy=false,again=false,failed=0,lastJson='',pollT=0;
+/* ---- save status chip + outbox (kept in localStorage so it survives reload / app close) ---- */
+var OB_KEY='cd_outbox',ob=[],flushing=false,backoff=0,retryT=0,lastErr='',chipEl=null,newVer=false;
+try{ob=JSON.parse(localStorage.getItem(OB_KEY)||'[]')||[]}catch(e){ob=[]}
+function saveOb(){try{localStorage.setItem(OB_KEY,JSON.stringify(ob));return true}catch(e){lastErr='Phone storage is full - changes cannot be kept offline.';chip();return false}}
+function chip(){
+  if(!document.body)return;
+  if(!chipEl){chipEl=document.createElement('div');chipEl.setAttribute('role','status');
+    chipEl.style.cssText='position:fixed;left:8px;top:8px;z-index:9998;font:600 11.5px Inter,system-ui,sans-serif;padding:4px 9px;border-radius:12px;background:#E6F1EA;color:#1F6B47;box-shadow:0 1px 4px rgba(0,0,0,.2)';
+    chipEl.addEventListener('click',function(){if(newVer)location.reload();else if(ob.length)flush(true)});document.body.appendChild(chipEl)}
+  var t,bg,fg;
+  if(newVer){t='New version - tap to refresh';bg='#1F2D5A';fg='#fff'}
+  else if(lastErr){t=lastErr;bg='#F8E6EA';fg='#A42A47'}
+  else if(!ob.length){t='Saved';bg='#E6F1EA';fg='#1F6B47'}
+  else if(typeof navigator.onLine==='boolean'&&!navigator.onLine){t='Offline - '+ob.length+' change'+(ob.length>1?'s':'')+' pending';bg='#FDF1DC';fg='#A8670A'}
+  else if(backoff){t='Save failed - retrying ('+ob.length+' pending)';bg='#F8E6EA';fg='#A42A47'}
+  else{t=(flushing?'Saving... ':'')+ob.length+' change'+(ob.length>1?'s':'')+' pending';bg='#FDF1DC';fg='#A8670A'}
+  chipEl.textContent=t;chipEl.style.background=bg;chipEl.style.color=fg;chipEl.style.opacity=(!ob.length&&!newVer)?'.55':'1';
 }
-setInterval(function(){if(!document.hidden)poll(false)},12000);
-document.addEventListener('visibilitychange',function(){if(!document.hidden)poll(false)});
-function write(op,path,data){
+function applyLocal(op,path,data){
   var parts=path.split('/');
   var cur=parts[0]==='days'?cache.days[parts[1]]:cache.docs[path];
   var next=op==='set'?data:merge(cur,data);
   if(parts[0]==='days')cache.days[parts[1]]=next;else cache.docs[path]=next;
-  notify();
-  return call(op,[path,data]).then(function(){poll(true)}).catch(function(e){poll(true);throw e});
+}
+function reapply(){ob.forEach(function(o){applyLocal(o.op,o.path,o.data)})}
+function snapDays(){var ids=Object.keys(cache.days);return{docs:ids.map(function(id){return{id:id,data:function(){return cache.days[id]}}}),metadata:{fromCache:false}}}
+function snapDoc(p){var v=cache.docs[p];return{exists:!!v,data:function(){return v}}}
+function notify(){qL.forEach(function(l){l.cb(snapDays())});dL.forEach(function(l){l.cb(snapDoc(l.path))})}
+function fail(e){qL.forEach(function(l){l.err&&l.err(e)});dL.forEach(function(l){l.err&&l.err(e)})}
+function isNet(e){return !(e&&e.server)}
+function flush(now){
+  if(flushing||!ob.length||(!CODE&&!PREVIEW))return;
+  if(!now&&backoff&&retryT>Date.now())return;
+  flushing=true;chip();
+  var o=ob[0];
+  call(o.op,[o.path,o.data,o.id]).then(function(){
+    ob.shift();saveOb();backoff=0;lastErr='';flushing=false;chip();
+    if(ob.length)flush(true);else schedulePoll(3000);
+  }).catch(function(e){
+    flushing=false;
+    if(e&&e.server&&!e.auth){ob.shift();saveOb();lastErr='A change was refused by the server: '+(e.message||'error');chip();if(ob.length)flush(true);return}
+    backoff=Math.min(60000,(backoff||2000)*2);retryT=Date.now()+backoff;chip();
+    clearTimeout(flush.t);flush.t=setTimeout(function(){flush(true)},backoff);
+  });
+}
+function poll(force){
+  if(busy){again=true;return}
+  if(force)ver=-1;
+  busy=true;
+  var sentAt=Date.now();
+  call('sync',[ver,dates]).then(function(d){
+    failed=0;
+    if(d&&d.now)window.__cdSkew=d.now-Date.now();
+    if(!d.same){
+      ver=d.ver;cache.days=d.days||{};cache.docs=d.docs||{};
+      reapply();                       /* never lose our own unsent edits */
+      var j=JSON.stringify(cache);
+      if(j!==lastJson){lastJson=j;notify()}   /* only redraw when something really changed */
+    }
+  }).catch(function(e){failed++;if(e.auth&&/log in again/i.test(e.message||'')){try{localStorage.removeItem('cd_tok')}catch(x){}location.reload();return}if(failed>1)fail(e)})
+  .then(function(){busy=false;if(again){again=false;poll(false)}});
+}
+function schedulePoll(ms){
+  clearTimeout(pollT);
+  pollT=setTimeout(function(){if(!document.hidden)poll(false);schedulePoll(20000+Math.random()*10000)},ms==null?20000+Math.random()*10000:ms);
+}
+schedulePoll();
+document.addEventListener('visibilitychange',function(){if(!document.hidden){poll(false);flush(true)}});
+window.addEventListener('online',function(){backoff=0;chip();flush(true);poll(false)});
+window.addEventListener('offline',chip);
+window.addEventListener('pagehide',saveOb);
+window.addEventListener('beforeunload',function(e){if(ob.length){e.preventDefault();e.returnValue='Some changes have not reached the server yet.';return e.returnValue}});
+window.addEventListener('error',function(e){report(e.message,(e.filename||'')+':'+(e.lineno||''))});
+window.addEventListener('unhandledrejection',function(e){var r=e.reason;report(String(r&&r.message||r),'promise')});
+var rep=0;
+function report(msg,where){
+  if(rep++>5)return;
+  if(!PREVIEW&&CODE)call('log',[String(msg).slice(0,300),String(where).slice(0,120),navigator.userAgent.slice(0,120)]).catch(function(){});
+}
+if('serviceWorker' in navigator&&!PREVIEW){
+  navigator.serviceWorker.register('sw.js').then(function(r){
+    var had=!!navigator.serviceWorker.controller;
+    navigator.serviceWorker.addEventListener('controllerchange',function(){if(had){newVer=true;chip()}});
+  }).catch(function(){});
+}
+function newId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,10)}
+function write(op,path,data){
+  applyLocal(op,path,data);
+  ob.push({id:newId(),op:op,path:path,data:data});
+  saveOb();
+  lastJson=JSON.stringify(cache);
+  window.__cdOwn=true;try{notify()}finally{window.__cdOwn=false}
+  chip();flush(true);
+  return Promise.resolve(true);
 }
 var db={
   collection:function(c){
@@ -208,7 +279,7 @@ new MutationObserver(function(ms){ms.forEach(function(m){m.addedNodes.forEach(fu
 var ready=new Promise(function(resolve){
   function gate(msg){
     var d=document.createElement('div');
-    d.style.cssText='position:fixed;inset:0;z-index:99999;background:#1F2D5A;display:flex;align-items:center;justify-content:center;padding:20px;font-family:Inter,system-ui,sans-serif';
+    d.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;background:#1F2D5A;display:flex;align-items:center;justify-content:center;padding:20px;font-family:Inter,system-ui,sans-serif';
     var f='width:100%;padding:11px 12px;border:1px solid #E6E2D8;border-radius:9px;font-size:15px;margin-bottom:9px';
     d.innerHTML='<form style="background:#fff;border-radius:14px;padding:26px;max-width:340px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.35)"><img src="../fis/fis-logo-192.png" alt="FIS" style="width:64px;height:64px;border-radius:14px;display:block;margin:0 auto 10px"><div style="font-family:Lora,Georgia,serif;font-size:22px;font-weight:700;color:#1F2D5A;text-align:center">CM Checking Desk</div><div style="height:3px;width:44px;background:#E3A94F;margin:8px auto 14px"></div><div style="color:#646B80;font-size:13.5px;margin-bottom:12px">Flourish International School · use the same name and password as the Diary app.</div><input id="cd-n" type="text" autocomplete="username" placeholder="Your name" style="'+f+'"><input id="cd-p" type="password" autocomplete="current-password" placeholder="Password" style="'+f+'"><div id="cd-err" style="color:#A42A47;font-size:13px;min-height:18px;margin:2px 0 8px">'+(msg||'')+'</div><button type="submit" style="width:100%;padding:11px;border:0;border-radius:9px;background:#1F2D5A;color:#fff;font-weight:700;font-size:15px">Log in</button><div style="color:#646B80;font-size:12.5px;margin-top:12px;line-height:1.45">No password yet? Set one in the <a href="../diary/" style="color:#1F2D5A;font-weight:600">Diary app</a> first; the admin approves it once.</div></form>';
     document.body.appendChild(d);
@@ -227,10 +298,11 @@ var ready=new Promise(function(resolve){
     if(!CODE){var dt='';try{dt=localStorage.getItem('diary-token')||''}catch(x){}
       if(dt){call('tokenlogin',[dt]).then(function(r){CODE=r.token;try{localStorage.setItem('cd_tok',CODE);localStorage.setItem('cd_name',r.name)}catch(x){}resolve()}).catch(function(){gate()});return}
       gate();return}
-    call('ping').then(resolve).catch(function(e){if(e.auth){CODE='';try{localStorage.removeItem('cd_tok')}catch(x){}gate()}else resolve()});
+    call('ping').then(resolve).catch(function(e){if(e.auth&&/log in again/i.test(e.message||'')){CODE='';try{localStorage.removeItem('cd_tok')}catch(x){}gate()}else resolve()});
   }
   if(document.body)start();else document.addEventListener('DOMContentLoaded',start);
 });
+ready.then(function(){chip();flush(true)});
 window.claude={use:function(n){
   if(n==='db')return ready.then(function(){return db});
   if(n==='assets')return ready.then(function(){return assets});
@@ -251,7 +323,10 @@ window.claude={use:function(n){
   --shadow:0 1px 2px rgba(20,25,60,.05),0 6px 20px rgba(20,25,60,.04);
 }
 *{box-sizing:border-box}
-html,body{margin:0}
+html,body{margin:0;overscroll-behavior:none;overscroll-behavior-y:none}
+body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+.toast{display:none}
 body{background:var(--bg);color:var(--ink);font:14.5px/1.45 var(--body);-webkit-font-smoothing:antialiased}
 button,input,select,textarea{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--gold);outline-offset:2px}
@@ -263,9 +338,9 @@ header{background:var(--navy);color:#fff;padding:12px 18px 0;position:sticky;top
 .logo img{width:34px;height:auto;display:block}
 .hrow h1{font:600 20px/1.2 var(--head);flex:1;min-width:170px;letter-spacing:.1px}
 .hrow h1 small{display:block;font:600 10.5px/1.4 var(--body);color:var(--gold);letter-spacing:.2em;text-transform:uppercase;margin-top:2px}
-.hchip{font-size:12px;font-weight:600;letter-spacing:.04em;padding:5px 11px;border-radius:20px;background:color-mix(in srgb,var(--gold) 18%,transparent);color:#F4D9A6;border:1px solid color-mix(in srgb,var(--gold) 40%,transparent);white-space:nowrap}
+.hchip{font-size:12px;font-weight:600;letter-spacing:.04em;padding:5px 11px;border-radius:20px;background:rgba(227,169,79,0.18);background:color-mix(in srgb,var(--gold) 18%,transparent);color:#F4D9A6;border:1px solid rgba(227,169,79,0.40);border:1px solid color-mix(in srgb,var(--gold) 40%,transparent);white-space:nowrap}
 button.hchip{cursor:pointer}
-button.hchip:hover{background:color-mix(in srgb,var(--gold) 30%,transparent)}
+button.hchip:hover{background:rgba(227,169,79,0.30);background:color-mix(in srgb,var(--gold) 30%,transparent)}
 .hchip.live::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:#6BE0A4;margin-right:7px;vertical-align:1px}
 nav{display:flex;gap:6px;overflow-x:auto;padding:12px 0;max-width:1180px;margin:0 auto;scrollbar-width:none}
 nav::-webkit-scrollbar{display:none}
@@ -302,7 +377,7 @@ main{padding:18px 18px 70px;max-width:1180px;margin:0 auto}
 .ucard{position:relative;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 13px 11px;cursor:pointer;box-shadow:var(--shadow);overflow:hidden;transition:transform .12s,box-shadow .12s}
 .ucard::before{content:"";position:absolute;left:0;top:0;right:0;height:4px;background:linear-gradient(90deg,var(--navy),var(--purple) 55%,var(--gold))}
 .ucard:hover{border-color:var(--gold);transform:translateY(-1px)}
-.ucard[aria-pressed="true"]{border-color:var(--gold);box-shadow:0 0 0 3px color-mix(in srgb,var(--gold) 35%,transparent)}
+.ucard[aria-pressed="true"]{border-color:var(--gold);box-shadow:0 0 0 3px rgba(227,169,79,0.35);box-shadow:0 0 0 3px color-mix(in srgb,var(--gold) 35%,transparent)}
 .ucard b{display:block;font:700 19px/1.2 var(--head);color:var(--navy)}
 .ucard small{display:block;color:var(--mute);font-size:12px;margin-top:3px}
 .ucard .mini{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:9px;text-align:center}
@@ -328,7 +403,7 @@ main{padding:18px 18px 70px;max-width:1180px;margin:0 auto}
 .ledger{display:flex;flex-direction:column;gap:12px}
 .slot{display:grid;grid-template-columns:112px 1fr;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;position:relative}
 .slot::before{content:"";position:absolute;left:0;top:0;right:0;height:4px;background:linear-gradient(90deg,var(--navy),var(--purple) 55%,var(--gold))}
-.slot.s-checked{border-left:5px solid var(--good)} .slot.s-due{border-left:5px solid var(--warn)} .slot.s-late{border-left:5px solid var(--bad)} .slot.s-now{border-left:5px solid var(--gold);box-shadow:0 0 0 2px color-mix(in srgb,var(--gold) 45%,transparent),var(--shadow)}
+.slot.s-checked{border-left:5px solid var(--good)} .slot.s-due{border-left:5px solid var(--warn)} .slot.s-late{border-left:5px solid var(--bad)} .slot.s-now{border-left:5px solid var(--gold);box-shadow:0 0 0 2px rgba(227,169,79,0.45),var(--shadow);box-shadow:0 0 0 2px color-mix(in srgb,var(--gold) 45%,transparent),var(--shadow)}
 .tm{padding:16px 10px 12px 12px;background:var(--cream2);border-right:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
 .tbox{background:var(--cream);border:1px solid var(--line);border-radius:10px;padding:5px 8px}
 .tbox span{display:block;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);font-weight:700}
@@ -366,20 +441,20 @@ main{padding:18px 18px 70px;max-width:1180px;margin:0 auto}
 .field{display:flex;flex-direction:column;gap:4px;min-width:0}
 .field label{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:700}
 .field input,.field select,.field textarea,input.plain{border:1px solid var(--line);background:#fff;border-radius:11px;padding:9px 11px;min-width:0}
-.field input:focus,.field select:focus,input.plain:focus{outline:0;border-color:var(--gold);box-shadow:0 0 0 3px color-mix(in srgb,var(--gold) 30%,transparent)}
+.field input:focus,.field select:focus,input.plain:focus{outline:0;border-color:var(--gold);box-shadow:0 0 0 3px rgba(227,169,79,0.30);box-shadow:0 0 0 3px color-mix(in srgb,var(--gold) 30%,transparent)}
 .field input[type=number]{width:100px}
 .field input[type=color]{width:64px;height:42px;padding:3px}
 .grow{flex:1 1 190px}
 .note{font-size:12.5px;color:var(--mute)}
 .hint{font-size:12.5px;color:var(--warn);font-weight:600}
-.lock{display:flex;gap:8px;align-items:center;color:var(--gold-ink);font-size:13px;font-weight:600;background:var(--gold-soft);border:1px solid color-mix(in srgb,var(--gold) 45%,#fff);border-radius:10px;padding:8px 12px}
+.lock{display:flex;gap:8px;align-items:center;color:var(--gold-ink);font-size:13px;font-weight:600;background:var(--gold-soft);border:1px solid #f2d8b0;border:1px solid color-mix(in srgb,var(--gold) 45%,#fff);border-radius:10px;padding:8px 12px}
 .instr{font-size:13px;background:var(--gold-soft);border-left:4px solid var(--gold);border-radius:8px;padding:7px 11px;color:var(--navy2)}
 .instr b{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-ink);margin-right:6px}
 .remark{display:flex;gap:8px;align-items:center}
 .remark label{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:700;flex:none}
 .remark input{flex:1;min-width:0;border:0;border-bottom:1px dashed var(--line);background:transparent;padding:5px 2px;border-radius:0}
 .remark input:focus{outline:0;border-bottom:1px solid var(--gold)}
-.empty{border:1px dashed color-mix(in srgb,var(--navy) 25%,#fff);border-radius:14px;padding:26px;text-align:center;color:var(--mute);background:var(--card)}
+.empty{border:1px dashed #c7cad6;border:1px dashed color-mix(in srgb,var(--navy) 25%,#fff);border-radius:14px;padding:26px;text-align:center;color:var(--mute);background:var(--card)}
 .empty b{display:block;font:600 18px var(--head);color:var(--navy);margin-bottom:4px}
 .pool{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);border-top:4px solid var(--navy)}
 .pitem{display:grid;grid-template-columns:1fr auto;gap:12px;padding:13px 16px;align-items:center}
@@ -388,15 +463,15 @@ main{padding:18px 18px 70px;max-width:1180px;margin:0 auto}
 .pitem h4{font:700 16px var(--head);color:var(--navy);margin-bottom:6px}
 
 .datebar{padding:4px}
-.datebtn{position:relative;display:flex;align-items:center;gap:10px;padding:6px 14px;border-radius:10px;cursor:pointer;color:var(--navy);background:var(--gold-soft);border:1px solid color-mix(in srgb,var(--gold) 55%,#fff)}
-.datebtn:hover{background:color-mix(in srgb,var(--gold) 28%,#fff)}
+.datebtn{position:relative;display:flex;align-items:center;gap:10px;padding:6px 14px;border-radius:10px;cursor:pointer;color:var(--navy);background:var(--gold-soft);border:1px solid #f0d09e;border:1px solid color-mix(in srgb,var(--gold) 55%,#fff)}
+.datebtn:hover{background:#f7e7ce;background:color-mix(in srgb,var(--gold) 28%,#fff)}
 .datebtn span{display:flex;flex-direction:column;line-height:1.2}.datebtn b{font:700 15px var(--head)}.datebtn small{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-ink);font-weight:700}
-.datebtn input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0}
+.datebtn input{position:absolute;top:0;left:0;right:0;bottom:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0}
 .ptable{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--navy);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
 .phead,.pt-row{display:grid;grid-template-columns:168px minmax(0,1fr) 190px auto;gap:12px;align-items:center;padding:11px 16px}
 .phead{background:var(--cream);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;color:var(--mute);padding-top:9px;padding-bottom:9px}
 .prw{border-top:1px solid var(--line);border-left:5px solid transparent}
-.prw.s-checked{border-left-color:var(--good)}.prw.s-due{border-left-color:var(--warn)}.prw.s-late{border-left-color:var(--bad)}.prw.s-now{border-left-color:var(--gold);background:color-mix(in srgb,var(--gold) 9%,#fff)}
+.prw.s-checked{border-left-color:var(--good)}.prw.s-due{border-left-color:var(--warn)}.prw.s-late{border-left-color:var(--bad)}.prw.s-now{border-left-color:var(--gold);background:#fcf7ef;background:color-mix(in srgb,var(--gold) 9%,#fff)}
 .prw.duty .pt-title{color:var(--mute);font-weight:600}
 .pt-time{font-variant-numeric:tabular-nums;color:var(--navy2);font-weight:700;font-size:14px;line-height:1.3}.pt-time small{display:block;color:var(--mute);font-weight:500;font-size:11.5px}
 .pt-title{font:700 17px/1.25 var(--head);color:var(--navy)}
@@ -405,7 +480,7 @@ main{padding:18px 18px 70px;max-width:1180px;margin:0 auto}
 .pt-act{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
 .pt-detail{padding:4px 16px 16px 184px;display:flex;flex-direction:column;gap:11px;background:var(--cream2);border-top:1px dashed var(--line)}
 .qb{border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 12px;font-weight:700;font-size:13px;cursor:pointer;color:var(--navy)}
-.qb.ok{background:var(--good);color:#fff;border-color:var(--good)}.qb.wn{background:var(--warn-bg);color:var(--warn);border-color:color-mix(in srgb,var(--warn) 40%,#fff)}.qb:disabled{opacity:.45;cursor:not-allowed}
+.qb.ok{background:var(--good);color:#fff;border-color:var(--good)}.qb.wn{background:var(--warn-bg);color:var(--warn);border-color:#dcc29d;border-color:color-mix(in srgb,var(--warn) 40%,#fff)}.qb:disabled{opacity:.45;cursor:not-allowed}
 .ptable.pool2 .phead,.ptable.pool2 .pt-row{grid-template-columns:minmax(0,1fr) 230px auto}
 .ptable.pool2 .pt-title{font-size:19px}
 .pt-in{display:flex;gap:6px}.pt-in input{width:100%;padding:7px 8px;border:1px solid var(--line);border-radius:8px;background:#fff}
@@ -434,7 +509,7 @@ main{padding:18px 18px 70px;max-width:1180px;margin:0 auto}
 .cchip{flex:none;display:flex;flex-direction:column;align-items:flex-start;gap:1px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:7px 12px;cursor:pointer;min-width:92px;box-shadow:var(--shadow)}
 .cchip b{font:700 14px var(--head);color:var(--navy)}.cchip small{font-size:11px;color:var(--mute)}
 .cchip[aria-pressed=true]{background:var(--navy);border-color:var(--navy)}.cchip[aria-pressed=true] b{color:#fff}.cchip[aria-pressed=true] small{color:var(--gold)}
-.hintbar{background:var(--gold-soft);border:1px solid color-mix(in srgb,var(--gold) 50%,#fff);border-radius:12px;padding:10px 14px;margin:12px 0;color:var(--gold-ink);font-size:13.5px}
+.hintbar{background:var(--gold-soft);border:1px solid #f1d4a7;border:1px solid color-mix(in srgb,var(--gold) 50%,#fff);border-radius:12px;padding:10px 14px;margin:12px 0;color:var(--gold-ink);font-size:13.5px}
 .strip{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--gold);border-radius:14px;box-shadow:var(--shadow);margin:12px 0;overflow:hidden}
 .strip.qa{border-top-color:var(--navy);padding:0 16px 14px}
 .strip .sh{display:flex;gap:10px;align-items:center;padding:11px 16px;background:var(--cream);margin:0 -16px 8px;flex-wrap:wrap}
@@ -485,12 +560,12 @@ td .bar i{display:block;height:100%;background:var(--good)}
 .banner{border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:13px;background:#FBF1DC;color:#6B4A0E;border:1px solid #F0DDB3}
 .banner.bad{background:var(--bad-bg);color:var(--bad);border-color:#EBC1CB}
 .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:11px 18px;border-radius:12px;font-weight:600;z-index:60;max-width:90vw;border-bottom:2px solid var(--gold);box-shadow:var(--shadow)}
-.modal{position:fixed;inset:0;background:rgba(10,20,40,.55);display:grid;place-items:center;z-index:50;padding:16px}
+.modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(10,20,40,.55);display:grid;place-items:center;z-index:50;padding:16px}
 .dlg{background:var(--card);border-radius:18px;border-top:4px solid var(--gold);max-width:450px;width:100%;padding:22px;display:flex;flex-direction:column;gap:14px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
 .dlg h2{font:600 24px var(--head);color:var(--navy)}
 .choice{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .choice button{border:1px solid var(--line);background:#fff;border-radius:12px;padding:12px;cursor:pointer;text-align:left}
-.choice button[aria-pressed="true"]{border-color:var(--gold);box-shadow:0 0 0 3px color-mix(in srgb,var(--gold) 30%,transparent);background:var(--gold-soft)}
+.choice button[aria-pressed="true"]{border-color:var(--gold);box-shadow:0 0 0 3px rgba(227,169,79,0.30);box-shadow:0 0 0 3px color-mix(in srgb,var(--gold) 30%,transparent);background:var(--gold-soft)}
 .choice b{display:block;font-family:var(--head);color:var(--navy)}.choice span{font-size:12px;color:var(--mute)}
 .swatches{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
 .thumbs{display:flex;gap:8px;flex-wrap:wrap}
@@ -520,7 +595,7 @@ td .bar i{display:block;height:100%;background:var(--good)}
 /* v9 compact time plan */
 .tll{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--navy);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
 .tl{border-top:1px solid var(--line);border-left:5px solid #d9d4c7}.tl:first-child{border-top:0}
-.tl.s-checked{border-left-color:var(--good)}.tl.s-due{border-left-color:var(--warn)}.tl.s-late{border-left-color:var(--bad);background:color-mix(in srgb,var(--bad) 4%,#fff)}.tl.s-now{border-left-color:var(--gold);background:color-mix(in srgb,var(--gold) 12%,#fff)}
+.tl.s-checked{border-left-color:var(--good)}.tl.s-due{border-left-color:var(--warn)}.tl.s-late{border-left-color:var(--bad);background:#fbf6f8;background:color-mix(in srgb,var(--bad) 4%,#fff)}.tl.s-now{border-left-color:var(--gold);background:#fcf5ea;background:color-mix(in srgb,var(--gold) 12%,#fff)}
 .tl-row{display:grid;grid-template-columns:62px minmax(0,1fr) auto;gap:9px;align-items:center;padding:7px 9px;min-height:52px;cursor:pointer}
 .tl.duty .tl-row{min-height:42px;padding-top:4px;padding-bottom:4px}
 .tl-t{font-variant-numeric:tabular-nums;line-height:1.2}.tl-t b{display:block;font-size:12.5px;color:var(--navy2)}.tl-t span{display:block;font-size:11px;color:var(--mute)}
@@ -532,7 +607,7 @@ td .bar i{display:block;height:100%;background:var(--good)}
 .tl-meta b{font-weight:700}.m-ok{color:var(--good)}.m-warn{color:var(--warn)}.m-bad{color:var(--bad)}.m-gold{color:var(--gold-ink)}.m-mute{color:var(--mute)}.m-mentor{color:var(--purple)}.m-sec{color:var(--navy2)}
 .tr-act{display:flex;gap:5px;justify-content:flex-end;align-items:center;min-width:110px}
 .tb{min-width:34px;height:32px;padding:0 9px;border:1px solid var(--line);background:#fff;border-radius:9px;font-weight:700;font-size:13px;color:var(--navy);cursor:pointer}
-.tb.ok{background:var(--good-bg);color:var(--good);border-color:color-mix(in srgb,var(--good) 40%,#fff)}.tb.wn{background:var(--warn-bg);color:var(--warn);border-color:color-mix(in srgb,var(--warn) 40%,#fff)}.tb.wide{min-width:96px}.tb:disabled{opacity:.45;cursor:not-allowed}
+.tb.ok{background:var(--good-bg);color:var(--good);border-color:#a5c4b5;border-color:color-mix(in srgb,var(--good) 40%,#fff)}.tb.wn{background:var(--warn-bg);color:var(--warn);border-color:#dcc29d;border-color:color-mix(in srgb,var(--warn) 40%,#fff)}.tb.wide{min-width:96px}.tb:disabled{opacity:.45;cursor:not-allowed}
 .tchip{display:inline-flex;justify-content:center;align-items:center;min-width:100px;height:32px;border-radius:9px;font-weight:700;font-size:12.5px;border:0;cursor:pointer;background:var(--cream);color:var(--mute)}
 .tchip.ok{background:var(--good);color:#fff}.tchip.wn{background:var(--warn);color:#fff}.tchip.pu{background:var(--pur-bg);color:var(--purple)}
 .tmr{font-weight:700;font-size:12px;color:var(--gold-ink);background:var(--gold-soft);border-radius:9px;padding:7px 8px;white-space:nowrap}
@@ -540,7 +615,7 @@ td .bar i{display:block;height:100%;background:var(--good)}
 .tl-full{font:700 15px/1.3 var(--head);color:var(--navy)}
 .timing{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.tm-l{background:#fff;border:1px solid var(--line);border-radius:10px;padding:5px 4px;text-align:center}.tm-l span{display:block;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);font-weight:700}.tm-l b{font-size:12px;color:var(--navy2);font-variant-numeric:tabular-nums}
 .seg button.on-pend{background:var(--navy);color:#fff}.seg button{padding:10px 16px}
-.viewas{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between;background:var(--gold-soft);border:1px solid color-mix(in srgb,var(--gold) 55%,#fff);border-left:5px solid var(--gold);border-radius:12px;padding:9px 12px;margin:0 0 10px}
+.viewas{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between;background:var(--gold-soft);border:1px solid #f0d09e;border:1px solid color-mix(in srgb,var(--gold) 55%,#fff);border-left:5px solid var(--gold);border-radius:12px;padding:9px 12px;margin:0 0 10px}
 .viewas i{font-style:normal;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-ink);font-weight:700}.viewas b{font:700 16px var(--head);color:var(--navy)}.viewas small{display:block;color:var(--mute);font-size:11.5px}
 .d2{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--warn);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
 .d2h{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;background:var(--warn-bg);font-size:12.5px;font-weight:700;color:var(--warn)}
@@ -609,6 +684,7 @@ const dayLong=s=>new Intl.DateTimeFormat('en-IN',{weekday:'long',day:'numeric',m
 const dayShort=s=>new Intl.DateTimeFormat('en-IN',{weekday:'short',day:'numeric',month:'short'}).format(parseYmd(s));
 const clockTxt=ts=>new Intl.DateTimeFormat('en-IN',{hour:'numeric',minute:'2-digit'}).format(new Date(ts));
 const num=v=>{const n=parseInt(v,10);return isFinite(n)&&n>0?n:0};
+const NOW=()=>Date.now()+(window.__cdSkew||0);
 const uid=()=>'s'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
 const unitById=id=>UNITS.find(u=>u.id===id);
 const nowMin=()=>{const d=new Date();return d.getHours()*60+d.getMinutes()};
@@ -632,6 +708,8 @@ let unsubDays=null,loadTimer=null;
 function applyTheme(){
   const t=Object.assign({},FIS_THEME,S.theme||{}),r=document.documentElement.style;
   ['navy','gold','purple','mag'].forEach(k=>{if(/^#[0-9a-fA-F]{6}$/.test(t[k]))r.setProperty('--'+k,t[k])});
+  const mix=(h,p,to)=>{const c=[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)),o=to==='#000'?[0,0,0]:[255,255,255];return '#'+c.map((v,i)=>('0'+Math.round(v*p+o[i]*(1-p)).toString(16)).slice(-2)).join('')};
+  r.setProperty('--navy2',mix(t.navy,.78,'#000'));r.setProperty('--navy3',mix(t.navy,.86,'#fff'));r.setProperty('--gold-soft',mix(t.gold,.16,'#fff'));
 }
 
 /* ---------- roster ---------- */
@@ -709,7 +787,7 @@ function liveInfo(s,date){
 /* ---------- execution timing, dues, coming up ---------- */
 function execInfo(s){
   if(!s.startAt)return null;
-  const run=!s.endAt&&(!s.cm||s.cm==='pending'),end=s.endAt||Date.now();
+  const run=!s.endAt&&(!s.cm||s.cm==='pending'),end=s.endAt||NOW();
   return {run:run,m:Math.max(0,Math.round((end-s.startAt)/60000)),plan:(s.from&&s.to)?toMin(s.to)-toMin(s.from):0};
 }
 function carryList(unit,date){
@@ -725,7 +803,7 @@ function carryList(unit,date){
   return out;
 }
 const TPC_ASOF='24 Nov 2026';
-const TPC=[["2026-11-12","1","EVS","L-13",["Assignment","Test"],"2026-11-16","ABC","Sunita, Priyanshi Bhojak, Kanika"],["2026-11-12","10","English","FP L-9",["Notebook","Assignment","Test notebook"],"2026-11-16","B","Shaan"],["2026-11-12","10","Maths","L-14",["Notebook","Test notebook"],"2026-11-16","AB","Vipul, Amit"],["2026-11-12","2","EVS","L-12",["Assignment","Test"],"2026-11-16","ABC","Deepmala, Deepali, Chhavi"],["2026-11-12","3","Science","L-8",["Assignment","Test"],"2026-11-16","ABC","Tina, Vaneshwari, Saroj"],["2026-11-12","4","Science","L-8",["Assignment","Test"],"2026-11-16","ABC","Pooja, Priya Shekhawat, Gauri"],["2026-11-12","5","Science","L-9",["Assignment","Test"],"2026-11-16","ABC","Anuradha, Reema, Devanshi"],["2026-11-12","6","S.St.","L-8",["Notebook","Assignment","Test notebook"],"2026-11-16","ABC","Shailesh, Ishita, Monika"],["2026-11-12","7","Hindi I","L-12",["Notebook","Assignment","Test notebook"],"2026-11-16","ABC","Tripti, Ajita, Bharti"],["2026-11-12","8","Maths","L-7",["Notebook","Assignment","Test notebook"],"2026-11-16","ABC","Vipul, Amit, Neha J"],["2026-11-12","8","Science","L-10",["Notebook","Assignment","Test notebook"],"2026-11-16","ABC","Pallavi, Shreya, Ritika"],["2026-11-12","9","Hindi","L-11",["Notebook","Assignment","Test notebook"],"2026-11-16","A","Shobha"],["2026-11-12","9","Science","L-11",["Notebook","Assignment","Test notebook"],"2026-11-16","B","Nisha"],["2026-11-13","10","S.St.","Geo-6",["Notebook","Assignment","Test notebook"],"2026-11-17","A","Jatin"],["2026-11-13","3","Hindi I","L-11",["Notebook","Test"],"2026-11-17","ABC","Geeta, Preeti, Anita"],["2026-11-13","4","Hindi II","L-8",["Notebook","Test"],"2026-11-17","ABC","Geeta, Preeti, Anita"],["2026-11-13","5","Hindi II","L-8",["Notebook","Test"],"2026-11-17","ABC","Geeta, Preeti, Anita"],["2026-11-13","6","English II","L-7",["Notebook","Assignment","Test notebook"],"2026-11-17","ABC","Swati, Yavnika, Jyotshna"],["2026-11-13","7","Hindi I","L-13",["Notebook","Assignment","Test notebook"],"2026-11-17","ABC","Tripti, Ajita, Bharti"],["2026-11-13","8","Sanskrit","L-11",["Notebook","Assignment","Test notebook"],"2026-11-17","ABC","Tripti, Ajita, Bharti"],["2026-11-16","10","English","FP L-9",["Notebook","Assignment","Test notebook"],"2026-11-18","A","Shaan"],["2026-11-16","10","Science","L-13",["Notebook","Assignment","Test notebook"],"2026-11-18","B","Pallavi"],["2026-11-16","2","Hindi I","L-10",["Notebook","Assignment","Test"],"2026-11-18","ABC","Geeta, Preeti, Anita"],["2026-11-16","6","Hindi II","L-14",["Notebook","Assignment","Test notebook"],"2026-11-18","ABC","Tripti, Ajita, Bharti"],["2026-11-16","7","English I","Poem 5",["Notebook","Assignment","Test notebook"],"2026-11-18","ABC","Swati, Yavnika, Jyotshna"],["2026-11-16","8","Sanskrit","L-12",["Notebook","Assignment","Test notebook"],"2026-11-18","ABC","Tripti, Ajita, Bharti"],["2026-11-17","1","Maths","L-12",["Assignment","Test"],"2026-11-19","ABC","Sunita, Priyanshi Bhojak, Kanika"],["2026-11-17","10","Hindi","Sparsh L-7",["Notebook","Assignment","Test notebook"],"2026-11-19","A","Shobha"],["2026-11-17","10","S.St.","Geo-6",["Notebook","Assignment","Test notebook"],"2026-11-19","B","Radha"],["2026-11-17","2","Maths","L-8",["Assignment","Test"],"2026-11-19","ABC","Deepmala, Deepali, Chhavi"],["2026-11-17","4","S.St.","L-12",["Assignment","Test"],"2026-11-19","ABC","Pooja, Priya Shekhawat, Gauri"],["2026-11-17","5","English II","L-6",["Assignment","Test"],"2026-11-19","ABC","Anuradha, Reema, Devanshi"],["2026-11-17","7","GK","Pages so far",["Test notebook"],"2026-11-19","ABC","Shailesh, Ishita, Monika"],["2026-11-17","8","English I","Poem 4 & Poem 5",["Notebook","Assignment","Test notebook"],"2026-11-19","ABC","Swati, Yavnika, Jyotshna"],["2026-11-17","9","S.St.","Part-II L-1",["Notebook","Assignment","Test notebook"],"2026-11-19","B","Jatin"],["2026-11-18","1","English I","L-8",["Assignment","Test"],"2026-11-20","ABC","Sunita, Priyanshi Bhojak, Kanika"],["2026-11-18","10","Hindi","Sparsh L-14",["Notebook","Assignment","Test notebook"],"2026-11-20","B","Shobha"],["2026-11-18","10","S.St.","Geo-7",["Notebook","Assignment","Test notebook"],"2026-11-20","A","Jatin"],["2026-11-18","2","GK","Pages 28\u201331",["Test"],"2026-11-20","ABC","Deepmala, Deepali, Chhavi"],["2026-11-18","3","GK","Pages 30\u201332, 44, 49",["Test"],"2026-11-20","ABC","Tina, Vaneshwari, Saroj"],["2026-11-18","5","S.St.","L-11",["Assignment","Test"],"2026-11-20","ABC","Anuradha, Reema, Devanshi"],["2026-11-18","7","Hindi II","L-13",["Notebook","Assignment","Test notebook"],"2026-11-20","ABC","Tripti, Ajita, Bharti"],["2026-11-18","8","English I","L-8",["Notebook","Assignment","Test notebook"],"2026-11-20","ABC","Swati, Yavnika, Jyotshna"],["2026-11-18","9","Science","L-11",["Notebook","Assignment","Test notebook"],"2026-11-20","A","Nisha"],["2026-11-19","1","Hindi","L-16",["Notebook","Assignment","Test"],"2026-11-21","ABC","Geeta, Preeti, Anita"],["2026-11-19","10","English","FF L-9",["Notebook","Assignment","Test notebook"],"2026-11-21","B","Shaan"],["2026-11-19","2","English I","L-8",["Assignment","Test"],"2026-11-21","ABC","Deepmala, Deepali, Chhavi"],["2026-11-19","4","Hindi I","L-11",["Notebook","Test"],"2026-11-21","ABC","Geeta, Preeti, Anita"],["2026-11-19","5","Hindi I","L-11",["Notebook","Test"],"2026-11-21","ABC","Geeta, Preeti, Anita"],["2026-11-19","6","S.St.","L-3",["Notebook","Assignment","Test notebook"],"2026-11-21","ABC","Shailesh, Ishita, Monika"],["2026-11-19","7","English I","L-8",["Notebook","Assignment","Test notebook"],"2026-11-21","ABC","Swati, Yavnika, Jyotshna"],["2026-11-19","8","Sanskrit","L-13",["Notebook","Assignment","Test notebook"],"2026-11-21","AC","Tripti, Bharti"],["2026-11-19","8","Sanskrit","L-13",["Notebook","Assignment","Test notebook","Book"],"2026-11-21","B","Ajita"],["2026-11-19","9","Hindi","L-11",["Notebook","Assignment","Test notebook"],"2026-11-21","B","Poonam Gaur"],["2026-11-20","1","EVS","L-14 (A, B, C, D)",["Assignment"],"2026-11-20","ABC","Sunita, Priyanshi Bhojak, Kanika"],["2026-11-20","1","English II","Story \u2013 The Fox and the Grapes",["Assignment","Test"],"2026-11-23","ABC","Sunita, Priyanshi Bhojak, Kanika"],["2026-11-20","1","Hindi","\u092e\u0947\u0930\u093e \u092a\u0930\u093f\u091a\u092f",["Notebook"],"2026-11-20","ABC","Geeta, Preeti, Anita"],["2026-11-20","10","English","FF L-7",["Assignment"],"2026-11-20","A","Shaan"],["2026-11-20","10","English","FF L-8",["Assignment"],"2026-11-20","A","Shaan"],["2026-11-20","10","English","FF L-9",["Assignment"],"2026-11-20","A","Shaan"],["2026-11-20","10","English","FF Poem-8",["Assignment"],"2026-11-20","A","Shaan"],["2026-11-20","10","Hindi","Sparsh L-13",["Notebook","Assignment","Test notebook"],"2026-11-23","A","Shobha"],["2026-11-20","10","Maths","HW Notebook",["Notebook"],"2026-11-20","A","Vipul"],["2026-11-20","10","S.St.","Geo-7",["Notebook","Assignment","Test notebook"],"2026-11-23","B","Radha"],["2026-11-20","10","Science","Diwali Assignment",["Assignment"],"2026-11-20","AB","Nisha"],["2026-11-20","11","Accountancy","L-18",["Test notebook"],"2026-11-20","A","Jitesh"],["2026-11-20","11","Accountancy","L-19",["Notebook"],"2026-11-20","A","Jitesh"],["2026-11-20","11","Business Studies","L-7",["Test notebook","Notebook","Assignment"],"2026-11-20","A","Jitesh"],["2026-11-20","11","Informatics Practices","Class Test",["Test notebook"],"2026-11-20","A","Himanshu"],["2026-11-20","11","Informatics Practices","L-8",["Test notebook"],"2026-11-20","A","Jitesh"],["2026-11-20","11","Microeconomics","L-9",["Notebook","Assignment","Test notebook"],"2026-11-20","A","Manisha"],["2026-11-20","11","Statistics","Ch-8",["Assignment"],"2026-11-20","A","Manisha"],["2026-11-20","2","All subjects","Assignment ticking",["Assignment"],"2026-11-20","C","Chhavi"],["2026-11-20","2","English II","L-8",["Assignment","Test"],"2026-11-23","ABC","Deepmala, Deepali, Chhavi"],["2026-11-20","2","GK","Assignment 8",["Assignment"],"2026-11-20","C","Chhavi"],["2026-11-20","2","GK","Assignment 8 (ticking)",["Assignment"],"2026-11-20","A","Deepmala"],["2026-11-20","2","Maths","Assignment 13.1",["Assignment"],"2026-11-20","AB","Deepmala, Deepali"],["2026-11-20","3","Hindi I","L-12",["Book Exercise","\u0915\u0920\u093f\u0928 \u0936\u092c\u094d\u0926, \u0936\u092c\u094d\u0926\u093e\u0930\u094d\u0925"],"2026-11-20","ABC","Geeta, Preeti, Anita"],["2026-11-20","3","S.St.","L-12",["Assignment","Test"],"2026-11-23","ABC","Tina, Vaneshwari, Saroj"],["2026-11-20","4","All subjects","Holiday Assignment",["Assignment"],"2026-11-20","B","Priya Shekhawat"],["2026-11-20","4","English I","L-8 (A, B, C, D)",["Assignment"],"2026-11-20","ABC","Pooja, Priya Shekhawat, Gauri"],["2026-11-20","4","Hindi II","\u091a\u093f\u0924\u094d\u0930 \u0935\u0930\u094d\u0923\u0928",["Book Exercise"],"2026-11-20","ABC","Geeta, Preeti, Anita"],["2026-11-20","4","Maths","Assignment 5.2",["Assignment"],"2026-11-20","A","Pooja"],["2026-11-20","4","Maths","Assignment 5.3",["Assignment"],"2026-11-20","ABC","Pooja, Priya Shekhawat, Gauri"],["2026-11-20","5","Hindi II","\u0935\u093f\u0932\u094b\u092e \u0936\u092c\u094d\u0926",["Notebook"],"2026-11-20","ABC","Geeta, Preeti, Anita"],["2026-11-20","5","Maths","L-10",["Assignment","Test"],"2026-11-23","ABC","Anuradha, Reema, Devanshi"],["2026-11-20","5","S.St.","Google Sheets",["Google Sheets"],"2026-11-20","A","Anuradha"],["2026-11-20","6","English I","L-8",["Notebook","Assignment","Test notebook"],"2026-11-23","ABC","Swati, Yavnika, Jyotshna"],["2026-11-20","6","English II","L-8",["Assignment"],"2026-11-20","ABC","Swati, Yavnika, Jyotshna"],["2026-11-20","6","Maths","HW Notebook",["Notebook"],"2026-11-20","A","Amit"],["2026-11-20","6","Science","L-9",["Assignment"],"2026-11-20","AC","Pallavi, Ritika"],["2026-11-20","7","English I","Diwali Assignment",["Assignment"],"2026-11-20","A","Swati"],["2026-11-20","7","Maths","Home Assignment 7D",["Assignment"],"2026-11-20","A","Vipul"],["2026-11-20","7","Maths","L-7",["Test notebook","Assignment"],"2026-11-20","ABC","Vipul, Madhu, Neha J"],["2026-11-20","7","S.St.","Diwali Assignment",["Assignment"],"2026-11-20","C","Monika"],["2026-11-20","8","Computer","Chapter 7",["Notebook","Assignment","Test notebook"],"2026-11-23","ABC","Himanshu"],["2026-11-20","8","English I","L-7",["Assignment"],"2026-11-20","BC","Yavnika, Jyotshna"],["2026-11-20","8","Hindi I","L-11",["Notebook","Assignment","Test notebook"],"2026-11-23","ABC","Tripti, Ajita, Bharti"],["2026-11-20","8","Maths","Home Assignment 1A",["Assignment"],"2026-11-20","ABC","Vipul, Amit, Neha J"],["2026-11-20","8","Maths","Home Assignment 1B",["Assignment"],"2026-11-20","ABC","Vipul, Amit, Neha J"],["2026-11-20","8","S.St.","Diwali Assignment",["Assignment"],"2026-11-20","C","Monika"],["2026-11-20","9","English","L-6",["Assignment"],"2026-11-20","B","Shaan"],["2026-11-20","9","Maths","Home Assignment 13.1",["Assignment"],"2026-11-20","A","Amit"],["2026-11-20","9","Maths","Home Assignment 13.2",["Assignment"],"2026-11-20","A","Amit"],["2026-11-20","9","Maths","L-10",["Notebook","Test notebook"],"2026-11-23","AB","Amit, Vipul"],["2026-11-20","9","Sanskrit","L-1",["Test notebook"],"2026-11-20","A","Shobha"],["2026-11-20","9","Science","Diwali Assignment",["Assignment"],"2026-11-20","AB","Nisha"],["2026-11-21","10","English","FF L-9",["Notebook","Assignment","Test notebook"],"2026-11-25","A","Shaan"],["2026-11-21","3","Maths","L-7",["Assignment","Test"],"2026-11-25","ABC","Tina, Vaneshwari, Saroj"],["2026-11-21","4","English I","L-8",["Assignment","Test"],"2026-11-25","ABC","Pooja, Priya Shekhawat, Gauri"],["2026-11-21","6","Hindi II","L-15",["Notebook","Assignment","Test notebook"],"2026-11-25","ABC","Tripti, Ajita, Bharti"],["2026-11-21","6","Maths","Assignment-6 (Days 1\u20133)",["Assignment"],"2026-11-25","ABC","Amit, Madhu, Neha J"],["2026-11-21","7","S.St.","Part II L-1",["Notebook","Assignment","Test notebook"],"2026-11-25","ABC","Shailesh, Ishita, Monika"],["2026-11-21","8","Hindi II","L-13",["Notebook","Assignment","Test notebook"],"2026-11-25","ABC","Tripti, Ajita, Bharti"],["2026-11-23","1","EVS","L-14",["Assignment","Test"],"2026-11-26","ABC","Sunita, Priyanshi Bhojak, Kanika"],["2026-11-23","1","Hindi","\u092e\u0947\u0930\u093e \u092a\u0930\u093f\u091a\u092f, \u0932\u093f\u0902\u0917 \u092c\u0926\u0932\u094b and \u0938\u0902\u091c\u094d\u091e\u093e",["Notebook","Assignment","Test"],"2026-11-26","ABC","Geeta, Preeti, Anita"],["2026-11-23","10","English","Grammar",["Notebook","Assignment","Test notebook"],"2026-11-26","AB","Shaan, Renu"],["2026-11-23","2","Hindi II","L-8",["Notebook","Test"],"2026-11-26","ABC","Geeta, Preeti, Anita"],["2026-11-23","3","Hindi II","L-9",["Notebook","Test"],"2026-11-26","ABC","Geeta, Preeti, Anita"],["2026-11-23","4","Maths","L-5",["Assignment","Test"],"2026-11-26","ABC","Pooja, Priya Shekhawat, Gauri"],["2026-11-23","5","English I","L-8",["Assignment","Test"],"2026-11-26","ABC","Anuradha, Reema, Devanshi"],["2026-11-23","6","Computer","Chapter 6",["Notebook","Assignment","Test notebook"],"2026-11-26","ABC","Himanshu, Richa"],["2026-11-23","6","English I","Poem 5",["Notebook","Assignment","Test notebook"],"2026-11-26","ABC","Swati, Yavnika, Jyotshna"],["2026-11-23","6","Maths","L-6",["Notebook","Assignment","Test notebook"],"2026-11-26","ABC","Amit, Madhu, Neha J"],["2026-11-23","7","Hindi II","L-14",["Notebook","Assignment","Test notebook"],"2026-11-26","ABC","Tripti, Ajita, Bharti"],["2026-11-23","8","Hindi II","L-17",["Notebook","Assignment","Test notebook"],"2026-11-26","ABC","Tripti, Ajita, Bharti"],["2026-11-23","9","S.St.","Part-II L-1",["Notebook","Assignment","Test notebook"],"2026-11-26","A","Radha"],["2026-11-25","10","S.St.","Revision",["Notebook","Assignment","Test notebook"],"2026-11-27","AB","Jatin, Radha"],["2026-11-25","10","Science","L-12",["Notebook","Assignment","Test notebook"],"2026-11-27","B","Nisha"],["2026-11-25","2","EVS","L-13",["Assignment","Test"],"2026-11-27","ABC","Deepmala, Deepali, Chhavi"],["2026-11-25","3","English II","L-7",["Assignment","Test"],"2026-11-27","ABC","Tina, Vaneshwari, Saroj"],["2026-11-25","5","GK","Pages 33\u201338, 50, 56",["Test"],"2026-11-27","ABC","Anuradha, Reema, Devanshi"],["2026-11-25","6","Sanskrit","L-11",["Notebook","Assignment","Test notebook"],"2026-11-27","ABC","Tripti, Ajita, Bharti"],["2026-11-25","7","Maths","L-7",["Notebook","Assignment","Test notebook"],"2026-11-27","ABC","Vipul, Madhu, Neha J"],["2026-11-25","8","Hindi I","L-12",["Notebook","Assignment","Test notebook"],"2026-11-27","ABC","Tripti, Ajita, Bharti"],["2026-11-25","9","English","L-7",["Notebook","Assignment","Test notebook"],"2026-11-27","A","Shaan"],["2026-11-25","9","Science","L-12",["Notebook","Assignment","Test notebook"],"2026-11-27","B","Nisha"],["2026-11-26","1","GK","Pages 27\u201328",["Test"],"2026-11-28","ABC","Sunita, Priyanshi Bhojak, Kanika"],["2026-11-26","10","Hindi","Sparsh L-14",["Notebook","Assignment","Test notebook"],"2026-11-28","A","Shobha"],["2026-11-26","2","Maths","L-13",["Assignment","Test"],"2026-11-28","ABC","Deepmala, Deepali, Chhavi"],["2026-11-26","3","English I","L-8",["Assignment","Test"],"2026-11-28","ABC","Tina, Vaneshwari, Saroj"],["2026-11-26","4","Science","L-9",["Assignment","Test"],"2026-11-28","ABC","Pooja, Priya Shekhawat, Gauri"],["2026-11-26","5","Hindi II","L-9",["Notebook","Test"],"2026-11-28","ABC","Geeta, Preeti, Anita"],["2026-11-26","6","Hindi II","L-16",["Notebook","Assignment","Test notebook"],"2026-11-28","ABC","Tripti, Ajita, Bharti"],["2026-11-26","7","English II","L-8",["Notebook","Assignment","Test notebook"],"2026-11-28","ABC","Swati, Yavnika, Jyotshna"],["2026-11-26","9","Computer","Chapter 4",["Notebook","Assignment","Test notebook"],"2026-11-28","AB","To be assigned"],["2026-11-27","1","English I","L-9",["Assignment","Test"],"2026-11-30","ABC","Sunita, Priyanshi Bhojak, Kanika"],["2026-11-27","10","English","FF Poem-8",["Notebook","Assignment","Test notebook"],"2026-11-30","B","Renu"],["2026-11-27","10","Science","L-12",["Notebook","Assignment","Test notebook"],"2026-11-30","A","Nisha"],["2026-11-27","4","Hindi II","L-9",["Notebook","Test"],"2026-11-30","ABC","Geeta, Preeti, Anita"],["2026-11-27","6","English II","L-8",["Notebook","Assignment","Test notebook"],"2026-11-30","ABC","Swati, Yavnika, Jyotshna"],["2026-11-27","7","Hindi I","L-14",["Notebook","Assignment","Test notebook"],"2026-11-30","ABC","Tripti, Ajita, Bharti"],["2026-11-27","9","S.St.","Part-II L-2",["Notebook","Assignment","Test notebook"],"2026-11-30","B","Jatin"],["2026-11-28","2","English I","L-9",["Assignment","Test"],"2026-12-01","ABC","Deepmala, Deepali, Chhavi"],["2026-11-28","3","Hindi II","L-17",["Notebook","Test"],"2026-12-01","ABC","Geeta, Preeti, Anita"],["2026-11-28","4","GK","Pages 28\u201331, 44, 49",["Test"],"2026-12-01","ABC","Pooja, Priya Shekhawat, Gauri"],["2026-11-28","5","Science","L-10",["Assignment","Test"],"2026-12-01","ABC","Anuradha, Reema, Devanshi"],["2026-11-28","6","Sanskrit","L-12",["Notebook","Assignment","Test notebook"],"2026-12-01","ABC","Tripti, Ajita, Bharti"],["2026-11-28","9","English","L-7",["Notebook","Assignment","Test notebook"],"2026-12-01","B","Shaan"],["2026-11-28","9","Sanskrit","L-1",["Notebook","Assignment","Test notebook"],"2026-12-01","A","Shobha"],["2026-11-30","1","Computer","L-6",["Test"],"2026-12-02","ABC","Sunita, Priyanshi Bhojak, Kanika"],["2026-11-30","10","English","FF Poem-8",["Notebook","Assignment","Test notebook"],"2026-12-02","A","Shaan"],["2026-11-30","3","Science","L-9",["Assignment","Test"],"2026-12-02","ABC","Tina, Vaneshwari, Saroj"],["2026-11-30","4","S.St.","L-13",["Assignment","Test"],"2026-12-02","ABC","Pooja, Priya Shekhawat, Gauri"],["2026-11-30","5","English II","L-7",["Assignment","Test"],"2026-12-02","ABC","Anuradha, Reema, Devanshi"],["2026-11-30","6","Hindi I","L-15",["Notebook","Assignment","Test notebook"],"2026-12-02","ABC","Tripti, Ajita, Bharti"],["2026-11-30","7","Science","L-10",["Notebook","Assignment","Test notebook"],"2026-12-02","ABC","Pallavi, Shreya, Ritika"],["2026-11-30","9","S.St.","Part-II L-2",["Notebook","Assignment","Test notebook"],"2026-12-02","A","Radha"],["2026-12-01","2","Computer","L-6",["Test"],"2026-12-03","ABC","Deepmala, Deepali, Chhavi"],["2026-12-01","5","S.St.","L-12",["Assignment","Test"],"2026-12-03","ABC","Anuradha, Reema, Devanshi"],["2026-12-01","7","Hindi II","L-15",["Notebook","Assignment","Test notebook"],"2026-12-03","ABC","Tripti, Ajita, Bharti"],["2026-12-01","8","S.St.","Part II L-4",["Notebook","Assignment","Test notebook"],"2026-12-03","ABC","Shailesh, Ishita, Monika"],["2026-12-01","9","English","Poem-7",["Notebook","Assignment","Test notebook"],"2026-12-03","A","Shaan"],["2026-12-01","9","Sanskrit","L-1",["Notebook","Assignment","Test notebook"],"2026-12-03","B","Poonam Gaur"],["2026-12-02","2","Hindi I","L-11",["Notebook","Assignment","Test"],"2026-12-04","ABC","Geeta, Preeti, Anita"],["2026-12-02","3","S.St.","L-13",["Assignment","Test"],"2026-12-04","ABC","Tina, Vaneshwari, Saroj"],["2026-12-02","6","Science","L-10",["Notebook","Assignment","Test notebook"],"2026-12-04","ABC","Pallavi, Shreya, Ritika"],["2026-12-02","7","Sanskrit","L-12",["Notebook","Assignment","Test notebook"],"2026-12-04","ABC","Tripti, Ajita, Bharti"],["2026-12-02","8","Hindi I","L-13",["Notebook","Assignment","Test notebook"],"2026-12-04","ABC","Tripti, Ajita, Bharti"],["2026-12-02","9","Hindi","L-7",["Notebook","Assignment","Test notebook"],"2026-12-04","A","Shobha"],["2026-12-02","9","S.St.","Part-II L-4",["Notebook","Assignment","Test notebook"],"2026-12-04","B","Jatin"],["2026-12-02","9","Sanskrit","L-3",["Notebook","Assignment","Test notebook"],"2026-12-04","A","Shobha"],["2026-12-03","3","Hindi I","L-12",["Notebook","Test"],"2026-12-07","ABC","Geeta, Preeti, Anita"],["2026-12-03","4","English I","L-9",["Assignment","Test"],"2026-12-07","ABC","Pooja, Priya Shekhawat, Gauri"],["2026-12-03","6","Sanskrit","L-13",["Notebook","Assignment","Test notebook"],"2026-12-07","ABC","Tripti, Ajita, Bharti"],["2026-12-03","9","Sanskrit","L-3",["Notebook","Assignment","Test notebook"],"2026-12-07","B","Poonam Gaur"],["2026-12-04","4","Hindi I","L-12",["Notebook","Test"],"2026-12-08","ABC","Geeta, Preeti, Anita"],["2026-12-04","6","Hindi I","L-16",["Notebook","Assignment","Test notebook"],"2026-12-08","ABC","Tripti, Ajita, Bharti"],["2026-12-04","7","S.St.","Part II L-2",["Notebook","Assignment","Test notebook"],"2026-12-08","ABC","Shailesh, Ishita, Monika"],["2026-12-04","8","English II","L-9",["Notebook","Assignment","Test notebook"],"2026-12-08","ABC","Swati, Yavnika, Jyotshna"],["2026-12-05","4","Hindi I","L-13",["Notebook","Test"],"2026-12-08","ABC","Geeta, Preeti, Anita"],["2026-12-05","5","English I","L-9",["Assignment","Test"],"2026-12-08","ABC","Anuradha, Reema, Devanshi"]];
+const TPC=[["2026-11-12","1","EVS","L-13",["Assignment","Test"],"2026-11-16","ABC","Sunita, Priyanshi Bhojak, Kanika"],["2026-11-12","10","English","FP L-9",["Notebook","Assignment","Test notebook"],"2026-11-16","B","Shaan"],["2026-11-12","10","Maths","L-14",["Notebook","Test notebook"],"2026-11-16","AB","Vipul, Amit"],["2026-11-12","2","EVS","L-12",["Assignment","Test"],"2026-11-16","ABC","Deepmala, Deepali, Chhavi"],["2026-11-12","3","Science","L-8",["Assignment","Test"],"2026-11-16","ABC","Tina, Vaneshwari, Saroj"],["2026-11-12","4","Science","L-8",["Assignment","Test"],"2026-11-16","ABC","Pooja, Priya Shekhawat, Gauri"],["2026-11-12","5","Science","L-9",["Assignment","Test"],"2026-11-16","ABC","Anuradha, Reema, Divyanshi"],["2026-11-12","6","S.St.","L-8",["Notebook","Assignment","Test notebook"],"2026-11-16","ABC","Shailesh, Ishita, Monika"],["2026-11-12","7","Hindi I","L-12",["Notebook","Assignment","Test notebook"],"2026-11-16","ABC","Tripti, Ajita, Bharti"],["2026-11-12","8","Maths","L-7",["Notebook","Assignment","Test notebook"],"2026-11-16","ABC","Vipul, Amit, Neha J"],["2026-11-12","8","Science","L-10",["Notebook","Assignment","Test notebook"],"2026-11-16","ABC","Pallavi, Shreya, Ritika"],["2026-11-12","9","Hindi","L-11",["Notebook","Assignment","Test notebook"],"2026-11-16","A","Shobha"],["2026-11-12","9","Science","L-11",["Notebook","Assignment","Test notebook"],"2026-11-16","B","Nisha"],["2026-11-13","10","S.St.","Geo-6",["Notebook","Assignment","Test notebook"],"2026-11-17","A","Jatin"],["2026-11-13","3","Hindi I","L-11",["Notebook","Test"],"2026-11-17","ABC","Geeta, Preeti, Anita"],["2026-11-13","4","Hindi II","L-8",["Notebook","Test"],"2026-11-17","ABC","Geeta, Preeti, Anita"],["2026-11-13","5","Hindi II","L-8",["Notebook","Test"],"2026-11-17","ABC","Geeta, Preeti, Anita"],["2026-11-13","6","English II","L-7",["Notebook","Assignment","Test notebook"],"2026-11-17","ABC","Swati, Yavnika, Jyotshna"],["2026-11-13","7","Hindi I","L-13",["Notebook","Assignment","Test notebook"],"2026-11-17","ABC","Tripti, Ajita, Bharti"],["2026-11-13","8","Sanskrit","L-11",["Notebook","Assignment","Test notebook"],"2026-11-17","ABC","Tripti, Ajita, Bharti"],["2026-11-16","10","English","FP L-9",["Notebook","Assignment","Test notebook"],"2026-11-18","A","Shaan"],["2026-11-16","10","Science","L-13",["Notebook","Assignment","Test notebook"],"2026-11-18","B","Pallavi"],["2026-11-16","2","Hindi I","L-10",["Notebook","Assignment","Test"],"2026-11-18","ABC","Geeta, Preeti, Anita"],["2026-11-16","6","Hindi II","L-14",["Notebook","Assignment","Test notebook"],"2026-11-18","ABC","Tripti, Ajita, Bharti"],["2026-11-16","7","English I","Poem 5",["Notebook","Assignment","Test notebook"],"2026-11-18","ABC","Swati, Yavnika, Jyotshna"],["2026-11-16","8","Sanskrit","L-12",["Notebook","Assignment","Test notebook"],"2026-11-18","ABC","Tripti, Ajita, Bharti"],["2026-11-17","1","Maths","L-12",["Assignment","Test"],"2026-11-19","ABC","Sunita, Priyanshi Bhojak, Kanika"],["2026-11-17","10","Hindi","Sparsh L-7",["Notebook","Assignment","Test notebook"],"2026-11-19","A","Shobha"],["2026-11-17","10","S.St.","Geo-6",["Notebook","Assignment","Test notebook"],"2026-11-19","B","Radha"],["2026-11-17","2","Maths","L-8",["Assignment","Test"],"2026-11-19","ABC","Deepmala, Deepali, Chhavi"],["2026-11-17","4","S.St.","L-12",["Assignment","Test"],"2026-11-19","ABC","Pooja, Priya Shekhawat, Gauri"],["2026-11-17","5","English II","L-6",["Assignment","Test"],"2026-11-19","ABC","Anuradha, Reema, Divyanshi"],["2026-11-17","7","GK","Pages so far",["Test notebook"],"2026-11-19","ABC","Shailesh, Ishita, Monika"],["2026-11-17","8","English I","Poem 4 & Poem 5",["Notebook","Assignment","Test notebook"],"2026-11-19","ABC","Swati, Yavnika, Jyotshna"],["2026-11-17","9","S.St.","Part-II L-1",["Notebook","Assignment","Test notebook"],"2026-11-19","B","Jatin"],["2026-11-18","1","English I","L-8",["Assignment","Test"],"2026-11-20","ABC","Sunita, Priyanshi Bhojak, Kanika"],["2026-11-18","10","Hindi","Sparsh L-14",["Notebook","Assignment","Test notebook"],"2026-11-20","B","Shobha"],["2026-11-18","10","S.St.","Geo-7",["Notebook","Assignment","Test notebook"],"2026-11-20","A","Jatin"],["2026-11-18","2","GK","Pages 28\u201331",["Test"],"2026-11-20","ABC","Deepmala, Deepali, Chhavi"],["2026-11-18","3","GK","Pages 30\u201332, 44, 49",["Test"],"2026-11-20","ABC","Tina, Vaneshwari, Saroj"],["2026-11-18","5","S.St.","L-11",["Assignment","Test"],"2026-11-20","ABC","Anuradha, Reema, Divyanshi"],["2026-11-18","7","Hindi II","L-13",["Notebook","Assignment","Test notebook"],"2026-11-20","ABC","Tripti, Ajita, Bharti"],["2026-11-18","8","English I","L-8",["Notebook","Assignment","Test notebook"],"2026-11-20","ABC","Swati, Yavnika, Jyotshna"],["2026-11-18","9","Science","L-11",["Notebook","Assignment","Test notebook"],"2026-11-20","A","Nisha"],["2026-11-19","1","Hindi","L-16",["Notebook","Assignment","Test"],"2026-11-21","ABC","Geeta, Preeti, Anita"],["2026-11-19","10","English","FF L-9",["Notebook","Assignment","Test notebook"],"2026-11-21","B","Shaan"],["2026-11-19","2","English I","L-8",["Assignment","Test"],"2026-11-21","ABC","Deepmala, Deepali, Chhavi"],["2026-11-19","4","Hindi I","L-11",["Notebook","Test"],"2026-11-21","ABC","Geeta, Preeti, Anita"],["2026-11-19","5","Hindi I","L-11",["Notebook","Test"],"2026-11-21","ABC","Geeta, Preeti, Anita"],["2026-11-19","6","S.St.","L-3",["Notebook","Assignment","Test notebook"],"2026-11-21","ABC","Shailesh, Ishita, Monika"],["2026-11-19","7","English I","L-8",["Notebook","Assignment","Test notebook"],"2026-11-21","ABC","Swati, Yavnika, Jyotshna"],["2026-11-19","8","Sanskrit","L-13",["Notebook","Assignment","Test notebook"],"2026-11-21","AC","Tripti, Bharti"],["2026-11-19","8","Sanskrit","L-13",["Notebook","Assignment","Test notebook","Book"],"2026-11-21","B","Ajita"],["2026-11-19","9","Hindi","L-11",["Notebook","Assignment","Test notebook"],"2026-11-21","B","Poonam Gaur"],["2026-11-20","1","EVS","L-14 (A, B, C, D)",["Assignment"],"2026-11-20","ABC","Sunita, Priyanshi Bhojak, Kanika"],["2026-11-20","1","English II","Story \u2013 The Fox and the Grapes",["Assignment","Test"],"2026-11-23","ABC","Sunita, Priyanshi Bhojak, Kanika"],["2026-11-20","1","Hindi","\u092e\u0947\u0930\u093e \u092a\u0930\u093f\u091a\u092f",["Notebook"],"2026-11-20","ABC","Geeta, Preeti, Anita"],["2026-11-20","10","English","FF L-7",["Assignment"],"2026-11-20","A","Shaan"],["2026-11-20","10","English","FF L-8",["Assignment"],"2026-11-20","A","Shaan"],["2026-11-20","10","English","FF L-9",["Assignment"],"2026-11-20","A","Shaan"],["2026-11-20","10","English","FF Poem-8",["Assignment"],"2026-11-20","A","Shaan"],["2026-11-20","10","Hindi","Sparsh L-13",["Notebook","Assignment","Test notebook"],"2026-11-23","A","Shobha"],["2026-11-20","10","Maths","HW Notebook",["Notebook"],"2026-11-20","A","Vipul"],["2026-11-20","10","S.St.","Geo-7",["Notebook","Assignment","Test notebook"],"2026-11-23","B","Radha"],["2026-11-20","10","Science","Diwali Assignment",["Assignment"],"2026-11-20","AB","Nisha"],["2026-11-20","11","Accountancy","L-18",["Test notebook"],"2026-11-20","A","Jitesh"],["2026-11-20","11","Accountancy","L-19",["Notebook"],"2026-11-20","A","Jitesh"],["2026-11-20","11","Business Studies","L-7",["Test notebook","Notebook","Assignment"],"2026-11-20","A","Jitesh"],["2026-11-20","11","Informatics Practices","Class Test",["Test notebook"],"2026-11-20","A","Himanshu"],["2026-11-20","11","Informatics Practices","L-8",["Test notebook"],"2026-11-20","A","Jitesh"],["2026-11-20","11","Microeconomics","L-9",["Notebook","Assignment","Test notebook"],"2026-11-20","A","Manisha"],["2026-11-20","11","Statistics","Ch-8",["Assignment"],"2026-11-20","A","Manisha"],["2026-11-20","2","All subjects","Assignment ticking",["Assignment"],"2026-11-20","C","Chhavi"],["2026-11-20","2","English II","L-8",["Assignment","Test"],"2026-11-23","ABC","Deepmala, Deepali, Chhavi"],["2026-11-20","2","GK","Assignment 8",["Assignment"],"2026-11-20","C","Chhavi"],["2026-11-20","2","GK","Assignment 8 (ticking)",["Assignment"],"2026-11-20","A","Deepmala"],["2026-11-20","2","Maths","Assignment 13.1",["Assignment"],"2026-11-20","AB","Deepmala, Deepali"],["2026-11-20","3","Hindi I","L-12",["Book Exercise","\u0915\u0920\u093f\u0928 \u0936\u092c\u094d\u0926, \u0936\u092c\u094d\u0926\u093e\u0930\u094d\u0925"],"2026-11-20","ABC","Geeta, Preeti, Anita"],["2026-11-20","3","S.St.","L-12",["Assignment","Test"],"2026-11-23","ABC","Tina, Vaneshwari, Saroj"],["2026-11-20","4","All subjects","Holiday Assignment",["Assignment"],"2026-11-20","B","Priya Shekhawat"],["2026-11-20","4","English I","L-8 (A, B, C, D)",["Assignment"],"2026-11-20","ABC","Pooja, Priya Shekhawat, Gauri"],["2026-11-20","4","Hindi II","\u091a\u093f\u0924\u094d\u0930 \u0935\u0930\u094d\u0923\u0928",["Book Exercise"],"2026-11-20","ABC","Geeta, Preeti, Anita"],["2026-11-20","4","Maths","Assignment 5.2",["Assignment"],"2026-11-20","A","Pooja"],["2026-11-20","4","Maths","Assignment 5.3",["Assignment"],"2026-11-20","ABC","Pooja, Priya Shekhawat, Gauri"],["2026-11-20","5","Hindi II","\u0935\u093f\u0932\u094b\u092e \u0936\u092c\u094d\u0926",["Notebook"],"2026-11-20","ABC","Geeta, Preeti, Anita"],["2026-11-20","5","Maths","L-10",["Assignment","Test"],"2026-11-23","ABC","Anuradha, Reema, Divyanshi"],["2026-11-20","5","S.St.","Google Sheets",["Google Sheets"],"2026-11-20","A","Anuradha"],["2026-11-20","6","English I","L-8",["Notebook","Assignment","Test notebook"],"2026-11-23","ABC","Swati, Yavnika, Jyotshna"],["2026-11-20","6","English II","L-8",["Assignment"],"2026-11-20","ABC","Swati, Yavnika, Jyotshna"],["2026-11-20","6","Maths","HW Notebook",["Notebook"],"2026-11-20","A","Amit"],["2026-11-20","6","Science","L-9",["Assignment"],"2026-11-20","AC","Pallavi, Ritika"],["2026-11-20","7","English I","Diwali Assignment",["Assignment"],"2026-11-20","A","Swati"],["2026-11-20","7","Maths","Home Assignment 7D",["Assignment"],"2026-11-20","A","Vipul"],["2026-11-20","7","Maths","L-7",["Test notebook","Assignment"],"2026-11-20","ABC","Vipul, Madhu, Neha J"],["2026-11-20","7","S.St.","Diwali Assignment",["Assignment"],"2026-11-20","C","Monika"],["2026-11-20","8","Computer","Chapter 7",["Notebook","Assignment","Test notebook"],"2026-11-23","ABC","Himanshu"],["2026-11-20","8","English I","L-7",["Assignment"],"2026-11-20","BC","Yavnika, Jyotshna"],["2026-11-20","8","Hindi I","L-11",["Notebook","Assignment","Test notebook"],"2026-11-23","ABC","Tripti, Ajita, Bharti"],["2026-11-20","8","Maths","Home Assignment 1A",["Assignment"],"2026-11-20","ABC","Vipul, Amit, Neha J"],["2026-11-20","8","Maths","Home Assignment 1B",["Assignment"],"2026-11-20","ABC","Vipul, Amit, Neha J"],["2026-11-20","8","S.St.","Diwali Assignment",["Assignment"],"2026-11-20","C","Monika"],["2026-11-20","9","English","L-6",["Assignment"],"2026-11-20","B","Shaan"],["2026-11-20","9","Maths","Home Assignment 13.1",["Assignment"],"2026-11-20","A","Amit"],["2026-11-20","9","Maths","Home Assignment 13.2",["Assignment"],"2026-11-20","A","Amit"],["2026-11-20","9","Maths","L-10",["Notebook","Test notebook"],"2026-11-23","AB","Amit, Vipul"],["2026-11-20","9","Sanskrit","L-1",["Test notebook"],"2026-11-20","A","Shobha"],["2026-11-20","9","Science","Diwali Assignment",["Assignment"],"2026-11-20","AB","Nisha"],["2026-11-21","10","English","FF L-9",["Notebook","Assignment","Test notebook"],"2026-11-25","A","Shaan"],["2026-11-21","3","Maths","L-7",["Assignment","Test"],"2026-11-25","ABC","Tina, Vaneshwari, Saroj"],["2026-11-21","4","English I","L-8",["Assignment","Test"],"2026-11-25","ABC","Pooja, Priya Shekhawat, Gauri"],["2026-11-21","6","Hindi II","L-15",["Notebook","Assignment","Test notebook"],"2026-11-25","ABC","Tripti, Ajita, Bharti"],["2026-11-21","6","Maths","Assignment-6 (Days 1\u20133)",["Assignment"],"2026-11-25","ABC","Amit, Madhu, Neha J"],["2026-11-21","7","S.St.","Part II L-1",["Notebook","Assignment","Test notebook"],"2026-11-25","ABC","Shailesh, Ishita, Monika"],["2026-11-21","8","Hindi II","L-13",["Notebook","Assignment","Test notebook"],"2026-11-25","ABC","Tripti, Ajita, Bharti"],["2026-11-23","1","EVS","L-14",["Assignment","Test"],"2026-11-26","ABC","Sunita, Priyanshi Bhojak, Kanika"],["2026-11-23","1","Hindi","\u092e\u0947\u0930\u093e \u092a\u0930\u093f\u091a\u092f, \u0932\u093f\u0902\u0917 \u092c\u0926\u0932\u094b and \u0938\u0902\u091c\u094d\u091e\u093e",["Notebook","Assignment","Test"],"2026-11-26","ABC","Geeta, Preeti, Anita"],["2026-11-23","10","English","Grammar",["Notebook","Assignment","Test notebook"],"2026-11-26","AB","Shaan, Renu"],["2026-11-23","2","Hindi II","L-8",["Notebook","Test"],"2026-11-26","ABC","Geeta, Preeti, Anita"],["2026-11-23","3","Hindi II","L-9",["Notebook","Test"],"2026-11-26","ABC","Geeta, Preeti, Anita"],["2026-11-23","4","Maths","L-5",["Assignment","Test"],"2026-11-26","ABC","Pooja, Priya Shekhawat, Gauri"],["2026-11-23","5","English I","L-8",["Assignment","Test"],"2026-11-26","ABC","Anuradha, Reema, Divyanshi"],["2026-11-23","6","Computer","Chapter 6",["Notebook","Assignment","Test notebook"],"2026-11-26","ABC","Himanshu, Richa"],["2026-11-23","6","English I","Poem 5",["Notebook","Assignment","Test notebook"],"2026-11-26","ABC","Swati, Yavnika, Jyotshna"],["2026-11-23","6","Maths","L-6",["Notebook","Assignment","Test notebook"],"2026-11-26","ABC","Amit, Madhu, Neha J"],["2026-11-23","7","Hindi II","L-14",["Notebook","Assignment","Test notebook"],"2026-11-26","ABC","Tripti, Ajita, Bharti"],["2026-11-23","8","Hindi II","L-17",["Notebook","Assignment","Test notebook"],"2026-11-26","ABC","Tripti, Ajita, Bharti"],["2026-11-23","9","S.St.","Part-II L-1",["Notebook","Assignment","Test notebook"],"2026-11-26","A","Radha"],["2026-11-25","10","S.St.","Revision",["Notebook","Assignment","Test notebook"],"2026-11-27","AB","Jatin, Radha"],["2026-11-25","10","Science","L-12",["Notebook","Assignment","Test notebook"],"2026-11-27","B","Nisha"],["2026-11-25","2","EVS","L-13",["Assignment","Test"],"2026-11-27","ABC","Deepmala, Deepali, Chhavi"],["2026-11-25","3","English II","L-7",["Assignment","Test"],"2026-11-27","ABC","Tina, Vaneshwari, Saroj"],["2026-11-25","5","GK","Pages 33\u201338, 50, 56",["Test"],"2026-11-27","ABC","Anuradha, Reema, Divyanshi"],["2026-11-25","6","Sanskrit","L-11",["Notebook","Assignment","Test notebook"],"2026-11-27","ABC","Tripti, Ajita, Bharti"],["2026-11-25","7","Maths","L-7",["Notebook","Assignment","Test notebook"],"2026-11-27","ABC","Vipul, Madhu, Neha J"],["2026-11-25","8","Hindi I","L-12",["Notebook","Assignment","Test notebook"],"2026-11-27","ABC","Tripti, Ajita, Bharti"],["2026-11-25","9","English","L-7",["Notebook","Assignment","Test notebook"],"2026-11-27","A","Shaan"],["2026-11-25","9","Science","L-12",["Notebook","Assignment","Test notebook"],"2026-11-27","B","Nisha"],["2026-11-26","1","GK","Pages 27\u201328",["Test"],"2026-11-28","ABC","Sunita, Priyanshi Bhojak, Kanika"],["2026-11-26","10","Hindi","Sparsh L-14",["Notebook","Assignment","Test notebook"],"2026-11-28","A","Shobha"],["2026-11-26","2","Maths","L-13",["Assignment","Test"],"2026-11-28","ABC","Deepmala, Deepali, Chhavi"],["2026-11-26","3","English I","L-8",["Assignment","Test"],"2026-11-28","ABC","Tina, Vaneshwari, Saroj"],["2026-11-26","4","Science","L-9",["Assignment","Test"],"2026-11-28","ABC","Pooja, Priya Shekhawat, Gauri"],["2026-11-26","5","Hindi II","L-9",["Notebook","Test"],"2026-11-28","ABC","Geeta, Preeti, Anita"],["2026-11-26","6","Hindi II","L-16",["Notebook","Assignment","Test notebook"],"2026-11-28","ABC","Tripti, Ajita, Bharti"],["2026-11-26","7","English II","L-8",["Notebook","Assignment","Test notebook"],"2026-11-28","ABC","Swati, Yavnika, Jyotshna"],["2026-11-26","9","Computer","Chapter 4",["Notebook","Assignment","Test notebook"],"2026-11-28","AB","To be assigned"],["2026-11-27","1","English I","L-9",["Assignment","Test"],"2026-11-30","ABC","Sunita, Priyanshi Bhojak, Kanika"],["2026-11-27","10","English","FF Poem-8",["Notebook","Assignment","Test notebook"],"2026-11-30","B","Renu"],["2026-11-27","10","Science","L-12",["Notebook","Assignment","Test notebook"],"2026-11-30","A","Nisha"],["2026-11-27","4","Hindi II","L-9",["Notebook","Test"],"2026-11-30","ABC","Geeta, Preeti, Anita"],["2026-11-27","6","English II","L-8",["Notebook","Assignment","Test notebook"],"2026-11-30","ABC","Swati, Yavnika, Jyotshna"],["2026-11-27","7","Hindi I","L-14",["Notebook","Assignment","Test notebook"],"2026-11-30","ABC","Tripti, Ajita, Bharti"],["2026-11-27","9","S.St.","Part-II L-2",["Notebook","Assignment","Test notebook"],"2026-11-30","B","Jatin"],["2026-11-28","2","English I","L-9",["Assignment","Test"],"2026-12-01","ABC","Deepmala, Deepali, Chhavi"],["2026-11-28","3","Hindi II","L-17",["Notebook","Test"],"2026-12-01","ABC","Geeta, Preeti, Anita"],["2026-11-28","4","GK","Pages 28\u201331, 44, 49",["Test"],"2026-12-01","ABC","Pooja, Priya Shekhawat, Gauri"],["2026-11-28","5","Science","L-10",["Assignment","Test"],"2026-12-01","ABC","Anuradha, Reema, Divyanshi"],["2026-11-28","6","Sanskrit","L-12",["Notebook","Assignment","Test notebook"],"2026-12-01","ABC","Tripti, Ajita, Bharti"],["2026-11-28","9","English","L-7",["Notebook","Assignment","Test notebook"],"2026-12-01","B","Shaan"],["2026-11-28","9","Sanskrit","L-1",["Notebook","Assignment","Test notebook"],"2026-12-01","A","Shobha"],["2026-11-30","1","Computer","L-6",["Test"],"2026-12-02","ABC","Sunita, Priyanshi Bhojak, Kanika"],["2026-11-30","10","English","FF Poem-8",["Notebook","Assignment","Test notebook"],"2026-12-02","A","Shaan"],["2026-11-30","3","Science","L-9",["Assignment","Test"],"2026-12-02","ABC","Tina, Vaneshwari, Saroj"],["2026-11-30","4","S.St.","L-13",["Assignment","Test"],"2026-12-02","ABC","Pooja, Priya Shekhawat, Gauri"],["2026-11-30","5","English II","L-7",["Assignment","Test"],"2026-12-02","ABC","Anuradha, Reema, Divyanshi"],["2026-11-30","6","Hindi I","L-15",["Notebook","Assignment","Test notebook"],"2026-12-02","ABC","Tripti, Ajita, Bharti"],["2026-11-30","7","Science","L-10",["Notebook","Assignment","Test notebook"],"2026-12-02","ABC","Pallavi, Shreya, Ritika"],["2026-11-30","9","S.St.","Part-II L-2",["Notebook","Assignment","Test notebook"],"2026-12-02","A","Radha"],["2026-12-01","2","Computer","L-6",["Test"],"2026-12-03","ABC","Deepmala, Deepali, Chhavi"],["2026-12-01","5","S.St.","L-12",["Assignment","Test"],"2026-12-03","ABC","Anuradha, Reema, Divyanshi"],["2026-12-01","7","Hindi II","L-15",["Notebook","Assignment","Test notebook"],"2026-12-03","ABC","Tripti, Ajita, Bharti"],["2026-12-01","8","S.St.","Part II L-4",["Notebook","Assignment","Test notebook"],"2026-12-03","ABC","Shailesh, Ishita, Monika"],["2026-12-01","9","English","Poem-7",["Notebook","Assignment","Test notebook"],"2026-12-03","A","Shaan"],["2026-12-01","9","Sanskrit","L-1",["Notebook","Assignment","Test notebook"],"2026-12-03","B","Poonam Gaur"],["2026-12-02","2","Hindi I","L-11",["Notebook","Assignment","Test"],"2026-12-04","ABC","Geeta, Preeti, Anita"],["2026-12-02","3","S.St.","L-13",["Assignment","Test"],"2026-12-04","ABC","Tina, Vaneshwari, Saroj"],["2026-12-02","6","Science","L-10",["Notebook","Assignment","Test notebook"],"2026-12-04","ABC","Pallavi, Shreya, Ritika"],["2026-12-02","7","Sanskrit","L-12",["Notebook","Assignment","Test notebook"],"2026-12-04","ABC","Tripti, Ajita, Bharti"],["2026-12-02","8","Hindi I","L-13",["Notebook","Assignment","Test notebook"],"2026-12-04","ABC","Tripti, Ajita, Bharti"],["2026-12-02","9","Hindi","L-7",["Notebook","Assignment","Test notebook"],"2026-12-04","A","Shobha"],["2026-12-02","9","S.St.","Part-II L-4",["Notebook","Assignment","Test notebook"],"2026-12-04","B","Jatin"],["2026-12-02","9","Sanskrit","L-3",["Notebook","Assignment","Test notebook"],"2026-12-04","A","Shobha"],["2026-12-03","3","Hindi I","L-12",["Notebook","Test"],"2026-12-07","ABC","Geeta, Preeti, Anita"],["2026-12-03","4","English I","L-9",["Assignment","Test"],"2026-12-07","ABC","Pooja, Priya Shekhawat, Gauri"],["2026-12-03","6","Sanskrit","L-13",["Notebook","Assignment","Test notebook"],"2026-12-07","ABC","Tripti, Ajita, Bharti"],["2026-12-03","9","Sanskrit","L-3",["Notebook","Assignment","Test notebook"],"2026-12-07","B","Poonam Gaur"],["2026-12-04","4","Hindi I","L-12",["Notebook","Test"],"2026-12-08","ABC","Geeta, Preeti, Anita"],["2026-12-04","6","Hindi I","L-16",["Notebook","Assignment","Test notebook"],"2026-12-08","ABC","Tripti, Ajita, Bharti"],["2026-12-04","7","S.St.","Part II L-2",["Notebook","Assignment","Test notebook"],"2026-12-08","ABC","Shailesh, Ishita, Monika"],["2026-12-04","8","English II","L-9",["Notebook","Assignment","Test notebook"],"2026-12-08","ABC","Swati, Yavnika, Jyotshna"],["2026-12-05","4","Hindi I","L-13",["Notebook","Test"],"2026-12-08","ABC","Geeta, Preeti, Anita"],["2026-12-05","5","English I","L-9",["Assignment","Test"],"2026-12-08","ABC","Anuradha, Reema, Divyanshi"]];
 function tpcMat(n){n=String(n).toLowerCase();if(/assign/.test(n))return 'Assignment';if(/test/.test(n))return 'Test';if(/exercise|book/.test(n)&&!/notebook/.test(n))return 'Book';if(/note/.test(n))return 'Notebook';return 'Other'}
 
 /* ---------- writes (serial per document) ---------- */
@@ -745,8 +823,7 @@ function writeSlots(unit,date,map){
   const key=date+'__'+unit;
   return queue(key,async()=>{
     const ref=S.db.collection('days').doc(key);
-    if(S.days[key]||S.known[key])await ref.update({slots:map});
-    else{await ref.set({date:date,unit:unit,slots:map});S.known[key]=true}
+    await ref.update({date:date,unit:unit,slots:map});S.known[key]=true
   });
 }
 const patch=(unit,date,id,p)=>writeSlots(unit,date,{[id]:p});
@@ -765,6 +842,22 @@ function writeTheme(t){
 }
 
 /* ---------- subscriptions ---------- */
+let lastTouch=0,holdT=0,holdSince=0;
+document.addEventListener('contextmenu',e=>{if(!/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))e.preventDefault()});
+['touchstart','touchmove','pointerdown','keydown','wheel'].forEach(ev=>document.addEventListener(ev,()=>{lastTouch=Date.now()},{passive:true,capture:true}));
+function busyNow(){
+  const a=document.activeElement;
+  if(a&&/INPUT|SELECT|TEXTAREA/.test(a.tagName))return true;
+  if(Date.now()-lastTouch<4000)return true;
+  if(S.lightbox)return true;
+  if(S.open&&Object.keys(S.open).some(k=>S.open[k])&&Date.now()-holdSince<90000)return true;
+  return false;
+}
+function softRender(){
+  if(!busyNow()){holdSince=0;clearTimeout(holdT);holdT=0;render();return}
+  if(!holdSince)holdSince=Date.now();
+  if(!holdT)holdT=setTimeout(()=>{holdT=0;softRender()},1000);
+}
 function subscribeDays(){
   if(!S.db)return;
   if(unsubDays){unsubDays();unsubDays=null}
@@ -773,8 +866,9 @@ function subscribeDays(){
     const next={};
     snap.docs.forEach(d=>{next[d.id]=d.data()});
     S.days=next;
+    const first=!S.loaded;
     if(!snap.metadata.fromCache){S.loaded=true;S.slow=false;clearTimeout(loadTimer)}
-    render();
+    if(first||window.__cdOwn)render();else softRender();
   },e=>{S.slow=true;render()});
   clearTimeout(loadTimer);
   loadTimer=setTimeout(()=>{if(!S.loaded){S.slow=true;render()}},10000);
@@ -789,18 +883,68 @@ async function boot(){
   try{S.assets=await claude.use('assets')}catch(e){S.assets=null}
   try{const w=user&&user.can&&user.can('data.write');const wv=(w&&typeof w.then==='function')?await w:w;S.canWrite=wv!==false}catch(e){}
   subscribeDays();
-  db.doc('config/roster').onSnapshot(d=>{S.cfgKnown=d.exists;const v=d.exists?d.data():null;S.cfg=(v&&v.units)||{};resolveMe();if(S.me&&S.me.role!=='guest'&&document.getElementById('rt'))closeRoleDialog();render()},()=>{});
-  db.doc('config/staff').onSnapshot(d=>{S.staffKnown=d.exists;S.staff=d.exists?d.data():null;resolveMe();if(S.me&&S.me.role!=='guest'&&document.getElementById('rt'))closeRoleDialog();render()},()=>{});
-  db.doc('config/theme').onSnapshot(d=>{S.theme=d.exists?d.data():{};applyTheme();render()},()=>{});
+  db.doc('config/roster').onSnapshot(d=>{S.cfgKnown=d.exists;const v=d.exists?d.data():null;S.cfg=(v&&v.units)||{};resolveMe();if(S.me&&S.me.role!=='guest'&&document.getElementById('rt'))closeRoleDialog();window.__cdOwn?render():softRender()},()=>{});
+  db.doc('config/staff').onSnapshot(d=>{S.staffKnown=d.exists;S.staff=d.exists?d.data():null;resolveMe();if(S.me&&S.me.role!=='guest'&&document.getElementById('rt'))closeRoleDialog();window.__cdOwn?render():softRender()},()=>{});
+  db.doc('config/theme').onSnapshot(d=>{S.theme=d.exists?d.data():{};applyTheme();softRender()},()=>{});
   render();
   try{const nm=localStorage.getItem('cd_name');if(nm){S.name=nm;S.roleHint='';resolveMe();if(S.me&&S.me.role!=='guest')safeSet('fis-cd-me3',{name:S.me.name,role:S.me.role})}}catch(e){}
   resolveMe();
   if(!S.me||S.me.role==='guest')openRoleDialog();
 }
 
+/* ---------- Back button: hash routes, one screen at a time ---------- */
+let depth=0,navLock=false,exitArmed=false,exitT=0,lastRoute='';
+const scrollMem={};
+function curRoute(){
+  let r='#/'+S.tab;
+  if(S.tab==='board'&&S.unit)r+='/'+S.unit;
+  if(S.tab==='desks'||S.tab==='dash'){if(S.desk)r+='/'+S.desk}
+  if(S.lightbox)r+='/photo';
+  return r;
+}
+function applyRoute(h){
+  const m=/^#\/([a-z]+)(?:\/([A-Za-z0-9]+))?(?:\/(photo))?$/.exec(h||'');
+  if(!m)return false;
+  const tab=m[1];if(['board','desks','dash','setup'].indexOf(tab)<0)return false;
+  S.tab=tab;S.viewAs='';S.lightbox=m[3]?S.lightbox:'';
+  if(tab==='board'&&m[2]&&unitById(m[2]))S.unit=m[2];
+  if((tab==='desks'||tab==='dash')&&m[2])S.desk=m[2];
+  return true;
+}
+function syncHist(){
+  if(!S.loaded||!S.me||S.me.role==='guest')return;
+  const r=curRoute();
+  if(!lastRoute&&location.hash&&location.hash!==r&&applyRoute(location.hash)){setTimeout(render,0);return}
+  if(r===lastRoute)return;
+  scrollMem[lastRoute]=window.scrollY;
+  const first=!lastRoute;lastRoute=r;
+  if(navLock)return;
+  if(first){history.replaceState({d:0,home:1},'',r);history.pushState({d:1},'',r);depth=1;return}
+  depth++;history.pushState({d:depth},'',r);
+}
+window.addEventListener('popstate',e=>{
+  const st=e.state||{};
+  if(st.home){
+    // landed on the base entry: ask once, then let the next Back leave
+    if(!exitArmed){exitArmed=true;toast('Press Back again to exit');clearTimeout(exitT);exitT=setTimeout(()=>{exitArmed=false},2500);history.pushState({d:1},'',location.hash||curRoute());depth=1;return}
+    history.back();return;
+  }
+  navLock=true;depth=st.d||0;
+  if(!applyRoute(location.hash)){S.tab='board';S.lightbox=''}
+  lastRoute=curRoute();render();
+  const y=scrollMem[lastRoute];if(y!=null)window.scrollTo(0,y);
+  navLock=false;
+});
+function backBar(){return depth>1?'<div style="margin:0 0 8px"><button class="btn ghost small" data-act="back">‹ Back</button></div>':''}
+
 /* ---------- toast ---------- */
 let toastT=null;
-function toast(m){S.toast=m;render();clearTimeout(toastT);toastT=setTimeout(()=>{S.toast='';render()},3800)}
+function toast(m){
+  S.toast=m;let el=document.getElementById('toastEl');
+  if(!el){el=document.createElement('div');el.id='toastEl';el.className='toast';el.setAttribute('role','status');document.body.appendChild(el)}
+  el.textContent=m;el.style.display='block';
+  clearTimeout(toastT);toastT=setTimeout(()=>{S.toast='';el.style.display='none'},3800);
+}
 
 /* ---------- rendering ---------- */
 function render(){
@@ -819,8 +963,8 @@ function render(){
   else h+=renderBoard();
   h+='<div class="ver">CM Checking Desk · version 9 · 24 Nov 2026</div>';
   if(S.lightbox)h+='<div class="modal light" data-act="img-close"><img src="/_blob/'+esc(S.lightbox)+'" alt="Error photo"></div>';
-  if(S.toast)h+='<div class="toast" role="status">'+esc(S.toast)+'</div>';
-  m.innerHTML=h;
+  m.innerHTML=backBar()+h;
+  syncHist();
   if(key){const el=document.getElementById(key);if(el){el.focus({preventScroll:true});try{el.setSelectionRange(ss,se)}catch(e){}}}
   window.scrollTo(0,scroll);
 }
@@ -1323,6 +1467,7 @@ function getSlot(id){return slotsOf(S.date,S.unit).find(s=>s.id===id)||{id:id}}
 async function act(a,id,v,el){
   const me=whoName();
   switch(a){
+  case 'back':history.back();break;
   case 'tab':S.tab=v;S.viewAs='';render();window.scrollTo(0,0);break;
   case 'date-tmr':setDate(addDays(todayStr(),1));break;
   case 'unit':S.unit=v;render();break;
@@ -1331,7 +1476,7 @@ async function act(a,id,v,el){
   case 'who':S.who=v||'';render();break;
   case 'drill':S.drill=(S.drill===v)?'':v;render();break;
   case 'open-slot':S.unit=v;S.tab='board';S.open[id]=true;render();setTimeout(()=>{const e=document.querySelector('[data-id="'+id+'"]');if(e)e.scrollIntoView({block:'center'})},60);break;
-  case 'tl-start':{await patch(S.unit,S.date,id,{startAt:Date.now(),endAt:0,startBy:me});break}
+  case 'tl-start':{await patch(S.unit,S.date,id,{startAt:NOW(),endAt:0,startBy:me});break}
   case 'tl-unstart':{await patch(S.unit,S.date,id,{startAt:0,endAt:0});break}
   case 'mv-open':S.open[id]='move';render();break;
   case 'mv-do':{const s0=getSlot(id),dest=v,body=Object.assign({},s0);delete body.id;body.note=((body.note?body.note+' · ':'')+'Moved from '+unitById(S.unit).label+' by '+me).slice(0,160);body.movedFrom=S.unit;S.open[id]=null;await writeSlots(dest,S.date,{[id]:body});await patch(S.unit,S.date,id,null);toast('Moved to '+unitById(dest).label);break}
@@ -1368,9 +1513,9 @@ async function act(a,id,v,el){
   case 'role-open':openRoleDialog();break;
   case 'more':S.open[id]='more';render();break;
   case 'close':S.open[id]=null;render();break;
-  case 'cm-checked':{const s=getSlot(id);S.open[id]=null;await patch(S.unit,S.date,id,{cm:'checked',done:num(s.bundle),due:0,cmBy:me,cmAt:Date.now(),endAt:s.startAt?(s.endAt||Date.now()):0});break}
+  case 'cm-checked':{const s=getSlot(id);S.open[id]=null;await patch(S.unit,S.date,id,{cm:'checked',done:num(s.bundle),due:0,cmBy:me,cmAt:NOW(),endAt:s.startAt?(s.endAt||NOW()):0});break}
   case 'cm-due-open':{const s=getSlot(id);S.draft['d:'+id]={due:s.cm==='due'?num(s.due):(num(s.bundle)||''),remark:s.cmRemark||''};S.open[id]='due';render();break}
-  case 'cm-due-save':{const d=S.draft['d:'+id]||{};const n=num(d.due);if(!n){toast('Enter how many notebooks are due.');break}{const s0=getSlot(id);S.open[id]=null;await patch(S.unit,S.date,id,{cm:'due',due:n,done:0,cmBy:me,cmAt:Date.now(),cmRemark:(d.remark||'').trim(),endAt:s0.startAt?(s0.endAt||Date.now()):0});break}}
+  case 'cm-due-save':{const d=S.draft['d:'+id]||{};const n=num(d.due);if(!n){toast('Enter how many notebooks are due.');break}{const s0=getSlot(id);S.open[id]=null;await patch(S.unit,S.date,id,{cm:'due',due:n,done:0,cmBy:me,cmAt:NOW(),cmRemark:(d.remark||'').trim(),endAt:s0.startAt?(s0.endAt||NOW()):0});break}}
   case 'cm-reset':{const s0=getSlot(id);if(s0.cm==='pending'||!s0.cm){S.open[id]=null;render();break}if((s0.rv==='yes'||s0.rv==='no')&&S.resetAsk!==id){S.resetAsk=id;toast('The head already reviewed this. Tap again to clear the status and the review.');break}S.resetAsk=null;S.open[id]=null;delete S.draft['r:'+id];await patch(S.unit,S.date,id,{cm:'pending',due:0,done:0,endAt:0,rv:'pending',errors:0,notDone:0,rvRemark:'',rvImgs:[]});break}
   case 'rv-pick':{const k='r:'+id,d=S.draft[k]||(S.draft[k]={});d.mode=v;if(v==='ok'){d.errors=0;d.notDone=0}render();break}
   case 'rv-save':{
@@ -1378,7 +1523,7 @@ async function act(a,id,v,el){
     let rv='yes',errors=0,notDone=0,imgs=[];
     if(d.mode==='no'){rv='no';notDone=num(d.notDone);if(!notDone){toast('Enter how many were not checked.');break}}
     if(d.mode==='err'){errors=num(d.errors);if(!errors){toast('Enter how many errors were found.');break}imgs=d.imgs||[]}
-    await patch(S.unit,S.date,id,{rv:rv,notDone:notDone,errors:errors,rvImgs:imgs,rvNames:(d.names||'').trim(),rvRemark:(d.remark||'').trim(),rvBy:me,rvAt:Date.now()});toast('Review saved');break}
+    await patch(S.unit,S.date,id,{rv:rv,notDone:notDone,errors:errors,rvImgs:imgs,rvNames:(d.names||'').trim(),rvRemark:(d.remark||'').trim(),rvBy:me,rvAt:NOW()});toast('Review saved');break}
   case 'img-open':S.lightbox=v;render();break;
   case 'img-close':S.lightbox=null;render();break;
   case 'img-del':{const d=S.draft['r:'+id];if(d&&d.imgs){d.imgs.splice(num(v)>=0?parseInt(v,10):0,1);render()}break}
@@ -1407,7 +1552,7 @@ async function act(a,id,v,el){
     const isNew=id==='new',nid=isNew?uid():id,chk=d.kind==='check';
     const body={kind:d.kind,title:(d.title||'').trim()||(chk?(d.subject||'Checking'):'Duty'),from:d.from||'',to:d.to||'',note:(d.note||'').trim()};
     if(chk){Object.assign(body,{material:d.material,subject:(d.subject||'').trim(),lesson:(d.lesson||'').trim(),sections:(d.sections||'').trim(),bundle:num(d.bundle),by:d.by||'CM',after:d.after||''})}
-    if(isNew)Object.assign(body,{order:Date.now()%100000,cm:'pending'});
+    if(isNew)Object.assign(body,{order:NOW()%100000,cm:'pending'});
     delete S.draft['e:'+id];S.open[id]=null;
     await patch(S.unit,S.date,nid,body);if(isNew)toast('Added');break}
   case 'del-ask':S.delConfirm=id;render();break;
@@ -1418,7 +1563,7 @@ async function act(a,id,v,el){
   case 'theme-reset':{S.theme={};applyTheme();await writeTheme(Object.assign({},FIS_THEME));toast('FIS colours restored');break}
   }
 }
-setInterval(()=>{renderHeader();const a=document.activeElement;if(!(a&&/INPUT|SELECT|TEXTAREA/.test(a.tagName)))render()},30000);
+setInterval(()=>{if(!document.hidden){renderHeader();softRender()}},30000);
 boot();
 })();
 </script>
