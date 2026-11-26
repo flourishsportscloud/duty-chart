@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="../fis/fis-icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" media="print" onload="this.media='all'">
 <style>
 /* Layout: phone-first single column. Top bar with the signed-in staff name, one screen at a time, and a fixed bottom tab bar (Home, Complaints, Found, Floor round, History). Cases open as a full-screen layer; forms open as bottom sheets. */
 :root {
@@ -263,6 +263,13 @@ input[type=date] { border-radius: 10px; }
 .tile { opacity: 0.78; } .tile.sel { opacity: 1; outline: 3px solid var(--gold); outline-offset: 2px; transform: translateY(-2px); box-shadow: 0 10px 24px rgba(14,33,73,0.22); }
 .scard.sel { outline: 3px solid var(--gold); outline-offset: 2px; }
 .rhead { scroll-margin-top: 8px; }
+html, body { overscroll-behavior: none; }
+.overlay, .sheet, #sheet, #case { overscroll-behavior: contain; }
+a, button, .tile, .scard, .chip, .tabbtn, .rp, .row, .brand, .seg, .bar { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+input, textarea, select, [contenteditable] { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
+.sync { align-self: flex-start; border: 0; border-radius: 999px; padding: 4px 12px; font-size: 13px; font-weight: 700; margin: -6px 0 0; }
+.sync.ok { background: #e3f3ea; color: #1f7048; } .sync.warn { background: #fdf0d2; color: #8a5a00; } .sync.bad { background: #fbe0dc; color: #a22b1d; }
+.upd { position: fixed; left: 12px; right: 12px; bottom: calc(80px + env(safe-area-inset-bottom, 0px)); z-index: 60; background: var(--navy); color: #fff; border: 2px solid var(--gold); border-radius: 12px; padding: 12px; font-weight: 700; }
 </style>
 </head>
 <body>
@@ -274,6 +281,7 @@ input[type=date] { border-radius: 10px; }
     <div class="bt"><b>Lost and Found Desk</b><span>Flourish International School</span></div>
   </header>
   <div class="topbar"><h1>Lost and Found Desk</h1><div class="who" id="who"></div></div>
+  <button type="button" class="sync ok" id="sync" hidden>Saved</button>
   <main id="screen" aria-live="polite"></main>
 </div>
 <nav class="bar" id="bar" aria-label="Main"></nav>
@@ -281,6 +289,7 @@ input[type=date] { border-radius: 10px; }
 <div class="shwrap" id="shwrap" hidden><div class="backdrop" data-act="sheet-close"></div><div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title"></div></div>
 <div class="lightbox" id="lb" hidden><img id="lbimg" alt="Photo, enlarged"></div>
 <div class="toast" id="toast" hidden></div>
+<button type="button" class="upd" id="upd" hidden>New version available. Tap to refresh.</button>
 
 <script>
 (function () {
@@ -301,7 +310,9 @@ input[type=date] { border-radius: 10px; }
   var today = function () { return dstr(new Date()); };
   function nowInfo() { var d = new Date(); return { at: d.getTime(), date: dstr(d), time: pad(d.getHours()) + ":" + pad(d.getMinutes()) }; }
   function parseD(s) { return new Date(s + "T00:00:00"); }
-  function dayDiff(a, b) { return Math.round((parseD(b) - parseD(a)) / 86400000); }
+  var DNC = {};
+  function dnum(x) { var v = DNC[x]; if (v === undefined) { v = DNC[x] = Math.round(Date.parse(x + "T00:00:00Z") / 86400000); } return v; }
+  function dayDiff(a, b) { return dnum(b) - dnum(a); }
   function daysAgo(date) { return date ? Math.max(0, dayDiff(date, today())) : 0; }
   function fmtDate(s) { if (!s) return ""; try { return parseD(s).toLocaleDateString("en-IN", { day: "numeric", month: "short" }); } catch (e) { return s; } }
   function fmtTime(t) { if (!t) return ""; try { return new Date("2000-01-01T" + t + ":00").toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" }); } catch (e) { return t; } }
@@ -354,15 +365,16 @@ input[type=date] { border-radius: 10px; }
   try { API_URL = new URLSearchParams(location.search).get("api") || API_URL; } catch (e) {}
   var TOKEN = "", lastSig = "", pollOn = false;
   function call(fn, args) {
-    return fetch(API_URL, { method: "POST", redirect: "follow", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ fn: fn, args: args || [] }) })
+    var ac = window.AbortController ? new AbortController() : null, tm = ac ? setTimeout(function () { ac.abort(); }, 30000) : 0;
+    return fetch(API_URL, { method: "POST", redirect: "follow", signal: ac ? ac.signal : undefined, headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ fn: fn, args: args || [] }) })
+      .then(function (r) { clearTimeout(tm); return r; }, function (e) { clearTimeout(tm); throw e; })
       .then(function (r) { return r.json(); })
       .then(function (j) { if (!j.ok) throw new Error(j.err || "Something went wrong."); return j.v; });
   }
   function tcall(fn, args) {
     return call(fn, [TOKEN].concat(args || [])).catch(function (e) { if (/log in again/i.test(e && e.message)) logout(true); throw e; });
   }
-  function wr(ops) { return tcall("write", [ops]).then(function (st) { applyState(st); }); }
-  function ref(col, id) { return { set: function (d) { return wr([{ op: "set", col: col, id: id, data: d }]); }, update: function (d) { return wr([{ op: "update", col: col, id: id, data: d }]); } }; }
+  function ref(col, id) { return { set: function (d) { return wr([{ op: "set", col: col, id: id, data: d }]); }, update: function (d, ex) { return wr([{ op: "update", col: col, id: id, data: d, expect: ex }]); } }; }
   function colRef(col) { return { doc: function (id) { return ref(col, id); } }; }
   colF = colRef("found"); colC = colRef("complaints"); colH = colRef("history");
   db = { doc: function (path) { var id = path.split("/")[1], r = ref("handovers", id); r.get = function () { return tcall("handover", [id]).then(function (v) { return { exists: !!v, data: function () { return v; } }; }); }; return r; } };
@@ -370,17 +382,18 @@ input[type=date] { border-radius: 10px; }
     if (!st || !st.me) { logout(true); return; }
     var sig = JSON.stringify([st.found, st.comps, st.hist.length, st.hist[0] && st.hist[0].id, st.users, st.me]);
     if (quiet && sig === lastSig && S.me) return;
-    lastSig = sig;
-    if (!pollOn) { pollOn = true; setInterval(poll, 20000); document.addEventListener("visibilitychange", poll); }
+    if (quiet && S.me && busyUI()) { holdState(st); return; }
+    lastSig = sig; heldState = null;
+    if (!pollOn) { pollOn = true; schedulePoll(); }
     S.me = st.me; S.name = st.me.name; S.profileName = true; S.isMgr = st.me.role !== "staff"; S.isAdmin = st.me.role === "admin"; S.users = st.users || []; S.codes = st.codes || {};
     S.found = st.found || []; S.comps = st.comps || []; S.hist = st.hist || []; S.rdy = { f: true, c: true, h: true }; S.fail = false;
+    reapplyOB(); cacheState();
     refresh();
   }
-  function poll() { if (!TOKEN || !S.me || document.hidden) return; tcall("state").then(function (st) { applyState(st, true); }, function () {}); }
   function logout(expired) {
     TOKEN = ""; try { localStorage.removeItem("lf-token"); } catch (e) {}
     S.me = null; S.isMgr = false; S.isAdmin = false; S.rdy = { f: false, c: false, h: false }; S.found = []; S.comps = []; S.hist = []; S.proofs = {}; PH = {}; PHq = {}; lastSig = "";
-    $("#case").hidden = true; S.caseId = ""; closeSheet();
+    $("#case").hidden = true; S.caseId = ""; closeSheet(); setSync();
     renderAuth("open", expired ? "Please type your name to open the desk again." : "");
   }
   function saveText(name, text) {
@@ -391,6 +404,196 @@ input[type=date] { border-radius: 10px; }
   function newF() { return { range: "all", from: "", to: "", status: "", cat: "", loc: "", q: "" }; }
   var FV = { mode: "list" };
   var F = { complaints: newF(), found: newF(), history: newF(), round: { loc: "", q: "", hideShown: false, restricted: false } };
+
+  /* ---------- reliability: save queue, sync chip, refresh hold, Back ---------- */
+  var OB = [], obBusy = false, obTimer = 0, obTries = 0, offline = false, lastTouch = 0, heldState = null, heldTimer = 0, lastRev = "", pollT = 0, lastPoll = 0, cacheT = 0;
+  var batch = [], batchTimer = 0, storeWarned = false;
+  function storeWarn() { if (!storeWarned) { storeWarned = true; toast("Phone storage is full or blocked. Free some space, or changes may be lost if you close the app."); } }
+  var idbP = null;
+  function idb() {
+    if (idbP) return idbP;
+    idbP = new Promise(function (ok) {
+      try { var r = indexedDB.open("lf-desk", 1); r.onupgradeneeded = function () { r.result.createObjectStore("kv"); }; r.onsuccess = function () { ok(r.result); }; r.onerror = function () { ok(null); }; r.onblocked = function () { ok(null); }; } catch (e) { ok(null); }
+    });
+    return idbP;
+  }
+  function kvGet(k) {
+    return idb().then(function (d) {
+      return new Promise(function (ok) {
+        if (!d) { try { ok(JSON.parse(localStorage.getItem("lfkv-" + k) || "null")); } catch (e) { ok(null); } return; }
+        try { var q = d.transaction("kv").objectStore("kv").get(k); q.onsuccess = function () { ok(q.result === undefined ? null : q.result); }; q.onerror = function () { ok(null); }; } catch (e) { ok(null); }
+      });
+    });
+  }
+  function kvSet(k, v) {
+    return idb().then(function (d) {
+      return new Promise(function (ok) {
+        if (!d) { try { localStorage.setItem("lfkv-" + k, JSON.stringify(v)); } catch (e) { storeWarn(); } ok(); return; }
+        try { var t = d.transaction("kv", "readwrite"); t.objectStore("kv").put(v, k); t.oncomplete = function () { ok(); }; t.onerror = function () { storeWarn(); ok(); }; t.onabort = function () { storeWarn(); ok(); }; } catch (e) { storeWarn(); ok(); }
+      });
+    });
+  }
+  function persistOB() { return kvSet("outbox", OB); }
+  function mine() { return OB.filter(function (e) { return e.by === S.name; }); }
+  function isNet(e) { return !e || e instanceof TypeError || e instanceof SyntaxError || e.name === "AbortError" || /Failed to fetch|NetworkError|Load failed|timed? ?out|network/i.test(e.message || ""); }
+  function localApply(op) {
+    var d = op.data || {}, list = op.col === "found" ? S.found : op.col === "complaints" ? S.comps : null, r;
+    if (op.col === "history") { if (!S.hist.some(function (h) { return h.id === op.id; })) S.hist.unshift({ id: op.id, caseId: d.caseId, caseType: d.caseType, code: d.code, title: d.title, action: d.action, detail: d.detail || "", by: S.name, at: d.at || Date.now() }); return; }
+    if (!list) return;
+    r = byId(list, op.id);
+    if (op.op === "set") {
+      if (!r) { r = Object.assign({}, d, { id: op.id, code: d.code || op.id.toUpperCase(), loggedBy: S.name }); if (op.col === "found") { r.status = "in_stock"; r.matchedComplaintId = ""; } else { r.status = "open"; r.matchedItemId = ""; r.reportedDate = r.reportedDate || today(); } list.unshift(r); }
+    } else if (r) Object.assign(r, d);
+  }
+  function reapplyOB() { OB.forEach(function (e) { if (!e.failed && e.by === S.name) e.ops.forEach(localApply); }); }
+  function wr(ops) {
+    ops.forEach(function (o) { batch.push(o); });
+    if (!batchTimer) batchTimer = setTimeout(commitBatch, 40);
+    return Promise.resolve();
+  }
+  function commitBatch() {
+    batchTimer = 0;
+    var all = batch; batch = [];
+    for (var i = 0; i < all.length; i += 6) {
+      var e = { id: mkId("o"), ops: all.slice(i, i + 6), at: Date.now(), by: S.name };
+      OB.push(e); e.ops.forEach(localApply);
+    }
+    persistOB(); refresh(); flush();
+  }
+  function flush() {
+    clearTimeout(obTimer);
+    if (obBusy || !TOKEN || !S.me) { setSync(); return; }
+    var e = mine().filter(function (x) { return !x.failed; })[0];
+    if (!e) { setSync(); return; }
+    obBusy = true; setSync();
+    tcall("write", [e.ops]).then(function (st) {
+      OB = OB.filter(function (x) { return x !== e; }); obTries = 0; offline = false; obBusy = false; persistOB();
+      applyState(st, true); flush();
+    }, function (err) {
+      obBusy = false;
+      if (isNet(err)) { offline = true; obTries++; obTimer = setTimeout(flush, Math.min(60000, 2000 * Math.pow(2, obTries - 1)) + Math.random() * 600); setSync(); }
+      else if (/log in again/i.test((err && err.message) || "")) { setSync(); }
+      else { e.failed = true; e.err = (err && err.message) || "Could not save."; persistOB(); toast("Not saved: " + e.err); poll(true); flush(); }
+    });
+  }
+  function setSync() {
+    var el = $("#sync"); if (!el) return;
+    if (!S.me) { el.hidden = true; return; }
+    var m = mine(), pend = m.filter(function (x) { return !x.failed; }).length, bad = m.length - pend, t, c = "ok";
+    if (bad) { t = bad + (bad === 1 ? " change" : " changes") + " not saved. Tap to fix"; c = "bad"; el.setAttribute("data-act", "sync-fix"); }
+    else {
+      el.removeAttribute("data-act");
+      if (offline) { t = "Offline" + (pend ? ": " + pend + (pend === 1 ? " change" : " changes") + " waiting" : ", showing the saved copy"); c = "warn"; }
+      else if (obBusy) { t = "Saving"; c = "warn"; }
+      else if (pend) { t = pend + (pend === 1 ? " change" : " changes") + " waiting"; c = "warn"; }
+      else t = "Saved";
+    }
+    el.className = "sync " + c; el.textContent = t; el.hidden = false;
+  }
+  function syncFix() {
+    var m = mine().filter(function (x) { return x.failed; });
+    openSheet("Changes not saved", '<p class="rsub">The desk refused these. Fix the problem, then try again, or remove them.</p><div class="list">' + m.map(function (e, i) {
+      var op = e.ops[0] || {}, d = op.data || {};
+      return '<div class="row"><h3>' + esc(d.title || d.action || op.col || "Change") + '</h3><p class="err">' + esc(e.err || "") + '</p><div class="actions"><button type="button" class="btn small primary" data-sf="retry" data-i="' + OB.indexOf(e) + '">Try again</button><button type="button" class="btn small danger" data-sf="drop" data-i="' + OB.indexOf(e) + '">Remove</button></div></div>';
+    }).join("") + "</div>", function (sh) {
+      sh.addEventListener("click", function (ev) {
+        var b = ev.target.closest("[data-sf]"); if (!b) return;
+        var e = OB[+b.getAttribute("data-i")]; if (!e) return;
+        if (b.getAttribute("data-sf") === "drop") OB = OB.filter(function (x) { return x !== e; }); else { e.failed = false; e.err = ""; }
+        persistOB(); closeSheet(); poll(true); refresh(); flush();
+      });
+    });
+  }
+  function busyUI() {
+    var a = document.activeElement, typing = a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && a.closest && a.closest("#screen,#case,#sheet");
+    return !!typing || !$("#shwrap").hidden || !$("#case").hidden || Date.now() - lastTouch < 4000;
+  }
+  function holdState(st) {
+    heldState = st;
+    if (!heldTimer) heldTimer = setInterval(function () {
+      if (!heldState) { clearInterval(heldTimer); heldTimer = 0; return; }
+      if (busyUI()) return;
+      var s2 = heldState; heldState = null; clearInterval(heldTimer); heldTimer = 0; applyState(s2, true);
+    }, 1000);
+  }
+  function keepFields() {
+    var k = {}; Array.prototype.forEach.call(document.querySelectorAll("#case [id]"), function (el) {
+      if (/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) && el.type !== "file" && el.type !== "checkbox" && el.type !== "radio") k[el.id] = el.value;
+    }); return k;
+  }
+  function restoreFields(k) { Object.keys(k).forEach(function (id) { var el = document.getElementById(id); if (el && !el.value && k[id]) el.value = k[id]; }); }
+  function cacheState() {
+    clearTimeout(cacheT);
+    cacheT = setTimeout(function () { if (S.me) kvSet("state", { me: S.me, found: S.found.filter(function (x) { return !x._p; }), comps: S.comps, hist: S.hist.slice(0, 200), users: S.users, at: Date.now() }); }, 1200);
+  }
+  function schedulePoll() { clearTimeout(pollT); pollT = setTimeout(function () { poll(); schedulePoll(); }, 20000 + Math.random() * 10000); }
+  function poll(force) {
+    if (!TOKEN || !S.me || (document.hidden && !force)) return;
+    if (!force && Date.now() - lastPoll < 8000) return;
+    lastPoll = Date.now();
+    call("rev").then(function (r) {
+      var wasOff = offline; offline = false;
+      if (wasOff) { setSync(); flush(); }
+      if (!force && r && r.rev === lastRev) return;
+      return tcall("state").then(function (st) { lastRev = r && r.rev; applyState(st, true); });
+    }, function (e) {
+      if (/Unknown action/i.test((e && e.message) || "")) return tcall("state").then(function (st) { applyState(st, true); }, function () {});
+      if (isNet(e)) { offline = true; setSync(); }
+    }).catch(function () {});
+  }
+  window.addEventListener("online", function () { offline = false; flush(); poll(true); });
+  window.addEventListener("offline", function () { offline = true; setSync(); });
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) poll(); else { persistOB(); cacheState(); } });
+  window.addEventListener("pagehide", function () { persistOB(); });
+  window.addEventListener("beforeunload", function (ev) { if (mine().length) { ev.preventDefault(); ev.returnValue = "Some changes are not sent yet."; return ev.returnValue; } });
+  ["touchstart", "pointerdown", "scroll"].forEach(function (n) { document.addEventListener(n, function () { lastTouch = Date.now(); }, { passive: true, capture: true }); });
+  document.addEventListener("contextmenu", function (ev) { if (!ev.target.closest || !ev.target.closest("input,textarea,[contenteditable]")) ev.preventDefault(); });
+  var errSent = 0, errAt = 0;
+  function reportErr(msg, where) {
+    if (Date.now() - errAt < 10000) return; errAt = Date.now();
+    toast("Something went wrong. Your saved work is safe. If this repeats, reload the page.");
+    if (errSent++ < 5 && TOKEN) call("clientLog", [TOKEN, String(msg).slice(0, 300), String(where || "").slice(0, 80)]).catch(function () {});
+  }
+  window.addEventListener("error", function (ev) { if (ev && ev.message && !/ResizeObserver|Script error/i.test(ev.message)) reportErr(ev.message, (ev.filename || "") + ":" + ev.lineno); });
+  window.addEventListener("unhandledrejection", function (ev) { var m = ev && ev.reason && (ev.reason.message || ev.reason); if (m && !isNet(ev.reason)) reportErr(m, "promise"); });
+
+  /* Back button: popups take a history step; Home asks twice before leaving */
+  var LAYERS = [], skipPop = 0, pendingPush = false, exitUntil = 0, navCount = 0, sheetLocked = false;
+  function pushLayer(k) { if (skipPop) { pendingPush = true; return; } LAYERS.push(k); try { history.pushState({ lfLayer: k }, ""); } catch (e) {} }
+  function dropLayer(k) { var i = LAYERS.lastIndexOf(k); if (i < 0) return; LAYERS.splice(i, 1); skipPop++; try { history.back(); } catch (e) { skipPop--; } }
+  window.addEventListener("popstate", function (ev) {
+    if (skipPop) { skipPop--; if (!skipPop && pendingPush) { pendingPush = false; pushLayer("sheet"); } return; }
+    if (LAYERS.length) {
+      var k = LAYERS.pop();
+      if (k === "sheet") { if (sheetLocked) { pushLayer("sheet"); return; } $("#shwrap").hidden = true; $("#sheet").innerHTML = ""; }
+      return;
+    }
+    if (ev.state && ev.state.lfRoot) {
+      if (Date.now() < exitUntil) { exitUntil = 0; skipPop++; try { history.back(); } catch (e) { skipPop--; } return; }
+      toast("Press back again to exit"); exitUntil = Date.now() + 2500;
+      try { history.pushState({ lfTop: 1 }, ""); } catch (e) {}
+    }
+  });
+  function initBack() { try { if (!history.state) { history.replaceState({ lfRoot: 1 }, ""); history.pushState({ lfTop: 1 }, ""); } } catch (e) {} }
+  var VIEWK = "lf-view";
+  function saveView() { try { sessionStorage.setItem(VIEWK, JSON.stringify({ p: DPER, f: DFROM, t: DTO, s: RSEL, c: RCAT, r: RST })); } catch (e) {} }
+  function loadView() { try { var v = JSON.parse(sessionStorage.getItem(VIEWK) || "null"); if (v) { DPER = v.p || DPER; DFROM = v.f || ""; DTO = v.t || ""; RSEL = v.s || RSEL; RCAT = v.c || ""; RST = v.r || ""; } } catch (e) {} }
+  function setupSW() {
+    if (!("serviceWorker" in navigator) || !/^https?:$/.test(location.protocol)) return;
+    navigator.serviceWorker.register("sw.js").then(function (reg) {
+      reg.addEventListener("updatefound", function () {
+        var nw = reg.installing; if (!nw) return;
+        nw.addEventListener("statechange", function () {
+          if (nw.state === "installed" && navigator.serviceWorker.controller) {
+            var u = $("#upd"); u.hidden = false; u.onclick = function () { nw.postMessage("skip"); };
+          }
+        });
+      });
+    }, function () {});
+    var reloading = false;
+    navigator.serviceWorker.addEventListener("controllerchange", function () { if (reloading) return; reloading = true; location.reload(); });
+    try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
+  }
 
   /* ---------- statuses ---------- */
   function ckey(c) { return c.status === "closed" ? (c.closeReason === "returned" ? "closed_returned" : "closed_not_found") : c.status; }
@@ -421,14 +624,17 @@ input[type=date] { border-radius: 10px; }
   /* ---------- matching ---------- */
   function toks(s) { var o = {}; String(s || "").toLowerCase().split(/[^a-z0-9]+/).forEach(function (w) { if (w.length > 2 && !STOP[w]) o[w] = 1; }); return o; }
   function norm(s) { return String(s || "").toLowerCase().replace(/[^a-z0-9]/g, ""); }
+  var TKC = {};
+  function ctok(c) { var k = "c" + c.id + "|" + (c.updatedAt || 0) + "|" + (c.desc || "").length + (c.title || "").length; var v = TKC[k]; if (!v) { var cw = toks(c.title + " " + c.desc), nm = toks(c.reporterName); v = TKC[k] = { cw: cw, cwk: Object.keys(cw), nmk: Object.keys(nm) }; } return v; }
+  function ftok(f) { var k = "f" + f.id + "|" + (f.updatedAt || 0) + "|" + (f.desc || "").length + (f.title || "").length; var v = TKC[k]; if (!v) v = TKC[k] = { fw: toks(f.title + " " + f.desc + " " + f.nameOnItem), fn: toks(f.nameOnItem) }; return v; }
   function scorePair(c, f) {
     var s = 0, r = [];
     if (c.category && c.category === f.category) { s += 3; r.push("Same category"); }
-    var cw = toks(c.title + " " + c.desc), fw = toks(f.title + " " + f.desc + " " + f.nameOnItem), hit = [];
-    Object.keys(cw).forEach(function (w) { if (fw[w]) hit.push(w); });
+    var ct = ctok(c), ft = ftok(f), cw = ct.cw, fw = ft.fw, hit = [];
+    ct.cwk.forEach(function (w) { if (fw[w]) hit.push(w); });
     if (hit.length) { s += Math.min(hit.length, 4) * 2; r.push("Shared words: " + hit.slice(0, 4).join(", ")); }
-    var nm = toks(c.reporterName), fn = toks(f.nameOnItem), nh = false;
-    Object.keys(nm).forEach(function (w) { if (fn[w]) nh = true; });
+    var fn = ft.fn, nh = false;
+    ct.nmk.forEach(function (w) { if (fn[w]) nh = true; });
     if (nh) { s += 5; r.push("Name on item matches the reporter"); }
     var cc = norm(c.reporterClass), fc = norm(f.classOnItem);
     if (cc && fc && cc === fc) { s += 3; r.push("Class matches"); }
@@ -441,7 +647,10 @@ input[type=date] { border-radius: 10px; }
     }
     return { s: s, r: r };
   }
+  var lastMsig = "";
   function recompute() {
+    var sg = []; S.comps.forEach(function (c) { if (c.status === "open") sg.push(c.id + (c.updatedAt || 0)); }); S.found.forEach(function (f) { if (f.status === "in_stock") sg.push(f.id + (f.updatedAt || 0)); });
+    sg = sg.join(","); if (sg === lastMsig) return; lastMsig = sg;
     M = { byC: {}, byI: {} };
     var open = S.comps.filter(function (c) { return c.status === "open"; });
     var stock = S.found.filter(function (f) { return f.status === "in_stock"; });
@@ -745,7 +954,7 @@ input[type=date] { border-radius: 10px; }
       (DPER === "range" ? '<div class="dates"><label>From<input type="date" data-dfrom value="' + esc(perRange("range")[0]) + '"></label><label>To<input type="date" data-dto value="' + esc(perRange("range")[1]) + '"></label></div>' : "") +
       '<div class="perlab">' + esc(perLabel()) + "</div></div>";
   }
-  var RSEL = "comp";
+  var RSEL = "comp", RMAX = 50;
   function longToday() { try { return new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" }); } catch (e) { return today(); } }
   function listBlock(kind, inHome) {
     var K = RKINDS[kind], P = perSets(DPER), list = P[kind === "comp" ? "comps" : kind], extra = "", note = "";
@@ -771,9 +980,10 @@ input[type=date] { border-radius: 10px; }
     }
     return '<section class="stack listsec"><div class="rhead k-' + kind + '"><h2>' + K[0] + "</h2><span>" + list.length + "</span></div>" + (extra || "") +
       '<div class="rsub">' + esc(note) + "</div>" +
-      (list.length ? '<div class="list">' + list.slice(0, 200).map(function (r) { return reportRow(kind, r); }).join("") + "</div>" + (list.length > 200 ? '<div class="notice">Showing the first 200. Narrow the dates, or export all records.</div>' : "") : emptyBox("Nothing to show", "No records for this period.")) + "</section>";
+      (list.length ? '<div class="list">' + list.slice(0, RMAX).map(function (r) { return reportRow(kind, r); }).join("") + "</div>" + (list.length > RMAX ? '<button type="button" class="btn block" data-more="1">Show 50 more (' + (list.length - RMAX) + " left)</button>" : "") : emptyBox("Nothing to show", "No records for this period.")) + "</section>";
   }
   function renderHome() {
+    saveView();
     var P = perSets(DPER), A = perSets("all");
     var openC = S.comps.filter(function (c) { return c.status === "open"; }).length;
     var retAll = S.found.filter(function (f) { return f.status === "returned"; });
@@ -794,6 +1004,7 @@ input[type=date] { border-radius: 10px; }
       '<div class="actions"><button type="button" class="btn small" data-act="export">Export all records (CSV)</button>' + (demo && S.isAdmin ? '<button type="button" class="btn small danger" data-act="demo-delete">Delete demo records</button>' : "") + (!demo && S.isAdmin && !S.found.length && !S.comps.length ? '<button type="button" class="btn small" data-act="demo-load">Load demo records</button>' : "") + "</div></div>";
   }
   function renderReport(kind) {
+    saveView();
     var tab = S.route === "complaints" || S.route === "found";
     $("#screen").innerHTML = '<div class="stack"><div class="datehead"><b>' + esc(longToday()) + "</b><span>" + RKINDS[kind][0] + "</span></div>" + perBar() +
       (S.canWrite ? '<div class="quick"><button type="button" class="btn ' + (kind === "comp" ? "gold" : "primary") + '" data-act="' + (kind === "comp" ? "log-comp" : "log-found") + '">' + (kind === "comp" ? "Log Lost Complaint" : "Log Found Item") + "</button></div>" : "") + listBlock(kind, false) + "</div>";
@@ -909,10 +1120,12 @@ input[type=date] { border-radius: 10px; }
   var sheetClose = null;
   function openSheet(title, html, mount, locked) {
     $("#sheet").innerHTML = '<div class="shead"><h2 id="sheet-title">' + esc(title) + "</h2>" + (locked ? "" : '<button type="button" class="btn small" data-act="sheet-close">Close</button>') + "</div>" + html;
+    sheetLocked = !!locked;
+    if (LAYERS.indexOf("sheet") < 0) pushLayer("sheet");
     $("#shwrap").hidden = false; $("#sheet").scrollTop = 0;
     if (mount) mount($("#sheet"));
   }
-  function closeSheet() { $("#shwrap").hidden = true; $("#sheet").innerHTML = ""; }
+  function closeSheet() { $("#shwrap").hidden = true; $("#sheet").innerHTML = ""; dropLayer("sheet"); }
   function val(id) { var e = document.getElementById(id); return e ? String(e.value).trim() : ""; }
   function fld(id, lab, inner, cls) { return '<div class="field' + (cls ? " " + cls : "") + '"><label for="' + id + '">' + lab + "</label>" + inner + "</div>"; }
 
@@ -1152,8 +1365,8 @@ input[type=date] { border-radius: 10px; }
     if (!c || !f) return;
     if (c.status !== "open" || f.status !== "in_stock") { toast("This case has changed. Check the latest status."); return; }
     try {
-      await colC.doc(cid).update({ status: "matched", matchedItemId: fid, updatedAt: Date.now() });
-      await colF.doc(fid).update({ status: "ready", matchedComplaintId: cid, updatedAt: Date.now() });
+      await colC.doc(cid).update({ status: "matched", matchedItemId: fid, updatedAt: Date.now() }, { status: "open" });
+      await colF.doc(fid).update({ status: "ready", matchedComplaintId: cid, updatedAt: Date.now() }, { status: "in_stock" });
       await hist("complaint", c, "Match confirmed", "Item " + f.code + ": " + f.title);
       await hist("found", f, "Match confirmed", "Complaint " + c.code + " from " + c.reporterName);
       toast("Match confirmed. Item is ready to hand over.");
@@ -1165,8 +1378,8 @@ input[type=date] { border-radius: 10px; }
     if (!c || !f) return;
     if (f.status !== "ready" || c.status !== "matched") { toast("This match can no longer be undone."); return; }
     try {
-      await colC.doc(cid).update({ status: "open", matchedItemId: "", updatedAt: Date.now() });
-      await colF.doc(fid).update({ status: "in_stock", matchedComplaintId: "", updatedAt: Date.now() });
+      await colC.doc(cid).update({ status: "open", matchedItemId: "", updatedAt: Date.now() }, { status: "matched" });
+      await colF.doc(fid).update({ status: "in_stock", matchedComplaintId: "", updatedAt: Date.now() }, { status: "ready" });
       await hist("complaint", c, "Match undone", "Item " + f.code);
       await hist("found", f, "Match undone", "Complaint " + c.code);
       toast("Match undone");
@@ -1228,6 +1441,7 @@ input[type=date] { border-radius: 10px; }
   /* ---------- events ---------- */
   function goRoute() {
     if (!S.me) return;
+    navCount++;
     var h = decodeURIComponent((location.hash || "").slice(1));
     if (h.indexOf("case-") === 0) {
       var id = h.slice(5);
@@ -1239,6 +1453,12 @@ input[type=date] { border-radius: 10px; }
     if (r !== S.route || !$("#screen").innerHTML) { S.route = r; renderBar(); renderScreen(); } else { renderBar(); }
   }
   function refresh() {
+    var sy = window.pageYOffset, cs = $("#case").scrollTop, kf = keepFields();
+    refresh0();
+    restoreFields(kf); try { window.scrollTo(0, sy); if (!$("#case").hidden) $("#case").scrollTop = cs; } catch (e) {}
+    setSync();
+  }
+  function refresh0() {
     recompute(); renderBar(); renderWho();
     if (S.route === "home" || S.route === "complaints" || S.route === "found" || S.route.indexOf("r-") === 0 || loading() || S.noDb || S.fail) renderScreen(); else renderList();
     if (S.caseId) renderCase();
@@ -1258,22 +1478,24 @@ input[type=date] { border-radius: 10px; }
       if (S.route === r) renderScreen(); go(r); return;
     }
     var dpb = ev.target.closest("[data-dper]");
-    if (dpb) { DPER = dpb.getAttribute("data-dper"); if (DPER === "range" && !DFROM) { DFROM = perRange("week")[0]; DTO = today(); } renderScreen(); return; }
+    if (dpb) { RMAX = 50; DPER = dpb.getAttribute("data-dper"); if (DPER === "range" && !DFROM) { DFROM = perRange("week")[0]; DTO = today(); } renderScreen(); return; }
     var sb = ev.target.closest("[data-sel]");
-    if (sb) { RSEL = sb.getAttribute("data-sel"); RCAT = sb.getAttribute("data-cat") || ""; RST = ""; renderScreen(); var hl = $("#homelist"); if (hl && hl.scrollIntoView) hl.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
+    if (sb) { RMAX = 50; RSEL = sb.getAttribute("data-sel"); RCAT = sb.getAttribute("data-cat") || ""; RST = ""; renderScreen(); var hl = $("#homelist"); if (hl && hl.scrollIntoView) hl.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
     var rb = ev.target.closest("[data-r]");
     if (rb) { RCAT = rb.getAttribute("data-cat") || ""; RST = ""; go("r-" + rb.getAttribute("data-r")); return; }
     var rsb = ev.target.closest("[data-rs]");
     if (rsb) { RST = rsb.getAttribute("data-rs"); return; }
+    var mb = ev.target.closest("[data-more]");
+    if (mb) { RMAX += 50; renderScreen(); return; }
     var rsc = ev.target.closest("[data-rst]");
-    if (rsc) { RST = rsc.getAttribute("data-rst"); renderScreen(); return; }
+    if (rsc) { RMAX = 50; RST = rsc.getAttribute("data-rst"); renderScreen(); return; }
     var fvb = ev.target.closest("[data-fview]");
     if (fvb) { FV.mode = fvb.getAttribute("data-fview"); renderScreen(); return; }
     var fr = ev.target.closest("[data-frange]");
     if (fr) { var key = fr.closest("[data-fkey]").getAttribute("data-fkey"); F[key].range = fr.getAttribute("data-frange"); var bar = fr.closest(".filters"); var tmp = document.createElement("div"); tmp.innerHTML = filterBar(key, key === "complaints" ? C_STAT : key === "found" ? F_STAT : H_STAT); bar.replaceWith(tmp.firstChild); renderList(); return; }
     var b = ev.target.closest("[data-act]"); if (!b) return;
     var a = b.getAttribute("data-act"), id = b.getAttribute("data-id");
-    if (a === "back") { if (S.caseId) go(S.route); }
+    if (a === "back") { if (S.caseId) { if (navCount > 1) { try { history.back(); } catch (e) { go(S.route); } } else go(S.route); } }
     else if (a === "sheet-close") { if (S.name || $("#nm") == null) closeSheet(); }
     else if (a === "log-found") foundForm(null);
     else if (a === "log-comp") compForm(null);
@@ -1293,7 +1515,8 @@ input[type=date] { border-radius: 10px; }
     else if (a === "export") exportCsv();
     else if (a === "demo-delete") demoDeleteSheet();
     else if (a === "name") nameSheet();
-    else if (a === "logout") logout(false);
+    else if (a === "logout") { if (mine().length) toast("Some changes are not sent yet. Connect to the internet first, then log out."); else logout(false); }
+    else if (a === "sync-fix") syncFix();
     else if (a === "team") teamSheet();
     else if (a === "demo-load") { b.disabled = true; tcall("seedDemo").then(function (st) { applyState(st); toast("Demo records loaded"); }, function (e) { b.disabled = false; writeErr(e); }); }
     else if (a === "fclear") {
@@ -1341,7 +1564,7 @@ input[type=date] { border-radius: 10px; }
       call(open ? "openJoin" : byCode ? "codeLogin" : first ? "setup" : "login", open ? [n] : first ? [n, pw, val("au-r")] : [n, pw]).then(function (r) {
         if (r.pending) { renderAuth("login", "Your login is created. It is waiting for the admin to approve it."); return; }
         TOKEN = r.token; try { localStorage.setItem("lf-token", TOKEN); localStorage.setItem("lf-name", n); } catch (x) {}
-        applyState(r.state); goRoute();
+        applyState(r.state); goRoute(); flush();
       }, function (err) {
         if (open && /staff code/.test(err.message || "")) { renderAuth("code", "The school now asks for the staff code."); return; }
         if (open && /personal login/.test(err.message || "")) { renderAuth("login", "Your name has an incharge or admin login. Please log in with your password."); return; }
@@ -1387,17 +1610,21 @@ input[type=date] { border-radius: 10px; }
     });
   }
   async function start() {
+    loadView(); initBack(); setupSW();
     renderWho(); renderBar();
     if (!API_URL) { S.noDb = true; renderScreen(); return; }
     try { TOKEN = localStorage.getItem("lf-token") || ""; } catch (e) {}
+    OB = (await kvGet("outbox")) || [];
     if (!TOKEN) { renderAuth("open", ""); return; }
     $("#screen").innerHTML = emptyBox("Loading records", "One moment.");
     try {
       var st = await tcall("state");
       if (!st || !st.me) { logout(false); return; }
-      applyState(st); goRoute();
+      applyState(st); goRoute(); flush();
     } catch (e) {
       if (!TOKEN) return;
+      var c = isNet(e) ? await kvGet("state") : null;
+      if (c && c.me) { offline = true; applyState(c); goRoute(); setSync(); obTimer = setTimeout(flush, 5000); schedulePoll(); return; }
       S.fail = true; renderScreen();
     }
   }
