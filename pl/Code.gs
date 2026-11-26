@@ -26,6 +26,11 @@ function sheet_(name){
 }
 function rows_(name){const sh=sheet_(name);const n=sh.getLastRow();if(n<2)return [];return sh.getRange(2,1,n-1,COLS[name].length).getValues()}
 function parse_(s){try{return JSON.parse(s)||{}}catch(e){return {}}}
+/* Long day records are split across cells: a Sheets cell holds at most 50,000 characters.
+   Column 6 keeps the first piece (old rows keep working); pieces 2..8 go to columns 8..14. */
+const JCHUNK=45000,JEXTRA=7;
+function joinJson_(r,off){let s=String(r[off]||"");for(let k=0;k<JEXTRA;k++)s+=String(r[off+2+k]||"");return s}
+function splitJson_(js){const out=[];for(let i=0;i<=JEXTRA;i++)out.push(js.slice(i*JCHUNK,(i+1)*JCHUNK));if(js.length>(JEXTRA+1)*JCHUNK)fail("This day's record is too large to save.");return out}
 function getTimes_(){const r=rows_("Config").find(x=>x[0]==="times");return r?parse_(r[1]):{}}
 
 function wkOf_(date){const d=new Date(date+"T00:00:00Z");d.setUTCDate(d.getUTCDate()-((d.getUTCDay()+6)%7));return d.toISOString().slice(0,10)}
@@ -88,18 +93,18 @@ function state_(token,wk){
   const psh=sheet_("Plan");const pn=psh.getLastRow();let pr=[];
   if(pn>=2){const keys=psh.getRange(2,1,pn-1,1).getValues();const hit=[];
     keys.forEach((r,i)=>{const p=String(r[0]).split("_");if(p.length===3&&isoDate(p[2])&&wkOf_(p[2])===wk)hit.push(i)});
-    if(hit.length){const lo=hit[0],hi=hit[hit.length-1];const js=psh.getRange(lo+2,6,hi-lo+1,1).getValues();
-      pr=hit.map(i=>[keys[i][0],0,0,0,0,js[i-lo][0]])}}
+    if(hit.length){const lo=hit[0],hi=hit[hit.length-1];const js=psh.getRange(lo+2,6,hi-lo+1,2+JEXTRA).getValues();
+      pr=hit.map(i=>[keys[i][0],0,0,0,0,joinJson_(js[i-lo],0)])}}
   pr.forEach(r=>{const p=String(r[0]).split("_");if(p.length!==3||!isoDate(p[2])||wkOf_(p[2])!==wk)return;
     const pl=PL_ALIAS[p[0]]||p[0];if(me.role==="pl"&&pl!==me.id)return;
     const id=pl+"_"+p[1]+"_"+p[2];if(PL_ALIAS[p[0]]&&docs[id])return;
     const j=parse_(r[5]);const cells=j.cells||{},rem=j.rem||{};
     if(pl in ALIAS_NAME)[cells,rem].forEach(o=>Object.keys(o).forEach(k=>{if(o[k]&&ALIAS_OLD_NAMES.indexOf(o[k].by)>=0)o[k].by=ALIAS_NAME[pl]}));
     docs[id]={pl:pl,mode:p[1],date:p[2],wk:wk,cells:cells,rem:rem}});
-  return {today:today_(),docs,times:getTimes_(),me:pub_(me)};
+  return {today:today_(),now:Date.now(),docs,times:getTimes_(),me:pub_(me)};
 }
 
-function save_(token,id,patch){
+function save_(token,id,patch,rid){
   const me=notPm_(me_(token));const name=me.name;
   const p=String(id||"").split("_");
   const pl=p[0],mode=p[1],date=p[2];
@@ -109,32 +114,41 @@ function save_(token,id,patch){
   const wk=wkOf_(date);
   const sh=sheet_("Plan");const nr=sh.getLastRow();
   const ids=nr>=2?sh.getRange(2,1,nr-1,1).getValues().map(r=>r[0]):[];   // id column only — fast as the sheet grows
-  const jsonAt=i=>parse_(sh.getRange(i+2,6).getValue());
+  const jsonAt=i=>parse_(joinJson_(sh.getRange(i+2,6,1,2+JEXTRA).getValues()[0],0));
   let idx=ids.indexOf(id);
   let seed={};
   if(idx<0){const old=Object.keys(PL_ALIAS).find(k=>PL_ALIAS[k]===pl);const oi=old?ids.indexOf(old+"_"+mode+"_"+date):-1;if(oi>=0)seed=jsonAt(oi)}
   const j=idx>=0?jsonAt(idx):seed;j.cells=j.cells||{};j.rem=j.rem||{};
   const now=Date.now();let n=0;
+  /* the same save sent twice (lost reply, double tap) is applied once */
+  const cache=CacheService.getScriptCache();const rk=rid?"rid:"+String(rid).slice(0,60):"";
+  if(rk&&cache.get(rk))return {pl,mode,date,wk,cells:j.cells,rem:j.rem,now:now,dup:1};
+  const audit=[];const brief=v=>v==null?"":String(v).replace(/\s+/g," ").slice(0,60);
   Object.keys((patch&&patch.cells)||{}).forEach(k=>{
     const c=patch.cells[k]||{};const key=String(k).slice(0,80);
     if(Array.isArray(c.ops)){                       // timed observations: server stamps each one
       const obs=((j.cells[key]&&j.cells[key].obs)||[]).slice();
-      c.ops.slice(0,20).forEach(o=>{if(o==="add")obs.push(now);else if(o==="pop")obs.pop()});
-      j.cells[key]={s:obs.length?"D":"",by:name,at:now,l:0,obs:obs};n++;return;
+      const before=obs.length;c.ops.slice(0,20).forEach(o=>{if(o==="add")obs.push(now);else if(o==="pop")obs.pop()});
+      j.cells[key]={s:obs.length?"D":"",by:name,at:now,l:0,obs:obs};n++;audit.push(key+" obs "+before+"→"+obs.length);return;
     }
     const s=["","D","N","A"].indexOf(c.s)>=0?c.s:"";
     const old_=j.cells[key];if(old_&&Array.isArray(old_.obs)&&old_.obs.length&&c.s!=="A"){n++;return}   // never wipe observation times with a plain tick
+    if((old_&&old_.s||"")!==s)audit.push(key+" "+((old_&&old_.s)||"·")+"→"+(s||"·"));
     j.cells[key]={s:s,by:name,at:now,l:c.l?1:0};n++;
   });
   Object.keys((patch&&patch.rem)||{}).forEach(k=>{
     const e=patch.rem[k]||{};
     const num=(e.n===""||e.n==null||isNaN(Number(e.n)))?"":Number(e.n);
-    j.rem[String(k).slice(0,80)]={n:num,x:String(e.x||"").slice(0,500),by:name,at:now};n++;
+    const rkey=String(k).slice(0,80),ov=j.rem[rkey]||{},nx=String(e.x||"").slice(0,500);
+    if(String(ov.x||"")!==nx||String(ov.n==null?"":ov.n)!==String(num))audit.push(rkey+" \""+brief(ov.n!==""&&ov.n!=null?ov.n+" ":"")+brief(ov.x)+"\"→\""+brief(num!==""?num+" ":"")+brief(nx)+"\"");
+    j.rem[rkey]={n:num,x:nx,by:name,at:now};n++;
   });
-  const row=[id,pl,mode,"'"+date,"'"+wk,JSON.stringify(j),new Date(now)];
+  const parts=splitJson_(JSON.stringify(j));
+  const row=[id,pl,mode,"'"+date,"'"+wk,parts[0],new Date(now)].concat(parts.slice(1));
   if(idx>=0)sh.getRange(idx+2,1,1,row.length).setValues([row]);else sh.appendRow(row);
-  const lg=sheet_("Log");lg.appendRow([Utilities.formatDate(new Date(now),TZ,"yyyy-MM-dd HH:mm"),name,id,n+" change(s)"]);
-  return {pl,mode,date,wk,cells:j.cells,rem:j.rem};
+  if(rk)cache.put(rk,"1",21600);
+  const lg=sheet_("Log");lg.appendRow([Utilities.formatDate(new Date(now),TZ,"yyyy-MM-dd HH:mm:ss"),name,id,(audit.join(" | ")||n+" change(s)").slice(0,45000)]);
+  return {pl,mode,date,wk,cells:j.cells,rem:j.rem,now:now};
 }
 
 function setTime_(token,b,v){
@@ -246,10 +260,11 @@ function doPost(e){
     const tk=req.token;
     if(req.fn==="state")v=state_(tk,a[0]);
     else if(req.fn==="login")v=login_(a[0],a[1]);
+    else if(req.fn==="logErr"){sheet_("Log").appendRow([Utilities.formatDate(new Date(),TZ,"yyyy-MM-dd HH:mm:ss"),"app error",String(a[0]||"").slice(0,40),String(a[1]||"").slice(0,1000)]);v={ok:1}}
     else if(req.fn==="pmState")v=pmState_(tk,a[0]);
     else{
       lock.waitLock(20000);
-      if(req.fn==="save")v=save_(tk,a[0],a[1]);
+      if(req.fn==="save")v=save_(tk,a[0],a[1],a[2]);
       else if(req.fn==="setTime")v=setTime_(tk,a[0],a[1]);
       else if(req.fn==="changePw")v=changePw_(tk,a[0],a[1]);
       else if(req.fn==="listUsers")v=listUsers_(tk);

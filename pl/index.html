@@ -408,6 +408,17 @@ input.cwin,select.cwin{font:inherit;font-size:13px;border:1px solid #c7cfe2;bord
   .report *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .rgrid tr{break-inside:avoid}
 }
+/* reliability: no pull-to-refresh, no long-press menus on controls */
+html,body{overscroll-behavior-y:contain}
+button,.box,.plc,.day,nav,.seg,.chip,.tag,summary,.mini{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+.chip.busy::before{background:#60a5fa;box-shadow:0 0 0 3px rgba(96,165,250,.2)}.chip.pend::before{background:#fbbf24}
+.backbar{max-width:1080px;margin:0 auto;padding:10px 16px 0}
+.backbar button{border:1px solid var(--line);background:var(--card);color:var(--ink2);border-radius:10px;padding:7px 12px;font-size:13px;font-weight:600}
+.failbox{border:1px solid var(--redL);background:var(--redS);color:#8f241c;border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:12.5px}
+.failbox b{display:block;margin-bottom:4px}.failbox ul{margin:4px 0 6px 18px;padding:0}.failbox button{border:1px solid var(--redL);background:#fff;color:#8f241c;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:600}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;z-index:99;box-shadow:0 6px 20px rgba(0,0,0,.25);max-width:90vw;text-align:center}
+.toast button{margin-left:10px;border:0;background:#fff;color:#111827;border-radius:8px;padding:4px 10px;font-weight:700}
 </style>
 </head>
 <body>
@@ -417,7 +428,8 @@ input.cwin,select.cwin{font:inherit;font-size:13px;border:1px solid #c7cfe2;bord
   <div class="sub"><div class="seg" id="modeseg"></div><span class="chip" id="conn"></span></div>
 </header>
 <nav id="tabs"></nav>
-<div class="wrap"><div id="msg"></div><div id="root"></div></div>
+<div id="backbar"></div>
+<div class="wrap"><div id="msg"></div><div id="fails"></div><div id="root"></div></div>
 
 <script>
 /* ================= CONFIG ================= */
@@ -478,9 +490,11 @@ const pad=n=>String(n).padStart(2,'0');
 const ds=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
 const parseD=s=>{const a=s.split('-').map(Number);return new Date(a[0],a[1]-1,a[2])};
 const mondayOf=d=>{const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()-((x.getDay()+6)%7));return x};
-const todayStr=()=>ds(new Date());
+let SKEW=0;   // server time minus phone time, updated on every sync
+const srvNow=()=>Date.now()+SKEW;
+const todayStr=()=>{const t=new Date(srvNow());try{return t.toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'})}catch(e){return ds(t)}};
 const toMin=t=>{const a=t.split(':').map(Number);return a[0]*60+a[1]};
-const nowMin=()=>{const n=new Date();return n.getHours()*60+n.getMinutes()};
+const nowMin=()=>{const n=new Date(srvNow());try{const p=n.toLocaleTimeString('en-GB',{timeZone:'Asia/Kolkata',hour12:false}).split(':');return +p[0]*60+ +p[1]}catch(e){return n.getHours()*60+n.getMinutes()}};
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clone=o=>JSON.parse(JSON.stringify(o));
 function fmtT(ms){const d=new Date(ms);let h=d.getHours();const ap=h>=12?'PM':'AM';h=h%12||12;return h+':'+pad(d.getMinutes())+' '+ap}
@@ -510,11 +524,15 @@ function dueOf(b){const t=S.times[b.id];if(t==='none')return null;if(t&&t!=='def
 /* ================= STORAGE (Google Sheet via Apps Script — see SETUP.md) ================= */
 const API_URL=new URLSearchParams(location.search).get('api')||'https://script.google.com/macros/s/AKfycbyzHMWJYQOB8Qr9jlrsml9PnoRs6d9xjvzWMejOMUF_1RGohDSIhnHmxM6QF79LgJ-q/exec';
 const lkey=()=>'plplan_gh_v2_'+(S.me?S.me.id:'');
-function saveLocal(){try{localStorage.setItem(lkey(),JSON.stringify({docs:S.docs,times:S.times}))}catch(e){}}
+/* ---- phone cache of the week (debounced; never the source of truth) ---- */
+let cacheTimer=null,storeWarned=false;
+function storeWarn(){if(storeWarned)return;storeWarned=true;showMsg('Phone storage is full — your changes are still being sent, but free some space so nothing is lost if the app closes.',true)}
+function saveLocalNow(){clearTimeout(cacheTimer);cacheTimer=null;try{localStorage.setItem(lkey(),JSON.stringify({docs:S.docs,times:S.times}))}catch(e){if(e&&/quota/i.test(e.name+e.message))storeWarn()}}
+function saveLocal(){if(!cacheTimer)cacheTimer=setTimeout(saveLocalNow,1000)}
 function loadLocal(){try{const o=JSON.parse(localStorage.getItem(lkey())||'null');if(o){S.docs=o.docs||{};S.times=o.times||{}}}catch(e){}}
 function setConn(c){if(S.conn!==c){S.conn=c;paintConn()}}
 let msgTimer=null;
-function showMsg(t){const el=document.getElementById('msg');el.innerHTML=t?`<div class="notice bad">${esc(t)}</div>`:'';clearTimeout(msgTimer);if(t)msgTimer=setTimeout(()=>showMsg(''),6000)}
+function showMsg(t,sticky){const el=document.getElementById('msg');el.innerHTML=t?`<div class="notice bad">${esc(t)}</div>`:'';clearTimeout(msgTimer);if(t&&!sticky)msgTimer=setTimeout(()=>showMsg(''),7000)}
 const queues={};
 function enqueue(k,job){queues[k]=(queues[k]||Promise.resolve()).then(job).catch(()=>{})}
 async function api(fn,args){
@@ -525,69 +543,120 @@ async function api(fn,args){
   if(!j.ok){const er=new Error(j.err||'Something went wrong.');er.server=true;if(/log in again/i.test(er.message)&&fn!=='login'){logout(true)}throw er}
   return j.v;
 }
-const unacked={},inflight={};
-const hasPend=u=>!!(u&&(Object.keys(u.cells).length||Object.keys(u.rem).length));
+/* ---- offline queue: every unsent change is kept on the phone (IndexedDB, else localStorage) until the server confirms it ---- */
+const Q={};               // docId -> [{rid,patch:{cells,rem},sent}]
+S.failed=[];S.sending=0;S.netErr=false;
+const qkey=()=>'plplan_q_'+(S.me?S.me.id:'');
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,10);
+let idb=null;
+function idbOpen(){return new Promise(res=>{try{if(!window.indexedDB)return res(null);const r=indexedDB.open('plplan',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>res(null)}catch(e){res(null)}})}
+function idbGet(k){return new Promise(res=>{try{const t=idb.transaction('kv').objectStore('kv').get(k);t.onsuccess=()=>res(t.result);t.onerror=()=>res(undefined)}catch(e){res(undefined)}})}
+function idbPut(k,v){return new Promise((res,rej)=>{try{const tx=idb.transaction('kv','readwrite');tx.objectStore('kv').put(v,k);tx.oncomplete=()=>res();tx.onerror=tx.onabort=()=>rej(tx.error)}catch(e){rej(e)}})}
+function qCount(){let n=0;Object.keys(Q).forEach(id=>Q[id].forEach(b=>{n+=Object.keys(b.patch.cells).length+Object.keys(b.patch.rem).length}));return n}
+function saveQueue(){
+  if(!S.me)return;const data=JSON.stringify({Q:Q,failed:S.failed});const k=qkey();
+  const ls=()=>{try{localStorage.setItem(k,data)}catch(e){storeWarn()}};
+  if(idb)idbPut(k,data).then(()=>{try{localStorage.removeItem(k)}catch(e){}}).catch(ls);else ls();
+  paintConn();
+}
+async function loadQueue(){
+  if(!S.me)return;if(idb===null)idb=await idbOpen();
+  let raw=idb?await idbGet(qkey()):null;if(!raw){try{raw=localStorage.getItem(qkey())}catch(e){}}
+  try{const o=JSON.parse(raw||'null');if(o){Object.keys(o.Q||{}).forEach(id=>{Q[id]=(o.Q[id]||[]).filter(b=>b&&b.patch)});S.failed=o.failed||[]}}catch(e){}
+  paintConn();paintFails();
+}
+const hasPend=id=>!!(Q[id]&&Q[id].length);
+function mergePatch(dst,src){
+  Object.keys(src.cells||{}).forEach(k=>{const c=clone(src.cells[k]);
+    if(c.ops&&dst.cells[k]&&dst.cells[k].ops)dst.cells[k].ops=dst.cells[k].ops.concat(c.ops);else dst.cells[k]=c});
+  Object.assign(dst.rem,clone(src.rem||{}));
+}
 function overlay(id,doc){
   doc.cells=doc.cells||{};doc.rem=doc.rem||{};
-  [inflight[id],unacked[id]].forEach(u=>{if(u){
+  (Q[id]||[]).forEach(b=>{const u=b.patch;
     Object.keys(u.cells).forEach(k=>{const c=u.cells[k];doc.cells[k]=c.ops?applyOps(doc.cells[k],c.ops,whoName()):clone(c)});
-    Object.assign(doc.rem,clone(u.rem))}});
+    Object.assign(doc.rem,clone(u.rem))});
   return doc;
 }
 function persist(id,patch){
-  const u=unacked[id]=unacked[id]||{cells:{},rem:{}};
-  Object.keys(patch.cells||{}).forEach(k=>{const c=clone(patch.cells[k]);
-    if(c.ops&&u.cells[k]&&u.cells[k].ops)u.cells[k].ops=u.cells[k].ops.concat(c.ops);else u.cells[k]=c});
-  Object.assign(u.rem,clone(patch.rem||{}));
-  saveLocal();
+  const list=Q[id]=Q[id]||[];let last=list[list.length-1];
+  if(!last||last.sent){last={rid:uid(),patch:{cells:{},rem:{}},sent:false};list.push(last)}   // never merge into a batch already on its way
+  mergePatch(last.patch,patch);
+  saveQueue();saveLocal();
   if(!API_URL)return;
   enqueue(id,()=>sendDoc(id));
 }
-async function sendDoc(id){
-  const u=unacked[id];if(!hasPend(u))return;
-  inflight[id]=u;unacked[id]={cells:{},rem:{}};
-  try{
-    const doc=await api('save',[id,u]);
-    delete inflight[id];S.docs[id]=overlay(id,doc);setConn('live');saveLocal();render();
-  }catch(e){
-    delete inflight[id];
-    if(e.server){showMsg(e.message);poll()}
-    else{const n=unacked[id];Object.keys(n.cells).forEach(k=>{const c=n.cells[k];if(c.ops&&u.cells[k]&&u.cells[k].ops)u.cells[k].ops=u.cells[k].ops.concat(c.ops);else u.cells[k]=c});
-      unacked[id]={cells:u.cells,rem:Object.assign(u.rem,n.rem)};setConn('err')}
-  }
+const PERMANENT=/Only today|only your own|Bad record|This login is for|too large|Only the seniors|Only the Director/i;
+let retryTimer=null,retryWait=2000;
+function scheduleRetry(){if(retryTimer)return;const w=retryWait+Math.random()*1000;retryWait=Math.min(retryWait*2,60000);retryTimer=setTimeout(()=>{retryTimer=null;flushQueue()},w)}
+function flushQueue(){Object.keys(Q).forEach(id=>{if(hasPend(id))enqueue(id,()=>sendDoc(id))})}
+function sameDoc(a,b,own){   // equal apart from the server's stamps on the items we just saved ourselves
+  if(!a||!b)return false;const skip=own||{cells:{},rem:{}};
+  const norm=(o,sk)=>JSON.stringify(Object.keys(o||{}).sort().map(k=>sk[k]?[k,(o[k]||{}).s,(o[k]||{}).x,(o[k]||{}).n,((o[k]||{}).obs||[]).length]:[k,o[k]]));
+  return norm(a.cells,skip.cells)===norm(b.cells,skip.cells)&&norm(a.rem,skip.rem)===norm(b.rem,skip.rem);
 }
-let polling=false;
+async function sendDoc(id){
+  while(hasPend(id)){
+    const b=Q[id][0];b.sent=true;saveQueue();S.sending++;paintConn();
+    try{
+      const doc=await api('save',[id,b.patch,b.rid]);
+      S.sending--;Q[id].shift();if(!Q[id].length)delete Q[id];saveQueue();
+      S.netErr=false;retryWait=2000;if(doc.now)SKEW=doc.now-Date.now();
+      const before=S.docs[id]?clone(S.docs[id]):null;const sd={pl:doc.pl,mode:doc.mode,date:doc.date,wk:doc.wk,cells:doc.cells,rem:doc.rem};
+      docSig[id]=JSON.stringify(sd);   // the next refresh will not count our own save as news
+      S.docs[id]=overlay(id,sd);saveLocal();
+      if(!sameDoc(before,S.docs[id],b.patch))requestRender();   // redraw only if someone else's change came back with ours
+    }catch(e){
+      S.sending--;
+      if(e.server&&PERMANENT.test(e.message)){   // a rule says no: keep a visible record, never drop silently
+        Q[id].shift();if(!Q[id].length)delete Q[id];
+        S.failed.push({id:id,msg:e.message,n:Object.keys(b.patch.cells).length+Object.keys(b.patch.rem).length,at:Date.now()});
+        saveQueue();paintFails();poll();continue;
+      }
+      b.sent=true;S.netErr=!e.server;saveQueue();scheduleRetry();return;   // busy / offline: same request id is retried later
+    }
+  }
+  paintConn();
+}
+let polling=false;const docSig={};
 async function poll(){
   if(!API_URL||polling||!S.token)return;polling=true;const wk=S.wk;
   try{
-    Object.keys(unacked).forEach(id=>{if(hasPend(unacked[id]))enqueue(id,()=>sendDoc(id))});
+    flushQueue();
     const v=await api('state',[wk]);
+    if(v.now)SKEW=v.now-Date.now();
+    let changed=false;
     if(wk===S.wk){
-      Object.keys(S.docs).forEach(id=>{if(S.docs[id].wk===wk&&!v.docs[id]&&!hasPend(unacked[id])&&!inflight[id])delete S.docs[id]});
-      Object.keys(v.docs).forEach(id=>{S.docs[id]=overlay(id,v.docs[id])});
-      S.times=v.times||{};
+      Object.keys(S.docs).forEach(id=>{if(S.docs[id].wk===wk&&!v.docs[id]&&!hasPend(id)){delete S.docs[id];changed=true}});
+      Object.keys(v.docs).forEach(id=>{const sig=JSON.stringify(v.docs[id]);if(docSig[id]!==sig||!S.docs[id]){docSig[id]=sig;changed=true}
+        S.docs[id]=overlay(id,v.docs[id])});
+      const ts=JSON.stringify(v.times||{});if(ts!==JSON.stringify(S.times))changed=true;S.times=v.times||{};
       if(v.me){S.me=Object.assign(S.me||{},v.me);try{localStorage.setItem('plplan_me',JSON.stringify(S.me))}catch(e){}}
     }
-    setConn('live');saveLocal();render();
-  }catch(e){setConn('err')}
+    S.netErr=false;paintConn();saveLocal();if(changed||S.firstPoll!==false){S.firstPoll=false;requestRender()}
+  }catch(e){S.netErr=!e.server;paintConn()}
   finally{polling=false}
 }
 function subscribeWeek(wk){poll()}
 function setSession(v){
   S.token=v.token;S.me=v.me;S.who=v.me.id;S.docs={};S.times={};
-  try{localStorage.setItem('plplan_token',S.token);localStorage.setItem('plplan_me',JSON.stringify(S.me))}catch(e){}
+  try{localStorage.setItem('plplan_token',S.token);localStorage.setItem('plplan_me',JSON.stringify(S.me))}catch(e){storeWarn()}
   S.tab=S.me.senior?'dash':S.me.id;loadLocal();
+  Object.keys(Q).forEach(k=>delete Q[k]);S.failed=[];loadQueue().then(flushQueue);   // changes waiting from before the login are sent now
 }
 function logout(expired){
-  try{localStorage.removeItem(lkey());localStorage.removeItem('plplan_token');localStorage.removeItem('plplan_me')}catch(e){}
-  S.token='';S.me=null;S.who='';S.docs={};S.view=null;S.users=null;
-  render(true);if(expired)showMsg('Please log in again.');
+  if(!expired&&qCount()&&!confirm(qCount()+' change(s) are not saved to the server yet. They stay on this phone and are sent after you log in again. Log out anyway?'))return;
+  saveQueue();   // the queue is kept per person; only the session is cleared
+  try{localStorage.removeItem('plplan_token');localStorage.removeItem('plplan_me')}catch(e){}
+  if(!expired){try{localStorage.removeItem(lkey())}catch(e){}}
+  S.token='';S.me=null;S.who='';S.docs={};S.view=null;S.users=null;Object.keys(Q).forEach(k=>delete Q[k]);
+  render(true);if(expired)showMsg('Your login has expired — please log in again. Unsaved changes are kept and will be sent.',true);
 }
 async function doLogin(){
   const id=document.getElementById('lid').value,pw=document.getElementById('lpw').value.trim();
   if(!id||!pw){showMsg('Choose your name and type your password.');return}
   S.busy=true;render(true);
-  try{const v=await api('login',[id,pw]);setSession(v);showMsg('');S.busy=false;render(true);poll()}
+  try{const v=await api('login',[id,pw]);setSession(v);showMsg('');S.busy=false;routeFromHash(true);render(true);poll()}
   catch(e){S.busy=false;render(true);showMsg(e.server?e.message:"Can't reach the server. Check your internet.")}
 }
 async function doChangePw(target,inId,in2Id){
@@ -595,7 +664,7 @@ async function doChangePw(target,inId,in2Id){
   if(pw.length<6){showMsg('Password must be at least 6 characters.');return}
   if(pw!==pw2){showMsg('The two passwords do not match.');return}
   try{const v=await api('changePw',[target,pw]);
-    if(v&&v.token){setSession(v);S.view=null;render(true);showOk('Password changed.');poll()}
+    if(v&&v.token){setSession(v);goHome();showOk('Password changed.');poll()}
     else{document.getElementById(inId).value='';showOk('New password set for '+PEOPLE.find(p=>p.id===target).name+'.')}
   }catch(e){showMsg(e.message)}
 }
@@ -628,13 +697,17 @@ function persistCfg(patch){
     catch(e){if(e.server){showMsg(e.message);poll()}else setConn('err')}
   });
 }
-function initDb(){
+async function initDb(){
   loadLocal();
   if(!API_URL){setConn('local');render();return}
-  if(S.me)S.tab=S.me.senior?'dash':S.me.id;
-  render();poll();
-  setInterval(()=>{if(!document.hidden)poll()},20000);
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll()});
+  if(S.me){S.tab=S.me.senior?'dash':S.me.id;routeFromHash(true)}
+  render(true);
+  await loadQueue();          // restore changes not yet sent (app closed, reload, offline)
+  poll();
+  const tick=()=>{setTimeout(()=>{if(!document.hidden)poll();tick()},20000+Math.random()*8000)};tick();   // 20–28 s, paused while hidden
+  document.addEventListener('visibilitychange',()=>{if(document.hidden){flushAll();saveLocalNow()}else poll()});
+  window.addEventListener('online',()=>{retryWait=2000;paintConn();flushQueue();poll()});
+  window.addEventListener('offline',paintConn);
 }
 
 /* ================= MUTATIONS ================= */
@@ -651,7 +724,15 @@ function setCells(plId,list){
   const mode=S.mode,date=S.date;const id=docId(plId,mode,date);const doc=ensureDoc(id,plId,mode,date);
   const now=Date.now();const patch={cells:{}};
   list.forEach(x=>{const key=x[0]+'__'+x[1];const c=mkCell(x[0],x[2],now,mode,date);doc.cells[key]=c;patch.cells[key]=clone(c)});
-  persist(id,patch);render();
+  persist(id,patch);
+  if(list.length===1&&fastBox(plId,list[0][0],list[0][1]))renderSoon(1200);else render(true);
+}
+function fastBox(plId,rk,sec){   // instant feedback on old phones: redraw only the tapped box
+  try{const el=document.querySelector(`button.box[data-act="tick"][data-pl="${plId}"][data-row="${rk}"][data-sec="${sec}"]`);if(!el)return false;
+    const r=ROWMAP[S.mode][rk],pl=plOf(plId),doc=S.docs[docId(plId,S.mode,S.date)];
+    const showSec=secsFor(pl,S.mode,r)[0]!=='x';
+    const t=document.createElement('div');t.innerHTML=boxHTML(pl,r,sec,doc&&doc.cells[rk+'__'+sec],!!r.block.yn,true,showSec);
+    el.replaceWith(t.firstChild);return true}catch(e){return false}
 }
 const OBS_MAX=7;
 const OBS_COL=['','#d64545','#e0b000','#9bc53d','#1e9e5a','#14a3a3','#3a63c8','#7b4fc9'];
@@ -730,15 +811,35 @@ function dayStats(date,plsList){return sumStats(plsList.map(pl=>stats(getDoc(pl,
 
 /* ================= RENDER ================= */
 function paintConn(){
-  const el=document.getElementById('conn');
-  const m={live:['Live · shared','live'],local:['Setting up · this device only','loc'],err:["Can't reach server · will retry",'err'],init:['Connecting…','']}[S.conn]||['',''];
-  el.textContent=m[0];el.className='chip '+m[1];
+  const el=document.getElementById('conn');if(!el)return;const n=qCount();
+  let t,c;
+  if(S.conn==='local'){t='Setting up · this device only';c='loc'}
+  else if(S.sending&&!S.netErr){t='Saving…';c='busy'}
+  else if(n&&(S.netErr||!navigator.onLine)){t=(navigator.onLine?'Save failed – retrying':'Offline')+' · '+n+' pending';c='err'}
+  else if(n){t=n+' change'+(n>1?'s':'')+' pending';c='pend'}
+  else if(S.netErr||!navigator.onLine){t=navigator.onLine?"Can't reach server · retrying":'Offline';c='err'}
+  else if(S.conn==='init'&&S.firstPoll!==false){t='Connecting…';c=''}
+  else{t='Saved · live';c='live'}
+  el.textContent=t;el.className='chip '+c;
+}
+function paintFails(){
+  const el=document.getElementById('fails');if(!el)return;
+  if(!S.failed.length){el.innerHTML='';return}
+  el.innerHTML=`<div class="failbox"><b>${S.failed.length} change${S.failed.length>1?'s were':' was'} not accepted by the server</b><ul>${S.failed.map(f=>`<li>${esc(f.msg)} <span class="muted">(${f.n} item${f.n>1?'s':''} · ${esc(f.id.split('_').slice(1).join(' '))} · ${fmtT(f.at)})</span></li>`).join('')}</ul><button data-act="clearfails">OK, understood</button></div>`;
 }
 function typing(){const a=document.activeElement;return !!(a&&a.classList&&(a.classList.contains('remin')||a.classList.contains('cwin')))}
+/* ---- redraw control: never under the user's finger ---- */
+let lastTouch=0,renderTimer=null;
+['touchstart','pointerdown','keydown','wheel'].forEach(ev=>document.addEventListener(ev,()=>{lastTouch=Date.now()},{passive:true,capture:true}));
+document.addEventListener('scroll',()=>{lastTouch=Date.now()},{passive:true});
+const userBusy=()=>typing()||Date.now()-lastTouch<4000;
+function requestRender(){S.dirty=true;if(renderTimer)return;const go=()=>{renderTimer=null;if(!S.dirty)return;if(userBusy()){renderTimer=setTimeout(go,1000);return}render()};renderTimer=setTimeout(go,50)}
+function renderSoon(ms){clearTimeout(S.soonT);const t0=Date.now();S.soonT=setTimeout(()=>{if(typing()||lastTouch>t0+100){requestRender();return}render(true)},ms||900)}   // after own tap: redraw counters once, unless the user is touching again
 function render(force){
+  if(!force&&userBusy()){S.dirty=true;requestRender();return}
   if(typing()&&!force){S.dirty=true;return}
   S.dirty=false;
-  paintTop();
+  paintTop();paintBack();paintFails();
   if(!S.me){document.getElementById('root').innerHTML=loginHTML();return}
   if(S.view==='pw'){document.getElementById('root').innerHTML=pwHTML();return}
   if(S.view==='logins'){document.getElementById('root').innerHTML=loginsHTML();return}
@@ -1222,7 +1323,7 @@ function dashboard(){
   if(mode==='dp')h+=`<div class="card"><h3>Section-wise completion <span class="hint">Red = has a Not Done</span></h3>`+sums.map(({pl,sm})=>`<div class="heatrow"><div class="nm">${esc(pl.name)}<small>${pl.cls}</small></div>${sectionBoxes(pl,sm.doc)}</div>`).join('')+`</div>`;
   /* 5 · week */
   const dates=weekDates(S.wk);
-  h+=`<div class="card"><h3>This week <span class="hint">% complete per day</span></h3><div class="tw"><table><tr><th>PL</th>${dates.map((d,i)=>`<th style="text-align:center">${DAYN[i]}<small>${parseD(d).getDate()}</small></th>`).join('')}</tr>`+
+  h+=`<div class="card"><h3>This week <span class="hint">% complete per day · <button class="mini" data-act="csv">Export CSV</button></span></h3><div class="tw"><table><tr><th>PL</th>${dates.map((d,i)=>`<th style="text-align:center">${DAYN[i]}<small>${parseD(d).getDate()}</small></th>`).join('')}</tr>`+
     PLS.map(pl=>`<tr><td><b>${esc(pl.name)}</b></td>`+dates.map(d=>{
       if(d>today)return '<td class="c e"><span>·</span></td>';const c=stats(getDoc(pl,mode,d),pl,mode);const any=c.D+c.A+c.N>0;
       return `<td class="c ${!any?'e':c.N?'r':(c.pct===100?'g':'')}"><span>${any?c.pct+'%':'–'}</span></td>`}).join('')+'</tr>').join('')+`</table></div></div>`;
@@ -1231,17 +1332,91 @@ function dashboard(){
   return h;
 }
 
+/* ================= SCREENS & PHONE BACK =================
+   #/dash · #/pl/<id> · #/report · #/pw · #/logins — Back steps one screen; at home a second Back leaves. */
+const navStack=[];const scrollAt={};
+const homeRoute=()=>S.me&&S.me.senior?'#/dash':'#/pl/'+(S.me?S.me.id:'');
+function curRoute(){if(!S.me)return '#/login';if(S.view)return '#/'+S.view;return S.tab==='dash'?'#/dash':'#/pl/'+S.tab}
+function applyRoute(h){
+  const m=/^#\/(dash|pl\/([a-z]+)|report|pw|logins)$/.exec(h||'');if(!m||!S.me)return false;
+  if(m[1]==='dash'){if(!S.me.senior)return false;S.view=null;S.tab='dash'}
+  else if(m[2]){if(!plOf(m[2])||(!S.me.senior&&m[2]!==S.me.id))return false;S.view=null;S.tab=m[2]}
+  else{if(m[1]==='logins'&&!S.me.admin)return false;S.view=m[1];if(m[1]==='logins')S.users=null}
+  return true;
+}
+function routeFromHash(first){
+  const h=location.hash;
+  if(first){history.replaceState({g:1},'',location.pathname+location.search+'#/exit');history.pushState({},'',location.pathname+location.search+homeRoute());navStack.length=0;navStack.push(homeRoute());
+    if(h&&h!==homeRoute()&&applyRoute(h)){history.pushState({},'',h);navStack.push(h)}else applyRoute(homeRoute())}
+}
+function go(route){   // move to a screen, keeping the phone's Back history in step
+  const cur=curRoute();if(route===cur)return;scrollAt[cur]=window.scrollY;
+  if(navStack.length>=2&&navStack[navStack.length-2]===route){history.back();return}
+  applyRoute(route);history.pushState({},'',route);navStack.push(route);render(true);window.scrollTo(0,scrollAt[route]||0);
+}
+function goHome(){navStack.length=0;navStack.push(homeRoute());try{history.replaceState({},'',homeRoute())}catch(e){}applyRoute(homeRoute());render(true)}
+function goBack(){if(navStack.length>1)history.back();else go(homeRoute())}
+let exitArm=0;
+window.addEventListener('popstate',()=>{
+  if(!S.me)return;flushAll();
+  const h=location.hash;
+  if(h==='#/exit'){   // Back pressed on the home screen
+    if(Date.now()-exitArm<2500){history.back();return}
+    exitArm=Date.now();history.pushState({},'',homeRoute());toast('Press back again to exit');return;
+  }
+  scrollAt[navStack[navStack.length-1]]=window.scrollY;
+  const i=navStack.lastIndexOf(h);if(i>=0)navStack.length=i+1;else{navStack.length=0;navStack.push(homeRoute());if(h!==homeRoute())navStack.push(h)}
+  if(!applyRoute(h)){applyRoute(homeRoute())}
+  render(true);window.scrollTo(0,scrollAt[h]||0);
+});
+function paintBack(){
+  const el=document.getElementById('backbar');if(!el)return;const r=curRoute();
+  if(!S.me||r===homeRoute()){el.innerHTML='';return}
+  const label=S.view==='report'||S.view==='pw'||S.view==='logins'?'Back':(S.me.senior?'Back to Dashboard':'Back');
+  el.innerHTML=`<div class="backbar noprint"><button data-act="back">‹ ${label}</button></div>`;
+}
+let toastT=null;
+function toast(t,btn){let el=document.getElementById('toast');if(!el){el=document.createElement('div');el.id='toast';el.className='toast';document.body.appendChild(el)}
+  el.innerHTML=esc(t)+(btn?`<button data-act="${btn[0]}">${esc(btn[1])}</button>`:'');el.style.display='';clearTimeout(toastT);if(!btn)toastT=setTimeout(()=>{el.style.display='none'},2500)}
+/* ---- leaving with unsent changes ---- */
+window.addEventListener('beforeunload',e=>{flushAll();saveLocalNow();if(qCount()){e.preventDefault();e.returnValue='';return ''}});
+/* ---- long press never opens menus on buttons/boxes ---- */
+document.addEventListener('contextmenu',e=>{const t=e.target;if(!(t.closest&&t.closest('input,textarea,select,[contenteditable]')))e.preventDefault()});
+/* ---- global error handler: friendly message + log to server ---- */
+let errSent=0;
+function reportErr(kind,msg){
+  showMsg('Something went wrong on this screen. Your changes are kept on this phone — if it looks wrong, go back and open it again.');
+  if(errSent++<5&&API_URL){try{fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:'logErr',args:['PL '+kind,(S.me?S.me.id+' · ':'')+String(msg).slice(0,800)+' · '+navigator.userAgent.slice(0,120)]})}).catch(()=>{})}catch(e){}}
+}
+window.addEventListener('error',e=>{if(e&&e.message)reportErr('error',e.message+' @'+(e.lineno||''))});
+window.addEventListener('unhandledrejection',e=>reportErr('promise',(e&&e.reason&&(e.reason.message||e.reason))||'unknown'));
+/* ---- CSV export of the week on screen (backup) ---- */
+function exportCSV(){
+  const rows=[['Date','PL','Report','Block','Item','Section','Status','Marked by','Marked at','Remark/No.','Remark by']];
+  const lab={D:'Done',N:'Not done',A:'NA','':''};
+  Object.keys(S.docs).sort().forEach(id=>{const d=S.docs[id];if(d.wk!==S.wk)return;const pl=plOf(d.pl);if(!pl||!ROWS[d.mode])return;
+    ROWS[d.mode].forEach(r=>secsFor(pl,d.mode,r).forEach(sec=>{const k=r.key+'__'+sec,c=d.cells[k],e=d.rem[k];if(!c&&!e)return;
+      rows.push([d.date,pl.name,d.mode==='dp'?'Day Plan':'Day End',r.block.name,r.sub?r.item.name+' > '+r.label:r.label,sec==='x'?'':sec,
+        c?(c.obs?c.obs.length+' observations':lab[c.s||'']):'',c?c.by||'':'',c&&c.at?new Date(c.at).toLocaleString('en-IN'):'',e?((e.n!==''&&e.n!=null?e.n+' ':'')+(e.x||'')):'',e?e.by||'':''])}))});
+  const csv='\ufeff'+rows.map(r=>r.map(v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"').join(',')).join('\r\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='PL-Reports-week-'+S.wk+'.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);
+}
+
 /* ================= EVENTS ================= */
 document.addEventListener('click',ev=>{
   const t=ev.target.closest('[data-act]');if(!t)return;if(t.tagName==='A')ev.preventDefault();
   const a=t.dataset.act;
   if(a==='login'){doLogin();return}
   if(a==='logout'){logout();return}
-  if(a==='view'){S.view=S.view===t.dataset.v?null:t.dataset.v;S.users=null;render(true);window.scrollTo(0,0);return}
-  if(a==='closeview'){S.view=null;render(true);return}
+  if(a==='back'){goBack();return}
+  if(a==='clearfails'){S.failed=[];saveQueue();paintFails();return}
+  if(a==='csv'){exportCSV();return}
+  if(a==='reload'){location.reload();return}
+  if(a==='view'){if(S.view===t.dataset.v){goBack();return}S.users=null;go('#/'+t.dataset.v);return}
+  if(a==='closeview'){goBack();return}
   if(a==='savepw'){doChangePw(S.me.id,'np1','np2');return}
   if(a==='setuserpw'){doChangePw(t.dataset.u,'up_'+t.dataset.u);return}
-  if(a==='report'){S.rep.pl=t.dataset.v||S.rep.pl;S.view='report';render(true);window.scrollTo(0,0);return}
+  if(a==='report'){S.rep.pl=t.dataset.v||S.rep.pl;go('#/report');return}
   if(a==='reppl'){S.rep.pl=t.dataset.v;render(true);return}
   if(a==='repkind'){S.rep.kind=t.dataset.v;render(true);return}
   if(a==='print'){const pl=plOf(S.rep.pl);const old=document.title;document.title=`PL ${S.rep.kind==='week'?'Weekly':'Daily'} Report - ${pl?pl.name:''} - ${S.rep.kind==='week'?'week of '+S.wk:S.date}`;window.print();setTimeout(()=>document.title=old,1500);return}
@@ -1253,7 +1428,7 @@ document.addEventListener('click',ev=>{
   if(a==='cwunmet'){cwMet(t.dataset.pl,t.dataset.id,'pop');return}
   if(a==='cwchk'){cwChk(t.dataset.pl,t.dataset.id,t.dataset.q);return}
   if(a==='mode'){S.mode=t.dataset.v;render(true)}
-  else if(a==='tab'){if(t.dataset.v==='dash'&&!(S.me&&S.me.senior))return;S.tab=t.dataset.v;render(true);window.scrollTo(0,0)}
+  else if(a==='tab'){if(t.dataset.v==='dash'&&!(S.me&&S.me.senior))return;go(t.dataset.v==='dash'?'#/dash':'#/pl/'+t.dataset.v)}
   else if(a==='day'){S.date=t.dataset.v;render(true)}
   else if(a==='wk'){
     const m=parseD(S.wk);m.setDate(m.getDate()+7*Number(t.dataset.v));S.wk=ds(m);
@@ -1283,8 +1458,11 @@ document.addEventListener('focusout',ev=>{
 });
 document.addEventListener('keydown',ev=>{if(ev.key==='Enter'&&ev.target.id==='lpw')doLogin()});
 window.addEventListener('pagehide',flushAll);
-setInterval(()=>render(),30000);
+let statusSig='';
+setInterval(()=>{if(document.hidden||!S.me)return;const sig=todayStr()+'|'+DEFS[S.mode].map(b=>{const d=dueOf(b);return d&&nowMin()>toMin(d)?1:0}).join('');if(sig!==statusSig){statusSig=sig;requestRender()}},60000);   // due/overdue labels change only at due times
 render(true);initDb();
+if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.serviceWorker.register('sw.js').then(reg=>{
+  reg.addEventListener('updatefound',()=>{const w=reg.installing;if(!w)return;w.addEventListener('statechange',()=>{if(w.state==='installed'&&navigator.serviceWorker.controller)toast('New version available',['reload','Tap to refresh'])})})}).catch(()=>{})}
 </script>
 </body>
 </html>
