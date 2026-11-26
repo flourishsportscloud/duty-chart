@@ -100,6 +100,12 @@ function doPost(e){
         const nv=cur+1;PropertiesService.getScriptProperties().setProperty("VER",String(nv));
         return {ver:nv};
       });
+    }else if(req.fn==="logError"){
+      /* friendly error log from the app: one line per error in the "Errors" sheet (no student data) */
+      const sh=SpreadsheetApp.getActive().getSheetByName("Errors")||SpreadsheetApp.getActive().insertSheet("Errors");
+      sh.appendRow([new Date(),me.name,String(a[0]||"").slice(0,300),String(a[1]||"").slice(0,80),String(a[2]||"").slice(0,200)]);
+      if(sh.getLastRow()>2000)sh.deleteRows(2,500);
+      data=1;
     }else fail("unknown call");
     return out({ok:true,data:data});
   }catch(err){
