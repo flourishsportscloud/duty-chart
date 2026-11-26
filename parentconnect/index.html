@@ -330,6 +330,13 @@ input[type=text],input[type=password],input[type=search],input[type=datetime-loc
 .ft2{font-size:15px;line-height:1.5;color:var(--ink);white-space:pre-wrap}
 .lnk{background:none;border:0;color:var(--sky);font-weight:700;font-size:13px;cursor:pointer;padding:2px 4px}
 .ins .prof,.ins .ii,.ins ul{font-size:14.5px}.ins .ih{font-size:13.5px}
+
+/* ---- touch, scroll, update banner ---- */
+html,body{overscroll-behavior:none}
+.scroll,.ov,.mod,.main{overscroll-behavior:contain}
+.btn,.chip,.role,.pill-u,nav,nav *,.sync,[data-a]{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:text}
+.nvb{position:fixed;left:12px;right:12px;bottom:76px;z-index:99;background:#1B3156;color:#fff;border-radius:12px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px;box-shadow:0 6px 24px rgba(0,0,0,.3)}
 </style>
 <script>
 /* Parent Connect — GitHub Pages client layer: Diary-password login + Apps Script API (replaces the Claude runtime) */
@@ -396,6 +403,13 @@ function idb(){return new Promise(function(ok,no){try{var q=indexedDB.open('pc_c
 GH.cget=async function(k){try{var d=await idb();return await new Promise(function(ok){var t=d.transaction('k').objectStore('k').get(k);t.onsuccess=function(){ok(t.result||null)};t.onerror=function(){ok(null)}})}catch(e){return null}};
 GH.cset=async function(k,v){try{var d=await idb();d.transaction('k','readwrite').objectStore('k').put(v,k)}catch(e){}};
 GH.cclear=async function(){try{var d=await idb();d.transaction('k','readwrite').objectStore('k').clear()}catch(e){}};
+GH.registerSW=function(onNew){try{if(!('serviceWorker' in navigator)||!(location.protocol==='https:'||location.hostname==='localhost'))return;
+  navigator.serviceWorker.register('sw.js').then(function(reg){
+    function watch(w){w&&w.addEventListener('statechange',function(){if(w.state==='installed'&&navigator.serviceWorker.controller)onNew(w)})}
+    if(reg.waiting&&navigator.serviceWorker.controller)onNew(reg.waiting);
+    reg.addEventListener('updatefound',function(){watch(reg.installing)});
+    var rl=false;navigator.serviceWorker.addEventListener('controllerchange',function(){if(!rl){rl=true;location.reload()}});
+    setInterval(function(){reg.update().catch(function(){})},1800000)}).catch(function(){})}catch(e){}};
 GH.logout=function(){GH.cclear();ld(K);ld(W);ld('pc2_me');location.reload()};
 GH.gate=function(){
   return new Promise(async function(done){
@@ -432,29 +446,101 @@ GH.gate=function(){
   });
 };
 /* ---- shared storage: same calls the app made to the Claude db, served by the Apps Script ---- */
+/* Save engine: every edit goes into a persistent queue (IndexedDB), is sent one record at a time with retry,
+   and is merged by item id with whatever other people saved meanwhile. Pending records are never overwritten by the server copy. */
 var C={},VER=0,subs=[],started=false,first=false,busy=false;
+var Q={},QV={},BASE={},STAT={pending:0,state:'ok',warn:''},sl=[],flushing=false,tries=0,ft=null,pq=null;
+var J=function(x){return JSON.stringify(x)},CL=function(x){return x==null?x:JSON.parse(J(x))};
+var isO=function(x){return x&&typeof x==='object'&&!Array.isArray(x)};
+function stat(){STAT.pending=Object.keys(Q).length;sl.forEach(function(f){try{f(STAT)}catch(e){}})}
+GH.stat=STAT;GH.onStat=function(f){sl.push(f)};
+function persistQ(){clearTimeout(pq);pq=setTimeout(async function(){try{await GH.cset('queue',{Q:Q,BASE:(function(){var b={};Object.keys(Q).forEach(function(k){if(BASE[k]!=null)b[k]=BASE[k]});return b})()});if(STAT.warn==='storage'){STAT.warn='';stat()}}catch(e){STAT.warn='storage';stat()}},200)}
+function allId(a){return a.every(function(x){return x&&typeof x==='object'&&x.id!=null})}
+function mergeArr(b,l,s){
+  var bm={},lm={},sm={};b.forEach(function(x){bm[x.id]=x});l.forEach(function(x){lm[x.id]=x});s.forEach(function(x){sm[x.id]=x});
+  var out=[],seen={};
+  s.forEach(function(x){var id=x.id;seen[id]=1;
+    if(id in bm&&!(id in lm))return;                    /* deleted here */
+    if(id in lm&&J(lm[id])!==J(bm[id]))out.push(isO(lm[id])&&isO(sm[id])&&id in bm?mergeO(bm[id],lm[id],sm[id]):lm[id]);else out.push(x)});
+  l.forEach(function(x){if(!seen[x.id]&&!(x.id in bm))out.push(x);else if(!seen[x.id]&&x.id in bm&&J(x)!==J(bm[x.id]))out.push(x)});
+  if(out.every(function(x){return typeof x.at==='number'}))out.sort(function(p,q){return p.at-q.at});
+  return out}
+function mergeO(b,l,s){var o={},ks={};Object.keys(l).concat(Object.keys(s)).forEach(function(k){ks[k]=1});var bb=isO(b)?b:{};
+  Object.keys(ks).forEach(function(k){
+    if(J(l[k])===J(bb[k])){if(k in s)o[k]=s[k]}
+    else o[k]=(Array.isArray(l[k])||isO(l[k]))&&k in s?merge(bb[k],l[k],s[k]):l[k]});return o}
+function merge(b,l,s){
+  if(s==null)return l;if(l==null)return s;
+  if(Array.isArray(l)&&Array.isArray(s)&&allId(l)&&allId(s)&&allId(b||[]))return mergeArr(b||[],l,s);
+  if(isO(l)&&isO(s))return mergeO(b,l,s);
+  return J(l)===J(b)?s:l}
+GH._merge=merge;
+function notify(c){subs.forEach(function(s){if(s.col===c)s.cb(snap(c))})}
+function backoff(){clearTimeout(ft);ft=setTimeout(flush,Math.min(60000,1500*Math.pow(2,Math.min(tries,6))))}
+async function sendOne(k){
+  var e=Q[k],ver=QV[k],c=e.c,id=e.id,merged=null,fin=null;
+  for(var n=0;n<4;n++){
+    var sv=await GH.api('get',[c,id]);
+    var b=BASE[k]!=null?JSON.parse(BASE[k]):null;
+    merged=merge(b,Q[k].v,sv);
+    await GH.api('set',[c,id,merged]);
+    var chk=await GH.api('get',[c,id]);                  /* another person may have saved at the same moment: check ours is still there */
+    var again=merge(b,merged,chk);
+    if(J(again)===J(chk)){fin=chk;break}
+    Q[k].v=again}
+  if(fin==null)fin=merged;
+  BASE[k]=J(fin);
+  if(QV[k]===ver){delete Q[k];(C[c]=C[c]||{})[id]=fin;notify(c)}
+  else{(C[c]=C[c]||{})[id]=Q[k].v}
+  persistQ();recheck(k,c,id,fin,3000);recheck(k,c,id,fin,12000)}
+/* another person may save the same record at the same instant: look again shortly after and add back anything that went missing */
+function recheck(k,c,id,fin,ms){setTimeout(async function(){try{
+  if(Q[k]||navigator.onLine===false)return;
+  var cur=(C[c]||{})[id];if(J(cur)!==J(fin))return;
+  var chk=await GH.api('get',[c,id]);if(J(chk)===J(fin))return;
+  var m=merge({},fin,chk);if(J(m)!==J(chk)){BASE[k]=J(chk);queueSet(c,id,m)}}catch(e){}},ms)}
+async function flush(){
+  if(flushing)return;flushing=true;
+  try{
+    while(Object.keys(Q).length){
+      if(navigator.onLine===false){STAT.state='offline';stat();return}
+      var k=Object.keys(Q)[0];
+      try{STAT.state='saving';stat();await sendOne(k);tries=0}
+      catch(e){tries++;STAT.state='retry';stat();backoff();return}
+    }
+    STAT.state='ok';stat()
+  }finally{flushing=false}}
+GH.flush=flush;
+async function restoreQ(){try{var s=await GH.cget('queue');if(s&&s.Q){Object.keys(s.Q).forEach(function(k){Q[k]=s.Q[k];QV[k]=1;if(s.BASE&&s.BASE[k]!=null)BASE[k]=s.BASE[k];(C[Q[k].c]=C[Q[k].c]||{})[Q[k].id]=CL(Q[k].v)});stat();if(Object.keys(Q).length)flush()}}catch(e){}}
+function queueSet(c,id,v){var k=c+'/'+id;Q[k]={c:c,id:id,v:CL(v)};QV[k]=(QV[k]||0)+1;(C[c]=C[c]||{})[id]=v;stat();persistQ();flush()}
 function snap(col){var m=C[col]||{};return{docs:Object.keys(m).filter(function(i){return m[i]}).map(function(i){return{id:i,data:function(){return m[i]}}})}}
 async function pull(){
   if(busy)return;busy=true;
   try{
     var r=await GH.api('sync',[VER]),ch={};
-    if(!r.same){VER=r.ver;Object.keys(r.rows).forEach(function(k){var i=k.indexOf('/'),c=k.slice(0,i),id=k.slice(i+1);(C[c]=C[c]||{})[id]=r.rows[k];ch[c]=1})}
+    if(!r.same){VER=r.ver;Object.keys(r.rows).forEach(function(k){var i=k.indexOf('/'),c=k.slice(0,i),id=k.slice(i+1);
+      if(Q[k])return;                                   /* unsent local change: keep it, never replace with the server copy */
+      (C[c]=C[c]||{})[id]=r.rows[k];BASE[k]=J(r.rows[k]);ch[c]=1})}
     subs.forEach(function(s){if(!first||ch[s.col])s.cb(snap(s.col))});
     first=true;
   }catch(e){subs.forEach(function(s){s.err&&s.err(e)})}
   finally{busy=false}
 }
-function start(){if(started)return;started=true;pull();setInterval(function(){if(!document.hidden)pull()},10000)}
+function nextPull(){setTimeout(function(){if(!document.hidden)pull();nextPull()},20000+Math.random()*10000)}
+function start(){if(started)return;started=true;restoreQ().then(pull);nextPull();
+  document.addEventListener('visibilitychange',function(){if(!document.hidden){pull();flush()}});
+  window.addEventListener('online',function(){tries=0;flush();pull()});window.addEventListener('offline',function(){STAT.state='offline';stat()})}
+window.addEventListener('beforeunload',function(e){if(Object.keys(Q).length){e.preventDefault();e.returnValue=''}});
 var DB={
   collection:function(name){
     var m=/^data\/users\/([^\/]+)/.exec(name);
     if(m)return{doc:function(){return{
       get:async function(){var v=await GH.api('get',['profiles',m[1]]);return v?{data:function(){return v}}:null},
-      set:async function(v){await GH.api('set',['profiles',m[1],v])}}}};
+      set:async function(v){queueSet('profiles',m[1],v)}}}};
     return{onSnapshot:function(cb,err){subs.push({col:name,cb:cb,err:err});start();return function(){}}};
   },
   doc:function(path){var i=path.indexOf('/'),c=path.slice(0,i),id=path.slice(i+1);
-    return{set:async function(v){await GH.api('set',[c,id,v]);(C[c]=C[c]||{})[id]=v}}}
+    return{set:async function(v){queueSet(c,id,v)}}}
 };
 var SL=function(n){return String(n).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,60)||'staff'};
 window.claude={use:async function(k){
@@ -495,7 +581,12 @@ GH.insightText=async function(id){
 "use strict";
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const LS={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+let _qw=0;
+const LS={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){if(Date.now()-_qw>60000){_qw=Date.now();try{toast('Phone storage is full. Free some space. Your changes are still being sent to the server.',7000)}catch(x){}}}}};
+const _lsq={};let _lst=null;
+function lsSet(k,v){_lsq[k]=v;clearTimeout(_lst);_lst=setTimeout(lsFlush,500)}
+function lsFlush(){Object.keys(_lsq).forEach(k=>{LS.set(k,_lsq[k]);delete _lsq[k]})}
+document.addEventListener('visibilitychange',()=>{if(document.hidden)lsFlush()});window.addEventListener('pagehide',lsFlush);
 const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],WD=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const pad=n=>String(n).padStart(2,'0');
 const isoOf=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
@@ -557,7 +648,8 @@ async function boot(){
     const sc=GH.scope();
     if(ME&&!ME.va)ME.scope=sc;
     if(!ME&&sc){const dg=GH.desig(),d=DESIG_BY[dg]||DESIG_BY.st;ME={role:d[1],desig:dg,name:GH.who.name,groups:[],subject:d[2]||'',classes:[],scope:sc};LS.set('pc2_me',ME);ME_WAIT=false}
-    if(ME)LS.set('pc2_me',ME)}
+    if(ME)LS.set('pc2_me',ME);
+    if(history.state&&history.state.pc&&history.state.view&&ME)restoreFromState(history.state)}
   $('#app').innerHTML='<div class="empty">Loading Parent Connect…</div>';
   try{
     const[f,c,h]=window.GH?[[],[],[]]:await Promise.all(['feedback.json','calls.json','changes.json'].map(u=>fetch(u).then(r=>r.json())));
@@ -580,13 +672,14 @@ async function initDB(){
   const watch=(name,store,key,cb)=>{try{DB.collection(name).onSnapshot(snap=>{
     const m={};const take=d=>{const v=typeof d.data==='function'?d.data():d.data;if(v)m[d.id]=v};
     const docs=snap.docs||[];if(docs.length)docs.forEach(take);else if(typeof snap.forEach==='function')snap.forEach(take);
-    Object.assign(store,m);LS.set(key,store);SYNC='shared';paintSync();cb&&cb(m);const ae=document.activeElement;if(ae&&/^(TEXTAREA|INPUT|SELECT)$/.test(ae.tagName))return;if(!document.querySelector('.ov'))render(true);
+    Object.assign(store,m);lsSet(key,store);SYNC='shared';paintSync();cb&&cb(m);softRender();
   },()=>{SYNC='local';paintSync()})}catch(e){SYNC='local';paintSync()}};
+  if(window.GH)GH.onStat(paintSync);
   watch('followups',FU,'pc2_fu');watch('calls',CS,'pc2_cs');watch('remarks',REM,'pc2_rm');watch('added',ADD,'pc2_ad',mergeAdded);watch('acks',ACK,'pc2_ak');watch('callreq',CQ,'pc2_cq',onCQ);watch('retag',RT,'pc2_rt',applyRT);
 }
 async function save(coll,store,key,id){
-  LS.set(key,store);
-  if(DB){try{await DB.doc(coll+'/'+id).set(store[id]);SYNC='shared'}catch(e){SYNC='local';toast('Saved on this device only. Ask the Director for edit access.')}paintSync()}
+  lsSet(key,store);
+  if(DB){try{await DB.doc(coll+'/'+id).set(store[id]);SYNC='shared'}catch(e){SYNC='local';toast('Could not save. It is kept on this phone and will be sent again.')}paintSync()}
 }
 const saveFU=id=>save('followups',FU,'pc2_fu',id),saveCS=id=>save('calls',CS,'pc2_cs',id),saveREM=id=>save('remarks',REM,'pc2_rm',id),saveADD=id=>save('added',ADD,'pc2_ad',id),saveACK=id=>save('acks',ACK,'pc2_ak',id),saveCQ=id=>save('callreq',CQ,'pc2_cq',id);
 function grpOf(c){const b=cbase(c);if(['PG','Nur','LKG','UKG'].includes(b))return'Pre-Primary';const n=+b;return!n?'':n<=2?'Class 1-2':n<=5?'Class 3-5':n<=7?'Class 6-7':n<=9?'Class 8-9':n<=11?'Class 10-11':''}
@@ -629,12 +722,71 @@ async function liveSync(manual,pre){
     LIVE.n=n;LIVE.at=Date.now();LIVE.st=(a.status==='fulfilled'&&b.status==='fulfilled')?'ok':'ok';
     if(a.status==='rejected'||b.status==='rejected'){LIVE.msg=''}
     D.last=D.f.reduce((m,r)=>r.d>m?r.d:m,'');if(!CM)CM=D.last.slice(0,7);mergeAdded();mergeCalls();
-    const ae=document.activeElement;if(!(ae&&/^(TEXTAREA|INPUT|SELECT)$/.test(ae.tagName))&&!document.querySelector('.ov')&&(changed||D.liveFirst!==1))render(true);
+    if(changed||D.liveFirst!==1)softRender();
     D.liveFirst=1;if(manual)toast(n?n+' new record'+(n>1?'s':'')+' from the sheets':'Up to date with the sheets');
   }catch(e){LIVE.st='err';LIVE.msg=window.GH?String(e&&e.message||'not connected').slice(0,60):lvMsg(e&&e.code);console.warn('live failed',e);if(window.GH&&!D.f.length&&!document.querySelector('.shell'))$('#app').innerHTML='<div class="loadbox"><div class="lbt">Could not load the feedback</div><div class="mut">'+esc(LIVE.msg)+'</div><button class="btn pri" data-a="lvretry">Try again</button> <button class="btn" data-a="signout">Sign out</button></div>'}
   finally{LIVE.busy=0;paintLive()}
 }
-function paintSync(){const e=$('#sync');if(e){e.textContent=SYNC==='shared'?'Shared live':'This device only';e.className='sync '+(SYNC==='shared'?'s':'l')}}
+function paintSync(){const e=$('#sync');if(!e)return;
+  const s=window.GH&&GH.stat;let t,ok=true;
+  if(s){const n=s.pending;
+    if(s.warn==='storage'){t='Phone storage full';ok=false}
+    else if(navigator.onLine===false){t=(n?n+' pending · ':'')+'Offline';ok=false}
+    else if(s.state==='retry'){t='Save failed, retrying'+(n?' ('+n+')':'');ok=false}
+    else if(n){t=s.state==='saving'?'Saving…':n+' change'+(n>1?'s':'')+' pending';ok=false}
+    else t='Saved'}
+  else t=SYNC==='shared'?'Shared live':'This device only',ok=SYNC==='shared';
+  e.textContent=t;e.className='sync '+(ok?'s':'l')}
+
+
+/* ---------- reliability helpers ---------- */
+let lastTouch=0,RQ=0;
+['touchstart','touchmove','pointerdown','keydown','wheel'].forEach(ev=>document.addEventListener(ev,()=>{lastTouch=Date.now()},{passive:true,capture:true}));
+const busyUI=()=>{const ae=document.activeElement;return(ae&&/^(TEXTAREA|INPUT|SELECT)$/.test(ae.tagName))||document.querySelector('.ov')||Date.now()-lastTouch<4000};
+function softRender(){if(!ME||view==='login')return;if(busyUI()){RQ=1;return}RQ=0;render(true)}
+setInterval(()=>{if(RQ&&!document.hidden&&!busyUI()){RQ=0;render(true)}},1000);
+/* global errors: friendly message, never a blank screen */
+const ERRS=[];let _le=0;
+function gerr(m){ERRS.push(String(m).slice(0,300));if(ERRS.length>30)ERRS.shift();if(Date.now()-_le>8000){_le=Date.now();try{toast('Something went wrong. Your saved work is safe. If it keeps happening, close and reopen the app.',6000)}catch(e){}}}
+window.addEventListener('error',e=>gerr(e.message||'error'));
+window.addEventListener('unhandledrejection',e=>gerr((e.reason&&e.reason.message)||e.reason||'error'));
+/* touch: no long-press menu on buttons and tiles, inputs stay selectable */
+document.addEventListener('contextmenu',e=>{const t=e.target;if(t.closest&&t.closest('[data-a],.chip,.btn,.role,nav')&&!t.closest('input,textarea'))e.preventDefault()});
+/* Back button: one screen at a time, popups included, Home asks twice before leaving */
+let HK='',IGN=0,EXARM=0;
+const hkey=()=>view+'|'+(view==='cl'?CLS+'|'+CLM:'')+'|'+(view==='st'?STK:'');
+const hst=m=>({pc:1,m:m?1:0,k:hkey(),view,CLS,CLM,STK,prevView});
+function syncHistory(){
+  if(!ME||view==='login')return;
+  const k=hkey(),s=history.state;
+  if(!s||!s.pc){try{history.replaceState({pc:1,root:1},'');history.pushState(hst(),'','#/'+view)}catch(e){}HK=k;return}
+  if(k===HK)return;
+  HK=k;try{history.pushState(hst(),'','#/'+view)}catch(e){}
+}
+function restoreFromState(s){if(!s||!s.pc||!s.view)return;view=s.view;if(s.CLS!==undefined)CLS=s.CLS;if(s.CLM)CLM=s.CLM;if(s.STK!==undefined)STK=s.STK;if(s.prevView)prevView=s.prevView;HK=s.k||hkey()}
+window.addEventListener('popstate',e=>{
+  if(IGN){IGN--;return}
+  const s=e.state;
+  if(document.querySelector('.ov')){document.querySelectorAll('.ov').forEach(x=>x.remove());return}
+  if(s&&s.root){
+    if(EXARM&&Date.now()-EXARM<2500){IGN=0;history.back();return}
+    EXARM=Date.now();toast('Press back again to exit',2400);try{history.pushState(hst(),'','#/'+view)}catch(x){}return}
+  if(s&&s.pc){restoreFromState(s);render(true);window.scrollTo(0,0)}
+});
+new MutationObserver(()=>{
+  const open=!!document.querySelector('.ov'),s=history.state;
+  if(open&&s&&s.pc&&!s.m){try{history.pushState(Object.assign(hst(true),{m:1}),'')}catch(e){}}
+  else if(!open&&s&&s.m){IGN++;history.back()}
+}).observe(document.body,{childList:true});
+/* backup: everything saved by staff, as a CSV */
+function backupCSV(){
+  const rows=[['collection','id','json']];
+  [['followups',FU],['calls',CS],['remarks',REM],['added',ADD],['acks',ACK],['callreq',CQ],['retag',RT]].forEach(([n,s])=>Object.keys(s||{}).forEach(id=>rows.push([n,id,JSON.stringify(s[id])])));
+  const csv=rows.map(r=>r.map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(',')).join('\r\n');
+  const b=new Blob(['﻿'+csv],{type:'text/csv'}),u=URL.createObjectURL(b),a=document.createElement('a');
+  a.href=u;a.download='parent-connect-backup-'+todayISO()+'.csv';document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(u)},2000);toast(rows.length-1+' records saved to a CSV file')}
+function newVersionBanner(w){if(document.getElementById('nvb'))return;const d=document.createElement('div');d.id='nvb';d.className='nvb';d.innerHTML='<span>New version available</span><button class="btn sm pri" id="nvbb">Tap to refresh</button>';document.body.appendChild(d);document.getElementById('nvbb').onclick=()=>{try{w.postMessage('skip')}catch(e){}setTimeout(()=>location.reload(),600)}}
+if(window.GH)GH.registerSW(newVersionBanner);
 
 /* ---------- scope ---------- */
 function scopeTxt(s){const pre=['PG','Nur','LKG','UKG'].filter(x=>s.includes(x)),n=s.filter(x=>/^\d+$/.test(x)).map(Number).sort((x,y)=>x-y);
@@ -1031,7 +1183,7 @@ function printStudent(){
 }
 
 /* ---------- drawer & modals ---------- */
-function overlay(html,center){const o=document.createElement('div');o.className='ov'+(center?' c':'');o.innerHTML=html;o.addEventListener('click',e=>{if(e.target===o)o.remove()});document.body.appendChild(o);return o}
+function overlay(html,center){const o=document.createElement('div');o.className='ov'+(center?' c':'');o.innerHTML=html;o.addEventListener('pointerdown',e=>{o._dn=e.target===o?Date.now():0});o.addEventListener('click',e=>{if(e.target===o&&o._dn&&Date.now()-o._dn<600)o.remove();o._dn=0});document.body.appendChild(o);return o}
 function openDrawer(id){
   const r=D.byId[id],v=FU[id];document.querySelectorAll('.ov').forEach(x=>x.remove());
   let h='<div class="drawer"><div class="row" style="justify-content:space-between;align-items:flex-start"><div><h2 class="lk" data-a="stu" data-v="'+esc(stKey(r))+'">'+esc(r.n||'Student')+'</h2><div class="row" style="margin-top:4px"><span class="st nu">'+esc(r.c)+'</span><span class="st cat">'+esc(r.ct)+'</span>'+priP(r.p)+(v?fuPill(id):'')+'</div></div><button class="btn sm" data-a="xo">Close</button></div>'
@@ -1125,7 +1277,8 @@ function callBanner(p){
   const u=p.filter(c=>c.urg==='Urgent').length,old=p.filter(c=>c.at).sort((a,b)=>a.at-b.at)[0];
   return'<div class="callban" data-a="go" data-v="ca"><b>'+p.length+' call'+(p.length>1?'s':'')+' waiting</b>'+(u?' · <span style="color:#b3123f">'+u+' urgent</span>':'')+(old?' · oldest request waiting '+waitTxt(old.at):'')+'<span class="sp"></span><span class="btn sm navy">Open calls</span></div>';
 }
-function render(keep){
+function render(keep){try{render0(keep)}finally{try{syncHistory();paintSync()}catch(e){}}}
+function render0(keep){
   const y=window.scrollY;
   if(!ME&&ME_WAIT){$('#app').innerHTML='<div class="empty">Opening Parent Connect…</div>';return}
   if(!ME||view==='login'){view='login';$('#app').innerHTML=vLogin();return}
@@ -1137,7 +1290,7 @@ function render(keep){
   const ini=ME.name.split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
   $('#app').innerHTML='<div class="shell"><aside class="side"><div class="logo">'+MARK+'<div><b>Parent Connect</b><small>FIS · Bikaner</small></div></div>'
   +nav.map(n=>'<button class="nav '+(nv===n[0]?'on':'')+'" data-a="go" data-v="'+n[0]+'">'+ico(n[0])+n[1]+(n[2]?'<span class="cnt">'+n[2]+'</span>':'')+'</button>').join('')+'</aside>'
-  +'<div class="main"><div class="top"><div><h1>'+TITLES[view][0]+'</h1><div class="sub">'+TITLES[view][1]+'</div></div><span class="sp"></span><button class="btn pri sm" data-a="add">+ Add feedback</button><button class="btn sm" data-a="paste">Paste from Studybase</button>'+(isDir()&&!ME.va?'<button class="btn sm" data-a="va">View as…</button>':'')+'<span class="sync" id="sync"></span><button class="sync" id="lv" data-a="lvref" title="Read the Feedback and Diary sheets from Google Drive now"></button><div class="pill-u" data-a="switch" title="Switch user"><div class="av">'+esc(ini)+'</div><div><b>'+esc(ME.name)+'</b><small>'+esc(roleLbl())+' · '+esc(scopeLabel())+'</small></div></div></div>'
+  +'<div class="main"><div class="top"><div><h1>'+TITLES[view][0]+'</h1><div class="sub">'+TITLES[view][1]+'</div></div><span class="sp"></span><button class="btn pri sm" data-a="add">+ Add feedback</button><button class="btn sm" data-a="paste">Paste from Studybase</button>'+(isDir()&&!ME.va?'<button class="btn sm" data-a="va">View as…</button>':'')+((ME.role==='director'||ME.role==='admin')&&!ME.va?'<button class="btn sm" data-a="backup" title="Download everything staff saved as a CSV file">Backup</button>':'')+'<span class="sync" id="sync"></span><button class="sync" id="lv" data-a="lvref" title="Read the Feedback and Diary sheets from Google Drive now"></button><div class="pill-u" data-a="switch" title="Switch user"><div class="av">'+esc(ini)+'</div><div><b>'+esc(ME.name)+'</b><small>'+esc(roleLbl())+' · '+esc(scopeLabel())+'</small></div></div></div>'
   +'<div class="work">'+callBanner(pend)+(ME.va?'<div class="banner" style="margin-bottom:14px;display:flex;gap:12px;align-items:center">Viewing as '+esc(roleLbl()+' · '+scopeLabel())+'<span class="sp"></span><button class="btn sm navy" data-a="vaback">Back to Director</button></div>':'')+body+'</div></div></div>';
   paintSync();paintLive();if(keep)window.scrollTo(0,y);
 }
@@ -1168,7 +1321,7 @@ document.addEventListener('click',e=>{
     case'lvref':liveSync(true);break;
     case'img':{const o=overlay('<div class="lightbox"><img src="'+esc(t.src)+'" alt="attachment"><button class="btn sm" data-a="xo">Close</button></div>',true);break}
     case'stu':document.querySelectorAll('.ov').forEach(x=>x.remove());if(view!=='st')prevView=view;STK=v;view='st';loadIns(v.split('|')[1]);render();window.scrollTo(0,0);break;
-    case'back':view=prevView||'fb';render();window.scrollTo(0,0);break;
+    case'back':if(history.state&&history.state.pc&&!history.state.root&&HK){history.back()}else{view=prevView||'fb';render();window.scrollTo(0,0)}break;
     case'more':shown+=30;render(true);break;
     case'fut':fuTab=v;reset();render();break;
     case'seg':fuSeg=v;reset();render();break;
@@ -1201,6 +1354,7 @@ document.addEventListener('click',e=>{
     case'stact':stActModal(v);break;
     case'stedit':stActModal(v,t.dataset.id);break;
     case'stdel':{const key=stuKey(CLS,v),id=t.dataset.id;formModal('Delete this action?','<div class="mut">This cannot be undone.</div>','Delete',()=>{REM[key].items=REM[key].items.filter(z=>z.id!==id);saveREM(key)});break}
+    case'backup':backupCSV();break;
     case'lvretry':$('#app').innerHTML='<div class="loadbox"><div class="lbt">Loading the latest feedback…</div><div class="mut">First load can take up to 30 seconds. Please wait.</div></div>';liveSync(true).then(()=>render(true));break;
     case'enter':{const m=window._lg;m.name=$('#lgname').value.trim();
       if(!m.name){toast('Please enter your name');break}
@@ -1271,7 +1425,7 @@ async function loadIns(c,force){
     const d=parseInsight(tx);if(!d.n)throw{code:'unreadable'};
     e.data=d;e.at=Date.now();e.st='ok';LS.set('pc2_ins_'+k,{d,at:e.at});
   }catch(x){if(!e.data){e.st='err';e.msg=lvMsg(x&&x.code)}console.warn('insight failed',x)}
-  finally{e.busy=0;if((view==='cl'||view==='st')&&!document.querySelector('.ov')&&!/^(TEXTAREA|INPUT|SELECT)$/.test((document.activeElement||{}).tagName||''))render(true)}
+  finally{e.busy=0;if(view==='cl'||view==='st')softRender()}
 }
 function insFind(d,n){if(!d)return null;const k=nk(n);if(d.students[k])return d.students[k];
   const t=String(n||'').toLowerCase().split(/\s+/).filter(x=>x.length>1);
