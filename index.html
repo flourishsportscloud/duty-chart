@@ -1945,7 +1945,8 @@ function applyOps(daily, roster, ops){
 }
 const Q = {ops: [], busy: false, wait: 0, timer: null};
 try { Q.ops = JSON.parse(localStorage.getItem('dutyQueue') || '[]') || []; } catch(e){ Q.ops = []; }
-function qSave(){ try { localStorage.setItem('dutyQueue', JSON.stringify(Q.ops)); } catch(e){} }
+function qSave(){ try { localStorage.setItem('dutyQueue', JSON.stringify(Q.ops)); } catch(e){} try { if (window.FIS && FIS.setPending) FIS.setPending(Q.ops.length); } catch(e){} }
+addEventListener('beforeunload', e => { if (Q.ops.length){ qSave(); e.preventDefault(); e.returnValue = 'Some changes are still being sent.'; return e.returnValue; } });
 function syncBadge(){
   let el = document.getElementById('syncb');
   if (!el){ el = document.createElement('div'); el.id = 'syncb'; el.className = 'syncb'; el.setAttribute('role', 'status'); el.onclick = () => { Q.wait = 0; clearTimeout(Q.timer); Q.timer = null; flush(); }; document.body.appendChild(el); }

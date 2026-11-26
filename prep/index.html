@@ -691,14 +691,14 @@ async function readPlanner(){
   if(!sampleFn){ upStatus('Reading planners needs Claude, which is not available in this view. Open the tracker on claude.ai.'); return; }
   const lim=await sampleFn.limits().catch(()=>null);
   const imgs=files.filter(f=>/^image\//.test(f.type)), sheets=files.filter(f=>!/^image\//.test(f.type));
-  if(imgs.length&&!lim?.images){ upStatus('This view cannot send images. Upload the Excel planner instead.'); return; }
+  if(imgs.length&&!(lim&&lim.images)){ upStatus('This view cannot send images. Upload the Excel planner instead.'); return; }
   $('upRead').disabled=true; $('upStop').hidden=false; $('upPreview').hidden=true;
   upCtl=new AbortController();
   const rows=[], off=[];
   try{
     const jobs=[];
     if(sheets.length){ upStatus('Opening the Excel files…'); let txt=''; for(const f of sheets) txt+=(await fileToText(f))+'\n\n'; jobs.push({kind:'sheet',text:txt.slice(0,220000)}); }
-    const per=Math.max(1,(lim?.images?.maxCount)||1);
+    const per=Math.max(1,(lim&&lim.images&&lim.images.maxCount)||1);
     for(let i=0;i<imgs.length;i+=Math.min(per,3)) jobs.push({kind:'image',images:imgs.slice(i,i+Math.min(per,3))});
     for(let j=0;j<jobs.length;j++){
       upStatus('Reading planner '+(j+1)+' of '+jobs.length+'… this can take a minute.');
@@ -756,7 +756,7 @@ async function saveUpload(){
   pendingJump=pick[0].date;
 }
 async function initUpload(){
-  sampleFn=await window.claude?.use?.('sample');
+  sampleFn=await (window.claude&&window.claude.use?window.claude.use('sample'):undefined);
   if(sampleFn){ $('upRow1').hidden=false; $('upRow2').hidden=false; }
   $('impGo').addEventListener('click',async()=>{ const f=$('impFile').files[0]; if(!f){ $('impStatus').textContent='Choose the lesson file first.'; return; }
     let data; try{ data=JSON.parse(await f.text()); }catch(e){ $('impStatus').textContent='This is not a lesson file. Use the .json file Claude sent.'; return; }
@@ -780,8 +780,8 @@ $('signOut').addEventListener('click',()=>window.PREP_LOGOUT());
 renderRole();
 
 (async function start(){
-  db=await window.claude?.use?.('db');
-  user=await window.claude?.use?.('user');
+  db=await (window.claude&&window.claude.use?window.claude.use('db'):undefined);
+  user=await (window.claude&&window.claude.use?window.claude.use('user'):undefined);
   if(!db){ $('liveTxt').textContent='OFFLINE'; $('dayTitle').textContent='Tracker unavailable'; showMsg('Log in to see and update preparation status.'); return; }
   if(user){ try{ const me=await user.me(); myId=me.id; canEdit=!!me.canEdit; const c=user.can?await user.can('data.write'):null; if(c===false){canWrite=false; $('hint').textContent='View only: ask the coordinator for edit access to update statuses.';} }catch(e){} }
   initUpload();

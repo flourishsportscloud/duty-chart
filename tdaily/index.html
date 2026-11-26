@@ -887,10 +887,10 @@ function renderSal(){
       <td class="num cur">${inr(cur)}${rise}</td><td><button class="btn sm" data-se="${id}">${salEdit===id?"Close":"Edit"}</button></td></tr>`;
     if(salEdit===id&&salDraft){r+=`<tr class="sedit"><td></td><td colspan="6"><div class="grid">
       <label>Date of joining<input class="note" type="date" id="se-doj" data-sd="doj" value="${esc(salDraft.doj||"")}"></label>
-      <label>Joining salary (₹)<input class="note" id="se-join" data-sd="join" inputmode="numeric" value="${esc(salDraft.join??"")}"></label></div>
+      <label>Joining salary (₹)<input class="note" id="se-join" data-sd="join" inputmode="numeric" value="${esc((salDraft.join!=null?salDraft.join:""))}"></label></div>
       <div class="group" style="padding-left:0">Increments (oldest first)</div>
       ${salDraft.inc.map((e,k)=>`<div class="grid" style="margin-bottom:6px"><label>Year / month<input class="note" id="se-l-${k}" data-sd="l-${k}" value="${esc(e.label||"")}" placeholder="2025 or Dec 2024"></label>
-        <label>New salary (₹)<input class="note" id="se-a-${k}" data-sd="a-${k}" inputmode="numeric" value="${esc(e.amount??"")}"></label>
+        <label>New salary (₹)<input class="note" id="se-a-${k}" data-sd="a-${k}" inputmode="numeric" value="${esc((e.amount!=null?e.amount:""))}"></label>
         <button class="btn sm" data-sr="${k}">Remove</button></div>`).join("")}
       <div class="actions" style="margin:8px 0 0"><button class="btn sm" data-sa="1">+ Add increment</button><button class="btn sm primary" data-ss="${id}">Save</button><button class="btn sm" data-sc="1">Cancel</button></div></td></tr>`}
     return r}).join("");
@@ -900,7 +900,7 @@ function renderSal(){
 }
 document.addEventListener("click",e=>{
   const t=e.target.closest("[data-se],[data-sa],[data-sr],[data-ss],[data-sc]"); if(!t)return; e.stopPropagation();
-  if(t.dataset.se){const id=t.dataset.se;if(salEdit===id){salEdit=null;salDraft=null}else{salEdit=id;const x=sal[id]||{};salDraft={doj:x.doj||"",join:x.join??"",inc:JSON.parse(JSON.stringify(x.inc||[]))}}renderSal();return}
+  if(t.dataset.se){const id=t.dataset.se;if(salEdit===id){salEdit=null;salDraft=null}else{salEdit=id;const x=sal[id]||{};salDraft={doj:x.doj||"",join:(x.join!=null?x.join:""),inc:JSON.parse(JSON.stringify(x.inc||[]))}}renderSal();return}
   if(t.dataset.sa){salDraft.inc.push({label:String(new Date().getFullYear()),amount:""});renderSal();return}
   if(t.dataset.sr){salDraft.inc.splice(+t.dataset.sr,1);renderSal();return}
   if(t.dataset.sc){salEdit=null;salDraft=null;renderSal();return}
@@ -930,7 +930,7 @@ function renderVeh(){
   $("docAlert").innerHTML=urgent.length?`<div class="dalert">Renew now: ${urgent.map(esc).join(" · ")} — <button data-goveh="1">see vehicle documents</button></div>`:"";
   const cell=(id,k)=>{const d=veh[id][k],[st,txt]=docState(d);return `<span class="vd ${st}">${d&&d!=="NR"?fmt(d):"—"}<small>${txt}</small></span>`};
   let rows=ids.map((id,i)=>{const x=veh[id];let r=`<tr><td class="num">${i+1}</td><td><b>${esc(x.no||id)}</b></td>${DOCS.map(([k])=>`<td>${cell(id,k)}</td>`).join("")}<td><button class="btn sm" data-ve="${id}">${vehEdit===id?"Close":"Renewed?"}</button></td></tr>`;
-    if(vehEdit===id)r+=`<tr class="sedit"><td></td><td colspan="6"><div class="grid">${DOCS.map(([k,lab])=>`<label>${lab} valid till<input class="note" type="date" id="ve-${k}" value="${esc(vehDraft[k]??x[k]??"")}"></label>`).join("")}</div>
+    if(vehEdit===id)r+=`<tr class="sedit"><td></td><td colspan="6"><div class="grid">${DOCS.map(([k,lab])=>`<label>${lab} valid till<input class="note" type="date" id="ve-${k}" value="${esc((vehDraft[k]!=null?vehDraft[k]:x[k]!=null?x[k]:""))}"></label>`).join("")}</div>
       <div class="actions" style="margin:8px 0 0"><button class="btn sm primary" data-vs="${id}">Save new dates</button><button class="btn sm" data-ve="${id}">Cancel</button></div></td></tr>`;
     return r}).join("");
   // plan: next 12 months
@@ -972,7 +972,7 @@ function loadSvc(){if(!db){svcState="off";renderSvc();return}
 function renderSvc(){
   const body=$("svcBody");if(!body)return;$("svcSec").classList.toggle("closed",closed.has("svcSec"));
   if(svcState!=="ok"){body.innerHTML=`<div class="lock">${svcState==="loading"?"Loading service records…":"Log in to see service records."}</div>`;$("svcAlert").innerHTML="";return}
-  const RK={exp:0,due:1,soon:2},ids=Object.keys(SV).sort((a,b)=>((RK[svcCalc(SV[a]).st]??3)-(RK[svcCalc(SV[b]).st]??3))||(SV[a].order||99)-(SV[b].order||99));
+  const RK={exp:0,due:1,soon:2},ids=Object.keys(SV).sort((a,b)=>((RK[svcCalc(SV[a]).st]!=null?RK[svcCalc(SV[a]).st]:3)-(RK[svcCalc(SV[b]).st]!=null?RK[svcCalc(SV[b]).st]:3))||(SV[a].order||99)-(SV[b].order||99));
   const urg=[];ids.forEach(id=>{const c=svcCalc(SV[id]);if(c.st!=="ok")urg.push(`${SV[id].no} (${c.why})`)});
   $("svcSum").textContent=`${ids.length} vehicles · ${urg.length} due`;$("svcSum").className="cnt"+(urg.length?"":" full");
   $("svcAlert").innerHTML=urg.length?`<div class="dalert">Service due: ${urg.map(esc).join(" · ")} — <button data-gosvc="1">see service schedule</button></div>`:"";
@@ -986,8 +986,8 @@ function renderSvc(){
       <td><div class="btns"><button class="btn xs" data-sk="${id}">Update km</button><button class="btn xs primary" data-sd2="${id}">Service done</button></div></td></tr>`;
     if(svcEdit&&svcEdit.id===id){const t=svcEdit.mode;
       r+=`<tr class="sedit"><td></td><td colspan="7"><div class="grid">
-        ${t==="km"?`<label>Current km<input class="note" id="sv-cur" inputmode="numeric" value="${esc(svcDraft.cur??c.cur)}"></label><label>As of date<input class="note" type="date" id="sv-curd" value="${esc(svcDraft.curd??todayIST())}"></label>`
-        :`<label>Service ${c.n+1} done at km<input class="note" id="sv-km" inputmode="numeric" value="${esc(svcDraft.km??c.cur)}"></label><label>Service date<input class="note" type="date" id="sv-date" value="${esc(svcDraft.date??todayIST())}"></label>`}
+        ${t==="km"?`<label>Current km<input class="note" id="sv-cur" inputmode="numeric" value="${esc((svcDraft.cur!=null?svcDraft.cur:c.cur))}"></label><label>As of date<input class="note" type="date" id="sv-curd" value="${esc((svcDraft.curd!=null?svcDraft.curd:todayIST()))}"></label>`
+        :`<label>Service ${c.n+1} done at km<input class="note" id="sv-km" inputmode="numeric" value="${esc((svcDraft.km!=null?svcDraft.km:c.cur))}"></label><label>Service date<input class="note" type="date" id="sv-date" value="${esc((svcDraft.date!=null?svcDraft.date:todayIST()))}"></label>`}
         </div><div class="actions" style="margin:8px 0 0"><button class="btn sm primary" data-svs="${id}">Save</button><button class="btn sm" data-svc="1">Cancel</button></div></td></tr>`}
     return r}).join("");
   body.innerHTML=`<div class="legend" style="padding:10px 14px 0;margin:0"><span><b class="vd exp" style="width:14px;height:14px;padding:0"></b>Overdue</span><span><b class="vd due" style="width:14px;height:14px;padding:0"></b>Within 2,000 km or 30 days</span><span><b class="vd ok" style="width:14px;height:14px;padding:0"></b>OK</span><span>Next service = last service km + interval, or 1 year after last service — whichever comes first</span></div>
@@ -1053,7 +1053,7 @@ ${list("adjust")}`}
 function renderEod(){const b=$("eodBody");if(!b)return;$("eodSec").classList.toggle("closed",closed.has("eodSec"));
   const nd=nextDay(date);if(db&&tmr.d!==nd){tmr={d:nd,data:null};db.doc("reports/"+nd).get().then(x=>{if(tmr.d===nd){tmr.data=x.exists?x.data():null;render()}}).catch(()=>{})}
   const a=eodAuto();const filled=EODF.filter(([k])=>eodVal(k,a).trim()).length;$("eodSum").textContent=`${filled}/${EODF.length} filled`;
-  const fld=([k,l,multi])=>{const own=(state.eod||{})[k]??"",au=a[k]||"";
+  const fld=([k,l,multi])=>{const own=((state.eod||{})[k]!=null?(state.eod||{})[k]:""),au=a[k]||"";
     const hint=au?`<span class="auto">Auto: ${esc(au.replace(/\n/g,", "))}${own?" (overridden)":""}</span>`:"";
     const ph=au?au.replace(/\n/g,", "):(multi?"One per line · blank = NA":"Blank = NA");
     return `<label>${l}${multi?`<textarea class="note" id="eod-${k}" data-eod="${k}" placeholder="${esc(ph)}">${esc(own)}</textarea>`:`<input class="note" id="eod-${k}" data-eod="${k}" value="${esc(own)}" placeholder="${esc(ph)}">`}${hint}</label>`};
@@ -1129,7 +1129,7 @@ function crSummary(){const v=CRD.data;if(!v)return null;const ov=id=>(v.docs||{}
 document.addEventListener("click",e=>{if(e.target.closest('[data-go="__cr"]')){e.stopPropagation();location.href="../complaints/"}},true);
 
 const _renderTD=render;render=function(){_renderTD();renderSup();renderWash();renderStl();renderVans();salLock();renderTabs();renderDash()};
-setInterval(()=>{if(tab==="dash")renderDash();renderTabs()},2000);
+setInterval(()=>{if(document.hidden)return;if(tab==="dash")renderDash();renderTabs()},5000);
 try{renderTabs()}catch(e){}
 
 /* ---- supervisor tasks (Kamal, Vishvbandu) ---- */
@@ -1703,7 +1703,7 @@ function renderDrv(){const b=$("drvBody");if(!b||tab!=="drv")return;
     ${roster.vanNotice?`<div class="card2 warn"><b>📢 सूचना · Notice</b><p style="white-space:pre-wrap">${esc(roster.vanNotice)}</p></div>`:""}
     <div class="card2"><a class="btn primary" style="display:block;text-align:center;text-decoration:none;padding:14px" href="${esc(vl)}">▶ रूट शुरू करें / खत्म करें · Open Van Duty</a></div>`;fin();return}
   const t=tmrData(),nd=nextDay(date),T=t?dutyOf(me,t):[],D=dutyOf(me,state);
-  const vid=(D.find(x=>x.r.first)||{}).r?.key||(slotOf(me)||{}).v?.id||"",v=VEH.find(x=>x.id===vid);
+  const vid=((D.find(x=>x.r.first)||{}).r||{}).key||((slotOf(me)||{}).v||{}).id||"",v=VEH.find(x=>x.id===vid);
   const key=vid?vehKey(vid):null,R=(state.vcr||{})[vid]||{};
   const docs=v&&key&&vehState==="ok"&&veh[key]?DOCS.map(([d,lab])=>{const[st,txt]=docState(veh[key][d]);return `<div class="drow"><span>${DOC_HI[d]||lab}</span><span class="vd ${st}">${veh[key][d]&&veh[key][d]!=="NR"?fmt(veh[key][d]):"—"}<small>${esc(txt)}</small></span></div>`}).join(""):"";
   const sv=v&&key&&svcState==="ok"&&SV[key]?(()=>{const c=svcCalc(SV[key]);return `<div class="drow"><span>सर्विस · Service</span><span class="vd ${c.st}">${c.st==="exp"?"बकाया":c.st==="due"?"जल्द":"ठीक"}<small>${esc(c.why)}${c.dueDate?" · "+fmt(c.dueDate):""}</small></span></div>`})():"";
@@ -1857,7 +1857,7 @@ function issDash(){const N=issNeed(),off=N.filter(n=>n.off),open=issOpen();if(!N
 const _r4=render;render=function(){if(DRV_MODE&&tab!=="drv")tab="drv";_r4();renderDrv();renderVrev();renderIss()};
 
 $("date").value=date; render(); loadHistory();
-setInterval(()=>{if(date===todayIST()&&!document.activeElement?.matches("input,textarea"))render()},60000);
+setInterval(()=>{if(date===todayIST()&&!(document.activeElement&&document.activeElement.matches("input,textarea")))render()},60000);
 (async()=>{try{db=await FISDB.ready()}catch(e){db=null}
   subscribe(); loadHistory(); loadSal(); loadVeh(); loadSvc();
   if(db)db.doc("roster/tasks").onSnapshot(x=>{if(tkEdit)return;const d=x.exists?x.data():null;if(d&&Array.isArray(d.w)){applyTasks(d.w);render()}},()=>{});
@@ -1865,7 +1865,7 @@ setInterval(()=>{if(date===todayIST()&&!document.activeElement?.matches("input,t
   if(db)db.doc("roster/issues").onSnapshot(s=>{const ae=document.activeElement;if(ae&&ae.id&&ae.id.startsWith("iss-")&&issLoaded)return;const d=s.exists?s.data():{};ISS={};Object.entries(d.i||{}).forEach(([k,v])=>{if(v)ISS[k]=v});issLoaded=true;render()},()=>{issLoaded=true});
   if(db)db.doc("roster/wash").onSnapshot(s=>{const d=s.exists?s.data():null;washTpl=d&&Array.isArray(d.list)?d.list:null;render()},()=>{});
   let preFix=false;
-  if(db)db.doc("roster/main").onSnapshot(s=>{const ae=document.activeElement?.dataset;if(ae&&(ae.r||ae.pre))return;const d=s.exists?s.data():{};roster={veh:{...(d.veh||{})},area:{...(d.area||{})},name:{...(d.name||{})},phone:{...(d.phone||{})},hi:{...(d.hi||{})},pre:Array.isArray(d.pre)?d.pre:[],mig:{...(d.mig||{})},g:{...(d.g||{})},rtm:{...(d.rtm||{})},rta:{...(d.rta||{})},cleaner:{...(d.cleaner||{})},vci:Array.isArray(d.vci)?d.vci:null,reporters:Array.isArray(d.reporters)?d.reporters:null,hist:Array.isArray(d.hist)?d.hist:[],vans:Array.isArray(d.vans)?d.vans:null,vanNotice:d.vanNotice||""};
+  if(db)db.doc("roster/main").onSnapshot(s=>{const ae=(document.activeElement&&document.activeElement.dataset);if(ae&&(ae.r||ae.pre))return;const d=s.exists?s.data():{};roster={veh:{...(d.veh||{})},area:{...(d.area||{})},name:{...(d.name||{})},phone:{...(d.phone||{})},hi:{...(d.hi||{})},pre:Array.isArray(d.pre)?d.pre:[],mig:{...(d.mig||{})},g:{...(d.g||{})},rtm:{...(d.rtm||{})},rta:{...(d.rta||{})},cleaner:{...(d.cleaner||{})},vci:Array.isArray(d.vci)?d.vci:null,reporters:Array.isArray(d.reporters)?d.reporters:null,hist:Array.isArray(d.hist)?d.hist:[],vans:Array.isArray(d.vans)?d.vans:null,vanNotice:d.vanNotice||""};
     // one-time change asked on 18 Nov 2026: Bus G second round is driven by Manish; Nitin stays spare
     if(s.exists&&!preFix&&!roster.mig.g1118){preFix=true;const G=roster.pre.find(p=>p.code==="G");if(G){G.driver=roster.name.p11d||"Manish";G.dphone=roster.phone.p11d||"";}roster.mig.g1118=1;saveRoster()}
     render()},()=>{});

@@ -22,7 +22,7 @@ const CLS_ORDER=['P.G.','Nursery','L.KG.','U.KG.','First','Second','Third','Four
 function clsKey(c){const [g,s]=c.split(' - ');return [CLS_ORDER.indexOf(g),s||'']}
 const CLASSES=[...new Set(Object.values(KID).map(k=>k.cls))].sort((a,b)=>{const x=clsKey(a),y=clsKey(b);return x[0]-y[0]||x[1].localeCompare(y[1])});
 const seg=s=>s.replace(/[^A-Za-z0-9]/g,'_');
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const $=id=>document.getElementById(id);
 function toast(t){const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>e.classList.remove('on'),1800)}
 const nowHM=()=>{const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};
@@ -1127,9 +1127,9 @@ document.addEventListener('click',async e=>{
   if(t.dataset.recper){S.recPer=t.dataset.recper;renderDash();return}
   if(t.dataset.recseg){S.recSeg=t.dataset.recseg;renderDash();return}
   if(t.id==='recRefresh'){S.recTick=(S.recTick||0)+1;RG.key='';renderDash();return}
-  if(t.dataset.derrcp!==undefined||t.dataset.derrwa!==undefined){const v=VEH.find(x=>x.k===S.depVeh);const it=((S.derr[S.depVeh]||{}).items||[])[+(t.dataset.derrcp??t.dataset.derrwa)];if(!it)return;const m=errMsg(S.date,v,it);if(t.dataset.derrwa!==undefined)await waSend(m);else await copyTxt(m);return}
+  if(t.dataset.derrcp!==undefined||t.dataset.derrwa!==undefined){const v=VEH.find(x=>x.k===S.depVeh);const it=((S.derr[S.depVeh]||{}).items||[])[+(t.dataset.derrcp!==undefined?t.dataset.derrcp:t.dataset.derrwa)];if(!it)return;const m=errMsg(S.date,v,it);if(t.dataset.derrwa!==undefined)await waSend(m);else await copyTxt(m);return}
   if(t.dataset.derrall){const v=VEH.find(x=>x.k===S.depVeh);const its=(S.derr[S.depVeh]||{}).items||[];const m='*Bus Errors – '+v.l+' – '+fmtD(S.date)+'*\nDuty: '+staffOf(v.k)+'\n'+its.map((it,i)=>{const k=it.kid&&KID[it.kid];return (i+1)+'. '+it.type+(k?' – '+k.name+' ('+shortCls(k.cls)+')':'')+(it.rem?' – '+it.rem:'')+(it.by?' [by '+it.by+(it.time?' '+it.time:'')+']':'')}).join('\n');if(t.dataset.derrall==='wa')await waSend(m);else await copyTxt(m);return}
-  if(t.dataset.berrcp!==undefined||t.dataset.berrwa!==undefined){const r=BERR_ROWS[+(t.dataset.berrcp??t.dataset.berrwa)];if(!r)return;const m=errMsg(r.d,r.v,{type:r.type,kid:r.kid,rem:r.rem,by:r.by});if(t.dataset.berrwa!==undefined)await waSend(m);else await copyTxt(m);return}
+  if(t.dataset.berrcp!==undefined||t.dataset.berrwa!==undefined){const r=BERR_ROWS[+(t.dataset.berrcp!==undefined?t.dataset.berrcp:t.dataset.berrwa)];if(!r)return;const m=errMsg(r.d,r.v,{type:r.type,kid:r.kid,rem:r.rem,by:r.by});if(t.dataset.berrwa!==undefined)await waSend(m);else await copyTxt(m);return}
   if(t.id==='berrDetCopy'){await copyTxt(busErrDetText());return}
   if(t.id==='berrDetWa'){await waSend(busErrDetText());return}
   if(t.id==='berrDayWa'||t.id==='berrDayCp'){const f=$('dashF').value;const m=busErrDayText(VEH.filter(v=>!f||v.t===f));if(t.id==='berrDayWa')await waSend(m);else await copyTxt(m);return}

@@ -460,7 +460,7 @@ async function save(f, statusEl) {
     const a = document.createElement('a'); a.href = url; a.download = fileName(f); document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 60000);
     say('Saved ' + fileName(f) + '. Attach it in WhatsApp as a Document.', true); return true;
-  } catch (e) { say(e?.message || 'Could not save the file.'); return false; }
+  } catch (e) { say((e&&e.message) || 'Could not save the file.'); return false; }
 }
 async function share(f, statusEl) {
   const say = (m, ok) => { statusEl.textContent = m; statusEl.className = 'st' + (ok ? ' ok' : ''); };
@@ -471,7 +471,7 @@ async function share(f, statusEl) {
       await navigator.share({ files: [file], title: `${f[1]} ${f[2]}`, text: `${f[1]} ${f[2]} · data as of ${AS_OF}` });
       say('Shared.', true);
     } else { say('This browser cannot share files directly. Use Save PDF, then attach it in WhatsApp.'); }
-  } catch (e) { if (e?.name === 'AbortError') say(''); else say('Could not share: ' + (e?.message || e) + '. Use Save PDF instead.'); }
+  } catch (e) { if ((e&&e.name) === 'AbortError') say(''); else say('Could not share: ' + ((e&&e.message) || e) + '. Use Save PDF instead.'); }
 }
 function sendSheet(f) {
   $('sh-fn').textContent = fileName(f) + ` · ${f[3]} pages`;
@@ -520,7 +520,7 @@ function openWText(f) {
 $('ws-abng').onchange = e => { WT.abng = e.target.checked; renderWText(); };
 $('ws-copy').onclick = () => { const t = waText(WT.S, WT); if (!t) return toast('Tap a test first.'); copyText(t, 'Defaulter list'); };
 $('ws-share').onclick = async () => { const t = waText(WT.S, WT); if (!t) return toast('Tap a test first.');
-  if (navigator.share) { try { await navigator.share({ text: t }); } catch (e) { if (e?.name !== 'AbortError') copyText(t, 'Defaulter list'); } } else copyText(t, 'Defaulter list'); };
+  if (navigator.share) { try { await navigator.share({ text: t }); } catch (e) { if ((e&&e.name) !== 'AbortError') copyText(t, 'Defaulter list'); } } else copyText(t, 'Defaulter list'); };
 $('ws-close').onclick = () => { $('wsheet').hidden = true; };
 $('wsheet').addEventListener('click', e => { if (e.target === $('wsheet')) $('wsheet').hidden = true; });
 
@@ -863,7 +863,7 @@ async function imageAction(el, name, mode) {
     }
     const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = file.name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 60000);
     toast('Image saved: ' + file.name);
-  } catch (e) { if (e?.name !== 'AbortError') toast(e?.message || 'Could not make the image.'); }
+  } catch (e) { if ((e&&e.name) !== 'AbortError') toast((e&&e.message) || 'Could not make the image.'); }
 }
 const cmpName = () => ('FIS defaulters ' + scopeText()).replace(/[^\w\- ,]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80);
 $('cmp-share').onclick = () => imageAction($('cmp-shot'), cmpName(), 'share');
@@ -981,7 +981,7 @@ $('wa-clear').onclick = () => { W.sel = []; renderWA(); };
 $('wa-copy').onclick = () => { const t = waText(); if (!t) return toast('Tap a test first.'); copyText(t, 'Defaulter list'); };
 $('wa-share').onclick = async () => {
   const t = waText(); if (!t) return toast('Tap a test first.');
-  if (navigator.share) { try { await navigator.share({ text: t }); } catch (e) { if (e?.name !== 'AbortError') copyText(t, 'Defaulter list'); } }
+  if (navigator.share) { try { await navigator.share({ text: t }); } catch (e) { if ((e&&e.name) !== 'AbortError') copyText(t, 'Defaulter list'); } }
   else copyText(t, 'Defaulter list');
 };
 function renderPoor() {
