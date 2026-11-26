@@ -106,7 +106,8 @@ function applyOp_(ctx,me,op){
   const nowIso=new Date(ctx.now).toISOString();
 
   if(col==="history"){
-    if(kind!=="set"||row)fail("History cannot be changed.");
+    if(kind!=="set")fail("History cannot be changed.");
+    if(row){if(parse_(row.json).by===me.name)return;fail("History cannot be changed.")}
     const h={caseType:data.caseType==="found"?"found":"complaint",caseId:str(data.caseId,60),code:str(data.code,30),title:str(data.title,120),action:str(data.action,60),detail:str(data.detail,300),at:ctx.now,by:me.name,demo:false};
     if(!h.caseId||!h.action)fail("Incomplete history entry.");
     appendRows_("History",[[id,h.at,h.caseId,JSON.stringify(h)]]);
@@ -115,7 +116,8 @@ function applyOp_(ctx,me,op){
   if(kind==="delete")fail("Records are not deleted. Close them instead.");
 
   if(col==="handovers"){
-    if(kind!=="set"||row)fail("This item already has a handover record.");
+    if(kind!=="set")fail("This item already has a handover record.");
+    if(row){if(parse_(row.json).by===me.name)return;fail("This item already has a handover record.")}
     const item=findRow_("Found",id);if(!item)fail("Item not found.");
     const f=parse_(item.json);
     if(f.status!=="ready"&&f.status!=="in_stock")fail("This item is not waiting for handover.");
@@ -135,7 +137,7 @@ function applyOp_(ctx,me,op){
   cleanText_(data,TEXT_KEYS,col==="found"&&data.desc!==undefined?400:300);
   stampTimes_(ctx,me,data);
   if(kind==="set"){
-    if(row)fail("This record already exists.");
+    if(row){if(cur&&cur.loggedBy===me.name)return;fail("This record already exists.")}
     if(col==="found"){
       if(!data.title||!data.location||!data.foundDate||!data.foundBy||!data.keptAt)fail("Fill in what, where, when, who found it and where it is kept.");
       if(!data.photos||!data.photos.length)fail("Add at least one photo.");
@@ -145,11 +147,12 @@ function applyOp_(ctx,me,op){
       Object.assign(data,{status:"open",matchedItemId:"",reportedDate:ctx.today,reportedTime:Utilities.formatDate(new Date(ctx.now),TZ,"HH:mm")});
     }
     const code=(col==="found"?"F-":"C-")+id.replace(/^[fc]-/,"").toUpperCase();
-    Object.assign(data,{code,at:ctx.now,createdAt:ctx.now,updatedAt:ctx.now,loggedBy:me.name,demo:false});
+    Object.assign(data,{code,at:ctx.now,createdAt:ctx.now,updatedAt:ctx.now,loggedBy:me.name,updatedBy:me.name,demo:false});
     upsert_(sheet,{id,json:JSON.stringify(data),updated:nowIso});
     return;
   }
   if(kind!=="update"||!cur)fail("Record not found.");
+  if(op.expect&&typeof op.expect==="object")Object.keys(op.expect).forEach(k=>{if(String(cur[k]==null?"":cur[k])!==String(op.expect[k]==null?"":op.expect[k]))fail("This record was just changed by "+(cur.updatedBy||"another person")+". Reload to see the latest, then try again.")});
   PROTECTED.forEach(k=>delete data[k]);
   if(col==="found"){
     if(data.status==="disposed"){
@@ -166,11 +169,14 @@ function applyOp_(ctx,me,op){
       if(data.status||data.restricted!==undefined||data.photos)fail("This case is closed.");
     }
   }else if(cur.status==="closed"&&data.status&&data.status!=="open")fail("This case is closed.");
-  Object.assign(cur,data,{updatedAt:ctx.now});
+  Object.assign(cur,data,{updatedAt:ctx.now,updatedBy:me.name});
   upsert_(sheet,{id,json:JSON.stringify(cur),updated:nowIso});
 }
 
 const API={
+  // cheap change counter: phones ask this every 20-30 s and download the full state only when it moved
+  rev(ctx){return {rev:PropertiesService.getScriptProperties().getProperty("REV")||"0"}},
+  clientLog(ctx,token,msg,where){const me=needUser(ctx,token);ctx.log(me.name,"client error",str(where,80),str(msg,300));return true},
   state(ctx,token){return publicState(ctx,readToken(ctx.H,ctx.secret,ctx.DB,token,ctx.now))},
 
   setup(ctx,name,pw,wantRole){
@@ -450,7 +456,7 @@ function doPost(e){
   const lock=LockService.getScriptLock();
   try{
     const req=JSON.parse(e.postData.contents||"{}");
-    const readOnly=req.fn==="state"||req.fn==="photo"||req.fn==="handover"||req.fn==="caseHistory";
+    const readOnly=req.fn==="rev"||req.fn==="clientLog"||req.fn==="state"||req.fn==="photo"||req.fn==="handover"||req.fn==="caseHistory";
     if(!readOnly)lock.waitLock(20000);
     const DB=loadDB_(),dirty={},logs=[];
     const now=Date.now();
@@ -458,6 +464,7 @@ function doPost(e){
       log:(who,action,item,detail)=>logs.push([Utilities.formatDate(new Date(now),TZ,"yyyy-MM-dd HH:mm"),who,action,item,detail])};
     const v=runApi(ctx,req.fn,req.args);
     saveDB_(DB,dirty);
+    if(!readOnly)PropertiesService.getScriptProperties().setProperty("REV",String(now));
     if(logs.length){const sh=sheet_("Log");sh.getRange(sh.getLastRow()+1,1,logs.length,5).setValues(logs)}
     out={ok:true,v};
   }catch(err){out={ok:false,err:String(err&&err.message||err)}}
