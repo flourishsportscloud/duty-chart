@@ -1385,7 +1385,7 @@ document.addEventListener('contextmenu',e=>{const t=e.target;if(!(t.closest&&t.c
 /* ---- global error handler: friendly message + log to server ---- */
 let errSent=0;
 function reportErr(kind,msg){
-  showMsg('Something went wrong on this screen. Your changes are kept on this phone — if it looks wrong, go back and open it again.');
+  if(!window.FIS)showMsg('Something went wrong on this screen. Your changes are kept on this phone — if it looks wrong, go back and open it again.');   // the shared shell shows its own banner
   if(errSent++<5&&API_URL){try{fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:'logErr',args:['PL '+kind,(S.me?S.me.id+' · ':'')+String(msg).slice(0,800)+' · '+navigator.userAgent.slice(0,120)]})}).catch(()=>{})}catch(e){}}
 }
 window.addEventListener('error',e=>{if(e&&e.message)reportErr('error',e.message+' @'+(e.lineno||''))});
@@ -1461,8 +1461,7 @@ window.addEventListener('pagehide',flushAll);
 let statusSig='';
 setInterval(()=>{if(document.hidden||!S.me)return;const sig=todayStr()+'|'+DEFS[S.mode].map(b=>{const d=dueOf(b);return d&&nowMin()>toMin(d)?1:0}).join('');if(sig!==statusSig){statusSig=sig;requestRender()}},60000);   // due/overdue labels change only at due times
 render(true);initDb();
-if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.serviceWorker.register('sw.js').then(reg=>{
-  reg.addEventListener('updatefound',()=>{const w=reg.installing;if(!w)return;w.addEventListener('statechange',()=>{if(w.state==='installed'&&navigator.serviceWorker.controller)toast('New version available',['reload','Tap to refresh'])})})}).catch(()=>{})}
+/* service worker + 'new version' banner come from the shared FIS shell (../fis/shell.js → /sw.js) */
 </script>
 </body>
 </html>
