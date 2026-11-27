@@ -563,7 +563,7 @@ input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:tex
 /* Version check: when a newer build is published, show a banner instead of reloading by itself
    (an automatic reload could interrupt someone mid-entry). Also reads the server clock from the
    response "Date" header so times do not depend on the phone's clock. */
-const APP_V="202611271700";
+const APP_V="202611271830";
 window.SRV_OFF=0;
 (function(){let busy=false,shown=false;async function chk(){if(busy||location.protocol==="file:")return;busy=true;
   try{const r=await fetch(location.pathname+"?nc="+Date.now(),{cache:"no-store"}),hd=r.headers.get("date");
@@ -663,8 +663,17 @@ const FISDB=(function(){
   let resolveReady,ready=false;const readyP=new Promise(r=>resolveReady=r);const markReady=()=>{if(!ready){ready=true;resolveReady(db)}};
   function showLogin(msg){const L=document.getElementById('fisLogin');if(!L)return;L.hidden=false;document.getElementById('fl-n').value=who||'';document.getElementById('fl-err').textContent=msg||''}
   let loopOn=false;function loop(){if(loopOn)return;loopOn=true;(function tick(){setTimeout(()=>{if(!document.hidden){flush();poll()}tick()},20000+Math.floor(Math.random()*10000))})()}
+  // first screen fast: ask only for what the page needs to start (names, issues, the last week, tomorrow, fleet).
+  // The Drivers App needs nothing more, so it never downloads the full history; the office app fills the rest in the background.
+  const LIGHT=/[?&]driver=1/.test(location.search);
+  async function boot(){const ist=Date.now()+(window.SRV_OFF||0)+330*6e4,day=o=>new Date(ist+o*864e5).toISOString().slice(0,10),keys=['roster/main','roster/issues','roster/sup','roster/wash','roster/tasks'];
+    for(let i=-7;i<=1;i++)keys.push('reports/'+day(i));
+    try{const v=await call('td_boot',[token,keys,['vehicles/','service/'],pin]);if(rev)return false;const ch=[];
+      Object.keys(v.docs||{}).forEach(k=>{SRV[k]=v.docs[k];docs[k]=view(k);ch.push(k)});if(LIGHT)rev=v.rev;lastSync=Date.now();online=true;markReady();if(ch.length)notify(ch,false);status();return true}
+    catch(e){if(e.net)online=false;return false}}
   async function start(){document.getElementById('fisLogin').hidden=true;
     const c=await IDB.get('snap');if(c&&c.srv&&!rev){SRV=c.srv;rev=c.rev||0;Object.keys(SRV).forEach(k=>docs[k]=view(k));Object.keys(OUT).forEach(k=>docs[k]=view(k));markReady()}
+    if(!rev){const ok=await boot();if(ok&&LIGHT){flush();loop();cacheSoon();poll();return}}
     await poll();markReady();flush();loop()}
   document.addEventListener('visibilitychange',()=>{if(document.hidden){saveOut();cacheNow()}else if(token){flush();poll()}});
   addEventListener('pagehide',()=>{saveOut();cacheNow()});
