@@ -133,13 +133,14 @@ const API={
     if(pw.length<6)fail("Password must be at least 6 characters.");
     const role=ROLES.includes(wantRole)?wantRole:"staff";
     const existing=DB.Users.find(x=>x.name.toLowerCase()===name.toLowerCase());
-    if(existing&&existing.status==="active")fail(name+" already has a login. Use Log in, or ask the admin to reset the password.");
+    const keepRole=!!existing&&existing.status==="active"&&!existing.hash&&existing.role!=="staff";
+    if(existing&&existing.status==="active"&&!keepRole)fail(name+" already has a login. Use Log in, or ask the admin to reset the password.");
     const noAdmin=!DB.Users.some(u=>u.role==="admin"&&u.status==="active");
     const wasReset=!!existing&&existing.status==="reset";
     const salt=ctx.H.salt();
     const u=existing||{name,ver:1};
     Object.assign(u,{salt,hash:hashPw(ctx.H,salt,pw),requestedAt:new Date(ctx.now).toISOString()});
-    if(wasReset){u.status="active";u.ver=Number(u.ver||1)+1}
+    if(wasReset||keepRole){u.status="active";u.ver=Number(u.ver||1)+1}
     else{
       u.role=role;
       if(role==="admin"&&noAdmin){u.status="active";u.approvedAt=u.requestedAt;u.approvedBy="(first admin)"}
@@ -168,6 +169,7 @@ const API={
     const existing=ctx.DB.Users.find(x=>x.name.toLowerCase()===name.toLowerCase());
     if(existing&&existing.hash&&existing.role!=="staff")fail(existing.name+" has a personal login. Use the incharge or admin login instead.");
     let u=existing;
+    if(u&&u.status==="active"&&u.role!=="staff"&&!u.hash)fail(u.name+" has the "+u.role+" role, which needs a password. Tap “Incharge / admin login”, then “First time? Set password”. Your role stays as the admin set it.");
     if(u&&u.role==="staff"&&u.status==="active")return {token:makeToken(ctx.H,ctx.secret,u,ctx.now),state:publicState(ctx,u)};
     if(!u){const at=new Date(ctx.now).toISOString();u={name,role:"staff",status:"active",salt:"",hash:"",ver:1,requestedAt:at,approvedAt:at,approvedBy:"(open)"};ctx.DB.Users.push(u)}
     else if(u.role!=="staff"||u.status!=="active"){u.role="staff";u.status="active"}
