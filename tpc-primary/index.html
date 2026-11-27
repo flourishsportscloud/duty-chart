@@ -547,7 +547,7 @@ function records(){
   const out=[];
   BASE.forEach(r=>{ r.dp=r.dp||dpath(r.id); const n=noteOf(r.dp); if(n&&n.rm) return; out.push(applyNote(r,n)); });
   Object.keys(DOCS).forEach(p=>{ const n=noteOf(p); if(!n) return;
-    if(p.indexOf('status/'+PFX+'s.')===0){ if(n.rm) OV.subRm[n.w+'|'+n.k]=1; else OV.subAdd.push({k:n.k,wing:n.w}); return; }
+    if(p.indexOf('status/'+PFX+'s.')===0){ if(n.rm&&!(n.w==='mid'&&n.k==='English'&&PFX==='t6.'&&Number((DOCS[p]||{}).note_at||0)<SUB_VOID_BEFORE)) OV.subRm[n.w+'|'+n.k]=1; else if(!n.rm) OV.subAdd.push({k:n.k,wing:n.w}); return; }
     if(p.indexOf('status/'+PFX+'a.')!==0||n.rm||!n.d) return;
     const kd=n.k==='check'?'check':'prep', r=mkRec(kd,n.d,n.c,n.s,n.l,null,(kd==='check'&&n.i)?String(n.i).split('|'):null); if(kd==='prep'&&n.i){ const ks=String(n.i).split(','); r.els=ELEMS.filter(x=>ks.indexOf(x[0])>=0).map(x=>({name:x[1],due:r.due})); } r.id='a|'+p; r.els.forEach(e=>e.id=r.id+'|'+e.name); if(n.e){ r.due=n.e; r.els.forEach(e=>e.due=n.e); } r.dp=p; r.added=true; r.t=n.t||r.t; r.g=n.g||r.g; r.wing=n.w||r.wing; out.push(r); });
   return out
@@ -917,6 +917,7 @@ function renderManage2(all){
       el('button',{type:'button',class:'btn warn',onclick:()=>{ if(confirmKey===ck){pushSub(subj,wing,1);confirmKey=null;}else confirmKey=ck; render()}},confirmKey===ck?'Confirm: remove '+subj:'Remove '+subj)));
   if(!canDash()){ box.lastChild.remove(); box.lastChild.remove(); }
   bulkBar(box,all);
+  if(canDash()){ const gone=Object.keys(OV.subRm).filter(k=>k.indexOf(wing+'|')===0).map(k=>k.slice(wing.length+1)); if(gone.length) box.append(el('b',{text:'Removed subjects'}),el('div',{class:'toolr'},...gone.map(k=>el('button',{type:'button',class:'btn ghost',onclick:()=>{ pushSub(k,wing,false); toast(k+' is back, with all its lessons and marks'); }},'Restore '+k))),el('p',{class:'note',text:'Removing a subject only hides it. Its lessons and marks are kept and come back when it is restored.'})); }
 }
 /* ---- dashboard: Preparation / Checking / Mentor tasks -> department -> staff, with WhatsApp ---- */
 let dDept='All', dMk='d', dSel={}, dDue={o:1,t:1,n:1,l:0}, dCls={}, dItems={};
@@ -1210,6 +1211,7 @@ let errShown=0; function oops(m){ try{ const l=JSON.parse(LS.get('tpc-errors')||
 window.addEventListener('error',e=>oops(e.message||'error')); window.addEventListener('unhandledrejection',e=>oops((e.reason&&e.reason.message)||e.reason||'rejection'));
 document.addEventListener('contextmenu',e=>{ if(e.target.closest&&e.target.closest('button,a,.chip,.tab,.st,.sw')&&!e.target.closest('input,textarea')) e.preventDefault(); });
 
+const SUB_VOID_BEFORE=Date.parse('2026-11-27T12:00:00Z');
 let outArm=0; $('meBtn').addEventListener('click',()=>{ if(!ME) return; if(Date.now()-outArm<4000){ setToken(''); lock(); outArm=0; } else { outArm=Date.now(); $('meBtn').textContent='Tap again to log out'; } });
 $('gateF').addEventListener('submit',async e=>{ e.preventDefault(); const n=$('gateN').value.trim(), w=$('gateW').value; if(!n){$('gateE').textContent='Type your name.';return} if(!w){$('gateE').textContent='Enter your password.';return}
   $('gateGo').disabled=true; $('gateE').textContent=''; try{ const r=await dcall('login',[n,w]); setToken(r.token); enter(r.state.me); }catch(x){ $('gateE').textContent=x.message||'Could not log in.'; } $('gateGo').disabled=false; });
