@@ -37,7 +37,7 @@ html,body{overscroll-behavior-y:contain}button{-webkit-user-select:none;user-sel
 </style>
 </head>
 <body>
-<header><div class="logo"><img src="../fis/fis-logo-192.png" alt="FIS"></div><h1><small>FIS · Transport</small>Van Duty · वैन ड्यूटी</h1></header>
+<header><div class="logo"><img src="../fis/fis-logo-192.png" alt="FIS"></div><h1><small>FIS · Drivers App</small>Van Duty · वैन ड्यूटी</h1></header>
 <main id="m"><div class="card">Loading…</div></main>
 <div class="toast" id="toast" hidden></div>
 <script>
@@ -92,7 +92,7 @@ function draw(){const m=$('m');
    ${S.notice?`<div class="notice"><b>Notice from school · सूचना</b>${esc(S.notice)}</div>`:''}
    ${trip('m','Morning · सुबह','ms','me',v.start||'05:30')}${trip('a','Afternoon · दोपहर','as','ae',v.astart||'13:15')}
    <div class="loc">${x.loc&&x.loc.lat?`📍 Location shared at ${h12(x.loc.t)} · <a href="https://www.google.com/maps?q=${x.loc.lat},${x.loc.lng}" target="_blank" rel="noopener">see map</a>`:'📍 Location is shared when you start a route.'}${running?' Keep this page open during the route.':''}</div>
-   <div class="row"><span>${esc(S.name||'')} · <b id="chip" class="chip ok"></b></span><span><button id="chg">Change van</button> · <button id="out">Log out</button></span></div>`;
+   <div class="row"><span>${esc(S.name||'')} · <b id="chip" class="chip ok"></b></span><span><a href="./?driver=1" style="color:inherit">‹ Drivers App</a> · <button id="chg">Change van</button> · <button id="out">Log out</button></span></div>`;
   chip();if(running){locate(false);keepAwake(true)}else{stopWatch();keepAwake(false)}}
 document.addEventListener('click',async e=>{const t=e.target.closest('button');if(!t)return;
   if(t.id==='go'){const n=$('n').value,p=$('p').value;$('er').textContent='Checking…';try{const v=await call('login',[n,p]);S.token=v.token;S.name=v.name;LS.s('token',v.token);LS.s('name',v.name);try{localStorage.setItem('fis_token',JSON.stringify(v.token));localStorage.setItem('fis_name',JSON.stringify(v.name))}catch(x){}draw();load()}catch(err){$('er').textContent=err.message}return}

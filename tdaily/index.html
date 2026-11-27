@@ -450,6 +450,9 @@ input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:tex
 #updBar{position:fixed;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:90;background:var(--gold,#C9A227);color:#14233F;font:inherit;font-weight:700;font-size:14px;border:0;border-radius:12px;padding:12px;cursor:pointer}
 .vprev{grid-column:1/-1;margin-top:6px;background:#FFF4DA;border-left:3px solid #C9A227;border-radius:8px;padding:6px 9px;font-size:12.5px;color:#5b4300}.vprev small{display:block;color:#7a6a3a;font-size:11px}
 .fuelb{margin-top:6px;background:#E6F1EA;border-color:#1F6B47;color:#1F6B47;font-weight:700}
+.dhead{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 12px}.dhead button{font:inherit;background:#fff;border:2px solid var(--line);border-radius:16px;padding:14px 8px;cursor:pointer;color:var(--navy);display:flex;flex-direction:column;align-items:center;gap:2px}
+.dhead i{font-style:normal;font-size:34px}.dhead b{font-family:Lora,serif;font-size:22px}.dhead small{color:var(--muted);font-size:12.5px}.dhead em{font-style:normal;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);font-weight:700}
+.dhead button.on{border-color:var(--navy);background:var(--navy);color:#fff}.dhead button.on small{color:#dfe5f0}
 </style>
 </head>
 <body>
@@ -560,7 +563,7 @@ input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:tex
 /* Version check: when a newer build is published, show a banner instead of reloading by itself
    (an automatic reload could interrupt someone mid-entry). Also reads the server clock from the
    response "Date" header so times do not depend on the phone's clock. */
-const APP_V="202611271500";
+const APP_V="202611271700";
 window.SRV_OFF=0;
 (function(){let busy=false,shown=false;async function chk(){if(busy||location.protocol==="file:")return;busy=true;
   try{const r=await fetch(location.pathname+"?nc="+Date.now(),{cache:"no-store"}),hd=r.headers.get("date");
@@ -1766,7 +1769,13 @@ function vcItemsHTML(v){const c=vcOf(v.id);return vciList().map(([k,ic,h,e])=>{c
    ${vcPrevHTML(v.id,k)}
    ${x.s==="bad"?`<div class="nt" style="display:flex;gap:6px"><input class="note" style="flex:1" id="vc-n-${v.id}-${k}" data-vcn="${v.id}|${k}" value="${esc(x.n||"")}" placeholder="समस्या लिखें या 🎤 दबाकर बोलें"><button class="mic" data-mic="vc-n-${v.id}-${k}" aria-label="Speak the problem">🎤</button></div>`:""}</div>`}).join("")}
 let drvMe=(()=>{try{return localStorage.getItem("td_me")||""}catch(e){return""}})();
-document.addEventListener("change",e=>{if(e.target.id!=="drv-me")return;drvMe=e.target.value;try{localStorage.setItem("td_me",drvMe)}catch(x){}render()});
+let drvHead=(()=>{try{return localStorage.getItem("td_head")||""}catch(e){return""}})();
+document.addEventListener("change",e=>{if(e.target.id!=="drv-me")return;drvMe=e.target.value;try{localStorage.setItem("td_me",drvMe)}catch(x){}
+  // a private-van driver goes straight to his Van Duty screen (start route / all children dropped)
+  if(DRV_MODE&&drvMe.indexOf("van:")===0){try{localStorage.setItem("van_vid",JSON.stringify(drvMe.slice(4)))}catch(x){}location.href="van.html";return}
+  render()});
+document.addEventListener("click",e=>{const t=e.target.closest("[data-dhead]");if(!t)return;e.stopPropagation();drvHead=t.dataset.dhead;try{localStorage.setItem("td_head",drvHead)}catch(x){}
+  if(drvMe&&((drvHead==="van")!==(drvMe.indexOf("van:")===0))){drvMe="";try{localStorage.removeItem("td_me")}catch(x){}}render()},true);
 function dutyCard(L,t,me,when){const rH=k=>k==="d"?"ड्राइवर":"कंडक्टर";
   if(!t)return `<div class="dbig"><small>Loading…</small></div>`;
   if((t.att||{})[me]==="A")return `<div class="dbig red"><b>${when} आपकी छुट्टी दर्ज है</b><small>Marked on leave / absent</small></div>`;
@@ -1781,16 +1790,20 @@ function renderDrv(){const b=$("drvBody");if(!b||tab!=="drv")return;
   const opt=id=>`<option value="${id}" ${id===me?"selected":""}>${esc(hi(id)&&hi(id)!==personName(id,"")?hi(id)+" · ":"")}${esc(personName(id,id))} — ${esc(roleOf(id))}</option>`;
   const grp=(l,L)=>L.length?`<optgroup label="${l}">${L.join("")}</optgroup>`:"";
   const dr=ids.filter(id=>/d$/.test(id)),co=ids.filter(id=>/c$/.test(id)),rs=ids.filter(id=>!/[dc]$/.test(id));
+  const head=DRV_MODE?(drvHead||(me?(me.indexOf("van:")===0?"van":"bus"):"")):"all";
+  const vanOpts=grp("वैन ड्राइवर · Van drivers",VL.map(v=>`<option value="van:${v.id}" ${"van:"+v.id===me?"selected":""}>${esc(v.driver||"—")} — ${esc(v.label)}</option>`));
+  const busOpts=grp("ड्राइवर · Drivers",dr.map(opt))+grp("कंडक्टर · Conductors",co.map(opt))+grp("रिज़र्व · Reserve",rs.map(opt));
   const opts=!loaded?`<option value="">नाम लोड हो रहे हैं… · loading names…</option>`:(!me?`<option value="">— अपना नाम चुनें · choose your name —</option>`:"")
-    +grp("ड्राइवर · Drivers",dr.map(opt))+grp("कंडक्टर · Conductors",co.map(opt))+grp("रिज़र्व · Reserve",rs.map(opt))
-    +grp("वैन ड्राइवर · Private vans",VL.map(v=>`<option value="van:${v.id}" ${"van:"+v.id===me?"selected":""}>${esc(v.driver||"—")} — ${esc(v.label)}</option>`));
+    +(head==="van"?vanOpts:head==="bus"?busOpts:busOpts+vanOpts);
+  const heads=DRV_MODE?`<div class="dhead"><button data-dhead="bus" class="${head==="bus"?"on":""}"><i>🚌</i><b>Bus</b><small>ड्राइवर · कंडक्टर</small><em>Drivers Head</em></button><button data-dhead="van" class="${head==="van"?"on":""}"><i>🚐</i><b>Van</b><small>वैन ड्राइवर</small><em>Driver Head</em></button></div>`:"";
   const sig=opts;const old=$("drv-me");
   const sel=`<label class="dsel"><span>${DRV_MODE?"आप कौन हैं? · Who are you?":"Driver app · see the screen of"}</span><select id="drv-me" ${loaded?"":"disabled"}>${opts}</select></label>`;
   if(old&&document.activeElement===old&&old.dataset.sig===sig)return;
   const link=location.origin+location.pathname.replace(/index\.html$/,"")+"?driver=1";
   const top=DRV_MODE?"":`<div class="pg-h"><h2>Driver app</h2><span>what each driver and conductor sees on his phone · link for drivers: <a href="${esc(link)}" target="_blank" rel="noopener">?driver=1</a></span><button class="btn sm" id="drvCopy" style="margin-left:auto">Copy link for drivers</button></div>`;
   const fin=()=>{const x=$("drv-me");if(x)x.dataset.sig=sig};
-  if(!me){b.innerHTML=top+`<div class="card2">${sel}</div>`;fin();return}
+  if(DRV_MODE&&!head){b.innerHTML=heads;fin();return}
+  if(!me){b.innerHTML=top+heads+`<div class="card2">${sel}</div>`;fin();return}
   if(me.startsWith("van:")){const v=VL.find(x=>"van:"+x.id===me)||{},x=vanOf(v.id||""),[c,t]=vanStatus(v,x),vl=location.origin+location.pathname.replace(/index\.html$/,"")+"van.html";
     b.innerHTML=top+`<div class="card2">${sel}</div>
     <div class="dtop"><div class="dh"><span>आपकी वैन · Your van</span><b>${dS(date)}</b></div><div class="dbig"><b>${esc(VEH_HI(v.label||""))}</b><small>${esc(v.driver||"")}${v.no?" · "+esc(v.no):""}${v.phone?" · "+esc(v.phone):""}</small>
@@ -1878,7 +1891,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="sal-p
 salLock=function(){const adm=FISDB.isAdmin(),need=FISDB.salPin()==="need",ok=adm&&!need;const L=$("salLock");if(L)L.hidden=ok;const S=$("salSec");if(S)S.hidden=!ok;if(!L||ok)return;
   if(adm&&need){if(!$("sal-pin"))L.innerHTML=`<div class="card2 lock2"><div class="ic">🔒</div><b>Salary PIN</b><p>Enter the salary PIN (only Harsh Yadav and Rahul Yadav have it).</p><div class="ped" style="justify-content:center"><input type="password" id="sal-pin" inputmode="numeric" autocomplete="off" style="max-width:160px"><button class="btn primary" id="salPinGo">Open</button></div><div id="salPinMsg" style="color:var(--miss);font-size:13px;margin-top:6px"></div></div>`;return}
   L.innerHTML=`<div class="card2 lock2"><div class="ic">🔒</div><b>Salary is private</b><p>Only Harsh Yadav and Rahul Yadav can open salaries.</p></div>`};
-if(DRV_MODE){document.body.classList.add("drvmode");tab="drv";const h=document.querySelector(".brand h1");if(h)h.innerHTML="<small>FIS · Transport</small>ड्राइवर ऐप · Driver";document.title="Driver · FIS"}
+if(DRV_MODE){document.body.classList.add("drvmode");tab="drv";const h=document.querySelector(".brand h1");if(h)h.innerHTML="<small>FIS · Transport</small>Drivers App · ड्राइवर ऐप";document.title="Driver · FIS"}
 /* ===== v5: vehicle issues (repair · maintenance · out of order · audit) ===== */
 let ISS={},issF="open",issForm=null,issLoaded=false;
 const ISS_T=[["out","Out of order","बंद / खराब"],["mech","Mechanical fault","मैकेनिकल खराबी"],["repair","Repair","मरम्मत"],["maint","Maintenance","रखरखाव"],["audit","Audit finding","ऑडिट में मिला"],["acc","Accident / damage","दुर्घटना / टूट-फूट"],["other","Other","अन्य"]];
