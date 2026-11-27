@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="theme-color" content="#1E3560">
+<title>FIS Class Desk</title>
+<style>
+:root{--navy:#1E3560;--navy2:#14233F;--pink:#D63F63;--purple:#5E3585;--gold:#E7AE55;--bg:#F3F4F9;--ink:#1c2333;--mut:#667089;--line:#e2e5ef;--ok:#2E8B57;--bad:#D63F63;--amb:#D98A0B;--grey:#8b93a7;--card:#fff}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:Inter,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:16px;line-height:1.35;-webkit-text-size-adjust:100%}
+body{padding-top:58px;padding-bottom:70px;min-height:100vh}
+h1,h2,h3{font-family:Lora,Georgia,"Times New Roman",serif;margin:0;color:var(--navy)}
+button{font:inherit;color:inherit;cursor:pointer}
+input,select,textarea{font:inherit;color:inherit}
+#hdr{position:fixed;top:0;left:0;right:0;height:58px;background:var(--navy);border-bottom:3px solid var(--gold);color:#fff;z-index:50;padding:0 10px;display:flex;align-items:center}
+#hdr .bk{width:38px;height:38px;border:0;background:rgba(255,255,255,.12);border-radius:10px;color:#fff;font-size:22px;margin-right:8px;flex:none}
+#hdr .tt{flex:1;min-width:0}
+#hdr .tt b{display:block;font-family:Lora,Georgia,serif;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#hdr .tt i{display:block;font-style:normal;font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--gold)}
+#pill{flex:none;font-size:12px;padding:4px 10px;border-radius:20px;background:rgba(255,255,255,.14);margin-left:8px;white-space:nowrap}
+#pill.sv{background:#e7a62e;color:#241800}#pill.off{background:var(--bad)}#pill.ok{background:rgba(255,255,255,.14)}
+#app{padding:12px;max-width:760px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:12px;box-shadow:0 1px 3px rgba(20,35,63,.06)}
+.lite .card{box-shadow:none}
+.row{display:flex;align-items:center}.sp{flex:1;min-width:0}
+.mut{color:var(--mut)}.sm{font-size:13px}.xs{font-size:12px}.b{font-weight:700}.c{text-align:center}
+.h2{font-size:20px;margin:4px 2px 10px}
+.sec{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--purple);font-weight:700;margin:16px 2px 8px}
+.chips{display:flex;flex-wrap:wrap;margin:0 -3px 6px}
+.chip{border:1.5px solid var(--line);background:#fff;border-radius:22px;padding:8px 14px;margin:3px;font-size:15px;color:var(--navy);min-height:40px}
+.chip.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.chip.pk.on{background:var(--pink);border-color:var(--pink)}
+.chip.sm{padding:5px 11px;font-size:13px;min-height:32px}
+.btn{border:0;border-radius:12px;padding:11px 16px;background:var(--navy);color:#fff;font-weight:600;min-height:44px}
+.btn.pk{background:var(--pink)}.btn.pu{background:var(--purple)}.btn.gh{background:#fff;color:var(--navy);border:1.5px solid var(--line)}.btn.bl{display:block;width:100%}
+.btn.sm{min-height:34px;padding:6px 12px;font-size:14px}
+.btn[disabled]{opacity:.45}
+.inp{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;background:#fff;min-height:44px}
+label.l{display:block;font-size:12px;color:var(--mut);margin:8px 2px 3px;text-transform:uppercase;letter-spacing:.5px}
+/* class tiles */
+.grid{display:flex;flex-wrap:wrap;margin:0 -4px}
+.ct{width:calc(33.333% - 8px);margin:4px;border:0;border-radius:16px;padding:14px 4px 10px;color:#fff;text-align:center;min-height:104px;position:relative}
+.ct b{display:block;font-family:Lora,Georgia,serif;font-size:36px;line-height:1}
+.ct span{display:block;font-size:11px;letter-spacing:1px;text-transform:uppercase;margin-top:4px;opacity:.9}
+.ct em{display:block;font-style:normal;font-size:12px;margin-top:6px;opacity:.95;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px}
+.g1{background:var(--pink)}.g2{background:var(--purple)}.g3{background:var(--navy)}
+/* feature tiles */
+.ft{width:calc(50% - 8px);margin:4px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;text-align:left;min-height:96px;display:block}
+.ft .ic{width:40px;height:40px;border-radius:12px;color:#fff;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;letter-spacing:.5px}
+.ft b{display:block;font-size:15px;color:var(--navy)}
+.ft small{display:block;color:var(--mut);font-size:12px;margin-top:2px}
+.ft .ln{position:absolute;right:8px;top:8px;font-size:11px;color:var(--grey)}
+.ft{position:relative}
+.i1{background:var(--navy)}.i2{background:var(--pink)}.i3{background:var(--purple)}.i4{background:#2E8B57}.i5{background:#D98A0B}.i6{background:#3d8fc4}
+.sum{display:flex;flex-wrap:wrap;margin:0 -4px}
+.sum div{width:calc(50% - 8px);margin:4px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.sum b{font-size:22px;color:var(--navy);display:block;font-family:Lora,Georgia,serif}.sum span{font-size:12px;color:var(--mut)}
+/* student tiles */
+.st{display:flex;flex-wrap:wrap;margin:0 -3px}
+.s{width:calc(50% - 6px);margin:3px;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:6px 8px;min-height:50px;display:flex;align-items:center;text-align:left;position:relative;overflow:hidden}
+.s .rn{font-size:11px;color:var(--mut);width:22px;flex:none}
+.s .nm{flex:1;min-width:0;font-size:14px;line-height:1.15;word-break:break-word}
+.s .cd{flex:none;min-width:34px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;margin-left:4px;background:#eef0f6;color:var(--grey)}
+.s.mC{border-color:#bfe3cd;background:#f1faf5}.s.mC .cd{background:var(--ok);color:#fff}
+.s.mN{border-color:#f3bccb;background:#fff3f6}.s.mN .cd{background:var(--bad);color:#fff}
+.s.mA{border-color:#d4d8e2;background:#f4f5f8}.s.mA .cd{background:var(--grey);color:#fff}
+.s.mIC{border-color:#f2d9a8;background:#fff8ec}.s.mIC .cd{background:var(--amb);color:#fff}
+.s.mP{border-color:#d9c6ea;background:#f8f2fd}.s.mP .cd{background:var(--purple);color:#fff}
+.s.mG{background:#f4f5f8}.s.mG .cd{background:#cfd4e0;color:#fff}
+.s .rm{position:absolute;right:0;top:0;width:20px;height:20px;border:0;background:none;color:var(--pink);font-size:11px;font-weight:700;padding:0}
+.s.hr .nm:after{content:" •";color:var(--pink)}
+.leg{display:flex;flex-wrap:wrap;margin:0 -3px 6px}.leg span{margin:2px 3px;font-size:12px;color:var(--mut)}
+.leg i{display:inline-block;min-width:22px;padding:1px 4px;text-align:center;border-radius:6px;color:#fff;font-style:normal;font-weight:700;margin-right:3px}
+/* tables */
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:12px;background:#fff;margin-bottom:12px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{background:#eef0f7;color:var(--navy);font-size:12px;white-space:nowrap}
+td.n,th.n{text-align:center}
+.red{color:var(--bad);font-weight:700}.grn{color:var(--ok);font-weight:700}.amb{color:var(--amb);font-weight:700}
+.pillx{display:inline-block;font-size:11px;padding:2px 8px;border-radius:12px;background:#eef0f7;color:var(--navy)}
+.pillx.r{background:#fde6ec;color:var(--bad)}.pillx.g{background:#e3f4ea;color:var(--ok)}.pillx.a{background:#fff1d9;color:var(--amb)}
+.lst>div{padding:10px 4px;border-bottom:1px solid var(--line);display:flex;align-items:center}
+.lst>div:last-child{border:0}
+.note{background:#fff8ec;border:1px solid #f2d9a8;border-radius:10px;padding:8px 10px;font-size:13px;margin-bottom:10px;color:#6a4a07}
+.note.info{background:#eef3fb;border-color:#cddaf0;color:var(--navy)}
+.banner{background:var(--purple);color:#fff;border-radius:10px;padding:8px 12px;margin-bottom:10px;display:flex;align-items:center;font-size:14px}
+.banner button{background:#fff;color:var(--purple);border:0;border-radius:8px;padding:5px 10px;font-weight:600;margin-left:8px}
+#nav{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);display:flex;z-index:40;height:60px}
+#nav button{flex:1;border:0;background:none;color:var(--mut);font-size:11px;padding:6px 0;letter-spacing:.3px}
+#nav button b{display:block;font-size:12px;width:30px;height:24px;line-height:24px;border-radius:8px;margin:0 auto 2px;background:#eef0f7;color:var(--navy)}
+#nav button.on{color:var(--navy);font-weight:700}#nav button.on b{background:var(--navy);color:#fff}
+#sheetbg{position:fixed;left:0;right:0;top:0;bottom:0;background:rgba(20,35,63,.5);z-index:80;display:none}
+#sheet{position:fixed;left:0;right:0;bottom:0;max-height:86vh;overflow-y:auto;background:#fff;border-radius:18px 18px 0 0;padding:14px 14px 22px;z-index:81;display:none;max-width:760px;margin:0 auto}
+#err{position:fixed;left:0;right:0;top:0;bottom:0;background:var(--navy2);color:#fff;z-index:200;display:none;align-items:center;justify-content:center;text-align:center;padding:30px}
+#err.on{display:flex}
+#login{position:fixed;left:0;right:0;top:0;bottom:0;background:var(--bg);z-index:150;overflow-y:auto;display:none}
+#login.on{display:block}
+.lg{max-width:380px;margin:0 auto;padding:46px 20px}
+.logo{width:68px;height:68px;border-radius:18px;background:var(--navy);color:var(--gold);font-family:Lora,Georgia,serif;font-size:34px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;border-bottom:4px solid var(--pink)}
+.spin{text-align:center;padding:36px 10px;color:var(--mut)}
+.lite *{transition:none!important;animation:none!important}
+.hide{display:none!important}
+@media print{body{padding:0;background:#fff}#hdr,#nav,.noprint{display:none!important}.card{border:0;box-shadow:none}.tw{border:0;overflow:visible}table{font-size:11px}}
+</style></head><body>
+<div id="hdr"><button class="bk hide" id="bk" data-a="back">&#8249;</button><div class="tt"><i id="hs">FIS &middot; Class Desk</i><b id="ht">Class Desk</b></div><span id="pill" class="ok">Saved</span></div>
+<div id="app"><div class="spin">Loading&hellip;</div></div>
+<div id="nav" class="hide"></div>
+<div id="sheetbg" data-a="shut"></div><div id="sheet"></div>
+<div id="login"><div class="lg"><div class="logo">F</div><h1 class="c">Class Desk</h1><p class="c mut sm" style="margin:4px 0 18px">Flourish International School, Bikaner</p>
+<div class="card"><label class="l">Your first name</label><input class="inp" id="lu" autocapitalize="none" autocomplete="username" placeholder="e.g. Pooja">
+<label class="l">Password</label><input class="inp" id="lp" type="password" autocomplete="current-password" placeholder="First name followed by #1111">
+<div id="lerr" class="red sm" style="margin:8px 2px;min-height:18px"></div><button class="btn bl" data-a="login">Log in</button></div>
+<p class="c mut xs">Your login is your first name. Your first password is your first name with #1111. Please change it from Profile after logging in.</p></div></div>
+<div id="err"><div><h2 style="color:#fff">Something went wrong</h2><p>Your saved marks are safe.</p><button class="btn pk" onclick="location.reload()">Reload</button></div></div>
+<script>
+/* ===== FIS Class Desk — core: polyfills, helpers, API, store, sync ===== */
+(function(){
+if(!Array.prototype.includes)Array.prototype.includes=function(x){return this.indexOf(x)>=0};
+if(!String.prototype.includes)String.prototype.includes=function(x){return this.indexOf(x)>=0};
+if(!Object.assign)Object.assign=function(t){for(var i=1;i<arguments.length;i++){var s=arguments[i];if(s)for(var k in s)if(Object.prototype.hasOwnProperty.call(s,k))t[k]=s[k]}return t};
+if(!Object.entries)Object.entries=function(o){return Object.keys(o).map(function(k){return[k,o[k]]})};
+if(!Object.values)Object.values=function(o){return Object.keys(o).map(function(k){return o[k]})};
+if(!Object.fromEntries)Object.fromEntries=function(a){var o={};a.forEach(function(p){o[p[0]]=p[1]});return o};
+if(!Array.prototype.flat)Array.prototype.flat=function(){return [].concat.apply([],this)};
+if(!Array.prototype.flatMap)Array.prototype.flatMap=function(f){return [].concat.apply([],this.map(f))};
+if(!String.prototype.padStart)String.prototype.padStart=function(n,c){var s=String(this);c=c||' ';while(s.length<n)s=c+s;return s};
+})();
+var BUILD='2026-11-26a';
+var API_URL=(function(){var m=/[?&]api=([^&]+)/.exec(location.search);return m?decodeURIComponent(m[1]):'https://script.google.com/macros/s/AKfycbw1CgnApZRZSv8hMi9FoFRZxQ6Xj2xM6rplczU_uLMquF3asH8mTr2qw3DHfzilMAvulA/exec'})();
+var $=function(id){return document.getElementById(id)};
+function esc(s){return String(s===null||s===undefined?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function pad(n){return n<10?'0'+n:''+n}
+function ymd(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function today(){return ymd(new Date())}
+function addDays(s,n){var d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return ymd(d)}
+var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function dshort(s){if(!s)return '';var p=s.split('-');return parseInt(p[2],10)+' '+MON[parseInt(p[1],10)-1]}
+function dtime(ts){if(!ts)return '';var d=new Date(ts);var h=d.getHours(),m=d.getMinutes();return d.getDate()+' '+MON[d.getMonth()]+', '+(h%12||12)+':'+pad(m)+(h>=12?' pm':' am')}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
+function jp(s,d){try{return JSON.parse(s)}catch(e){return d}}
+function lsGet(k,d){try{var v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch(e){return d}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function lsDel(k){try{localStorage.removeItem(k)}catch(e){}}
+if((navigator.deviceMemory&&navigator.deviceMemory<=1)||/Android [1-7]\./.test(navigator.userAgent))document.documentElement.className+=' lite';
+
+/* ---- state ---- */
+var S={token:lsGet('cd_tok',''),user:null,viewAs:null,classes:[],roster:{},byId:{},data:{},X:{},pend:{},out:lsGet('cd_out',[]),
+  cfg:{links:{},assign:[],lessons:{}},busyUntil:0,dirty:false,watch:{},failN:0,flushing:false,online:true,lastSync:0};
+var net={calls:0};
+function api(fn,args,ms){
+  var p=fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({fn:fn,args:args||[]})}).then(function(r){return r.json()});
+  var t=new Promise(function(_,rej){setTimeout(function(){rej(new Error('The network is slow. Please try again.'))},ms||30000)});
+  return Promise.race([p,t]).then(function(j){if(!j||!j.ok){var e=new Error(j&&j.err||'Server error');e.server=true;throw e}return j.v})
+}
+function apiT(fn,args,ms){return api(fn,[S.token].concat(args||[]),ms).catch(function(e){if(e.server&&/log in again/i.test(e.message)){showLogin('Please log in again. Your saved work is kept.')}throw e})}
+
+/* ---- class data store (append-only ops folded into key/values + indexes) ---- */
+function D(cls){return S.data[cls]||(S.data[cls]={ver:0,loaded:false,kv:{}})}
+function IX(cls){return S.X[cls]||(S.X[cls]={rounds:{},marks:{},notes:{},srec:{},tasks:{}})}
+function applyKV(cls,key,val){
+  var d=D(cls);d.kv[key]=val;
+  if(cls===0){cfgApply(key,val);return}
+  var x=IX(cls),p=key.split('|'),t=p[0];
+  if(t==='r'){if(val)x.rounds[p[1]]=jp(val,null);else delete x.rounds[p[1]]}
+  else if(t==='m'){var m=x.marks[p[1]]||(x.marks[p[1]]={});if(val!=='')m[p[2]]=val;else delete m[p[2]]}
+  else if(t==='n'){var n=x.notes[p[1]]||(x.notes[p[1]]={});if(val!=='')n[p[2]]=val;else delete n[p[2]]}
+  else if(t==='s'){var sd=x.srec[p[1]]||(x.srec[p[1]]={});if(val)sd[p[2]]=jp(val,{});else delete sd[p[2]]}
+  else if(t==='t'){if(val)x.tasks[p[1]]=jp(val,null);else delete x.tasks[p[1]]}
+}
+function cfgApply(key,val){
+  var p=key.split('|');
+  if(p[1]==='links')S.cfg.links=jp(val,{});
+  else if(p[1]==='assign')S.cfg.assign=jp(val,[]);
+  else if(p[1]==='lessons')S.cfg.lessons[p[2]+'|'+p[3]]=jp(val,[]);
+}
+function pullClass(cls){
+  var d=D(cls);
+  function page(){
+    return apiT('pull',[cls,d.ver,6000],40000).then(function(r){
+      var n=0;
+      for(var i=0;i<r.ops.length;i++){var o=r.ops[i];if(S.pend[o[1]])continue;applyKV(cls,o[1],o[2]);n++}
+      var changed=r.ops.length>0;d.ver=r.ver;
+      if(r.more)return page().then(function(c2){return changed||c2});
+      return changed;
+    });
+  }
+  return page().then(function(ch){d.loaded=true;if(ch){S.dirty=true;cacheClass(cls)}return ch});
+}
+function ensureClass(cls){
+  var d=D(cls);if(d.loaded)return Promise.resolve();
+  if(d.loading)return d.loading;
+  var c=lsGet('cd_c'+cls,null);
+  if(c&&c.kv){ // open instantly from this phone's saved copy, then fetch only what changed
+    Object.keys(c.kv).forEach(function(k){applyKV(cls,k,c.kv[k])});d.ver=c.v||0;d.loaded=true;reapplyPend(cls);
+    pullClass(cls).catch(function(){});return Promise.resolve();
+  }
+  d.loading=pullClass(cls).then(function(){d.loading=null;reapplyPend(cls)},function(e){d.loading=null;throw e});
+  return d.loading;
+}
+var cacheT={};
+function cacheClass(cls){
+  clearTimeout(cacheT[cls]);
+  cacheT[cls]=setTimeout(function(){
+    var d=D(cls),kv={};for(var k in d.kv){if(!S.pend[k])kv[k]=d.kv[k]}
+    var js;try{js=JSON.stringify({v:d.ver,kv:kv})}catch(e){return}
+    if(js.length>1800000){lsDel('cd_c'+cls);return}
+    try{localStorage.setItem('cd_c'+cls,js)}catch(e){lsDel('cd_c'+cls)}
+  },4000);
+}
+function clearCaches(){try{for(var i=localStorage.length-1;i>=0;i--){var k=localStorage.key(i);if(k&&(/^cd_c\d+$/.test(k)||k==='cd_boot'))localStorage.removeItem(k)}}catch(e){}}
+function reapplyPend(cls){for(var k in S.pend)if(S.pend[k].cls===cls)applyKV(cls,k,S.pend[k].val)}
+
+/* ---- saving: optimistic, queued, retried, survives reload ---- */
+function put(cls,key,val){
+  val=String(val);var o=uid();
+  S.pend[key]={cls:cls,val:val,o:o};
+  S.out=S.out.filter(function(x){return x.k!==key||x.c!==cls});
+  S.out.push({c:cls,k:key,v:val,o:o});
+  lsSet('cd_out',S.out);applyKV(cls,key,val);setPill();schedFlush(900);
+}
+var flushT=null;
+function schedFlush(ms){clearTimeout(flushT);flushT=setTimeout(flush,ms)}
+function flush(){
+  if(S.flushing||!S.out.length||!S.token){setPill();return}
+  S.flushing=true;setPill();
+  var byc={};S.out.forEach(function(x){(byc[x.c]=byc[x.c]||[]).push(x)});
+  var cls=Object.keys(byc)[0],batch=byc[cls].slice(0,150);
+  apiT('save',[parseInt(cls,10),batch.map(function(x){return{k:x.k,v:x.v,o:x.o}})],40000).then(function(){
+    batch.forEach(function(x){if(S.pend[x.k]&&S.pend[x.k].o===x.o)delete S.pend[x.k]});
+    S.out=S.out.filter(function(x){return batch.indexOf(x)<0});lsSet('cd_out',S.out);
+    S.failN=0;S.flushing=false;setPill();if(S.out.length)schedFlush(150);
+  }).catch(function(e){
+    S.flushing=false;S.failN++;setPill(e.message);
+    schedFlush(Math.min(30000,2000*Math.pow(2,Math.min(S.failN,4))));
+  });
+}
+function setPill(msg){
+  var p=$('pill');if(!p)return;
+  if(S.out.length&&S.failN>0){p.className='off';p.textContent=S.out.length+' waiting to save'}
+  else if(S.out.length||S.flushing){p.className='sv';p.textContent='Saving…'}
+  else{p.className='ok';p.textContent='Saved ✓'}
+}
+window.addEventListener('online',function(){S.failN=0;schedFlush(300)});
+window.addEventListener('beforeunload',function(){lsSet('cd_out',S.out)});
+
+/* ---- background sync: never redraws while the person is typing or touching ---- */
+function busy(){
+  if(Date.now()<S.busyUntil)return true;
+  if($('sheet').style.display==='block')return true;
+  var a=document.activeElement;return !!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&a.id!=='lu'&&a.id!=='lp'&&!a.readOnly&&a.type!=='button');
+}
+['touchstart','touchmove','mousedown','keydown','scroll'].forEach(function(ev){window.addEventListener(ev,function(){S.busyUntil=Date.now()+3500},{passive:true,capture:true})});
+function syncLoop(){
+  var wait=14000+Math.random()*4000;
+  setTimeout(syncLoop,wait);
+  if(document.hidden||!S.token||!S.user)return;
+  var list=Object.keys(S.watch).map(Number).filter(function(c){return D(c).loaded});
+  list.push(0);
+  var any=false;
+  list.reduce(function(p,c){return p.then(function(){return pullClass(c).then(function(ch){if(ch)any=true},function(){})})},Promise.resolve()).then(function(){
+    S.lastSync=Date.now();if(any)S.dirty=true;
+  });
+  if(S.out.length&&!S.flushing)flush();
+}
+setInterval(function(){if(S.dirty&&!busy()){S.dirty=false;if(typeof refreshView==='function')refreshView()}},1200);
+
+/* ===== model: subjects, items, codes, scope, rounds ===== */
+var SUBJ=[
+ {k:'ENG1',n:'English 1',it:['book','nb','asg','test']},
+ {k:'ENG2',n:'English 2',it:['book','asg','test']},
+ {k:'HIN1',n:'Hindi 1',it:['book','nb','test']},
+ {k:'HIN2',n:'Hindi 2',it:['book','asg']},
+ {k:'SCI',n:'Science',it:['book','nb','asg','test']},
+ {k:'SST',n:'S.St.',it:['book','nb','asg','test']},
+ {k:'MATH',n:'Maths',it:['book','nb','mcon','mhw','mprac','asg','test']},
+ {k:'GK',n:'GK',it:['book']},
+ {k:'FL',n:'Foreign Language (Sanskrit)',it:['book']},
+ {k:'CMP',n:'Computer',it:['book','nb']},
+ {k:'ENG',n:'English (older records)',it:['book','nb','asg','test'],legacy:1}
+];
+var ITEMN={book:'Book',nb:'Notebook',asg:'Assignment',test:'Test',tnb:'Test notebook',mcon:'Content notebook',mhw:'Homework notebook',mprac:'Practice notebook'};
+var CODE={C:{t:'✓',n:'Checked'},N:{t:'NS',n:'Not submitted'},A:{t:'A',n:'Absent'},IC:{t:'IC',n:'Incomplete'},P:{t:'P',n:'Pasting'},G:{t:'NG',n:'Not given'}};
+var CHIPS=['No name written','Untidy work','Work not done','Pages missing','Not covered in class','Needs parent sign','Good work'];
+var UNI=['Shirt','Tie','Belt','Shoes','Socks','Hair','Nails','ID card','Blazer / sweater'];
+var START='2026-10-01';
+function subjName(k){for(var i=0;i<SUBJ.length;i++)if(SUBJ[i].k===k)return SUBJ[i].n;return k}
+function itemName(k){return ITEMN[k]||k}
+function isPrimary(c){return c<=5}
+function grp(c){return c<=5?1:(c<=8?2:3)}
+function grpName(g){return g===1?'Primary · Classes 1–5':(g===2?'Middle · Classes 6–8':'Senior · Classes 9–11')}
+function eu(){return S.viewAs||S.user}
+function isAdmin(){return S.user&&S.user.role==='admin'}
+function myClasses(){
+  var u=eu();if(!u)return[];
+  if(u.role==='admin'||u.classes==='*')return[1,2,3,4,5,6,7,8,9,10,11];
+  return String(u.classes).split(',').map(Number).filter(function(x){return x>=1&&x<=11});
+}
+function secs(cls){return Object.keys(S.roster[cls]||{}).sort()}
+function studs(cls,sec){return(S.roster[cls]&&S.roster[cls][sec])||[]}
+function sname(sid){var s=S.byId[sid];return s?s.n:sid}
+function setRoster(rows){
+  S.roster={};S.byId={};
+  rows.forEach(function(r){var c=r[0],s=r[1];var o={id:r[2],r:r[3],n:r[4],c:c,s:s};if(!S.roster[c])S.roster[c]={};if(!S.roster[c][s])S.roster[c][s]=[];S.roster[c][s].push(o);S.byId[o.id]=o});
+  Object.keys(S.roster).forEach(function(c){Object.keys(S.roster[c]).forEach(function(s){S.roster[c][s].sort(function(a,b){return (parseInt(a.r,10)||0)-(parseInt(b.r,10)||0)||a.n.localeCompare(b.n)})})});
+}
+function itemsFor(cls,subj){
+  var base=[];SUBJ.forEach(function(s){if(s.k===subj)base=s.it.slice()});
+  if(base.indexOf('tnb')<0)base.push('tnb');
+  var x=IX(cls);for(var rid in x.rounds){var r=x.rounds[rid];if(r&&r.j===subj&&base.indexOf(r.i)<0)base.push(r.i)}
+  return base;
+}
+function subjectsFor(cls){
+  var out=SUBJ.filter(function(s){return !s.legacy}).map(function(s){return s.k});
+  var x=IX(cls);for(var rid in x.rounds){var r=x.rounds[rid];if(r&&out.indexOf(r.j)<0)out.push(r.j)}
+  return out;
+}
+function rounds(cls,f){
+  f=f||{};var out=[],x=IX(cls);
+  for(var rid in x.rounds){
+    var r=x.rounds[rid];if(!r)continue;
+    if(f.sec&&r.s!==f.sec)continue;if(f.subj&&r.j!==f.subj)continue;if(f.item&&r.i!==f.item)continue;
+    if(f.from&&(r.d||'')<f.from)continue;if(f.to&&(r.d||'')>f.to)continue;
+    out.push({id:rid,m:r});
+  }
+  out.sort(function(a,b){return (b.m.d||'').localeCompare(a.m.d||'')||(b.m.c||0)-(a.m.c||0)});
+  return out;
+}
+function tally(cls,rid){
+  var mk=IX(cls).marks[rid]||{},t={C:0,N:0,A:0,IC:0,P:0,G:0,n:0};
+  for(var s in mk){var c=mk[s];if(t[c]!==undefined)t[c]++;t.n++}
+  return t;
+}
+function lastSubmit(r){var u=r.u||[];return u.length?u[u.length-1]:null}
+function nextCode(cur,cls,item){
+  var order=['','C','N','A','IC'];if(isPrimary(cls)&&(item==='nb'||item==='mcon'||item==='mhw'||item==='mprac'))order.push('P');
+  var i=order.indexOf(cur||'');return order[(i+1)%order.length];
+}
+function pct(v,mx){return mx>0?Math.round(v/mx*1000)/10:null}
+function newRound(cls,sec,subj,item){
+  var rid=cls+sec+uid(),m={s:sec,j:subj,i:item,l:'',d:today(),c:Date.now(),by:S.user.name};
+  if(item==='test'){m.x=0;m.n=0}
+  put(cls,'r|'+rid,JSON.stringify(m));return rid;
+}
+function saveRound(cls,rid,patch){var r=Object.assign({},IX(cls).rounds[rid]||{},patch);put(cls,'r|'+rid,JSON.stringify(r))}
+function periodFrom(p){
+  if(p==='day')return today();if(p==='7')return addDays(today(),-6);if(p==='30')return addDays(today(),-29);if(p==='oct')return START;return '';
+}
+var PERIODS=[['day','Today'],['7','7 days'],['30','30 days'],['oct','Since 1 Oct']];
+
+/* ===== UI core, router, home, class hub, check, round, class record ===== */
+var A={};            // click actions
+var CH={};           // change actions
+var CMS={1:'Yashika',2:'Manisha',3:'Vijay Raj',4:'Komal',5:'Mansi',6:'Rashmi',7:'Tanushri',8:'Pooja, Mansi',9:'Pooja',10:'Upinder',11:'Upinder'};
+var ROLEN={admin:'Director / Admin',pl:'Programme Leader',pm:'Program Manager',cm:'Class Manager',teacher:'Teacher'};
+var ST={rt:0,cur:null,vars:{}};
+function setHdr(t,sub,back){$('ht').textContent=t;$('hs').textContent=sub||'FIS · Class Desk';$('bk').className='bk'+(back?'':' hide')}
+function setNav(on){
+  var n=$('nav');if(!on){n.className='hide';n.innerHTML='';return}
+  var h=location.hash||'#/home',it=[['#/home','H','Home'],['#/dash','D','Dashboard'],['#/rep','R','Reports']];
+  if(isAdmin()){it.push(['#/mentors','M','Mentors']);it.push(['#/setup','S','Setup'])}else it.push(['#/me','P','Profile']);
+  n.className='';n.innerHTML=it.map(function(x){var on=(x[0]==='#/home'?/^#\/(home|c\/)/.test(h)||h===''||h==='#':h.indexOf(x[0])===0);return'<button data-a="nav" data-h="'+x[0]+'" class="'+(on?'on':'')+'"><b>'+x[1]+'</b>'+x[2]+'</button>'}).join('');
+}
+function go(h){if(location.hash===h)route();else location.hash=h}
+function toast(m){var t=document.createElement('div');t.style.cssText='position:fixed;left:14px;right:14px;bottom:76px;background:#14233F;color:#fff;padding:12px 14px;border-radius:12px;z-index:120;text-align:center;font-size:14px';t.textContent=m;document.body.appendChild(t);setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t)},2600)}
+function openSheet(h){$('sheet').innerHTML=h;$('sheet').style.display='block';$('sheetbg').style.display='block'}
+function shut(){$('sheet').style.display='none';$('sheetbg').style.display='none';$('sheet').innerHTML='';if(S.dirty&&!busy()){/*picked up by loop*/}}
+var askFn=null;
+function ask(msg,ok,fn){askFn=fn;openSheet('<p style="font-size:16px;margin:4px 0 14px">'+esc(msg)+'</p><div class="row"><button class="btn gh sp" data-a="shut">Cancel</button><span style="width:10px"></span><button class="btn pk sp" data-a="askok">'+esc(ok)+'</button></div>')}
+A.askok=function(){var f=askFn;askFn=null;shut();if(f)f()};
+A.shut=shut;
+A.nav=function(el){go(el.getAttribute('data-h'))};
+A.back=function(){var h=(location.hash||'').replace(/^#\//,'').split('/');
+  if(h[0]==='c'){if(h.length<=2)go('#/home');else if(h[2]==='check'&&h.length>=7)go('#/c/'+h[1]+'/check/'+h[3]+'/'+h[4]+'/'+h[5]);else if(h[2]==='check'&&h.length>3)go('#/c/'+h.slice(1,h.length-1).join('/'));else if(h[2]==='student')go('#/c/'+h[1]+'/students');else go('#/c/'+h[1])}
+  else go('#/home')};
+document.addEventListener('click',function(e){var el=e.target;while(el&&el!==document&&!(el.getAttribute&&el.getAttribute('data-a')))el=el.parentNode;if(!el||el===document)return;var f=A[el.getAttribute('data-a')];if(f){try{f(el,e)}catch(x){console.error(x);throw x}}});
+document.addEventListener('change',function(e){var el=e.target,k=el.getAttribute&&el.getAttribute('data-c');if(k&&CH[k])CH[k](el,e)});
+window.addEventListener('hashchange',function(){route()});
+function app(h){$('app').innerHTML=h}
+function chips(arr,cur,act,extra){return'<div class="chips">'+arr.map(function(x){return'<button class="chip'+(String(x[0])===String(cur)?' on':'')+'" data-a="'+act+'" data-v="'+esc(x[0])+'" '+(extra||'')+'>'+esc(x[1])+'</button>'}).join('')+'</div>'}
+function fixScroll(fn){var y=window.pageYOffset;fn();window.scrollTo(0,y)}
+function refreshView(){
+  if(ST.cur==='round'){patchRound();return}
+  if(ST.cur==='none')return;
+  fixScroll(function(){route(true)});
+}
+
+/* ---------------- router ---------------- */
+function route(silent){
+  if(!S.user){return}
+  var h=(location.hash||'#/home').replace(/^#\/?/,'').split('/'),my=++ST.rt;S.watch={};
+  ST.cur='page';
+  var v=h[0]||'home';
+  try{
+    if(v==='home'||v==='')return vHome();
+    if(v==='me')return vMe();
+    if(v==='mentors')return vMentors();
+    if(v==='setup')return vSetup(h[1]);
+    if(v==='dash')return vDash(0,h);
+    if(v==='rep')return vRep(0,h);
+    if(v==='c'){
+      var cls=parseInt(h[1],10);
+      if(myClasses().indexOf(cls)<0){toast('This class is not in your list.');return go('#/home')}
+      S.watch[cls]=1;
+      var sub=h[2]||'';
+      var need=function(fn){
+        if(D(cls).loaded){fn();return}
+        if(!silent){setHdr('Class '+cls,grpName(grp(cls)),true);setNav(true);app('<div class="spin">Loading Class '+cls+'…</div>')}
+        ensureClass(cls).then(function(){if(my===ST.rt)fn()},function(e){if(my===ST.rt)app('<div class="card"><b class="red">Could not load.</b><p class="sm">'+esc(e.message)+'</p><button class="btn" onclick="route()">Try again</button></div>')});
+      };
+      return need(function(){
+        if(!sub)return vClass(cls);
+        if(sub==='check')return vCheck(cls,h.slice(3));
+        if(sub==='record')return vRecord(cls,h[3],h[4]);
+        if(sub==='sr')return vSR(cls,h[3]);
+        if(sub==='tasks')return vTasks(cls,h[3]||'class');
+        if(sub==='students')return vStudents(cls,h[3]);
+        if(sub==='student')return vStudent(cls,h[3]);
+        if(sub==='dash')return vDash(cls,h.slice(3));
+        if(sub==='rep')return vRep(cls,h.slice(3));
+        if(sub==='link')return vLink(cls,h[3]);
+        vClass(cls);
+      });
+    }
+    go('#/home');
+  }catch(e){console.error(e);throw e}
+}
+
+/* ---------------- home ---------------- */
+function vHome(){
+  setHdr('Class Desk','FIS · Flourish International School',false);setNav(true);ST.cur='home';
+  var u=eu(),mine=myClasses(),hh=new Date().getHours(),gr=hh<12?'Good morning':(hh<17?'Good afternoon':'Good evening');
+  var h=(S.viewAs?'<div class="banner"><span class="sp">Viewing as <b>'+esc(S.viewAs.name)+'</b></span><button data-a="exitview">Back to mine</button></div>':'');
+  h+='<div class="card row"><div class="sp"><div class="b" style="font-size:18px;font-family:Lora,Georgia,serif;color:#1E3560">'+gr+', '+esc(u.name.split(' ')[0])+'</div><div class="sm mut">'+esc(ROLEN[u.role]||u.role)+' · '+(mine.length===11?'All classes':'Class '+mine.join(', '))+'</div></div><button class="btn gh sm" data-a="nav" data-h="#/me">Profile</button></div>';
+  if(!mine.length)h+='<div class="note">No class is linked to your login yet. Please ask the Director to add your classes in Setup.</div>';
+  [1,2,3].forEach(function(g){
+    var cs=mine.filter(function(c){return grp(c)===g});if(!cs.length)return;
+    h+='<div class="sec">'+grpName(g)+'</div><div class="grid">'+cs.map(function(c){return'<button class="ct g'+g+'" data-a="cls" data-v="'+c+'"><b>'+c+'</b><span>Class</span><em>'+esc(CMS[c]||'')+'</em></button>'}).join('')+'</div>';
+  });
+  if(!window.__homeNote)h+='<p class="xs mut c" style="margin-top:18px">Marks and records are saved with your name and the time.</p>';
+  app(h);
+}
+A.cls=function(el){go('#/c/'+el.getAttribute('data-v'))};
+A.exitview=function(){S.viewAs=null;go('#/home')};
+
+/* ---------------- class hub ---------------- */
+var GROUPS=[
+ ['Today',[['check','CH','Check','Books, notebooks, tests','i1'],['sr','SR','Student record','Late and uniform','i2'],['diary','DI','Diary','Diary and remarks','i3',1],['dcr','DC','DCR','Handed out and collected','i4',1]]],
+ ['Records and reports',[['record','CR','Class record','Lesson-wise and tests','i1'],['dash','DB','Dashboard','Status, defaulters, marks','i5'],['students','ST','Students','Each child’s record','i3'],['rep','RP','Reports','Print, Excel, WhatsApp','i6']]],
+ ['Teaching',[['tpc','CP','Checking and preparation','Lessons and checking','i4',1],['tasks/class','CT','Class tasks','Daily class jobs','i2'],['tasks/mentor','MT','Mentor tasks','Mentor to-do list','i5'],['res','RS','Resources','PPT, PDF, videos','i6',1]]],
+ ['Care and recognition',[['lib','LB','Library','Book issue record','i3',1],['aw','AW','Awards','Child awards','i2',1],['cert','WC','Weekly certificates','Best of the week','i5',1],['pc','PC','Parent connect','Parent feedback','i4',1]]]
+];
+function linkUrl(key,cls){
+  var L=S.cfg.links||{};if(L[key])return L[key];
+  if(key==='diary')return'../diary/';
+  if(key==='tpc'||key==='res'||key==='lib'||key==='aw'||key==='cert')return isPrimary(cls)?'../tpc-primary/':'../tpc/';
+  return'';
+}
+function vClass(cls){
+  setHdr('Class '+cls,['','Primary','Middle','Senior'][grp(cls)]+' · CM '+(CMS[cls]||''),true);setNav(true);ST.cur='class';
+  var td=today(),x=IX(cls),checks=rounds(cls,{from:td,to:td}).length,late=0,uni=0,sr=x.srec[td]||{};
+  for(var s in sr){if(sr[s].l)late++;if(sr[s].u&&sr[s].u.length)uni++}
+  var tk=0;for(var t in x.tasks){var o=x.tasks[t];if(o&&!o.dn&&!o.del)tk++}
+  var h=(S.viewAs?'<div class="banner"><span class="sp">Viewing as <b>'+esc(S.viewAs.name)+'</b></span><button data-a="exitview">Back to mine</button></div>':'');
+  h+='<div class="sec" style="margin-top:4px">Today · '+dshort(td)+'</div><div class="sum"><div><b>'+checks+'</b><span>Checks done today</span></div><div><b>'+late+'</b><span>Late arrivals</span></div><div><b>'+uni+'</b><span>Uniform defaulters</span></div><div><b>'+tk+'</b><span>Open class and mentor tasks</span></div></div>';
+  GROUPS.forEach(function(g){
+    h+='<div class="sec">'+g[0]+'</div><div class="grid">'+g[1].map(function(t){
+      return'<button class="ft" data-a="feat" data-k="'+t[0]+'" data-cls="'+cls+'"><div class="ic '+t[4]+'">'+t[1]+'</div><b>'+t[2]+'</b><small>'+t[3]+'</small>'+(t[5]?'<span class="ln">opens app</span>':'')+'</button>';
+    }).join('')+'</div>';
+  });
+  app(h);
+}
+A.feat=function(el){
+  var k=el.getAttribute('data-k'),cls=parseInt(el.getAttribute('data-cls'),10);
+  if(['diary','dcr','tpc','res','lib','aw','cert','pc'].indexOf(k)>=0){
+    if(!linkUrl(k,cls)){openSheet('<h3>Not linked yet</h3><p class="sm">This app has not been linked to Class Desk yet. The Director can add its address in Setup › Links.</p><button class="btn bl" data-a="shut">OK</button>');return}
+    return go('#/c/'+cls+'/link/'+k);
+  }
+  go('#/c/'+cls+'/'+k);
+};
+function vLink(cls,key){
+  var u=linkUrl(key,cls),nm={diary:'Diary',dcr:'DCR',tpc:'Checking and preparation',res:'Resources',lib:'Library',aw:'Awards',cert:'Weekly certificates',pc:'Parent connect'}[key]||'App';
+  setHdr(nm,'Class '+cls,true);setNav(false);ST.cur='none';
+  var sep=u.indexOf('#')>=0?'&':'#';
+  app('<div class="row" style="margin-bottom:8px"><span class="sp sm mut">This app opens inside Class Desk. Use the back arrow to return.</span><a class="btn gh sm" style="text-decoration:none" href="'+esc(u)+'" target="_blank">Open full page</a></div><iframe src="'+esc(u+sep+'class='+cls)+'" style="width:100%;height:calc(100vh - 130px);border:1px solid #e2e5ef;border-radius:12px;background:#fff"></iframe>');
+}
+
+/* ---------------- check flow ---------------- */
+function crumb(cls,p){
+  var h='<div class="chips" style="margin-bottom:2px"><button class="chip sm on" data-a="go" data-h="#/c/'+cls+'/check">Class '+cls+'</button>';
+  var path='#/c/'+cls+'/check';
+  if(p[0]){path+='/'+p[0];h+='<button class="chip sm on" data-a="go" data-h="'+path+'">Section '+esc(p[0])+'</button>'}
+  if(p[1]){path+='/'+p[1];h+='<button class="chip sm on" data-a="go" data-h="'+path+'">'+esc(subjName(p[1]))+'</button>'}
+  if(p[2]){path+='/'+p[2];h+='<button class="chip sm on" data-a="go" data-h="'+path+'">'+esc(itemName(p[2]))+'</button>'}
+  return h+'</div>';
+}
+A.go=function(el){go(el.getAttribute('data-h'))};
+function vCheck(cls,p){
+  var base='#/c/'+cls+'/check';
+  if(p[3])return vRound(cls,p[3],p);
+  ST.cur='page';setNav(true);
+  setHdr('Check · Class '+cls,isPrimary(cls)?'Primary':'Secondary',true);
+  var h=crumb(cls,p);
+  if(!p[0]){
+    var ss=secs(cls);
+    h+='<div class="h2">Choose section</div>'+(ss.length?'<div class="chips">'+ss.map(function(s){return'<button class="chip" data-a="go" data-h="'+base+'/'+s+'" style="min-width:64px;font-size:20px">'+s+'</button>'}).join('')+'</div>':'<div class="note">No student list found for this class yet. Please ask the Director to upload class lists in Setup.</div>');
+  }else if(!p[1]){
+    h+='<div class="h2">Choose subject</div><div class="chips">'+subjectsFor(cls).map(function(k){return'<button class="chip" data-a="go" data-h="'+base+'/'+p[0]+'/'+k+'">'+esc(subjName(k))+'</button>'}).join('')+'</div>';
+  }else if(!p[2]){
+    h+='<div class="h2">What are you checking?</div><div class="chips">'+itemsFor(cls,p[1]).map(function(k){var n=rounds(cls,{sec:p[0],subj:p[1],item:k}).length;return'<button class="chip" data-a="go" data-h="'+base+'/'+p[0]+'/'+p[1]+'/'+k+'">'+esc(itemName(k))+(n?' <span class="xs" style="opacity:.7">('+n+')</span>':'')+'</button>'}).join('')+'</div>';
+  }else{
+    var rs=rounds(cls,{sec:p[0],subj:p[1],item:p[2]}),all=ST.vars.allr;
+    h+='<button class="btn pk bl" data-a="newround" data-cls="'+cls+'" data-p="'+esc(p.join('/'))+'" style="margin:6px 0 12px">+ New '+esc(itemName(p[2]).toLowerCase())+' check</button>';
+    h+='<div class="sec" style="margin-top:4px">Earlier checks ('+rs.length+')</div>';
+    if(!rs.length)h+='<div class="card mut sm">No check recorded yet for this item.</div>';
+    else h+='<div class="card lst">'+(all?rs:rs.slice(0,15)).map(function(r){return roundRow(cls,r,base+'/'+p.join('/'))}).join('')+'</div>'+(!all&&rs.length>15?'<button class="btn gh bl" data-a="allr">Show all '+rs.length+'</button>':'');
+  }
+  app(h);
+}
+A.allr=function(){ST.vars.allr=1;route()};
+function roundRow(cls,r,base){
+  var m=r.m,t=tally(cls,r.id),ls=lastSubmit(m),nm=m.i==='test'?'':'';
+  var tag=m.i==='test'?(m.x?'out of '+m.x:'marks'):('✓'+t.C+(t.N?' · NS'+t.N:'')+(t.IC?' · IC'+t.IC:'')+(t.A?' · A'+t.A:''));
+  return'<div data-a="go" data-h="'+base+'/'+r.id+'" style="cursor:pointer"><div class="sp"><div class="b">'+esc(m.l||'(lesson not named)')+'</div><div class="xs mut">'+dshort(m.d)+' · '+tag+(m.imp?' · imported':'')+'</div></div>'+(ls?'<span class="pillx g">'+((m.u||[]).length>1?'Re-submitted':'Submitted')+'</span>':'<span class="pillx a">Not submitted</span>')+'</div>';
+}
+A.newround=function(el){
+  var cls=parseInt(el.getAttribute('data-cls'),10),p=el.getAttribute('data-p').split('/');
+  var rid=newRound(cls,p[0],p[1],p[2]);go('#/c/'+cls+'/check/'+p[0]+'/'+p[1]+'/'+p[2]+'/'+rid);
+};
+
+/* ---------------- round (marking screen) ---------------- */
+function lessonList(cls,subj){
+  var set={},out=[];((S.cfg.lessons[cls+'|'+subj])||[]).forEach(function(l){if(!set[l]){set[l]=1;out.push(l)}});
+  rounds(cls,{subj:subj}).forEach(function(r){var l=r.m.l;if(l&&!set[l]){set[l]=1;out.push(l)}});return out.slice(0,80);
+}
+function vRound(cls,rid,p){
+  var r=IX(cls).rounds[rid];
+  if(!r){setHdr('Check','',true);setNav(true);ST.cur='page';return app('<div class="card"><b>This check was not found.</b><p class="sm mut">It may have been removed.</p><button class="btn" data-a="back">Go back</button></div>')}
+  ST.cur='round';ST.rid=rid;ST.rcls=cls;setNav(false);
+  setHdr(subjName(r.j)+' · '+itemName(r.i),'Class '+cls+r.s+' · '+dshort(r.d),true);
+  var test=r.i==='test',h='';
+  h+='<div class="card"><label class="l" style="margin-top:0">Lesson</label><input class="inp" id="rl" data-c="rlesson" list="dl" value="'+esc(r.l)+'" placeholder="Lesson name or number"><datalist id="dl">'+lessonList(cls,r.j).map(function(l){return'<option value="'+esc(l)+'">'}).join('')+'</datalist>';
+  h+='<div class="row"><div class="sp"><label class="l">Date</label><input class="inp" type="date" id="rd" data-c="rdate" value="'+esc(r.d)+'"></div>';
+  if(test)h+='<div style="width:90px;margin-left:8px"><label class="l">Max marks</label><input class="inp" inputmode="decimal" data-c="rmax" value="'+(r.x||'')+'"></div><div style="width:90px;margin-left:8px"><label class="l">Min marks</label><input class="inp" inputmode="decimal" data-c="rmin" value="'+(r.n||'')+'"></div>';
+  h+='</div></div>';
+  if(test&&!(r.x>0)){h+='<div class="note">Please enter the <b>maximum marks</b> and the <b>minimum (pass) marks</b> above first. Then the marks list will open.</div>';app(h+'<button class="btn gh bl" data-a="delround">Remove this check</button>');return}
+  h+='<div class="leg">'+(test?'<span><i style="background:#D63F63">red</i>below 60%</span><span><i style="background:#8b93a7">A</i>absent</span>':['C','N','A','IC'].concat(isPrimary(cls)&&['nb','mcon','mhw','mprac'].indexOf(r.i)>=0?['P']:[]).map(function(c){var col={C:'#2E8B57',N:'#D63F63',A:'#8b93a7',IC:'#D98A0B',P:'#5E3585'}[c];return'<span><i style="background:'+col+'">'+CODE[c].t+'</i>'+CODE[c].n+'</span>'}).join(''))+'</div>';
+  h+='<div class="st" id="grid">'+studs(cls,r.s).map(function(s){return tileHtml(cls,rid,r,s)}).join('')+'</div>';
+  if(!studs(cls,r.s).length)h+='<div class="note">No student list for Section '+esc(r.s)+'.</div>';
+  h+='<div class="card" style="margin-top:12px"><div id="rcount" class="sm"></div><div id="rsub" class="xs mut" style="margin:4px 0 8px"></div>'+(!test?'<button class="btn gh bl" data-a="allok" style="margin-bottom:8px">Mark everyone ✓ Checked</button>':'')+'<button class="btn pk bl" data-a="submit">Submit</button><button class="btn gh bl" data-a="delround" style="margin-top:8px">Remove this check</button></div>';
+  app(h);patchCounts();
+}
+function tileHtml(cls,rid,r,s){
+  var x=IX(cls),c=(x.marks[rid]||{})[s.id]||'',note=(x.notes[rid]||{})[s.id]||'';
+  if(r.i==='test'){
+    var isA=c==='A',v=isA?'':c,pc=(!isA&&v!==''&&r.x>0)?pct(parseFloat(v),r.x):null;
+    return'<div class="s'+(note?' hr':'')+'" id="t'+s.id+'" style="width:calc(100% - 6px)"><span class="rn">'+esc(s.r)+'</span><span class="nm">'+esc(s.n)+'</span><span class="pc xs '+(pc!==null&&pc<60?'red':'mut')+'" style="width:44px;text-align:right;margin-right:4px">'+(pc!==null?pc+'%':'')+'</span><input class="inp" inputmode="decimal" data-c="mark" data-sid="'+s.id+'" value="'+esc(v)+'" style="width:64px;min-height:36px;padding:4px 6px;text-align:center'+(pc!==null&&pc<60?';color:#D63F63;font-weight:700':'')+'"><button class="cd" data-a="tabs" data-sid="'+s.id+'" style="border:0;margin-left:4px;background:'+(isA?'#8b93a7':'#eef0f6')+';color:'+(isA?'#fff':'#8b93a7')+'">A</button><button class="rm" data-a="rem" data-sid="'+s.id+'">R</button></div>';
+  }
+  return'<div class="s m'+c+(note?' hr':'')+'" id="t'+s.id+'" data-a="tap" data-sid="'+s.id+'"><span class="rn">'+esc(s.r)+'</span><span class="nm">'+esc(s.n)+'</span><span class="cd">'+(c?CODE[c].t:'')+'</span><button class="rm" data-a="rem" data-sid="'+s.id+'">R</button></div>';
+}
+function patchTile(sid){
+  var cls=ST.rcls,rid=ST.rid,r=IX(cls).rounds[rid],el=$('t'+sid);if(!el||!r)return;
+  var s=S.byId[sid];if(!s)return;
+  var c=(IX(cls).marks[rid]||{})[sid]||'',note=(IX(cls).notes[rid]||{})[sid]||'';
+  if(r.i==='test'){
+    var inp=el.querySelector('input'),pcs=el.querySelector('.pc'),ab=el.querySelector('.cd'),isA=c==='A',v=isA?'':c,p=(!isA&&v!==''&&r.x>0)?pct(parseFloat(v),r.x):null,low=p!==null&&p<60;
+    if(inp&&document.activeElement!==inp)inp.value=v;
+    if(inp){inp.style.color=low?'#D63F63':'';inp.style.fontWeight=low?'700':''}
+    if(pcs){pcs.textContent=p!==null?p+'%':'';pcs.className='pc xs '+(low?'red':'mut')}
+    if(ab){ab.style.background=isA?'#8b93a7':'#eef0f6';ab.style.color=isA?'#fff':'#8b93a7'}
+    el.className='s'+(note?' hr':'');return;
+  }
+  el.className='s m'+c+(note?' hr':'');el.querySelector('.cd').textContent=c?CODE[c].t:'';
+}
+function patchCounts(){
+  var cls=ST.rcls,rid=ST.rid,r=IX(cls).rounds[rid];if(!r||!$('rcount'))return;
+  var t=tally(cls,rid),tot=studs(cls,r.s).length,done=0,mk=IX(cls).marks[rid]||{};studs(cls,r.s).forEach(function(s){if(mk[s.id])done++});
+  $('rcount').innerHTML=r.i==='test'?'Marks entered: <b>'+done+'</b> of '+tot:'<b>'+done+'</b> of '+tot+' marked · ✓ '+t.C+' · NS '+t.N+' · A '+t.A+' · IC '+t.IC+(t.P?' · P '+t.P:'');
+  var u=r.u||[];$('rsub').innerHTML=u.length?u.map(function(x,i){return(i?'Re-submitted ':'Submitted ')+dtime(x[0])+' by '+esc(x[1])}).join('<br>'):'Not submitted yet. Marks are saved as you tap; press Submit when finished.';
+}
+function patchRound(){
+  var cls=ST.rcls,rid=ST.rid,r=IX(cls).rounds[rid];if(!r){route();return}
+  studs(cls,r.s).forEach(function(s){patchTile(s.id)});patchCounts();
+}
+A.tap=function(el,e){
+  if(e.target.className==='rm')return;
+  var sid=el.getAttribute('data-sid'),cls=ST.rcls,rid=ST.rid,r=IX(cls).rounds[rid];
+  var cur=(IX(cls).marks[rid]||{})[sid]||'';put(cls,'m|'+rid+'|'+sid,nextCode(cur,cls,r.i));patchTile(sid);patchCounts();
+};
+A.tabs=function(el){
+  var sid=el.getAttribute('data-sid'),cls=ST.rcls,rid=ST.rid,cur=(IX(cls).marks[rid]||{})[sid]||'';
+  put(cls,'m|'+rid+'|'+sid,cur==='A'?'':'A');patchTile(sid);patchCounts();
+};
+CH.mark=function(el){
+  var sid=el.getAttribute('data-sid'),cls=ST.rcls,rid=ST.rid,r=IX(cls).rounds[rid],v=el.value.trim();
+  if(v===''){put(cls,'m|'+rid+'|'+sid,'')}
+  else if(/^a(b|bsent)?$/i.test(v)){put(cls,'m|'+rid+'|'+sid,'A');el.value=''}
+  else{var n=parseFloat(v);if(isNaN(n)||n<0||(r.x>0&&n>r.x)){toast('Marks must be between 0 and '+r.x);el.value='';return}put(cls,'m|'+rid+'|'+sid,String(n))}
+  patchTile(sid);patchCounts();
+};
+CH.rlesson=function(el){saveRound(ST.rcls,ST.rid,{l:el.value.trim()})};
+CH.rdate=function(el){if(el.value)saveRound(ST.rcls,ST.rid,{d:el.value});setHdr($('ht').textContent,'Class '+ST.rcls+IX(ST.rcls).rounds[ST.rid].s+' · '+dshort(el.value),true)};
+CH.rmax=function(el){var n=parseFloat(el.value);saveRound(ST.rcls,ST.rid,{x:n>0?n:0});route()};
+CH.rmin=function(el){var n=parseFloat(el.value);saveRound(ST.rcls,ST.rid,{n:n>0?n:0})};
+A.allok=function(){
+  var cls=ST.rcls,rid=ST.rid,r=IX(cls).rounds[rid],mk=IX(cls).marks[rid]||{},n=0;
+  studs(cls,r.s).forEach(function(s){if(!mk[s.id]){put(cls,'m|'+rid+'|'+s.id,'C');n++}});
+  patchRound();toast(n?n+' children marked ✓ Checked. Tap only the exceptions.':'Everyone is already marked.');
+};
+A.submit=function(){
+  var cls=ST.rcls,rid=ST.rid,r=IX(cls).rounds[rid],mk=IX(cls).marks[rid]||{},miss=studs(cls,r.s).filter(function(s){return !mk[s.id]}).length;
+  var doit=function(){var u=(r.u||[]).slice();u.push([Date.now(),S.user.name]);saveRound(cls,rid,{u:u});patchCounts();toast(u.length>1?'Re-submitted. Time and date are recorded.':'Submitted. Thank you.')};
+  if(!r.l){openSheet('<h3>Lesson name missing</h3><p class="sm">Please write the lesson name or number at the top, then press Submit.</p><button class="btn bl" data-a="shut">OK</button>');return}
+  if(miss)ask(miss+' children are not marked yet. Submit anyway?','Submit',doit);else doit();
+};
+A.delround=function(){var cls=ST.rcls,rid=ST.rid;ask('Remove this check and its marks from the lists?','Remove',function(){var r=IX(cls).rounds[rid];put(cls,'r|'+rid,'');ST.cur='page';go('#/c/'+cls+'/check/'+r.s+'/'+r.j+'/'+r.i)})};
+A.rem=function(el,e){
+  e.stopPropagation&&e.stopPropagation();
+  var sid=el.getAttribute('data-sid'),cls=ST.rcls,rid=ST.rid,r=IX(cls).rounds[rid],cur=(IX(cls).marks[rid]||{})[sid]||'',note=(IX(cls).notes[rid]||{})[sid]||'';
+  var codes=['C','N','A','IC'].concat(isPrimary(cls)&&['nb','mcon','mhw','mprac'].indexOf(r.i)>=0?['P']:[]);
+  ST.remSid=sid;
+  openSheet('<h3>'+esc(sname(sid))+'</h3>'+(r.i==='test'?'':'<label class="l">Status</label><div class="chips">'+codes.map(function(c){return'<button class="chip'+(cur===c?' on':'')+'" data-a="setcode" data-v="'+c+'">'+CODE[c].t+' '+CODE[c].n+'</button>'}).join('')+'</div>')+'<label class="l">Remark</label><div class="chips">'+CHIPS.map(function(c){return'<button class="chip sm" data-a="chip" data-v="'+esc(c)+'">'+esc(c)+'</button>'}).join('')+'</div><textarea class="inp" id="rtxt" rows="2" placeholder="Type a remark">'+esc(note)+'</textarea><div class="row" style="margin-top:10px"><button class="btn gh sp" data-a="shut">Close</button><span style="width:8px"></span><button class="btn sp" data-a="saverem">Save remark</button></div>');
+};
+A.setcode=function(el){var cls=ST.rcls,rid=ST.rid,v=el.getAttribute('data-v');put(cls,'m|'+rid+'|'+ST.remSid,v);shut();patchTile(ST.remSid);patchCounts()};
+A.chip=function(el){var t=$('rtxt'),v=el.getAttribute('data-v');t.value=t.value?(t.value.indexOf(v)>=0?t.value:t.value+', '+v):v};
+A.saverem=function(){put(ST.rcls,'n|'+ST.rid+'|'+ST.remSid,$('rtxt').value.trim());shut();patchTile(ST.remSid)};
+
+/* ---------------- class record ---------------- */
+function lkey(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'')}
+function vRecord(cls,sec,subj){
+  setHdr('Class record','Class '+cls,true);setNav(true);ST.cur='page';
+  var ss=secs(cls);sec=sec||ss[0]||'';subj=subj||'SCI';
+  var h='<div class="chips">'+ss.map(function(s){return'<button class="chip'+(s===sec?' on':'')+'" data-a="go" data-h="#/c/'+cls+'/record/'+s+'/'+subj+'">Section '+s+'</button>'}).join('')+'</div>';
+  var sl=subjectsFor(cls);var hasLegacy=false;rounds(cls,{subj:'ENG'}).length&&(hasLegacy=true);if(hasLegacy&&sl.indexOf('ENG')<0)sl.push('ENG');
+  h+='<div class="chips">'+sl.map(function(k){return'<button class="chip sm'+(k===subj?' on':'')+'" data-a="go" data-h="#/c/'+cls+'/record/'+sec+'/'+k+'">'+esc(subjName(k))+'</button>'}).join('')+'</div>';
+  if(subj==='ENG')h+='<div class="note info">Older checking records show English as one subject. They are not split into English 1 and English 2.</div>';
+  var rs=rounds(cls,{sec:sec,subj:subj}).filter(function(r){return r.m.i!=='test'});
+  var items=[],byL={};
+  rs.forEach(function(r){if(items.indexOf(r.m.i)<0)items.push(r.m.i);var k=lkey(r.m.l)||('d'+r.m.d);(byL[k]=byL[k]||{l:r.m.l||'(no lesson)',d:r.m.d,cells:{}});var o=byL[k];if(r.m.d>o.d)o.d=r.m.d;if(!o.cells[r.m.i]||(o.cells[r.m.i].m.d<r.m.d))o.cells[r.m.i]=r});
+  var order=['book','nb','asg','mcon','mhw','mprac','tnb'];items.sort(function(a,b){var x=order.indexOf(a),y=order.indexOf(b);return(x<0?99:x)-(y<0?99:y)});
+  var L=Object.keys(byL).map(function(k){return byL[k]}).sort(function(a,b){return b.d.localeCompare(a.d)});
+  h+='<div class="sec">Lesson-wise checking</div>';
+  if(!L.length)h+='<div class="card mut sm">No checking recorded for this subject yet.</div>';
+  else{
+    h+='<div class="tw"><table><tr><th>Lesson</th>'+items.map(function(i){return'<th>'+esc(itemName(i))+'</th>'}).join('')+'</tr>';
+    L.forEach(function(o){h+='<tr><td><b>'+esc(o.l)+'</b><div class="xs mut">'+dshort(o.d)+'</div></td>'+items.map(function(i){
+      var c=o.cells[i];if(!c)return'<td class="mut">–</td>';var t=tally(cls,c.id);
+      return'<td data-a="go" data-h="#/c/'+cls+'/check/'+sec+'/'+subj+'/'+i+'/'+c.id+'" style="cursor:pointer"><span class="grn">✓'+t.C+'</span>'+(t.N?' <span class="red">NS'+t.N+'</span>':'')+(t.IC?' <span class="amb">IC'+t.IC+'</span>':'')+(t.A?' <span class="mut">A'+t.A+'</span>':'')+(t.P?' P'+t.P:'')+((c.m.u||[]).length>1?' <span title="Re-submitted">↻</span>':'')+'<div class="xs mut">'+dshort(c.m.d)+'</div></td>'}).join('')+'</tr>'});
+    h+='</table></div>';
+    // defaulters below
+    var def={};
+    rs.forEach(function(r){var mk=IX(cls).marks[r.id]||{};for(var sid in mk){var c=mk[sid];if(c==='N'||c==='IC'){var d=def[sid]||(def[sid]=[]);d.push(itemName(r.m.i)+(c==='IC'?' (incomplete)':'')+' · '+(r.m.l||dshort(r.m.d)))}}});
+    var ids=Object.keys(def).sort(function(a,b){return def[b].length-def[a].length});
+    h+='<div class="sec">Defaulters in this subject</div>';
+    h+=ids.length?'<div class="tw"><table><tr><th>Student</th><th>Not submitted / incomplete</th></tr>'+ids.map(function(s){return'<tr><td>'+esc(sname(s))+'</td><td class="sm">'+def[s].map(esc).join('<br>')+'</td></tr>'}).join('')+'</table></div>':'<div class="card grn sm">No defaulters recorded.</div>';
+  }
+  // tests from 1 Oct
+  var ts=rounds(cls,{sec:sec,subj:subj,item:'test',from:START}).sort(function(a,b){return(a.m.d||'').localeCompare(b.m.d||'')});
+  h+='<div class="sec">Test marks · 1 Oct to date</div>';
+  if(!ts.length)h+='<div class="card mut sm">No tests recorded since 1 Oct.</div>';
+  else{
+    h+='<div class="tw"><table><tr><th>Student</th>'+ts.map(function(t){return'<th class="n"><a data-a="go" data-h="#/c/'+cls+'/check/'+sec+'/'+subj+'/test/'+t.id+'" style="color:inherit">'+esc(t.m.l||'Test')+'<br><span class="xs">'+dshort(t.m.d)+(t.m.x?' /'+t.m.x:'')+'</span></a></th>'}).join('')+'<th class="n">Avg %</th></tr>';
+    studs(cls,sec).forEach(function(s){
+      var sum=0,cnt=0,flag=0,prevLow=false;
+      var cells=ts.map(function(t){var v=(IX(cls).marks[t.id]||{})[s.id];if(v===undefined||v==='')return'<td class="n mut">–</td>';if(v==='A'){return'<td class="n mut">A</td>'}var n=parseFloat(v),p=pct(n,t.m.x);if(p!==null){sum+=p;cnt++;var low=p<60;if(low&&prevLow)flag=1;prevLow=low}return'<td class="n'+(p!==null&&p<60?' red':'')+'">'+esc(v)+'</td>'});
+      h+='<tr><td>'+esc(s.n)+(flag?' <span class="red" title="Below 60% in two tests in a row">⚠</span>':'')+'</td>'+cells.join('')+'<td class="n'+(cnt&&sum/cnt<60?' red':'')+'">'+(cnt?Math.round(sum/cnt):'–')+'</td></tr>';
+    });
+    h+='</table></div><p class="xs mut">Red = below 60%. ⚠ = below 60% in two tests in a row.</p>';
+  }
+  app(h);
+}
+
+/* ===== student record, tasks, students, dashboard, reports ===== */
+document.addEventListener('input',function(e){var el=e.target,k=el.getAttribute&&el.getAttribute('data-i');if(k==='find'){var q=el.value.toLowerCase();var rows=document.querySelectorAll('[data-nm]');for(var i=0;i<rows.length;i++)rows[i].style.display=rows[i].getAttribute('data-nm').indexOf(q)>=0?'':'none'}});
+function secChips(cls,cur,mk){return'<div class="chips">'+secs(cls).map(function(s){return'<button class="chip'+(s===cur?' on':'')+'" data-a="go" data-h="'+mk(s)+'">Section '+s+'</button>'}).join('')+'</div>'}
+
+/* ---- student record: late and uniform ---- */
+function vSR(cls,sec){
+  setNav(true);ST.cur='page';var ss=secs(cls);sec=sec||ss[0]||'';var d=ST.vars.srd||today();
+  setHdr('Student record','Class '+cls+' · late and uniform',true);
+  var rec=IX(cls).srec[d]||{},late=0,uni=0;studs(cls,sec).forEach(function(s){var o=rec[s.id];if(o){if(o.l)late++;if(o.u&&o.u.length)uni++}});
+  var h=secChips(cls,sec,function(s){return'#/c/'+cls+'/sr/'+s});
+  h+='<div class="card row"><button class="btn gh sm" data-a="srday" data-n="-1">‹</button><div class="sp c"><input class="inp" type="date" value="'+d+'" data-c="srdate" style="text-align:center"></div><button class="btn gh sm" data-a="srday" data-n="1">›</button></div>';
+  h+='<div class="sum"><div><b>'+late+'</b><span>Late arrivals</span></div><div><b>'+uni+'</b><span>Uniform defaulters</span></div></div><div style="height:8px"></div>';
+  h+='<div class="card lst">'+studs(cls,sec).map(function(s){var o=rec[s.id]||{};return'<div><span class="rn xs mut" style="width:26px">'+esc(s.r)+'</span><span class="sp">'+esc(s.n)+(o.u&&o.u.length?'<div class="xs red">'+o.u.map(esc).join(', ')+'</div>':'')+'</span><button class="chip sm'+(o.l?' on pk':'')+'" data-a="srlate" data-sid="'+s.id+'">'+(o.l?'Late '+esc(o.l):'Late')+'</button><button class="chip sm'+(o.u&&o.u.length?' on pk':'')+'" data-a="sruni" data-sid="'+s.id+'">Uniform</button></div>'}).join('')+'</div>';
+  ST.vars.srsec=sec;app(h);
+}
+CH.srdate=function(el){if(el.value){ST.vars.srd=el.value;route()}};
+A.srday=function(el){ST.vars.srd=addDays(ST.vars.srd||today(),parseInt(el.getAttribute('data-n'),10));route()};
+function srGet(sid){var cls=curCls(),d=ST.vars.srd||today();return Object.assign({},((IX(cls).srec[d]||{})[sid])||{})}
+function srPut(sid,o){var cls=curCls(),d=ST.vars.srd||today();var e=!o.l&&!(o.u&&o.u.length)&&!o.r;put(cls,'s|'+d+'|'+sid,e?'':JSON.stringify(o))}
+function curCls(){var m=/#\/c\/(\d+)/.exec(location.hash);return m?parseInt(m[1],10):0}
+A.srlate=function(el){var sid=el.getAttribute('data-sid'),o=srGet(sid);if(o.l){delete o.l}else{var n=new Date();o.l=pad(n.getHours())+':'+pad(n.getMinutes())}srPut(sid,o);route()};
+A.sruni=function(el){
+  var sid=el.getAttribute('data-sid'),o=srGet(sid);ST.srSid=sid;
+  openSheet('<h3>'+esc(sname(sid))+'</h3><label class="l">Uniform not complete</label><div class="chips">'+UNI.map(function(u){return'<button class="chip'+((o.u||[]).indexOf(u)>=0?' on pk':'')+'" data-a="unitog" data-v="'+esc(u)+'">'+esc(u)+'</button>'}).join('')+'</div><label class="l">Late arrival time</label><input class="inp" type="time" id="srt" value="'+esc(o.l||'')+'"><label class="l">Remark</label><input class="inp" id="srr" value="'+esc(o.r||'')+'"><div class="row" style="margin-top:12px"><button class="btn gh sp" data-a="shut">Cancel</button><span style="width:8px"></span><button class="btn sp" data-a="srsave">Save</button></div>');
+};
+A.unitog=function(el){el.classList.toggle('on');el.classList.toggle('pk')};
+A.srsave=function(){var o={},u=[];var cs=$('sheet').querySelectorAll('.chip.on');for(var i=0;i<cs.length;i++)u.push(cs[i].getAttribute('data-v'));if(u.length)o.u=u;if($('srt').value)o.l=$('srt').value;if($('srr').value.trim())o.r=$('srr').value.trim();srPut(ST.srSid,o);shut();route()};
+
+/* ---- class tasks / mentor tasks ---- */
+function vTasks(cls,kind){
+  setNav(true);ST.cur='page';setHdr(kind==='mentor'?'Mentor tasks':'Class tasks','Class '+cls,true);
+  var all=IX(cls).tasks,list=[];for(var id in all){var t=all[id];if(t&&t.k===kind&&!t.del)list.push({id:id,t:t})}
+  var open=list.filter(function(x){return !x.t.dn}).sort(function(a,b){return(a.t.d||'').localeCompare(b.t.d||'')}),done=list.filter(function(x){return x.t.dn}).sort(function(a,b){return(b.t.dt||0)-(a.t.dt||0)}).slice(0,15);
+  var h='<div class="card"><label class="l" style="margin-top:0">New task</label><input class="inp" id="tx" placeholder="Write the task"><div class="row"><div class="sp"><label class="l">Due date</label><input class="inp" type="date" id="td" value="'+today()+'"></div></div><label class="l">For section</label><div class="chips" id="tsc"><button class="chip on" data-a="tsec" data-v="">All</button>'+secs(cls).map(function(s){return'<button class="chip" data-a="tsec" data-v="'+s+'">'+s+'</button>'}).join('')+'</div><button class="btn pk bl" data-a="addtask" data-kind="'+kind+'">Add task</button></div>';
+  h+='<div class="sec">Open ('+open.length+')</div><div class="card lst">'+(open.map(taskRow).join('')||'<div class="mut sm">No open tasks.</div>')+'</div>';
+  if(done.length)h+='<div class="sec">Done recently</div><div class="card lst">'+done.map(taskRow).join('')+'</div>';
+  ST.vars.tsec='';app(h);
+}
+function taskRow(x){var t=x.t,od=!t.dn&&t.d&&t.d<today();return'<div><button class="chip sm'+(t.dn?' on':'')+'" data-a="tdone" data-id="'+x.id+'" style="min-width:44px">'+(t.dn?'✓':'○')+'</button><span class="sp" style="margin-left:8px"><span'+(t.dn?' style="text-decoration:line-through;color:#8b93a7"':'')+'>'+esc(t.x)+'</span><div class="xs '+(od?'red':'mut')+'">'+(t.s?'Section '+esc(t.s)+' · ':'')+'Due '+dshort(t.d)+(t.dn?' · done by '+esc(t.by2||'')+' '+dtime(t.dt):'')+'</div></span><button class="chip sm" data-a="tdel" data-id="'+x.id+'">×</button></div>'}
+A.tsec=function(el){ST.vars.tsec=el.getAttribute('data-v');var c=$('tsc').children;for(var i=0;i<c.length;i++)c[i].className='chip'+(c[i]===el?' on':'')};
+A.addtask=function(el){var x=$('tx').value.trim();if(!x){toast('Please write the task.');return}var cls=curCls();put(cls,'t|'+uid(),JSON.stringify({k:el.getAttribute('data-kind'),s:ST.vars.tsec||'',x:x,d:$('td').value||today(),dn:0,by:S.user.name}));route()};
+A.tdone=function(el){var cls=curCls(),id=el.getAttribute('data-id'),t=Object.assign({},IX(cls).tasks[id]);t.dn=t.dn?0:1;t.dt=Date.now();t.by2=S.user.name;put(cls,'t|'+id,JSON.stringify(t));route()};
+A.tdel=function(el){var cls=curCls(),id=el.getAttribute('data-id');ask('Remove this task?','Remove',function(){put(cls,'t|'+id,'');route()})};
+
+/* ---- students ---- */
+function vStudents(cls,sec){
+  setNav(true);ST.cur='page';setHdr('Students','Class '+cls,true);var ss=secs(cls);sec=sec||ss[0]||'';
+  var h=secChips(cls,sec,function(s){return'#/c/'+cls+'/students/'+s})+'<input class="inp" data-i="find" placeholder="Search a name" style="margin-bottom:10px"><div class="card lst">'+studs(cls,sec).map(function(s){return'<div data-nm="'+esc(s.n.toLowerCase())+'" data-a="go" data-h="#/c/'+cls+'/student/'+s.id+'" style="cursor:pointer"><span class="xs mut" style="width:26px">'+esc(s.r)+'</span><span class="sp">'+esc(s.n)+'</span><span class="mut">›</span></div>'}).join('')+'</div>';
+  app(h);
+}
+function vStudent(cls,sid){
+  setNav(true);ST.cur='page';var s=S.byId[sid];if(!s){return app('<div class="card">Student not found.</div>')}
+  setHdr(s.n,'Class '+cls+s.s+' · Roll '+s.r,true);
+  var x=IX(cls),rows=[],tests=[],nsC=0,icC=0,aC=0;
+  for(var rid in x.rounds){var r=x.rounds[rid];if(!r||r.s!==s.s)continue;var c=(x.marks[rid]||{})[sid];if(!c)continue;
+    if(r.i==='test'){var p=c==='A'?null:pct(parseFloat(c),r.x);tests.push({d:r.d,j:r.j,l:r.l,v:c,x:r.x,p:p})}
+    else{if(c==='N'){nsC++}if(c==='IC')icC++;if(c==='A')aC++;if(c==='N'||c==='IC')rows.push({d:r.d,j:r.j,i:r.i,l:r.l,c:c,n:(x.notes[rid]||{})[sid]||''})}}
+  var late=0,uni=0;for(var d in x.srec){var o=x.srec[d][sid];if(o){if(o.l)late++;if(o.u&&o.u.length)uni++}}
+  var h='<div class="sum"><div><b>'+nsC+'</b><span>Not submitted</span></div><div><b>'+icC+'</b><span>Incomplete</span></div><div><b>'+late+'</b><span>Late arrivals</span></div><div><b>'+uni+'</b><span>Uniform defaulter days</span></div></div>';
+  rows.sort(function(a,b){return b.d.localeCompare(a.d)});tests.sort(function(a,b){return b.d.localeCompare(a.d)});
+  h+='<div class="sec">Not submitted and incomplete</div>'+(rows.length?'<div class="tw"><table><tr><th>Date</th><th>Subject</th><th>Item</th><th>Lesson</th><th>Status</th></tr>'+rows.slice(0,60).map(function(r){return'<tr><td>'+dshort(r.d)+'</td><td>'+esc(subjName(r.j))+'</td><td>'+esc(itemName(r.i))+'</td><td>'+esc(r.l)+(r.n?'<div class="xs mut">'+esc(r.n)+'</div>':'')+'</td><td class="'+(r.c==='N'?'red':'amb')+'">'+CODE[r.c].n+'</td></tr>'}).join('')+'</table></div>':'<div class="card grn sm">Nothing pending.</div>');
+  h+='<div class="sec">Test marks</div>'+(tests.length?'<div class="tw"><table><tr><th>Date</th><th>Subject</th><th>Lesson</th><th class="n">Marks</th><th class="n">%</th></tr>'+tests.map(function(t){return'<tr><td>'+dshort(t.d)+'</td><td>'+esc(subjName(t.j))+'</td><td>'+esc(t.l)+'</td><td class="n">'+esc(t.v)+(t.x?' / '+t.x:'')+'</td><td class="n'+(t.p!==null&&t.p<60?' red':'')+'">'+(t.p!==null?t.p:'')+'</td></tr>'}).join('')+'</table></div>':'<div class="card mut sm">No tests recorded.</div>');
+  app(h);
+}
+
+/* ---- table engine (used by Dashboard and Reports) ---- */
+function scopeCls(cls){return cls?[cls]:myClasses()}
+function loadScope(cs){
+  var need=cs.filter(function(c){return !D(c).loaded});if(!need.length)return Promise.resolve();
+  var i=0;
+  return need.reduce(function(p,c){return p.then(function(){i++;var m=$('lm');if(m)m.textContent='Loading Class '+c+' ('+i+' of '+need.length+')…';return ensureClass(c)})},Promise.resolve());
+}
+function T(title,cols,rows,extra){return Object.assign({title:title,cols:cols,rows:rows},extra||{})}
+function tblChecking(cs,f){
+  var agg={};
+  cs.forEach(function(c){rounds(c,{from:f.from,sec:f.sec}).forEach(function(r){if(r.m.i==='test')return;if(f.item&&r.m.i!==f.item)return;
+    var k=c+'|'+r.m.s+'|'+r.m.j+'|'+r.m.i,a=agg[k]||(agg[k]={c:c,s:r.m.s,j:r.m.j,i:r.m.i,n:0,C:0,N:0,IC:0,A:0,last:''});var t=tally(c,r.id);a.n++;a.C+=t.C;a.N+=t.N;a.IC+=t.IC;a.A+=t.A;if(r.m.d>a.last)a.last=r.m.d})});
+  var rows=Object.keys(agg).map(function(k){return agg[k]}).sort(function(a,b){return a.c-b.c||a.s.localeCompare(b.s)||subjName(a.j).localeCompare(subjName(b.j))||a.i.localeCompare(b.i)});
+  return T('Checking status',['Class','Sec','Subject','Item','Lessons checked','Checked','Not submitted','Incomplete','Absent','Last check'],rows.map(function(a){return[a.c,a.s,subjName(a.j),itemName(a.i),a.n,a.C,a.N,a.IC,a.A,dshort(a.last)]}));
+}
+function tblPending(cs,f){
+  var rows=[],as=S.cfg.assign||[];
+  cs.forEach(function(c){secs(c).forEach(function(s){if(f.sec&&s!==f.sec)return;
+    SUBJ.forEach(function(sj){if(sj.legacy)return;
+      var tn=[];as.forEach(function(a){if(a.c===c&&(a.s==='*'||a.s===''||a.s===s)&&a.j===sj.k&&tn.indexOf(a.t)<0)tn.push(a.t)});
+      var exp=sj.it.filter(function(i){return i!=='test'}),done=[],pend=[];
+      exp.forEach(function(i){var n=rounds(c,{sec:s,subj:sj.k,item:i,from:f.from}).length;(n?done:pend).push(itemName(i))});
+      if(!pend.length&&!done.length)return;
+      rows.push([c,s,sj.n,tn.join(', ')||'—',done.join(', ')||'—',pend.join(', ')||'All done'])})})});
+  rows.sort(function(a,b){return a[0]-b[0]||a[1].localeCompare(b[1])||a[3].localeCompare(b[3])});
+  return T('Pending status',['Class','Sec','Subject','Teacher','Done','Pending'],rows,{pending:1});
+}
+function tblDefaulters(cs,f){
+  var m={};
+  cs.forEach(function(c){rounds(c,{from:f.from,sec:f.sec}).forEach(function(r){if(r.m.i==='test')return;if(f.item&&r.m.i!==f.item)return;
+    var mk=IX(c).marks[r.id]||{};for(var sid in mk){var code=mk[sid];if(code!=='N'&&code!=='IC')continue;var o=m[sid]||(m[sid]={sid:sid,c:c,N:0,IC:0,it:{},last:''});if(code==='N')o.N++;else o.IC++;var k=itemName(r.m.i);o.it[k]=(o.it[k]||0)+1;if(r.m.d>o.last)o.last=r.m.d}})});
+  var rows=Object.keys(m).map(function(k){return m[k]}).filter(function(o){var s=S.byId[o.sid];return s&&(!f.sec||s.s===f.sec)}).sort(function(a,b){return(b.N+b.IC)-(a.N+a.IC)||a.c-b.c}).map(function(o){var s=S.byId[o.sid];return[o.c,s.s,s.n,o.N,o.IC,Object.keys(o.it).map(function(k){return k+' ×'+o.it[k]}).join(', '),dshort(o.last)]});
+  return T('Defaulters',['Class','Sec','Student','Not submitted','Incomplete','Items','Last'],rows);
+}
+function tblTests(cs,f){
+  var rows=[];
+  cs.forEach(function(c){rounds(c,{from:f.from||START,sec:f.sec,item:'test'}).forEach(function(r){var mk=IX(c).marks[r.id]||{},sum=0,n=0,low=0,ab=0;
+    for(var sid in mk){var v=mk[sid];if(v==='A'){ab++;continue}var p=pct(parseFloat(v),r.m.x);if(p===null)continue;sum+=p;n++;if(p<60)low++}
+    if(!n&&!ab)return;rows.push([c,r.m.s,subjName(r.m.j),r.m.l||'',dshort(r.m.d),r.m.x||'',n,n?Math.round(sum/n)+'%':'',low,ab,r.m.d])})});
+  rows.sort(function(a,b){return b[10].localeCompare(a[10])||a[0]-b[0]});
+  rows.forEach(function(r){r.pop()});
+  return T('Test marks',['Class','Sec','Subject','Lesson','Date','Max','Written','Average','Below 60%','Absent'],rows);
+}
+function tblPoor(cs,f){
+  var rows=[];
+  cs.forEach(function(c){var x=IX(c),by={};
+    rounds(c,{sec:f.sec,item:'test',from:START}).forEach(function(r){(by[r.m.s+'|'+r.m.j]=by[r.m.s+'|'+r.m.j]||[]).push(r)});
+    Object.keys(by).forEach(function(k){var ts=by[k].sort(function(a,b){return(a.m.d||'').localeCompare(b.m.d||'')}).slice(-4),p=k.split('|');
+      studs(c,p[0]).forEach(function(s){var ps=[],flag=0,prev=false;
+        ts.forEach(function(t){var v=(x.marks[t.id]||{})[s.id];if(v===undefined||v===''||v==='A')return;var q=pct(parseFloat(v),t.m.x);if(q===null)return;ps.push(q);var low=q<60;if(low&&prev)flag=1;prev=low});
+        if(flag)rows.push([c,p[0],subjName(p[1]),s.n,ps.map(function(q){return Math.round(q)+'%'}).join(', '),'Below 60% in two tests in a row'])})})});
+  rows.sort(function(a,b){return a[0]-b[0]||a[1].localeCompare(b[1])||a[2].localeCompare(b[2])||a[3].localeCompare(b[3])});
+  return T('Poor performers',['Class','Sec','Subject','Student','Last tests','Reason'],rows);
+}
+var TABS=[['chk','Checking status',tblChecking],['pen','Pending status',tblPending],['def','Defaulters',tblDefaulters],['perf','Performance',tblPoor]];
+var REPS=[['chk','Checking summary',tblChecking],['pen','Pending status',tblPending],['def','Defaulters',tblDefaulters],['tst','Test marks',tblTests],['perf','Poor performers',tblPoor]];
+function tableHtml(t){
+  if(!t.rows.length)return'<div class="card mut sm">Nothing to show for these choices.</div>';
+  return'<div class="tw"><table><tr>'+t.cols.map(function(c){return'<th>'+esc(c)+'</th>'}).join('')+'</tr>'+t.rows.slice(0,400).map(function(r){return'<tr>'+r.map(function(v){var s=String(v),neg=/^\d+(\.\d+)?%$/.test(s)&&parseFloat(s)<60;return'<td'+(neg?' class="red"':'')+'>'+esc(s)+'</td>'}).join('')+'</tr>'}).join('')+'</table></div>'+(t.rows.length>400?'<p class="xs mut">Showing the first 400 of '+t.rows.length+' rows. Use Excel copy for all.</p>':'');
+}
+function dvState(){return ST.vars.dv||(ST.vars.dv={tab:'chk',per:'7',sec:'',item:'',cls:0})}
+function filterBar(cls,v,withItem){
+  var h='';
+  if(!cls){var mc=myClasses();h+='<div class="chips"><button class="chip sm'+(!v.cls?' on':'')+'" data-a="dvset" data-k="cls" data-v="0">All classes</button>'+mc.map(function(c){return'<button class="chip sm'+(v.cls===c?' on':'')+'" data-a="dvset" data-k="cls" data-v="'+c+'">'+c+'</button>'}).join('')+'</div>'}
+  var cc=cls||v.cls;
+  if(cc)h+='<div class="chips"><button class="chip sm'+(!v.sec?' on':'')+'" data-a="dvset" data-k="sec" data-v="">All sections</button>'+secs(cc).map(function(s){return'<button class="chip sm'+(v.sec===s?' on':'')+'" data-a="dvset" data-k="sec" data-v="'+s+'">'+s+'</button>'}).join('')+'</div>';
+  h+='<div class="chips">'+PERIODS.map(function(p){return'<button class="chip sm'+(v.per===p[0]?' on':'')+'" data-a="dvset" data-k="per" data-v="'+p[0]+'">'+p[1]+'</button>'}).join('')+'</div>';
+  if(withItem)h+='<div class="chips"><button class="chip sm'+(!v.item?' on':'')+'" data-a="dvset" data-k="item" data-v="">All items</button>'+['book','nb','asg','tnb','mcon','mhw','mprac'].map(function(i){return'<button class="chip sm'+(v.item===i?' on':'')+'" data-a="dvset" data-k="item" data-v="'+i+'">'+itemName(i)+'</button>'}).join('')+'</div>';
+  return h;
+}
+A.dvset=function(el){var v=dvState(),k=el.getAttribute('data-k'),x=el.getAttribute('data-v');v[k]=k==='cls'?parseInt(x,10):x;if(k==='cls')v.sec='';route()};
+A.dvtab=function(el){dvState().tab=el.getAttribute('data-v');route()};
+function runTable(list,key,cs,v){var f={from:periodFrom(v.per),sec:v.sec,item:v.item};for(var i=0;i<list.length;i++)if(list[i][0]===key)return list[i][2](cs,f);return T('',[],[])}
+function vDash(cls,p){
+  setNav(true);ST.cur='page';setHdr('Dashboard',cls?'Class '+cls:'All your classes',cls>0);
+  var v=dvState(),cs=cls?[cls]:(v.cls?[v.cls]:myClasses());cs.forEach(function(c){S.watch[c]=1});
+  app('<div class="spin" id="lm">Loading…</div>');var my=ST.rt;
+  loadScope(cs).then(function(){if(my!==ST.rt)return;
+    var t=runTable(TABS,v.tab,cs,v),h=(S.viewAs?'<div class="banner"><span class="sp">Viewing as <b>'+esc(S.viewAs.name)+'</b></span><button data-a="exitview">Back to mine</button></div>':'');
+    h+='<div class="chips">'+TABS.map(function(x){return'<button class="chip'+(v.tab===x[0]?' on':'')+'" data-a="dvtab" data-v="'+x[0]+'">'+x[1]+'</button>'}).join('')+'</div>'+filterBar(cls,v,v.tab==='def'||v.tab==='chk');
+    if(v.tab==='pen')h+='<div class="note info">This list shows work that is still to be checked, class by class. It is not a ranking. Please follow up one to one.</div>';
+    if(v.tab==='def')h+='<div class="note info">Children who did not submit, most pending first. Names are for class teachers and managers only.</div>';
+    var n=t.rows.length;h+='<div class="sum"><div><b>'+n+'</b><span>'+(v.tab==='pen'?'Subjects to look at':(v.tab==='def'||v.tab==='perf'?'Children listed':'Rows'))+'</span></div></div><div style="height:8px"></div>'+tableHtml(t);
+    h+='<button class="btn gh bl" data-a="go" data-h="#/'+(cls?'c/'+cls+'/':'')+'rep">Open in Reports</button>';app(h)
+  },function(e){app('<div class="card red">'+esc(e.message)+'</div>')});
+}
+function rpState(){return ST.vars.rp||(ST.vars.rp={tab:'chk'})}
+function vRep(cls,p){
+  setNav(true);ST.cur='page';setHdr('Reports',cls?'Class '+cls:'All your classes',cls>0);
+  var v=dvState(),r=rpState(),cs=cls?[cls]:(v.cls?[v.cls]:myClasses());cs.forEach(function(c){S.watch[c]=1});
+  app('<div class="spin" id="lm">Loading…</div>');var my=ST.rt;
+  loadScope(cs).then(function(){if(my!==ST.rt)return;
+    var t=runTable(REPS,r.tab,cs,v);ST.lastT=t;
+    var h='<div class="chips">'+REPS.map(function(x){return'<button class="chip'+(r.tab===x[0]?' on':'')+'" data-a="rptab" data-v="'+x[0]+'">'+x[1]+'</button>'}).join('')+'</div>'+filterBar(cls,v,r.tab==='def'||r.tab==='chk');
+    h+='<div class="row noprint" style="margin:4px 0 10px"><button class="btn sm sp" data-a="rpprint">Print / PDF</button><span style="width:6px"></span><button class="btn sm sp pu" data-a="rpexcel">Copy for Excel</button><span style="width:6px"></span><button class="btn sm sp pk" data-a="rpwa">Copy for WhatsApp</button></div>';
+    h+='<h3 style="margin:6px 2px">'+esc(t.title)+'</h3><p class="xs mut" style="margin:0 2px 8px">'+(cls?'Class '+cls:(v.cls?'Class '+v.cls:'All your classes'))+(v.sec?' · Section '+v.sec:'')+' · '+(PERIODS.filter(function(q){return q[0]===v.per})[0]||[0,''])[1]+' · '+dshort(today())+'</p>'+tableHtml(t);app(h)
+  },function(e){app('<div class="card red">'+esc(e.message)+'</div>')});
+}
+A.rptab=function(el){rpState().tab=el.getAttribute('data-v');route()};
+A.rpprint=function(){window.print()};
+function copyText(s){
+  var ta=document.createElement('textarea');ta.value=s;ta.style.cssText='position:fixed;left:0;top:0;opacity:0';document.body.appendChild(ta);ta.focus();ta.select();var ok=false;try{ok=document.execCommand('copy')}catch(e){}document.body.removeChild(ta);
+  if(!ok&&navigator.clipboard)navigator.clipboard.writeText(s).then(function(){toast('Copied.')},function(){toast('Could not copy.')});else toast(ok?'Copied.':'Could not copy.');
+}
+A.rpexcel=function(){var t=ST.lastT;if(!t)return;copyText([t.cols.join('\t')].concat(t.rows.map(function(r){return r.join('\t')})).join('\n'))};
+A.rpwa=function(){var t=ST.lastT;if(!t)return;var v=dvState();
+  var txt='*'+t.title+'* · '+dshort(today())+'\n'+t.rows.slice(0,120).map(function(r){return r.map(function(x){return String(x)}).join(' | ')}).join('\n');
+  copyText(txt);};
+
+/* ===== mentors, setup, profile, login, boot ===== */
+function vMe(){
+  setHdr('Profile',S.user.name,false);setNav(true);ST.cur='page';
+  app('<div class="card"><div class="b" style="font-size:18px">'+esc(S.user.name)+'</div><div class="sm mut">'+esc(ROLEN[S.user.role]||'')+' · login: '+esc(S.user.id)+'</div></div><div class="card"><h3>Change password</h3><label class="l">Current password</label><input class="inp" type="password" id="pw0"><label class="l">New password (at least 6 letters)</label><input class="inp" type="password" id="pw1"><div id="pwm" class="sm red" style="min-height:20px;margin:6px 0"></div><button class="btn bl" data-a="pwsave">Save new password</button></div><button class="btn gh bl" data-a="logout">Log out</button><p class="xs mut c" style="margin-top:14px">Build '+BUILD+'</p>');
+}
+A.pwsave=function(){apiT('pwChange',[$('pw0').value,$('pw1').value]).then(function(){$('pwm').className='sm grn';$('pwm').textContent='Password changed.';$('pw0').value='';$('pw1').value=''},function(e){$('pwm').className='sm red';$('pwm').textContent=e.message})};
+A.logout=function(){if(S.out.length){ask('Some changes are still waiting to be saved. Log out anyway?','Log out',doLogout)}else doLogout()};
+function doLogout(){S.token='';S.user=null;S.booted=false;S.data={};S.X={};lsDel('cd_tok');clearCaches();showLogin('')}
+
+function vMentors(){
+  if(!isAdmin())return go('#/home');
+  setHdr('Mentors','Tap a name to see their view',false);setNav(true);ST.cur='page';app('<div class="spin">Loading…</div>');var my=ST.rt;
+  apiT('users').then(function(l){if(my!==ST.rt)return;
+    app('<div class="note info">Tap any mentor to see Class Desk exactly as they see it. You stay logged in as yourself.</div><div class="card lst">'+l.filter(function(u){return u.active}).map(function(u){return'<div data-a="viewas" data-id="'+esc(u.id)+'" style="cursor:pointer"><span class="sp"><b>'+esc(u.name)+'</b><div class="xs mut">'+esc(ROLEN[u.role]||u.role)+' · '+(u.classes==='*'?'All classes':'Class '+esc(u.classes))+'</div></span><span class="mut">›</span></div>'}).join('')+'</div>');ST.users=l
+  },function(e){app('<div class="card red">'+esc(e.message)+'</div>')});
+}
+A.viewas=function(el){var id=el.getAttribute('data-id'),u=(ST.users||[]).filter(function(x){return x.id===id})[0];if(!u)return;S.viewAs=u.id===S.user.id?null:u;go('#/home')};
+
+/* ---- setup (Director / Admin) ---- */
+var SUBTABS=[['staff','Staff'],['assign','Teachers'],['lessons','Lessons'],['links','Links'],['lists','Class lists']];
+function vSetup(tab){
+  if(!isAdmin())return go('#/home');
+  tab=tab||'staff';setHdr('Setup','Director / Admin',false);setNav(true);ST.cur='page';
+  var h='<div class="chips">'+SUBTABS.map(function(t){return'<button class="chip'+(t[0]===tab?' on':'')+'" data-a="go" data-h="#/setup/'+t[0]+'">'+t[1]+'</button>'}).join('')+'</div>',my=ST.rt;
+  if(tab==='staff'){app(h+'<div class="spin">Loading…</div>');apiT('users').then(function(l){if(my!==ST.rt)return;ST.users=l;
+    app(h+'<button class="btn pk bl" data-a="staffedit" data-id="" style="margin-bottom:12px">+ Add staff</button><div class="card lst">'+l.map(function(u){return'<div data-a="staffedit" data-id="'+esc(u.id)+'" style="cursor:pointer;'+(u.active?'':'opacity:.45')+'"><span class="sp"><b>'+esc(u.name)+'</b><div class="xs mut">login: '+esc(u.id)+' · '+esc(ROLEN[u.role]||u.role)+' · '+(u.classes==='*'?'All classes':'Class '+esc(u.classes))+(u.changed?'':' · first password')+'</div></span><span class="mut">›</span></div>'}).join('')+'</div>')},function(e){app(h+'<div class="card red">'+esc(e.message)+'</div>')});return}
+  if(tab==='assign'){
+    var as=S.cfg.assign||[];
+    h+='<div class="card"><label class="l" style="margin-top:0">Class</label><div class="chips">'+[1,2,3,4,5,6,7,8,9,10,11].map(function(c){return'<button class="chip sm'+(ST.vars.ac===c?' on':'')+'" data-a="aset" data-k="ac" data-v="'+c+'">'+c+'</button>'}).join('')+'</div>';
+    if(ST.vars.ac)h+='<label class="l">Section</label><div class="chips"><button class="chip sm'+(!ST.vars.as?' on':'')+'" data-a="aset" data-k="as" data-v="">All</button>'+secs(ST.vars.ac).map(function(s){return'<button class="chip sm'+(ST.vars.as===s?' on':'')+'" data-a="aset" data-k="as" data-v="'+s+'">'+s+'</button>'}).join('')+'</div>';
+    h+='<label class="l">Subject</label><div class="chips">'+SUBJ.filter(function(s){return !s.legacy}).map(function(s){return'<button class="chip sm'+(ST.vars.aj===s.k?' on':'')+'" data-a="aset" data-k="aj" data-v="'+s.k+'">'+esc(s.n)+'</button>'}).join('')+'</div><label class="l">Teacher name</label><input class="inp" id="at"><button class="btn bl" style="margin-top:10px" data-a="addassign">Add</button></div>';
+    h+='<div class="sec">Who teaches what ('+as.length+')</div><div class="card lst">'+(as.map(function(a,i){return'<div><span class="sp">Class '+a.c+(a.s&&a.s!=='*'?a.s:'')+' · '+esc(subjName(a.j))+'<div class="xs mut">'+esc(a.t)+'</div></span><button class="chip sm" data-a="delassign" data-i="'+i+'">×</button></div>'}).join('')||'<div class="mut sm">Nothing added yet. This is used for the Pending status view.</div>')+'</div>';app(h);return}
+  if(tab==='lessons'){
+    var lc=ST.vars.lc,lj=ST.vars.lj,cur=lc&&lj?(S.cfg.lessons[lc+'|'+lj]||[]).join('\n'):'';
+    h+='<div class="note info">Add lesson names once. Teachers then pick them from a list while checking.</div><div class="card"><div class="chips">'+[1,2,3,4,5,6,7,8,9,10,11].map(function(c){return'<button class="chip sm'+(lc===c?' on':'')+'" data-a="aset" data-k="lc" data-v="'+c+'">'+c+'</button>'}).join('')+'</div><div class="chips">'+SUBJ.filter(function(s){return !s.legacy}).map(function(s){return'<button class="chip sm'+(lj===s.k?' on':'')+'" data-a="aset" data-k="lj" data-v="'+s.k+'">'+esc(s.n)+'</button>'}).join('')+'</div>'+(lc&&lj?'<label class="l">One lesson per line</label><textarea class="inp" id="lt" rows="8">'+esc(cur)+'</textarea><button class="btn bl" style="margin-top:10px" data-a="savelessons">Save lessons</button>':'<p class="sm mut">Choose a class and a subject.</p>')+'</div>';app(h);return}
+  if(tab==='links'){
+    var L=S.cfg.links||{},rows=[['diary','Diary','../diary/'],['dcr','DCR','(not set)'],['tpc','Checking and preparation · Classes 6–11','../tpc/'],['tpcp','Checking and preparation · Classes 1–5','../tpc-primary/'],['pc','Parent connect','(not set)']];
+    h+='<div class="note info">Addresses of the other staff apps. They open inside Class Desk. Leave empty to use the default.</div><div class="card">'+rows.map(function(r){return'<label class="l">'+r[1]+'</label><input class="inp lk" data-key="'+r[0]+'" value="'+esc(L[r[0]]||'')+'" placeholder="'+esc(r[2])+'">'}).join('')+'<button class="btn bl" style="margin-top:12px" data-a="savelinks">Save links</button></div>';app(h);return}
+  if(tab==='lists'){
+    var cnt=Object.keys(S.byId).length;
+    h+='<div class="card"><b>'+cnt+' students</b> in the class lists now.<p class="sm mut">Paste new students below, one per line: <b>Class, Section, Name</b>. Students already in the list are skipped.</p><textarea class="inp" id="rt" rows="7" placeholder="5, A, Aarav Sharma"></textarea><div id="rm" class="sm" style="margin:6px 0;min-height:18px"></div><button class="btn bl" data-a="saveroster">Add to class lists</button></div><div class="note info">To load the old checking and test history (CCR and CAR), the Director runs <b>importAll</b> once from the Apps Script editor. Steps are in the handover note.</div>';app(h);return}
+}
+A.aset=function(el){var k=el.getAttribute('data-k'),v=el.getAttribute('data-v');ST.vars[k]=(k==='ac'||k==='lc')?parseInt(v,10):v;if(k==='ac')ST.vars.as='';route()};
+function saveCfg(key,val){put(0,key,JSON.stringify(val))}
+A.addassign=function(){var v=ST.vars,t=$('at').value.trim();if(!v.ac||!v.aj||!t){toast('Choose class, subject and write the teacher name.');return}var l=(S.cfg.assign||[]).slice();l.push({c:v.ac,s:v.as||'*',j:v.aj,t:t});saveCfg('cfg|assign',l);route()};
+A.delassign=function(el){var l=(S.cfg.assign||[]).slice();l.splice(parseInt(el.getAttribute('data-i'),10),1);saveCfg('cfg|assign',l);route()};
+A.savelessons=function(){var l=$('lt').value.split('\n').map(function(x){return x.trim()}).filter(Boolean);saveCfg('cfg|lessons|'+ST.vars.lc+'|'+ST.vars.lj,l);toast('Lessons saved.')};
+A.savelinks=function(){var o={};var e=document.querySelectorAll('.lk');for(var i=0;i<e.length;i++){var v=e[i].value.trim();if(v)o[e[i].getAttribute('data-key')]=v}
+  if(o.tpcp){o.tpcPrimary=o.tpcp}saveCfg('cfg|links',o);toast('Links saved.')};
+A.saveroster=function(){
+  var rows=$('rt').value.split('\n').map(function(l){var p=l.split(/[,\t]/).map(function(x){return x.trim()});return p.length>=3?[p[0],p[1],'',p.slice(2).join(' ')]:null}).filter(Boolean);
+  if(!rows.length){$('rm').textContent='Please paste lines as: Class, Section, Name';return}
+  var added=0,i=0;$('rm').textContent='Saving…';
+  (function next(){if(i>=rows.length){$('rm').className='sm grn';$('rm').textContent=added+' students added.';loadBoot();return}apiT('rosterSave',[rows.slice(i,i+300)]).then(function(r){added+=r.added;i+=300;next()},function(e){$('rm').className='sm red';$('rm').textContent=e.message})})();
+};
+A.staffedit=function(el){
+  var id=el.getAttribute('data-id'),u=(ST.users||[]).filter(function(x){return x.id===id})[0]||{name:'',id:'',role:'teacher',classes:'',active:true};ST.ed=u;ST.edSet={};
+  (u.classes==='*'?[]:String(u.classes).split(',')).forEach(function(c){if(c)ST.edSet[c]=1});ST.edAll=u.classes==='*';ST.edRole=u.role;
+  openSheet(staffForm(u,!!id));
+};
+function staffForm(u,ex){
+  return'<h3>'+(ex?esc(u.name):'Add staff')+'</h3><label class="l">Full name</label><input class="inp" id="sn" value="'+esc(u.name)+'"><label class="l">Login name (first name)</label><input class="inp" id="si" value="'+esc(u.id)+'" '+(ex?'readonly':'')+' placeholder="Leave empty to use first name"><label class="l">Role</label><div class="chips">'+Object.keys(ROLEN).map(function(r){return'<button class="chip sm'+(ST.edRole===r?' on':'')+'" data-a="edrole" data-v="'+r+'">'+ROLEN[r]+'</button>'}).join('')+'</div><label class="l">Classes</label><div class="chips"><button class="chip sm'+(ST.edAll?' on':'')+'" data-a="edcls" data-v="*">All classes</button>'+[1,2,3,4,5,6,7,8,9,10,11].map(function(c){return'<button class="chip sm'+(ST.edSet[c]?' on':'')+'" data-a="edcls" data-v="'+c+'">'+c+'</button>'}).join('')+'</div><div class="row" style="margin-top:12px"><button class="btn gh sp" data-a="shut">Cancel</button><span style="width:8px"></span><button class="btn sp" data-a="edsave">Save</button></div>'+(ex?'<div class="row" style="margin-top:10px"><button class="btn gh sp sm" data-a="edreset">Reset password</button><span style="width:8px"></span><button class="btn gh sp sm" data-a="edremove">'+(u.active?'Remove':'Restore')+'</button></div><p class="xs mut">Reset sets the password back to first name + #1111.</p>':'');
+}
+A.edrole=function(el){ST.edRole=el.getAttribute('data-v');ST.edName=$('sn').value;ST.edId=$('si').value;var u=Object.assign({},ST.ed,{name:ST.edName,id:ST.edId});openSheet(staffForm(u,!!ST.ed.id))};
+A.edcls=function(el){var v=el.getAttribute('data-v');ST.edName=$('sn').value;ST.edId=$('si').value;if(v==='*'){ST.edAll=!ST.edAll}else{ST.edAll=false;if(ST.edSet[v])delete ST.edSet[v];else ST.edSet[v]=1}var u=Object.assign({},ST.ed,{name:ST.edName,id:ST.edId});openSheet(staffForm(u,!!ST.ed.id))};
+A.edsave=function(){var rec={name:$('sn').value.trim(),id:$('si').value.trim(),role:ST.edRole,classes:ST.edAll?'*':Object.keys(ST.edSet).sort(function(a,b){return a-b}).join(','),active:ST.ed.active!==false};
+  apiT('userSave',[rec]).then(function(){shut();route();toast('Saved.')},function(e){toast(e.message)})};
+A.edreset=function(){apiT('userReset',[ST.ed.id]).then(function(){toast('Password reset to first name + #1111.')},function(e){toast(e.message)})};
+A.edremove=function(){var act=ST.ed.active;if(act){apiT('userRemove',[ST.ed.id]).then(function(){shut();route()},function(e){toast(e.message)})}else{apiT('userSave',[{name:ST.ed.name,id:ST.ed.id,role:ST.ed.role,classes:ST.ed.classes,active:true}]).then(function(){shut();route()},function(e){toast(e.message)})}};
+
+/* ---- login and boot ---- */
+function showLogin(msg){$('login').className='on';$('lerr').textContent=msg||'';$('nav').className='hide'}
+A.login=function(){
+  var u=$('lu').value.trim(),p=$('lp').value;if(!u||!p){$('lerr').textContent='Please type your first name and password.';return}
+  $('lerr').textContent='Checking…';
+  api('login',[u,p]).then(function(r){S.token=r.token;lsSet('cd_tok',r.token);$('lp').value='';loadBoot(true)},function(e){$('lerr').textContent=e.message})
+};
+document.addEventListener('keydown',function(e){if(e.key==='Enter'&&$('login').className==='on')A.login()});
+function useBoot(b,offline){
+  S.user=b.user;S.classes=b.classes;setRoster(b.roster);
+  if(!S.booted){S.out.forEach(function(x){S.pend[x.k]={cls:x.c,val:x.v,o:x.o}})}
+  return ensureClass(0).catch(function(){}).then(function(){S.out.forEach(function(x){if(x.c===0)applyKV(0,x.k,x.v)});$('login').className='';S.booted=true;route();if(S.out.length)schedFlush(offline?4000:500);if(offline)toast('No internet. You can keep working; changes will be saved later.')});
+}
+function loadBoot(first){
+  return apiT('boot').then(function(b){lsSet('cd_boot',b);return useBoot(b,false)},function(e){
+    if(!e.server){var cb=lsGet('cd_boot',null);if(cb)return useBoot(cb,true)}
+    if(!S.user){showLogin(e.server?e.message:'Could not connect. Please check the internet and try again.')}else toast(e.message)});
+}
+window.onerror=function(m,s,l){console.error(m,s,l);try{lsSet('cd_out',S.out)}catch(e){}$('err').className='on';return false};
+if(/[?&]api=/.test(location.search)||API_URL.indexOf('PASTE_')<0){
+  if(S.token)loadBoot();else showLogin('');
+}else{showLogin('This copy is not connected to the school server yet.')}
+syncLoop();setPill();
+
+
+</script></body></html>
