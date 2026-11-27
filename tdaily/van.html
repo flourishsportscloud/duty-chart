@@ -37,7 +37,7 @@ html,body{overscroll-behavior-y:contain}button{-webkit-user-select:none;user-sel
 </style>
 </head>
 <body>
-<header><div class="logo"><img src="../fis/fis-logo-192.png" alt="FIS"></div><h1><small>FIS · Drivers App</small>Van Duty · वैन ड्यूटी</h1></header>
+<header><div class="logo"><img src="../fis/fis-logo-192.png" alt="FIS"></div><h1><small>FIS · Drivers</small>Van Duty · वैन ड्यूटी</h1></header>
 <main id="m"><div class="card">Loading…</div></main>
 <div class="toast" id="toast" hidden></div>
 <script>
@@ -53,6 +53,13 @@ const tok=()=>LS.g('token')||(()=>{for(const k of ['fis_token','td_token','tcr_t
 let S={token:tok(),name:LS.g('name')||(()=>{try{return JSON.parse(localStorage.getItem('fis_name'))}catch(e){return null}})(),vid:LS.g('vid'),vans:VAN_SEED,notice:'',me:{},watch:null,lastLoc:0,rev:LS.g('rev')||0,srv:LS.g('srv')||{},out:LS.g('out')||{},online:navigator.onLine!==false,err:'',retry:0};
 (async()=>{try{const r=await fetch(location.pathname+'?nc='+Date.now(),{cache:'no-store'}),d=r.headers.get('date');if(d){const o=new Date(d).getTime()-Date.now();if(Math.abs(o)>60000)OFF=o}}catch(e){}})();
 function chip(){const n=Object.keys(S.out).length,c=$('chip');if(!c)return;c.className='chip '+(n?(S.online?'busy':'off'):'ok');c.textContent=n?(S.online?(S.err?'Not sent yet — retrying':'Sending…'):'No internet · will send automatically'):'Saved ✓'}
+// this month's complaints about this van (from the Transport Helpdesk) — shown at the top so the driver knows
+const CRU='https://script.google.com/macros/s/AKfycbxkeXNT1rwMcFD8Wpp-jCWDa8Fchaeq-ZKbYnCcBFxdB3ByQ9ZcQkdbHdLocv5S3ZVx5Q/exec',VC={};
+function compHTML(label){const c=VC[label];if(!c||Date.now()-c.at>5*60e3){VC[label]=Object.assign({},c||{},{at:Date.now()});
+    fetch(CRU,{method:'POST',body:JSON.stringify({fn:'cr_veh',args:[S.token,label,31],token:S.token})}).then(r=>r.json()).then(j=>{if(j.ok){VC[label]={at:Date.now(),list:j.v};draw()}}).catch(()=>{})}
+  const L=(VC[label]||{}).list,H=x=>({Open:'खुली',Closed:'बंद','Action logged':'कार्रवाई हुई'})[x]||x;
+  if(!L)return '';if(!L.length)return `<div class="card" style="padding:12px 16px;color:#1F6B45;font-weight:600">✓ इस महीने आपकी वैन की कोई शिकायत नहीं · no complaint this month</div>`;
+  return `<div class="notice" style="border-color:#E3B3B9;background:#FBEFF1"><b>📞 शिकायतें · ${esc(label)} · पिछले 1 महीने में ${L.length} (${L.filter(x=>x.st!=='Closed').length} खुली)</b>${L.map(x=>`<div style="padding:7px 0;border-top:1px solid #EBCFD3;font-size:14px"><small style="display:block;color:#6B7280">${esc(x.d.split('-').reverse().join('/'))} · ${esc(H(x.st))}</small>${esc(x.t)}</div>`).join('')}</div>`}
 function meNow(){const d=today(),srv=((S.srv[d]||{})[S.vid])||{},o=((S.out[d]||{})[S.vid])||{};return Object.assign({},srv,o)}
 async function call(fn,args){let j;try{const r=await fetch(API,{method:'POST',body:JSON.stringify({fn,args,token:S.token})});j=await r.json()}catch(e){const x=new Error('No internet');x.net=1;throw x}
   if(!j.ok){if(j.login){LS.d('token');S.token=null;draw()}throw new Error(j.err||'Error')}return j.v}
@@ -90,9 +97,10 @@ function draw(){const m=$('m');
     ${x[s]?(x[e]?`<button class="big done" disabled>✓ All children dropped ${h12(x[e])}<small>सब बच्चे छोड़ दिए</small></button>`:`<button class="big stop" data-end="${e}">■ All children dropped<small>सब बच्चे छोड़ दिए — रूट खत्म</small></button>`):''}</div>`;
   m.innerHTML=`<div class="card"><div class="who">${esc(v.label)} · ${esc(v.driver)}<small>${new Date(today()+'T00:00:00Z').toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',timeZone:'UTC'})}</small></div></div>
    ${S.notice?`<div class="notice"><b>Notice from school · सूचना</b>${esc(S.notice)}</div>`:''}
+   ${compHTML(v.label)}
    ${trip('m','Morning · सुबह','ms','me',v.start||'05:30')}${trip('a','Afternoon · दोपहर','as','ae',v.astart||'13:15')}
    <div class="loc">${x.loc&&x.loc.lat?`📍 Location shared at ${h12(x.loc.t)} · <a href="https://www.google.com/maps?q=${x.loc.lat},${x.loc.lng}" target="_blank" rel="noopener">see map</a>`:'📍 Location is shared when you start a route.'}${running?' Keep this page open during the route.':''}</div>
-   <div class="row"><span>${esc(S.name||'')} · <b id="chip" class="chip ok"></b></span><span><a href="./?driver=1" style="color:inherit">‹ Drivers App</a> · <button id="chg">Change van</button> · <button id="out">Log out</button></span></div>`;
+   <div class="row"><span>${esc(S.name||'')} · <b id="chip" class="chip ok"></b></span><span><a href="./?driver=1" style="color:inherit">‹ Drivers</a> · <button id="chg">Change van</button> · <button id="out">Log out</button></span></div>`;
   chip();if(running){locate(false);keepAwake(true)}else{stopWatch();keepAwake(false)}}
 document.addEventListener('click',async e=>{const t=e.target.closest('button');if(!t)return;
   if(t.id==='go'){const n=$('n').value,p=$('p').value;$('er').textContent='Checking…';try{const v=await call('login',[n,p]);S.token=v.token;S.name=v.name;LS.s('token',v.token);LS.s('name',v.name);try{localStorage.setItem('fis_token',JSON.stringify(v.token));localStorage.setItem('fis_name',JSON.stringify(v.name))}catch(x){}draw();load()}catch(err){$('er').textContent=err.message}return}

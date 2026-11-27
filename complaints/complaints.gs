@@ -161,7 +161,17 @@ function setMany_(list, who){
     log_(who, 'hire/*', 'saved ' + list.length + ' candidates'); return {ok: 1, n: list.length};
   }finally{ lock.releaseLock(); }
 }
+// Drivers page: only the complaints about one vehicle in the last month (date, text, status) — nothing else from the Helpdesk
+function veh_(label, days){
+  const num = (String(label || '').match(/\d+/) || [''])[0]; if(!num) fail('Bad vehicle.');
+  const since = Utilities.formatDate(new Date(Date.now() - (Math.min(Number(days) || 31, 62)) * 864e5), TZ, 'yyyy-MM-dd'), D = docs_(), out = [];
+  entries_(false).forEach(e => { const o = D['ov/' + e.id] || {}; if((o.kind || e.kind) !== 'Complaint' || !e.d || e.d < since) return;
+    const vs = o.veh ? [o.veh] : (e.vehs || []); if(!vs.some(v => { const m = String(v).match(/^(bus|van)\s*-?\s*(\d+)$/i); return m && Number(m[2]) === Number(num); })) return;
+    out.push({d: e.d, t: String(e.text || '').slice(0, 240), st: o.st || (e.action ? 'Action logged' : 'Open'), cat: o.cat || ''}); });
+  return out.sort((a, b) => b.d < a.d ? -1 : b.d > a.d ? 1 : 0);
+}
 return {
+  veh: veh_,
   setMany: setMany_,
   data: fresh => ({entries: entries_(!!fresh), docs: docs_(), at: Utilities.formatDate(new Date(), TZ, 'dd MMM yyyy, HH:mm')}),
   set: set_,
@@ -174,7 +184,8 @@ return {
 Object.assign(API, {
   cr_data: function(fresh){ return CR_.data(fresh); },
   cr_set: function(token, key, obj){ return CR_.set(key, obj, me_(token)); },
-  cr_setmany: function(token, list){ return CR_.setMany(list, me_(token)); }
+  cr_setmany: function(token, list){ return CR_.setMany(list, me_(token)); },
+  cr_veh: function(token, label, days){ me_(token); return CR_.veh(label, days); }
 });
 function crSetup(){ Logger.log(CR_.setup()); }
 /* Run to replace the saved drivers list with SEED_DRIVERS above (overwrites edits made in the app's Drivers list). */

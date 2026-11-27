@@ -225,7 +225,7 @@ nav button b{position:absolute;top:-6px;right:-4px;margin:0!important}
 <div id="sheet"></div>
 <div class="toast" id="toast" hidden></div>
 <script>
-const APP_V="202611272030";
+const APP_V="202611280030";
 const QS=new URLSearchParams(location.search);
 const API_URL=QS.get('api')||'https://script.google.com/macros/s/AKfycbxkeXNT1rwMcFD8Wpp-jCWDa8Fchaeq-ZKbYnCcBFxdB3ByQ9ZcQkdbHdLocv5S3ZVx5Q/exec';
 const TD_URL=QS.get('tdapi')||QS.get('api')||'https://script.google.com/macros/s/AKfycbzIeMjvNueZiTlS6m-j8VNKJxLAbWVITVYkvdj7COAUJMhAsxe2BvPmPD7K3czI6oqWfw/exec';
@@ -292,7 +292,18 @@ function crewOn(veh,d){ // {driver,dphone,cond,cphone,cover}
 const ov=id=>S.docs['ov/'+id]||{};
 const kindOf=e=>ov(e.id).kind||e.kind;
 const isComp=e=>kindOf(e)==='Complaint';
-const isReq=e=>['Request','Query','Not marked','Call'].includes(kindOf(e));
+// transport request (vehicle start / change / stop, address change, by walk, bus<->van) vs parent information (one-day notes, things left in the vehicle, stay back...)
+function reqClass(e,o){if(o&&o.rt)return o.rt;const t=String(e.text||'')+' '+String(e.cat||'');
+  if(/transport change/i.test(e.cat||''))return 'tr';
+  const perm=/from (today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|next|\d)|onwards|permanent|regular(ly)?\b|daily\b|every ?day|address|shift(ing|ed)?\s+(to|house|home|from)|new (house|home|address|location)/i;
+  const temp=/\b(today|tomorrow|tmrw|aaj|kal)\b|for (\d+|one|two|three|a few|some) days?|this week|stay ?back|lunch|tiffin|bottle|book ?set|bookset|forg[oe]t|left (his|her|in|behind)|lost|found|uniform|jacket|sweater|bag\b|will go (with|home with)|pick(ed)? ?up by (parent|father|mother|grand)/i;
+  if(temp.test(t)&&!perm.test(t))return 'pi';
+  const tr=/address|shift(ing|ed)?\b|by ?walk|walk(ing)? (to|from)|(change|chang|different|another|switch|replace|other)\w*\s[\w\s,-]{0,25}(bus|van|vehicle|route|stop|stoppage|transport)|(bus|van)\s*(to|→|->)\s*(bus|van)|from (bus|van) to|(start|need|want|requir|request|avail|opt|join|add|allot|provide)\w*\s[\w\s,-]{0,30}(bus|van|transport|vehicle|conveyance)|(stop|discontinu|remov|cancel|leav|withdraw)\w*\s[\w\s,-]{0,30}(bus|van|transport|vehicle)|(bus|van|transport)\s[\w\s,-]{0,25}(discontinu|stop|cancel|not required|no longer)|transport (change|facility|service|request)|गाड़ी|पता|एड्रेस/i;
+  return tr.test(t)?'tr':'pi'}
+const isAnyReq=e=>['Request','Query','Not marked','Call'].includes(kindOf(e));
+// Transport requests = start / change / stop a vehicle, address change, by walk <-> vehicle, bus <-> van. Everything else a parent asks or tells = Parent information.
+const isReq=e=>isAnyReq(e)&&reqClass(e,ov(e.id))==='tr';
+const isInfo=e=>isAnyReq(e)&&reqClass(e,ov(e.id))!=='tr';
 const isChg=e=>e.kind==='Change';
 const old=e=>e.d&&e.d<addDays(today(),-30);
 function vehsOf(e){const o=ov(e.id);return (o.veh?[o.veh]:e.vehs||[]).map(canon)}
@@ -371,10 +382,10 @@ function rank(rows,key,lim){const mx=Math.max(1,...rows.map(r=>r.n));
 function groupBy(L,fn){const m=new Map();L.forEach(e=>[].concat(fn(e)).forEach(k=>{if(!k)return;if(!m.has(k))m.set(k,[]);m.get(k).push(e)}));return m}
 
 /* ---------- tabs ---------- */
-const TABS0=[['dash','Dashboard'],['comp','Complaints'],['req','Transport Requests'],['wait','Waiting list'],['fu','Follow-ups'],['chg','Change Tracker'],['fleet','Drivers'],['hire','Driver Hiring']];
+const TABS0=[['dash','Dashboard'],['comp','Complaints'],['req','Transport Requests'],['info','Parent Information'],['wait','Waiting list'],['fu','Follow-ups'],['chg','Change Tracker'],['fleet','Drivers'],['hire','Driver Hiring']];
 const tabsNow=()=>S.tdAdmin?TABS0.concat([['sal','🔒 Salary']]):TABS0;
 function nav(){const E=S.entries,open=E.filter(e=>isComp(e)&&statusOf(e)==='Open').length,nw=E.filter(e=>isReq(e)&&stageOf(e)==='New').length,
-  fu=E.filter(e=>['over','today'].includes(fuState(fuOf(e)))).length;const c={comp:open,req:nw,fu,wait:E.filter(e=>isReq(e)&&stageOf(e)==='Awaiting').length,hire:hires().filter(x=>x.st==='In hiring').length};
+  fu=E.filter(e=>['over','today'].includes(fuState(fuOf(e)))).length;const c={comp:open,req:nw,info:E.filter(e=>isInfo(e)&&e.d===today()).length,fu,wait:E.filter(e=>isReq(e)&&stageOf(e)==='Awaiting').length,hire:hires().filter(x=>x.st==='In hiring').length};
   $('nav').innerHTML=tabsNow().map(([k,l])=>`<button class="${S.tab===k?'on':''}" data-tab="${k}">${l}${c[k]?`<b>${c[k]}</b>`:''}</button>`).join('')}
 
 function lookups(){S.noPB=true;let h;try{h=S.dview==='bus'?busTab():S.dview==='stu'?stuTab():drvTab()}finally{S.noPB=false}return h}
@@ -394,6 +405,7 @@ function dash(){if(S.sel&&['drv','bus','stu'].includes(S.sel.t)){S.dview=S.sel.t
    <button class="kpi red" data-tab="comp" data-cst="Open"><span>Open complaints</span><b>${C.filter(e=>statusOf(e)==='Open').length}</b><small>Action logged <em>${C.filter(e=>statusOf(e)==='Action logged').length}</em> · older than 1 month close automatically</small></button>
    <button class="kpi" data-tab="fu"><span>Follow-ups due</span><b>${over+tod}</b><small>Overdue <em>${over}</em> · Today <em>${tod}</em> · Upcoming <em>${fus.length-over-tod}</em></small></button>
    <button class="kpi navy" data-tab="req" data-rst="New"><span>Transport requests · period</span><b>${QP.length}</b><small>New <em>${sg('New')}</em> · Acknowledged <em>${sg('Acknowledged')}</em></small></button>
+   <button class="kpi" data-tab="info"><span>Parent information · period</span><b>${E.filter(e=>isInfo(e)&&inR(e,R)).length}</b><small>Today <em>${E.filter(e=>isInfo(e)&&e.d===t).length}</em> · stay back, things left in the vehicle, one-day changes</small></button>
    <button class="kpi pur" data-tab="req" data-rst="Approved"><span>Onboarding in progress</span><b>${sg('Approved')}</b><small>Completed <em>${sg('Completed')}</em></small></button>
    <button class="kpi" data-tab="wait"><span>Awaiting / denied</span><b>${sg('Awaiting')} / ${sg('Denied')}</b><small>Colony-wise list inside</small></button>
   </div>
@@ -431,6 +443,11 @@ function reqTab(){const R=range(),all=S.entries.filter(isReq);
   <div class="note">Awaiting and denied requests are in the <b>Waiting list</b> tab. Green = step done · grey = not done yet.</div>
   <div class="bar"><input type="search" id="f-q" placeholder="Search student, class, colony" value="${esc(S.q)}"></div>
   <div class="card"><div class="sh"><span>Transport Requests</span><small>${L.length}</small></div>${caseList(L)}</div>`}
+function infoTab(){const R=range(),L=search(S.entries.filter(e=>isInfo(e)&&inR(e,R))).sort(byDate);
+  return `${periodBar()}
+  <div class="note"><b>Parent information</b> — one-day notes and messages from parents: going with a parent today, stay back / not staying back, lunch, books or things left in the vehicle, a book set to be sent. Only vehicle start / change / stop, address change, by walk ↔ vehicle and bus ↔ van are <b>Transport Requests</b>. If a case is in the wrong list, open it and change <b>Head</b>.</div>
+  <div class="bar"><input type="search" id="f-q" placeholder="Search student, class, text" value="${esc(S.q)}"></div>
+  <div class="card"><div class="sh"><span>Parent Information</span><small>${L.length}</small></div>${caseList(L)}</div>`}
 function waitTab(){const all=S.entries.filter(e=>isReq(e)&&['Awaiting','Denied'].includes(stageOf(e)));const W=S.wf;
   const areas=[...new Set(all.map(e=>rqOf(e).area).filter(Boolean))].sort(),classes=[...new Set(all.map(e=>e.cls))].sort();
   let L=all.filter(e=>(!W.st||stageOf(e)===W.st)&&(!W.area||rqOf(e).area===W.area)&&(!W.cls||e.cls===W.cls)&&(!W.from||e.d>=W.from)&&(!W.to||e.d<=W.to)&&(!W.q||(e.name+' '+e.cls+' '+(rqOf(e).area||'')).toLowerCase().includes(W.q.toLowerCase()))).sort(byDate);
@@ -533,6 +550,7 @@ function sheet(){const e=S.entries.find(x=>x.id===S.open);if(!e){$('sheet').inne
     ${e.need?`<div style="margin-top:8px;font-size:13px;color:var(--mute)">Action required: <b style="color:var(--ink)">${esc(e.need)}</b></div>`:''}</div>
 
    ${!chg?`<div class="blk"><span class="lbl">Type &amp; category</span><div class="form">
+    ${isAnyReq(e)?`<label>Head<select data-rt="${e.id}"><option value="tr" ${isReq(e)?'selected':''}>Transport request</option><option value="pi" ${isInfo(e)?'selected':''}>Parent information</option></select></label>`:''}
     <label>Type<select data-kind="${e.id}">${['Complaint','Request','Query','Not marked','Call'].map(k=>`<option ${kindOf(e)===k?'selected':''}>${k}</option>`).join('')}</select></label>
     ${rq?`<label>Request for<select data-rqf="${e.id}|type">${RQT.map(k=>`<option ${(r.type||guessRqt(e.text))===k?'selected':''}>${k}</option>`).join('')}</select></label>`
      :`<label>Category<select data-cat="${e.id}">${CATS.map(k=>`<option ${catOf(e)===k?'selected':''}>${k}</option>`).join('')}</select></label>`}
@@ -583,7 +601,7 @@ function render(){
   const a=document.activeElement;if(a&&a.closest&&a.closest('#sheet')&&!render.force){nav();return}
   if(a&&a.id==='rem-text'&&a.value&&!render.force)return;render.force=false;
   nav();let h;
-  switch(S.tab){case'comp':h=compTab();break;case'req':h=reqTab();break;case'fu':h=fuTab();break;case'wait':h=waitTab();break;case'drv':h=drvTab();break;case'bus':h=busTab();break;
+  switch(S.tab){case'comp':h=compTab();break;case'req':h=reqTab();break;case'info':h=infoTab();break;case'fu':h=fuTab();break;case'wait':h=waitTab();break;case'drv':h=drvTab();break;case'bus':h=busTab();break;
     case'stu':h=stuTab();break;case'chg':h=chgTab();break;case'fleet':h=fleetTab();break;case'hire':h=hireTab();break;case'sal':h=salTab();break;default:h=dash()}
   const fid=a&&a.id,pos=a&&a.selectionStart,keep=S.open&&$('rem-text')?$('rem-text').value:'',sc=(document.querySelector('.sheet .in')||{}).scrollTop||0;
   $('main').innerHTML=h+`<datalist id="vlist">${[...new Set(FLEET.map(f=>f.label).concat(S.entries.flatMap(e=>e.vehs||[]),Object.keys(cfgMap())))].sort().map(v=>`<option value="${esc(v)}">`).join('')}</datalist>`;
@@ -637,6 +655,7 @@ document.addEventListener('change',ev=>{const t=ev.target,d=t.dataset;render.for
   if(t.id==='w-cls'){S.wf.cls=t.value;render()}if(t.id==='w-area'){S.wf.area=t.value;render()}if(t.id==='w-from'){S.wf.from=t.value;render()}if(t.id==='w-to'){S.wf.to=t.value;render()}
   if(t.id==='f-from'){S.from=t.value;render()}if(t.id==='f-to'){S.to=t.value;render()}if(t.id==='f-cat'){S.cf.cat=t.value;render()}
   if(d.kind){saveOv(d.kind,{kind:t.value})}
+  if(d.rt){saveOv(d.rt,{rt:t.value})}
   if(d.cat){saveOv(d.cat,{cat:t.value})}
   if(d.rqf){const[id,k]=d.rqf.split('|'),r=Object.assign({},ov(id).rq||{});r[k]=t.value.trim();saveOv(id,{rq:r})}
   if(d.fuon){const f=Object.assign({},ov(d.fuon).fu||{});f.on=t.checked;if(t.checked&&!f.due){const n=nowIST();n.setUTCDate(n.getUTCDate()+1);f.due=n.toISOString().slice(0,10)+'T10:00'}f.done=false;saveOv(d.fuon,{fu:f})}
@@ -672,7 +691,7 @@ function hCard(x,full){const n=hDone(x),pct=Math.round(n/HSTEPS.length*100),ro=i
 function hForm(x){x=x||{};const f=(id,l,v,a)=>`<label><span class="lbl">${l}</span><input id="${id}" value="${esc(v||'')}" ${a||''}></label>`;
   return `<div class="card gold"><div class="sh"><span>${x.id?'Edit candidate':'Add candidate'}</span><small>guard-room entry</small></div><div class="hform">
   ${f('h-n','Name *',x.n)}${f('h-ph','Mobile *',x.ph,'inputmode="tel"')}
-  <label><span class="lbl">Applying for</span><select id="h-role">${HROLE.map(v=>`<option ${v===(x.role||'Driver')?'selected':''}>${v}</option>`).join('')}</select></label>
+  <label><span class="lbl">Applying for</span><select id="h-role">${HROLE.map(v=>`<option ${v===(x.role||(S.hhd==='con'?'Conductor':'Driver'))?'selected':''}>${v}</option>`).join('')}</select></label>
   ${f('h-lic','Licence (LMV / HMV / badge)',x.lic)}${f('h-exp','Experience (years)',x.exp,'inputmode="numeric"')}${f('h-area','Area / village',x.area)}
   ${f('h-vd','Came to guard room on',x.vd||today(),'type="date"')}${f('h-ref','Referred by',x.ref)}${f('h-prev','Last job / school',x.prev)}
   <label class="wide"><span class="lbl">Remarks</span><textarea id="h-note">${esc(x.note||'')}</textarea></label></div>
@@ -695,8 +714,8 @@ async function hRead(file){await loadXLSX();const wb=XLSX.read(await file.arrayB
 async function hTemplate(){try{await loadXLSX()}catch(e){toast(e.message);return}const ws=XLSX.utils.aoa_to_sheet([['Date','Name','Mobile','Applying for','Licence','Experience (years)','Area / village','Referred by','Last job / school','Remarks'],
   [today(),'Ramesh Kumar','9876543210','Bus driver','HMV','8','Rani Bazar','Guard room','City Travels','Example row — delete before upload']]);
   ws['!cols']=[12,22,14,14,10,10,18,16,18,30].map(w=>({wch:w}));const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Guard room register');XLSX.writeFile(wb,'FIS_Driver_Candidates_Template.xlsx')}
-function hireTab(){const A=hires(),v=S.hv||'pipe',P=A.filter(x=>x.st==='In hiring'||(x.st==='Joined'&&hDone(x)<HSTEPS.length));
-  const seg=`<div class="seg"><button class="${v==='pipe'?'on':''}" data-hv="pipe">Hiring in progress<b>${P.length}</b></button><button class="${v==='db'?'on':''}" data-hv="db">Driver database<b>${A.length}</b></button><button class="${v==='add'?'on':''}" data-hv="add">＋ Add candidate</button><button class="${v==='up'?'on':''}" data-hv="up">⬆ Upload Excel</button></div>`;
+function hireTab(){let A=hires();const v=S.hv||'pipe',P=A.filter(x=>x.st==='In hiring'||(x.st==='Joined'&&hDone(x)<HSTEPS.length));
+  const seg=`<div class="seg"><button class="${v==='pipe'?'on':''}" data-hv="pipe">Hiring in progress<b>${P.length}</b></button><button class="${v==='db'?'on':''}" data-hv="db">Database<b>${A.length}</b></button><button class="${v==='add'?'on':''}" data-hv="add">＋ Add candidate</button><button class="${v==='up'?'on':''}" data-hv="up">⬆ Upload Excel</button></div>`;
   if(S.hopen){const x=A.find(y=>y.id===S.hopen);if(x){if(S.hedit)return seg+hForm(x);return seg+`<button class="back" data-hv="${S.hback||'pipe'}">‹ Back</button>`+hCard(x,true)}S.hopen=null}
   if(v==='add')return seg+hForm(null);
   if(v==='up'){const U=S.hup;return seg+`<div class="card gold"><div class="sh"><span>Upload guard-room register</span><small>Excel or CSV · first sheet</small></div>
@@ -705,12 +724,13 @@ function hireTab(){const A=hires(),v=S.hv||'pipe',P=A.filter(x=>x.st==='In hirin
     ${U?`<div class="stats"><div><span>New</span><b>${U.add.length}</b></div><div><span>Already in database</span><b>${U.dup}</b></div><div><span>No name / mobile</span><b>${U.bad}</b></div></div>
       ${U.add.length?`<div class="tw" style="margin-top:12px"><table><thead><tr><th>Name</th><th>Mobile</th><th>For</th><th>Area</th><th>Came</th></tr></thead><tbody>${U.add.slice(0,30).map(x=>`<tr><td>${esc(x.n)}</td><td>${esc(x.ph)}</td><td>${esc(x.role)}</td><td>${esc(x.area)}</td><td>${fmtS(x.vd)}</td></tr>`).join('')}</tbody></table></div>${U.add.length>30?`<div class="prange" style="margin-top:6px">…and ${U.add.length-30} more</div>`:''}
       <div class="bar" style="margin-top:12px"><button class="btn gold" data-hupok="1" ${S.hbusy?'disabled':''}>${S.hbusy?'Saving…':'Add '+U.add.length+' candidates'}</button><button class="btn ghost" data-hupx="1">Cancel</button></div>`:''}`:''}</div>`}
-  if(v==='db'){const q=String(S.hq||'').toLowerCase(),qd=digits(q),f=S.hf||'',rf=S.hrf||'';
+  if(v==='db'){const q=String(S.hq||'').toLowerCase(),qd=digits(q),f=S.hf||'',rf=S.hrf||'',hd=S.hhd||'drv',isC=x=>(x.role||'Driver')==='Conductor',A0=A;A=A0.filter(x=>hd==='con'?isC(x):!isC(x));
     const L=A.filter(x=>(!f||(x.st||'New')===f)&&(!rf||(x.role||'Driver')===rf)&&(!q||[x.n,x.area,x.lic,x.note,x.ref].join(' ').toLowerCase().indexOf(q)>=0||(qd.length>=3&&digits(x.ph).indexOf(qd)>=0)))
       .sort((a,b)=>String(b.vd||'').localeCompare(String(a.vd||''))||(b.addAt||0)-(a.addAt||0));
     const c={};A.forEach(x=>{const s=x.st||'New';c[s]=(c[s]||0)+1});
-    return seg+`<div class="card"><div class="sh"><span>Driver database</span><small>everyone who came to the guard room for a job · tap Call to phone them</small></div>
-    <div class="bar"><input type="search" id="h-q" placeholder="Search name, mobile, area" value="${esc(S.hq||'')}"><select id="h-rf"><option value="">All posts</option>${HROLE.map(r=>`<option ${r===rf?'selected':''}>${r}</option>`).join('')}</select></div>
+    return seg+`<div class="seg"><button class="${hd==='drv'?'on':''}" data-hhd="drv">Driver hiring<b>${A0.filter(x=>!isC(x)).length}</b></button><button class="${hd==='con'?'on':''}" data-hhd="con">Conductor hiring<b>${A0.filter(isC).length}</b></button></div>
+    <div class="card"><div class="sh"><span>Database · ${hd==='con'?'Conductor hiring':'Driver hiring'}</span><small>everyone who came to the guard room for a job · tap Call to phone them</small></div>
+    <div class="bar"><input type="search" id="h-q" placeholder="Search name, mobile, area" value="${esc(S.hq||'')}">${hd==='con'?'':`<select id="h-rf"><option value="">All driver posts</option>${HROLE.filter(r=>r!=='Conductor').map(r=>`<option ${r===rf?'selected':''}>${r}</option>`).join('')}</select>`}</div>
     <div class="seg"><button class="${!f?'on':''}" data-hf="">All<b>${A.length}</b></button>${HST.map(s=>`<button class="${f===s?'on':''}" data-hf="${s}">${s}<b>${c[s]||0}</b></button>`).join('')}</div>
     ${L.slice(0,300).map(x=>`<div class="hrow"><div class="hrb" data-hopen="${x.id}" data-hback="db"><b>${esc(x.n||'—')}</b> <span class="tag ${HSTAG[x.st||'New']||''}">${esc(x.st||'New')}</span>
       <div class="hmeta">${esc(x.role||'Driver')} · ${esc(x.ph||'')}${x.area?' · '+esc(x.area):''}${x.lic?' · DL '+esc(x.lic):''}${x.exp?' · '+esc(x.exp)+' yr':''}</div>
@@ -719,7 +739,7 @@ function hireTab(){const A=hires(),v=S.hv||'pipe',P=A.filter(x=>x.st==='In hirin
     ${L.length>300?`<div class="prange">Showing 300 of ${L.length} — search to narrow</div>`:''}</div>`}
   const J=A.filter(x=>x.st==='Joined'&&hDone(x)===HSTEPS.length).sort((a,b)=>(b.at||'').localeCompare(a.at||''));
   return seg+`<div class="note">Hiring steps: ${HSTEPS.map((s,i)=>(i+1)+'. '+s[1]).join(' → ')}. Tick each step as it is done; when all ${HSTEPS.length} are ticked the driver moves to <b>Joined</b>.</div>
-    ${P.length?P.map(x=>hCard(x,false)).join(''):'<div class="card"><div class="empty">No driver in hiring. Open <b>Driver database</b> and tap <b>Start hiring</b> on a candidate.</div></div>'}
+    ${P.length?P.map(x=>hCard(x,false)).join(''):'<div class="card"><div class="empty">Nobody in hiring. Open <b>Database</b> and tap <b>Start hiring</b> on a candidate.</div></div>'}
     ${J.length?`<div class="card"><div class="sh"><span>Joined</span><small>all steps done</small></div>${J.slice(0,20).map(x=>`<div class="hrow"><div class="hrb" data-hopen="${x.id}"><b>${esc(x.n)}</b><div class="hmeta">${esc(x.role||'Driver')} · ${esc(x.ph||'')} · joined ${x.steps&&x.steps.jn&&x.steps.jn.d?fmt(x.steps.jn.d):''}</div></div></div>`).join('')}</div>`:''}`}
 
 /* ---------- Salary (moved here from Transport Operations; only Harsh Yadav and Rahul Yadav) ---------- */
@@ -752,12 +772,13 @@ function salTab(){
 function sdRead(){const D=S.sd;if(!D)return;const v=id=>{const e=$(id);return e?e.value:null};if(v('sd-doj')!=null)D.doj=v('sd-doj');if(v('sd-join')!=null)D.join=v('sd-join');if(v('sd-role')!=null)D.role=v('sd-role');
   D.inc.forEach((e,k)=>{if(v('sd-l-'+k)!=null){e.label=v('sd-l-'+k);e.date=v('sd-d-'+k);e.amount=v('sd-a-'+k)}})}
 
-document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-hv],[data-hopen],[data-hstep],[data-hdoc],[data-hstart],[data-hadd],[data-hedit],[data-hdel],[data-hf],[data-hupok],[data-hupx],[data-htpl],[data-hcall],[data-salgo],[data-sedit],[data-sdadd],[data-sdrm],[data-sdsave],[data-sdnew]');if(!t)return;
+document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-hv],[data-hhd],[data-hopen],[data-hstep],[data-hdoc],[data-hstart],[data-hadd],[data-hedit],[data-hdel],[data-hf],[data-hupok],[data-hupx],[data-htpl],[data-hcall],[data-salgo],[data-sedit],[data-sdadd],[data-sdrm],[data-sdsave],[data-sdnew]');if(!t)return;
   const d=t.dataset,A=()=>hires(),get=id=>A().find(x=>x.id===id);ev.stopPropagation();render.force=true;
   if(d.hcall!=null){const x=get(d.hcall);if(x){x.lc={at:Date.now(),by:me()};if((x.st||'New')==='New')x.st='Called';hSave(x,'Call noted')}return}
   if(d.hv!=null){S.hv=d.hv;S.hopen=null;S.hedit=false;render();scrollTo(0,0);return}
   if(d.hopen!=null){S.hopen=d.hopen;S.hback=d.hback||'pipe';S.hedit=false;render();scrollTo(0,0);return}
   if(d.hf!=null){S.hf=d.hf;render();return}
+  if(d.hhd){S.hhd=d.hhd;S.hrf='';S.hf='';render();return}
   if(d.htpl){hTemplate();return}
   if(d.hupx){S.hup=null;render();return}
   if(d.hstart){const x=get(d.hstart);if(x){x.st='In hiring';x.steps=x.steps||{};x.hs={by:me(),at:Date.now()};S.hopen=x.id;S.hback='pipe';S.hv='pipe';hSave(x,'Hiring started')}return}
