@@ -448,6 +448,8 @@ input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:tex
 #toastBar{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translate(-50%,30px);opacity:0;pointer-events:none;background:#14233F;color:#fff;font-size:14px;padding:10px 16px;border-radius:12px;z-index:80;transition:opacity .2s,transform .2s;max-width:92vw;text-align:center}
 #toastBar.on{opacity:1;transform:translate(-50%,0)}
 #updBar{position:fixed;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:90;background:var(--gold,#C9A227);color:#14233F;font:inherit;font-weight:700;font-size:14px;border:0;border-radius:12px;padding:12px;cursor:pointer}
+.vprev{grid-column:1/-1;margin-top:6px;background:#FFF4DA;border-left:3px solid #C9A227;border-radius:8px;padding:6px 9px;font-size:12.5px;color:#5b4300}.vprev small{display:block;color:#7a6a3a;font-size:11px}
+.fuelb{margin-top:6px;background:#E6F1EA;border-color:#1F6B47;color:#1F6B47;font-weight:700}
 </style>
 </head>
 <body>
@@ -558,7 +560,7 @@ input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:tex
 /* Version check: when a newer build is published, show a banner instead of reloading by itself
    (an automatic reload could interrupt someone mid-entry). Also reads the server clock from the
    response "Date" header so times do not depend on the phone's clock. */
-const APP_V="202611271330";
+const APP_V="202611271500";
 window.SRV_OFF=0;
 (function(){let busy=false,shown=false;async function chk(){if(busy||location.protocol==="file:")return;busy=true;
   try{const r=await fetch(location.pathname+"?nc="+Date.now(),{cache:"no-store"}),hd=r.headers.get("date");
@@ -868,7 +870,7 @@ function rangeEnd(){const m=[date.slice(0,7),todayIST().slice(0,7),START.slice(0
 function ensureMonth(){
   const end=rangeEnd(); if(end===month&&window.__monthDb===db)return; month=end; monthData={};
   if(monthUnsub){monthUnsub();monthUnsub=null} window.__monthDb=db; if(!db)return;
-  const take=q=>{monthData={};q.docs.forEach(doc=>{const x=doc.data()||{},k=x.date||doc.id;if(k>=START&&k<=end)monthData[k]={att:x.att||{},uni:x.uni||{},pu:x.pu||{},cover:x.cover||{}}});renderChart()};
+  const take=q=>{monthData={};q.docs.forEach(doc=>{const x=doc.data()||{},k=x.date||doc.id;if(k>=START&&k<=end)monthData[k]={att:x.att||{},uni:x.uni||{},pu:x.pu||{},cover:x.cover||{},vc:x.vc||{}}});renderChart()};
   const fallback=()=>db.collection("reports").orderBy("date","desc").limit(400).get().then(take).catch(()=>{});
   try{monthUnsub=db.collection("reports").where("date",">=",START).where("date","<=",end).onSnapshot(take,fallback)}catch(e){fallback()}
 }
@@ -1392,7 +1394,8 @@ function renderVC(){const b=$("vcBody");if(!b)return;const S=vcStats(),today=dat
     return `<div class="vcc"><div class="vh"><b>${v.label}</b><span>${esc([roster.veh[v.id],(roster.cleaner||{})[v.id]?"Cleaner: "+roster.cleaner[v.id]:""].filter(Boolean).join(" · "))}</span><em class="${n===vciList().length?"ok":""}">${n}/${vciList().length}</em></div>
      ${vciList().map(([k,ic,h,e])=>{const x=c[k]||{},pk="photos/"+date+".v."+v.id+"."+k;
       return `<div class="vci"><div class="ico">${ic}</div><div class="lb"><b>${h}</b><small>${e}${x.s?` · ${esc(x.by||"")} ${x.at?h12(x.at):""}`:""}</small></div>
-       <div class="bt"><button class="ok2 ${x.s==="ok"?"on":""}" data-vc="${v.id}|${k}|ok">✓ ठीक</button><button class="bad2 ${x.s==="bad"?"on":""}" data-vc="${v.id}|${k}|bad">✗ समस्या</button>${phBtn(pk,x.ph,"vc|"+v.id+"|"+k)}</div>
+       <div class="bt"><button class="ok2 ${x.s==="ok"?"on":""}" data-vc="${v.id}|${k}|ok">✓ ठीक</button><button class="bad2 ${x.s==="bad"?"on":""}" data-vc="${v.id}|${k}|bad">${vcPrev(v.id,k)?"✗ अभी भी खराब":"✗ समस्या"}</button>${phBtn(pk,x.ph,"vc|"+v.id+"|"+k)}</div>
+       ${vcPrevHTML(v.id,k)}
        ${x.s==="bad"?`<div class="nt" style="display:flex;gap:6px"><input class="note" style="flex:1" id="vc-n-${v.id}-${k}" data-vcn="${v.id}|${k}" value="${esc(x.n||"")}" placeholder="समस्या लिखें या 🎤 दबाकर बोलें"><button class="mic" data-mic="vc-n-${v.id}-${k}" aria-label="Speak the problem">🎤</button></div>`:""}</div>`}).join("")}</div>`}).join("")||`<div class="allok">Nothing in this list.</div>`}`}
 document.addEventListener("click",e=>{const t=e.target.closest("[data-vc],[data-vf]");if(!t)return;e.stopPropagation();const D=t.dataset;
   if(D.vf){vcFilter=D.vf;render();return}
@@ -1546,7 +1549,7 @@ document.addEventListener("click",e=>{const t=e.target.closest("[data-cat]");if(
 
 /* ===== day data helpers (any date) ===== */
 function dayRec(d){if(d===date)return state;const x=monthData[d]||{},p=pendingBy[d]||{};
-  return{att:Object.assign({},x.att,p.att),uni:Object.assign({},x.uni,p.uni),cover:Object.assign({},x.cover,p.cover),pu:x.pu||{}}}
+  return{att:Object.assign({},x.att,p.att),uni:Object.assign({},x.uni,p.uni),cover:Object.assign({},x.cover,p.cover),pu:x.pu||{},vc:x.vc||{}}}
 function maleOn(d){const r=dayRec(d),cov={};RES.forEach(q=>{const c=(r.cover||{})[q.id];if(c&&(r.att||{})[q.id]!=="A")cov[c]=q.id});const out=[];
   VEH.filter(v=>v.bus).forEach(v=>{const c=v.id+"c";let who=c;if((r.att||{})[c]==="A"){if(!cov[c])return;who=cov[c]}if(gOf(who)==="M")out.push({v,id:who})});return out}
 function dayFacts(d){const r=dayRec(d),P=PEOPLE();
@@ -1753,9 +1756,14 @@ function dueAll(){const L=[];
   if(vehState==="ok")Object.keys(veh).forEach(k=>DOCS.forEach(([d,lab])=>{const[st,txt]=docState(veh[k][d]);if(st==="exp"||st==="none"||st==="due")L.push({k,st,t:`${DOC_HI[d]||lab}`,why:st==="none"?"तारीख दर्ज नहीं · missing":txt})}));
   if(svcState==="ok")Object.keys(SV).forEach(k=>{const c=svcCalc(SV[k]);if(c.st!=="ok")L.push({k,st:c.st,t:"सर्विस · Service",why:(c.st==="exp"?"बकाया · overdue · ":"जल्द · due soon · ")+c.why})});
   return L.sort((a,b)=>(a.st==="exp"||a.st==="none"?0:1)-(b.st==="exp"||b.st==="none"?0:1))}
+// earlier problem for this vehicle + check that is not closed yet (open issue, or an earlier ✗ not fixed)
+function vcPrev(vid,k){const iss=issFor(vid,k).filter(x=>x.st!=="fixed");if(iss.length){const x=iss[0];return{t:x.desc,d:String(x.at||"").slice(0,10),st:x.st==="work"?"मैकेनिक के पास":"शिकायत दर्ज · खुली",iss:true}}
+  const F=vcOpenFlag(vid,k,true);if(!F)return null;return{t:F.x.n||"समस्या",d:F.d,st:isFuel(k)?"डीज़ल कम":"अभी बंद नहीं",iss:false}}
+function vcPrevHTML(vid,k){const p=vcPrev(vid,k);if(!p)return"";return `<div class="vprev">⚠ पहले से दर्ज समस्या · ${esc(dS(p.d))}: <b>${esc(p.t)}</b> · ${esc(p.st)}<small>नई शिकायत न करें — ठीक होने पर यहाँ से हट जाएगी</small></div>`}
 function vcItemsHTML(v){const c=vcOf(v.id);return vciList().map(([k,ic,h,e])=>{const x=c[k]||{},pk="photos/"+date+".v."+v.id+"."+k;
   return `<div class="vci"><div class="ico">${ic}</div><div class="lb"><b>${h}</b><small>${e}${x.s?` · ${esc(x.by||"")} ${x.at?h12(x.at):""}`:""}</small></div>
-   <div class="bt"><button class="ok2 ${x.s==="ok"?"on":""}" data-vc="${v.id}|${k}|ok">✓ ठीक</button><button class="bad2 ${x.s==="bad"?"on":""}" data-vc="${v.id}|${k}|bad">✗ समस्या</button>${phBtn(pk,x.ph,"vc|"+v.id+"|"+k)}</div>
+   <div class="bt"><button class="ok2 ${x.s==="ok"?"on":""}" data-vc="${v.id}|${k}|ok">✓ ठीक</button><button class="bad2 ${x.s==="bad"?"on":""}" data-vc="${v.id}|${k}|bad">${vcPrev(v.id,k)?"✗ अभी भी खराब":"✗ समस्या"}</button>${phBtn(pk,x.ph,"vc|"+v.id+"|"+k)}</div>
+   ${vcPrevHTML(v.id,k)}
    ${x.s==="bad"?`<div class="nt" style="display:flex;gap:6px"><input class="note" style="flex:1" id="vc-n-${v.id}-${k}" data-vcn="${v.id}|${k}" value="${esc(x.n||"")}" placeholder="समस्या लिखें या 🎤 दबाकर बोलें"><button class="mic" data-mic="vc-n-${v.id}-${k}" aria-label="Speak the problem">🎤</button></div>`:""}</div>`}).join("")}
 let drvMe=(()=>{try{return localStorage.getItem("td_me")||""}catch(e){return""}})();
 document.addEventListener("change",e=>{if(e.target.id!=="drv-me")return;drvMe=e.target.value;try{localStorage.setItem("td_me",drvMe)}catch(x){}render()});
@@ -1886,14 +1894,25 @@ const issVL=id=>{const v=issVehs().find(x=>x.id===id);return v?v.label:String(id
 const nowStamp=()=>todayIST()+" "+nowHM();
 const daysOpen=x=>Math.max(0,dayDiff(String(x.at||"").slice(0,10))*-1);
 function issSave(id,patch){const cur=JSON.parse(JSON.stringify(ISS[id]||{}));if(patch.log&&Array.isArray(cur.log))cur.log={};ISS[id]=deepMerge(cur,JSON.parse(JSON.stringify(patch)));if(db)db.doc("roster/issues").update({i:{[id]:patch}}).then(()=>setStatus("Saved")).catch(()=>setStatus("Could not save — try again."))}
-function issAuto(){const L=[],add=(vid,k,t,d,sev,src)=>L.push({vid,k,t,d,sev,src});const openKeys=new Set(issList().filter(x=>x.st!=="fixed"&&x.ak).map(x=>x.ak));
-  // vehicle check ✗ in the last 7 days whose latest mark is still ✗
-  const days=[];for(let i=0;i<7;i++){const d=addDays(todayIST(),-i);days.push(d)}
-  VEH.forEach(v=>vciList().forEach(([k,ic,h,e])=>{for(const d of days){const r=d===date?state:dayRec(d);const x=((r.vc||{})[v.id]||{})[k];if(x&&x.s){if(x.s==="bad")add(v.id,"vc."+v.id+"."+k+"."+d,"Vehicle check ✗ · "+e,(x.n||"Problem marked")+" · "+dS(d)+(x.by?" · "+x.by:""),"urg","Driver check");break}}}));
+let FC={};  // closed flags: {"vc.<vid>.<item>": {at,by}} — e.g. diesel refilled
+const issItem=x=>x.item||(/^vc\.[^.]+\.([^.]+)/.exec(x.ak||"")||[])[1]||"";
+const issFor=(vid,k)=>issList().filter(x=>x.v===vid&&issItem(x)===k);
+// latest vehicle-check mark for this item in the last 7 days
+function vcLatest(vid,k,beforeToday){for(let i=beforeToday?1:0;i<7;i++){const d=addDays(todayIST(),-i),r=d===date?state:dayRec(d),x=((r.vc||{})[vid]||{})[k];if(x&&x.s)return{d,x}}return null}
+// a ✗ counts as closed when it was closed (refuelled) or an issue for it was fixed on/after that day
+function vcClosed(vid,k,d){const c=FC["vc."+vid+"."+k];if(c&&String(c.at||"").slice(0,10)>=d)return c;const f=issFor(vid,k).find(x=>x.st==="fixed"&&String(x.fixedAt||"").slice(0,10)>=d);return f?{at:f.fixedAt,by:"fixed"}:null}
+function vcOpenFlag(vid,k,beforeToday){const L=vcLatest(vid,k,beforeToday);if(!L||L.x.s!=="bad"||vcClosed(vid,k,L.d))return null;return L}
+const isFuel=k=>/diesel|fuel/i.test(k)||/diesel|fuel|डीज़ल|डीजल/i.test(((vciList().find(q=>q[0]===k)||[])[3]||"")+((vciList().find(q=>q[0]===k)||[])[2]||""));
+function issAuto(){const L=[],add=(vid,k,t,d,sev,src,extra)=>L.push(Object.assign({vid,k,t,d,sev,src},extra||{}));
+  VEH.forEach(v=>vciList().forEach(([k,ic,h,e])=>{const F=vcOpenFlag(v.id,k);if(!F)return;const x=F.x,fuel=isFuel(k);
+    add(v.id,"vc."+v.id+"."+k,(fuel?"⛽ ":"Vehicle check ✗ · ")+e,(x.n||(fuel?"Low diesel":"Problem marked"))+" · "+dS(F.d)+(x.by?" · "+x.by:""),fuel?"norm":"urg","Driver check",{item:k,fuel})}));
   VEH.forEach(v=>{const r=(state.vcr||{})[v.id]||{};if(r.s==="bad")add(v.id,"vr."+v.id+"."+date,"Supervisor: problem found",(r.n||"No remark")+" · "+(r.by||""),"urg","Supervisor review")});
   if(vehState==="ok")VEH.forEach(v=>{const k=vehKey(v.id);if(!k||!veh[k])return;DOCS.forEach(([d,lab])=>{const[st,txt]=docState(veh[k][d]);if(st==="exp"||st==="none")add(v.id,"doc."+k+"."+d,lab+" "+(st==="exp"?"expired":"missing"),txt,"off","Documents");else if(st==="due")add(v.id,"doc."+k+"."+d,lab+" due",txt,"norm","Documents")})});
   if(svcState==="ok")VEH.forEach(v=>{const k=vehKey(v.id);if(!k||!SV[k])return;const c=svcCalc(SV[k]);if(c.st==="exp")add(v.id,"svc."+k,"Service overdue",c.why,"urg","Service");else if(c.st==="due")add(v.id,"svc."+k,"Service due soon",c.why,"norm","Service")});
-  return L.map(x=>Object.assign(x,{logged:openKeys.has(x.k)}))}
+  const open=issList().filter(x=>x.st!=="fixed");
+  return L.map(a=>Object.assign(a,{logged:open.some(x=>(a.item&&x.v===a.vid&&issItem(x)===a.item)||(x.ak&&(x.ak===a.k||x.ak.indexOf(a.k+".")===0)))}))}
+document.addEventListener("click",e=>{const t=e.target.closest("[data-fc]");if(!t)return;e.stopPropagation();const[vid,k]=t.dataset.fc.split("|");fcClose(vid,k,isFuel(k)?"Refuelled":"Fixed");toast(isFuel(k)?"Diesel flag closed":"Flag closed")},true);
+function fcClose(vid,k,note){const key="vc."+vid+"."+k,e={at:nowStamp(),by:db&&db.who?db.who():"",n:note||""};FC[key]=e;if(db)db.doc("roster/issues").update({fc:{[key]:e}}).then(()=>setStatus("Closed")).catch(()=>setStatus("Not saved — will retry"));render()}
 function issNeed(){const M={};const put=(vid,o)=>{(M[vid]=M[vid]||{vid,iss:[],auto:[],off:false}),o.iss?M[vid].iss.push(o.iss):M[vid].auto.push(o.auto)};
   issOpen().forEach(x=>{put(x.v,{iss:x});if(x.sev==="off")M[x.v].off=true});issAuto().filter(a=>!a.logged).forEach(a=>{put(a.vid,{auto:a});if(a.sev==="off")M[a.vid].off=true});
   return Object.values(M).sort((a,b)=>(b.off-a.off)||(b.iss.length+b.auto.length)-(a.iss.length+a.auto.length))}
@@ -1922,12 +1941,12 @@ function renderIss(){const b=$("issBody");if(!b||tab!=="issues")return;
     <div style="display:flex;gap:6px;margin-top:8px"><textarea class="note" style="flex:1;min-height:64px" id="iss-f-d" placeholder="What is the problem? · समस्या लिखें">${esc(f.desc||"")}</textarea><button class="mic" data-mic="iss-f-d" aria-label="Speak">🎤</button></div>
     <div style="display:flex;gap:8px;margin-top:10px"><button class="btn primary" data-issadd>Save issue</button><button class="btn" data-isscancel>Cancel</button></div></div>`:""}
   <div class="sec-t"><i>🛠</i><b>Vehicles needing attention</b></div>
-  ${N.length?`<div class="card2"><div class="nl">${N.map(n=>`<div><span class="who">${esc(issVL(n.vid))}${n.off?' <span class="isev red">Off road</span>':""}<small>${n.iss.map(x=>esc(typL(x.type))+": "+esc(x.desc||"")).concat(n.auto.map(a=>esc(a.t))).slice(0,3).join(" · ")}</small></span><span class="v ${n.off?"red":"amb"}">${n.iss.length} logged${n.auto.length?" · "+n.auto.length+" flag"+(n.auto.length>1?"s":""):""}</span></div>`).join("")}</div></div>`:`<div class="allok">✓ All vehicles fine</div>`}
+  ${N.length?`<div class="card2"><div class="nl">${N.map(n=>`<div><span class="who">${esc(issVL(n.vid))}${n.off?' <span class="isev red">Off road</span>':""}<small>${n.iss.map(x=>esc(typL(x.type))+": "+esc(x.desc||"")).concat(n.auto.filter(a=>!a.fuel).map(a=>esc(a.t))).slice(0,3).join(" · ")}</small>${n.auto.filter(a=>a.fuel).map(a=>`<button class="btn sm fuelb" data-fc="${a.vid}|${a.item}">⛽ Refuelled — close</button>`).join("")}</span><span class="v ${n.off?"red":"amb"}">${n.iss.length} logged${n.auto.length?" · "+n.auto.length+" flag"+(n.auto.length>1?"s":""):""}</span></div>`).join("")}</div></div>`:`<div class="allok">✓ All vehicles fine</div>`}
   <div class="sec-t"><i>📋</i><b>Issue list</b></div>
   <div class="chips2">${[["open","Open · "+open.length],["work","At mechanic · "+work.length],["fixed","Fixed"],["all","All"]].map(([k,l])=>`<button class="${issF===k?"on":""}" data-issf="${k}">${l}</button>`).join("")}</div>
   ${issLoaded?(F.map(issRow).join("")||`<div class="allok">Nothing in this list.</div>`):`<div class="empty2">Loading…</div>`}
   <div class="sec-t"><i>📡</i><b>From fleet data</b><span style="font-size:12px;color:var(--muted);margin-left:6px">driver checks · supervisor review · documents · service</span></div>
-  ${A.length?`<div class="card2"><div class="nl">${A.map((a,i)=>`<div><span class="who">${esc(issVL(a.vid))} · ${esc(a.t)}<small>${esc(a.d)} · ${esc(a.src)}</small></span>${a.logged?`<span class="v grn">logged</span>`:`<button class="btn sm" data-issauto="${i}">＋ Log</button>`}</div>`).join("")}</div></div>`:`<div class="allok">✓ No problems in fleet data</div>`}`}
+  ${A.length?`<div class="card2"><div class="nl">${A.map((a,i)=>`<div><span class="who">${esc(issVL(a.vid))} · ${esc(a.t)}<small>${esc(a.d)} · ${esc(a.src)}</small></span>${a.logged?`<span class="v grn">logged</span>`:a.fuel?`<button class="btn sm fuelb" data-fc="${a.vid}|${a.item}">⛽ Refuelled — close</button>`:`<span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">${a.item?`<button class="btn sm" data-fc="${a.vid}|${a.item}">✓ Fixed</button>`:""}<button class="btn sm" data-issauto="${i}">＋ Log</button></span>`}</div>`).join("")}</div></div>`:`<div class="allok">✓ No problems in fleet data</div>`}`}
 document.addEventListener("click",e=>{const t=e.target.closest("[data-issnew],[data-isscancel],[data-isft],[data-isfs],[data-issadd],[data-issf],[data-iss],[data-issn],[data-issauto],[data-issdel]");if(!t)return;e.stopPropagation();
   const D=t.dataset,keep=()=>{if(!issForm)return;const v=$("iss-f-v"),d=$("iss-f-d");if(v)issForm.v=v.value;if(d)issForm.desc=d.value};
   if("issnew" in D){issForm={v:"",type:"",sev:"urg",desc:""};render();setTimeout(()=>{const x=$("iss-f-v");x&&x.scrollIntoView({block:"center"})},50);return}
@@ -1935,9 +1954,9 @@ document.addEventListener("click",e=>{const t=e.target.closest("[data-issnew],[d
   if(D.isft){keep();issForm.type=D.isft;render();return}
   if(D.isfs){keep();issForm.sev=D.isfs;render();return}
   if(D.issf){issF=D.issf;render();return}
-  if(D.issauto!=null){const a=issAuto()[+D.issauto];if(!a)return;issForm={v:a.vid,type:a.src==="Documents"?"other":a.src==="Service"?"maint":"repair",sev:a.sev,desc:a.t+" — "+a.d,ak:a.k,src:a.src};render();window.scrollTo({top:0,behavior:"smooth"});return}
+  if(D.issauto!=null){const a=issAuto()[+D.issauto];if(!a)return;issForm={v:a.vid,type:a.src==="Documents"?"other":a.src==="Service"?"maint":"repair",sev:a.sev,desc:a.t+" — "+a.d,ak:a.k,src:a.src,item:a.item||""};render();window.scrollTo({top:0,behavior:"smooth"});return}
   if("issadd" in D){keep();const f=issForm;if(!f.v){setStatus("Choose the vehicle.");return}if(!f.type){setStatus("Choose what kind of issue.");return}if(!String(f.desc||"").trim()){setStatus("Write the problem.");return}
-    const id="i"+Date.now().toString(36);issSave(id,{v:f.v,type:f.type,sev:f.sev||"norm",desc:f.desc.trim(),by:db&&db.who?db.who():"",at:nowStamp(),st:"open",src:f.src||"Manual",ak:f.ak||"",log:{}});issForm=null;issF="open";render();return}
+    const id="i"+Date.now().toString(36);issSave(id,{v:f.v,type:f.type,sev:f.sev||"norm",desc:f.desc.trim(),by:db&&db.who?db.who():"",at:nowStamp(),st:"open",src:f.src||"Manual",ak:f.ak||"",item:f.item||"",log:{}});issForm=null;issF="open";render();return}
   if(D.iss){const[id,st]=D.iss.split("|"),x=ISS[id];if(!x)return;const log=issLogAdd(x,"Status: "+(ISS_ST.find(q=>q[0]===st)||[])[1]);
     issSave(id,{st,log,fixedAt:st==="fixed"?nowStamp():""});render();return}
   if(D.issn){const i=$("iss-n-"+D.issn),x=ISS[D.issn];if(!i||!x||!i.value.trim())return;issSave(D.issn,{log:issLogAdd(x,i.value.trim())});i.value="";render();return}
@@ -2011,7 +2030,7 @@ $("date").value=date; render(); loadHistory();
   if(db&&window.__preQ){window.__preQ.forEach(([d,p])=>db.doc("reports/"+d).update(p).catch(()=>{}));window.__preQ=null}
   if(db)db.doc("roster/tasks").onSnapshot(x=>{if(tkEdit)return;const d=x.exists?x.data():null;if(d&&Array.isArray(d.w)){applyTasks(d.w);render()}},()=>{});
   if(db)db.doc("roster/sup").onSnapshot(s=>{supTpl=s.exists?s.data():null;render()},()=>{});
-  if(db)db.doc("roster/issues").onSnapshot(s=>{const ae=document.activeElement;if(ae&&ae.id&&ae.id.startsWith("iss-")&&issLoaded)return;const d=s.exists?s.data():{};ISS={};Object.entries(d.i||{}).forEach(([k,v])=>{if(v)ISS[k]=v});issLoaded=true;render()},()=>{issLoaded=true});
+  if(db)db.doc("roster/issues").onSnapshot(s=>{const ae=document.activeElement;if(ae&&ae.id&&ae.id.startsWith("iss-")&&issLoaded)return;const d=s.exists?s.data():{};FC=Object.assign({},d.fc||{});ISS={};Object.entries(d.i||{}).forEach(([k,v])=>{if(v)ISS[k]=v});issLoaded=true;render()},()=>{issLoaded=true});
   if(db)db.doc("roster/wash").onSnapshot(s=>{const d=s.exists?s.data():null;washTpl=d&&Array.isArray(d.list)?d.list:null;render()},()=>{});
   let preFix=false;
   if(db)db.doc("roster/main").onSnapshot(s=>{const ae=(document.activeElement&&document.activeElement.dataset);if(ae&&(ae.r||ae.pre))return;const d=s.exists?s.data():{};roster={veh:{...(d.veh||{})},area:{...(d.area||{})},name:{...(d.name||{})},phone:{...(d.phone||{})},hi:{...(d.hi||{})},pre:Array.isArray(d.pre)?d.pre:[],mig:{...(d.mig||{})},g:{...(d.g||{})},rtm:{...(d.rtm||{})},rta:{...(d.rta||{})},cleaner:{...(d.cleaner||{})},vci:Array.isArray(d.vci)?d.vci:null,reporters:Array.isArray(d.reporters)?d.reporters:null,hist:Array.isArray(d.hist)?d.hist:[],vans:Array.isArray(d.vans)?d.vans:null,vanNotice:d.vanNotice||"",full:{...(d.full||{})}};if(s.exists)rosterBase=JSON.parse(JSON.stringify(roster));
