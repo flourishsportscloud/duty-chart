@@ -34,6 +34,17 @@ function readJson_(s, idx){ const out = {}; let i = 0;
 function pick_(m, test){ const idx = []; m.keys.forEach((k, i) => { if(k && test(k, m.revs[i])) idx.push(i); }); const raw = readJson_(m.s, idx), out = {};
   idx.forEach(i => { try{ out[m.keys[i]] = JSON.parse(raw[i]); }catch(e){} }); return out; }
 function rev_(){ return Number(props().getProperty('TD_REV') || '1'); }
+// shared snapshot of all non-salary, non-photo docs, kept in the script cache for the current rev,
+// so most opens are answered without opening the sheet at all; rebuilt once after each change
+function snap_(cur){ const c = CacheService.getScriptCache(), head = c.get('tds:head');
+  if(head){ const h = JSON.parse(head); if(h.rev === cur){ const ks = []; for(let i = 0; i < h.n; i++) ks.push('tds:' + cur + ':' + i);
+      const got = c.getAll(ks); if(Object.keys(got).length === h.n){ try{ return JSON.parse(ks.map(k => got[k]).join('')); }catch(e){} } } }
+  const m = meta_(), idx = []; m.keys.forEach((k, i) => { if(k && k.indexOf('photos/') !== 0 && k.indexOf('salary/') !== 0) idx.push(i); });
+  const raw = readJson_(m.s, idx), map = {}; idx.forEach(i => { map[m.keys[i]] = [m.revs[i], raw[i]]; });
+  try{ const str = JSON.stringify(map), parts = {}, N = 90000; let n = 0; for(let o = 0; o < str.length; o += N){ parts['tds:' + cur + ':' + n] = str.slice(o, o + N); n++; }
+    if(n <= 50){ c.putAll(parts, 21600); c.put('tds:head', JSON.stringify({rev: cur, n: n}), 21600); } }catch(e){}
+  return map; }
+function fromSnap_(map, test){ const out = {}; Object.keys(map).forEach(k => { const e = map[k]; if(test(k, e[0])){ try{ out[k] = JSON.parse(e[1]); }catch(x){} } }); return out; }
 function merge_(a, b){ for(const k in b){ const v = b[k];
   if(v && typeof v === 'object' && !Array.isArray(v)){ if(!a[k] || typeof a[k] !== 'object' || Array.isArray(a[k])) a[k] = {}; merge_(a[k], v); } else a[k] = v; } return a; }
 function since(who, since, pin){
@@ -41,7 +52,8 @@ function since(who, since, pin){
   const adm0 = admin_(who), pinState = !adm0 ? 'no' : (pinSet_() ? (pinOk_(pin) ? 'ok' : 'need') : 'none');
   // nothing changed since this phone's last sync: answer without reading the sheet (most polls)
   if(since > 0 && since >= cur) return {docs: {}, rev: cur, admin: adm0, full: false, salPin: pinState};
-  const docs = pick_(meta_(), (k, rv) => k.indexOf('photos/') !== 0 && rv > since && may_(k, who, pin));
+  const docs = fromSnap_(snap_(cur), (k, rv) => rv > since);
+  if(adm0 && pinOk_(pin)) Object.assign(docs, pick_(meta_(), (k, rv) => k.indexOf('salary/') === 0 && rv > since));
   return {docs: docs, rev: cur, admin: adm0, full: since === 0, salPin: pinState};
 }
 function write(who, key, obj, isMerge, pin){
@@ -69,8 +81,8 @@ function photo(who, key){ key = String(key||''); if(!/^photos\//.test(key) || !K
   const m = meta_(), i = m.keys.indexOf(key); if(i < 0) return {}; try{ return JSON.parse(m.s.getRange(i + 2, 3).getValue()); }catch(e){ return {}; } }
 // first screen: just the documents a page needs to start (names, issues, today/tomorrow, fleet) — the rest follows with td_since
 function boot(who, keys, prefixes, pin){ keys = (keys || []).map(String); prefixes = (prefixes || []).map(String);
-  const docs = pick_(meta_(), k => k.indexOf('photos/') !== 0 && may_(k, who, pin) && (keys.indexOf(k) >= 0 || prefixes.some(p => k.indexOf(p) === 0)));
-  return {docs: docs, rev: rev_()}; }
+  const cur = rev_(), docs = fromSnap_(snap_(cur), k => keys.indexOf(k) >= 0 || prefixes.some(p => k.indexOf(p) === 0));
+  return {docs: docs, rev: cur}; }
 return {since: since, write: write, photo: photo, boot: boot};
 })();
 // The Student Entry Exit doPost checks the staff login (me_) before calling these.
