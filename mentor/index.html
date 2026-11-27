@@ -198,13 +198,14 @@ const SUBJ=[
  {n:'Science',d:'Science',c:[3,10],i:()=>NB4},
  {n:'S.St.',d:'S.St.',c:[3,10],i:()=>NB4},
  {n:'Maths',d:'Maths',c:[1,10],i:c=>c<=5?NB4:ITEMS.slice()},
- {n:'GK',d:'GK',c:[1,8],i:()=>NB4},
+ {n:'GK',d:'GK',c:[1,11],i:()=>NB4},
  {n:'Computer',d:'Computer',c:[1,10],i:()=>NB4},
- {n:'Hindi I',d:'Hindi',c:[1,8],i:()=>NB4},
- {n:'Hindi II',d:'Hindi',c:[2,8],i:()=>NB4},
+ {n:'Hindi I',d:'Hindi',c:[1,11],i:()=>NB4},
+ {n:'Hindi II',d:'Hindi',c:[2,11],i:()=>NB4},
  {n:'Hindi',d:'Hindi',c:[9,10],i:()=>NB4},
- {n:'Sanskrit',d:'Sanskrit',c:[2,9],i:()=>NB4},
- {n:'Foreign Language',d:'Foreign Language',c:[6,10],i:()=>NB4},
+ {n:'Sanskrit',d:'Sanskrit',c:[1,11],i:()=>NB4},
+ {n:'Foreign Language',d:'Foreign Language',c:[1,11],i:()=>NB4},
+ {n:'Art',d:'Art',c:[1,11],i:()=>NB4},
  {n:'Business Studies',d:'Commerce',c:[11,11],i:()=>NB4},
  {n:'Accountancy',d:'Commerce',c:[11,11],i:()=>NB4},
  {n:'Economics',d:'Commerce',c:[11,11],i:()=>NB4},
@@ -338,8 +339,9 @@ function roleOf(){if(isAdmin())return 'Director';const p=PLDEF.find(x=>first(x.n
 function chrome(){
   ensureSel();
   $('segSw').innerHTML='<button class="chip" data-seg="P" aria-pressed="'+(U.seg==='P')+'">Primary 1–5</button><button class="chip" data-seg="S" aria-pressed="'+(U.seg==='S')+'">Secondary 6–11</button>';
-  $('clsRow').innerHTML=segClasses(U.seg).map(c=>'<button class="chip sm" data-act="cls" data-v="'+c+'" aria-pressed="'+(c===U.cls)+'">'+c+'</button>').join('');
-  $('secRow').innerHTML=secsOf(U.cls).map(s=>'<button class="chip sm" data-act="sec" data-v="'+s+'" aria-pressed="'+(s===U.sec)+'">'+s+'<small>'+nOf(U.cls+s)+'</small></button>').join('');
+  const _all=U.tab==='dash'||U.tab==='rep'||U.tab==='rec';if(!_all){U.call=false;U.sall=false}
+  $('clsRow').innerHTML=(_all?'<button class="chip sm" data-act="call" aria-pressed="'+!!U.call+'">All</button>':'')+segClasses(U.seg).map(c=>'<button class="chip sm" data-act="cls" data-v="'+c+'" aria-pressed="'+(c===U.cls&&!U.call)+'">'+c+'</button>').join('');
+  $('secRow').innerHTML=(_all?'<button class="chip sm" data-act="sall" aria-pressed="'+!!(U.sall||U.call)+'">All</button>':'')+secsOf(U.cls).map(s=>'<button class="chip sm" data-act="sec" data-v="'+s+'" aria-pressed="'+(s===U.sec&&!U.sall&&!U.call)+'">'+s+'<small>'+nOf(U.cls+s)+'</small></button>').join('');
   let open=0;try{open=followItems().filter(x=>x.c!=='A').length}catch(e){}
   $('bn').innerHTML=NAV.map(g=>'<div class="nsec">'+g[0]+'</div>'+g[1].filter(t=>t[0]!=='men'||isAdmin()).map(t=>'<button class="navb" data-act="tab" data-v="'+t[0]+'" aria-selected="'+(U.tab===t[0])+'">'+IC[t[0]]+'<span>'+t[1]+'</span>'+(t[0]==='rep'&&open?'<span class="cnt">'+(open>999?'999+':open)+'</span>':'')+'</button>').join('')).join('');
   const T=TITLES[U.tab]||['',''];$('pgT').textContent=T[0];$('pgS').textContent=T[1];
@@ -525,7 +527,7 @@ function renderSheet(){const el=$('sheet');if(!el)return;el.innerHTML=overlayHTM
   const i=$('smk');if(i)setTimeout(()=>{i.focus();i.select()},60)}
 /* ---------- DASHBOARD ---------- */
 function scopeOpts(){const o=[];if(plSet().size)o.push(['pl',(!PLDEF.some(x=>first(x.n)===first(ME))&&cmOf().length)?'My CM classes':'My PL classes']);if(mineSet().size)o.push(['mine',(U.mentor&&isAdmin())?U.mentor+'’s classes':'My classes']);o.push(['sec','Section '+curSec()]);o.push(['cls','Class '+U.cls+' · all sections']);o.push(['seg',U.seg==='P'?'All Primary':'All Secondary']);if(isAdmin())o.push(['all','Whole school']);return o}
-function scopeNow(){const o=scopeOpts().map(x=>x[0]);if(!U.scope||!o.includes(U.scope))U.scope=plSet().size?'pl':mineSet().size?'mine':(isAdmin()?'seg':'sec');return U.scope}
+function scopeNow(){if(U.tab==='dash'||U.tab==='rep'){if(U.call)return 'seg';if(U.sall)return 'cls'}const o=scopeOpts().map(x=>x[0]);if(!U.scope||!o.includes(U.scope))U.scope=plSet().size?'pl':mineSet().size?'mine':(isAdmin()?'seg':'sec');return U.scope}
 function cutoff(){if(U.per==='all')return '';if(U.per==='custom')return U.rfrom||'';const d=new Date();d.setDate(d.getDate()-(+U.per));return isoD(d)}
 function inScope(r,ignorePer){
   const sc=scopeNow(),rp=U.tab==='rep',rs=rp&&U.rsecs&&U.rsecs.length;
@@ -748,14 +750,24 @@ const mcell=(t,s)=>{const v=t.m[s];if(typeof v==='number')return '<span class="c
 function chipRow(lab,opts,act,cur){return '<div class="frow"><span class="lab">'+lab+'</span><div class="fchips">'+opts.map(o=>'<button class="chip sm" data-act="'+act+'" data-v="'+esc(o[0])+'" aria-pressed="'+(cur===o[0])+'">'+esc(o[1])+'</button>').join('')+'</div></div>'}
 function secsInScope(){const sc=scopeNow();return Object.keys(ROSTER).filter(sec=>sc==='pl'?plSet().has(sec):sc==='mine'?[...mineSet()].some(x=>x.startsWith(sec+'|')):sc==='sec'?sec===curSec():sc==='cls'?+sec.slice(0,-1)===U.cls:sc==='seg'?segOf(sec)===U.seg:true).sort(secSort)}
 function viewRec(){
-  const c=U.cls,sbs=subjectsFor(c);if(!sbs.find(x=>x.n===U.rs))U.rs=sbs[0].n;
-  const its=itemsFor(c,U.rs);if(!its.includes(U.ri))U.ri=its[0];
-  let h='<div class="card" style="padding:10px"><div class="frow"><span class="lab">Subject</span><div class="fchips">'+sbs.map(x=>'<button class="chip sm" data-act="rs" data-v="'+esc(x.n)+'" aria-pressed="'+(U.rs===x.n)+'">'+esc(x.n)+'</button>').join('')+'</div></div>';
-  h+=chipRow('View',its.map(i=>[i,IT_SHORT[i]||i]),'ri',U.ri);
+  const c=U.cls,sbs=subjectsFor(c),ALLS=U.rs==='*';
+  if(!ALLS&&!sbs.find(x=>x.n===U.rs))U.rs=sbs[0].n;
+  const its=ALLS?[]:itemsFor(c,U.rs),ALLI=U.ri==='*';
+  if(!ALLS&&!ALLI&&!its.includes(U.ri))U.ri=its[0];
+  const iOpts=ALLS?ITEMS.map(i=>[i,IT_SHORT[i]||i]):its.map(i=>[i,IT_SHORT[i]||i]);
+  let h='<div class="card" style="padding:10px"><div class="frow"><span class="lab">Subject</span><div class="fchips"><button class="chip sm" data-act="rs" data-v="*" aria-pressed="'+ALLS+'">All</button>'+sbs.map(x=>'<button class="chip sm" data-act="rs" data-v="'+esc(x.n)+'" aria-pressed="'+(U.rs===x.n)+'">'+esc(x.n)+'</button>').join('')+'</div></div>';
+  h+=chipRow('View',[['*','All']].concat(iOpts),'ri',U.ri);
   h+=chipRow('Period',[['all','From start (1 Oct)'],['30','30 days'],['14','14 days']],'rper',U.rper||'all');
-  h+='<div class="row" style="margin-top:6px"><button class="chip sm" data-act="rall" aria-pressed="'+!!U.rall+'">All sections of Class '+c+'</button></div></div>';
-  const secs=U.rall?secsOf(c).map(l=>c+l):[curSec()];
-  secs.forEach(sec=>{h+=recSection(sec)});
+  h+='<div class="frow"><span class="lab">Sections</span><div class="fchips"><button class="chip sm" data-act="rall" aria-pressed="'+!!(U.rall||U.sall||U.call)+'">All sections of Class '+c+'</button></div></div></div>';
+  const cls=U.call?segClasses(U.seg):[c],secs=[];
+  cls.forEach(k=>{if(U.call||U.sall||U.rall)secsOf(k).forEach(l=>secs.push(k+l));else secs.push(curSec())});
+  const so=U.rs,io=U.ri;let n=0;
+  secs.forEach(sec=>{const k=+sec.slice(0,-1),sl=ALLS?subjectsFor(k).map(x=>x.n):[so];
+    sl.forEach(sn=>{U.rs=sn;const il=ALLI||ALLS?(ALLS?ITEMS:itemsFor(k,sn)):[io];
+      il.forEach(it=>{if(!ALLS&&!ALLI&&!itemsFor(k,sn).includes(it))return;if(ALLS&&!itemsFor(k,sn).includes(it))return;U.ri=it;
+        const x=recSection(sec);if((ALLS||ALLI)&&x.indexOf('Nothing recorded yet')>=0)return;h+=x;n++})})});
+  U.rs=so;U.ri=io;
+  if(!n)h+='<div class="empty">Nothing recorded yet for this view.</div>';
   return h;
 }
 function recSection(sec){
@@ -1052,8 +1064,8 @@ document.addEventListener('click',ev=>{
   const b=ev.target.closest('[data-act]');if(!b||b.tagName==='INPUT')return;const a=b.dataset.act,D=b.dataset;
   const cur=U.open?DB[U.open.p]:null;
   switch(a){
-    case'cls':U.cls=+D.v;U.open=null;U.form=null;U.stu=null;render();break;
-    case'sec':U.sec=D.v;U.open=null;U.form=null;U.stu=null;render();break;
+    case'call':U.call=true;U.sall=true;U.open=null;render();break;case'sall':U.sall=true;U.call=false;render();break;case'cls':U.call=false;U.cls=+D.v;U.open=null;U.form=null;U.stu=null;render();break;
+    case'sec':U.sall=false;U.call=false;U.sec=D.v;U.open=null;U.form=null;U.stu=null;render();break;
     case'tab':U.tab=D.v;U.open=null;U.form=null;U.stu=null;render();window.scrollTo(0,0);break;
     case'subj':U.subj=D.v;U.open=null;U.form=null;render();break;
     case'fnew':U.form={k:D.i==='Test Notebook'?'t':'e',date:today(),item:D.i,ls:'',lt:'',max:'',min:''};render();window.scrollTo(0,0);break;
@@ -1105,7 +1117,7 @@ document.addEventListener('click',ev=>{
     case'mkx':{const t=cur;const s=+D.s;if(t.m[s]===D.c)delete t.m[s];else t.m[s]=D.c;putDoc(t);rowSwap(t,s);refreshTest(t);renderSheet();break}
     case'delentry':if(sure('del')){delDoc(cur.p);U.open=null;render();toast('Deleted')}break;
     case'resolve':{const e=DB[D.p];setMark(e,+D.s,'C');toast('Marked ✓ · time logged');render();break}
-    case'scope':U.scope=D.v;render();break;
+    case'scope':U.scope=D.v;U.call=false;U.sall=false;render();break;
     case'per':U.per=D.v;render();break;
     case'dept':U.dept=D.v;render();break;
     case'dsub':U.dsub=D.v;U.ditem='';U.dsubj='';render();break;
@@ -1121,7 +1133,7 @@ document.addEventListener('click',ev=>{
     case'overdue':U.overdue=!U.overdue;render();break;
     case'fflt':U.fitem=D.v;render();break;case'fcode':U.fcode=D.v;render();break;case'fsub':U.fsub=D.v;render();break;
     case'pthr':U.pthr=+D.v;render();break;case'pkk':U.pk=+D.v;render();break;case'psub':U.psub=D.v;render();break;case'csub':U.csub=D.v;render();break;
-    case'rs':U.rs=D.v;U.ri='';render();break;case'ri':U.ri=D.v;render();break;case'rper':U.rper=D.v;render();break;case'rall':U.rall=!U.rall;render();break;
+    case'rs':U.rs=D.v;U.ri=D.v==='*'?'*':'';render();break;case'ri':U.ri=D.v;render();break;case'rper':U.rper=D.v;render();break;case'rall':U.rall=!U.rall;render();break;
     case'copyfup':{const t=waFollow();(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Copied · paste in WhatsApp'),()=>{U.wa=t;render()});break}
     case'stu':U.stu={sec:D.sec,s:+D.s};renderSheet();break;
     case'stuback':U.stu=null;render();break;
