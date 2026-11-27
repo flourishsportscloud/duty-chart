@@ -1224,8 +1224,8 @@ function crTok(){for(const k of ["td_token","fis_token","tcr_token"]){try{const 
 const VCOMP={};
 function vehComp(label){if(!label)return null;const c=VCOMP[label];if(!c||Date.now()-c.at>5*60e3){VCOMP[label]=Object.assign({},c||{},{at:Date.now()});
   fetch("https://script.google.com/macros/s/AKfycbxkeXNT1rwMcFD8Wpp-jCWDa8Fchaeq-ZKbYnCcBFxdB3ByQ9ZcQkdbHdLocv5S3ZVx5Q/exec",{method:"POST",body:JSON.stringify({fn:"cr_veh",args:[crTok(),label,31],token:crTok()})})
-   .then(r=>r.json()).then(j=>{if(j.ok){VCOMP[label]={at:Date.now(),list:j.v};if(tab==="drv")renderDrv()}}).catch(()=>{})}return (VCOMP[label]||{}).list||null}
-function vehCompHTML(label){const L=vehComp(label);const H=x=>({Open:"खुली",Closed:"बंद","Action logged":"कार्रवाई हुई"})[x]||x;
+   .then(r=>r.json()).then(j=>{VCOMP[label]=j.ok?{at:Date.now(),list:j.v}:{at:Date.now(),err:1};if(tab==="drv")renderDrv()}).catch(()=>{})}return (VCOMP[label]||{}).list||null}
+function vehCompHTML(label){const L=vehComp(label);if(L==null&&(VCOMP[label]||{}).err)return "";const H=x=>({Open:"खुली",Closed:"बंद","Action logged":"कार्रवाई हुई"})[x]||x;
   return `<div class="card2 ${L&&L.length?"warn":""}"><div class="sh"><b>📞 शिकायतें · ${esc(VEH_HI(label))}</b><small>पिछले 1 महीने में · last 1 month</small></div>
    ${L==null?'<div class="empty2">Loading…</div>':!L.length?'<div class="empty2" style="color:var(--done)">✓ इस महीने कोई शिकायत नहीं · no complaint this month</div>'
     :`<div class="dcn"><b>${L.length}</b> शिकायत दर्ज · ${L.filter(x=>x.st!=="Closed").length} खुली</div>${L.map(x=>`<p class="dcp"><span>${fmt(x.d)} · <b class="${x.st==="Closed"?"ok":"bad"}">${esc(H(x.st))}</b></span>${esc(x.t)}</p>`).join("")}`}</div>`}
