@@ -32,6 +32,8 @@ input,select{width:100%;font:inherit;font-size:16px;padding:11px 12px;border:1px
 .row{display:flex;gap:8px;align-items:center;justify-content:space-between;font-size:13px;color:var(--mute);margin-top:10px}
 .row button{background:none;border:0;color:var(--navy);font:inherit;font-weight:700;text-decoration:underline;cursor:pointer}
 .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:11px 16px;border-radius:12px;border-bottom:2px solid var(--gold);font-size:14px;z-index:9}
+html,body{overscroll-behavior-y:contain}button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+.chip{font-size:12px;border-radius:999px;padding:2px 8px;white-space:nowrap}.chip.ok{background:#E6F1EA;color:#1F6B47}.chip.busy{background:#F3E2B3;color:#5b4300}.chip.off{background:#F8E6EA;color:#A42A47}
 </style>
 </head>
 <body>
@@ -43,16 +45,32 @@ const QS=new URLSearchParams(location.search);
 const API=QS.get('api')||'https://script.google.com/macros/s/AKfycbzIeMjvNueZiTlS6m-j8VNKJxLAbWVITVYkvdj7COAUJMhAsxe2BvPmPD7K3czI6oqWfw/exec';
 const LS={g(k){try{return JSON.parse(localStorage.getItem('van_'+k))}catch(e){return null}},s(k,v){try{localStorage.setItem('van_'+k,JSON.stringify(v))}catch(e){}},d(k){try{localStorage.removeItem('van_'+k)}catch(e){}}};
 const $=id=>document.getElementById(id),esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const ist=()=>new Date(Date.now()+330*6e4),today=()=>ist().toISOString().slice(0,10),hm=()=>ist().toISOString().slice(11,16);
+let OFF=0;const ist=()=>new Date(Date.now()+OFF+330*6e4),today=()=>ist().toISOString().slice(0,10),hm=()=>ist().toISOString().slice(11,16);
 const h12=t=>{if(!t)return'';const[a,b]=t.split(':').map(Number);return (a%12||12)+':'+String(b).padStart(2,'0')+(a<12?' am':' pm')};
 function toast(m){const t=$('toast');t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,2800)}
 const VAN_SEED=[["Van 17","Raj Inda"],["Van 18","Mumtaj"],["Van 19","Yogesh"],["Van 20","Jaswant"],["Van 21","Surya"],["Van 22","Ram Lal"],["Van 23","Dulhi Chand"],["Van 24","Anwar Khan"],["Van 25","Chennaram"],["Van 26","Jeet"],["Van 27","Mohsin"],["Van 28","Mangtu Ram"],["Van 29","Prabhu"],["Van 30","Jagdish"],["Van 31","Ravi"],["Van 32","Mussa"],["Van 33","Kishan Singh"],["Van 35","Yashwardhan"],["Van 36","Badal"],["Van 37","Sonu"],["Van 38","Ajij"]].map(([l,d])=>({id:'v'+l.split(' ')[1],label:l,driver:d}));
-let S={token:LS.g('token'),name:LS.g('name'),vid:LS.g('vid'),vans:VAN_SEED,notice:'',me:{},watch:null,lastLoc:0};
-async function call(fn,args){const r=await fetch(API,{method:'POST',body:JSON.stringify({fn,args,token:S.token})});const j=await r.json();
+const tok=()=>LS.g('token')||(()=>{for(const k of ['fis_token','td_token','tcr_token']){try{const v=JSON.parse(localStorage.getItem(k));if(v)return v}catch(e){}}return null})();
+let S={token:tok(),name:LS.g('name')||(()=>{try{return JSON.parse(localStorage.getItem('fis_name'))}catch(e){return null}})(),vid:LS.g('vid'),vans:VAN_SEED,notice:'',me:{},watch:null,lastLoc:0,rev:LS.g('rev')||0,srv:LS.g('srv')||{},out:LS.g('out')||{},online:navigator.onLine!==false,err:'',retry:0};
+(async()=>{try{const r=await fetch(location.pathname+'?nc='+Date.now(),{cache:'no-store'}),d=r.headers.get('date');if(d){const o=new Date(d).getTime()-Date.now();if(Math.abs(o)>60000)OFF=o}}catch(e){}})();
+function chip(){const n=Object.keys(S.out).length,c=$('chip');if(!c)return;c.className='chip '+(n?(S.online?'busy':'off'):'ok');c.textContent=n?(S.online?(S.err?'Not sent yet — retrying':'Sending…'):'No internet · will send automatically'):'Saved ✓'}
+function meNow(){const d=today(),srv=((S.srv[d]||{})[S.vid])||{},o=((S.out[d]||{})[S.vid])||{};return Object.assign({},srv,o)}
+async function call(fn,args){let j;try{const r=await fetch(API,{method:'POST',body:JSON.stringify({fn,args,token:S.token})});j=await r.json()}catch(e){const x=new Error('No internet');x.net=1;throw x}
   if(!j.ok){if(j.login){LS.d('token');S.token=null;draw()}throw new Error(j.err||'Error')}return j.v}
-async function load(){try{const v=await call('td_since',[S.token,0]);const d=v.docs||{},R=d['roster/main']||{};if(Array.isArray(R.vans)&&R.vans.length)S.vans=R.vans;S.notice=R.vanNotice||'';
-  S.me=(((d['reports/'+today()]||{}).van)||{})[S.vid]||{};draw()}catch(e){if(e.message!=='LOGIN'){toast('No internet — will retry');setTimeout(load,15000)}}}
-async function save(patch){Object.assign(S.me,patch);draw();try{await call('td_update',[S.token,'reports/'+today(),{date:today(),van:{[S.vid]:patch}}]);toast('Saved ✓')}catch(e){toast('Not saved — check internet and tap again')}}
+async function load(){try{const v=await call('td_since',[S.token,S.rev]);if(v.rev<S.rev){S.rev=0;return load()}const d=v.docs||{},R=d['roster/main'];
+  if(R){if(Array.isArray(R.vans)&&R.vans.length)S.vans=R.vans;S.notice=R.vanNotice||'';LS.s('roster',{vans:S.vans,notice:S.notice})}
+  Object.keys(d).forEach(k=>{if(k.indexOf('reports/')===0){const day=k.slice(8);if(day>=today())S.srv[day]=(d[k]||{}).van||{}}});Object.keys(S.srv).forEach(k=>{if(k<today())delete S.srv[k]});
+  S.rev=v.rev;S.online=true;LS.s('rev',S.rev);LS.s('srv',S.srv);S.me=meNow();draw()}catch(e){if(e.net){S.online=false;chip()}}}
+(()=>{const R=LS.g('roster');if(R){S.vans=R.vans||S.vans;S.notice=R.notice||''}S.me=meNow()})();
+let flushing=false;async function flush(){if(flushing||!S.token)return;const ds=Object.keys(S.out);if(!ds.length){chip();return}flushing=true;
+  for(const d of ds){const vans=S.out[d];try{await call('td_update',[S.token,'reports/'+d,{date:d,van:vans}]);
+      S.srv[d]=S.srv[d]||{};Object.keys(vans).forEach(id=>S.srv[d][id]=Object.assign({},S.srv[d][id]||{},vans[id]));
+      if(S.out[d]===vans)delete S.out[d];LS.s('out',S.out);LS.s('srv',S.srv);S.err='';S.retry=0;S.online=true}
+    catch(e){if(e.net)S.online=false;else S.err=e.message;flushing=false;chip();setTimeout(flush,Math.min(60000,3000*Math.pow(2,Math.min(S.retry++,5))));return}}
+  flushing=false;chip();if(Object.keys(S.out).length)setTimeout(flush,300)}
+function save(patch){const d=today();const cur=(S.out[d]||{});const mine=Object.assign({},cur[S.vid]||{},patch);
+  // a new object each time so a send already in progress is never confused with a newer change
+  S.out=Object.assign({},S.out,{[d]:Object.assign({},cur,{[S.vid]:mine})});
+  if(!LS.s('out',S.out))toast('Phone storage is full — keep this page open until it says Saved');S.me=meNow();draw();flush();return Promise.resolve()}
 function locate(force,once){if(!navigator.geolocation)return;const ok=p=>{const now=Date.now();if(!force&&now-S.lastLoc<120000)return;S.lastLoc=now;
     save({loc:{lat:+p.coords.latitude.toFixed(5),lng:+p.coords.longitude.toFixed(5),acc:Math.round(p.coords.accuracy),t:hm()}})};
   navigator.geolocation.getCurrentPosition(ok,()=>toast('Location is off — please allow location'),{enableHighAccuracy:true,timeout:15000});
@@ -74,17 +92,20 @@ function draw(){const m=$('m');
    ${S.notice?`<div class="notice"><b>Notice from school · सूचना</b>${esc(S.notice)}</div>`:''}
    ${trip('m','Morning · सुबह','ms','me',v.start||'05:30')}${trip('a','Afternoon · दोपहर','as','ae',v.astart||'13:15')}
    <div class="loc">${x.loc&&x.loc.lat?`📍 Location shared at ${h12(x.loc.t)} · <a href="https://www.google.com/maps?q=${x.loc.lat},${x.loc.lng}" target="_blank" rel="noopener">see map</a>`:'📍 Location is shared when you start a route.'}${running?' Keep this page open during the route.':''}</div>
-   <div class="row"><span>${esc(S.name||'')}</span><span><button id="chg">Change van</button> · <button id="out">Log out</button></span></div>`;
-  if(running){locate(false);keepAwake(true)}else{stopWatch();keepAwake(false)}}
+   <div class="row"><span>${esc(S.name||'')} · <b id="chip" class="chip ok"></b></span><span><button id="chg">Change van</button> · <button id="out">Log out</button></span></div>`;
+  chip();if(running){locate(false);keepAwake(true)}else{stopWatch();keepAwake(false)}}
 document.addEventListener('click',async e=>{const t=e.target.closest('button');if(!t)return;
-  if(t.id==='go'){const n=$('n').value,p=$('p').value;$('er').textContent='Checking…';try{const v=await call('login',[n,p]);S.token=v.token;S.name=v.name;LS.s('token',v.token);LS.s('name',v.name);draw();load()}catch(err){$('er').textContent=err.message}return}
-  if(t.id==='pick'){S.vid=$('vs').value;LS.s('vid',S.vid);S.me={};draw();load();return}
+  if(t.id==='go'){const n=$('n').value,p=$('p').value;$('er').textContent='Checking…';try{const v=await call('login',[n,p]);S.token=v.token;S.name=v.name;LS.s('token',v.token);LS.s('name',v.name);try{localStorage.setItem('fis_token',JSON.stringify(v.token));localStorage.setItem('fis_name',JSON.stringify(v.name))}catch(x){}draw();load()}catch(err){$('er').textContent=err.message}return}
+  if(t.id==='pick'){S.vid=$('vs').value;LS.s('vid',S.vid);S.me=meNow();draw();load();return}
   if(t.id==='chg'){S.vid=null;LS.d('vid');stopWatch();draw();return}
-  if(t.id==='out'){LS.d('token');S.token=null;stopWatch();draw();return}
+  if(t.id==='out'){if(Object.keys(S.out).length&&!confirm('Some taps are not sent yet. Log out anyway? They stay on this phone.'))return;LS.d('token');try{localStorage.removeItem('fis_token')}catch(x){}S.token=null;stopWatch();draw();return}
   if(t.dataset.start){await save({[t.dataset.start]:hm()});locate(true);return}
   if(t.dataset.end){await save({[t.dataset.end]:hm()});locate(true,true);return}});
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.token&&S.vid)load()});
-draw();if(S.token&&S.vid)load();
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.token&&S.vid){flush();load()}});
+addEventListener('online',()=>{S.online=true;flush();load()});addEventListener('offline',()=>{S.online=false;chip()});
+addEventListener('beforeunload',e=>{if(Object.keys(S.out).length){e.preventDefault();e.returnValue='Not sent yet';return e.returnValue}});
+setInterval(()=>{if(!document.hidden&&S.token&&S.vid){flush();load()}},45000+Math.floor(Math.random()*15000));
+draw();if(S.token&&S.vid){flush();load()}
 </script>
 </body>
 </html>
