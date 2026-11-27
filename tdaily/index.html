@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="icon" href="../fis/fis-logo-192.png">
 <style>html,body{margin:0}[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}.card2.flash,.sec-t.flash{box-shadow:0 0 0 3px var(--gold);transition:box-shadow .3s}
+.pun .vclr{display:block;width:100%;margin-top:4px;border:1px dashed var(--miss);background:#fff;color:var(--miss);border-radius:9px;padding:5px 4px;font-size:12px;font-weight:700;cursor:pointer}
 </style>
 <title>Transport Operations · FIS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
@@ -557,7 +558,7 @@ input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:tex
 /* Version check: when a newer build is published, show a banner instead of reloading by itself
    (an automatic reload could interrupt someone mid-entry). Also reads the server clock from the
    response "Date" header so times do not depend on the phone's clock. */
-const APP_V="202611272150";
+const APP_V="202611272200";
 window.SRV_OFF=0;
 (function(){let busy=false,shown=false;async function chk(){if(busy||location.protocol==="file:")return;busy=true;
   try{const r=await fetch(location.pathname+"?nc="+Date.now(),{cache:"no-store"}),hd=r.headers.get("date");
@@ -1714,6 +1715,13 @@ function vanStatus(v,x){const today=date===todayIST(),now=nowMinIST();
   if(!x.ms&&(date<todayIST()||(today&&now>mins(v.start||"05:30")+15)))return["red","Not started (due "+h12(v.start||"05:30")+")"];return["","Not started yet"]}
 function vanLate(v,x){return x.ms&&mins(x.ms)>mins(v.start||"05:30")+10?mins(x.ms)-mins(v.start||"05:30"):0}
 const mapLink=l=>l&&l.lat?`https://www.google.com/maps?q=${l.lat},${l.lng}`:"";
+let vanClr="";
+// only the Director can remove a wrong van time (e.g. afternoon tapped in the morning)
+function vanFixer(){try{return /^harsh\b/i.test(String(FISDB.name()||"").trim())}catch(e){return false}}
+document.addEventListener("click",e=>{const t=e.target.closest("[data-vclr]");if(!t)return;e.stopPropagation();if(!vanFixer())return;const k=t.dataset.vclr;
+  if(vanClr!==k){vanClr=k;renderVans();setTimeout(()=>{if(vanClr===k){vanClr="";renderVans()}},4000);return}
+  const[id,f]=k.split("|"),old=(state.van||{})[id]||{};vanClr="";state.van=state.van||{};state.van[id]=Object.assign({},old,{[f]:null});
+  const fx={[f]:null};fx["x_"+f]={was:old[f]||"",by:FISDB.name(),at:new Date().toISOString()};queue({van:{[id]:fx}});setStatus("Time removed — the driver can mark it again.");renderVans()},true);
 function renderVans(){const b=$("vanBody");if(!b)return;const L=vanList(),link=location.origin+location.pathname.replace(/index\.html$/,"")+"van.html";
   if(vanEdit){b.innerHTML=`<div class="pg-h"><h2>Vans · list</h2><span>van number, driver, phone and reporting times</span><button class="btn sm primary" data-vanedit style="margin-left:auto">Done</button></div>
     <div class="card2">${L.map((v,i)=>`<div class="rtgrid" style="grid-template-columns:1fr 1fr;padding:10px 0;border-bottom:1px solid var(--line)">
@@ -1724,7 +1732,7 @@ function renderVans(){const b=$("vanBody");if(!b)return;const L=vanList(),link=l
      <div class="actions" style="margin:10px 0 0"><button class="btn sm primary" data-vanadd>＋ Add van</button></div></div>`;return}
   const S={run:0,done:0,no:0,late:0};const rows=L.map(v=>{const x=vanOf(v.id),[c,t]=vanStatus(v,x),lt=vanLate(v,x);if(c==="red")S.no++;if(c==="blu")S.run++;if(x.me)S.done++;if(lt)S.late++;
     return `<div class="seat"><div class="top"><div class="who"><b>${esc(v.label)} · ${esc(v.driver)}</b><small>${esc(v.no||"")}${v.phone?` · <a href="tel:${esc(v.phone)}">${esc(v.phone)}</a>`:""}</small></div><span class="flag ${c||"amb"}" style="margin:0">${esc(t)}</span></div>
-     <div class="pun" style="margin-top:8px">${[["ms","सुबह शुरू","Morning start"],["me","सब बच्चे छोड़े","Morning over"],["as","दोपहर शुरू","Afternoon start"],["ae","सब बच्चे छोड़े","Afternoon over"]].map(([k,h,e])=>`<div><button class="${x[k]?"set":""} ${k==="ms"&&lt?"late":""}" disabled style="cursor:default"><small>${h}</small><small>${e}</small><b>${x[k]?h12(x[k]):"—"}</b>${k==="ms"&&lt?`<em>+${lt} min late</em>`:""}</button></div>`).join("")}</div>
+     <div class="pun" style="margin-top:8px">${[["ms","सुबह शुरू","Morning start"],["me","सब बच्चे छोड़े","Morning over"],["as","दोपहर शुरू","Afternoon start"],["ae","सब बच्चे छोड़े","Afternoon over"]].map(([k,h,e])=>`<div><button class="${x[k]?"set":""} ${k==="ms"&&lt?"late":""}" disabled style="cursor:default"><small>${h}</small><small>${e}</small><b>${x[k]?h12(x[k]):"—"}</b>${k==="ms"&&lt?`<em>+${lt} min late</em>`:""}</button>${x[k]&&vanFixer()?`<button class="vclr" data-vclr="${esc(v.id)}|${k}">${vanClr===v.id+"|"+k?"Tap again to remove":"✕ Remove time"}</button>`:""}</div>`).join("")}</div>
      ${x.loc&&x.loc.lat?`<div class="ped"><a class="btn sm" href="${mapLink(x.loc)}" target="_blank" rel="noopener">📍 Location · ${h12(x.loc.t||"")}</a></div>`:x.ms?`<div class="legend" style="margin:6px 0 0">No location shared</div>`:""}</div>`}).join("");
   b.innerHTML=`<div class="pg-h"><h2>Vans · today</h2><span>${fmt(date)} · drivers tap Start and "All children dropped" in the Van Duty page</span><button class="btn sm" data-vanedit style="margin-left:auto">✎ Van list</button></div>
    <div class="kp"><div class="${S.no?"red":"grn"}"><span>Not started</span><b>${S.no}</b></div><div><span>On route now</span><b>${S.run}</b></div><div class="grn"><span>Morning over</span><b>${S.done}/${L.length}</b></div><div class="${S.late?"red":"grn"}"><span>Late start</span><b>${S.late}</b></div></div>

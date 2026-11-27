@@ -99,8 +99,8 @@ document.addEventListener('click',async e=>{const t=e.target.closest('button');i
   if(t.id==='pick'){S.vid=$('vs').value;LS.s('vid',S.vid);S.me=meNow();draw();load();return}
   if(t.id==='chg'){S.vid=null;LS.d('vid');stopWatch();draw();return}
   if(t.id==='out'){if(Object.keys(S.out).length&&!confirm('Some taps are not sent yet. Log out anyway? They stay on this phone.'))return;LS.d('token');try{localStorage.removeItem('fis_token')}catch(x){}S.token=null;stopWatch();draw();return}
-  if(t.dataset.start){await save({[t.dataset.start]:hm()});locate(true);return}
-  if(t.dataset.end){await save({[t.dataset.end]:hm()});locate(true,true);return}});
+  if(t.dataset.start){if(t.dataset.start==='as'&&hm()<'12:00'&&!confirm('अभी सुबह है। क्या सच में दोपहर का रूट शुरू करना है?\nIt is still morning — start the AFTERNOON route?'))return;await save({[t.dataset.start]:hm()});locate(true);return}
+  if(t.dataset.end){if(t.dataset.end==='ae'&&hm()<'12:00'&&!confirm('अभी सुबह है। क्या सच में दोपहर के सब बच्चे छोड़ दिए?\nIt is still morning — mark the AFTERNOON route over?'))return;await save({[t.dataset.end]:hm()});locate(true,true);return}});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.token&&S.vid){flush();load()}});
 addEventListener('online',()=>{S.online=true;flush();load()});addEventListener('offline',()=>{S.online=false;chip()});
 addEventListener('beforeunload',e=>{if(Object.keys(S.out).length){e.preventDefault();e.returnValue='Not sent yet';return e.returnValue}});
