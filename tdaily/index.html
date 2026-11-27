@@ -558,7 +558,7 @@ input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:tex
 /* Version check: when a newer build is published, show a banner instead of reloading by itself
    (an automatic reload could interrupt someone mid-entry). Also reads the server clock from the
    response "Date" header so times do not depend on the phone's clock. */
-const APP_V="202611261800";
+const APP_V="202611271200";
 window.SRV_OFF=0;
 (function(){let busy=false,shown=false;async function chk(){if(busy||location.protocol==="file:")return;busy=true;
   try{const r=await fetch(location.pathname+"?nc="+Date.now(),{cache:"no-store"}),hd=r.headers.get("date");
@@ -1150,7 +1150,8 @@ document.addEventListener("click",async e=>{if(!e.target.closest("#eodCopy"))ret
 const HI={p1d:"समसुदिन",p1c:"संतोष चावरिया",p2d:"सुरेश नायक",p2c:"रुक्षणा",p3d:"महेंद्र",p3c:"विमला",p4d:"दीपक",p4c:"संतोष लोट",p5d:"भारत",p5c:"आशा",
  p6d:"अजय गुजराती",p7d:"विकाश",p8d:"अमन",p8c:"आरती न्यू",p9d:"कुशाल",p9c:"पूनम",p10d:"अजीज",p10c:"निर्मला",p11d:"मनीष",p12d:"अरुण न्यू",p13d:"जैराज",
  p14d:"शिवरतन",p14c:"पूजा",p15d:"दिलीप",p15c:"कोमल",p16d:"हनुमान",p34d:"गोपाल",r1:"कमल सिंग",r2:"नितिन",r3:"विश्वबंधु",r4:"मोनिका न्यू"};
-const hi=id=>((roster.hi||{})[id]||"").trim()||HI[id]||personName(id,id);
+// a seat marked vacant (name cleared) shows no old Hindi default
+const hi=id=>{const o=((roster.hi||{})[id]||"").trim();if(o)return o;if(roster.name&&roster.name[id]===""&&roster.hi&&(id in roster.hi))return "";return HI[id]||personName(id,id)};
 function tmrData(){const nd=nextDay(date);if(tmr.d!==nd){if(!db)return null;tmr={d:nd,data:null,loading:true};db.doc("reports/"+nd).get().then(x=>{if(tmr.d===nd){tmr.data=x.exists?x.data():{att:{},cover:{}};tmr.loading=false;render()}}).catch(()=>{if(tmr.d===nd){tmr.data={att:{},cover:{}};tmr.loading=false;render()}});return null}if(tmr.loading)return null;if(!tmr.data)tmr.data={att:{},cover:{}};tmr.data.att=tmr.data.att||{};tmr.data.cover=tmr.data.cover||{};return tmr.data}
 function idByName(nm){const k=String(nm||"").trim().toLowerCase();if(!k)return null;const all=[...SLOTS.map(x=>x.id),...RES.map(r=>r.id)];return all.find(id=>(roster.name[id]||"").trim().toLowerCase()===k)||null}
 /* ---- tabs & dashboard ---- */
