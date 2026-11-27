@@ -1,5 +1,5 @@
 /* FIS Co-Curricular Desk: offline app shell. Data calls (Apps Script) are never cached here. */
-const V='fis-cc-shell-20261126155831';
+const V='fis-cc-shell-20261127071258';
 self.addEventListener('install',e=>{e.waitUntil(caches.open(V).then(c=>c.addAll(['./','index.html','seed.txt'])).catch(()=>{}))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==V&&k.indexOf('fis-cc-shell-')===0).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
 self.addEventListener('message',e=>{if(e.data==='skip')self.skipWaiting()});

@@ -10,6 +10,7 @@
    Saving uses a version number: if two people save at the same moment the later one is told to reload.
 */
 const DIARY_API="https://script.google.com/macros/s/AKfycbyvWTDOKOQ8F0vD-oy9vchmq04GdhfZfgtpomgWg73rIa13gmkrFkpZsvQl9ISZKrSFQw/exec";
+const FULL_NAMES=["harsh","vaishali","nahida","saurabh","jay","anoop","megha","priyanka","chandan","rahul","nishant","sanjana","diksha","neetu","divyanshi","karishma","poonam","sharda","asha","sarita","saba"]; /* these people see and do everything, like the Director */
 const TOKEN_DAYS=120, CHUNK=40000, MAX_LEN=6000000;
 
 function setupCoCurricular(){
@@ -80,7 +81,7 @@ function doPost(e){
     if(req.fn==="login")return out({ok:true,data:login(a[0],a[1])});
     const me=readToken(req.code);
     if(!me)return out({ok:false,auth:true,error:"Please log in again."});
-    const admin=me.role==="admin";
+    const admin=me.role==="admin"||FULL_NAMES.indexOf(String(me.name||"").trim().toLowerCase().split(/\s+/)[0])>=0;
     let data=null;
     if(req.fn==="getState"){
       const cur=ver();
