@@ -558,7 +558,7 @@ input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:tex
 /* Version check: when a newer build is published, show a banner instead of reloading by itself
    (an automatic reload could interrupt someone mid-entry). Also reads the server clock from the
    response "Date" header so times do not depend on the phone's clock. */
-const APP_V="202611272200";
+const APP_V="202611272230";
 window.SRV_OFF=0;
 (function(){let busy=false,shown=false;async function chk(){if(busy||location.protocol==="file:")return;busy=true;
   try{const r=await fetch(location.pathname+"?nc="+Date.now(),{cache:"no-store"}),hd=r.headers.get("date");
@@ -612,7 +612,7 @@ const FISDB=(function(){
     if(storeWarn){s+=' · '+storeWarn;c='bad'}
     const el=document.getElementById('syncChip');if(el){el.textContent=s;el.className='sync '+c}
     try{if(window.FIS&&FIS.setPending)FIS.setPending((c==='off'||c==='bad')?n:0)}catch(e){}return{n,s,c}}
-  function saveOut(){const all={};Object.keys(INF).forEach(p=>all[p]=INF[p]);Object.keys(OUT).forEach(p=>all[p]=all[p]?comb(all[p],OUT[p]):OUT[p]);if(raw.set('td_out',all)&&storeWarn&&pending()===0)storeWarn='';status()}
+  function saveOut(){const all={};Object.keys(INF).forEach(p=>all[p]=INF[p]);Object.keys(OUT).forEach(p=>all[p]=all[p]?comb(all[p],OUT[p]):OUT[p]);if(raw.set('td_out',all)&&storeWarn&&pending()===0)storeWarn='';try{IDB.set('out',all)}catch(e){}status()}
   // ---- phone cache (IndexedDB, falls back to nothing) ----
   const IDB=(()=>{let p=null;const open=()=>p||(p=new Promise((res,rej)=>{try{const r=indexedDB.open('fis-td',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}catch(e){rej(e)}}));
     return{get:k=>open().then(db=>new Promise(res=>{const q=db.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>res(null)})).catch(()=>null),
@@ -666,7 +666,9 @@ const FISDB=(function(){
     try{const v=await call('td_boot',[token,keys,['vehicles/','service/'],pin]);if(rev)return false;const ch=[];
       Object.keys(v.docs||{}).forEach(k=>{SRV[k]=v.docs[k];docs[k]=view(k);ch.push(k)});if(LIGHT)rev=v.rev;lastSync=Date.now();online=true;markReady();if(ch.length)notify(ch,false);status();return true}
     catch(e){if(e.net)online=false;return false}}
-  async function start(){document.getElementById('fisLogin').hidden=true;
+  // the outbox is kept twice (localStorage + IndexedDB); if the phone cleared localStorage, bring the unsent changes back
+  async function restoreOut(){try{if(localStorage.getItem('td_out')!==null)return;const o=await IDB.get('out');if(o&&typeof o==='object'&&Object.keys(o).length){Object.keys(o).forEach(p=>{OUT[p]=OUT[p]?comb(o[p],OUT[p]):o[p];docs[p]=view(p)});saveOut();notify(Object.keys(o),false)}}catch(e){}}
+  async function start(){document.getElementById('fisLogin').hidden=true;await restoreOut();
     const c=await IDB.get('snap');if(c&&c.srv&&!rev){SRV=c.srv;rev=c.rev||0;Object.keys(SRV).forEach(k=>docs[k]=view(k));Object.keys(OUT).forEach(k=>docs[k]=view(k));markReady()}
     if(!rev){const ok=await boot();if(ok&&LIGHT){flush();loop();cacheSoon();poll();return}}
     await poll();markReady();flush();loop()}
@@ -1047,15 +1049,17 @@ document.addEventListener("click",e=>{
   const g=e.target.closest("[data-goveh]");if(g){closed.delete("vehSec");saveClosed();render();$("vehSec").scrollIntoView({behavior:"smooth"});return}
   const t=e.target.closest("[data-ve],[data-vs]");if(!t)return;e.stopPropagation();
   if(t.dataset.ve){vehDraft={};vehEdit=vehEdit===t.dataset.ve?null:t.dataset.ve;renderVeh();return}
-  const id=t.dataset.vs,doc={...veh[id]};DOCS.forEach(([k])=>{doc[k]=$("ve-"+k).value||(veh[id][k]==="NR"?"NR":"")});
-  setStatus("Saving vehicle dates…");db.doc("vehicles/"+id).set(doc).then(()=>{vehEdit=null;vehDraft={};setStatus("Vehicle dates saved");renderVeh()}).catch(err=>setStatus(err&&err.code==="permission_denied"?"You have view-only access.":"Could not save — try again."))
+  const id=t.dataset.vs,doc={};DOCS.forEach(([k])=>{const v=$("ve-"+k).value||(veh[id][k]==="NR"?"NR":"");if(v!==(veh[id][k]||""))doc[k]=v});
+  if(!Object.keys(doc).length){vehEdit=null;vehDraft={};setStatus("No change");renderVeh();return}
+  setStatus("Saving vehicle dates…");db.doc("vehicles/"+id).update(Object.assign({no:veh[id].no},doc)).then(()=>{vehEdit=null;vehDraft={};setStatus("Vehicle dates saved");renderVeh()}).catch(err=>setStatus(err&&err.code==="permission_denied"?"You have view-only access.":"Could not save — try again."))
 },true);
 
 /* ---- service schedule ---- */
 let SV={}, svcState="loading", svcEdit=null, svcDraft={};
 const addYear=d=>{const t=new Date(d+"T00:00:00Z");t.setUTCFullYear(t.getUTCFullYear()+1);return t.toISOString().slice(0,10)};
 const km=n=>n==null||n===""?"–":Number(n).toLocaleString("en-IN")+" km";
-function svcCalc(x){const h=x.history||[],last=h[h.length-1]||{},lastKm=Number(last.km)||0,iv=Number(x.interval)||10000;
+function svHist(x){return (x.history||[]).concat(Object.keys(x.hx||{}).map(k=>x.hx[k]).filter(e=>e&&e.km)).sort((a,b)=>(Number(a.km)||0)-(Number(b.km)||0))}
+function svcCalc(x){const h=svHist(x),last=h[h.length-1]||{},lastKm=Number(last.km)||0,iv=Number(x.interval)||10000;
   const dueKm=lastKm+iv,cur=Number(x.curKm)||lastKm,kmLeft=dueKm-cur;
   const dueDate=last.date?addYear(last.date):(x.nextDate||""),dLeft=dueDate?dayDiff(dueDate):null;
   let st="ok",why="";
@@ -1072,7 +1076,7 @@ function renderSvc(){
   const urg=[];ids.forEach(id=>{const c=svcCalc(SV[id]);if(c.st!=="ok")urg.push(`${SV[id].no} (${c.why})`)});
   $("svcSum").textContent=`${ids.length} vehicles · ${urg.length} due`;$("svcSum").className="cnt"+(urg.length?"":" full");
   $("svcAlert").innerHTML=urg.length?`<div class="dalert">Service due: ${urg.map(esc).join(" · ")} — <button data-gosvc="1">see service schedule</button></div>`:"";
-  const rows=ids.map((id,i)=>{const x=SV[id],c=svcCalc(x),h=x.history||[];
+  const rows=ids.map((id,i)=>{const x=SV[id],c=svcCalc(x),h=svHist(x);
     let r=`<tr><td class="num">${i+1}</td><td><span class="tag">${esc(x.type||"")}</span><br><b>${esc(x.no)}</b><br><small style="color:var(--muted)">Every ${km(c.iv)} / 1 yr</small></td>
       <td><div class="hist">${h.map((e,k)=>`<span class="chip"><i>${k+1}</i> ${Number(e.km).toLocaleString("en-IN")}${e.date?" · "+fmt(e.date):""}</span>`).join("")}</div></td>
       <td class="km">${km(c.lastKm)}<small>service ${c.n}</small></td>
@@ -1095,10 +1099,10 @@ document.addEventListener("click",e=>{
   const t=e.target.closest("[data-sk],[data-sd2],[data-svs],[data-svc]");if(!t)return;e.stopPropagation();
   if(t.dataset.sk||t.dataset.sd2){const id=t.dataset.sk||t.dataset.sd2,mode=t.dataset.sk?"km":"done";svcDraft={};svcEdit=svcEdit&&svcEdit.id===id&&svcEdit.mode===mode?null:{id,mode};renderSvc();return}
   if(t.dataset.svc){svcEdit=null;svcDraft={};renderSvc();return}
-  const id=t.dataset.svs,x=SV[id],doc=JSON.parse(JSON.stringify(x));
+  const id=t.dataset.svs,x=SV[id],doc={no:x.no};
   if(svcEdit.mode==="km"){const v=Number(($("sv-cur").value||"").replace(/[^0-9]/g,""));if(!v){setStatus("Enter the current km.");return}doc.curKm=v;doc.curKmDate=$("sv-curd").value||todayIST()}
-  else{const v=Number(($("sv-km").value||"").replace(/[^0-9]/g,""));if(!v){setStatus("Enter the km at service.");return}const d=$("sv-date").value||todayIST();doc.history=(doc.history||[]).concat([{km:v,date:d}]);if(!doc.curKm||doc.curKm<v){doc.curKm=v;doc.curKmDate=d}delete doc.nextDate}
-  setStatus("Saving service record…");db.doc("service/"+id).set(doc).then(()=>{svcEdit=null;svcDraft={};setStatus("Service record saved");renderSvc()}).catch(err=>setStatus(err&&err.code==="permission_denied"?"You have view-only access.":"Could not save — try again."))
+  else{const v=Number(($("sv-km").value||"").replace(/[^0-9]/g,""));if(!v){setStatus("Enter the km at service.");return}const d=$("sv-date").value||todayIST();doc.hx={["s"+Date.now().toString(36)+Math.random().toString(36).slice(2,5)]:{km:v,date:d,by:(FISDB.name()||"")}};if(!x.curKm||x.curKm<v){doc.curKm=v;doc.curKmDate=d}if(x.nextDate)doc.nextDate=null}
+  setStatus("Saving service record…");db.doc("service/"+id).update(doc).then(()=>{svcEdit=null;svcDraft={};setStatus("Service record saved");renderSvc()}).catch(err=>setStatus(err&&err.code==="permission_denied"?"You have view-only access.":"Could not save — try again."))
 },true);
 
 /* ---- day-end summary ---- */
