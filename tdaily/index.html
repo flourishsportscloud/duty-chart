@@ -532,13 +532,6 @@ input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:tex
     <div class="rows" id="svcBody"><div class="lock">Loading service records…</div></div>
   </section>
   </div>
-  <div class="pane" data-pane="salary" hidden>
-  <div id="salLock"></div>
-  <section class="win" id="salSec">
-    <div class="win-h" data-w="salSec"><span class="time">Salary</span><h2>Salary &amp; Increments</h2><span class="cnt" id="salSum"></span><span class="chev">▾</span></div>
-    <div class="rows" id="salBody"><div class="group">Loading…</div></div>
-  </section>
-  </div>
   <div class="pane" data-pane="history" hidden>
   <div class="card2"><div class="sh"><b>Export · backup</b><small>opens in Excel</small></div><div class="chips2" style="margin:0"><button data-exp="att">⬇ Attendance &amp; check-ins</button><button data-exp="iss">⬇ Vehicle issues</button><button data-exp="day">⬇ Checklist (this day)</button></div></div>
   <h3>Last 14 days</h3>
@@ -563,7 +556,7 @@ input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:tex
 /* Version check: when a newer build is published, show a banner instead of reloading by itself
    (an automatic reload could interrupt someone mid-entry). Also reads the server clock from the
    response "Date" header so times do not depend on the phone's clock. */
-const APP_V="202611271830";
+const APP_V="202611272030";
 window.SRV_OFF=0;
 (function(){let busy=false,shown=false;async function chk(){if(busy||location.protocol==="file:")return;busy=true;
   try{const r=await fetch(location.pathname+"?nc="+Date.now(),{cache:"no-store"}),hd=r.headers.get("date");
@@ -1175,7 +1168,7 @@ const hi=id=>{const o=((roster.hi||{})[id]||"").trim();if(o)return o;if(roster.n
 function tmrData(){const nd=nextDay(date);if(tmr.d!==nd){if(!db)return null;tmr={d:nd,data:null,loading:true};db.doc("reports/"+nd).get().then(x=>{if(tmr.d===nd){tmr.data=x.exists?x.data():{att:{},cover:{}};tmr.loading=false;render()}}).catch(()=>{if(tmr.d===nd){tmr.data={att:{},cover:{}};tmr.loading=false;render()}});return null}if(tmr.loading)return null;if(!tmr.data)tmr.data={att:{},cover:{}};tmr.data.att=tmr.data.att||{};tmr.data.cover=tmr.data.cover||{};return tmr.data}
 function idByName(nm){const k=String(nm||"").trim().toLowerCase();if(!k)return null;const all=[...SLOTS.map(x=>x.id),...RES.map(r=>r.id)];return all.find(id=>(roster.name[id]||"").trim().toLowerCase()===k)||null}
 /* ---- tabs & dashboard ---- */
-const TABS=[["dash","Dashboard"],["att","Attendance & Check-in"],["staffl","Staff list & changes"],["vcheck","Vehicle Check"],["vans","Vans"],["tasks","Daily Checklist"],["sup","सुपरवाइज़र कार्य"],["wash","Sunday Washing"],["plan","Next-Day Plan"],["uniform","Absentee & Uniform"],["docs","Documents"],["service","Service"],["salary","Salary"],["history","History"],["drv","Driver app"],["vrev","Check review"],["issues","Vehicle issues"]];
+const TABS=[["dash","Dashboard"],["att","Attendance & Check-in"],["staffl","Staff list & changes"],["vcheck","Vehicle Check"],["vans","Vans"],["tasks","Daily Checklist"],["sup","सुपरवाइज़र कार्य"],["wash","Sunday Washing"],["plan","Next-Day Plan"],["uniform","Absentee & Uniform"],["docs","Documents"],["service","Service"],["history","History"],["drv","Driver app"],["vrev","Check review"],["issues","Vehicle issues"]];
 const PANE_SEC={plan:"nplSec",docs:"vehSec",service:"svcSec",salary:"salSec"};
 let tab=(()=>{const h=location.hash.slice(1);if(TABS.some(t=>t[0]===h))return h;try{const v=localStorage.getItem("td_tab");return TABS.some(t=>t[0]===v)?v:"dash"}catch(e){return"dash"}})();
 function tabBadges(){const b={};try{
@@ -1215,7 +1208,7 @@ function dashIssues(){const I=[],today=date===todayIST(),now=today?nowMinIST():-
   const lw=lastSunWash();if(lw.wd)add("red","🧽",`Sunday washing defaulters · ${fmt(lw.d)} (minimum ${WASH_MIN} min)`,washDefaulters(lw.wd,lw.d).map(x=>`${esc(x.v.name)} (${esc(x.v.bus)}) — ${esc(x.why)}`),"wash");
   if(vehState==="ok"){const L=[];Object.keys(veh).forEach(id=>DOCS.forEach(([k,lab])=>{const[st,txt]=docState(veh[id][k]);if(st==="exp"||st==="none"||st==="due")L.push(`${esc(veh[id].no)} ${lab} — ${esc(txt)}`)}));add("red","📄","Vehicle documents expired or due",L,"docs")}
   if(svcState==="ok")add("amb","🛠️","Service overdue or due soon",Object.keys(SV).filter(id=>svcCalc(SV[id]).st!=="ok").map(id=>{const k=svcCalc(SV[id]);return `${esc(SV[id].no)} — ${k.st==="exp"?"overdue":"due soon"} · ${esc(k.why)}`}),"service");
-  if(salState==="ok"){const L=[];Object.keys(sal).forEach(id=>{const x=sal[id],inc=(x.inc||[]).filter(e=>e.date),last=inc.length?inc[inc.length-1].date:x.doj;if(last&&dayDiff(last)<-365)L.push(`${esc(x.name||personName(id,id))} — last increment ${fmt(last)}`)});add("amb","₹","Increment review due (over 12 months)",L,"salary")}
+  /* salary moved to Transport Helpdesk */
   const noRt=PEOPLE().filter(id=>!rtOf(id,"m")||!rtOf(id,"a"));if(noRt.length)add("amb","⚙️","Reporting times not set — late cannot be counted",[`${noRt.length} staff · set them in Attendance › Staff details & timings`],"att");
   return I}
 let CRD={at:0,data:null};
@@ -1548,8 +1541,7 @@ const CATS=[["home","🏠","Dashboard","डैशबोर्ड",[["dash","Dire
  ["duty","✅","Duties","कार्य",[["tasks","Daily checklist"],["sup","Supervisor duties"]]],
  ["fleet","🚌","Drivers","ड्राइवर",[["drv","Driver app"],["vcheck","Vehicle check"],["vans","Vans · route"]]],
  ["sfleet","🧑‍✈️","Review","सुपरवाइज़र",[["issues","Vehicle issues"],["vrev","Check review"],["docs","Documents"],["service","Service"],["wash","Sunday washing"]]],
- ["plan","📅","Next day","कल का प्लान",[["plan","Next-day plan"]]],
- ["pay","🔒","Salary","वेतन",[["salary","Salary"]]]];
+ ["plan","📅","Next day","कल का प्लान",[["plan","Next-day plan"]]]];
 const catOf=k=>CATS.find(c=>c[4].some(x=>x[0]===k))||CATS[0];
 function renderTabs(){const b=tabBadges(),c=catOf(tab);
   const nav=$("tabs");nav.classList.add("cats");
@@ -2048,7 +2040,7 @@ document.addEventListener("click",e=>{const t=e.target.closest("[data-exp]");if(
 $("date").value=date; render(); loadHistory();
 
 (async()=>{try{db=await FISDB.ready()}catch(e){db=null}
-  subscribe(); loadHistory(); loadSal(); loadVeh(); loadSvc();
+  subscribe(); loadHistory(); loadVeh(); loadSvc();
   if(db&&window.__preQ){window.__preQ.forEach(([d,p])=>db.doc("reports/"+d).update(p).catch(()=>{}));window.__preQ=null}
   if(db)db.doc("roster/tasks").onSnapshot(x=>{if(tkEdit)return;const d=x.exists?x.data():null;if(d&&Array.isArray(d.w)){applyTasks(d.w);render()}},()=>{});
   if(db)db.doc("roster/sup").onSnapshot(s=>{supTpl=s.exists?s.data():null;render()},()=>{});

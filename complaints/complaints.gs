@@ -136,7 +136,7 @@ function docs_(){
   return o;
 }
 function set_(key, obj, who){
-  key = String(key||''); if(!/^(ov\/[a-z0-9]+|config\/drivers)$/i.test(key)) fail('Bad key.');
+  key = String(key||''); if(!/^(ov\/[a-z0-9]+|config\/drivers|hire\/[a-z0-9]{4,20})$/i.test(key)) fail('Bad key.');
   const lock = LockService.getScriptLock(); if(!lock.tryLock(20000)) fail('Server busy, try again.');
   try{
     const sh = DOCS(), last = sh.getLastRow(), json = JSON.stringify(Object.assign({}, obj, {by: who, at: new Date().toISOString()}));
@@ -147,7 +147,22 @@ function set_(key, obj, who){
     log_(who, key, 'saved'); return {ok: 1};
   }finally{ lock.releaseLock(); }
 }
+// driver hiring: many candidate records in one call (Excel upload from the guard-room register)
+function setMany_(list, who){
+  if(!Array.isArray(list) || !list.length || list.length > 300) fail('Send 1 to 300 records at a time.');
+  const lock = LockService.getScriptLock(); if(!lock.tryLock(20000)) fail('Server busy, try again.');
+  try{
+    const sh = DOCS(), last = sh.getLastRow(), idx = {}, now = new Date().toISOString(), add = [];
+    if(last > 1) sh.getRange(2,1,last-1,1).getValues().forEach((r, i) => { if(r[0]) idx[r[0]] = i + 2; });
+    list.forEach(x => { const key = String((x && x.k) || ''); if(!/^hire\/[a-z0-9]{4,20}$/i.test(key)) fail('Bad key.');
+      const json = JSON.stringify(Object.assign({}, x.v, {by: who, at: now})); if(json.length > 45000) fail('Too long.');
+      const v = [key, json, now, who]; if(idx[key]) sh.getRange(idx[key],1,1,4).setValues([v]); else add.push(v); });
+    if(add.length) sh.getRange(sh.getLastRow()+1, 1, add.length, 4).setValues(add);
+    log_(who, 'hire/*', 'saved ' + list.length + ' candidates'); return {ok: 1, n: list.length};
+  }finally{ lock.releaseLock(); }
+}
 return {
+  setMany: setMany_,
   data: fresh => ({entries: entries_(!!fresh), docs: docs_(), at: Utilities.formatDate(new Date(), TZ, 'dd MMM yyyy, HH:mm')}),
   set: set_,
   saveDrivers(){ set_('config/drivers', {map: SEED_DRIVERS}, 'Director'); return Object.keys(SEED_DRIVERS).length; },
@@ -158,7 +173,8 @@ return {
 // The Student Entry Exit doPost checks the staff login (me_) before calling these.
 Object.assign(API, {
   cr_data: function(fresh){ return CR_.data(fresh); },
-  cr_set: function(token, key, obj){ return CR_.set(key, obj, me_(token)); }
+  cr_set: function(token, key, obj){ return CR_.set(key, obj, me_(token)); },
+  cr_setmany: function(token, list){ return CR_.setMany(list, me_(token)); }
 });
 function crSetup(){ Logger.log(CR_.setup()); }
 /* Run to replace the saved drivers list with SEED_DRIVERS above (overwrites edits made in the app's Drivers list). */

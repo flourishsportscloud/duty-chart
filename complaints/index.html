@@ -95,6 +95,14 @@ textarea{width:100%;min-height:70px;resize:vertical}
 .t-red{background:var(--redbg);color:var(--red)}.t-amb{background:var(--ambbg);color:var(--amb)}.t-grn{background:var(--grnbg);color:var(--grn)}.t-blu{background:var(--blubg);color:var(--blu)}.t-pur{background:var(--purbg);color:var(--pur)}.t-navy{background:var(--navy);color:#fff}
 .empty{padding:26px 10px;text-align:center;color:var(--mute)}
 .note{font-size:12.5px;color:#6B4A0E;background:var(--goldSoft);border:1px solid #F0DDB3;border-radius:10px;padding:9px 12px;margin-bottom:12px;line-height:1.45}
+.hc.hire{cursor:pointer}.hbar{height:6px;border-radius:3px;background:var(--cream);overflow:hidden;margin:9px 0 6px}.hbar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--grn))}
+.hmeta{font-size:12.5px;color:var(--mute);margin-top:3px;line-height:1.4}.hact{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.hact a.btn{text-decoration:none}
+.hsteps{margin-top:12px;border-top:1px solid var(--line)}.hstep{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);align-items:flex-start}
+.hck{flex:none;width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:#fff;font-weight:700;color:var(--mute);cursor:pointer}.hstep.ok .hck{background:var(--grn);border-color:var(--grn);color:#fff}
+.hsb{flex:1;min-width:0}.hsb b{display:block;font-size:14.5px}.hsb small{display:block;color:var(--mute);font-size:12.5px}.hsb em{display:block;font-style:normal;font-size:12px;color:var(--grn);margin-top:2px}.hsb input{width:100%;margin-top:6px;font-size:14px;padding:7px 10px}
+.hdocs{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}.hdocs button{border:1px solid var(--line);background:#fff;border-radius:9px;padding:6px 10px;font-size:12.5px;font-weight:600;cursor:pointer}.hdocs button.on{background:var(--grnbg);border-color:#BFDCCB;color:var(--grn)}
+.hform{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:12px}.hform label{display:flex;flex-direction:column;gap:4px}.hform .wide{grid-column:1/-1}
+.hrow{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:11px 2px;border-bottom:1px solid var(--line)}.hrow:last-child{border-bottom:0}.hrb{flex:1;min-width:200px;cursor:pointer}.hrb b{font-size:15px}
 /* tables */
 .tw{overflow-x:auto;border-radius:12px;border:1px solid var(--line)}
 table{border-collapse:collapse;width:100%;font-size:13.5px;font-variant-numeric:tabular-nums;background:#fff}
@@ -217,7 +225,7 @@ nav button b{position:absolute;top:-6px;right:-4px;margin:0!important}
 <div id="sheet"></div>
 <div class="toast" id="toast" hidden></div>
 <script>
-const APP_V="202611271930";
+const APP_V="202611272030";
 const QS=new URLSearchParams(location.search);
 const API_URL=QS.get('api')||'https://script.google.com/macros/s/AKfycbxkeXNT1rwMcFD8Wpp-jCWDa8Fchaeq-ZKbYnCcBFxdB3ByQ9ZcQkdbHdLocv5S3ZVx5Q/exec';
 const TD_URL=QS.get('tdapi')||QS.get('api')||'https://script.google.com/macros/s/AKfycbzIeMjvNueZiTlS6m-j8VNKJxLAbWVITVYkvdj7COAUJMhAsxe2BvPmPD7K3czI6oqWfw/exec';
@@ -254,7 +262,7 @@ async function load(fresh){
   S.busy=false;render();loadTD();
 }
 async function loadTD(){ // drivers on duty from Transport Operations (same login)
-  if(!S.token)return;try{const v=await call('td_since',[S.token,0],TD_URL);S.td=v.docs||{};LS.set('td',{docs:pickTD(S.td)});render()}catch(e){}
+  if(!S.token)return;try{const v=await call('td_since',[S.token,0,salPin()],TD_URL);S.td=v.docs||{};S.tdAdmin=!!v.admin;S.salPin=v.salPin||'no';LS.set('td',{docs:pickTD(S.td)});if(S.tab==='sal'&&!S.tdAdmin)setTab('dash');if(!(S.sd&&S.tab==='sal'))render()}catch(e){}
 }
 function pickTD(d){const o={};Object.keys(d||{}).forEach(k=>{if(k==='roster/main'||/^reports\/\d{4}-\d\d-\d\d$/.test(k)){const x=d[k]||{};o[k]=k==='roster/main'?x:{att:x.att||{},cover:x.cover||{}}}});return o}
 
@@ -363,10 +371,11 @@ function rank(rows,key,lim){const mx=Math.max(1,...rows.map(r=>r.n));
 function groupBy(L,fn){const m=new Map();L.forEach(e=>[].concat(fn(e)).forEach(k=>{if(!k)return;if(!m.has(k))m.set(k,[]);m.get(k).push(e)}));return m}
 
 /* ---------- tabs ---------- */
-const TABS=[['dash','Dashboard'],['comp','Complaints'],['req','Transport Requests'],['wait','Waiting list'],['fu','Follow-ups'],['chg','Change Tracker'],['fleet','Drivers']];
+const TABS0=[['dash','Dashboard'],['comp','Complaints'],['req','Transport Requests'],['wait','Waiting list'],['fu','Follow-ups'],['chg','Change Tracker'],['fleet','Drivers'],['hire','Driver Hiring']];
+const tabsNow=()=>S.tdAdmin?TABS0.concat([['sal','🔒 Salary']]):TABS0;
 function nav(){const E=S.entries,open=E.filter(e=>isComp(e)&&statusOf(e)==='Open').length,nw=E.filter(e=>isReq(e)&&stageOf(e)==='New').length,
-  fu=E.filter(e=>['over','today'].includes(fuState(fuOf(e)))).length;const c={comp:open,req:nw,fu,wait:E.filter(e=>isReq(e)&&stageOf(e)==='Awaiting').length};
-  $('nav').innerHTML=TABS.map(([k,l])=>`<button class="${S.tab===k?'on':''}" data-tab="${k}">${l}${c[k]?`<b>${c[k]}</b>`:''}</button>`).join('')}
+  fu=E.filter(e=>['over','today'].includes(fuState(fuOf(e)))).length;const c={comp:open,req:nw,fu,wait:E.filter(e=>isReq(e)&&stageOf(e)==='Awaiting').length,hire:hires().filter(x=>x.st==='In hiring').length};
+  $('nav').innerHTML=tabsNow().map(([k,l])=>`<button class="${S.tab===k?'on':''}" data-tab="${k}">${l}${c[k]?`<b>${c[k]}</b>`:''}</button>`).join('')}
 
 function lookups(){S.noPB=true;let h;try{h=S.dview==='bus'?busTab():S.dview==='stu'?stuTab():drvTab()}finally{S.noPB=false}return h}
 function dash(){if(S.sel&&['drv','bus','stu'].includes(S.sel.t)){S.dview=S.sel.t;return periodBar()+lookups()}
@@ -575,7 +584,7 @@ function render(){
   if(a&&a.id==='rem-text'&&a.value&&!render.force)return;render.force=false;
   nav();let h;
   switch(S.tab){case'comp':h=compTab();break;case'req':h=reqTab();break;case'fu':h=fuTab();break;case'wait':h=waitTab();break;case'drv':h=drvTab();break;case'bus':h=busTab();break;
-    case'stu':h=stuTab();break;case'chg':h=chgTab();break;case'fleet':h=fleetTab();break;default:h=dash()}
+    case'stu':h=stuTab();break;case'chg':h=chgTab();break;case'fleet':h=fleetTab();break;case'hire':h=hireTab();break;case'sal':h=salTab();break;default:h=dash()}
   const fid=a&&a.id,pos=a&&a.selectionStart,keep=S.open&&$('rem-text')?$('rem-text').value:'',sc=(document.querySelector('.sheet .in')||{}).scrollTop||0;
   $('main').innerHTML=h+`<datalist id="vlist">${[...new Set(FLEET.map(f=>f.label).concat(S.entries.flatMap(e=>e.vehs||[]),Object.keys(cfgMap())))].sort().map(v=>`<option value="${esc(v)}">`).join('')}</datalist>`;
   sheet();if(keep&&$('rem-text'))$('rem-text').value=keep;const si=document.querySelector('.sheet .in');if(si)si.scrollTop=sc;
@@ -634,6 +643,161 @@ document.addEventListener('change',ev=>{const t=ev.target,d=t.dataset;render.for
   if(d.fu){const[id,k]=d.fu.split('|'),f=Object.assign({},ov(id).fu||{});f[k]=t.value;saveOv(id,{fu:f})}
 });
 document.addEventListener('keydown',ev=>{if(ev.key==='Enter'&&(ev.target.id==='lp'||ev.target.id==='ln'))$('lgo').click();if(ev.key==='Escape'&&S.open){S.open=null;render.force=true;render()}});
+/* ---------- Driver hiring & candidate database (guard-room register) ---------- */
+const HSTEPS=[['dm','Director meeting','डायरेक्टर मीटिंग · सर ने अप्रूव किया'],['td','Test drive','टेस्ट ड्राइव · ट्रायल'],['dc','Documents submitted','डॉक्यूमेंट जमा: लाइसेंस, बैंक स्टेटमेंट, आधार, पैन, 2 फोटो'],['cl','Contract letter signed','कॉन्ट्रैक्ट लेटर साइन'],['jn','Joining given','ज्वाइनिंग दी'],
+  ['rv','Route visit','दूसरे ड्राइवर के साथ पूरा रूट याद किया'],['un','Uniform','यूनिफॉर्म दी'],['ap','App download','ड्राइवर ऐप डाउनलोड · नाम ऐप में अपडेट'],['wg','Added to WhatsApp group','व्हाट्सएप ग्रुप में ऐड किया'],['pn','Number sent to parents','पेरेंट्स को ड्राइवर का नंबर भेजा']];
+const HDOCS=[['dl','Driving licence'],['bk','Bank statement'],['ad','Aadhaar card'],['pc','PAN card'],['ph','2 passport photos']];
+const HST=['New','Called','Interested','In hiring','Joined','Not interested','Rejected'];
+const HSTAG={New:'t-blu',Called:'',Interested:'t-pur','In hiring':'t-amb',Joined:'t-grn','Not interested':'',Rejected:'t-red'};
+const HROLE=['Driver','Bus driver','Van driver','Conductor'];
+const digits=s=>String(s==null?'':s).replace(/\D/g,'').slice(-10);
+const hid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+function hires(){return Object.keys(S.docs||{}).filter(k=>k.indexOf('hire/')===0).map(k=>Object.assign({},S.docs[k],{id:k.slice(5)})).filter(x=>!x.del)}
+const hDone=x=>HSTEPS.filter(s=>x.steps&&x.steps[s[0]]&&x.steps[s[0]].ok).length;
+function inRoster(x){const r=roster(),n=String(x.n||'').trim().toLowerCase(),p=digits(x.ph);
+  return Object.keys(r.name||{}).some(id=>(p&&digits((r.phone||{})[id])===p)||(n&&String(r.name[id]||'').trim().toLowerCase()===n))}
+async function hSave(x,msg){const id=x.id,o=Object.assign({},x);delete o.id;S.docs['hire/'+id]=o;render.force=true;render();
+  try{await call('cr_set',[S.token,'hire/'+id,o]);toast(msg||'Saved')}catch(e){toast(e.message==='LOGIN'?'Log in again':'Not saved: '+e.message)}}
+const telA=(p,l)=>p?`<a class="btn sm grn" href="tel:${esc(digits(p))}" data-hcall="${esc(l)}">📞 Call</a><a class="btn sm ghost" href="https://wa.me/91${esc(digits(p))}" target="_blank" rel="noopener">WhatsApp</a>`:'';
+function hCard(x,full){const n=hDone(x),pct=Math.round(n/HSTEPS.length*100),ro=inRoster(x);
+  return `<div class="hc hire" ${full?'':`data-hopen="${x.id}"`}><div class="top"><strong>${esc(x.n||'—')}</strong><span class="tag ${HSTAG[x.st||'New']||''}">${esc(x.st||'New')}</span><span class="tag">${esc(x.role||'Driver')}</span>${ro?'<span class="tag t-grn">In staff list</span>':''}<span style="margin-left:auto;font-weight:700;color:var(--navy)">${n}/${HSTEPS.length}</span></div>
+  <div class="hbar"><i style="width:${pct}%"></i></div>
+  <div class="hmeta">${esc(x.ph||'')}${x.area?' · '+esc(x.area):''}${x.lic?' · DL '+esc(x.lic):''}${x.exp?' · '+esc(x.exp)+' yr':''}${x.vd?' · came '+fmtS(x.vd):''}</div>
+  ${full?`<div class="hact">${telA(x.ph,x.id)}</div><div class="hsteps">${HSTEPS.map(([k,en,hn],i)=>{const s=(x.steps||{})[k]||{};
+    return `<div class="hstep ${s.ok?'ok':''}"><button class="hck" data-hstep="${x.id}|${k}" aria-label="${esc(en)}">${s.ok?'✓':i+1}</button><div class="hsb"><b>${esc(en)}</b><small>${esc(hn)}</small>
+      ${s.ok?`<em>${s.d?fmt(s.d):''}${s.who?' · '+esc(s.who):''}</em>`:''}${k==='dc'?`<div class="hdocs">${HDOCS.map(([q,l])=>`<button class="${(s.it||{})[q]?'on':''}" data-hdoc="${x.id}|${q}">${(s.it||{})[q]?'✓ ':''}${l}</button>`).join('')}</div>`:''}${k==='ap'&&!s.ok&&ro?'<em style="color:var(--grn)">Name found in Transport Operations staff list — tick to confirm</em>':''}
+      <input data-hnote="${x.id}|${k}" value="${esc(s.note||'')}" placeholder="${k==='rv'?'With which driver / route':k==='jn'?'Joining date, vehicle':k==='dm'?'Remarks':'Note'}"></div></div>`}).join('')}</div>
+    <div class="bar" style="margin-top:12px"><label class="lbl" style="margin-right:4px">Status</label><select data-hst="${x.id}">${HST.map(v=>`<option ${v===(x.st||'New')?'selected':''}>${v}</option>`).join('')}</select>
+      <button class="btn sm ghost" data-hedit="${x.id}">Edit details</button><button class="btn sm ghost" data-hdel="${x.id}">Remove</button></div>`:''}</div>`}
+function hForm(x){x=x||{};const f=(id,l,v,a)=>`<label><span class="lbl">${l}</span><input id="${id}" value="${esc(v||'')}" ${a||''}></label>`;
+  return `<div class="card gold"><div class="sh"><span>${x.id?'Edit candidate':'Add candidate'}</span><small>guard-room entry</small></div><div class="hform">
+  ${f('h-n','Name *',x.n)}${f('h-ph','Mobile *',x.ph,'inputmode="tel"')}
+  <label><span class="lbl">Applying for</span><select id="h-role">${HROLE.map(v=>`<option ${v===(x.role||'Driver')?'selected':''}>${v}</option>`).join('')}</select></label>
+  ${f('h-lic','Licence (LMV / HMV / badge)',x.lic)}${f('h-exp','Experience (years)',x.exp,'inputmode="numeric"')}${f('h-area','Area / village',x.area)}
+  ${f('h-vd','Came to guard room on',x.vd||today(),'type="date"')}${f('h-ref','Referred by',x.ref)}${f('h-prev','Last job / school',x.prev)}
+  <label class="wide"><span class="lbl">Remarks</span><textarea id="h-note">${esc(x.note||'')}</textarea></label></div>
+  <div class="bar"><button class="btn gold" data-hadd="${x.id||''}">Save</button><button class="btn ghost" data-hv="${x.id?'pipe':'db'}">Cancel</button></div></div>`}
+const HMAP=[['n',/^(driver\s*|candidate\s*)?name$|^name|नाम/i],['ph',/mob|phone|contact|number|^no\b|मोबाइल|फ़ोन|फोन|नंबर/i],['area',/area|address|village|city|place|पता|गाँव|गांव|क्षेत्र/i],
+  ['vd',/date|दिनांक|तारीख/i],['lic',/licen|^dl|लाइसेंस/i],['exp',/exp|अनुभव/i],['role',/post|role|position|applied|पद/i],['ref',/refer|ref\b|द्वारा/i],['prev',/previous|last job|company|school|पिछला/i],['note',/remark|note|comment|टिप्पणी/i]];
+function hDate(v){v=String(v||'').trim();let m=v.match(/^(\d{4})-(\d\d)-(\d\d)/);if(m)return m[0];m=v.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})$/);
+  if(m){const y=m[3].length===2?'20'+m[3]:m[3];return y+'-'+String(m[2]).padStart(2,'0')+'-'+String(m[1]).padStart(2,'0')}return ''}
+function loadXLSX(){return window.XLSX?Promise.resolve():new Promise((ok,no)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=ok;s.onerror=()=>no(new Error('Could not load the Excel reader'));document.head.appendChild(s)})}
+async function hRead(file){await loadXLSX();const wb=XLSX.read(await file.arrayBuffer(),{type:'array',cellDates:true});const ws=wb.Sheets[wb.SheetNames[0]];
+  const rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:false,dateNF:'yyyy-mm-dd',defval:''});let hi=rows.findIndex(r=>r.some(c=>HMAP[0][1].test(String(c).trim()))&&r.some(c=>HMAP[1][1].test(String(c).trim())));
+  if(hi<0)throw new Error('Could not find the Name and Mobile columns in the first sheet');const H=rows[hi].map(c=>String(c).trim()),col={};
+  HMAP.forEach(([k,re])=>{const i=H.findIndex((h,j)=>h&&re.test(h)&&!Object.values(col).includes(j));if(i>=0)col[k]=i});
+  const have={};hires().forEach(x=>{const p=digits(x.ph);if(p)have[p]=1});const out={add:[],dup:0,bad:0};
+  rows.slice(hi+1).forEach(r=>{const g=k=>col[k]!=null?String(r[col[k]]==null?'':r[col[k]]).trim():'';const n=g('n'),ph=g('ph'),p=digits(ph);
+    if(!n&&!ph)return;if(!n||p.length<10){out.bad++;return}if(have[p]){out.dup++;return}have[p]=1;
+    const rl=g('role');out.add.push({n,ph:p,area:g('area'),vd:hDate(g('vd'))||today(),lic:g('lic'),exp:g('exp'),role:/cond|कंड/i.test(rl)?'Conductor':/van|वैन/i.test(rl)?'Van driver':/bus|बस/i.test(rl)?'Bus driver':'Driver',
+      ref:g('ref'),prev:g('prev'),note:g('note'),st:'New',src:'Guard room (Excel)',addBy:me(),addAt:Date.now()})});
+  return out}
+async function hTemplate(){try{await loadXLSX()}catch(e){toast(e.message);return}const ws=XLSX.utils.aoa_to_sheet([['Date','Name','Mobile','Applying for','Licence','Experience (years)','Area / village','Referred by','Last job / school','Remarks'],
+  [today(),'Ramesh Kumar','9876543210','Bus driver','HMV','8','Rani Bazar','Guard room','City Travels','Example row — delete before upload']]);
+  ws['!cols']=[12,22,14,14,10,10,18,16,18,30].map(w=>({wch:w}));const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Guard room register');XLSX.writeFile(wb,'FIS_Driver_Candidates_Template.xlsx')}
+function hireTab(){const A=hires(),v=S.hv||'pipe',P=A.filter(x=>x.st==='In hiring'||(x.st==='Joined'&&hDone(x)<HSTEPS.length));
+  const seg=`<div class="seg"><button class="${v==='pipe'?'on':''}" data-hv="pipe">Hiring in progress<b>${P.length}</b></button><button class="${v==='db'?'on':''}" data-hv="db">Driver database<b>${A.length}</b></button><button class="${v==='add'?'on':''}" data-hv="add">＋ Add candidate</button><button class="${v==='up'?'on':''}" data-hv="up">⬆ Upload Excel</button></div>`;
+  if(S.hopen){const x=A.find(y=>y.id===S.hopen);if(x){if(S.hedit)return seg+hForm(x);return seg+`<button class="back" data-hv="${S.hback||'pipe'}">‹ Back</button>`+hCard(x,true)}S.hopen=null}
+  if(v==='add')return seg+hForm(null);
+  if(v==='up'){const U=S.hup;return seg+`<div class="card gold"><div class="sh"><span>Upload guard-room register</span><small>Excel or CSV · first sheet</small></div>
+    <div class="note">Columns are matched by heading: <b>Name</b> and <b>Mobile</b> are needed; Date, Applying for, Licence, Experience, Area, Referred by, Remarks are optional. A mobile number already in the database is skipped, so the same file can be uploaded again with new rows.</div>
+    <div class="bar"><input type="file" id="h-file" accept=".xlsx,.xls,.csv"><button class="btn ghost sm" data-htpl="1">⬇ Blank template</button></div>
+    ${U?`<div class="stats"><div><span>New</span><b>${U.add.length}</b></div><div><span>Already in database</span><b>${U.dup}</b></div><div><span>No name / mobile</span><b>${U.bad}</b></div></div>
+      ${U.add.length?`<div class="tw" style="margin-top:12px"><table><thead><tr><th>Name</th><th>Mobile</th><th>For</th><th>Area</th><th>Came</th></tr></thead><tbody>${U.add.slice(0,30).map(x=>`<tr><td>${esc(x.n)}</td><td>${esc(x.ph)}</td><td>${esc(x.role)}</td><td>${esc(x.area)}</td><td>${fmtS(x.vd)}</td></tr>`).join('')}</tbody></table></div>${U.add.length>30?`<div class="prange" style="margin-top:6px">…and ${U.add.length-30} more</div>`:''}
+      <div class="bar" style="margin-top:12px"><button class="btn gold" data-hupok="1" ${S.hbusy?'disabled':''}>${S.hbusy?'Saving…':'Add '+U.add.length+' candidates'}</button><button class="btn ghost" data-hupx="1">Cancel</button></div>`:''}`:''}</div>`}
+  if(v==='db'){const q=String(S.hq||'').toLowerCase(),qd=digits(q),f=S.hf||'',rf=S.hrf||'';
+    const L=A.filter(x=>(!f||(x.st||'New')===f)&&(!rf||(x.role||'Driver')===rf)&&(!q||[x.n,x.area,x.lic,x.note,x.ref].join(' ').toLowerCase().indexOf(q)>=0||(qd.length>=3&&digits(x.ph).indexOf(qd)>=0)))
+      .sort((a,b)=>String(b.vd||'').localeCompare(String(a.vd||''))||(b.addAt||0)-(a.addAt||0));
+    const c={};A.forEach(x=>{const s=x.st||'New';c[s]=(c[s]||0)+1});
+    return seg+`<div class="card"><div class="sh"><span>Driver database</span><small>everyone who came to the guard room for a job · tap Call to phone them</small></div>
+    <div class="bar"><input type="search" id="h-q" placeholder="Search name, mobile, area" value="${esc(S.hq||'')}"><select id="h-rf"><option value="">All posts</option>${HROLE.map(r=>`<option ${r===rf?'selected':''}>${r}</option>`).join('')}</select></div>
+    <div class="seg"><button class="${!f?'on':''}" data-hf="">All<b>${A.length}</b></button>${HST.map(s=>`<button class="${f===s?'on':''}" data-hf="${s}">${s}<b>${c[s]||0}</b></button>`).join('')}</div>
+    ${L.slice(0,300).map(x=>`<div class="hrow"><div class="hrb" data-hopen="${x.id}" data-hback="db"><b>${esc(x.n||'—')}</b> <span class="tag ${HSTAG[x.st||'New']||''}">${esc(x.st||'New')}</span>
+      <div class="hmeta">${esc(x.role||'Driver')} · ${esc(x.ph||'')}${x.area?' · '+esc(x.area):''}${x.lic?' · DL '+esc(x.lic):''}${x.exp?' · '+esc(x.exp)+' yr':''}</div>
+      <div class="hmeta">${x.vd?'Came '+fmt(x.vd):''}${x.lc?' · last called '+stamp(x.lc.at)+(x.lc.by?' by '+esc(x.lc.by):''):''}${x.note?' · '+esc(x.note):''}</div></div>
+      <div class="hact">${telA(x.ph,x.id)}${['New','Called','Interested'].includes(x.st||'New')?`<button class="btn sm" data-hstart="${x.id}">Start hiring</button>`:''}</div></div>`).join('')||'<div class="empty">No candidates yet. Add one, or upload the guard-room Excel.</div>'}
+    ${L.length>300?`<div class="prange">Showing 300 of ${L.length} — search to narrow</div>`:''}</div>`}
+  const J=A.filter(x=>x.st==='Joined'&&hDone(x)===HSTEPS.length).sort((a,b)=>(b.at||'').localeCompare(a.at||''));
+  return seg+`<div class="note">Hiring steps: ${HSTEPS.map((s,i)=>(i+1)+'. '+s[1]).join(' → ')}. Tick each step as it is done; when all ${HSTEPS.length} are ticked the driver moves to <b>Joined</b>.</div>
+    ${P.length?P.map(x=>hCard(x,false)).join(''):'<div class="card"><div class="empty">No driver in hiring. Open <b>Driver database</b> and tap <b>Start hiring</b> on a candidate.</div></div>'}
+    ${J.length?`<div class="card"><div class="sh"><span>Joined</span><small>all steps done</small></div>${J.slice(0,20).map(x=>`<div class="hrow"><div class="hrb" data-hopen="${x.id}"><b>${esc(x.n)}</b><div class="hmeta">${esc(x.role||'Driver')} · ${esc(x.ph||'')} · joined ${x.steps&&x.steps.jn&&x.steps.jn.d?fmt(x.steps.jn.d):''}</div></div></div>`).join('')}</div>`:''}`}
+
+/* ---------- Salary (moved here from Transport Operations; only Harsh Yadav and Rahul Yadav) ---------- */
+const inr=n=>n==null||n===''||isNaN(n)?'–':'₹'+Number(n).toLocaleString('en-IN');
+const curSal=x=>{const i=(x.inc||[]).filter(e=>e.amount);return i.length?Number(i[i.length-1].amount):Number(x.join)||null};
+function svcLen(doj){if(!doj)return'';const a=new Date(doj+'T00:00:00Z'),b=new Date(today()+'T00:00:00Z');let m=(b.getUTCFullYear()-a.getUTCFullYear())*12+b.getUTCMonth()-a.getUTCMonth();if(b.getUTCDate()<a.getUTCDate())m--;if(m<0)return'';return(m>=12?Math.floor(m/12)+' yr ':'')+(m%12)+' mo'}
+const salPin=()=>{try{return sessionStorage.getItem('hd_salpin')||''}catch(e){return''}};
+function salDocs(){const o={};Object.keys(S.td||{}).forEach(k=>{if(k.indexOf('salary/')===0&&k!=='salary/_')o[k.slice(7)]=S.td[k]});return o}
+function salTab(){
+  if(!S.tdAdmin)return `<div class="card"><div class="empty">🔒 Salary is private. Only Harsh Yadav and Rahul Yadav can open it.</div></div>`;
+  if(S.salPin==='need')return `<div class="card gold" style="max-width:420px;margin:0 auto"><div class="sh"><span>Salary PIN</span></div><p style="color:var(--mute);font-size:13.5px">Enter the salary PIN (only Harsh Yadav and Rahul Yadav have it).</p>
+    <div class="bar"><input type="password" id="sal-pin" inputmode="numeric" autocomplete="off" style="max-width:160px"><button class="btn" data-salgo="1">Open</button></div><div id="salmsg" style="color:var(--red);font-size:13px">${S.salErr||''}</div></div>`;
+  const sal=salDocs(),ids=Object.keys(sal).sort((a,b)=>(sal[a].order||99)-(sal[b].order||99)||String(sal[a].name||'').localeCompare(String(sal[b].name||'')));let tot=0,totJ=0;const due=[];
+  const rows=ids.map((id,i)=>{const x=sal[id],cur=curSal(x),j=Number(x.join)||null;tot+=cur||0;totJ+=j||0;const D=S.sd&&S.sd.id===id?S.sd:null;
+    const inc=(x.inc||[]).filter(e=>e.amount),last=inc.length?(inc[inc.length-1].date||''):x.doj;if(last&&/^\d{4}-\d\d-\d\d$/.test(last)&&(Date.parse(today())-Date.parse(last))>365*864e5)due.push(x.name||id);
+    let r=`<tr><td class="n">${i+1}</td><td><b>${esc(x.name||id)}</b><br><span style="color:var(--mute);font-size:12px">${esc(x.role||'')}</span></td><td>${x.doj?fmt(x.doj):'–'}<br><span style="color:var(--mute);font-size:12px">${svcLen(x.doj)}</span></td><td class="n">${inr(j)}</td>
+      <td>${inc.map(e=>`<span class="tag" style="margin:0 4px 4px 0">${inr(e.amount)} ${esc(e.label||'')}</span>`).join('')||'<span style="color:var(--mute)">No increment yet</span>'}</td><td class="n"><b>${inr(cur)}</b>${j&&cur&&cur>j?`<br><span style="color:var(--grn);font-size:12px">+${Math.round((cur-j)/j*100)}%</span>`:''}</td>
+      <td><button class="btn sm ghost" data-sedit="${esc(id)}">${D?'Close':'Edit'}</button></td></tr>`;
+    if(D)r+=`<tr><td></td><td colspan="6"><div class="hform"><label><span class="lbl">Date of joining</span><input type="date" id="sd-doj" value="${esc(D.doj||'')}"></label><label><span class="lbl">Joining salary (₹)</span><input id="sd-join" inputmode="numeric" value="${esc(D.join==null?'':D.join)}"></label><label><span class="lbl">Post</span><input id="sd-role" value="${esc(D.role||'')}"></label></div>
+      <div class="lbl" style="margin:8px 0 6px">Increments (oldest first)</div>${D.inc.map((e,k)=>`<div class="hform" style="margin-bottom:6px"><label><span class="lbl">Year / month</span><input id="sd-l-${k}" value="${esc(e.label||'')}" placeholder="2025 or Dec 2024"></label><label><span class="lbl">Date</span><input type="date" id="sd-d-${k}" value="${esc(e.date||'')}"></label><label><span class="lbl">New salary (₹)</span><input id="sd-a-${k}" inputmode="numeric" value="${esc(e.amount==null?'':e.amount)}"></label><button class="btn sm ghost" data-sdrm="${k}" style="align-self:end">Remove</button></div>`).join('')}
+      <div class="bar"><button class="btn sm ghost" data-sdadd="1">＋ Add increment</button><button class="btn sm gold" data-sdsave="${esc(id)}" ${S.sbusy?'disabled':''}>${S.sbusy?'Saving…':'Save'}</button><button class="btn sm ghost" data-sedit="${esc(id)}">Cancel</button></div></td></tr>`;
+    return r}).join('');
+  const r=roster(),have={};ids.forEach(id=>{have[String(sal[id].name||'').trim().toLowerCase()]=1});
+  const miss=Object.keys(r.name||{}).filter(id=>r.name[id]&&!sal[id]&&!have[String(r.name[id]).trim().toLowerCase()]);
+  return `<div class="note">🔒 Salary is visible only to Harsh Yadav and Rahul Yadav. It was moved here from Transport Operations so that drivers and conductors never see it.${S.salPin==='none'?' <b>Salary PIN is not set</b> — ask to set it so that typing your name at login is not enough.':''}</div>
+  <div class="kpis"><div class="kpi navy"><span>Staff</span><b>${ids.length}</b></div><div class="kpi"><span>Monthly total</span><b style="font-size:24px">${inr(tot)}</b><small>at joining <em>${inr(totJ)}</em></small></div><div class="kpi red"><span>Increment review due</span><b>${due.length}</b><small>${esc(due.slice(0,4).join(', '))}${due.length>4?'…':''}</small></div></div>
+  <div class="card"><div class="sh"><span>Salary &amp; increments</span><small>${ids.length} staff</small></div><div class="tw"><table><thead><tr><th class="n">#</th><th>Name</th><th>Joined</th><th class="n">Joining</th><th>Increments</th><th class="n">Current</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="7" class="empty">No salary records yet.</td></tr>'}</tbody>
+  <tfoot><tr><td></td><td><b>Total monthly</b></td><td></td><td class="n">${inr(totJ)}</td><td></td><td class="n"><b>${inr(tot)}</b></td><td></td></tr></tfoot></table></div>
+  ${miss.length?`<div class="bar" style="margin-top:12px"><select id="sd-new"><option value="">Add salary record for…</option>${miss.map(id=>`<option value="${esc(id)}">${esc(r.name[id])}</option>`).join('')}</select><button class="btn sm" data-sdnew="1">Add</button></div>`:''}</div>`}
+function sdRead(){const D=S.sd;if(!D)return;const v=id=>{const e=$(id);return e?e.value:null};if(v('sd-doj')!=null)D.doj=v('sd-doj');if(v('sd-join')!=null)D.join=v('sd-join');if(v('sd-role')!=null)D.role=v('sd-role');
+  D.inc.forEach((e,k)=>{if(v('sd-l-'+k)!=null){e.label=v('sd-l-'+k);e.date=v('sd-d-'+k);e.amount=v('sd-a-'+k)}})}
+
+document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-hv],[data-hopen],[data-hstep],[data-hdoc],[data-hstart],[data-hadd],[data-hedit],[data-hdel],[data-hf],[data-hupok],[data-hupx],[data-htpl],[data-hcall],[data-salgo],[data-sedit],[data-sdadd],[data-sdrm],[data-sdsave],[data-sdnew]');if(!t)return;
+  const d=t.dataset,A=()=>hires(),get=id=>A().find(x=>x.id===id);ev.stopPropagation();render.force=true;
+  if(d.hcall!=null){const x=get(d.hcall);if(x){x.lc={at:Date.now(),by:me()};if((x.st||'New')==='New')x.st='Called';hSave(x,'Call noted')}return}
+  if(d.hv!=null){S.hv=d.hv;S.hopen=null;S.hedit=false;render();scrollTo(0,0);return}
+  if(d.hopen!=null){S.hopen=d.hopen;S.hback=d.hback||'pipe';S.hedit=false;render();scrollTo(0,0);return}
+  if(d.hf!=null){S.hf=d.hf;render();return}
+  if(d.htpl){hTemplate();return}
+  if(d.hupx){S.hup=null;render();return}
+  if(d.hstart){const x=get(d.hstart);if(x){x.st='In hiring';x.steps=x.steps||{};x.hs={by:me(),at:Date.now()};S.hopen=x.id;S.hback='pipe';S.hv='pipe';hSave(x,'Hiring started')}return}
+  if(d.hstep){const[id,k]=d.hstep.split('|'),x=get(id);if(!x)return;const s=Object.assign({},x.steps||{}),c=Object.assign({},s[k]||{});
+    if(c.ok){c.ok=false}else{c.ok=true;c.d=today();c.who=me()}if(k==='dc'){const it={};HDOCS.forEach(q=>{it[q[0]]=c.ok});c.it=it}s[k]=c;x.steps=s;
+    if(hDone(x)===HSTEPS.length)x.st='Joined';else if(x.st==='Joined'||!x.st||x.st==='New'||x.st==='Called'||x.st==='Interested')x.st='In hiring';
+    hSave(x,c.ok?'Step done':'Step un-ticked');return}
+  if(d.hdoc){const[id,q]=d.hdoc.split('|'),x=get(id);if(!x)return;const s=Object.assign({},x.steps||{}),c=Object.assign({},s.dc||{}),it=Object.assign({},c.it||{});it[q]=!it[q];c.it=it;
+    const all=HDOCS.every(z=>it[z[0]]);if(all&&!c.ok){c.ok=true;c.d=today();c.who=me()}else if(!all)c.ok=false;s.dc=c;x.steps=s;
+    if(hDone(x)===HSTEPS.length)x.st='Joined';else if(['Joined','New','Called','Interested'].includes(x.st||'New'))x.st='In hiring';hSave(x,it[q]?'Document received':'Document un-ticked');return}
+  if(d.hedit){S.hopen=d.hedit;S.hedit=true;render();return}
+  if(d.hdel){const x=get(d.hdel);if(!x)return;if(S.hdelc!==x.id){S.hdelc=x.id;t.textContent='Tap again to remove';setTimeout(()=>{S.hdelc=null},4000);return}
+    x.del=true;S.hopen=null;S.hdelc=null;hSave(x,'Removed');return}
+  if(d.hadd!=null){const g=id=>($(id).value||'').trim(),n=g('h-n'),ph=digits(g('h-ph'));if(!n||ph.length<10){toast('Enter the name and a 10-digit mobile');return}
+    const dup=A().find(y=>digits(y.ph)===ph&&y.id!==d.hadd);if(dup&&S.hdup!==ph){S.hdup=ph;toast(dup.n+' already has this mobile — tap Save again to add anyway');return}
+    const x=d.hadd?Object.assign({},get(d.hadd)):{id:hid(),st:'New',src:'Guard room',addBy:me(),addAt:Date.now()};
+    Object.assign(x,{n,ph,role:$('h-role').value,lic:g('h-lic'),exp:g('h-exp'),area:g('h-area'),vd:g('h-vd'),ref:g('h-ref'),prev:g('h-prev'),note:g('h-note')});
+    S.hdup=null;S.hedit=false;if(!d.hadd){S.hv='db';S.hopen=null}hSave(x,'Candidate saved');return}
+  if(d.hupok){const L=(S.hup||{}).add||[];if(!L.length||S.hbusy)return;S.hbusy=true;render();let done=0;
+    try{for(let i=0;i<L.length;i+=200){const part=L.slice(i,i+200).map(v=>({k:'hire/'+hid(),v}));await call('cr_setmany',[S.token,part]);part.forEach(p=>{S.docs[p.k]=p.v});done+=part.length}
+      toast(done+' candidates added');S.hup=null;S.hv='db'}catch(e){toast((done?done+' added, then ':'')+'not saved: '+e.message)}
+    S.hbusy=false;render.force=true;render();return}
+  if(d.salgo){const v=($('sal-pin')||{}).value||'';try{sessionStorage.setItem('hd_salpin',v.trim())}catch(e){}S.salErr='Checking…';render();await loadTD();S.salErr=S.salPin==='need'?'Wrong PIN.':'';render.force=true;render();return}
+  if(d.sedit!=null){if(S.sd&&S.sd.id===d.sedit){S.sd=null}else{const x=salDocs()[d.sedit]||{};S.sd={id:d.sedit,doj:x.doj||'',join:x.join==null?'':x.join,role:x.role||'',inc:JSON.parse(JSON.stringify(x.inc||[]))}}render();return}
+  if(d.sdadd){sdRead();S.sd.inc.push({label:String(new Date().getFullYear()),date:today(),amount:''});render();return}
+  if(d.sdrm!=null){sdRead();S.sd.inc.splice(+d.sdrm,1);render();return}
+  if(d.sdnew){const id=($('sd-new')||{}).value;if(!id)return;const r=roster();S.td['salary/'+id]={name:r.name[id],order:99};S.sd={id,doj:'',join:'',role:'',inc:[]};render();return}
+  if(d.sdsave){sdRead();const id=d.sdsave,x=salDocs()[id]||{},D=S.sd,num=v=>v===''||v==null||isNaN(v)?null:Number(v);
+    const doc=Object.assign({},x,{doj:D.doj||'',join:num(D.join),role:String(D.role||'').trim(),inc:D.inc.filter(e=>e.amount!==''&&e.amount!=null).map(e=>({label:String(e.label||'').trim(),date:e.date||'',amount:Number(e.amount)}))});
+    S.sbusy=true;render();try{await call('td_set',[S.token,'salary/'+id,doc,salPin()],TD_URL);S.td['salary/'+id]=doc;S.sd=null;toast('Salary saved')}catch(e){toast(e.message==='LOGIN'?'Log in again':'Not saved: '+e.message)}S.sbusy=false;render.force=true;render();return}
+},true);
+document.addEventListener('input',ev=>{const t=ev.target;if(t.id==='h-q'){S.hq=t.value;render.force=true;render()}});
+document.addEventListener('keydown',ev=>{if(ev.key==='Enter'&&ev.target.id==='sal-pin'){const b=document.querySelector('[data-salgo]');if(b)b.click()}});
+document.addEventListener('change',async ev=>{const t=ev.target,d=t.dataset;
+  if(t.id==='h-rf'){S.hrf=t.value;render.force=true;render();return}
+  if(d.hst){const x=hires().find(y=>y.id===d.hst);if(x){x.st=t.value;if(t.value==='In hiring'&&!x.steps)x.steps={};hSave(x,'Status saved')}return}
+  if(d.hnote){const[id,k]=d.hnote.split('|'),x=hires().find(y=>y.id===id);if(!x)return;const s=Object.assign({},x.steps||{});s[k]=Object.assign({},s[k]||{},{note:t.value.trim()});x.steps=s;hSave(x,'Note saved');return}
+  if(t.id==='h-file'&&t.files&&t.files[0]){toast('Reading file…');try{S.hup=await hRead(t.files[0])}catch(e){S.hup=null;toast(e.message)}render.force=true;render();return}
+});
+
 /* self-update */
 (function(){async function chk(){if(location.protocol==='file:')return;try{const t=await (await fetch(location.pathname+'?nc='+Date.now(),{cache:'no-store'})).text(),m=t.match(/const APP_V="(\d+)"/);if(m&&m[1]!==APP_V){const u=new URL(location.href);u.searchParams.set('v',m[1]);if(window.FIS&&FIS.newVersion)FIS.newVersion(u.toString());else location.replace(u.toString())}}catch(e){}}
   chk();document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()})})();
