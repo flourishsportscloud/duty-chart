@@ -1574,7 +1574,7 @@ function renderDash(){const el=$("dashBody");if(!el||tab!=="dash")return;loadCR(
   const tile=(cls,go,l,n,sub)=>`<button class="${cls}" data-go="${go}"><span>${l}</span><b>${n}</b><small>${sub}</small></button>`;
   const list=(L,empty,max)=>{max=max||8;return L.length?`<div class="nl">${L.slice(0,max).join("")}</div>${L.length>max?`<div class="legend" style="margin:6px 0 0">+ ${L.length-max} more</div>`:""}`:`<div class="empty2">✓ ${empty}</div>`};
   const row=(who,sub,v,cls)=>`<div><span class="who">${who}${sub?`<small>${sub}</small>`:""}</span>${v?`<span class="v ${cls||""}">${v}</span>`:""}</div>`;
-  const notIn=PEOPLE().filter(id=>roster.name[id]&&!(state.att||{})[id]).filter(id=>notInYet(id,"m")||notInYet(id,"a")),NIc=noCheckIn(date);
+  const notIn=PEOPLE().filter(id=>roster.name[id]&&(state.att||{})[id]!=="A").filter(id=>notInYet(id,"m")||notInYet(id,"a")),NIc=noCheckIn(date);
   // 7 days
   const days=[];for(let i=6;i>=0;i--)days.push(addDays(date,-i));
   const MET=[["abs","Absent",d=>dayFacts(d).abs.map(id=>[nm(id),esc(roleOf(id))])],["noin","No check-in",d=>noCheckIn(d).map(x=>[nm(x.id),(x.k==="m"?"morning":x.k==="o"?"no check-out":"afternoon")+" · "+esc(roleOf(x.id))])],["late","Late",d=>dayFacts(d).late.map(x=>[nm(x.id),`${x.k==="m"?"morning":"afternoon"} · in ${h12(x.t)} · +${x.min} min`])],
