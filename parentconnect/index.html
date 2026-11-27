@@ -337,6 +337,30 @@ html,body{overscroll-behavior:none}
 .btn,.chip,.role,.pill-u,nav,nav *,.sync,[data-a]{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:text}
 .nvb{position:fixed;left:12px;right:12px;bottom:76px;z-index:99;background:#1B3156;color:#fff;border-radius:12px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px;box-shadow:0 6px 24px rgba(0,0,0,.3)}
+
+/* ---- compact layout v3: main content first, less space ---- */
+.top{padding:8px 12px!important;gap:8px!important;flex-wrap:nowrap!important}
+.top .who{min-width:0;flex:1;cursor:pointer}
+.top h1{font-size:18px;line-height:1.15}
+.top .sub{font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.top .sub b{color:var(--navy)}
+.work{padding:10px 12px!important}
+.card{padding:12px!important;border-radius:12px!important}
+.card h3{font-size:14.5px}
+.pillrow{display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.pillrow::-webkit-scrollbar{display:none}.pillrow .chip{flex:none}
+.chip{padding:5px 11px!important}
+.find{margin-bottom:10px}.find input{padding:10px 12px}
+.fc{padding:10px 12px!important;margin-bottom:8px!important}
+.rin{display:flex;gap:6px;align-items:flex-start;margin-top:8px}.rin textarea{min-height:36px;padding:7px 10px}
+.cact{margin-bottom:10px;padding:8px 12px!important}.cact .row{align-items:center;gap:8px}.cact .al{margin-top:8px}
+.secgrid{display:flex;flex-direction:column;gap:2px;margin-top:6px}
+.secrow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:3px 0}
+.secrow .bs{min-width:78px;font-weight:700;text-align:center}
+.roles{grid-template-columns:1fr 1fr!important;gap:6px!important;margin:8px 0!important}
+.role{padding:8px 10px!important}.role b{font-size:14px!important}.role small{font-size:11.5px!important;display:block;line-height:1.25}
+.loginw{padding-top:3vh!important}
+.lbl{margin-top:10px}
 </style>
 <script>
 /* Parent Connect — GitHub Pages client layer: Diary-password login + Apps Script API (replaces the Claude runtime) */
@@ -810,10 +834,8 @@ function inScope(r){
   if(ME.scope&&ME.scope.length)return ME.scope.includes(cbase(r.c));
   if(ME.role==='director'||ME.role==='admin')return true;
   if(ME.role==='coord')return ME.groups.includes(r.g);
-  const cl=ME.classes||[];
-  if(ME.subject==='Class Teacher')return cl.includes(r.c);
-  const ok=ME.subject==='Co-curricular'?(r.dp==='Co Curricular'||r.dp==='Competition'):(r.sub||[]).includes(ME.subject);
-  return ok&&(!cl.length||cl.includes(r.c));
+  const cl=ME.classes||[],subs=ME.subs&&ME.subs.length?ME.subs:[ME.subject];
+  return subs.some(s=>s==='Class Teacher'?cl.includes(r.c):(s==='Co-curricular'?(r.dp==='Co Curricular'||r.dp==='Competition'):(r.sub||[]).includes(s))&&(!cl.length||cl.includes(r.c)));
 }
 const canCalls=()=>ME&&(ME.role!=='teacher'||ME.subject==='Class Teacher');
 function fuVisible(id){const r=D.byId[id];if(!r||!inScope(r))return false;if(ME.role==='teacher')return myKeys().includes(owner(id))||FU[id].by===ME.name;return true}
@@ -943,7 +965,7 @@ function ovwModal(id){
 }
 function menuModal(){
   const b=(a,l)=>'<button class="btn" style="width:100%;justify-content:flex-start;margin-bottom:8px" data-a="'+a+'">'+l+'</button>';
-  overlay('<div class="mod"><h2>More</h2>'+b('add','+ Add feedback')+b('paste','Paste from Studybase')+(isDir()&&!ME.va?b('va','View as…'):'')+((ME.role==='director'||ME.role==='admin')&&!ME.va?b('backup','Download backup (CSV)'):'')+b('lvref','Refresh data from Drive')+'<div class="row" style="justify-content:flex-end;margin-top:6px"><button class="btn" data-a="xo">Close</button></div></div>',true);
+  overlay('<div class="mod"><h2>More</h2><div class="mut" style="margin:-4px 0 12px;font-size:13px">Signed in as <b style="color:var(--navy)">'+esc(ME.name)+'</b><br>'+esc(roleLbl())+' · '+esc(scopeLabel())+'</div>'+b('add','+ Add feedback')+b('paste','Paste from Studybase')+(isDir()&&!ME.va?b('va','View as…'):'')+((ME.role==='director'||ME.role==='admin')&&!ME.va?b('backup','Download backup (CSV)'):'')+b('lvref','Refresh data from Drive')+b('switch','Change my role, subjects or classes')+(window.GH?b('signout','Sign out'):'')+'<div class="row" style="justify-content:flex-end;margin-top:6px"><button class="btn" data-a="xo">Close</button></div></div>',true);
 }
 function fuCard(id){
   const r=D.byId[id],v=FU[id],t=todayISO(),ct=checkedOn(id,t);
@@ -1019,7 +1041,7 @@ function vHome(){
 }
 
 /* ---------- student ---------- */
-function stuFinder(){return'<div class="card" style="margin-bottom:16px"><label class="lbl">Find a student. See all feedback in one place</label><input type="search" id="sq" placeholder="Type a student name" autocomplete="off"><div id="sugs"></div></div>'}
+function stuFinder(){return'<div class="find"><input type="search" id="sq" placeholder="Find a student. See all feedback in one place" autocomplete="off"><div id="sugs"></div></div>'}
 function stuList(q){const m={};D.f.forEach(r=>{if(inScope(r)&&r.n&&r.n.toLowerCase().includes(q)){const k=stKey(r);m[k]=(m[k]||0)+1}});return Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,10)}
 function vStudent(){
   const[n,c]=STK.split('|'),f=D.f.filter(r=>r.n===n&&r.c===c&&inScope(r)),ca=D.c.filter(x=>x.n===n&&x.c===c&&callScope(x)),ch=D.h.filter(x=>x.n===n&&x.c===c&&cScope(x)&&canCalls());
@@ -1281,12 +1303,15 @@ function vLogin(){
   if(window.GH&&GH.alloc())h+='<div class="scopebox"><b>You see:</b> your own subjects and sections</div>';if(window.GH&&GH.scope())h+='<div class="scopebox"><b>You see:</b> '+esc(scopeTxt(GH.scope()))+'</div>';
   if(m.role==='coord'&&!(window.GH&&GH.scope()))h+='<label class="lbl">My class group(s)</label><div class="chips">'+GROUPS.map(g=>'<button class="chip '+(m.groups.includes(g)?'on':'')+'" data-a="lgg" data-v="'+g+'">'+g+'</button>').join('')+'</div>';
   if(m.role==='teacher'){
-    if((m.desig||'st')==='st')h+='<label class="lbl">My subject. Matching feedback reaches me automatically</label><div class="chips">'+SUBJECTS.map(s=>'<button class="chip '+(m.subject===s?'on':'')+'" data-a="lgs" data-v="'+s+'">'+s+'</button>').join('')+'</div>';
-    h+='<label class="lbl" style="margin-top:12px">My classes / sections'+(m.subject==='Class Teacher'?' (required)':' (optional, empty means all)')+'</label><div class="chips">'+allc.map(c=>'<button class="chip '+(m.classes.includes(c)?'on':'')+'" data-a="lgc" data-v="'+c+'">'+c+'</button>').join('')+'</div>';
+    m.subs=m.subs||[];
+    if((m.desig||'st')==='st')h+='<label class="lbl">Subjects I teach <span class="mut">(pick all)</span></label><div class="chips">'+SUBJECTS.filter(s=>s!=='Class Teacher').map(s=>'<button class="chip '+(m.subs.includes(s)?'on':'')+'" data-a="lgs" data-v="'+s+'">'+s+'</button>').join('')+'</div>';
+    h+=secPicker(m.classes,allc);
   }
   return h+'<div style="margin-top:20px"><button class="btn pri" data-a="enter">Enter Parent Connect</button>'+(window.GH?'<button class="btn" style="margin-left:8px" data-a="signout">Sign out</button>':'')+'</div></div></div>';
 }
-function scopeLabel(){if(ME.alloc&&!ME.va)return allocTxt();if(ME.scope&&ME.scope.length)return scopeTxt(ME.scope);if(ME.role==='coord')return ME.groups.join(', ');if(ME.role==='teacher')return ME.subject+(ME.classes.length?' · '+ME.classes.join(', '):'');return ME.role==='director'?'Whole school':'All departments'}
+function secPicker(sel,allc){const by={};allc.forEach(c=>{(by[cbase(c)]=by[cbase(c)]||[]).push(c)});
+  return'<label class="lbl">My classes and sections <span class="mut">(tap a class for all its sections)</span></label><div class="secgrid">'+Object.keys(by).sort((x,y)=>crank(by[x][0])-crank(by[y][0])).map(b=>{const L=by[b],all=L.every(c=>sel.includes(c));return'<div class="secrow"><button class="chip bs '+(all?'on':'')+'" data-a="lgb" data-v="'+b+'">'+(isNaN(b)?b:'Class '+b)+'</button>'+L.map(c=>'<button class="chip '+(sel.includes(c)?'on':'')+'" data-a="lgc" data-v="'+c+'">'+esc(c.replace(b,'').trim()||b)+'</button>').join('')+'</div>'}).join('')+'</div>'}
+function scopeLabel(){if(ME.alloc&&!ME.va)return allocTxt();if(ME.scope&&ME.scope.length)return scopeTxt(ME.scope);if(ME.role==='coord')return ME.groups.join(', ');if(ME.role==='teacher')return(ME.subs&&ME.subs.length?ME.subs.join(', '):ME.subject)+(ME.classes.length?' · '+(ME.classes.length>6?ME.classes.length+' sections':ME.classes.join(', ')):'');return ME.role==='director'?'Whole school':'All departments'}
 const TITLES={ov:['Home','Cases by category. Latest first'],fb:['Feedback','Studybase, calls received, diary remarks, front desk and calls made'],fu:['Follow-ups','Daily checks. Who follows which child'],rq:['Requests','Books, notebooks, call to teacher, transport and co-curricular changes'],ca:['Calls','Call requests, calls made and calls received'],st:['Student','All feedback, calls and changes in one place'],cl:['Class Record','Every child, the Parent Insight card, all feedback and what the teacher did']};
 const newF=()=>({per:'7',from:'',to:'',cl:[],c:[],dp:'',ct:'',m:'',p:'',q:'',cs:'',ak:'',rb:''});
 function callBanner(p){
@@ -1308,7 +1333,7 @@ function render0(keep){
   const ini=ME.name.split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
   $('#app').innerHTML='<div class="shell"><aside class="side"><div class="logo">'+MARK+'<div><b>Parent Connect</b><small>FIS · Bikaner</small></div></div>'
   +nav.map(n=>'<button class="nav '+(nv===n[0]?'on':'')+'" data-a="go" data-v="'+n[0]+'">'+ico(n[0])+n[1]+(n[2]?'<span class="cnt">'+n[2]+'</span>':'')+'</button>').join('')+'</aside>'
-  +'<div class="main"><div class="top"><div><h1>'+TITLES[view][0]+'</h1><div class="sub">'+TITLES[view][1]+'</div></div><span class="sp"></span><span class="sync" id="sync"></span><button class="btn sm" data-a="menu">More</button><div class="pill-u" data-a="switch" title="Switch user"><div class="av">'+esc(ini)+'</div><div><b>'+esc(ME.name)+'</b><small>'+esc(roleLbl())+' · '+esc(scopeLabel())+'</small></div></div></div>'
+  +'<div class="main"><div class="top"><div class="who" data-a="switch" title="Switch user"><h1>'+TITLES[view][0]+'</h1><div class="sub"><b>'+esc(ME.name)+'</b> · '+esc(roleLbl())+' · '+esc(scopeLabel())+'</div></div><span class="sp"></span><span class="sync" id="sync"></span><button class="btn sm" data-a="menu">More</button></div>'
   +'<div class="work">'+callBanner(pend)+(ME.va?'<div class="banner" style="margin-bottom:14px;display:flex;gap:12px;align-items:center">Viewing as '+esc(roleLbl()+' · '+scopeLabel())+'<span class="sp"></span><button class="btn sm navy" data-a="vaback">Back to Director</button></div>':'')+body+'</div></div></div>';
   paintSync();paintLive();if(keep)window.scrollTo(0,y);
 }
@@ -1366,11 +1391,12 @@ document.addEventListener('click',e=>{
     case'va':viewAsModal();break;
     case'vaback':ME=REAL;REAL=null;F=newF();view='ov';fuSeg='';render();break;
     case'prlist':printList();break;case'prstu':printStudent();break;
-    case'switch':REAL=null;if(ME&&ME.va)ME=null;window._lg=null;view='login';render();break;
-    case'signout':GH.logout();break;
+    case'switch':document.querySelectorAll('.ov').forEach(x=>x.remove());REAL=null;if(ME&&ME.va)ME=null;window._lg=null;view='login';render();break;
+    case'signout':document.querySelectorAll('.ov').forEach(x=>x.remove());GH.logout();break;
     case'role':{const n=$('#lgname');if(n)window._lg.name=n.value;const d=DESIG_BY[v];window._lg.desig=v;window._lg.role=d[1];if(d[2])window._lg.subject=d[2];render();break}
     case'lgg':{window._lg.name=$('#lgname').value;const g=window._lg.groups,i=g.indexOf(v);i<0?g.push(v):g.splice(i,1);render();break}
-    case'lgs':{window._lg.name=$('#lgname').value;window._lg.subject=v;render();break}
+    case'lgs':{window._lg.name=$('#lgname').value;const s=window._lg.subs=window._lg.subs||[],i=s.indexOf(v);i<0?s.push(v):s.splice(i,1);window._lg.subject=s[0]||'';render();break}
+    case'lgb':{window._lg.name=$('#lgname').value;const L=[...new Set(D.f.map(r=>r.c).filter(c=>c&&c!=='—'&&cbase(c)===v))],g=window._lg.classes,all=L.every(c=>g.includes(c));L.forEach(c=>{const i=g.indexOf(c);if(all){if(i>=0)g.splice(i,1)}else if(i<0)g.push(c)});render();break}
     case'lgc':{window._lg.name=$('#lgname').value;const g=window._lg.classes,i=g.indexOf(v);i<0?g.push(v):g.splice(i,1);render();break}
     case'stn':stStep(+v);break;
     case'stact':stActModal(v,null,t.dataset.ref);break;
@@ -1381,9 +1407,9 @@ document.addEventListener('click',e=>{
     case'enter':{const m=window._lg;m.name=$('#lgname').value.trim();
       if(!m.name){toast('Please enter your name');break}
       if(m.role==='coord'&&!m.groups.length&&!(window.GH&&GH.scope())){toast('Select at least one class group');break}
-      if(m.role==='teacher'&&(m.desig||'st')==='st'&&!m.subject){toast('Pick your subject');break}
-      if(m.role==='teacher'&&m.subject==='Class Teacher'&&!m.classes.length){toast('Select your class or section');break}
-      REAL=null;ME={role:m.role,desig:m.desig||'',name:m.name,groups:m.groups.slice(),subject:m.subject,classes:m.classes.slice(),scope:window.GH?GH.scope():null};LS.set('pc2_me',ME);saveMe();F=newF();syncCM();fuSeg=ME.role==='teacher'?myKey():'';view='ov';render();break}
+      if(m.role==='teacher'&&(m.desig||'st')==='st'&&!(m.subs&&m.subs.length)){toast('Pick the subjects you teach');break}
+      if(m.role==='teacher'&&!m.classes.length){toast('Pick your classes and sections');break}
+      REAL=null;ME={role:m.role,desig:m.desig||'',name:m.name,groups:m.groups.slice(),subject:(m.desig||'st')==='st'?(m.subs&&m.subs[0])||m.subject:m.subject,subs:(m.desig||'st')==='st'&&m.role==='teacher'?(m.subs||[]).slice():[],classes:m.classes.slice().sort((x,y)=>crank(x)-crank(y)),scope:window.GH?GH.scope():null};LS.set('pc2_me',ME);saveMe();F=newF();syncCM();fuSeg=ME.role==='teacher'?myKey():'';view='ov';render();break}
   }
 });
 document.addEventListener('change',e=>{
@@ -1515,8 +1541,8 @@ function vClass(){
 const fbLine=r=>'<div class="fl"><div class="fh"><b>'+fmtDY(r.d)+'</b>'+srcP(r.m)+'<span class="sp"></span><button class="btn sm" data-a="stact" data-v="'+esc(r.n)+'" data-ref="'+r.d+'">Action</button></div><div class="ft2">'+esc(r.t)+'</div>'+imgsH(r)+'</div>';
 function classActs(){
   const a=stuActs(CLS,'__class');
-  return'<div class="card rcs" style="margin-bottom:12px"><div class="row"><h3 style="margin:0">Whole class actions<small>'+a.length+' · '+esc(CLS)+'</small></h3><span class="sp"></span><button class="btn pri sm" data-a="stact" data-v="__class">+ Class action</button></div>'
-   +(a.length?a.map(x=>'<div class="al"><div class="ah"><b>'+fmtT(x.when||x.at)+'</b><span class="mut">'+esc(x.by)+(x.role?' · '+esc(x.role):'')+'</span><span class="sp"></span>'+(canEditAct(x)?'<button class="lnk" data-a="stedit" data-v="__class" data-id="'+x.id+'">Edit</button><button class="lnk" data-a="stdel" data-v="__class" data-id="'+x.id+'">Delete</button>':'')+'</div><div class="ft2">'+esc(x.text)+'</div></div>').join(''):'<div class="mut" style="margin-top:8px">Nothing recorded for the whole class. Use this when you take an action on the full class, such as a notebook check or a talk to everyone.</div>')+'</div>';
+  return'<div class="card rcs cact"><div class="row"><b>Whole class actions</b><span class="mut">'+a.length+' · '+esc(CLS)+'</span><span class="sp"></span><button class="btn pri sm" data-a="stact" data-v="__class">+ Class action</button></div>'
+   +a.map(x=>'<div class="al"><div class="ah"><b>'+fmtT(x.when||x.at)+'</b><span class="mut">'+esc(x.by)+(x.role?' · '+esc(x.role):'')+'</span><span class="sp"></span>'+(canEditAct(x)?'<button class="lnk" data-a="stedit" data-v="__class" data-id="'+x.id+'">Edit</button><button class="lnk" data-a="stdel" data-v="__class" data-id="'+x.id+'">Delete</button>':'')+'</div><div class="ft2">'+esc(x.text)+'</div></div>').join('')+'</div>';
 }
 function clCard(n){
   const c=CLS,rows=(rosterOf(c)[n]||[]).slice().sort((x,y)=>y.d<x.d?-1:y.d>x.d?1:0),e=INS[insKey(c)],up=e&&e.data?uptoISO(e.data.upto):'';
@@ -1650,10 +1676,10 @@ let UID='',ME_WAIT=!LS.get('pc2_me');
 async function restoreMe(){
   try{const U=await claude.use('user');if(!U||!U.id)return;UID=await U.id()||'';if(!UID||!DB)return;
     if(!ME){const s=await DB.collection('data/users/'+UID).doc('me').get();const v=s&&(typeof s.data==='function'?s.data():s.data);
-      if(v&&v.name&&v.role){ME={role:v.role,desig:v.desig||'',name:v.name,groups:v.groups||[],subject:v.subject||'',classes:v.classes||[],scope:window.GH?GH.scope():null};LS.set('pc2_me',ME);F=newF();syncCM();fuSeg=ME.role==='teacher'?myKey():'';view='ov'}}
+      if(v&&v.name&&v.role){ME={role:v.role,desig:v.desig||'',name:v.name,groups:v.groups||[],subject:v.subject||'',subs:v.subs||[],classes:v.classes||[],scope:window.GH?GH.scope():null};LS.set('pc2_me',ME);F=newF();syncCM();fuSeg=ME.role==='teacher'?myKey():'';view='ov'}}
     else saveMe()}catch(e){}
 }
-function saveMe(){try{if(DB&&UID&&ME&&!ME.va)DB.collection('data/users/'+UID).doc('me').set({role:ME.role,name:ME.name,groups:ME.groups||[],subject:ME.subject||'',classes:ME.classes||[]})}catch(e){}}
+function saveMe(){try{if(DB&&UID&&ME&&!ME.va)DB.collection('data/users/'+UID).doc('me').set({subs:ME.subs||[],role:ME.role,name:ME.name,groups:ME.groups||[],subject:ME.subject||'',classes:ME.classes||[]})}catch(e){}}
 
 function normCls(v){let s=String(v).replace(/\./g,'').replace(/\s+/g,'').toUpperCase(),m=/^(NUR|PG|LKG|UKG)([A-C]?)$/.exec(s);if(m)return(m[1]==='NUR'?'Nur':m[1])+(m[2]?' '+m[2]:'');m=/^(\d{1,2})([A-E]?)$/.exec(s);return m?m[1]+m[2]:String(v).trim()}
 
