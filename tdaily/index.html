@@ -557,7 +557,7 @@ input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:tex
 /* Version check: when a newer build is published, show a banner instead of reloading by itself
    (an automatic reload could interrupt someone mid-entry). Also reads the server clock from the
    response "Date" header so times do not depend on the phone's clock. */
-const APP_V="202611272140";
+const APP_V="202611272150";
 window.SRV_OFF=0;
 (function(){let busy=false,shown=false;async function chk(){if(busy||location.protocol==="file:")return;busy=true;
   try{const r=await fetch(location.pathname+"?nc="+Date.now(),{cache:"no-store"}),hd=r.headers.get("date");
@@ -728,7 +728,7 @@ function absentByName(nm){if(!nm)return false;const k=nm.trim().toLowerCase();
 const slotOf=id=>SLOTS.find(s=>s.id===id);
 const personName=(id,fb)=>roster.name[id]||fb;
 const slotText=s=>`${s.v.label} ${s.role}${roster.name[s.id]?" ("+roster.name[s.id]+")":""}`;
-function coverMap(){const m={};RES.forEach(r=>{const t=state.cover[r.id];if(t&&state.att[t]==="A"&&state.att[r.id]!=="A")m[t]=r.id});return m}
+function coverMap(){const m={},P=state.plan||{};Object.keys(P).forEach(c=>{const w=P[c];if(w&&!String(w).startsWith("n:")&&w!==c&&state.att[c]==="A"&&state.att[w]!=="A")m[c]=w});RES.forEach(r=>{const t=state.cover[r.id];if(t&&state.att[t]==="A"&&state.att[r.id]!=="A")m[t]=r.id});return m}
 function namesEditor(){const el=$("staffBody");if(!el)return;el.innerHTML=`<div class="group">Names, phone numbers and vehicle numbers stay the same every day · when a person changes, also type the Hindi name (used in the WhatsApp plan)</div>`+
     VEH.map(v=>`<div class="redit"><b>${v.label}</b>
       <label>Area<input class="note" id="ro-area-${v.id}" data-r="area.${v.id}" value="${esc(roster.area[v.id]||"")}" placeholder="Area"></label>
