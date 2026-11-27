@@ -4,7 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="icon" href="../fis/fis-logo-192.png">
-<style>html,body{margin:0}[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
+<style>html,body{margin:0}[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}.card2.flash,.sec-t.flash{box-shadow:0 0 0 3px var(--gold);transition:box-shadow .3s}
+</style>
 <title>Transport Operations · FIS</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
 <style>
@@ -556,7 +557,7 @@ input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:tex
 /* Version check: when a newer build is published, show a banner instead of reloading by itself
    (an automatic reload could interrupt someone mid-entry). Also reads the server clock from the
    response "Date" header so times do not depend on the phone's clock. */
-const APP_V="202611272030";
+const APP_V="202611272130";
 window.SRV_OFF=0;
 (function(){let busy=false,shown=false;async function chk(){if(busy||location.protocol==="file:")return;busy=true;
   try{const r=await fetch(location.pathname+"?nc="+Date.now(),{cache:"no-store"}),hd=r.headers.get("date");
@@ -875,7 +876,7 @@ function rangeEnd(){const m=[date.slice(0,7),todayIST().slice(0,7),START.slice(0
 function ensureMonth(){
   const end=rangeEnd(); if(end===month&&window.__monthDb===db)return; month=end; monthData={};
   if(monthUnsub){monthUnsub();monthUnsub=null} window.__monthDb=db; if(!db)return;
-  const take=q=>{monthData={};q.docs.forEach(doc=>{const x=doc.data()||{},k=x.date||doc.id;if(k>=START&&k<=end)monthData[k]={att:x.att||{},uni:x.uni||{},pu:x.pu||{},cover:x.cover||{},vc:x.vc||{}}});renderChart()};
+  const take=q=>{monthData={};q.docs.forEach(doc=>{const x=doc.data()||{},k=x.date||doc.id;if(k>=START&&k<=end)monthData[k]={att:x.att||{},uni:x.uni||{},pu:x.pu||{},cover:x.cover||{},vc:x.vc||{},plan:x.plan||{}}});renderChart()};
   const fallback=()=>db.collection("reports").orderBy("date","desc").limit(400).get().then(take).catch(()=>{});
   try{monthUnsub=db.collection("reports").where("date",">=",START).where("date","<=",end).onSnapshot(take,fallback)}catch(e){fallback()}
 }
@@ -1209,19 +1210,21 @@ function dashIssues(){const I=[],today=date===todayIST(),now=today?nowMinIST():-
   if(vehState==="ok"){const L=[];Object.keys(veh).forEach(id=>DOCS.forEach(([k,lab])=>{const[st,txt]=docState(veh[id][k]);if(st==="exp"||st==="none"||st==="due")L.push(`${esc(veh[id].no)} ${lab} — ${esc(txt)}`)}));add("red","📄","Vehicle documents expired or due",L,"docs")}
   if(svcState==="ok")add("amb","🛠️","Service overdue or due soon",Object.keys(SV).filter(id=>svcCalc(SV[id]).st!=="ok").map(id=>{const k=svcCalc(SV[id]);return `${esc(SV[id].no)} — ${k.st==="exp"?"overdue":"due soon"} · ${esc(k.why)}`}),"service");
   /* salary moved to Transport Helpdesk */
-  const noRt=PEOPLE().filter(id=>!rtOf(id,"m")||!rtOf(id,"a"));if(noRt.length)add("amb","⚙️","Reporting times not set — late cannot be counted",[`${noRt.length} staff · set them in Attendance › Staff details & timings`],"att");
+  const noRt=PEOPLE().filter(id=>roster.name[id]&&(!rtOf(id,"m")||(!rtOf(id,"a")&&!fullOut(id))));if(noRt.length)add("amb","⚙️","Reporting times not set — late cannot be counted",[`${noRt.length} staff · set them in Attendance › Staff details & timings`],"att");
   return I}
 let CRD={at:0,data:null};
+function crTok(){for(const k of ["td_token","fis_token","tcr_token"]){try{const v=localStorage.getItem(k);if(v){try{return JSON.parse(v)}catch(e){return v}}}catch(e){}}return ""}
 function loadCR(){if(Date.now()-CRD.at<10*60e3)return;CRD.at=Date.now();
-  fetch("https://script.google.com/macros/s/AKfycbxkeXNT1rwMcFD8Wpp-jCWDa8Fchaeq-ZKbYnCcBFxdB3ByQ9ZcQkdbHdLocv5S3ZVx5Q/exec",{method:"POST",body:JSON.stringify({fn:"cr_data",args:[false],token:""})})
-   .then(r=>r.json()).then(j=>{if(j.ok){CRD.data=j.v;if(tab==="dash")renderDash()}}).catch(()=>{})}
+  fetch("https://script.google.com/macros/s/AKfycbxkeXNT1rwMcFD8Wpp-jCWDa8Fchaeq-ZKbYnCcBFxdB3ByQ9ZcQkdbHdLocv5S3ZVx5Q/exec",{method:"POST",body:JSON.stringify({fn:"cr_data",args:[false],token:crTok()})})
+   .then(r=>r.json()).then(j=>{if(j.ok){CRD.data=j.v;if(tab==="dash")renderDash()}else CRD.at=Date.now()-9*60e3}).catch(()=>{CRD.at=Date.now()-9*60e3})}
 function crSummary(){const v=CRD.data;if(!v)return null;const ov=id=>(v.docs||{})["ov/"+id]||{},kind=e=>ov(e.id).kind||e.kind,t=todayIST(),m30=addDays(t,-30),wk=addDays(t,-6);
   const st=e=>ov(e.id).st||(e.d<m30?"Closed":e.action?"Action logged":"Open"),veh=e=>{const o=ov(e.id);return o.veh?[o.veh]:(e.vehs||[])};
   const C=(v.entries||[]).filter(e=>kind(e)==="Complaint"),open=C.filter(e=>st(e)==="Open"),week=C.filter(e=>e.d>=wk),today=C.filter(e=>e.d===t);
   const byV={};C.filter(e=>e.d>=m30).forEach(e=>veh(e).forEach(x=>byV[x]=(byV[x]||0)+1));
   const R=(v.entries||[]).filter(e=>["Request","Query","Not marked","Call"].includes(kind(e))),newR=R.filter(e=>{const r=ov(e.id).rq||{};return!r.dec&&!r.ack&&ov(e.id).st!=="Closed"&&e.d>=m30});
   return{open,week,today,top:Object.entries(byV).sort((a,b)=>b[1]-a[1]).slice(0,4),newR,veh}}
-document.addEventListener("click",e=>{if(e.target.closest('[data-go="__cr"]')){e.stopPropagation();location.href="../complaints/"}},true);
+document.addEventListener("click",e=>{if(e.target.closest('[data-go="__cr"]')){e.stopPropagation();const c=$("dCR");if(c){c.scrollIntoView({behavior:"smooth",block:"start"});c.classList.add("flash");setTimeout(()=>c.classList.remove("flash"),1600)}else location.href="../complaints/";return}
+  const g=e.target.closest('[data-go^="__d"]');if(g){e.stopPropagation();const c=$(g.dataset.go.slice(2));if(c){c.scrollIntoView({behavior:"smooth",block:"start"});c.classList.add("flash");setTimeout(()=>c.classList.remove("flash"),1600)}}},true);
 
 const _renderTD=render;render=function(){_renderTD();renderSup();renderWash();renderStl();renderVans();salLock();renderTabs();renderDash()};
 try{renderTabs()}catch(e){}
@@ -1553,10 +1556,12 @@ document.addEventListener("click",e=>{const t=e.target.closest("[data-cat]");if(
 
 /* ===== day data helpers (any date) ===== */
 function dayRec(d){if(d===date)return state;const x=monthData[d]||{},p=pendingBy[d]||{};
-  return{att:Object.assign({},x.att,p.att),uni:Object.assign({},x.uni,p.uni),cover:Object.assign({},x.cover,p.cover),pu:x.pu||{},vc:x.vc||{}}}
+  return{att:Object.assign({},x.att,p.att),uni:Object.assign({},x.uni,p.uni),cover:Object.assign({},x.cover,p.cover),pu:x.pu||{},vc:x.vc||{},plan:x.plan||{}}}
 function maleOn(d){const r=dayRec(d),cov={};RES.forEach(q=>{const c=(r.cover||{})[q.id];if(c&&(r.att||{})[q.id]!=="A")cov[c]=q.id});const out=[];
-  VEH.filter(v=>v.bus).forEach(v=>{const c=v.id+"c";let who=c;if((r.att||{})[c]==="A"){if(!cov[c])return;who=cov[c]}if(gOf(who)==="M")out.push({v,id:who})});return out}
-function dayFacts(d){const r=dayRec(d),P=PEOPLE();
+  VEH.filter(v=>v.bus).forEach(v=>{const c=v.id+"c";let who=c;const P=r.plan||{};
+    if(c in P){who=P[c];if(!who||String(who).startsWith("n:"))return}else if((r.att||{})[c]==="A"){if(!cov[c])return;who=cov[c]}
+    if(roster.name[who]&&gOf(who)==="M")out.push({v,id:who})});return out}
+function dayFacts(d){const r=dayRec(d),P=PEOPLE().filter(id=>roster.name[id]);
   return{abs:P.filter(id=>(r.att||{})[id]==="A"),uni:P.filter(id=>(r.uni||{})[id]&&(r.att||{})[id]!=="A"),
    late:P.flatMap(id=>["m","a"].filter(k=>lateBy(d,id,k)).map(k=>({id,k,min:lateBy(d,id,k),t:puOf(d,id)[k==="m"?"mi":"ai"]}))),male:isSun(d)?[]:maleOn(d)}}
 function crDay(d){const v=CRD.data;if(!v)return null;const ov=id=>(v.docs||{})["ov/"+id]||{},kind=e=>ov(e.id).kind||e.kind,veh=e=>{const o=ov(e.id);return o.veh?[o.veh]:(e.vehs||[])};
@@ -1596,21 +1601,21 @@ function renderDash(){const el=$("dashBody");if(!el||tab!=="dash")return;loadCR(
   ${isSun(date)?`<div class="card2" style="border-top-color:var(--gold)"><b>Sunday</b> — no school run. Attendance and duties are not counted; see Sunday washing below.</div>`:""}
   <div class="kp">
    ${tile(NIc.length?"red":"grn","att","No check-in",NIc.length,NIc.slice(0,2).map(x=>nm(x.id)).join(", ")||"everyone checked in")}
-   ${tile(F.abs.length?"red":"grn","att","Absent",F.abs.length,F.abs.length?F.abs.slice(0,2).map(nm).join(", "):"everyone present")}
-   ${tile(F.late.length?"red":"grn","att","Late arrivals",F.late.length,"morning "+F.late.filter(x=>x.k==="m").length+" · afternoon "+F.late.filter(x=>x.k==="a").length)}
-   ${tile(F.uni.length?"red":"grn","att","Without uniform",F.uni.length,F.uni.slice(0,2).map(nm).join(", ")||"all in uniform")}
-   ${tile(F.male.length?"red":"grn","att","Male conductor",F.male.length,F.male.map(m=>esc(m.v.label)).join(", ")||"rule followed")}
+   ${tile(F.abs.length?"red":"grn","__dAbs","Absent",F.abs.length,F.abs.length?F.abs.map(nm).join(", "):"everyone present")}
+   ${tile(F.late.length?"red":"grn","__dLate","Late arrivals",F.late.length,F.late.length?"morning "+F.late.filter(x=>x.k==="m").length+" · afternoon "+F.late.filter(x=>x.k==="a").length+" · <u>tap for names &amp; minutes</u>":"nobody late")}
+   ${tile(F.uni.length?"red":"grn","__dUni","Without uniform",F.uni.length,F.uni.map(nm).join(", ")||"all in uniform")}
+   ${tile(F.male.length?"red":"grn","__dMale","Male conductor",F.male.length,F.male.map(m=>nm(m.id)+" · "+esc(m.v.label)).join(", ")||"rule followed")}
    ${tile(CRd&&CRd.c.length?"red":"grn","__cr","Complaints",CRd?CRd.c.length:"…","on "+dS(date))}
    ${tile(CRd&&CRd.r.length?"gold":"grn","__cr","Transport requests",CRd?CRd.r.length:"…","on "+dS(date))}
   </div>
   ${dashTop()}
   <div class="sec-t"><i>👥</i><b>Staff · ${dS(date)}</b></div>
   <div class="dg">
-   <div class="card2"><div class="sh"><b>Absent</b><small>${F.abs.length}</small></div>${list(F.abs.map(id=>row(nm(id),esc(roleOf(id)),slotOf(id)?(cov[id]?"Covered: "+nm(cov[id]):"NOT COVERED"):"",slotOf(id)&&!cov[id]?"red":"grn")),"Everyone present")}</div>
-   <div class="card2"><div class="sh"><b>Late arrivals</b><small>check-in after ideal time</small></div>${list(F.late.map(x=>row(nm(x.id),`${x.k==="m"?"Morning":"Afternoon"} · ideal ${h12(rtOf(x.id,x.k))} · in ${h12(x.t)}`,"+"+x.min+" min","red")),"Nobody late")}
+   <div class="card2" id="dAbs"><div class="sh"><b>Absent</b><small>${F.abs.length}</small></div>${list(F.abs.map(id=>row(nm(id),esc(roleOf(id)),slotOf(id)?(cov[id]?"Covered: "+nm(cov[id]):"NOT COVERED"):"",slotOf(id)&&!cov[id]?"red":"grn")),"Everyone present")}</div>
+   <div class="card2" id="dLate"><div class="sh"><b>Late arrivals</b><small>${F.late.length} · check-in after ideal time</small></div>${list(F.late.slice().sort((a,b)=>b.min-a.min).map(x=>row(nm(x.id),`${x.k==="m"?"Morning":"Afternoon"} · ideal ${h12(rtOf(x.id,x.k))} · in ${h12(x.t)}`,"+"+x.min+" min","red")),"Nobody late")}
     ${notIn.length?`<div class="legend" style="margin:8px 0 0;color:#8A5B12">Not checked in yet: ${notIn.map(nm).join(", ")}</div>`:""}</div>
-   <div class="card2"><div class="sh"><b>Without uniform</b><small>marked at check-in</small></div>${list(F.uni.map(id=>{const p=puOf(date,id);return row(nm(id),esc(roleOf(id)),[p.um?"morning":"",p.ua?"afternoon":""].filter(Boolean).join(" + ")||"","blu")}),"Everyone in uniform")}</div>
-   <div class="card2"><div class="sh"><b>Male staff as conductor</b><small>conductors must be female</small></div>${list(F.male.map(m=>row(nm(m.id),esc(m.v.label)+" conductor seat","Not allowed","red")),"Rule followed")}</div>
+   <div class="card2" id="dUni"><div class="sh"><b>Without uniform</b><small>${F.uni.length} · marked at check-in</small></div>${list(F.uni.map(id=>{const p=puOf(date,id);return row(nm(id),esc(roleOf(id)),[p.um?"morning":"",p.ua?"afternoon":""].filter(Boolean).join(" + ")||"","blu")}),"Everyone in uniform")}</div>
+   <div class="card2" id="dMale"><div class="sh"><b>Male staff as conductor</b><small>${F.male.length} · conductors must be female</small></div>${list(F.male.map(m=>row(nm(m.id),esc(m.v.label)+" conductor seat","Male","red")),"Rule followed")}</div>
   </div>
   <div class="sec-t"><i>📊</i><b>Last 7 days</b><span>${dS(days[0])} – ${dS(date)}</span></div>
   <div class="card2">${wk}</div>
@@ -1620,7 +1625,7 @@ function renderDash(){const el=$("dashBody");if(!el||tab!=="dash")return;loadCR(
    <div class="card2"><div class="sh"><b>Changes in the plan</b><small>${chg.length}</small></div>${t?list(chg.map(c=>row(esc(c.label)+" · "+c.role,c.from?"regular: "+esc(pName(c.from)):"",c.to?esc(pName(c.to)):"EMPTY SEAT",c.to?"amb":"red")),"Regular crew on every vehicle"):"Loading…"}
     ${P&&P.absent.length?`<div class="legend" style="margin:8px 0 0">Absent tomorrow: ${P.absent.map(id=>esc(personName(id,id))).join(", ")}</div>`:""}</div>
   </div>
-  <div class="sec-t"><i>📞</i><b>Parent complaints &amp; transport requests · ${dS(date)}</b><a class="btn sm" href="../complaints/" style="margin-left:auto;text-decoration:none">Helpdesk</a></div>
+  <div class="sec-t" id="dCR"><i>📞</i><b>Parent complaints &amp; transport requests · ${dS(date)}</b><a class="btn sm" href="../complaints/" style="margin-left:auto;text-decoration:none">Helpdesk</a></div>
   <div class="dg">
    <div class="card2"><div class="sh"><b>Complaints</b><small>${CRd?CRd.c.length:""}</small></div>${CRd?list(CRd.c.map(e=>row(esc(e.name)+" · "+esc(e.cls),esc((CRd.veh(e).join(", ")||"vehicle ?")+" — "+String(e.text).slice(0,110)),esc(CRd.ov(e.id).st||(e.action?"Action logged":"Open")),CRd.ov(e.id).st==="Closed"?"grn":"red")),"No complaint on this day"):"Loading from the Daily FO…"}</div>
    <div class="card2"><div class="sh"><b>Transport requests</b><small>${CRd?CRd.r.length:""}</small></div>${CRd?list(CRd.r.map(e=>{const r=CRd.ov(e.id).rq||{};return row(esc(e.name)+" · "+esc(e.cls),esc(String(e.text).slice(0,110)),esc(r.dec||(r.ack?"Acknowledged":"New")),r.dec==="Denied"?"red":r.dec==="Approved"?"grn":"amb")}),"No request on this day"):"Loading…"}</div>
@@ -1872,7 +1877,7 @@ function notMarked(){const today=date===todayIST(),now=today?nowMinIST():1e9,pas
   return O}
 function dashTop(){const nm=id=>esc(personName(id,id)),row=(a,b,c,cls)=>`<div><span class="who">${a}${b?`<small>${b}</small>`:""}</span>${c?`<span class="v ${cls||""}">${c}</span>`:""}</div>`;
   const list=(L,empty)=>L.length?`<div class="nl">${L.slice(0,12).join("")}</div>${L.length>12?`<div class="legend" style="margin:6px 0 0">+ ${L.length-12} more</div>`:""}`:`<div class="empty2">✓ ${empty}</div>`;
-  const noRt=VEH.filter(v=>!rtOf(v.id+"d","m")||!rtOf(v.id+"d","a")).map(v=>v.label);
+  const noRt=VEH.filter(v=>!rtOf(v.id+"d","m")||(!rtOf(v.id+"d","a")&&!fullOut(v.id+"d"))).map(v=>v.label);
   const NI=noCheckIn(date),O=notMarked(),ML=markedLate();
   if(isSun(date))return"";
   return `${noRt.length?`<div class="card2 warn"><b>⚠️ Reporting time not set for ${noRt.length} of ${VEH.length} vehicles</b><p>Late arrivals are counted only against each bus's reporting time. Missing: ${esc(noRt.join(", "))}. Until set, "no check-in" uses ${h12(RT_FALL.m)} / ${h12(RT_FALL.a)}.</p><button class="btn sm primary" data-go="staffl">Set times per bus</button></div>`:""}
