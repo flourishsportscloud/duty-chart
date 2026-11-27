@@ -558,7 +558,7 @@ input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:tex
 /* Version check: when a newer build is published, show a banner instead of reloading by itself
    (an automatic reload could interrupt someone mid-entry). Also reads the server clock from the
    response "Date" header so times do not depend on the phone's clock. */
-const APP_V="202611272230";
+const APP_V="202611272300";
 window.SRV_OFF=0;
 (function(){let busy=false,shown=false;async function chk(){if(busy||location.protocol==="file:")return;busy=true;
   try{const r=await fetch(location.pathname+"?nc="+Date.now(),{cache:"no-store"}),hd=r.headers.get("date");
@@ -754,7 +754,7 @@ const PUN=[["mi","सुबह आए","In · morning"],["mo","सुबह ग�
 const PEOPLE=()=>[...SLOTS.map(s=>s.id),...RES.map(r=>r.id)];
 // full-day staff (bus supervisors): report in the morning, leave at their out time; no afternoon check-in
 const fullOut=id=>((roster.full||{})[id]||"");
-const roleOf=id=>{const s=slotOf(id),r=RES.find(x=>x.id===id),base=s?s.v.label+" · "+s.role:(r?r.label:id);return fullOut(id)?"Bus Supervisor ("+base+")":base};
+const roleOf=id=>{const s=slotOf(id),r=RES.find(x=>x.id===id),base=s?s.v.label+" · "+s.role:(r?r.label:id);return fullOut(id)?(((roster.fullRole||{})[id])||"Full day")+" ("+base+")":base};
 const gOf=id=>(roster.g||{})[id]||(id==="r4"||/c$/.test(id)?"F":"M");
 const rtOf=(id,k)=>k==="a"&&fullOut(id)?"":(((k==="m"?roster.rtm:roster.rta)||{})[id]||"");
 // left before the out time (full-day staff)
@@ -790,7 +790,7 @@ function renderStaff(){const b=$("attBody");if(!b)return;
         <label class="h">Name<input id="ro-name-${id}" data-r="name.${id}" value="${esc(roster.name[id]||"")}"></label><label class="h">Phone<input id="ro-phone-${id}" data-r="phone.${id}" value="${esc(roster.phone[id]||"")}" inputmode="tel"></label>
         <label class="h">Hindi name<input id="ro-hi-${id}" data-r="hi.${id}" value="${esc((roster.hi||{})[id]||"")}" placeholder="${esc(HI[id]||"")}"></label><label class="h">Gender<select id="ro-g-${id}" data-r="g.${id}"><option value="M" ${gOf(id)==="M"?"selected":""}>Male</option><option value="F" ${gOf(id)==="F"?"selected":""}>Female</option></select></label>
         <label class="h">Ideal time · morning<input type="time" id="rt-m-${id}" data-r="rtm.${id}" value="${esc(rtOf(id,"m"))}"></label><label class="h">Ideal time · afternoon<input type="time" id="rt-a-${id}" data-r="rta.${id}" value="${esc(((roster.rta||{})[id])||"")}"></label>
-        <label class="h">Full day (supervisor) · leaves at<input type="time" id="ro-full-${id}" data-r="full.${id}" value="${esc(fullOut(id))}" title="Set for staff who stay the whole day; clear it for normal two-shift duty"></label>
+        <label class="h">Full day · leaves at<input type="time" id="ro-full-${id}" data-r="full.${id}" value="${esc(fullOut(id))}" title="Set for staff who stay the whole day; clear it for normal two-shift duty"></label><label class="h">Full-day work<input id="ro-fr-${id}" data-r="fullRole.${id}" value="${esc((roster.fullRole||{})[id]||"")}" placeholder="e.g. Bus Supervisor, School nanny"></label>
         ${PUN.map(([k,,e])=>`<label class="h">${e} (correct)<input type="time" id="pt-${id}-${k}" data-pt="${id}|${k}" value="${esc(p[k]||"")}"></label>`).join("")}</div>
         <div class="actions" style="margin:8px 0 0"><button class="btn sm primary" data-ped="${id}">Done</button></div></div>`:""}
      ${x.a?`<div style="margin-top:8px;font-size:13px">${slotOf(id)?(cov[id]?`Covered by <b>${esc(personName(cov[id],cov[id]))}</b>`:`<span class="flag">Not covered</span>`):"Reserve absent"}</div>`
@@ -906,7 +906,7 @@ document.addEventListener("click",e=>{
   const hd=e.target.closest("[data-d]"); if(hd){setDate(hd.dataset.d);scrollTo({top:0})}
 });
 document.addEventListener("input",e=>{
-  const rk=e.target.dataset.r; if(rk){const[g,k]=rk.split(".");roster[g][k]=e.target.value;saveRoster();return}
+  const rk=e.target.dataset.r; if(rk){const[g,k]=rk.split(".");roster[g]=roster[g]||{};roster[g][k]=e.target.value;saveRoster();return}
   const pk=e.target.dataset.pre; if(pk){const[i,f]=pk.split("."),P=roster.pre[+i];if(!P)return;P[f]=e.target.value;
     if(f==="driver"||f==="cond"){const id=idByName(e.target.value);if(id&&roster.phone[id]){P[f==="driver"?"dphone":"cphone"]=roster.phone[id];const ph=$("ro-pre-"+i+"-"+(f==="driver"?"dphone":"cphone"));if(ph)ph.value=roster.phone[id]}}
     saveRoster();return}
