@@ -217,7 +217,7 @@ nav button b{position:absolute;top:-6px;right:-4px;margin:0!important}
 <div id="sheet"></div>
 <div class="toast" id="toast" hidden></div>
 <script>
-const APP_V="202611222000";
+const APP_V="202611271930";
 const QS=new URLSearchParams(location.search);
 const API_URL=QS.get('api')||'https://script.google.com/macros/s/AKfycbxkeXNT1rwMcFD8Wpp-jCWDa8Fchaeq-ZKbYnCcBFxdB3ByQ9ZcQkdbHdLocv5S3ZVx5Q/exec';
 const TD_URL=QS.get('tdapi')||QS.get('api')||'https://script.google.com/macros/s/AKfycbzIeMjvNueZiTlS6m-j8VNKJxLAbWVITVYkvdj7COAUJMhAsxe2BvPmPD7K3czI6oqWfw/exec';
@@ -510,7 +510,7 @@ function sheet(){const e=S.entries.find(x=>x.id===S.open);if(!e){$('sheet').inne
   <div class="sb">
    <div class="blk"><span class="lbl">Case details</span><div class="facts">
     <div><span>Student</span><b>${esc(e.name)}</b></div><div><span>Class</span><b>${esc(e.cls)}</b></div>
-    <div><span>Logged on</span><b>${fmt(e.d)}</b></div><div><span>Source</span><b>Daily FO · ${esc(e.mode||e.src||'')}</b></div>
+    <div><span>Logged on</span><b>${fmt(e.d)}</b></div><div><span>Source</span><b>${e.src==='Parent Connect'?'Parent Connect':'Daily FO'} · ${esc(e.mode||e.src||'')}${e.by?' · added by '+esc(e.by):''}</b></div>
     <div><span>Vehicle</span><b>${esc(v.join(', ')||'Not known')}</b></div><div><span>Driver that day</span><b>${esc(c.driver||'—')}</b>${c.dphone?'<br>'+tel(c.dphone):''}${c.cover?`<br><span class="tag t-amb">covering for ${esc(c.cover)}</span>`:''}</div>
     ${c.cond||(FLEET.find(x=>x.label===v[0])||{}).bus?`<div><span>Conductor</span><b>${esc(c.cond||'—')}</b>${c.cphone?'<br>'+tel(c.cphone):''}</div>`:''}
     ${!rq&&!chg?`<div><span>Priority</span><b>${esc(e.pri||'Not marked')}</b></div>`:''}

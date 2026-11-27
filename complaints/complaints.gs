@@ -10,6 +10,9 @@ const TZ = 'Asia/Kolkata';
 const FO_ID = '1DAx096q0BtPAEsBI2AAtxYtGyEmHEXqFaLpghy_rhSA';      // Daily FO – "Feedback 2026"
 const ROSTER_ID = '1wxkOdzcg3-jRo9y0L6ueaNFQwEonIeyPgfjwzTKtmqM';  // "Student Entry Exit Data" (Roster tab)
 const CACHE_SEC = 300;
+const PC_ID = '13qnxmZpI9uiK7c2VtAgR2QUIWFWrLKz1xrT9IHf0Ag8';      // "Parent Connect Data" (feedback and requests added in the Parent Connect app) — read only
+// transport words in the text: a bus / van / driver complaint logged under another department still reaches the Helpdesk
+const TRANS_RE = /\b(bus|buses|van|driver|conductor|transport|pick ?up|drop(ped|ping)?|route|stoppage)\b|बस|वैन|ड्राइवर|कंडक्टर/i;
 const SEED_DRIVERS = {"Bus 1":"Samsudin","Bus 2":"Suresh Nayak","Bus 3":"Mahender","Bus 4":"Deepak","Bus 5":"Bharat","Bus 6":"Ajay Gujrati",
   "Bus 7":"Vikash Saraswat","Bus 8":"Aman Siyota","Bus 9":"Kushal Singh","Bus 10":"Ajij","Bus 11":"Manish","Bus 12":"Suresh Gujrati",
   "Bus 13":"Jairaj","Bus 14":"Shivratan","Bus 15":"Dilip Chanwariya","Bus 16":"Hanuman Singh","Bus 34":"Gopal Jawa",
@@ -75,9 +78,10 @@ function read_(){
   // 1. Feedback Updated Final – Transport complaints, concerns, requests, queries, unmarked
   let sh = fo.getSheetByName('Feedback Updated Final');
   if(sh && sh.getLastRow() > 1) sh.getRange(2,1,sh.getLastRow()-1,13).getValues().forEach((r, i) => {
-    if(s_(r[5]).toLowerCase() !== 'transport') return;
+    const text = s_(r[8]);
+    if(s_(r[5]).toLowerCase() !== 'transport' && !TRANS_RE.test(text)) return;
     const k = kind_(r[6]); if(!k) return;
-    const name = s_(r[2]), cls = s_(r[3]), text = s_(r[8]);
+    const name = s_(r[2]), cls = s_(r[3]);
     out.push(Object.assign({id: 'fb' + (s_(r[0]) || ('r' + (i+2))).replace(/\.0$/,''), src: 'Feedback', d: day_(r[1]), name: name, cls: cls_(cls),
       kind: k, cat: s_(r[6]), mode: s_(r[7]), text: text, pri: pri_(r[9]), action: s_(r[12]), need: s_(r[11])}, match(name, cls, text)));
   });
@@ -96,12 +100,25 @@ function read_(){
   if(sh && sh.getLastRow() > 1){ let last = '';
     sh.getRange(2,1,sh.getLastRow()-1,11).getValues().forEach((r, i) => {
       const d = day_(r[1]); if(d) last = d;
-      if(s_(r[4]).toLowerCase() !== 'transport') return;
-      const name = s_(r[2]), cls = s_(r[3]), text = s_(r[5]);
+      const text = s_(r[5]);
+      if(s_(r[4]).toLowerCase() !== 'transport' && !TRANS_RE.test(text)) return;
+      const name = s_(r[2]), cls = s_(r[3]);
       out.push(Object.assign({id: 'ca' + (i+2), src: 'Calls', d: d || last, name: name, cls: cls_(cls), kind: 'Call', cat: 'In-house call',
         text: text, action: s_(r[10]), by: s_(r[8]), status: s_(r[9]), pri: ''}, match(name, cls, text)));
     });
   }
+  // 4. Parent Connect – feedback, complaints and requests added in the Parent Connect app (department Transport,
+  //    request category "Transport change", or a bus / van / driver complaint in the text)
+  try{ const pc = SpreadsheetApp.openById(PC_ID).getSheetByName('Docs');
+    if(pc && pc.getLastRow() > 1){ const w = pc.getLastColumn(), rows = pc.getRange(2,1,pc.getLastRow()-1,w).getValues();
+      rows.forEach(r => { const key = String(r[0]); if(key.indexOf('added/') !== 0) return; let a = null;
+        try{ a = JSON.parse(r.slice(3).join('')); }catch(e){ return; } if(!a || !a.t) return;
+        const rc = s_(a.rc), dp = s_(a.dp), text = s_(a.t), ct = s_(a.ct);
+        if(dp.toLowerCase() !== 'transport' && !/transport/i.test(rc) && !TRANS_RE.test(text)) return;
+        const kind = ct === 'Request' || /transport/i.test(rc) ? 'Request' : /complain|concern/i.test(ct) ? 'Complaint' : ct === 'Query' ? 'Query' : 'Not marked';
+        out.push(Object.assign({id: 'pc' + key.slice(6).replace(/[^a-z0-9]/gi,''), src: 'Parent Connect', d: s_(a.d).slice(0,10), name: s_(a.n), cls: cls_(a.c), kind: kind,
+          cat: ct + (rc ? ' · ' + rc : ''), mode: s_(a.m), text: text, pri: pri_(a.p), action: '', by: s_(a.by)}, match(s_(a.n), s_(a.c), text)));
+      }); } }catch(e){}
   return out;
 }
 function entries_(fresh){
