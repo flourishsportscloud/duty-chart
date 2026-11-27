@@ -1,0 +1,13 @@
+{
+ "name": "FIS Parent Connect",
+ "short_name": "Parent Connect",
+ "start_url": "./",
+ "scope": "./",
+ "display": "standalone",
+ "background_color": "#F5F3EE",
+ "theme_color": "#1B3156",
+ "icons": [
+  {"src": "../fis/fis-logo-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+  {"src": "../fis/fis-logo-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"}
+ ]
+}

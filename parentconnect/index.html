@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FIS Parent Connect</title>
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Parent Connect"><meta name="theme-color" content="#1B3156">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="../fis/fis-logo-180.png">
+<link rel="icon" href="../fis/fis-logo-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -296,6 +300,43 @@ tr.clk{cursor:pointer}tr.clk:hover td{background:#f4f7fc}
 .ins ul{margin:0;padding-left:18px;font-size:13.5px}.ins .ii{font-size:13.5px;padding:4px 0;border-top:1px dashed #dfe5f1}.ins .ii:first-of-type{border-top:0}
 .ins .itag{display:inline-block;margin-left:8px;font-size:11px;font-weight:700;color:#572686;background:#efe3fa;border-radius:20px;padding:1px 8px;white-space:nowrap}
 select[data-cf]{width:100%}
+/* ---- Class Record, login, loading (v2) ---- */
+body{font-size:15px}
+.lbl{font-size:13px;font-weight:700;color:#3a4a68;margin:12px 0 5px}
+input[type=text],input[type=password],input[type=search],input[type=datetime-local],select,textarea{font-size:16px}
+.loginw{padding:16px;align-items:flex-start;padding-top:7vh}
+.loginc{width:100%;max-width:400px;margin:0 auto;background:#fff;border-radius:18px;padding:26px 24px;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+.lg-head{text-align:center;margin-bottom:16px}
+.lg-head img{width:64px;height:64px;border-radius:14px;display:block;margin:0 auto 10px}
+.lg-head h1{margin:0;font-size:24px;color:var(--navy);font-weight:800}
+.lg-head p{margin:4px 0 0;font-size:14px;color:#5b6b88}
+.loginc input{height:48px;border-radius:12px}
+.loginc .btn.pri{width:100%;height:50px;font-size:16px;border-radius:12px;margin-top:6px}
+.lg-note{font-size:13px;color:#5b6b88;text-align:center;margin-top:12px;line-height:1.5}
+.lg-err{background:#fdecef;border:1px solid #f4b8c6;color:#8d1237;border-radius:10px;padding:10px 12px;font-size:14px;margin-top:12px}
+.loginc .banner{font-size:13px;text-align:center}
+.roles{grid-template-columns:1fr;gap:8px}
+.role{padding:12px 14px}.role b{font-size:15px}.role small{font-size:13px}
+.scopebox{background:var(--sky-t);border-radius:10px;padding:10px 12px;font-size:14px;margin:10px 0;color:var(--navy)}
+.loadbox{max-width:420px;margin:18vh auto 0;text-align:center;padding:24px}.loadbox .lbt{font-size:18px;font-weight:800;color:var(--navy);margin-bottom:8px}.loadbox .btn{margin-top:14px}
+.rcnav{display:flex;gap:8px;align-items:center;margin-bottom:6px}.rcnav select{flex:1;height:46px;font-weight:700}.rcnav .btn{height:46px;width:46px;font-size:22px;padding:0}
+.rcpos{text-align:center;font-size:13px;margin-bottom:12px}
+.rc{max-width:760px;margin:0 auto}
+.rch{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}.rch h2{margin:0;font-size:22px;color:var(--navy)}
+.rcs{margin-bottom:14px}.rcs h3{font-size:16px;margin:0 0 8px}.rcs h3 small{font-weight:500;color:#7a869c;margin-left:8px;font-size:13px}
+.rcs.new{border-left:4px solid var(--mag)}
+.fl,.al{padding:10px 0;border-top:1px solid #e6ebf4}.fl:first-of-type,.al:first-of-type{border-top:0}
+.fh,.ah{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:3px;font-size:13.5px}
+.ft2{font-size:15px;line-height:1.5;color:var(--ink);white-space:pre-wrap}
+.lnk{background:none;border:0;color:var(--sky);font-weight:700;font-size:13px;cursor:pointer;padding:2px 4px}
+.ins .prof,.ins .ii,.ins ul{font-size:14.5px}.ins .ih{font-size:13.5px}
+
+/* ---- touch, scroll, update banner ---- */
+html,body{overscroll-behavior:none}
+.scroll,.ov,.mod,.main{overscroll-behavior:contain}
+.btn,.chip,.role,.pill-u,nav,nav *,.sync,[data-a]{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:text}
+.nvb{position:fixed;left:12px;right:12px;bottom:76px;z-index:99;background:#1B3156;color:#fff;border-radius:12px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px;box-shadow:0 6px 24px rgba(0,0,0,.3)}
 </style>
 <script>
 /* Parent Connect — GitHub Pages client layer: Diary-password login + Apps Script API (replaces the Claude runtime) */
@@ -309,8 +350,10 @@ function ld(k){try{localStorage.removeItem(k)}catch(e){}}
 var GH=window.GH={tok:lg(K)||'',who:lg(W)||{}};
 async function call(fn,args,tok){
   if(API.indexOf('__API')===0)throw new Error('This app is not connected to its server yet. See SETUP.md.');
-  var r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:fn,args:args||[],code:tok||''})});
-  var j=await r.json();
+  var ac=new AbortController(),tm=setTimeout(function(){ac.abort()},120000),r,j;
+  try{r=await fetch(API,{method:'POST',signal:ac.signal,headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:fn,args:args||[],code:tok||''})});j=await r.json()}
+  catch(x){throw new Error(x&&x.name==='AbortError'?'The server took too long. Tap to try again.':'No connection. Check your internet and try again.')}
+  finally{clearTimeout(tm)}
   if(!j.ok){var e=new Error(j.error||'Something went wrong');e.auth=!!j.auth;throw e}
   return j.data;
 }
@@ -318,14 +361,56 @@ GH.api=async function(fn,args){
   try{return await call(fn,args,GH.tok)}
   catch(e){if(e.auth&&!GH._x){GH._x=1;ld(K);location.reload()}throw e}
 };
-GH.allowed=function(){
-  var n=String(GH.who.name||'').trim().toLowerCase(),r=String(GH.who.role||'').toLowerCase();
-  if(n==='harsh yadav')return['director'];
-  if(r==='admin')return['admin'];
-  if(/^(pl|cm|cmh|pm)$/.test(r))return['coord'];
-  return['teacher'];
+/* Full access: exact names as in the Diary login (lower case). Diary role admin (= front office) always has it. */
+var NAMES=["Ajita", "Amit", "Anita", "Anuradha", "Archana", "Bharti", "chhavi", "Deepali", "Deepmala", "Devanshi", "Diksha Singh", "Divyanshi Jain", "Garima Mathur", "Gauri", "Geeta", "Harsh Yadav", "Harshvardhan Soni", "Himanshi", "Himanshi Negi", "Himanshu", "Ishita", "Jatin", "Jitesh", "Jyotshna", "Kanika", "Karishma suthar", "Komal Suthar", "Madhu", "Manisha Chauhan", "Manisha Sharma", "Mansi Soni", "Mansi yadav", "Megha Shekhawat", "Monika", "Monika Rajpurohit", "Neetu Dara", "Neha", "Neha Sethia", "Nisha", "Pallavi", "Pooja", "Pooja Chauhan", "Poonam", "Poonam Gaur", "Preeti", "Preeti Jain", "Priya", "Priya Shekhawat", "Priyanshi", "Radha", "Rahul", "Rahul Yadav", "Rashmi Singh", "Reema", "Richa", "Richa Sharma", "Ritika", "Saba", "Saba panwar", "Sanjana Sarswat", "Santosh Yadav", "Sarita Saini", "Saroj", "Shaan", "Shailesh", "Shally Taneja", "Sharda Yadav", "Shobha", "Shreya", "Shubhangi", "Sunita Bidawat", "Swati", "tanushree", "Tanushreee", "tina", "Tripti", "Upendra", "Vaishali Rathore", "Vaneshwari", "Vijay Raj Soni", "Vipul", "Yashika Gupta", "Yavnika"];
+var FULL=['harsh yadav','surender yadav','shubhangi','santosh yadav','sharda yadav','nahida','anahida',
+ 'anoop gahlot','anoop','jai pandla','jai','chandan soni','chandan','narendra dara','narendra',
+ 'megha shekhawat','harshvardhan soni','preeti jain','vaishali rathore',
+ 'sanjana sarswat','neetu dara','divyanshi jain','diksha singh raghuwanshi','diksha singh',
+ 'rashmi purushottam','rashmi rathore','neha sethia',
+ 'saba','saba panwar','karishma suthar','karishma','chandani chayal','chandani',
+ 'asha rao','asha'];
+
+var PRE=['PG','Nur','LKG','UKG'];
+function R(a,b){var o=[];for(var i=a;i<=b;i++)o.push(String(i));return o}
+var ALLC=PRE.concat(R(1,11));
+/* Who sees which classes (matched on the Diary login name) and their role */
+var SCOPES={
+ 'poonam':[R(6,7),'pl'],'poonam sharda':[R(6,7),'pl'],
+ 'garima':[R(8,9),'pl'],'garima mathur':[R(8,9),'pl'],'dr. garima khatri':[R(8,9),'pl'],
+ 'sarita saini':[R(6,11),'pl'],'sarita':[R(6,11),'pl'],
+ 'santosh yadav':[R(1,11),'mgmt'],'shubhangi':[ALLC,'mgmt'],
+ 'sharda yadav':[PRE.concat(R(1,5)),'pl'],
+ 'vaishali rathore':[ALLC,'admin'],'preeti jain':[ALLC,'admin'],'harshvardhan soni':[ALLC,'admin'],'megha shekhawat':[ALLC,'admin'],
+ 'rashmi purushottam':[PRE,'pl'],'rashmi rathore':[PRE,'pl'],
+ 'shally taneja':[R(1,2),'pl'],
+ 'sanjana sarswat':[R(1,5),'pm'],
+ 'neetu dara':[R(3,5),'pm'],'diksha singh raghuwanshi':[R(3,5),'pm'],'diksha singh':[R(3,5),'pm'],'divyanshi jain':[R(3,5),'pm']
 };
-GH.logout=function(){ld(K);ld(W);ld('pc2_me');location.reload()};
+function nkey(){return String(GH.who.name||'').trim().toLowerCase().replace(/\s+/g,' ')}
+GH.scope=function(){var s=SCOPES[nkey()];return s?s[0].slice():null};
+GH.desig=function(){var s=SCOPES[nkey()];if(s)return s[1];var r=String(GH.who.role||'').toLowerCase();
+  if(r==='admin')return'admin';if(r==='pl')return'pl';if(r==='cm')return'cm';if(r==='cmh')return'cmh';if(r==='pm')return'pm';return'st'};
+GH.allowed=function(){
+  var n=String(GH.who.name||'').trim().toLowerCase().replace(/\s+/g,' '),r=String(GH.who.role||'').toLowerCase();
+  if(n==='rahul yadav'||n==='rahul')return['director','admin','coord','teacher'];
+  var sd=SCOPES[n];if(sd){return(sd[1]==='pl'||sd[1]==='pm')?['coord','teacher']:['admin','coord','teacher']}
+  if(r==='admin'||FULL.indexOf(n)>=0)return['admin','coord','teacher'];
+  if(/^(pl|cm|cmh|pm)$/.test(r))return['coord','teacher'];
+  return['teacher','coord'];
+};
+function idb(){return new Promise(function(ok,no){try{var q=indexedDB.open('pc_cache',1);q.onupgradeneeded=function(){q.result.createObjectStore('k')};q.onsuccess=function(){ok(q.result)};q.onerror=function(){no(q.error)}}catch(e){no(e)}})}
+GH.cget=async function(k){try{var d=await idb();return await new Promise(function(ok){var t=d.transaction('k').objectStore('k').get(k);t.onsuccess=function(){ok(t.result||null)};t.onerror=function(){ok(null)}})}catch(e){return null}};
+GH.cset=async function(k,v){try{var d=await idb();d.transaction('k','readwrite').objectStore('k').put(v,k)}catch(e){}};
+GH.cclear=async function(){try{var d=await idb();d.transaction('k','readwrite').objectStore('k').clear()}catch(e){}};
+GH.registerSW=function(onNew){try{if(!('serviceWorker' in navigator)||!(location.protocol==='https:'||location.hostname==='localhost'))return;
+  navigator.serviceWorker.register('sw.js').then(function(reg){
+    function watch(w){w&&w.addEventListener('statechange',function(){if(w.state==='installed'&&navigator.serviceWorker.controller)onNew(w)})}
+    if(reg.waiting&&navigator.serviceWorker.controller)onNew(reg.waiting);
+    reg.addEventListener('updatefound',function(){watch(reg.installing)});
+    var rl=false;navigator.serviceWorker.addEventListener('controllerchange',function(){if(!rl){rl=true;location.reload()}});
+    setInterval(function(){reg.update().catch(function(){})},1800000)}).catch(function(){})}catch(e){}};
+GH.logout=function(){GH.cclear();ld(K);ld(W);ld('pc2_me');location.reload()};
 GH.gate=function(){
   return new Promise(async function(done){
     var app=document.getElementById('app');
@@ -335,25 +420,24 @@ GH.gate=function(){
     }
     var msg='',lastN='';
     function paint(){
-      app.innerHTML='<div class="loginw"><div class="loginc"><div style="font-size:19px;font-weight:800;color:var(--navy)">Parent Connect</div>'
-       +'<div class="mut" style="font-size:12.5px;margin-bottom:12px">Flourish International School, Bikaner</div>'
+      app.innerHTML='<div class="loginw"><div class="loginc"><div class="lg-head"><img src="../fis/fis-logo-192.png" alt="FIS"><h1>Parent Connect</h1><p>Flourish International School, Bikaner</p></div>'
        +'<div class="banner">Contains names of students and parents. Staff use only.</div>'
-       +'<label class="lbl">Name</label><input type="text" id="gn" autocomplete="username" placeholder="Same name as in the Diary app">'
-       +'<label class="lbl">Password</label><input type="password" id="gp" autocomplete="current-password" placeholder="Same password as in the Diary app">'
-       +(msg?'<div style="color:#b3123f;font-size:13px;margin-top:10px">'+msg.replace(/</g,'&lt;')+'</div>':'')
-       +'<div style="margin-top:18px"><button class="btn pri" id="gb">Sign in</button></div>'
-       +'<div class="mut" style="font-size:12px;margin-top:10px">Use the same login you use for the Diary app. You stay signed in on this phone or computer.</div></div></div>';
+       +'<label class="lbl">Name</label><input type="text" id="gn" list="gnl" autocomplete="username" autocapitalize="words" autocorrect="off" spellcheck="false" placeholder="Start typing, then pick your name"><datalist id="gnl">'+NAMES.map(function(x){return'<option value="'+x+'">'}).join('')+'</datalist>'
+       +'<label class="lbl">Password</label><input type="password" id="gp" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Your Diary app password">'
+       +(msg?'<div class="lg-err">'+msg.replace(/</g,'&lt;')+'</div>':'')
+       +'<div style="margin-top:16px"><button class="btn pri" id="gb">Sign in</button></div>'
+       +'<div class="lg-note">Use the same name and password as the Diary app. You stay signed in on this device.</div></div></div>';
       var go=document.getElementById('gb'),n=document.getElementById('gn'),p=document.getElementById('gp');
       n.value=lastN||GH.who.name||'';
       async function submit(){
         lastN=n.value;go.disabled=true;go.textContent='Signing in…';
         try{
-          var r=await call('login',[n.value,p.value],'');
+          var nm=n.value.replace(/\s+/g,' ').trim();var r=await call('login',[nm,p.value],'');
           var prev=(GH.who.name||'').toLowerCase();
           GH.tok=r.token;GH.who={name:r.name,role:r.role};ls(K,GH.tok);ls(W,GH.who);
           if(prev&&prev!==r.name.toLowerCase()){ld('pc2_me');try{ME=null;ME_WAIT=true}catch(e){}}
           done();
-        }catch(e){msg=e.message||'Could not sign in';paint()}
+        }catch(e){var m=e.message||'Could not sign in';if(/No login for this name/i.test(m))m='No login found for this name. Pick your name from the list. If you are not in the list, set your password once in the Diary app (First time? Set your password) and ask FO to approve it.';else if(/Wrong password/i.test(m))m='Wrong password. Use the password you set in the Diary app.';else if(/waiting for the admin/i.test(m))m='Your Diary login is waiting for FO approval.';else if(/reset/i.test(m))m='Your password was reset. Set a new one in the Diary app (First time? Set your password), then come back.';else if(/fetch|network|Failed/i.test(m))m='No connection. Check your internet and try again.';msg=m;paint()}
       }
       go.onclick=submit;p.onkeydown=n.onkeydown=function(e){if(e.key==='Enter')submit()};
       (n.value?p:n).focus();
@@ -362,29 +446,101 @@ GH.gate=function(){
   });
 };
 /* ---- shared storage: same calls the app made to the Claude db, served by the Apps Script ---- */
+/* Save engine: every edit goes into a persistent queue (IndexedDB), is sent one record at a time with retry,
+   and is merged by item id with whatever other people saved meanwhile. Pending records are never overwritten by the server copy. */
 var C={},VER=0,subs=[],started=false,first=false,busy=false;
+var Q={},QV={},BASE={},STAT={pending:0,state:'ok',warn:''},sl=[],flushing=false,tries=0,ft=null,pq=null;
+var J=function(x){return JSON.stringify(x)},CL=function(x){return x==null?x:JSON.parse(J(x))};
+var isO=function(x){return x&&typeof x==='object'&&!Array.isArray(x)};
+function stat(){STAT.pending=Object.keys(Q).length;sl.forEach(function(f){try{f(STAT)}catch(e){}})}
+GH.stat=STAT;GH.onStat=function(f){sl.push(f)};
+function persistQ(){clearTimeout(pq);pq=setTimeout(async function(){try{await GH.cset('queue',{Q:Q,BASE:(function(){var b={};Object.keys(Q).forEach(function(k){if(BASE[k]!=null)b[k]=BASE[k]});return b})()});if(STAT.warn==='storage'){STAT.warn='';stat()}}catch(e){STAT.warn='storage';stat()}},200)}
+function allId(a){return a.every(function(x){return x&&typeof x==='object'&&x.id!=null})}
+function mergeArr(b,l,s){
+  var bm={},lm={},sm={};b.forEach(function(x){bm[x.id]=x});l.forEach(function(x){lm[x.id]=x});s.forEach(function(x){sm[x.id]=x});
+  var out=[],seen={};
+  s.forEach(function(x){var id=x.id;seen[id]=1;
+    if(id in bm&&!(id in lm))return;                    /* deleted here */
+    if(id in lm&&J(lm[id])!==J(bm[id]))out.push(isO(lm[id])&&isO(sm[id])&&id in bm?mergeO(bm[id],lm[id],sm[id]):lm[id]);else out.push(x)});
+  l.forEach(function(x){if(!seen[x.id]&&!(x.id in bm))out.push(x);else if(!seen[x.id]&&x.id in bm&&J(x)!==J(bm[x.id]))out.push(x)});
+  if(out.every(function(x){return typeof x.at==='number'}))out.sort(function(p,q){return p.at-q.at});
+  return out}
+function mergeO(b,l,s){var o={},ks={};Object.keys(l).concat(Object.keys(s)).forEach(function(k){ks[k]=1});var bb=isO(b)?b:{};
+  Object.keys(ks).forEach(function(k){
+    if(J(l[k])===J(bb[k])){if(k in s)o[k]=s[k]}
+    else o[k]=(Array.isArray(l[k])||isO(l[k]))&&k in s?merge(bb[k],l[k],s[k]):l[k]});return o}
+function merge(b,l,s){
+  if(s==null)return l;if(l==null)return s;
+  if(Array.isArray(l)&&Array.isArray(s)&&allId(l)&&allId(s)&&allId(b||[]))return mergeArr(b||[],l,s);
+  if(isO(l)&&isO(s))return mergeO(b,l,s);
+  return J(l)===J(b)?s:l}
+GH._merge=merge;
+function notify(c){subs.forEach(function(s){if(s.col===c)s.cb(snap(c))})}
+function backoff(){clearTimeout(ft);ft=setTimeout(flush,Math.min(60000,1500*Math.pow(2,Math.min(tries,6))))}
+async function sendOne(k){
+  var e=Q[k],ver=QV[k],c=e.c,id=e.id,merged=null,fin=null;
+  for(var n=0;n<4;n++){
+    var sv=await GH.api('get',[c,id]);
+    var b=BASE[k]!=null?JSON.parse(BASE[k]):null;
+    merged=merge(b,Q[k].v,sv);
+    await GH.api('set',[c,id,merged]);
+    var chk=await GH.api('get',[c,id]);                  /* another person may have saved at the same moment: check ours is still there */
+    var again=merge(b,merged,chk);
+    if(J(again)===J(chk)){fin=chk;break}
+    Q[k].v=again}
+  if(fin==null)fin=merged;
+  BASE[k]=J(fin);
+  if(QV[k]===ver){delete Q[k];(C[c]=C[c]||{})[id]=fin;notify(c)}
+  else{(C[c]=C[c]||{})[id]=Q[k].v}
+  persistQ();recheck(k,c,id,fin,3000);recheck(k,c,id,fin,12000)}
+/* another person may save the same record at the same instant: look again shortly after and add back anything that went missing */
+function recheck(k,c,id,fin,ms){setTimeout(async function(){try{
+  if(Q[k]||navigator.onLine===false)return;
+  var cur=(C[c]||{})[id];if(J(cur)!==J(fin))return;
+  var chk=await GH.api('get',[c,id]);if(J(chk)===J(fin))return;
+  var m=merge({},fin,chk);if(J(m)!==J(chk)){BASE[k]=J(chk);queueSet(c,id,m)}}catch(e){}},ms)}
+async function flush(){
+  if(flushing)return;flushing=true;
+  try{
+    while(Object.keys(Q).length){
+      if(navigator.onLine===false){STAT.state='offline';stat();return}
+      var k=Object.keys(Q)[0];
+      try{STAT.state='saving';stat();await sendOne(k);tries=0}
+      catch(e){tries++;STAT.state='retry';stat();backoff();return}
+    }
+    STAT.state='ok';stat()
+  }finally{flushing=false}}
+GH.flush=flush;
+async function restoreQ(){try{var s=await GH.cget('queue');if(s&&s.Q){Object.keys(s.Q).forEach(function(k){Q[k]=s.Q[k];QV[k]=1;if(s.BASE&&s.BASE[k]!=null)BASE[k]=s.BASE[k];(C[Q[k].c]=C[Q[k].c]||{})[Q[k].id]=CL(Q[k].v)});stat();if(Object.keys(Q).length)flush()}}catch(e){}}
+function queueSet(c,id,v){var k=c+'/'+id;Q[k]={c:c,id:id,v:CL(v)};QV[k]=(QV[k]||0)+1;(C[c]=C[c]||{})[id]=v;stat();persistQ();flush()}
 function snap(col){var m=C[col]||{};return{docs:Object.keys(m).filter(function(i){return m[i]}).map(function(i){return{id:i,data:function(){return m[i]}}})}}
 async function pull(){
   if(busy)return;busy=true;
   try{
     var r=await GH.api('sync',[VER]),ch={};
-    if(!r.same){VER=r.ver;Object.keys(r.rows).forEach(function(k){var i=k.indexOf('/'),c=k.slice(0,i),id=k.slice(i+1);(C[c]=C[c]||{})[id]=r.rows[k];ch[c]=1})}
+    if(!r.same){VER=r.ver;Object.keys(r.rows).forEach(function(k){var i=k.indexOf('/'),c=k.slice(0,i),id=k.slice(i+1);
+      if(Q[k])return;                                   /* unsent local change: keep it, never replace with the server copy */
+      (C[c]=C[c]||{})[id]=r.rows[k];BASE[k]=J(r.rows[k]);ch[c]=1})}
     subs.forEach(function(s){if(!first||ch[s.col])s.cb(snap(s.col))});
     first=true;
   }catch(e){subs.forEach(function(s){s.err&&s.err(e)})}
   finally{busy=false}
 }
-function start(){if(started)return;started=true;pull();setInterval(function(){if(!document.hidden)pull()},10000)}
+function nextPull(){setTimeout(function(){if(!document.hidden)pull();nextPull()},20000+Math.random()*10000)}
+function start(){if(started)return;started=true;restoreQ().then(pull);nextPull();
+  document.addEventListener('visibilitychange',function(){if(!document.hidden){pull();flush()}});
+  window.addEventListener('online',function(){tries=0;flush();pull()});window.addEventListener('offline',function(){STAT.state='offline';stat()})}
+window.addEventListener('beforeunload',function(e){if(Object.keys(Q).length){e.preventDefault();e.returnValue=''}});
 var DB={
   collection:function(name){
     var m=/^data\/users\/([^\/]+)/.exec(name);
     if(m)return{doc:function(){return{
       get:async function(){var v=await GH.api('get',['profiles',m[1]]);return v?{data:function(){return v}}:null},
-      set:async function(v){await GH.api('set',['profiles',m[1],v])}}}};
+      set:async function(v){queueSet('profiles',m[1],v)}}}};
     return{onSnapshot:function(cb,err){subs.push({col:name,cb:cb,err:err});start();return function(){}}};
   },
   doc:function(path){var i=path.indexOf('/'),c=path.slice(0,i),id=path.slice(i+1);
-    return{set:async function(v){await GH.api('set',[c,id,v]);(C[c]=C[c]||{})[id]=v}}}
+    return{set:async function(v){queueSet(c,id,v)}}}
 };
 var SL=function(n){return String(n).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,60)||'staff'};
 window.claude={use:async function(k){
@@ -425,7 +581,12 @@ GH.insightText=async function(id){
 "use strict";
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const LS={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+let _qw=0;
+const LS={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){if(Date.now()-_qw>60000){_qw=Date.now();try{toast('Phone storage is full. Free some space. Your changes are still being sent to the server.',7000)}catch(x){}}}}};
+const _lsq={};let _lst=null;
+function lsSet(k,v){_lsq[k]=v;clearTimeout(_lst);_lst=setTimeout(lsFlush,500)}
+function lsFlush(){Object.keys(_lsq).forEach(k=>{LS.set(k,_lsq[k]);delete _lsq[k]})}
+document.addEventListener('visibilitychange',()=>{if(document.hidden)lsFlush()});window.addEventListener('pagehide',lsFlush);
 const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],WD=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const pad=n=>String(n).padStart(2,'0');
 const isoOf=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
@@ -441,7 +602,7 @@ const ago=s=>{const n=diffDays(s,todayISO());return n<=0?'today':n===1?'yesterda
 const GROUPS=['Pre-Primary','Class 1-2','Class 3-5','Class 6-7','Class 8-9','Class 10-11'];
 const SUBJECTS=['Maths','Hindi','English','Science','SST','Computer','Sanskrit','French/German','Co-curricular','Class Teacher'];
 const OWNERS=['Maths teacher','Hindi teacher','English teacher','Science teacher','SST teacher','Computer teacher','Sanskrit teacher','French/German teacher','Co-curricular teacher','Class teacher','Coordinator','Administration'];
-const ROLES=[['director','Director','Sees everything'],['coord','Coordinator / PL','Own class group(s)'],['admin','Administration','All departments and calls'],['teacher','Teacher','Own subject or class']];
+const ROLES=[['director','Director','Sees everything'],['coord','Coordinator / PL','Own class group(s)'],['admin','Management / Front Office','All data, all departments, remarks and calls'],['teacher','Teacher','Own subject or class']];
 const SRC_LBL={Studybase:'Studybase',Call:'Call received',Diary:'Diary remark',Desk:'Front office desk',Internal:'Internal'};
 const srcName=m=>SRC_LBL[m]||m;
 const CASES=['Complaints','Academic complaints','Behavioural','Medical cases','Admission enquiries','HR','Transport','Fee and documents','Requests'];
@@ -459,6 +620,8 @@ function caseOf(r){const a=[],cm=r.ct==='Complain'||r.ct==='Concern',t=r.t||'';
   if(r.ct==='Request')a.push('Requests');
   return a}
 const dayLbl=d=>d===todayISO()?'Today':d===addDays(todayISO(),-1)?'Yesterday':fmtS(d);
+const DESIG=[['director','director','','Director','Sees everything'],['admin','admin','','Administration / Front Office','All data, all departments'],['ops','admin','','Operations','All data, all departments'],['mgmt','admin','','Management / Dean / Principal','All data, all departments'],['cmh','coord','','CMH (Class Manager Head)','Own class group(s)'],['cm','coord','','Class Manager','Own class group(s)'],['pl','coord','','Program Leader (PL)','Own class group(s)'],['fm','coord','','Floor Manager','Own class group(s)'],['pm','coord','','Primary Manager','Own class group(s)'],['ct','teacher','Class Teacher','Class teacher','Own class / section'],['st','teacher','Maths','Subject teacher','Own subject and classes'],['coach','teacher','Co-curricular','Co-curricular coach','Co-curricular']];
+const DESIG_BY=Object.fromEntries(DESIG.map(d=>[d[0],d]));
 const ROLE_NAME=Object.fromEntries(ROLES.map(r=>[r[0],r[1]]));
 const PAL=['#1B3156','#2B9BD6','#572686','#EFA11D','#E91D69','#68C0EA','#243D69','#8a6bb3'];
 const ICON={ov:'<path d="M3 12 12 4l9 8M5 10v10h14V10"/>',fb:'<path d="M4 5h16v11H9l-5 4z"/>',fu:'<circle cx="12" cy="12" r="8"/><path d="m8.5 12 2.5 2.5 4.5-5"/>',ca:'<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>',ch:'<path d="M7 7h12l-3-3M17 17H5l3 3"/>',cl:'<path d="M4 20v-2a4 4 0 0 1 4-4h2a4 4 0 0 1 4 4v2M9 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6M17 11a2.5 2.5 0 1 0 0-5M20 20v-1.5a3.5 3.5 0 0 0-2.5-3.3"/>'};
@@ -477,11 +640,16 @@ function reasons(r){const a=[];if(r.fu)a.push('Marked for follow-up');if(r.ar)a.
 function ownerOf(r){const s=(r.sub||[])[0];if(s&&s!=='Academics')return s==='Co-curricular'?'Co-curricular teacher':s+' teacher';if(r.dp==='Co Curricular'||r.dp==='Competition')return'Co-curricular teacher';return r.g?'Coordinator':'Administration'}
 const myKey=()=>ME.role==='coord'?'Coordinator':ME.role==='admin'?'Administration':ME.role==='teacher'?(ME.subject==='Class Teacher'?'Class teacher':ME.subject==='Co-curricular'?'Co-curricular teacher':ME.subject+' teacher'):'';
 const isDir=()=>(REAL||ME).role==='director';
-const roleLbl=()=>ME.role==='coord'?'Coordinator / PL':ROLE_NAME[ME.role];
+const roleLbl=()=>ME.desig&&DESIG_BY[ME.desig]?DESIG_BY[ME.desig][3]:ME.role==='coord'?'Coordinator / PL':ROLE_NAME[ME.role];
 const owner=id=>(FU[id]&&FU[id].owner)||ownerOf(D.byId[id]);
 
 async function boot(){
-  if(window.GH)await GH.gate();
+  if(window.GH){await GH.gate();
+    const sc=GH.scope();
+    if(ME&&!ME.va)ME.scope=sc;
+    if(!ME&&sc){const dg=GH.desig(),d=DESIG_BY[dg]||DESIG_BY.st;ME={role:d[1],desig:dg,name:GH.who.name,groups:[],subject:d[2]||'',classes:[],scope:sc};LS.set('pc2_me',ME);ME_WAIT=false}
+    if(ME)LS.set('pc2_me',ME);
+    if(history.state&&history.state.pc&&history.state.view&&ME)restoreFromState(history.state)}
   $('#app').innerHTML='<div class="empty">Loading Parent Connect…</div>';
   try{
     const[f,c,h]=window.GH?[[],[],[]]:await Promise.all(['feedback.json','calls.json','changes.json'].map(u=>fetch(u).then(r=>r.json())));
@@ -495,7 +663,7 @@ async function boot(){
     D.h=h.map(x=>({id:x[0],d:x[1],n:x[2],c:x[3],g:x[4],dp:x[5],ty:x[6],fr:x[7],to:x[8],st:x[9]}));D.h.forEach(r=>r.cb=cbase(r.c));
     D.last=D.f.reduce((m,r)=>r.d>m?r.d:m,'');CM=D.last.slice(0,7);mergeAdded();mergeCalls();
   }catch(e){$('#app').innerHTML='<div class="empty">Could not load the data files. Please reopen the app.</div>';return}
-  if(window.GH){$('#app').innerHTML='<div class="empty">Loading the latest feedback…</div>';await liveSync()}render();setTimeout(()=>{if(ME_WAIT){ME_WAIT=false;render()}},6000);initDB();if(!window.GH)liveSync();setInterval(()=>{if(!document.hidden)liveSync()},300000);
+  if(window.GH){$('#app').innerHTML='<div class="loadbox"><div class="lbt">Loading the latest feedback…</div><div class="mut">First load can take up to 30 seconds. Please wait.</div></div>';const cd=await GH.cget('data');if(cd){await liveSync(false,cd);liveSync()}else await liveSync()}if(!(window.GH&&LIVE.st==='err'&&!D.f.length))render();setTimeout(()=>{if(ME_WAIT){ME_WAIT=false;render()}},6000);initDB();if(!window.GH)liveSync();setInterval(()=>{if(!document.hidden)liveSync()},300000);
 }
 async function initDB(){
   try{if(!(window.claude&&claude.use)){ME_WAIT=false;render();return}DB=await claude.use('db')}catch(e){DB=null}
@@ -504,13 +672,14 @@ async function initDB(){
   const watch=(name,store,key,cb)=>{try{DB.collection(name).onSnapshot(snap=>{
     const m={};const take=d=>{const v=typeof d.data==='function'?d.data():d.data;if(v)m[d.id]=v};
     const docs=snap.docs||[];if(docs.length)docs.forEach(take);else if(typeof snap.forEach==='function')snap.forEach(take);
-    Object.assign(store,m);LS.set(key,store);SYNC='shared';paintSync();cb&&cb(m);const ae=document.activeElement;if(ae&&/^(TEXTAREA|INPUT|SELECT)$/.test(ae.tagName))return;if(!document.querySelector('.ov'))render(true);
+    Object.assign(store,m);lsSet(key,store);SYNC='shared';paintSync();cb&&cb(m);softRender();
   },()=>{SYNC='local';paintSync()})}catch(e){SYNC='local';paintSync()}};
+  if(window.GH)GH.onStat(paintSync);
   watch('followups',FU,'pc2_fu');watch('calls',CS,'pc2_cs');watch('remarks',REM,'pc2_rm');watch('added',ADD,'pc2_ad',mergeAdded);watch('acks',ACK,'pc2_ak');watch('callreq',CQ,'pc2_cq',onCQ);watch('retag',RT,'pc2_rt',applyRT);
 }
 async function save(coll,store,key,id){
-  LS.set(key,store);
-  if(DB){try{await DB.doc(coll+'/'+id).set(store[id]);SYNC='shared'}catch(e){SYNC='local';toast('Saved on this device only. Ask the Director for edit access.')}paintSync()}
+  lsSet(key,store);
+  if(DB){try{await DB.doc(coll+'/'+id).set(store[id]);SYNC='shared'}catch(e){SYNC='local';toast('Could not save. It is kept on this phone and will be sent again.')}paintSync()}
 }
 const saveFU=id=>save('followups',FU,'pc2_fu',id),saveCS=id=>save('calls',CS,'pc2_cs',id),saveREM=id=>save('remarks',REM,'pc2_rm',id),saveADD=id=>save('added',ADD,'pc2_ad',id),saveACK=id=>save('acks',ACK,'pc2_ak',id),saveCQ=id=>save('callreq',CQ,'pc2_cq',id);
 function grpOf(c){const b=cbase(c);if(['PG','Nur','LKG','UKG'].includes(b))return'Pre-Primary';const n=+b;return!n?'':n<=2?'Class 1-2':n<=5?'Class 3-5':n<=7?'Class 6-7':n<=9?'Class 8-9':n<=11?'Class 10-11':''}
@@ -529,11 +698,11 @@ function findZip(o,d){if(typeof o==='string'){if(o.startsWith('UEsD'))return o;c
   if(o&&typeof o==='object'&&(d||0)<7){for(const k of Object.keys(o)){const r=findZip(o[k],(d||0)+1);if(r)return r}}return null}
 function b64u8(b){const bin=atob(b),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u}
 const lvMsg=c=>({needs_reauth:'reconnect Drive',server_not_connected:'not connected',selection_required:'choose Drive',not_in_manifest:'not allowed',approval_required:'needs approval',blocked_by_policy:'blocked',consent_required:'not allowed',not_granted:'not available',capability_disabled:'not available',capability_removed:'not available'}[c]||'could not read');
-async function liveSync(manual){
+async function liveSync(manual,pre){
   if(LIVE.busy)return;LIVE.busy=1;
   try{
     let df,a={status:'fulfilled'},b={status:'fulfilled'};
-    if(window.GH){LIVE.st='load';paintLive();df=await GH.api('data',[!!manual])}else{
+    if(window.GH){LIVE.st='load';paintLive();df=pre||await GH.api('data',[!!manual]);if(!pre)GH.cset('data',df)}else{
     let mcp=null;try{mcp=window.claude&&claude.use?await claude.use('mcp'):null}catch(e){}
     if(!mcp||!window.PCLive){LIVE.st='na';LIVE.msg='not available here';return}
     LIVE.st='load';paintLive();
@@ -553,17 +722,80 @@ async function liveSync(manual){
     LIVE.n=n;LIVE.at=Date.now();LIVE.st=(a.status==='fulfilled'&&b.status==='fulfilled')?'ok':'ok';
     if(a.status==='rejected'||b.status==='rejected'){LIVE.msg=''}
     D.last=D.f.reduce((m,r)=>r.d>m?r.d:m,'');if(!CM)CM=D.last.slice(0,7);mergeAdded();mergeCalls();
-    const ae=document.activeElement;if(!(ae&&/^(TEXTAREA|INPUT|SELECT)$/.test(ae.tagName))&&!document.querySelector('.ov')&&(changed||D.liveFirst!==1))render(true);
+    if(changed||D.liveFirst!==1)softRender();
     D.liveFirst=1;if(manual)toast(n?n+' new record'+(n>1?'s':'')+' from the sheets':'Up to date with the sheets');
-  }catch(e){LIVE.st='err';LIVE.msg=window.GH?String(e&&e.message||'not connected').slice(0,60):lvMsg(e&&e.code);console.warn('live failed',e)}
+  }catch(e){LIVE.st='err';LIVE.msg=window.GH?String(e&&e.message||'not connected').slice(0,60):lvMsg(e&&e.code);console.warn('live failed',e);if(window.GH&&!D.f.length&&!document.querySelector('.shell'))$('#app').innerHTML='<div class="loadbox"><div class="lbt">Could not load the feedback</div><div class="mut">'+esc(LIVE.msg)+'</div><button class="btn pri" data-a="lvretry">Try again</button> <button class="btn" data-a="signout">Sign out</button></div>'}
   finally{LIVE.busy=0;paintLive()}
 }
-function paintSync(){const e=$('#sync');if(e){e.textContent=SYNC==='shared'?'Shared live':'This device only';e.className='sync '+(SYNC==='shared'?'s':'l')}}
+function paintSync(){const e=$('#sync');if(!e)return;
+  const s=window.GH&&GH.stat;let t,ok=true;
+  if(s){const n=s.pending;
+    if(s.warn==='storage'){t='Phone storage full';ok=false}
+    else if(navigator.onLine===false){t=(n?n+' pending · ':'')+'Offline';ok=false}
+    else if(s.state==='retry'){t='Save failed, retrying'+(n?' ('+n+')':'');ok=false}
+    else if(n){t=s.state==='saving'?'Saving…':n+' change'+(n>1?'s':'')+' pending';ok=false}
+    else t='Saved'}
+  else t=SYNC==='shared'?'Shared live':'This device only',ok=SYNC==='shared';
+  e.textContent=t;e.className='sync '+(ok?'s':'l')}
+
+
+/* ---------- reliability helpers ---------- */
+let lastTouch=0,RQ=0;
+['touchstart','touchmove','pointerdown','keydown','wheel'].forEach(ev=>document.addEventListener(ev,()=>{lastTouch=Date.now()},{passive:true,capture:true}));
+const busyUI=()=>{const ae=document.activeElement;return(ae&&/^(TEXTAREA|INPUT|SELECT)$/.test(ae.tagName))||document.querySelector('.ov')||Date.now()-lastTouch<4000};
+function softRender(){if(!ME||view==='login')return;if(busyUI()){RQ=1;return}RQ=0;render(true)}
+setInterval(()=>{if(RQ&&!document.hidden&&!busyUI()){RQ=0;render(true)}},1000);
+/* global errors: friendly message, never a blank screen */
+const ERRS=[];let _le=0;
+function gerr(m){ERRS.push(String(m).slice(0,300));if(ERRS.length>30)ERRS.shift();if(Date.now()-_le>8000){_le=Date.now();try{toast('Something went wrong. Your saved work is safe. If it keeps happening, close and reopen the app.',6000)}catch(e){}}}
+window.addEventListener('error',e=>gerr(e.message||'error'));
+window.addEventListener('unhandledrejection',e=>gerr((e.reason&&e.reason.message)||e.reason||'error'));
+/* touch: no long-press menu on buttons and tiles, inputs stay selectable */
+document.addEventListener('contextmenu',e=>{const t=e.target;if(t.closest&&t.closest('[data-a],.chip,.btn,.role,nav')&&!t.closest('input,textarea'))e.preventDefault()});
+/* Back button: one screen at a time, popups included, Home asks twice before leaving */
+let HK='',IGN=0,EXARM=0;
+const hkey=()=>view+'|'+(view==='cl'?CLS+'|'+CLM:'')+'|'+(view==='st'?STK:'');
+const hst=m=>({pc:1,m:m?1:0,k:hkey(),view,CLS,CLM,STK,prevView});
+function syncHistory(){
+  if(!ME||view==='login')return;
+  const k=hkey(),s=history.state;
+  if(!s||!s.pc){try{history.replaceState({pc:1,root:1},'');history.pushState(hst(),'','#/'+view)}catch(e){}HK=k;return}
+  if(k===HK)return;
+  HK=k;try{history.pushState(hst(),'','#/'+view)}catch(e){}
+}
+function restoreFromState(s){if(!s||!s.pc||!s.view)return;view=s.view;if(s.CLS!==undefined)CLS=s.CLS;if(s.CLM)CLM=s.CLM;if(s.STK!==undefined)STK=s.STK;if(s.prevView)prevView=s.prevView;HK=s.k||hkey()}
+window.addEventListener('popstate',e=>{
+  if(IGN){IGN--;return}
+  const s=e.state;
+  if(document.querySelector('.ov')){document.querySelectorAll('.ov').forEach(x=>x.remove());return}
+  if(s&&s.root){
+    if(EXARM&&Date.now()-EXARM<2500){IGN=0;history.back();return}
+    EXARM=Date.now();toast('Press back again to exit',2400);try{history.pushState(hst(),'','#/'+view)}catch(x){}return}
+  if(s&&s.pc){restoreFromState(s);render(true);window.scrollTo(0,0)}
+});
+new MutationObserver(()=>{
+  const open=!!document.querySelector('.ov'),s=history.state;
+  if(open&&s&&s.pc&&!s.m){try{history.pushState(Object.assign(hst(true),{m:1}),'')}catch(e){}}
+  else if(!open&&s&&s.m){IGN++;history.back()}
+}).observe(document.body,{childList:true});
+/* backup: everything saved by staff, as a CSV */
+function backupCSV(){
+  const rows=[['collection','id','json']];
+  [['followups',FU],['calls',CS],['remarks',REM],['added',ADD],['acks',ACK],['callreq',CQ],['retag',RT]].forEach(([n,s])=>Object.keys(s||{}).forEach(id=>rows.push([n,id,JSON.stringify(s[id])])));
+  const csv=rows.map(r=>r.map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(',')).join('\r\n');
+  const b=new Blob(['﻿'+csv],{type:'text/csv'}),u=URL.createObjectURL(b),a=document.createElement('a');
+  a.href=u;a.download='parent-connect-backup-'+todayISO()+'.csv';document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(u)},2000);toast(rows.length-1+' records saved to a CSV file')}
+function newVersionBanner(w){if(document.getElementById('nvb'))return;const d=document.createElement('div');d.id='nvb';d.className='nvb';d.innerHTML='<span>New version available</span><button class="btn sm pri" id="nvbb">Tap to refresh</button>';document.body.appendChild(d);document.getElementById('nvbb').onclick=()=>{try{w.postMessage('skip')}catch(e){}setTimeout(()=>location.reload(),600)}}
+if(window.GH)GH.registerSW(newVersionBanner);
 
 /* ---------- scope ---------- */
+function scopeTxt(s){const pre=['PG','Nur','LKG','UKG'].filter(x=>s.includes(x)),n=s.filter(x=>/^\d+$/.test(x)).map(Number).sort((x,y)=>x-y);
+  const rng=n.length?(n.length>1&&n[n.length-1]-n[0]===n.length-1?'Class '+n[0]+' to '+n[n.length-1]:'Class '+n.join(', ')):'';
+  const p=pre.length?(pre.length===4?'PG to UKG':pre.join(', ')):'';return[p,rng].filter(Boolean).join(' and ')}
 function inScope(r){
   if(!ME)return false;
   if(r.add&&r.by===ME.name)return true;
+  if(ME.scope&&ME.scope.length)return ME.scope.includes(cbase(r.c));
   if(ME.role==='director'||ME.role==='admin')return true;
   if(ME.role==='coord')return ME.groups.includes(r.g);
   const cl=ME.classes||[];
@@ -951,7 +1183,7 @@ function printStudent(){
 }
 
 /* ---------- drawer & modals ---------- */
-function overlay(html,center){const o=document.createElement('div');o.className='ov'+(center?' c':'');o.innerHTML=html;o.addEventListener('click',e=>{if(e.target===o)o.remove()});document.body.appendChild(o);return o}
+function overlay(html,center){const o=document.createElement('div');o.className='ov'+(center?' c':'');o.innerHTML=html;o.addEventListener('pointerdown',e=>{o._dn=e.target===o?Date.now():0});o.addEventListener('click',e=>{if(e.target===o&&o._dn&&Date.now()-o._dn<600)o.remove();o._dn=0});document.body.appendChild(o);return o}
 function openDrawer(id){
   const r=D.byId[id],v=FU[id];document.querySelectorAll('.ov').forEach(x=>x.remove());
   let h='<div class="drawer"><div class="row" style="justify-content:space-between;align-items:flex-start"><div><h2 class="lk" data-a="stu" data-v="'+esc(stKey(r))+'">'+esc(r.n||'Student')+'</h2><div class="row" style="margin-top:4px"><span class="st nu">'+esc(r.c)+'</span><span class="st cat">'+esc(r.ct)+'</span>'+priP(r.p)+(v?fuPill(id):'')+'</div></div><button class="btn sm" data-a="xo">Close</button></div>'
@@ -1024,39 +1256,41 @@ function viewAsModal(){
 const MARK='<svg viewBox="0 0 48 48"><defs><linearGradient id="lg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E91D69"/><stop offset="1" stop-color="#572686"/></linearGradient></defs><rect x="2" y="2" width="44" height="44" rx="12" fill="#fff" opacity=".08"/><path d="M24 6 40 12v12c0 9-7 15-16 18C15 39 8 33 8 24V12z" fill="none" stroke="url(#lg1)" stroke-width="2.6"/><path d="M17 33V16h13M17 24h9" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/><circle cx="33" cy="32" r="3" fill="#EFA11D"/><circle cx="37" cy="25" r="2.2" fill="#68C0EA"/></svg>';
 function vLogin(){
   const allc=[...new Set(D.f.map(r=>r.c).filter(c=>c&&c!=='—'))].sort((a,b)=>crank(a)-crank(b));
-  const m=window._lg||{role:(ME&&ME.role)||(window.GH?GH.allowed()[0]:'director'),name:(ME&&ME.name)||(window.GH?GH.who.name:''),groups:(ME&&ME.groups)||[],subject:(ME&&ME.subject)||'Maths',classes:(ME&&ME.classes)||[]};window._lg=m;
+  const m=window._lg||{role:(ME&&ME.role)||(window.GH?(DESIG_BY[GH.desig()]||[])[1]||GH.allowed()[0]:'director'),desig:(ME&&ME.desig)||(window.GH?GH.desig():''),name:(ME&&ME.name)||(window.GH?GH.who.name:''),groups:(ME&&ME.groups)||[],subject:(ME&&ME.subject)||'',classes:(ME&&ME.classes)||[]};window._lg=m;
   let h='<div class="loginw"><div class="loginc"><div class="row" style="gap:12px"><div style="width:44px;height:44px;background:var(--navy);border-radius:12px;padding:3px">'+MARK+'</div><div><h2 style="margin:0;font-size:19px;color:var(--navy)">Parent Connect</h2><div class="mut" style="font-size:12.5px">Flourish International School, Bikaner</div></div></div>'
   +'<div class="banner" style="margin-top:16px">Contains names of students and parents. Staff use only.</div>'
   +'<label class="lbl">Your name</label><input type="text" id="lgname"'+(window.GH?' readonly':'')+' value="'+esc(m.name)+'" placeholder="e.g. Mansi Sharma">'
-  +'<div class="roles">'+ROLES.filter(r=>!window.GH||GH.allowed().includes(r[0])).map(r=>'<button class="role '+(m.role===r[0]?'on':'')+'" data-a="role" data-v="'+r[0]+'"><b>'+r[1]+'</b><small>'+r[2]+'</small></button>').join('')+'</div>';
-  if(m.role==='coord')h+='<label class="lbl">My class group(s)</label><div class="chips">'+GROUPS.map(g=>'<button class="chip '+(m.groups.includes(g)?'on':'')+'" data-a="lgg" data-v="'+g+'">'+g+'</button>').join('')+'</div>';
+  +'<label class="lbl">Choose your role</label><div class="roles">'+DESIG.filter(d=>!window.GH||GH.allowed().includes(d[1])).map(d=>'<button class="role '+((m.desig||(DESIG.find(x=>x[1]===m.role)||[])[0])===d[0]?'on':'')+'" data-a="role" data-v="'+d[0]+'"><b>'+d[3]+'</b><small>'+d[4]+'</small></button>').join('')+'</div>';
+  if(window.GH&&GH.scope())h+='<div class="scopebox"><b>You see:</b> '+esc(scopeTxt(GH.scope()))+'</div>';
+  if(m.role==='coord'&&!(window.GH&&GH.scope()))h+='<label class="lbl">My class group(s)</label><div class="chips">'+GROUPS.map(g=>'<button class="chip '+(m.groups.includes(g)?'on':'')+'" data-a="lgg" data-v="'+g+'">'+g+'</button>').join('')+'</div>';
   if(m.role==='teacher'){
-    h+='<label class="lbl">My subject. Matching feedback reaches me automatically</label><div class="chips">'+SUBJECTS.map(s=>'<button class="chip '+(m.subject===s?'on':'')+'" data-a="lgs" data-v="'+s+'">'+s+'</button>').join('')+'</div>';
+    if((m.desig||'st')==='st')h+='<label class="lbl">My subject. Matching feedback reaches me automatically</label><div class="chips">'+SUBJECTS.map(s=>'<button class="chip '+(m.subject===s?'on':'')+'" data-a="lgs" data-v="'+s+'">'+s+'</button>').join('')+'</div>';
     h+='<label class="lbl" style="margin-top:12px">My classes / sections'+(m.subject==='Class Teacher'?' (required)':' (optional, empty means all)')+'</label><div class="chips">'+allc.map(c=>'<button class="chip '+(m.classes.includes(c)?'on':'')+'" data-a="lgc" data-v="'+c+'">'+c+'</button>').join('')+'</div>';
   }
   return h+'<div style="margin-top:20px"><button class="btn pri" data-a="enter">Enter Parent Connect</button>'+(window.GH?'<button class="btn" style="margin-left:8px" data-a="signout">Sign out</button>':'')+'</div></div></div>';
 }
-function scopeLabel(){if(ME.role==='coord')return ME.groups.join(', ');if(ME.role==='teacher')return ME.subject+(ME.classes.length?' · '+ME.classes.join(', '):'');return ME.role==='director'?'Whole school':'All departments'}
-const TITLES={ov:['Home','Cases by category. Latest first'],fb:['Feedback','Studybase, calls received, diary remarks, front desk and calls made'],fu:['Follow-ups','Daily checks. Who follows which child'],rq:['Requests','Books, notebooks, call to teacher, transport and co-curricular changes'],ca:['Calls','Call requests, calls made and calls received'],st:['Student','All feedback, calls and changes in one place'],cl:['Class','Every child, every case and the action taken']};
+function scopeLabel(){if(ME.scope&&ME.scope.length)return scopeTxt(ME.scope);if(ME.role==='coord')return ME.groups.join(', ');if(ME.role==='teacher')return ME.subject+(ME.classes.length?' · '+ME.classes.join(', '):'');return ME.role==='director'?'Whole school':'All departments'}
+const TITLES={ov:['Home','Cases by category. Latest first'],fb:['Feedback','Studybase, calls received, diary remarks, front desk and calls made'],fu:['Follow-ups','Daily checks. Who follows which child'],rq:['Requests','Books, notebooks, call to teacher, transport and co-curricular changes'],ca:['Calls','Call requests, calls made and calls received'],st:['Student','All feedback, calls and changes in one place'],cl:['Class Record','Every child, the Parent Insight card, all feedback and what the teacher did']};
 const newF=()=>({per:'7',from:'',to:'',cl:[],c:[],dp:'',ct:'',m:'',p:'',q:'',cs:'',ak:'',rb:''});
 function callBanner(p){
   if(ME.role==='teacher'||!p.length||view==='ca')return'';
   const u=p.filter(c=>c.urg==='Urgent').length,old=p.filter(c=>c.at).sort((a,b)=>a.at-b.at)[0];
   return'<div class="callban" data-a="go" data-v="ca"><b>'+p.length+' call'+(p.length>1?'s':'')+' waiting</b>'+(u?' · <span style="color:#b3123f">'+u+' urgent</span>':'')+(old?' · oldest request waiting '+waitTxt(old.at):'')+'<span class="sp"></span><span class="btn sm navy">Open calls</span></div>';
 }
-function render(keep){
+function render(keep){try{render0(keep)}finally{try{syncHistory();paintSync()}catch(e){}}}
+function render0(keep){
   const y=window.scrollY;
   if(!ME&&ME_WAIT){$('#app').innerHTML='<div class="empty">Opening Parent Connect…</div>';return}
   if(!ME||view==='login'){view='login';$('#app').innerHTML=vLogin();return}
   const nOpen=Object.keys(FU).filter(id=>FU[id].st==='open'&&fuVisible(id)).length;
-  const pend=callList().filter(c=>!callDone(c)&&(c.app||c.d>=addDays(todayISO(),-7))),nav=[['ov','Home'],['fb','Feedback'],['ca','Calls',pend.length],['rq','Requests'],['cl','Class'],['fu','Follow-ups',nOpen]]
+  const pend=callList().filter(c=>!callDone(c)&&(c.app||c.d>=addDays(todayISO(),-7))),nav=[['ov','Home'],['fb','Feedback'],['ca','Calls',pend.length],['rq','Requests'],['cl','Class Record'],['fu','Follow-ups',nOpen]]
   if(!nav.find(n=>n[0]===view)&&view!=='st')view='ov';
   const body=view==='ov'?vHome():view==='fb'?vFeedback():view==='fu'?vFollow():view==='ca'?vCalls():view==='st'?vStudent():view==='cl'?vClass():vRequests();
   const nv=view==='st'?(prevView||'fb'):view;
   const ini=ME.name.split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
   $('#app').innerHTML='<div class="shell"><aside class="side"><div class="logo">'+MARK+'<div><b>Parent Connect</b><small>FIS · Bikaner</small></div></div>'
   +nav.map(n=>'<button class="nav '+(nv===n[0]?'on':'')+'" data-a="go" data-v="'+n[0]+'">'+ico(n[0])+n[1]+(n[2]?'<span class="cnt">'+n[2]+'</span>':'')+'</button>').join('')+'</aside>'
-  +'<div class="main"><div class="top"><div><h1>'+TITLES[view][0]+'</h1><div class="sub">'+TITLES[view][1]+'</div></div><span class="sp"></span><button class="btn pri sm" data-a="add">+ Add feedback</button><button class="btn sm" data-a="paste">Paste from Studybase</button>'+(isDir()&&!ME.va?'<button class="btn sm" data-a="va">View as…</button>':'')+'<span class="sync" id="sync"></span><button class="sync" id="lv" data-a="lvref" title="Read the Feedback and Diary sheets from Google Drive now"></button><div class="pill-u" data-a="switch" title="Switch user"><div class="av">'+esc(ini)+'</div><div><b>'+esc(ME.name)+'</b><small>'+esc(roleLbl())+' · '+esc(scopeLabel())+'</small></div></div></div>'
+  +'<div class="main"><div class="top"><div><h1>'+TITLES[view][0]+'</h1><div class="sub">'+TITLES[view][1]+'</div></div><span class="sp"></span><button class="btn pri sm" data-a="add">+ Add feedback</button><button class="btn sm" data-a="paste">Paste from Studybase</button>'+(isDir()&&!ME.va?'<button class="btn sm" data-a="va">View as…</button>':'')+((ME.role==='director'||ME.role==='admin')&&!ME.va?'<button class="btn sm" data-a="backup" title="Download everything staff saved as a CSV file">Backup</button>':'')+'<span class="sync" id="sync"></span><button class="sync" id="lv" data-a="lvref" title="Read the Feedback and Diary sheets from Google Drive now"></button><div class="pill-u" data-a="switch" title="Switch user"><div class="av">'+esc(ini)+'</div><div><b>'+esc(ME.name)+'</b><small>'+esc(roleLbl())+' · '+esc(scopeLabel())+'</small></div></div></div>'
   +'<div class="work">'+callBanner(pend)+(ME.va?'<div class="banner" style="margin-bottom:14px;display:flex;gap:12px;align-items:center">Viewing as '+esc(roleLbl()+' · '+scopeLabel())+'<span class="sp"></span><button class="btn sm navy" data-a="vaback">Back to Director</button></div>':'')+body+'</div></div></div>';
   paintSync();paintLive();if(keep)window.scrollTo(0,y);
 }
@@ -1087,7 +1321,7 @@ document.addEventListener('click',e=>{
     case'lvref':liveSync(true);break;
     case'img':{const o=overlay('<div class="lightbox"><img src="'+esc(t.src)+'" alt="attachment"><button class="btn sm" data-a="xo">Close</button></div>',true);break}
     case'stu':document.querySelectorAll('.ov').forEach(x=>x.remove());if(view!=='st')prevView=view;STK=v;view='st';loadIns(v.split('|')[1]);render();window.scrollTo(0,0);break;
-    case'back':view=prevView||'fb';render();window.scrollTo(0,0);break;
+    case'back':if(history.state&&history.state.pc&&!history.state.root&&HK){history.back()}else{view=prevView||'fb';render();window.scrollTo(0,0)}break;
     case'more':shown+=30;render(true);break;
     case'fut':fuTab=v;reset();render();break;
     case'seg':fuSeg=v;reset();render();break;
@@ -1102,7 +1336,7 @@ document.addEventListener('click',e=>{
     case'add':addModal();break;
     case'paste':pasteModal();break;
     case'newreq':addModal({ct:'Request'});break;
-    case'clsel':CLS=v;view='cl';loadIns(v);shown=30;render();window.scrollTo(0,0);break;
+    case'clsel':CLS=v;CST='';view='cl';loadIns(v);shown=30;render();window.scrollTo(0,0);break;
     case'clm':CLM=v;shown=30;render();break;
     case'cft':{const k=t.dataset.k;if(k==='clear')CF={st:'',src:'',dp:'',stu:'',q:''};else CF[k]=(CF[k]===v&&k==='stu')?'':v;shown=30;render(true);break}
     case'actrec':actModal(id);break;
@@ -1112,20 +1346,28 @@ document.addEventListener('click',e=>{
     case'prlist':printList();break;case'prstu':printStudent();break;
     case'switch':REAL=null;if(ME&&ME.va)ME=null;window._lg=null;view='login';render();break;
     case'signout':GH.logout();break;
-    case'role':{const n=$('#lgname');if(n)window._lg.name=n.value;window._lg.role=v;render();break}
+    case'role':{const n=$('#lgname');if(n)window._lg.name=n.value;const d=DESIG_BY[v];window._lg.desig=v;window._lg.role=d[1];if(d[2])window._lg.subject=d[2];render();break}
     case'lgg':{window._lg.name=$('#lgname').value;const g=window._lg.groups,i=g.indexOf(v);i<0?g.push(v):g.splice(i,1);render();break}
     case'lgs':{window._lg.name=$('#lgname').value;window._lg.subject=v;render();break}
     case'lgc':{window._lg.name=$('#lgname').value;const g=window._lg.classes,i=g.indexOf(v);i<0?g.push(v):g.splice(i,1);render();break}
+    case'stn':stStep(+v);break;
+    case'stact':stActModal(v);break;
+    case'stedit':stActModal(v,t.dataset.id);break;
+    case'stdel':{const key=stuKey(CLS,v),id=t.dataset.id;formModal('Delete this action?','<div class="mut">This cannot be undone.</div>','Delete',()=>{REM[key].items=REM[key].items.filter(z=>z.id!==id);saveREM(key)});break}
+    case'backup':backupCSV();break;
+    case'lvretry':$('#app').innerHTML='<div class="loadbox"><div class="lbt">Loading the latest feedback…</div><div class="mut">First load can take up to 30 seconds. Please wait.</div></div>';liveSync(true).then(()=>render(true));break;
     case'enter':{const m=window._lg;m.name=$('#lgname').value.trim();
       if(!m.name){toast('Please enter your name');break}
-      if(m.role==='coord'&&!m.groups.length){toast('Select at least one class group');break}
+      if(m.role==='coord'&&!m.groups.length&&!(window.GH&&GH.scope())){toast('Select at least one class group');break}
+      if(m.role==='teacher'&&(m.desig||'st')==='st'&&!m.subject){toast('Pick your subject');break}
       if(m.role==='teacher'&&m.subject==='Class Teacher'&&!m.classes.length){toast('Select your class or section');break}
-      REAL=null;ME={role:m.role,name:m.name,groups:m.groups.slice(),subject:m.subject,classes:m.classes.slice()};LS.set('pc2_me',ME);saveMe();F=newF();syncCM();fuSeg=ME.role==='teacher'?myKey():'';view='ov';render();break}
+      REAL=null;ME={role:m.role,desig:m.desig||'',name:m.name,groups:m.groups.slice(),subject:m.subject,classes:m.classes.slice(),scope:window.GH?GH.scope():null};LS.set('pc2_me',ME);saveMe();F=newF();syncCM();fuSeg=ME.role==='teacher'?myKey():'';view='ov';render();break}
   }
 });
 document.addEventListener('change',e=>{
   const t=e.target;
   if(t.dataset&&t.dataset.f){F[t.dataset.f]=t.value;shown=30;render(true)}
+  else if(t.dataset&&t.dataset.cs!==undefined){CST=t.value;render();window.scrollTo(0,0)}
   else if(t.dataset&&t.dataset.cf){CF[t.dataset.cf]=t.value;shown=30;render(true)}
   else if(t.id==='c1'||t.id==='c2'){const a=$('#c1').value,b=$('#c2').value;if(a||b){F.per='pick';F.from=a||b;F.to=b||a;if(F.to<F.from)F.to=F.from;calA=null;syncCM();shown=30;render(true)}}
   else if(t.name==='n'&&t.closest('.mod')){const cs=[...new Set(D.f.filter(r=>r.n===t.value&&r.c!=='—').map(r=>r.c))],s=t.closest('.mod').querySelector('select[name=c]');if(cs.length===1&&s)s.value=cs[0]}
@@ -1183,7 +1425,7 @@ async function loadIns(c,force){
     const d=parseInsight(tx);if(!d.n)throw{code:'unreadable'};
     e.data=d;e.at=Date.now();e.st='ok';LS.set('pc2_ins_'+k,{d,at:e.at});
   }catch(x){if(!e.data){e.st='err';e.msg=lvMsg(x&&x.code)}console.warn('insight failed',x)}
-  finally{e.busy=0;if((view==='cl'||view==='st')&&!document.querySelector('.ov')&&!/^(TEXTAREA|INPUT|SELECT)$/.test((document.activeElement||{}).tagName||''))render(true)}
+  finally{e.busy=0;if(view==='cl'||view==='st')softRender()}
 }
 function insFind(d,n){if(!d)return null;const k=nk(n);if(d.students[k])return d.students[k];
   const t=String(n||'').toLowerCase().split(/\s+/).filter(x=>x.length>1);
@@ -1207,7 +1449,7 @@ function insPanel(c,n){
 }
 
 /* ===== Class segment: Overview and Action ===== */
-let CLS='',CLM='ov',CF={st:'',src:'',dp:'',stu:'',q:''};
+let CLS='',CLM='ov',CST='',CF={st:'',src:'',dp:'',stu:'',q:''};
 const CASE_TYPES=['Complain','Concern','Request','Call Arrange'];
 const isCase=r=>!!(r.why&&r.why.length)||!!FU[r.id]||CASE_TYPES.includes(r.ct);
 const actItems=id=>remItems(id).filter(x=>x.act);
@@ -1226,13 +1468,58 @@ function rosterOf(c){
   const m={};D.f.filter(r=>r.c===c&&inScope(r)&&r.n).forEach(r=>{(m[r.n]=m[r.n]||[]).push(r)});
   const e=INS[insKey(c)];if(e&&e.data&&(ME.role!=='teacher'||ME.subject==='Class Teacher'||!(ME.classes||[]).length||true)&&canCalls())Object.values(e.data.students).forEach(s=>{if(!Object.keys(m).some(n=>nk(n)===nk(s.n)))m[s.n]=[]});
   return m}
+const MOI=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+function uptoISO(u){const m=/(\d{1,2})\s+([A-Za-z]{3})[a-z]*\s+(\d{4})/.exec(u||'');if(!m)return'';const k=MOI.indexOf(m[2].toLowerCase());return k<0?'':m[3]+'-'+pad(k+1)+'-'+pad(+m[1])}
+const stuKey=(c,n)=>'S:'+insKey(c)+':'+nk(n);
+const stuNames=c=>Object.keys(rosterOf(c)).sort((x,y)=>x.localeCompare(y));
+const stuActs=(c,n)=>remItems(stuKey(c,n)).slice().sort((x,y)=>(y.when||y.at)-(x.when||x.at));
+const canEditAct=x=>x.by===ME.name||ME.role==='director'||ME.role==='admin';
 function vClass(){
-  const L=myClasses();if(!L.length)return'<div class="empty card">No class found for you yet. Ask the Director to check your login.</div>';
-  if(!CLS||!L.includes(CLS))CLS=L[0];
-  let h='<div class="scroll" style="margin-bottom:12px">'+L.map(c=>'<button class="chip '+(c===CLS?'on':'')+'" data-a="clsel" data-v="'+esc(c)+'">'+esc(c)+'</button>').join('')+'</div>';
-  h+='<div class="scroll" style="margin-bottom:14px"><button class="chip '+(CLM==='ov'?'on':'')+'" data-a="clm" data-v="ov">Overview</button><button class="chip '+(CLM==='ac'?'on':'')+'" data-a="clm" data-v="ac">Action</button></div>';
-  return h+(CLM==='ov'?clOverview():clAction());
+  const L=myClasses();
+  if(!L.length)return'<div class="empty card">No class found for your login yet.'+(ME.scope&&ME.scope.length?' Your access: '+esc(scopeTxt(ME.scope))+'.':'')+' Tap the sync button at the top right to refresh the data.</div>';
+  if(!CLS||!L.includes(CLS)){CLS=L[0];CST=''}
+  loadIns(CLS);
+  let h='<div class="scroll" style="margin-bottom:10px">'+L.map(c=>'<button class="chip '+(c===CLS?'on':'')+'" data-a="clsel" data-v="'+esc(c)+'">'+esc(c)+'</button>').join('')+'</div>';
+  h+='<div class="scroll" style="margin-bottom:12px"><button class="chip '+(CLM!=='ac'?'on':'')+'" data-a="clm" data-v="ov">Students</button><button class="chip '+(CLM==='ac'?'on':'')+'" data-a="clm" data-v="ac">Cases and actions</button></div>';
+  if(CLM==='ac')return h+clAction();
+  const names=stuNames(CLS);if(!names.length)return h+'<div class="empty card">No children found for '+esc(CLS)+' yet.</div>';
+  if(!CST||!names.includes(CST))CST=names[0];
+  const ix=names.indexOf(CST);
+  h+='<div class="rcnav"><button class="btn" data-a="stn" data-v="-1">‹</button><select data-cs>'+names.map(n=>'<option value="'+esc(n)+'" '+(n===CST?'selected':'')+'>'+esc(n)+'</option>').join('')+'</select><button class="btn" data-a="stn" data-v="1">›</button></div>'
+   +'<div class="mut rcpos">'+(ix+1)+' of '+names.length+' in '+esc(CLS)+'. Swipe left or right to change child.</div>';
+  return h+clCard(CST);
 }
+const fbLine=r=>'<div class="fl"><div class="fh"><b>'+fmtDY(r.d)+'</b>'+srcP(r.m)+'</div><div class="ft2">'+esc(r.t)+'</div>'+imgsH(r)+'</div>';
+function clCard(n){
+  const c=CLS,rows=(rosterOf(c)[n]||[]).slice().sort((x,y)=>y.d<x.d?-1:y.d>x.d?1:0),e=INS[insKey(c)],up=e&&e.data?uptoISO(e.data.upto):'';
+  const fresh=up?rows.filter(r=>r.d>up):[],acts=stuActs(c,n);
+  let h='<div class="rc" data-swipe><div class="rch"><h2>'+esc(n)+'</h2><span class="st nu">'+esc(c)+'</span><span class="sp"></span><span class="mut">'+rows.length+' feedback · '+acts.length+' action'+(acts.length===1?'':'s')+'</span></div>';
+  h+=insPanel(c,n);
+  if(fresh.length)h+='<div class="card rcs new"><h3>New since the chart<small>'+fresh.length+' after '+fmtDY(up)+'</small></h3>'+fresh.map(fbLine).join('')+'</div>';
+  h+='<div class="card rcs"><div class="row"><h3 style="margin:0">Teacher actions<small>'+acts.length+'</small></h3><span class="sp"></span><button class="btn pri" data-a="stact" data-v="'+esc(n)+'">+ Add action</button></div>'
+   +(acts.length?acts.map(x=>'<div class="al"><div class="ah"><b>'+fmtT(x.when||x.at)+'</b><span class="mut">'+esc(x.by)+(x.role?' · '+esc(x.role):'')+'</span><span class="sp"></span>'+(canEditAct(x)?'<button class="lnk" data-a="stedit" data-v="'+esc(n)+'" data-id="'+x.id+'">Edit</button><button class="lnk" data-a="stdel" data-v="'+esc(n)+'" data-id="'+x.id+'">Delete</button>':'')+'</div><div class="ft2">'+esc(x.text)+'</div></div>').join(''):'<div class="mut" style="margin-top:10px">No action recorded yet. Tap "+ Add action" after you counsel, check or speak to the child or parent.</div>')+'</div>';
+  h+='<div class="card rcs"><h3>All feedback<small>'+rows.length+' · latest first</small></h3>'+(rows.length?rows.map(fbLine).join(''):'<div class="mut">No feedback recorded for this child.</div>')+'</div></div>';
+  return h;
+}
+function nowLocal(ms){const d=new Date(ms||Date.now());return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes())}
+function stActModal(n,id){
+  const key=stuKey(CLS,n),old=id?remItems(key).find(z=>z.id===id):null;
+  formModal(old?'Edit action: '+n:'Add action: '+n,
+    '<div class="chips" style="margin-top:6px">'+QCH.map(x=>'<button type="button" class="chip qch">'+esc(x)+'</button>').join('')+'</div>'
+    +lab('What did you do?','<textarea name="t" rows="3" placeholder="e.g. Counselled about water bottle. Checked bag.">'+esc(old?old.text:'')+'</textarea>')
+    +lab('Date and time of the action','<input type="datetime-local" name="w" value="'+nowLocal(old?(old.when||old.at):0)+'">')
+    +'<div class="mut" style="margin-top:10px;font-size:12.5px">Saved under your name: '+esc(ME.name)+'. You can add as many actions as needed.</div>',old?'Save':'Add action',v=>{
+      if(!v.t.trim()){toast('Write what you did');return false}
+      const w=v.w?new Date(v.w).getTime():Date.now();if(!w||isNaN(w)){toast('Pick the date and time');return false}
+      REM[key]=REM[key]||{items:[]};
+      if(old){old.text=v.t.trim();old.when=w;old.ed=Date.now()}else REM[key].items.push({id:Date.now().toString(36),at:Date.now(),when:w,by:ME.name,role:roleLbl(),text:v.t.trim(),act:1});
+      saveREM(key);toast(old?'Action updated':'Action saved')});
+  document.querySelectorAll('.mod .qch').forEach(b=>b.onclick=()=>{const ta=document.querySelector('.mod textarea[name=t]');ta.value=(ta.value?ta.value.replace(/\s*$/,'')+'. ':'')+b.textContent;ta.focus()});
+}
+function stStep(d){const names=stuNames(CLS);if(!names.length)return;let i=names.indexOf(CST)+d;if(i<0)i=names.length-1;if(i>=names.length)i=0;CST=names[i];render();window.scrollTo(0,0)}
+let swx=0,swy=0,swt=0;
+document.addEventListener('touchstart',e=>{const t=e.target.closest&&e.target.closest('[data-swipe]');if(!t||e.touches.length!==1){swx=0;return}swx=e.touches[0].clientX;swy=e.touches[0].clientY;swt=Date.now()},{passive:true});
+document.addEventListener('touchend',e=>{if(!swx)return;const t=e.changedTouches[0],dx=t.clientX-swx,dy=t.clientY-swy;swx=0;if(Math.abs(dx)>80&&Math.abs(dx)>Math.abs(dy)*2&&Date.now()-swt<700&&!document.querySelector('.ov'))stStep(dx<0?1:-1)},{passive:true});
 function clOverview(){
   const m=rosterOf(CLS),names=Object.keys(m).sort(),e=INS[insKey(CLS)];
   const q=(CF.q||'').toLowerCase(),shownN=names.filter(n=>!q||n.toLowerCase().includes(q));
@@ -1342,7 +1629,7 @@ let UID='',ME_WAIT=!LS.get('pc2_me');
 async function restoreMe(){
   try{const U=await claude.use('user');if(!U||!U.id)return;UID=await U.id()||'';if(!UID||!DB)return;
     if(!ME){const s=await DB.collection('data/users/'+UID).doc('me').get();const v=s&&(typeof s.data==='function'?s.data():s.data);
-      if(v&&v.name&&v.role){ME={role:v.role,name:v.name,groups:v.groups||[],subject:v.subject||'',classes:v.classes||[]};LS.set('pc2_me',ME);F=newF();syncCM();fuSeg=ME.role==='teacher'?myKey():'';view='ov'}}
+      if(v&&v.name&&v.role){ME={role:v.role,desig:v.desig||'',name:v.name,groups:v.groups||[],subject:v.subject||'',classes:v.classes||[],scope:window.GH?GH.scope():null};LS.set('pc2_me',ME);F=newF();syncCM();fuSeg=ME.role==='teacher'?myKey():'';view='ov'}}
     else saveMe()}catch(e){}
 }
 function saveMe(){try{if(DB&&UID&&ME&&!ME.va)DB.collection('data/users/'+UID).doc('me').set({role:ME.role,name:ME.name,groups:ME.groups||[],subject:ME.subject||'',classes:ME.classes||[]})}catch(e){}}
