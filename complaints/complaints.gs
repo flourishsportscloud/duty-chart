@@ -162,7 +162,7 @@ function setMany_(list, who){
   }finally{ lock.releaseLock(); }
 }
 // Drivers page: only the complaints about one vehicle in the last month (date, text, status) — nothing else from the Helpdesk
-function veh_(label, days){
+function vehComp_(label, days){
   const num = (String(label || '').match(/\d+/) || [''])[0]; if(!num) fail('Bad vehicle.');
   const since = Utilities.formatDate(new Date(Date.now() - (Math.min(Number(days) || 31, 62)) * 864e5), TZ, 'yyyy-MM-dd'), D = docs_(), out = [];
   entries_(false).forEach(e => { const o = D['ov/' + e.id] || {}; if((o.kind || e.kind) !== 'Complaint' || !e.d || e.d < since) return;
@@ -171,7 +171,7 @@ function veh_(label, days){
   return out.sort((a, b) => b.d < a.d ? -1 : b.d > a.d ? 1 : 0);
 }
 return {
-  veh: veh_,
+  vehComp: vehComp_,
   setMany: setMany_,
   data: fresh => ({entries: entries_(!!fresh), docs: docs_(), at: Utilities.formatDate(new Date(), TZ, 'dd MMM yyyy, HH:mm')}),
   set: set_,
@@ -185,7 +185,7 @@ Object.assign(API, {
   cr_data: function(fresh){ return CR_.data(fresh); },
   cr_set: function(token, key, obj){ return CR_.set(key, obj, me_(token)); },
   cr_setmany: function(token, list){ return CR_.setMany(list, me_(token)); },
-  cr_veh: function(token, label, days){ me_(token); return CR_.veh(label, days); }
+  cr_veh: function(token, label, days){ me_(token); return CR_.vehComp(label, days); }
 });
 function crSetup(){ Logger.log(CR_.setup()); }
 /* Run to replace the saved drivers list with SEED_DRIVERS above (overwrites edits made in the app's Drivers list). */
