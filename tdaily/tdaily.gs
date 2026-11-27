@@ -28,6 +28,9 @@ function merge_(a, b){ for(const k in b){ const v = b[k];
   if(v && typeof v === 'object' && !Array.isArray(v)){ if(!a[k] || typeof a[k] !== 'object' || Array.isArray(a[k])) a[k] = {}; merge_(a[k], v); } else a[k] = v; } return a; }
 function since(who, since, pin){
   since = Number(since) || 0; const out = {}, cur = rev_();
+  const adm0 = admin_(who), pinState = !adm0 ? 'no' : (pinSet_() ? (pinOk_(pin) ? 'ok' : 'need') : 'none');
+  // nothing changed since this phone's last sync: answer without reading the sheet (most polls)
+  if(since > 0 && since >= cur) return {docs: {}, rev: cur, admin: adm0, full: false, salPin: pinState};
   rows_().forEach(r => { const k = String(r[0]); if(!k || k.indexOf('photos/') === 0 || Number(r[4]) <= since || !may_(k, who, pin)) return;
     try{ out[k] = JSON.parse(r[2]); }catch(e){} });
   const adm = admin_(who);
@@ -41,12 +44,15 @@ function write(who, key, obj, isMerge, pin){
   try{
     const s = docs_(), r = rows_(); let row = 0, cur = {};
     for(let i = 0; i < r.length; i++) if(String(r[i][0]) === key){ row = i + 2; try{ cur = JSON.parse(r[i][2]); }catch(e){} break; }
+    // audit trail: what was sent and the old value of every field it changed
+    const old = {}; (function walk(o, c, p){ for(const k in o){ const v = o[k], q = p ? p + '.' + k : k;
+      if(v && typeof v === 'object' && !Array.isArray(v) && c && c[k] && typeof c[k] === 'object' && !Array.isArray(c[k])) walk(v, c[k], q); else old[q] = c ? c[k] : undefined; } })(obj, JSON.parse(JSON.stringify(cur)), '');
     const next = isMerge ? merge_(cur, obj) : obj, json = JSON.stringify(next);
     if(json.length > 49000) fail('Too long to save.');
     const rev = rev_() + 1; props().setProperty('TD_REV', String(rev));
     const v = [key, key.split('/')[0], json, new Date().toISOString(), rev];
     if(row) s.getRange(row,1,1,5).setValues([v]); else s.appendRow(v);
-    log_(who, key, isMerge ? 'updated' : 'saved');
+    log_(who, key, (isMerge ? 'updated ' : 'saved ') + JSON.stringify(obj).slice(0, 1500) + ' | old ' + JSON.stringify(old).slice(0, 1500));
     return {rev: rev};
   }finally{ lock.releaseLock(); }
 }

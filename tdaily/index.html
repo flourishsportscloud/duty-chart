@@ -6,7 +6,7 @@
 <link rel="icon" href="../fis/fis-logo-192.png">
 <style>html,body{margin:0}[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
 <title>Transport Operations · FIS</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
 <style>
 /* Layout: sticky date bar, then one stacked card per time window, current window highlighted */
 :root{
@@ -436,6 +436,18 @@ body.drvmode .datebox,body.drvmode .prog,body.drvmode #tabs,body.drvmode #subtab
 .islog{margin-top:8px;border-left:3px solid var(--line);padding-left:10px;font-size:13px}.islog div{padding:3px 0}
 .issf select,.issf textarea{width:100%;font:inherit;font-size:15px;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:#fff}.issf .h{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
 .lnk{background:none;border:0;color:var(--miss);font:inherit;font-size:12.5px;text-decoration:underline;cursor:pointer;padding:0}
+/* reliability: touch, sync chip, back, toast, update bar */
+html,body{overscroll-behavior-y:contain}
+button,.tabs,.chips2,.kp,.dc,.tile,.win-h,.tick,.cm,.slot,.pchip,label.h{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+button,a,.tick,.cm,[data-t],[data-cm]{touch-action:manipulation}
+input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+.sync{display:inline-block;margin-left:auto;align-self:center;font-size:11px;font-weight:700;border-radius:999px;padding:4px 9px;background:rgba(255,255,255,.14);color:#fff;white-space:nowrap;max-width:46vw;overflow:hidden;text-overflow:ellipsis}
+.sync.busy{background:#F3E2B3;color:#5b4300}.sync.off{background:#cfd6e4;color:#1b2a44}.sync.bad{background:#B3261E;color:#fff;white-space:normal}.sync.ok{background:rgba(255,255,255,.14);color:#e9f3ea}
+.brand{display:flex;align-items:center;gap:10px}
+#subtabs .back{background:var(--navy);color:#fff;border-color:var(--navy);font-weight:700}
+#toastBar{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translate(-50%,30px);opacity:0;pointer-events:none;background:#14233F;color:#fff;font-size:14px;padding:10px 16px;border-radius:12px;z-index:80;transition:opacity .2s,transform .2s;max-width:92vw;text-align:center}
+#toastBar.on{opacity:1;transform:translate(-50%,0)}
+#updBar{position:fixed;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:90;background:var(--gold,#C9A227);color:#14233F;font:inherit;font-weight:700;font-size:14px;border:0;border-radius:12px;padding:12px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -523,6 +535,7 @@ body.drvmode .datebox,body.drvmode .prog,body.drvmode #tabs,body.drvmode #subtab
   </section>
   </div>
   <div class="pane" data-pane="history" hidden>
+  <div class="card2"><div class="sh"><b>Export · backup</b><small>opens in Excel</small></div><div class="chips2" style="margin:0"><button data-exp="att">⬇ Attendance &amp; check-ins</button><button data-exp="iss">⬇ Vehicle issues</button><button data-exp="day">⬇ Checklist (this day)</button></div></div>
   <h3>Last 14 days</h3>
   <div class="hist-wrap"><table id="hist"><thead></thead><tbody><tr><td>Loading…</td></tr></tbody></table></div>
   </div>
@@ -542,31 +555,94 @@ body.drvmode .datebox,body.drvmode .prog,body.drvmode #tabs,body.drvmode #subtab
   </div>
 </div>
 <script>
-/* Self-update: phones keep an old copy of this page for a while, so check for a newer build and reload */
-const APP_V="202611251200";
-(function(){let busy=false;async function chk(){if(busy||location.protocol==="file:")return;busy=true;
-  try{const t=await (await fetch(location.pathname+"?nc="+Date.now(),{cache:"no-store"})).text(),m=t.match(/const APP_V="(\d+)"/);
-    if(m&&m[1]!==APP_V){const u=new URL(location.href);u.searchParams.set("v",m[1]);if(window.FIS&&FIS.newVersion)FIS.newVersion(u.toString());else location.replace(u.toString())}}catch(e){}busy=false}
-  chk();document.addEventListener("visibilitychange",()=>{if(!document.hidden)chk()});setInterval(chk,10*60000)})();
+/* Version check: when a newer build is published, show a banner instead of reloading by itself
+   (an automatic reload could interrupt someone mid-entry). Also reads the server clock from the
+   response "Date" header so times do not depend on the phone's clock. */
+const APP_V="202611261800";
+window.SRV_OFF=0;
+(function(){let busy=false,shown=false;async function chk(){if(busy||location.protocol==="file:")return;busy=true;
+  try{const r=await fetch(location.pathname+"?nc="+Date.now(),{cache:"no-store"}),hd=r.headers.get("date");
+    if(hd){const off=new Date(hd).getTime()-Date.now();if(isFinite(off))window.SRV_OFF=Math.abs(off)>60000?off:0}
+    const t=await r.text(),m=t.match(/const APP_V="(\d+)"/);
+    if(m&&m[1]!==APP_V&&!shown){shown=true;try{window.FISDB&&FISDB.persist()}catch(e){}const u=new URL(location.href);u.searchParams.set("v",m[1]);
+      if(window.FIS&&FIS.newVersion)FIS.newVersion(u.toString());else{const b=document.createElement("button");b.id="updBar";b.type="button";b.textContent="New version available — tap to refresh";b.onclick=()=>location.replace(u.toString());document.body.appendChild(b)}}}catch(e){}busy=false}
+  chk();document.addEventListener("visibilitychange",()=>{if(!document.hidden)chk()});setInterval(()=>{if(!document.hidden)chk()},15*60000)})();
 </script>
 <script>
-/* FIS data store: same calls the report used before (doc / collection / onSnapshot), backed by the
-   Student Entry Exit API web app and the "Transport Daily Data" Google Sheet. Polls every 15 s. */
+/* FIS data store for Transport Operations, backed by the Student Entry Exit API web app and the
+   "Transport Daily Data" Google Sheet.
+   - Every change goes into an outbox kept on the phone (survives reload, app close and no network).
+   - The outbox is sent one document at a time as a field-level merge; failures retry with backoff.
+   - What you see = server copy + changes being sent + changes waiting, so a poll never undoes your edit.
+   - Data is cached on the phone (IndexedDB) and only changes since the last sync are downloaded. */
 const FISDB=(function(){
   const API_URL=new URLSearchParams(location.search).get('api')||'https://script.google.com/macros/s/AKfycbzIeMjvNueZiTlS6m-j8VNKJxLAbWVITVYkvdj7COAUJMhAsxe2BvPmPD7K3czI6oqWfw/exec';
-  const LS={get(k){try{return JSON.parse(localStorage.getItem('td_'+k))}catch(e){return null}},set(k,v){try{localStorage.setItem('td_'+k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem('td_'+k)}catch(e){}}};
-  let token=LS.get('token'),who=LS.get('name')||'',docs={},rev=0,admin=false,salPin='none',pin=(()=>{try{return sessionStorage.getItem('td_salpin')||''}catch(e){return''}})(),subs=new Set(),started=null,timer=null;
+  let storeWarn='';
+  const raw={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},
+    set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){if(e&&(e.name==='QuotaExceededError'||e.code===22))storeWarn='Phone storage is full — unsent changes may be lost if you close the app.';return false}},
+    del(k){try{localStorage.removeItem(k)}catch(e){}}};
+  const LS={get:k=>raw.get('td_'+k),set:(k,v)=>raw.set('td_'+k,v),del:k=>raw.del('td_'+k)};
+  // one login for the Transport apps (same server): reuse a token saved by Van Duty / Helpdesk / Student Entry Exit
+  let token=LS.get('token'),who=LS.get('name')||'';
+  if(!token){for(const [tk,nk] of [['fis_token','fis_name'],['tcr_token','tcr_name'],['van_token','van_name'],['fisTA:token','fisTA:me']]){const t=raw.get(tk);if(t){token=t;who=who||raw.get(nk)||'';break}}}
+  let SRV={},docs={},OUT=LS.get('out')||{},INF={},WAIT={},rev=0,admin=false,salPin='none',
+    pin=(()=>{try{return sessionStorage.getItem('td_salpin')||''}catch(e){return''}})(),subs=new Set(),
+    lastSync=0,lastErr='',hardErr='',retryN=0,flushT=null,retryT=null,flushing=false,online=navigator.onLine!==false;
   const clone=o=>o==null?o:JSON.parse(JSON.stringify(o));
-  async function call(fn,args){const r=await fetch(API_URL,{method:'POST',body:JSON.stringify({fn,args,token})});const j=await r.json();
-    if(!j.ok){if(j.login){LS.del('token');token=null;showLogin('Please log in again.')}const e=new Error(j.err||'Error');e.code=/admin|Only/.test(j.err||'')?'permission_denied':(j.login?'unauthenticated':'error');throw e}return j.v}
-  function notify(keys){subs.forEach(f=>{try{f(keys)}catch(e){}})}
-  async function poll(){try{const v=await call('td_since',[token,rev,pin]);const keys=Object.keys(v.docs);keys.forEach(k=>docs[k]=v.docs[k]);rev=v.rev;admin=!!v.admin;salPin=v.salPin||'none';if(keys.length)notify(keys)}catch(e){}}
-  function merge(a,b){for(const k in b){const v=b[k];if(v&&typeof v==='object'&&!Array.isArray(v)){if(!a[k]||typeof a[k]!=='object')a[k]={};merge(a[k],v)}else a[k]=v}return a}
-  const snap=p=>({id:p.split('/').pop(),exists:p in docs,data:()=>clone(docs[p])});
-  async function write(p,o,isMerge){const prev=clone(docs[p]);docs[p]=isMerge?merge(clone(docs[p])||{},clone(o)):clone(o);notify([p]);
-    try{const v=await call(isMerge?'td_update':'td_set',p.indexOf('salary/')===0?[token,p,o,pin]:[token,p,o]);if(v&&v.rev>rev&&v.rev===rev+1)rev=v.rev}catch(e){if(prev===undefined)delete docs[p];else docs[p]=prev;notify([p]);throw e}}
+  const stab=o=>JSON.stringify(o,(k,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.keys(v).sort().reduce((a,c)=>(a[c]=v[c],a),{}):v);
+  // same rule as the server: objects merge field by field, everything else (incl. arrays) is replaced
+  function merge(a,b){for(const k in b){const v=b[k];if(v&&typeof v==='object'&&!Array.isArray(v)){if(!a[k]||typeof a[k]!=='object'||Array.isArray(a[k]))a[k]={};merge(a[k],v)}else a[k]=v}return a}
+  const comb=(a,b)=>b.set?{m:clone(b.m),set:true}:{m:merge(clone(a.m)||{},clone(b.m)),set:!!a.set};
+  const apply=(d,e)=>e?(e.set?clone(e.m):merge(d==null?{}:d,clone(e.m))):d;
+  const view=k=>{let d=SRV[k]===undefined?undefined:clone(SRV[k]);d=apply(d,INF[k]);d=apply(d,OUT[k]);return d};
+  async function call(fn,args){let j;
+    try{const r=await fetch(API_URL,{method:'POST',body:JSON.stringify({fn,args,token})});j=await r.json()}catch(e){const x=new Error('No internet');x.net=1;throw x}
+    if(!j.ok){if(j.login&&fn!=='login'){LS.del('token');raw.del('fis_token');token=null;showLogin('Please log in again.')}
+      const e=new Error(j.err||'Error');e.code=/admin|Only/.test(j.err||'')?'permission_denied':(j.login?'unauthenticated':'error');e.hard=/Bad key|Too long|Nothing to save/.test(j.err||'');throw e}
+    return j.v}
+  function notify(keys,remote){window.__remote=!!remote;subs.forEach(f=>{try{f(keys)}catch(e){console.error(e)}});window.__remote=false}
+  // ---- status chip ----
+  const pending=()=>Object.keys(OUT).length+Object.keys(INF).length;
+  function status(){const n=pending();let s,c;
+    if(hardErr){s='⚠ '+hardErr;c='bad'}
+    else if(!online){s='Offline'+(n?' · '+n+' change'+(n>1?'s':'')+' waiting':'');c='off'}
+    else if(lastErr&&n){s='Save failed — retrying · '+n+' waiting';c='bad'}
+    else if(n){s='Saving… '+n;c='busy'}
+    else{s='Saved ✓'+(lastSync?' '+new Date(lastSync+(window.SRV_OFF||0)+330*6e4).toISOString().slice(11,16):'');c='ok'}
+    if(storeWarn){s+=' · '+storeWarn;c='bad'}
+    const el=document.getElementById('syncChip');if(el){el.textContent=s;el.className='sync '+c}
+    try{if(window.FIS&&FIS.setPending)FIS.setPending((c==='off'||c==='bad')?n:0)}catch(e){}return{n,s,c}}
+  function saveOut(){const all={};Object.keys(INF).forEach(p=>all[p]=INF[p]);Object.keys(OUT).forEach(p=>all[p]=all[p]?comb(all[p],OUT[p]):OUT[p]);if(raw.set('td_out',all)&&storeWarn&&pending()===0)storeWarn='';status()}
+  // ---- phone cache (IndexedDB, falls back to nothing) ----
+  const IDB=(()=>{let p=null;const open=()=>p||(p=new Promise((res,rej)=>{try{const r=indexedDB.open('fis-td',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}catch(e){rej(e)}}));
+    return{get:k=>open().then(db=>new Promise(res=>{const q=db.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>res(null)})).catch(()=>null),
+      set:(k,v)=>open().then(db=>new Promise(res=>{const t=db.transaction('kv','readwrite');t.objectStore('kv').put(v,k);t.oncomplete=()=>res(true);t.onerror=()=>{storeWarn='Phone storage is full — data is not cached.';res(false)}})).catch(()=>false)}})();
+  let cacheT=null;function cacheSoon(){clearTimeout(cacheT);cacheT=setTimeout(cacheNow,2000)}
+  function cacheNow(){clearTimeout(cacheT);const s={};Object.keys(SRV).forEach(k=>{if(k.indexOf('salary/')!==0)s[k]=SRV[k]});return IDB.set('snap',{rev,srv:s,at:Date.now()})}
+  // ---- sync ----
+  let polling=false;
+  async function poll(){if(!token||polling)return;polling=true;
+    try{const v=await call('td_since',[token,rev,pin]);if(v.rev<rev){rev=0;polling=false;return poll()}
+      const ch=[];Object.keys(v.docs).forEach(k=>{SRV[k]=v.docs[k];const nv=view(k);if(stab(nv)!==stab(docs[k])){docs[k]=nv;ch.push(k)}});
+      rev=v.rev;admin=!!v.admin;salPin=v.salPin||'none';lastSync=Date.now();online=true;if(Object.keys(v.docs).length)cacheSoon();if(ch.length)notify(ch,true)}
+    catch(e){if(e.net)online=false}
+    polling=false;status()}
+  function flushSoon(ms){clearTimeout(flushT);flushT=setTimeout(flush,ms==null?600:ms)}
+  async function flush(){if(flushing||!token||!Object.keys(OUT).length)return;flushing=true;let failed=false;
+    for(const p of Object.keys(OUT)){const e=OUT[p];delete OUT[p];INF[p]=e;saveOut();const ws=WAIT[p]||[];WAIT[p]=[];
+      try{await call(e.set?'td_set':'td_update',p.indexOf('salary/')===0?[token,p,e.m,pin]:[token,p,e.m]);
+        SRV[p]=e.set?clone(e.m):merge(clone(SRV[p])||{},clone(e.m));delete INF[p];docs[p]=view(p);lastSync=Date.now();lastErr='';online=true;retryN=0;saveOut();cacheSoon();ws.forEach(w=>w.res())}
+      catch(err){delete INF[p];
+        if(err.code==='permission_denied'||err.hard){hardErr=err.message;setTimeout(()=>{hardErr='';status()},12000);docs[p]=view(p);saveOut();notify([p],false);ws.forEach(w=>w.rej(err));continue}
+        OUT[p]=OUT[p]?comb(e,OUT[p]):e;WAIT[p]=ws.concat(WAIT[p]||[]);if(err.net)online=false;else lastErr=err.message||'error';saveOut();failed=true;
+        if(err.code==='unauthenticated')break;break}}
+    flushing=false;
+    if(failed){clearTimeout(retryT);retryT=setTimeout(flush,Math.min(60000,3000*Math.pow(2,Math.min(retryN++,5))))}
+    else if(Object.keys(OUT).length)flushSoon(200);status()}
+  function write(p,o,isMerge){const e={m:clone(o),set:!isMerge};OUT[p]=OUT[p]?comb(OUT[p],e):e;docs[p]=view(p);saveOut();notify([p],false);flushSoon();
+    return new Promise((res,rej)=>{(WAIT[p]=WAIT[p]||[]).push({res,rej})})}
   function query(coll,conds,ord,lim){
-    const run=()=>{let L=Object.keys(docs).filter(k=>k.startsWith(coll+'/')&&k.split('/').length===2).map(k=>({id:k.split('/')[1],v:docs[k]}));
+    const run=()=>{let L=Object.keys(docs).filter(k=>k.startsWith(coll+'/')&&k.split('/').length===2&&docs[k]!==undefined).map(k=>({id:k.split('/')[1],v:docs[k]}));
       conds.forEach(([f,op,val])=>{L=L.filter(d=>{const x=d.v&&d.v[f];return op==='>='?x>=val:op==='<='?x<=val:op==='>'?x>val:op==='<'?x<val:op==='=='?x===val:true})});
       if(ord)L.sort((a,b)=>{const x=a.v&&a.v[ord[0]],y=b.v&&b.v[ord[0]];return (x<y?-1:x>y?1:0)*(ord[1]==='desc'?-1:1)});
       if(lim)L=L.slice(0,lim);return{docs:L.map(d=>({id:d.id,exists:true,data:()=>clone(d.v)}))}};
@@ -575,21 +651,31 @@ const FISDB=(function(){
       get:async()=>{if(deny){const e=new Error('denied');e.code='permission_denied';throw e}return run()},
       onSnapshot(cb,err){if(deny){setTimeout(()=>err&&err({code:'permission_denied'}),0);return()=>{}}
         const f=keys=>{if(!keys||keys.some(k=>k.startsWith(coll+'/')))cb(run())};subs.add(f);setTimeout(()=>f(null),0);return()=>subs.delete(f)}}}
+  const snap=p=>({id:p.split('/').pop(),exists:docs[p]!==undefined,data:()=>clone(docs[p])});
   const db={doc:p=>({get:async()=>snap(p),set:o=>write(p,o,false),update:o=>write(p,o,true),
       onSnapshot(cb){const f=keys=>{if(!keys||keys.includes(p))cb(snap(p))};subs.add(f);setTimeout(()=>f(null),0);return()=>subs.delete(f)}}),
-    collection:c=>query(c,[],null,null),
-    photo:k=>call('td_photo',[token,k]),who:()=>who};
-  let resolveReady;const readyP=new Promise(r=>resolveReady=r);
-  function showLogin(msg){const L=document.getElementById('fisLogin');L.hidden=false;document.getElementById('fl-n').value=who||'';document.getElementById('fl-err').textContent=msg||''}
-  async function start(){await poll();if(!token)return;if(!timer){timer=setInterval(()=>{if(!document.hidden)poll()},15000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll()})}
-    document.getElementById('fisLogin').hidden=true;resolveReady(db)}
+    collection:c=>query(c,[],null,null),photo:k=>call('td_photo',[token,k]),who:()=>who};
+  let resolveReady,ready=false;const readyP=new Promise(r=>resolveReady=r);const markReady=()=>{if(!ready){ready=true;resolveReady(db)}};
+  function showLogin(msg){const L=document.getElementById('fisLogin');if(!L)return;L.hidden=false;document.getElementById('fl-n').value=who||'';document.getElementById('fl-err').textContent=msg||''}
+  let loopOn=false;function loop(){if(loopOn)return;loopOn=true;(function tick(){setTimeout(()=>{if(!document.hidden){flush();poll()}tick()},20000+Math.floor(Math.random()*10000))})()}
+  async function start(){document.getElementById('fisLogin').hidden=true;
+    const c=await IDB.get('snap');if(c&&c.srv&&!rev){SRV=c.srv;rev=c.rev||0;Object.keys(SRV).forEach(k=>docs[k]=view(k));Object.keys(OUT).forEach(k=>docs[k]=view(k));markReady()}
+    await poll();markReady();flush();loop()}
+  document.addEventListener('visibilitychange',()=>{if(document.hidden){saveOut();cacheNow()}else if(token){flush();poll()}});
+  addEventListener('pagehide',()=>{saveOut();cacheNow()});
+  addEventListener('online',()=>{online=true;status();flush();poll()});addEventListener('offline',()=>{online=false;status()});
+  addEventListener('beforeunload',e=>{if(pending()){saveOut();e.preventDefault();e.returnValue='Some changes are not saved yet.';return e.returnValue}});
   document.addEventListener('click',async e=>{if(e.target.id==='fl-go'){const n=document.getElementById('fl-n').value,pw=document.getElementById('fl-p').value;document.getElementById('fl-err').textContent='Checking…';
-      try{const v=await call('login',[n,pw]);token=v.token;who=v.name;LS.set('token',token);LS.set('name',who);document.getElementById('fl-err').textContent='';start()}catch(x){document.getElementById('fl-err').textContent=x.message==='LOGIN'?'Please try again.':x.message}}
-    if(e.target.id==='fl-out'){LS.del('token');token=null;location.reload()}});
+      try{const v=await call('login',[n,pw]);token=v.token;who=v.name;LS.set('token',token);LS.set('name',who);raw.set('fis_token',token);raw.set('fis_name',who);document.getElementById('fl-p').value='';document.getElementById('fl-err').textContent='';start()}
+      catch(x){document.getElementById('fl-err').textContent=x.net?'No internet — try again.':x.message==='LOGIN'?'Please try again.':x.message}}
+    if(e.target.id==='fl-out'){if(pending()&&!confirm('Some changes are not sent yet. Sign out anyway? They stay on this phone and are sent after you log in again.'))return;LS.del('token');raw.del('fis_token');token=null;location.reload()}});
   document.addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.target.id==='fl-p'||e.target.id==='fl-n'))document.getElementById('fl-go').click()});
-  addEventListener('DOMContentLoaded',()=>{if(token)start();else showLogin()});
-  async function setPin(x){pin=String(x||'').trim();try{sessionStorage.setItem('td_salpin',pin)}catch(e){}rev=0;await poll();notify(Object.keys(docs).filter(k=>k.startsWith('salary/')).concat(['salary/_']));return salPin!=='need'}
-  return{ready:()=>readyP,isAdmin:()=>admin,name:()=>who,salPin:()=>salPin,setPin};
+  addEventListener('DOMContentLoaded',()=>{if(token)start();else{showLogin();
+    // offline / logged-out: still show cached data, edits wait in the outbox until login
+    IDB.get('snap').then(c=>{if(c&&c.srv&&!rev){SRV=c.srv;rev=c.rev||0;Object.keys(SRV).forEach(k=>docs[k]=view(k));markReady()}})}});
+  async function setPin(x){pin=String(x||'').trim();try{sessionStorage.setItem('td_salpin',pin)}catch(e){}rev=0;await poll();notify(Object.keys(docs).filter(k=>k.startsWith('salary/')).concat(['salary/_']),false);return salPin!=='need'}
+  Object.keys(OUT).forEach(k=>docs[k]=view(k));
+  return{ready:()=>readyP,isAdmin:()=>admin,name:()=>who,salPin:()=>salPin,setPin,status,pending,persist:()=>{saveOut();cacheNow()},flushNow:()=>flush(),pollNow:()=>poll()};
 })();
 </script>
 <script>
@@ -618,8 +704,8 @@ const $=id=>document.getElementById(id);
 let db=null, date=todayIST(), state=blank(), unsub=null, closed=new Set();
 try{JSON.parse(localStorage.getItem("closed")||"[]").forEach(x=>closed.add(x))}catch(e){}
 
-function todayIST(){const d=new Date(Date.now()+330*60000);return d.toISOString().slice(0,10)}
-function nowMinIST(){const d=new Date(Date.now()+330*60000);return d.getUTCHours()*60+d.getUTCMinutes()}
+function todayIST(){const d=new Date(Date.now()+(window.SRV_OFF||0)+330*60000);return d.toISOString().slice(0,10)}
+function nowMinIST(){const d=new Date(Date.now()+(window.SRV_OFF||0)+330*60000);return d.getUTCHours()*60+d.getUTCMinutes()}
 function blank(){return{s:{},n:{},by:"",fleet:"",dayNote:"",att:{},cover:{},uni:{},eod:{},sup:{},wash:{},pu:{},vc:{},tt:{},van:{},vcr:{},plan:{}}}
 
 /* ---- fleet & staff ---- */
@@ -717,9 +803,13 @@ function staffEditor(){const row=(id,label)=>`<div>${esc(label)}<br><small style
   <div class="card2"><div class="sh"><b>Cleaners</b><small>person responsible for cleaning each vehicle (shown in Vehicle Check)</small></div>
    <div class="rtgrid" style="grid-template-columns:90px 1fr">${VEH.map(v=>`<div><b>${v.label}</b></div><input id="ro-cl-${v.id}" data-r="cleaner.${v.id}" value="${esc((roster.cleaner||{})[v.id]||"")}" placeholder="Cleaner name">`).join("")}</div></div>
   <div class="card2"><div class="sh"><b>Names, phones &amp; vehicles</b></div><div class="rows" id="staffBody"></div></div>`}
-let rosterChain=Promise.resolve(), rosterTimer=null;
-function saveRoster(){clearTimeout(rosterTimer);rosterTimer=setTimeout(()=>{if(!db)return;const snap=JSON.parse(JSON.stringify(roster));
-  rosterChain=rosterChain.then(()=>db.doc("roster/main").set(snap)).then(()=>setStatus("Names saved")).catch(e=>setStatus(e&&e.code==="permission_denied"?"You have view-only access to the names.":"Could not save names — try again."))},600);setStatus("Saving names…")}
+let rosterTimer=null, rosterBase=null;
+function rosterDiff(a,b){const p={};Object.keys(b).forEach(k=>{const x=a?a[k]:undefined,y=b[k];
+  if(y&&typeof y==="object"&&!Array.isArray(y)&&x&&typeof x==="object"&&!Array.isArray(x)){const sub={};Object.keys(y).forEach(q=>{if(JSON.stringify(x[q])!==JSON.stringify(y[q]))sub[q]=y[q]===undefined?null:y[q]});Object.keys(x).forEach(q=>{if(!(q in y))sub[q]=null});if(Object.keys(sub).length)p[k]=sub}
+  else if(JSON.stringify(x)!==JSON.stringify(y))p[k]=y===undefined?null:y});return p}
+// sent at once (the outbox groups quick changes), so a refresh from another phone can never overwrite an edit made a moment ago
+function saveRoster(){if(!db)return;const cur=JSON.parse(JSON.stringify(roster)),p=rosterDiff(rosterBase||{},cur);if(!Object.keys(p).length)return;rosterBase=cur;
+  db.doc("roster/main").update(p).then(()=>setStatus("Names saved")).catch(e=>setStatus(e&&e.code==="permission_denied"?"You have view-only access to the names.":"Not saved: "+((e&&e.message)||"error")))}
 const mins=t=>{const[a,b]=t.split(":");return+a*60+ +b};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const fmt=d=>{const[y,m,dd]=d.split("-");return dd+"/"+m+"/"+y};
@@ -758,20 +848,11 @@ const openNotes=new Set();
 /* ---- saving: one queued write at a time ---- */
 let pendingBy={}, writing=false, timer=null;
 const hasPending=d=>!!(pendingBy[d]&&Object.keys(pendingBy[d]).length);
-function queue(patch,d){d=d||date;pendingBy[d]=deepMerge(pendingBy[d]||{},JSON.parse(JSON.stringify(patch)));clearTimeout(timer);timer=setTimeout(flush,500);setStatus("Saving…")}
-function deepMerge(a,b){for(const k in b){if(b[k]&&typeof b[k]==="object"){a[k]=a[k]||{};deepMerge(a[k],b[k])}else a[k]=b[k]}return a}
-async function flush(){
-  const ds=Object.keys(pendingBy); if(writing||!ds.length)return;
-  if(!db){setStatus("Not saved — log in to save this report.");return}
-  writing=true;const d=ds[0];const p=pendingBy[d];delete pendingBy[d];
-  try{const ref=db.doc("reports/"+d);const snap=await ref.get();
-    p.updatedAt=new Date().toISOString(); p.date=d;
-    if(snap.exists)await ref.update(p);else await ref.set(deepMerge(blank(),p));
-    setStatus("Saved "+new Date().toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"}));
-    loadHistory();
-  }catch(e){pendingBy[d]=deepMerge(p,pendingBy[d]||{});writing=false;setStatus(e&&e.code==="permission_denied"?"You have view-only access to this report.":"Could not save — will retry on your next change.");return}
-  writing=false;if(Object.keys(pendingBy).length)flush();
-}
+function queue(patch,d){d=d||date;const p=JSON.parse(JSON.stringify(patch));p.date=d;p.updatedAt=new Date(Date.now()+(window.SRV_OFF||0)).toISOString();
+  if(!db){(window.__preQ=window.__preQ||[]).push([d,p]);setStatus("Saved on this phone — sends after you log in.");return}
+  db.doc("reports/"+d).update(p).then(()=>{clearTimeout(queue.h);queue.h=setTimeout(loadHistory,1500)}).catch(e=>setStatus(e&&e.code==="permission_denied"?"You have view-only access to this report.":"Not saved: "+((e&&e.message)||"error")))}
+function deepMerge(a,b){for(const k in b){if(b[k]&&typeof b[k]==="object"&&!Array.isArray(b[k])){if(!a[k]||typeof a[k]!=="object"||Array.isArray(a[k]))a[k]={};deepMerge(a[k],b[k])}else a[k]=b[k]}return a}
+async function flush(){}
 
 /* ---- uniform & absentee chart ---- */
 const CHART=["p1d","p2d","p3d","p4d","p5d","p6d","p7d","p8d","p9d","p10d","p11d","p12d","p13d","p14d","r2","p16d","r1","r3","p34d","p15d","p4c","p2c","p5c","p14c","p9c","p10c","p15c","p8c","p1c","p3c","r4"];
@@ -1088,7 +1169,7 @@ function tabBadges(){const b={};try{
   if(svcState==="ok")b.service=Object.keys(SV).filter(id=>svcCalc(SV[id]).st!=="ok").length;
  }catch(e){}return b}
 function showTab(k){tab=k;try{localStorage.setItem("td_tab",k)}catch(e){}if(PANE_SEC[k])closed.delete(PANE_SEC[k]);
-  try{history.replaceState(null,"","#"+k)}catch(e){}renderTabs();render();scrollTo({top:0});const on=$("tabs").querySelector(".on");on&&on.scrollIntoView({inline:"center",block:"nearest"})}
+  renderTabs();render();scrollTo({top:0});const on=$("tabs").querySelector(".on");on&&on.scrollIntoView({inline:"center",block:"nearest"})}
 document.addEventListener("click",e=>{const t=e.target.closest("[data-tab]");if(t){e.stopPropagation();showTab(t.dataset.tab);return}
   const d=e.target.closest("[data-go]");if(d){e.stopPropagation();showTab(d.dataset.go);return}
   if(e.target.closest("[data-goveh]")){e.stopPropagation();showTab("docs");return}
@@ -1129,7 +1210,6 @@ function crSummary(){const v=CRD.data;if(!v)return null;const ov=id=>(v.docs||{}
 document.addEventListener("click",e=>{if(e.target.closest('[data-go="__cr"]')){e.stopPropagation();location.href="../complaints/"}},true);
 
 const _renderTD=render;render=function(){_renderTD();renderSup();renderWash();renderStl();renderVans();salLock();renderTabs();renderDash()};
-setInterval(()=>{if(document.hidden)return;if(tab==="dash")renderDash();renderTabs()},5000);
 try{renderTabs()}catch(e){}
 
 /* ---- supervisor tasks (Kamal, Vishvbandu) ---- */
@@ -1785,13 +1865,16 @@ let ISS={},issF="open",issForm=null,issLoaded=false;
 const ISS_T=[["out","Out of order","बंद / खराब"],["mech","Mechanical fault","मैकेनिकल खराबी"],["repair","Repair","मरम्मत"],["maint","Maintenance","रखरखाव"],["audit","Audit finding","ऑडिट में मिला"],["acc","Accident / damage","दुर्घटना / टूट-फूट"],["other","Other","अन्य"]];
 const ISS_S=[["off","Off road","गाड़ी नहीं चलेगी","red"],["urg","Urgent","जल्दी ठीक करें","gold"],["norm","Normal","सामान्य","blu"]];
 const ISS_ST=[["open","Open","खुला"],["work","At mechanic","मैकेनिक के पास"],["fixed","Fixed","ठीक हो गया"]];
-const issList=()=>Object.entries(ISS).filter(([k,v])=>v&&v.v).map(([id,v])=>Object.assign({id},v));
+const issList=()=>Object.entries(ISS).filter(([k,v])=>v&&v.v&&!v.del).map(([id,v])=>Object.assign({id},v));
+const issLogs=x=>(Array.isArray(x.log)?x.log:Object.values(x.log||{})).filter(Boolean).sort((a,b)=>String(a.t).localeCompare(String(b.t)));
+function issLogAdd(x,n){const lid="l"+Date.now().toString(36)+Math.random().toString(36).slice(2,5),e={t:nowStamp(),by:db&&db.who?db.who():"",n};
+  const m={};if(Array.isArray(x.log))x.log.forEach((l,i)=>m["o"+i]=l);m[lid]=e;return m}
 const issOpen=()=>issList().filter(x=>x.st!=="fixed");
 function issVehs(){const L=VEH.map(v=>({id:v.id,label:v.label,no:vehNoOf(v.id)}));try{vanList().forEach(v=>L.push({id:"van:"+v.id,label:v.label+" (private)",no:v.no||""}))}catch(e){}return L}
 const issVL=id=>{const v=issVehs().find(x=>x.id===id);return v?v.label:String(id||"").replace(/^txt:/,"")};
 const nowStamp=()=>todayIST()+" "+nowHM();
 const daysOpen=x=>Math.max(0,dayDiff(String(x.at||"").slice(0,10))*-1);
-function issSave(id,patch){ISS[id]=Object.assign({},ISS[id]||{},patch);if(db)db.doc("roster/issues").update({i:{[id]:patch}}).then(()=>setStatus("Saved")).catch(()=>setStatus("Could not save — try again."))}
+function issSave(id,patch){const cur=JSON.parse(JSON.stringify(ISS[id]||{}));if(patch.log&&Array.isArray(cur.log))cur.log={};ISS[id]=deepMerge(cur,JSON.parse(JSON.stringify(patch)));if(db)db.doc("roster/issues").update({i:{[id]:patch}}).then(()=>setStatus("Saved")).catch(()=>setStatus("Could not save — try again."))}
 function issAuto(){const L=[],add=(vid,k,t,d,sev,src)=>L.push({vid,k,t,d,sev,src});const openKeys=new Set(issList().filter(x=>x.st!=="fixed"&&x.ak).map(x=>x.ak));
   // vehicle check ✗ in the last 7 days whose latest mark is still ✗
   const days=[];for(let i=0;i<7;i++){const d=addDays(todayIST(),-i);days.push(d)}
@@ -1810,7 +1893,7 @@ function issRow(x){const st=ISS_ST.find(q=>q[0]===(x.st||"open"))||ISS_ST[0],d=d
    <div class="issd">${esc(x.desc||"")}</div>
    <div class="legend" style="margin:4px 0 8px">Reported by ${esc(x.by||"—")} · ${esc(x.at||"")}${x.src&&x.src!=="Manual"?" · from "+esc(x.src):""}${x.st!=="fixed"?` · <b style="white-space:nowrap;color:${d>=3?"var(--miss)":"inherit"}">${d} day${d===1?"":"s"} open</b>`:` · fixed ${esc(x.fixedAt||"")}`}${x.eta&&x.st!=="fixed"?" · expected back "+fmt(x.eta):""}</div>
    <div class="istb">${ISS_ST.map(([k,l,h])=>`<button class="${(x.st||"open")===k?"on":""} s-${k}" data-iss="${x.id}|${k}">${l}<small>${h}</small></button>`).join("")}</div>
-   ${(x.log||[]).length?`<div class="islog">${x.log.map(l=>`<div><b>${esc(l.t)}</b> · ${esc(l.by||"")}<br>${esc(l.n)}</div>`).join("")}</div>`:""}
+   ${issLogs(x).length?`<div class="islog">${issLogs(x).map(l=>`<div><b>${esc(l.t)}</b> · ${esc(l.by||"")}<br>${esc(l.n)}</div>`).join("")}</div>`:""}
    ${x.st!=="fixed"?`<div style="display:flex;gap:6px;margin-top:8px"><input class="note" style="flex:1" id="iss-n-${x.id}" placeholder="Update · e.g. sent to garage, part ordered"><button class="mic" data-mic="iss-n-${x.id}" aria-label="Speak">🎤</button><button class="btn sm primary" data-issn="${x.id}">Add</button></div>
    <div class="ped" style="margin:8px 0 0"><label style="font-size:12px;color:var(--muted)">Expected back <input type="date" id="iss-eta-${x.id}" data-iseta="${x.id}" value="${esc(x.eta||"")}"></label></div>`:""}
    ${FISDB.isAdmin()?`<button class="lnk" data-issdel="${x.id}" style="margin-top:6px">Delete</button>`:""}</div>`}
@@ -1843,11 +1926,11 @@ document.addEventListener("click",e=>{const t=e.target.closest("[data-issnew],[d
   if(D.issf){issF=D.issf;render();return}
   if(D.issauto!=null){const a=issAuto()[+D.issauto];if(!a)return;issForm={v:a.vid,type:a.src==="Documents"?"other":a.src==="Service"?"maint":"repair",sev:a.sev,desc:a.t+" — "+a.d,ak:a.k,src:a.src};render();window.scrollTo({top:0,behavior:"smooth"});return}
   if("issadd" in D){keep();const f=issForm;if(!f.v){setStatus("Choose the vehicle.");return}if(!f.type){setStatus("Choose what kind of issue.");return}if(!String(f.desc||"").trim()){setStatus("Write the problem.");return}
-    const id="i"+Date.now().toString(36);issSave(id,{v:f.v,type:f.type,sev:f.sev||"norm",desc:f.desc.trim(),by:db&&db.who?db.who():"",at:nowStamp(),st:"open",src:f.src||"Manual",ak:f.ak||"",log:[]});issForm=null;issF="open";render();return}
-  if(D.iss){const[id,st]=D.iss.split("|"),x=ISS[id];if(!x)return;const log=(x.log||[]).concat([{t:nowStamp(),by:db&&db.who?db.who():"",n:"Status: "+(ISS_ST.find(q=>q[0]===st)||[])[1]}]);
+    const id="i"+Date.now().toString(36);issSave(id,{v:f.v,type:f.type,sev:f.sev||"norm",desc:f.desc.trim(),by:db&&db.who?db.who():"",at:nowStamp(),st:"open",src:f.src||"Manual",ak:f.ak||"",log:{}});issForm=null;issF="open";render();return}
+  if(D.iss){const[id,st]=D.iss.split("|"),x=ISS[id];if(!x)return;const log=issLogAdd(x,"Status: "+(ISS_ST.find(q=>q[0]===st)||[])[1]);
     issSave(id,{st,log,fixedAt:st==="fixed"?nowStamp():""});render();return}
-  if(D.issn){const i=$("iss-n-"+D.issn),x=ISS[D.issn];if(!i||!x||!i.value.trim())return;issSave(D.issn,{log:(x.log||[]).concat([{t:nowStamp(),by:db&&db.who?db.who():"",n:i.value.trim()}])});i.value="";render();return}
-  if(D.issdel){if(!FISDB.isAdmin())return;ISS[D.issdel]=null;if(db)db.doc("roster/issues").update({i:{[D.issdel]:null}});render();return}
+  if(D.issn){const i=$("iss-n-"+D.issn),x=ISS[D.issn];if(!i||!x||!i.value.trim())return;issSave(D.issn,{log:issLogAdd(x,i.value.trim())});i.value="";render();return}
+  if(D.issdel){if(!FISDB.isAdmin())return;issSave(D.issdel,{del:true,delBy:db&&db.who?db.who():"",delAt:nowStamp()});toast("Issue removed (kept in the record)");render();return}
 },true);
 document.addEventListener("change",e=>{const id=e.target.dataset&&e.target.dataset.iseta;if(id)issSave(id,{eta:e.target.value})});
 function issDash(){const N=issNeed(),off=N.filter(n=>n.off),open=issOpen();if(!N.length)return"";
@@ -1855,17 +1938,72 @@ function issDash(){const N=issNeed(),off=N.filter(n=>n.off),open=issOpen();if(!N
   <div class="card2"><div class="nl">${N.slice(0,10).map(n=>`<div><span class="who">${esc(issVL(n.vid))}${n.off?' <span class="isev red">Off road</span>':""}<small>${n.iss.map(x=>esc(typL(x.type))+": "+esc(x.desc||"")+" · "+daysOpen(x)+"d").concat(n.auto.map(a=>esc(a.t))).slice(0,2).join(" · ")}</small></span><span class="v ${n.off?"red":"amb"}">${n.iss.length?n.iss.length+" open":"flag"}</span></div>`).join("")}</div>${N.length>10?`<div class="legend" style="margin:6px 0 0">+ ${N.length-10} more</div>`:""}</div>`}
 
 const _r4=render;render=function(){if(DRV_MODE&&tab!=="drv")tab="drv";_r4();renderDrv();renderVrev();renderIss()};
+/* ===== reliability layer: hold refreshes while busy · render only the open screen · real Back · toast · errors · export ===== */
+(function(){
+  // 1. only build the screen that is open (others are rebuilt when you open them)
+  const only=(name,panes)=>{const f=window[name];if(typeof f!=="function")return;window[name]=function(){if(panes.includes(tab))return f.apply(this,arguments)}};
+  [["renderStaff",["att"]],["renderReg",["uniform"]],["renderVC",["vcheck"]],["renderSal",["salary"]],["renderNpl",["plan"]],["renderSup",["sup"]],["renderWash",["wash"]],["renderStl",["staffl"]],["renderVans",["vans"]],["renderDash",["dash"]]].forEach(([n,p])=>only(n,p));
+})();
+let lastTouch=0,needRender=false;
+["touchstart","pointerdown","keydown","wheel"].forEach(ev=>addEventListener(ev,()=>{lastTouch=Date.now()},{passive:true,capture:true}));
+addEventListener("scroll",()=>{lastTouch=Date.now()},{passive:true});
+function uiBusy(){const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&a.type!=="button")return true;
+  if(Date.now()-lastTouch<4000)return true;const pv=$("phView");if(pv&&!pv.hidden)return true;
+  try{if(issForm||editRoster||vanEdit||tkEdit||salEdit||vehEdit||svcEdit||washEdit||vcEdit||puEdit)return true}catch(e){}return false}
+{const _rr=render;render=function(){if(window.__remote&&uiBusy()){needRender=true;return}needRender=false;_rr()}}
+setInterval(()=>{if(needRender&&!uiBusy())render()},1000);
+// time-based states ("NOW", "late", "not marked") move on once a minute — treated like a remote change, so it waits while you are busy
+setInterval(()=>{if(date===todayIST()&&!document.hidden){window.__remote=true;try{render()}finally{window.__remote=false}}},60000);
+// 2. toast
+function toast(m){let t=$("toastBar");if(!t){t=document.createElement("div");t.id="toastBar";t.setAttribute("role","status");document.body.appendChild(t)}t.textContent=m;t.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("on"),2600)}
+// 3. Back: every tab change is a history step; Back closes an open form/photo first; at the Dashboard it asks before leaving
+function closeOverlay(){const pv=$("phView");if(pv&&!pv.hidden){pv.hidden=true;return true}
+  if(salEdit||vehEdit||svcEdit){toast("Tap Save or Cancel first");return true}
+  if(issForm){issForm=null;render();return true}if(puEdit){puEdit="";render();return true}
+  if(editRoster){editRoster=false;render();return true}if(vanEdit){vanEdit=false;render();return true}
+  if(tkEdit){tkEdit=false;render();return true}if(washEdit){washEdit=false;render();return true}if(vcEdit){vcEdit=false;render();return true}return false}
+let exitAt=0;
+try{if(!(history.state&&history.state.td)){history.replaceState({td:1,base:1},"",location.pathname+location.search);history.pushState({td:1,tab},"",location.pathname+location.search+"#"+tab)}}catch(e){}
+{const _st=showTab;showTab=function(k,noPush){const same=k===tab;if(!noPush&&!same){try{history.replaceState(Object.assign({},history.state,{y:scrollY}),"")}catch(e){}}_st(k);if(!noPush&&!same){try{history.pushState({td:1,tab:k},"",location.pathname+location.search+"#"+k)}catch(e){}}}}
+addEventListener("popstate",e=>{const s=e.state||{};
+  if(closeOverlay()){try{history.pushState({td:1,tab},"",location.pathname+location.search+"#"+tab)}catch(x){}return}
+  if(s.base||!s.td){
+    if(!DRV_MODE&&tab!=="dash"){showTab("dash",true);try{history.pushState({td:1,tab:"dash"},"",location.pathname+location.search+"#dash")}catch(x){}return}
+    if(Date.now()-exitAt<2500){exitAt=0;try{history.back()}catch(x){}return}
+    exitAt=Date.now();toast("Press Back again to exit");try{history.pushState({td:1,tab},"",location.pathname+location.search+"#"+tab)}catch(x){}return}
+  if(s.tab&&s.tab!==tab){showTab(s.tab,true);if(s.y)setTimeout(()=>scrollTo(0,s.y),30)}});
+document.addEventListener("click",e=>{if(e.target.closest("#backBtn")){e.stopPropagation();history.back()}},true);
+{const _rt=renderTabs;renderTabs=function(){_rt();const st=$("subtabs");if(st&&!DRV_MODE&&tab!=="dash"&&!st.querySelector("#backBtn"))st.insertAdjacentHTML("afterbegin",`<button id="backBtn" class="back" aria-label="Back">‹ Back</button>`)}}
+// 4. long-press: no copy/share menu on buttons and tiles (text boxes still work normally)
+// 5. errors: friendly message, details kept on this phone
+// 6. sync chip in the header
+(function(){const b=document.querySelector(".brand");if(b&&!$("syncChip")){b.insertAdjacentHTML("beforeend",`<span id="syncChip" class="sync ok" role="status" aria-live="polite">…</span>`)}try{FISDB.status()}catch(e){}})();
+// 7. export (CSV opens in Excel)
+function csvDl(name,rows){const s=rows.map(r=>r.map(v=>{v=v==null?"":String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}).join(",")).join("\r\n");
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["﻿"+s],{type:"text/csv;charset=utf-8"}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+document.addEventListener("click",e=>{const t=e.target.closest("[data-exp]");if(!t)return;e.stopPropagation();const k=t.dataset.exp;
+  if(k==="att"){const R=[["Date","Name","Role","Attendance","Without uniform","In · morning","Out · morning","In · afternoon","Out · evening"]];
+    const days=Object.keys(monthData).concat([date]).filter((d,i,a)=>a.indexOf(d)===i&&d<=todayIST()).sort();
+    days.forEach(d=>{const r=dayRec(d);PEOPLE().forEach(id=>{const p=puOf(d,id),a=(r.att||{})[id];if(!a&&!p.mi&&!p.ai)return;R.push([d,personName(id,id),roleOf(id),a==="A"?"Absent":a==="P"||p.mi||p.ai?"Present":"",(r.uni||{})[id]||p.um||p.ua?"Yes":"",p.mi||"",p.mo||"",p.ai||"",p.ao||""])})});
+    csvDl("transport-attendance-"+todayIST()+".csv",R);return}
+  if(k==="iss"){const R=[["Reported","Vehicle","Kind","Seriousness","Problem","Reported by","Status","Fixed","Updates"]];
+    issList().forEach(x=>R.push([x.at,issVL(x.v),typL(x.type),(ISS_S.find(q=>q[0]===x.sev)||[])[1]||"",x.desc,x.by,(ISS_ST.find(q=>q[0]===(x.st||"open"))||[])[1],x.fixedAt||"",issLogs(x).map(l=>l.t+" "+(l.by||"")+": "+l.n).join(" | ")]));
+    csvDl("vehicle-issues-"+todayIST()+".csv",R);return}
+  if(k==="day"){const R=[["Date","Window","Task","Status","Time","Note"]];W.forEach(w=>w.g.flatMap(g=>g[1]).forEach(([id,n])=>R.push([date,w.t+" "+w.n,n,state.s[id]||"",(state.tt||{})[id]||"",state.n[id]||""])));csvDl("checklist-"+date+".csv",R)}},true);
+// 8. offline app shell (network first, so nobody runs old code)
+
 
 $("date").value=date; render(); loadHistory();
-setInterval(()=>{if(date===todayIST()&&!(document.activeElement&&document.activeElement.matches("input,textarea")))render()},60000);
+
 (async()=>{try{db=await FISDB.ready()}catch(e){db=null}
   subscribe(); loadHistory(); loadSal(); loadVeh(); loadSvc();
+  if(db&&window.__preQ){window.__preQ.forEach(([d,p])=>db.doc("reports/"+d).update(p).catch(()=>{}));window.__preQ=null}
   if(db)db.doc("roster/tasks").onSnapshot(x=>{if(tkEdit)return;const d=x.exists?x.data():null;if(d&&Array.isArray(d.w)){applyTasks(d.w);render()}},()=>{});
   if(db)db.doc("roster/sup").onSnapshot(s=>{supTpl=s.exists?s.data():null;render()},()=>{});
   if(db)db.doc("roster/issues").onSnapshot(s=>{const ae=document.activeElement;if(ae&&ae.id&&ae.id.startsWith("iss-")&&issLoaded)return;const d=s.exists?s.data():{};ISS={};Object.entries(d.i||{}).forEach(([k,v])=>{if(v)ISS[k]=v});issLoaded=true;render()},()=>{issLoaded=true});
   if(db)db.doc("roster/wash").onSnapshot(s=>{const d=s.exists?s.data():null;washTpl=d&&Array.isArray(d.list)?d.list:null;render()},()=>{});
   let preFix=false;
-  if(db)db.doc("roster/main").onSnapshot(s=>{const ae=(document.activeElement&&document.activeElement.dataset);if(ae&&(ae.r||ae.pre))return;const d=s.exists?s.data():{};roster={veh:{...(d.veh||{})},area:{...(d.area||{})},name:{...(d.name||{})},phone:{...(d.phone||{})},hi:{...(d.hi||{})},pre:Array.isArray(d.pre)?d.pre:[],mig:{...(d.mig||{})},g:{...(d.g||{})},rtm:{...(d.rtm||{})},rta:{...(d.rta||{})},cleaner:{...(d.cleaner||{})},vci:Array.isArray(d.vci)?d.vci:null,reporters:Array.isArray(d.reporters)?d.reporters:null,hist:Array.isArray(d.hist)?d.hist:[],vans:Array.isArray(d.vans)?d.vans:null,vanNotice:d.vanNotice||""};
+  if(db)db.doc("roster/main").onSnapshot(s=>{const ae=(document.activeElement&&document.activeElement.dataset);if(ae&&(ae.r||ae.pre))return;const d=s.exists?s.data():{};roster={veh:{...(d.veh||{})},area:{...(d.area||{})},name:{...(d.name||{})},phone:{...(d.phone||{})},hi:{...(d.hi||{})},pre:Array.isArray(d.pre)?d.pre:[],mig:{...(d.mig||{})},g:{...(d.g||{})},rtm:{...(d.rtm||{})},rta:{...(d.rta||{})},cleaner:{...(d.cleaner||{})},vci:Array.isArray(d.vci)?d.vci:null,reporters:Array.isArray(d.reporters)?d.reporters:null,hist:Array.isArray(d.hist)?d.hist:[],vans:Array.isArray(d.vans)?d.vans:null,vanNotice:d.vanNotice||""};if(s.exists)rosterBase=JSON.parse(JSON.stringify(roster));
     // one-time change asked on 18 Nov 2026: Bus G second round is driven by Manish; Nitin stays spare
     if(s.exists&&!preFix&&!roster.mig.g1118){preFix=true;const G=roster.pre.find(p=>p.code==="G");if(G){G.driver=roster.name.p11d||"Manish";G.dphone=roster.phone.p11d||"";}roster.mig.g1118=1;saveRoster()}
     render()},()=>{});
