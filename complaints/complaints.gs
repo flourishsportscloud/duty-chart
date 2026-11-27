@@ -115,6 +115,7 @@ function read_(){
         try{ a = JSON.parse(r.slice(3).join('')); }catch(e){ return; } if(!a || !a.t) return;
         const rc = s_(a.rc), dp = s_(a.dp), text = s_(a.t), ct = s_(a.ct);
         if(dp.toLowerCase() !== 'transport' && !/transport/i.test(rc) && !TRANS_RE.test(text)) return;
+        if(ct === 'Request' && rc && !/transport/i.test(rc)) return;   // a books / uniform / leave request is not a transport case
         const kind = ct === 'Request' || /transport/i.test(rc) ? 'Request' : /complain|concern/i.test(ct) ? 'Complaint' : ct === 'Query' ? 'Query' : 'Not marked';
         out.push(Object.assign({id: 'pc' + key.slice(6).replace(/[^a-z0-9]/gi,''), src: 'Parent Connect', d: s_(a.d).slice(0,10), name: s_(a.n), cls: cls_(a.c), kind: kind,
           cat: ct + (rc ? ' · ' + rc : ''), mode: s_(a.m), text: text, pri: pri_(a.p), action: '', by: s_(a.by)}, match(s_(a.n), s_(a.c), text)));
