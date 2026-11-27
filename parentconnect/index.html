@@ -388,6 +388,11 @@ var SCOPES={
  'neetu dara':[R(3,5),'pm'],'diksha singh raghuwanshi':[R(3,5),'pm'],'diksha singh':[R(3,5),'pm'],'divyanshi jain':[R(3,5),'pm']
 };
 function nkey(){return String(GH.who.name||'').trim().toLowerCase().replace(/\s+/g,' ')}
+var ALLOC={"amit":{"Maths":["6A","8B","9A","10B"]},"swati":{"English":["6A","7A","8A"]},"tripti":{"Hindi":["6A","7A","8A"],"Sanskrit":["6A","7A","8A"]},"shailesh":{"SST":["6A","7A","8A"]},"pallavi":{"Science":["6A","7A","8A"]},"himanshu":{"Computer":["6A","6B","7A","7B","8A","8B","8C"]},"madhu":{"Maths":["6B","7B"]},"yavnika":{"English":["6B","7B","8B"]},"ajita":{"Hindi":["6B","7B","8B"],"Sanskrit":["6B","7B","8B"]},"ishita":{"SST":["6B","7B","8B"]},"shreya":{"Science":["6B","7B","8B"]},"neha j":{"Maths":["6C","7C","8C"]},"jyotshna":{"English":["6C","7C","8C"]},"bharti":{"Hindi":["6C","7C","8C"],"Sanskrit":["6C","7C","8C"]},"monika":{"SST":["6C","7C","8C"]},"ritika":{"Science":["6C","7C","8C"]},"richa":{"Computer":["6C","7C"]},"vipul":{"Maths":["7A","8A","9B","10A"]},"shaan":{"English":["9A","9B","10A"]},"radha":{"SST":["9A","10B"]},"nisha":{"Science":["9A","9B","10A","10B"]},"shobha":{"Hindi":["9A","10A","10B"],"Sanskrit":["9A","10A","10B"]},"jatin":{"SST":["9B","10A"]},"poonam gaur":{"Hindi":["9B"],"Sanskrit":["9B"]},"renu":{"English":["10B"]},"sunita":{"Class Teacher":["1A"]},"priyanshi bhojak":{"Class Teacher":["1B"]},"kanika":{"Class Teacher":["1C"]},"deepmala":{"Class Teacher":["2A"]},"deepali":{"Class Teacher":["2B"]},"chhavi":{"Class Teacher":["2C"]},"tina":{"Class Teacher":["3A"]},"vaneshwari":{"Class Teacher":["3B"]},"saroj":{"Class Teacher":["3C"]},"pooja":{"Class Teacher":["4A"]},"priya shekhawat":{"Class Teacher":["4B"]},"gauri":{"Class Teacher":["4C"]},"anuradha":{"Class Teacher":["5A"]},"reema":{"Class Teacher":["5B"]},"devanshi":{"Class Teacher":["5C"]},"geeta":{"Hindi":["1A","2A","3A","4A","5A"]},"preeti":{"Hindi":["1B","2B","3B","4B","5B"]},"anita":{"Hindi":["1C","2C","3C","4C","5C"]},"himanshi":{"Computer":["3A","3B","3C","4A","4B","4C","5A","5B","5C"]}};
+var ALIAS={"neha":"neha j","priyanshi":"priyanshi bhojak","sunita bidawat":"sunita"};
+GH.alloc=function(){var k=nkey();if(SCOPES[k])return null;var a=ALLOC[k]||ALLOC[ALIAS[k]];if(!a)return null;var p=[],subs=[],ct=false;
+  Object.keys(a).forEach(function(s){if(subs.indexOf(s)<0)subs.push(s);if(s==='Class Teacher')ct=true;a[s].forEach(function(cs){p.push([cs,s])})});
+  return{pairs:p,subs:subs,ct:ct}};
 GH.scope=function(){var s=SCOPES[nkey()];return s?s[0].slice():null};
 GH.desig=function(){var s=SCOPES[nkey()];if(s)return s[1];var r=String(GH.who.role||'').toLowerCase();
   if(r==='admin')return'admin';if(r==='pl')return'pl';if(r==='cm')return'cm';if(r==='cmh')return'cmh';if(r==='pm')return'pm';return'st'};
@@ -629,7 +634,7 @@ const ico=k=>'<svg viewBox="0 0 24 24">'+ICON[k]+'</svg>';
 
 let D={f:[],c:[],h:[],byId:{},cById:{}},ME=LS.get('pc2_me'),REAL=null,FU=LS.get('pc2_fu')||{},CS=LS.get('pc2_cs')||{},REM=LS.get('pc2_rm')||{},ACK=LS.get('pc2_ak')||{},CQ=LS.get('pc2_cq')||{},ADD=LS.get('pc2_ad')||{},DB=null,SYNC='local';
 let rqMode='req',rqSeg='',SEEN=new Set(Object.keys(LS.get('pc2_cq')||{})),SEENI=0;
-let hv='cases',CM='',calA=null,STK='',prevView='fb',RO={};
+let FOPEN=false,hv='cases',CM='',calA=null,STK='',prevView='fb',RO={};
 let view='ov',shown=30,fuTab='chk',callTab='open',fuSeg='',showStaff=false;
 let F={per:'7',from:'',to:'',cl:[],c:[],dp:'',ct:'',m:'',p:'',q:'',cs:'',ak:'',rb:''};
 
@@ -638,15 +643,17 @@ function crank(c){const b=['PG','Nur','LKG','UKG'];const m=c.match(/^(PG|Nur|LKG
 const brank=b=>b==='—'?9999:crank(b);
 function reasons(r){const a=[];if(r.fu)a.push('Marked for follow-up');if(r.ar)a.push('Action required');if(r.p==='High')a.push('High priority');if(r.ct==='Concern'||r.ct==='Complain')a.push(r.ct);if(r.weak)a.push('Learning concern');if(r.open)a.push('Open status');return a}
 function ownerOf(r){const s=(r.sub||[])[0];if(s&&s!=='Academics')return s==='Co-curricular'?'Co-curricular teacher':s+' teacher';if(r.dp==='Co Curricular'||r.dp==='Competition')return'Co-curricular teacher';return r.g?'Coordinator':'Administration'}
+const myKeys=()=>ME.subs&&ME.subs.length?ME.subs.map(s=>s==='Class Teacher'?'Class teacher':s==='Co-curricular'?'Co-curricular teacher':s+' teacher'):[myKey()];
 const myKey=()=>ME.role==='coord'?'Coordinator':ME.role==='admin'?'Administration':ME.role==='teacher'?(ME.subject==='Class Teacher'?'Class teacher':ME.subject==='Co-curricular'?'Co-curricular teacher':ME.subject+' teacher'):'';
 const isDir=()=>(REAL||ME).role==='director';
-const roleLbl=()=>ME.desig&&DESIG_BY[ME.desig]?DESIG_BY[ME.desig][3]:ME.role==='coord'?'Coordinator / PL':ROLE_NAME[ME.role];
+const roleLbl=()=>ME.alloc&&!ME.va?(ME.desig==='ct'?'Class teacher':ME.subs.join(', ')+' teacher'):ME.desig&&DESIG_BY[ME.desig]?DESIG_BY[ME.desig][3]:ME.role==='coord'?'Coordinator / PL':ROLE_NAME[ME.role];
 const owner=id=>(FU[id]&&FU[id].owner)||ownerOf(D.byId[id]);
 
 async function boot(){
   if(window.GH){await GH.gate();
     const sc=GH.scope();
     if(ME&&!ME.va)ME.scope=sc;
+    if(!ME&&!sc&&GH.alloc()){ME={name:GH.who.name,groups:[],role:'teacher'};applyAlloc();LS.set('pc2_me',ME);ME_WAIT=false}
     if(!ME&&sc){const dg=GH.desig(),d=DESIG_BY[dg]||DESIG_BY.st;ME={role:d[1],desig:dg,name:GH.who.name,groups:[],subject:d[2]||'',classes:[],scope:sc};LS.set('pc2_me',ME);ME_WAIT=false}
     if(ME)LS.set('pc2_me',ME);
     if(history.state&&history.state.pc&&history.state.view&&ME)restoreFromState(history.state)}
@@ -789,12 +796,17 @@ function newVersionBanner(w){if(document.getElementById('nvb'))return;const d=do
 if(window.GH)GH.registerSW(newVersionBanner);
 
 /* ---------- scope ---------- */
+function applyAlloc(){const al=window.GH&&GH.alloc&&GH.alloc();if(!al||!ME||ME.va)return false;
+  ME.role='teacher';ME.desig=al.ct?'ct':'st';ME.alloc=al.pairs;ME.subs=al.subs;ME.subject=al.ct?'Class Teacher':al.subs[0];ME.classes=[...new Set(al.pairs.map(p=>p[0]))].sort((x,y)=>crank(x)-crank(y));ME.scope=null;return true}
+function allocTxt(){const by={};ME.alloc.forEach(p=>{(by[p[1]]=by[p[1]]||[]).push(p[0])});
+  return Object.keys(by).map(s=>(s==='Class Teacher'?'Class teacher':s)+' '+(by[s].length>6?by[s].length+' sections':by[s].sort((x,y)=>crank(x)-crank(y)).join(', '))).join(' · ')}
 function scopeTxt(s){const pre=['PG','Nur','LKG','UKG'].filter(x=>s.includes(x)),n=s.filter(x=>/^\d+$/.test(x)).map(Number).sort((x,y)=>x-y);
   const rng=n.length?(n.length>1&&n[n.length-1]-n[0]===n.length-1?'Class '+n[0]+' to '+n[n.length-1]:'Class '+n.join(', ')):'';
   const p=pre.length?(pre.length===4?'PG to UKG':pre.join(', ')):'';return[p,rng].filter(Boolean).join(' and ')}
 function inScope(r){
   if(!ME)return false;
   if(r.add&&r.by===ME.name)return true;
+  if(ME.alloc)return ME.alloc.some(p=>p[0]===r.c&&(p[1]==='Class Teacher'||(r.sub||[]).includes(p[1])));
   if(ME.scope&&ME.scope.length)return ME.scope.includes(cbase(r.c));
   if(ME.role==='director'||ME.role==='admin')return true;
   if(ME.role==='coord')return ME.groups.includes(r.g);
@@ -804,12 +816,12 @@ function inScope(r){
   return ok&&(!cl.length||cl.includes(r.c));
 }
 const canCalls=()=>ME&&(ME.role!=='teacher'||ME.subject==='Class Teacher');
-function fuVisible(id){const r=D.byId[id];if(!r||!inScope(r))return false;if(ME.role==='teacher')return owner(id)===myKey()||FU[id].by===ME.name;return true}
+function fuVisible(id){const r=D.byId[id];if(!r||!inScope(r))return false;if(ME.role==='teacher')return myKeys().includes(owner(id))||FU[id].by===ME.name;return true}
 
 /* ---------- dates in plain words ---------- */
 function range(){
   const t=todayISO();
-  switch(F.per){case'today':return[t,t];case'yest':{const y=addDays(t,-1);return[y,y]}case'7':return[addDays(t,-6),t];case'month':return[t.slice(0,8)+'01',t];case'pick':return[F.from||'0000',F.to||F.from||'9999'];case'day':return[F.from,F.from];default:return['0000','9999']}
+  switch(F.per){case'today':return[t,t];case'yest':{const y=addDays(t,-1);return[y,y]}case'7':return[addDays(t,-6),t];case'10':return[addDays(t,-9),t];case'15':return[addDays(t,-14),t];case'month':return[t.slice(0,8)+'01',t];case'pick':return[F.from||'0000',F.to||F.from||'9999'];case'day':return[F.from,F.from];default:return['0000','9999']}
 }
 function perLabel(){const[a,b]=range();if(F.per==='all')return'All dates';if(a===b)return fmtD(a)+' '+dOf(a).getFullYear();return fmtD(a)+' to '+fmtD(b)}
 /* ---------- calendar & dates ---------- */
@@ -822,12 +834,13 @@ function calHTML(){
   for(let d=1;d<=n;d++){const iso=y+'-'+pad(m)+'-'+pad(d),c=cn[iso]||0;h+='<button class="'+(F.per!=='all'&&iso>=a&&iso<=b?'sel ':'')+(iso===t?'td ':'')+(c?'has':'')+'" data-a="calday" data-v="'+iso+'" title="'+c+' feedback"><b>'+d+'</b><small>'+(c||'')+'</small></button>'}
   return h+'</div><div class="mut" style="font-size:11.5px;margin-top:6px">'+(calA?'Tap a second date to finish the range.':'Tap a date. Tap two dates for a range. Small number is feedback received.')+'</div></div>';
 }
+let COPEN=false;
 function dateBar(){
-  const per=[['today','Today'],['yest','Yesterday'],['7','Last 7 days'],['month','This month'],['all','All dates'],['pick','Pick dates']];
-  let h='<div class="dcard"><div><div class="pillrow">'+per.map(p=>'<button class="chip '+((F.per===p[0]||(p[0]==='pick'&&F.per==='day'))?'on':'')+'" data-a="per" data-v="'+p[0]+'">'+p[1]+'</button>').join('')+'</div>';
-  h+='<div class="row" style="margin-top:12px"><div><label class="lbl">From</label><input type="date" id="c1" value="'+esc(F.from)+'"></div><div><label class="lbl">To</label><input type="date" id="c2" value="'+esc(F.to||F.from)+'"></div></div>';
-  h+='<div class="mut" style="margin-top:10px;font-size:12.5px">Showing <b style="color:var(--navy)">'+esc(perLabel())+'</b>.<br>Data is up to <b style="color:var(--navy)">'+fmtD(D.last)+'</b>.</div></div>'+calHTML()+'</div>';
-  return'<div class="card" style="margin-bottom:16px">'+h+'</div>';
+  const per=[['today','Today'],['yest','Yesterday'],['7','7 days'],['10','10 days'],['15','15 days'],['month','This month'],['all','All dates'],['pick','Pick dates']];
+  let h='<div class="pillrow">'+per.map(p=>'<button class="chip '+((F.per===p[0]||(p[0]==='pick'&&F.per==='day'))?'on':'')+'" data-a="per" data-v="'+p[0]+'">'+p[1]+'</button>').join('')+'</div>';
+  h+='<div class="row" style="margin-top:10px;align-items:center"><div class="mut" style="font-size:12.5px;flex:1">Showing <b style="color:var(--navy)">'+esc(perLabel())+'</b> · data up to '+fmtD(D.last)+'</div><button class="btn sm" data-a="copen">Calendar '+(COPEN?'▲':'▼')+'</button></div>';
+  if(COPEN)h+='<div class="dcard" style="margin-top:12px"><div><div class="row"><div><label class="lbl">From</label><input type="date" id="c1" value="'+esc(F.from)+'"></div><div><label class="lbl">To</label><input type="date" id="c2" value="'+esc(F.to||F.from)+'"></div></div></div>'+calHTML()+'</div>';
+  return'<div class="card" style="margin-bottom:12px">'+h+'</div>';
 }
 function noDataHint(n){
   if(n)return'';const[a,b]=range();if(b<D.last||F.per==='all')return'';
@@ -895,8 +908,8 @@ function fuSummary(id){
 const remItems=id=>(REM[id]&&REM[id].items)||[];
 function thread(id){
   const it=remItems(id);
-  return'<div class="thread" data-th="'+id+'">'+(it.length?it.map(x=>'<div class="rem"><div class="rh"><b>'+esc(x.by)+'</b><span class="st nu">'+esc(x.role)+'</span>'+(x.act?'<span class="st '+(x.st==='done'?'ok':'warn')+'">Action · '+(x.st==='done'?'Done':'In progress')+'</span>':'')+'<span class="mut">'+fmtT(x.at)+(x.ed?' · edited':'')+'</span>'+((x.by===ME.name||isDir())?'<span class="sp"></span><a data-a="remedit" data-id="'+id+'" data-r="'+x.id+'">Edit</a><a data-a="remdel" data-id="'+id+'" data-r="'+x.id+'">Delete</a>':'')+'</div><div class="rt">'+esc(x.text)+'</div></div>').join(''):'<div class="mut" style="font-size:12.5px;margin-bottom:8px">No remarks yet. Teacher, PL or admin can write one.</div>')
-  +'<div class="rin"><textarea rows="2" id="rt-'+id+'" placeholder="Write a remark…"></textarea><button class="btn pri sm" data-a="remadd" data-id="'+id+'">Send</button></div></div>';
+  return'<div class="thread" data-th="'+id+'">'+it.map(x=>'<div class="rem"><div class="rh"><b>'+esc(x.by)+'</b><span class="st nu">'+esc(x.role)+'</span>'+(x.act?'<span class="st '+(x.st==='done'?'ok':'warn')+'">Action · '+(x.st==='done'?'Done':'In progress')+'</span>':'')+'<span class="mut">'+fmtT(x.at)+(x.ed?' · edited':'')+'</span>'+((x.by===ME.name||isDir())?'<span class="sp"></span><a data-a="remedit" data-id="'+id+'" data-r="'+x.id+'">Edit</a><a data-a="remdel" data-id="'+id+'" data-r="'+x.id+'">Delete</a>':'')+'</div><div class="rt">'+esc(x.text)+'</div></div>').join('')
+  +'<div class="rin"><textarea rows="1" id="rt-'+id+'" placeholder="Write a remark…"></textarea><button class="btn pri sm" data-a="remadd" data-id="'+id+'">Send</button></div></div>';
 }
 function refreshThreads(id){document.querySelectorAll('[data-th="'+id+'"]').forEach(e=>{e.outerHTML=thread(id)})}
 
@@ -914,15 +927,23 @@ const waitTxt=ms=>{const m=Math.max(0,Math.round((Date.now()-ms)/6e4));return m<
 
 /* ---------- cards ---------- */
 function fbCard(r){
-  const v=FU[r.id],nr=remItems(r.id).length;
-  let h='<div class="fc '+esc(r.p)+'"><div class="hd"><b class="lk" data-a="stu" data-v="'+esc(stKey(r))+'">'+esc(r.n||'—')+'</b><span class="st nu">'+esc(r.c)+'</span>'+srcP(r.m)+'<span class="dt">'+fmtD(r.d)+' · '+ago(r.d)+'</span></div>'
-  +'<div class="tx" data-a="open" data-id="'+r.id+'">'+esc(r.t)+'</div>'+imgsH(r)+akStrip(r)+'<div class="ft" style="margin-top:8px"><span class="st cat">'+esc(r.ct)+'</span><span class="st nu">'+esc(r.dp)+'</span>'+priP(r.p)+'<span class="sp"></span>';
-  h+=akBtn(r)+(isCase(r)?'<button class="btn sm" data-a="actrec" data-id="'+r.id+'">Record action</button>':'')+'<button class="btn sm" data-a="mvreq" data-id="'+r.id+'">'+(RT[r.id]&&RT[r.id].ct==='Request'?'Request: '+esc(RT[r.id].rc):'Move to Requests')+'</button>'+'<button class="btn sm" data-a="reqcall" data-id="'+r.id+'">Call parent</button><button class="btn sm" data-a="rto" data-id="'+r.id+'">Remarks'+(nr?' ('+nr+')':'')+'</button>';
-  if(v)h+=fuPill(r.id)+(v.checks&&v.checks.length?' <span class="mut" style="font-size:12px">Checked '+v.checks.length+'×</span>':'')+'<button class="btn sm" data-a="open" data-id="'+r.id+'">Open</button>';
-  else h+=(r.why.length?'<span class="st warn" title="'+esc(r.why.join(', '))+'">Needs follow-up</span>':'')+'<button class="btn sm '+(r.why.length?'pri':'')+'" data-a="fup" data-id="'+r.id+'">Follow up</button>';
-  h+='</div>';
-  if(RO[r.id])h+=thread(r.id);
-  return h+'</div>';
+  const nr=remItems(r.id).length;
+  return'<div class="fc '+esc(r.p)+'"><div class="hd"><b class="lk" data-a="stu" data-v="'+esc(stKey(r))+'">'+esc(r.n||'—')+'</b><span class="st nu">'+esc(r.c)+'</span>'+srcP(r.m)+'<span class="dt">'+fmtD(r.d)+' · '+ago(r.d)+'</span></div>'
+  +'<div class="tx" data-a="open" data-id="'+r.id+'">'+esc(r.t)+'</div>'+imgsH(r)
+  +'<div class="ft" style="margin-top:8px">'+akBtn(r)+'<button class="btn sm" data-a="rto" data-id="'+r.id+'">Remark'+(nr?' ('+nr+')':'')+'</button><button class="btn sm" data-a="ovw" data-id="'+r.id+'">Overview</button></div>'+thread(r.id)+'</div>';
+}
+function ovwModal(id){
+  const r=D.byId[id],v=FU[id];
+  const kv=(k,x)=>'<div><div class="k">'+k+'</div><div class="vv">'+x+'</div></div>';
+  overlay('<div class="mod"><h2>Overview</h2><div class="mut" style="margin-bottom:8px"><b class="lk" data-a="stu" data-v="'+esc(stKey(r))+'">'+esc(r.n||'—')+'</b> · '+esc(r.c)+' · '+fmtD(r.d)+', '+ago(r.d)+'</div>'
+   +'<h3 style="margin:12px 0 6px;font-size:14px;color:var(--navy)">Acknowledgement</h3>'+akStrip(r)
+   +'<div class="kv" style="margin-top:12px">'+kv('Type',esc(r.ct))+kv('Priority',priP(r.p)||'—')+kv('Department',esc(r.dp))+kv('Source',esc(srcName(r.m)))+kv('Goes to',esc(v?owner(id):ownerOf(r)))+kv('Follow-up',v?fuPill(id):(r.why.length?'<span class="st warn">Needed</span>':'Not needed'))+'</div>'
+   +(r.why.length&&!v?'<div class="mut" style="font-size:12.5px;margin-top:6px">'+esc(r.why.join(', '))+'</div>':'')
+   +'<div class="row" style="margin-top:14px">'+(v?'<button class="btn sm" data-a="open" data-id="'+id+'">Open follow-up</button>':'<button class="btn sm '+(r.why.length?'pri':'')+'" data-a="fup" data-id="'+id+'">Follow up</button>')+(isCase(r)?'<button class="btn sm" data-a="actrec" data-id="'+id+'">Record action</button>':'')+'<button class="btn sm" data-a="mvreq" data-id="'+id+'">'+(RT[id]&&RT[id].ct==='Request'?'Request: '+esc(RT[id].rc):'Move to Requests')+'</button><span class="sp"></span><button class="btn" data-a="xo">Close</button></div></div>',true);
+}
+function menuModal(){
+  const b=(a,l)=>'<button class="btn" style="width:100%;justify-content:flex-start;margin-bottom:8px" data-a="'+a+'">'+l+'</button>';
+  overlay('<div class="mod"><h2>More</h2>'+b('add','+ Add feedback')+b('paste','Paste from Studybase')+(isDir()&&!ME.va?b('va','View as…'):'')+((ME.role==='director'||ME.role==='admin')&&!ME.va?b('backup','Download backup (CSV)'):'')+b('lvref','Refresh data from Drive')+'<div class="row" style="justify-content:flex-end;margin-top:6px"><button class="btn" data-a="xo">Close</button></div></div>',true);
 }
 function fuCard(id){
   const r=D.byId[id],v=FU[id],t=todayISO(),ct=checkedOn(id,t);
@@ -939,12 +960,13 @@ function fuCard(id){
 function callCard(c){
   const s=CS[c.id],done=callDone(c),att=(s&&s.att)||[],t=todayISO(),late=!done&&c.due&&c.due<t;
   const OUT={ok:'Spoke to parent',na:'No answer',nr:'Not reachable',cb:'Will call back'};
+  const attH=att.map(x=>'<div class="rem"><div class="rh"><b>'+esc(x.by)+'</b><span class="st nu">'+esc(OUT[x.out]||'')+'</span>'+(x.resp?'<span class="st info">'+esc(x.resp)+'</span>':'')+'<span class="mut">'+fmtT(x.at)+'</span></div>'+(x.note?'<div class="rt">'+esc(x.note)+'</div>':'')+'</div>').join('');
   let h='<div class="fc'+(c.urg==='Urgent'&&!done?' High':'')+'"><div class="hd"><b class="lk" data-a="stu" data-v="'+esc(c.n+'|'+c.c)+'">'+esc(c.n)+'</b><span class="st nu">'+esc(c.c)+'</span><span class="st cat">'+esc(c.dp)+'</span>'+(c.urg==='Urgent'?'<span class="st bad">Urgent</span>':'')+'<span class="dt">'+(c.at?fmtT(c.at)+(done?'':' · waiting '+waitTxt(c.at)):fmtD(c.d)+' · '+ago(c.d))+'</span></div>'
   +'<div class="tx" style="cursor:default;-webkit-line-clamp:5">'+esc(c.t)+'</div>';
   if(c.imgs&&c.imgs.length)h+='<div class="ths">'+c.imgs.map(i=>'<img class="th" data-a="img" alt="attachment" src="'+esc(i.id?'/_blob/'+i.id:i.u)+'">').join('')+'</div>';
   h+='<div class="mut" style="font-size:12.5px;margin-top:6px">'+(c.rq?'Requested by '+esc(c.rq):'')+(c.due?' · Call by '+fmtS(c.due)+(late?' (late)':''):'')+(c.mk?' · Call made '+esc(c.mk):'')+(c.by?' · By '+esc(c.by):'')+(c.rm?' · '+esc(c.rm):'')+(att.length?' · Tried '+att.length+'× (last: '+esc(OUT[att[att.length-1].out]||'')+')':'')+'</div>'
-  +'<div class="ft" style="margin-top:8px">'+(done?'<span class="st ok">Call done</span>'+(s&&s.done?'<span class="mut" style="font-size:12px">'+fmtT(s.at)+' by '+esc(s.by)+(s.note?' · '+esc(s.note):'')+'</span>':''):'<span class="st '+(late?'bad':'warn')+'">Call pending</span>')+'<span class="sp"></span>'
-  +(done?(s&&s.done?'<button class="btn sm" data-a="callre" data-id="'+c.id+'">Undo</button>':''):'<button class="btn pri sm" data-a="calldone" data-id="'+c.id+'">Call result</button>')+'</div></div>';
+  +attH+'<div class="ft" style="margin-top:8px">'+(done?'<span class="st ok">Call done</span>'+(s&&s.done?'<span class="mut" style="font-size:12px">'+fmtT(s.at)+' by '+esc(s.by)+'</span>':''):'<span class="st '+(late?'bad':'warn')+'">Call pending</span>')+'<span class="sp"></span>'
+  +'<button class="btn '+(done?'':'pri ')+'sm" data-a="calldone" data-id="'+c.id+'">'+(done?'Add another call result':'Add call result')+'</button>'+(done&&s&&s.done?'<button class="btn sm" data-a="callre" data-id="'+c.id+'">Undo</button>':'')+'</div>'+thread('call-'+c.id)+'</div>';
   return h;
 }
 
@@ -1052,27 +1074,20 @@ function listHTML(L){
   L.slice(0,shown).forEach(r=>{if(r.d!==last){last=r.d;h+='<div class="dh">'+(r.d===t?'Today':r.d===y?'Yesterday':fmtD(r.d))+'<small>'+cnt[r.d]+'</small></div>'}h+=fbCard(r)});
   return h;
 }
+function filtersHTML(){
+  let h=srcSeg()+chipRow('Department','dp',tally(fb(['dp']),r=>r.dp),'All departments');
+  h+='<div class="lblrow">Case</div><div class="scroll"><button class="chip '+(!F.cs?'on':'')+'" data-a="flt" data-k="cs" data-v="">All cases</button>'+CASES.map(k=>[k,fb(['cs']).filter(r=>r.cs.includes(k)).length]).filter(x=>x[1]||F.cs===x[0]).map(o=>'<button class="chip '+(F.cs===o[0]?'on':'')+'" data-a="flt" data-k="cs" data-v="'+esc(o[0])+'">'+esc(o[0])+'<small>'+o[1]+'</small></button>').join('')+'</div>';
+  h+=chipRow('Type','ct',tally(fb(['ct']),r=>r.ct),'All types');
+  h+='<div class="lblrow">Acknowledgement</div><div class="scroll"><button class="chip '+(!F.ak?'on':'')+'" data-a="flt" data-k="ak" data-v="">All</button><button class="chip '+(F.ak==='wait'?'on':'')+'" data-a="flt" data-k="ak" data-v="wait">Waiting for '+AK[akRole()]+'</button><button class="chip '+(F.ak==='done'?'on':'')+'" data-a="flt" data-k="ak" data-v="done">Acknowledged by '+AK[akRole()]+'</button></div>';
+  h+=classBar();
+  h+='<div class="row" style="margin-top:12px"><button class="btn sm" data-a="clr">Clear filters</button></div>';
+  return h;
+}
 function vFeedback(){
-  const made=F.m==='made';
-  const L=made?[]:fb();
-  let h=stuFinder()+srcSeg()+dateBar()+'<div class="card" style="margin-bottom:16px">';
-  if(!made){
-    h+=chipRow('Department','dp',tally(fb(['dp']),r=>r.dp),'All departments').replace('</div></div>',(canCalls()?'<button class="chip" data-a="chg">Change requests</button>':'')+'</div></div>');
-    h+='<div class="lblrow">Case</div><div class="scroll"><button class="chip '+(!F.cs?'on':'')+'" data-a="flt" data-k="cs" data-v="">All cases</button>'+CASES.map(k=>[k,fb(['cs']).filter(r=>r.cs.includes(k)).length]).filter(x=>x[1]||F.cs===x[0]).map(o=>'<button class="chip '+(F.cs===o[0]?'on':'')+'" data-a="flt" data-k="cs" data-v="'+esc(o[0])+'">'+esc(o[0])+'<small>'+o[1]+'</small></button>').join('')+'</div>';
-    h+=chipRow('Type','ct',tally(fb(['ct']),r=>r.ct),'All types');
-    h+='<div class="lblrow">Acknowledgement</div><div class="scroll"><button class="chip '+(!F.ak?'on':'')+'" data-a="flt" data-k="ak" data-v="">All</button><button class="chip '+(F.ak==='wait'?'on':'')+'" data-a="flt" data-k="ak" data-v="wait">Waiting for '+AK[akRole()]+'</button><button class="chip '+(F.ak==='done'?'on':'')+'" data-a="flt" data-k="ak" data-v="done">Acknowledged by '+AK[akRole()]+'</button></div>';
-  }
-  const noClass=!made&&L.length&&L.every(r=>r.cb==='—');
-  if(!noClass)h+=classBar();
-  h+='<div class="row" style="margin-top:14px"><div style="flex:1;min-width:180px"><label class="lbl">Search</label><input type="search" id="q" placeholder="Student name or word" value="'+esc(F.q)+'"></div></div>';
-  h+='<div class="row" style="margin-top:12px"><button class="btn" data-a="prlist">Print this list</button><span class="sp"></span><button class="btn sm" data-a="clr">Clear filters</button></div></div>';
+  const made=F.m==='made',L=made?[]:fb(),nf=[F.dp,F.ct,F.m,F.p,F.cs,F.ak].filter(Boolean).length+F.cl.length+F.c.length;
+  let h=dateBar()+'<div class="card" style="margin-bottom:14px"><div class="row"><div style="flex:1;min-width:170px"><input type="search" id="q" placeholder="Search student name or word" value="'+esc(F.q)+'"></div><button class="btn sm'+(nf?' navy':'')+'" data-a="fopen">Filters'+(nf?' ('+nf+')':'')+(FOPEN?' ▲':' ▼')+'</button></div>'+(FOPEN?'<div style="margin-top:6px">'+filtersHTML()+'</div>':'')+'</div>';
   if(made)return h+callsBlock();
   h+=noDataHint(L.length);
-  if(!noClass&&(F.c.length||F.cl.length===1)){
-    const calls=canCalls()?callList().length:0;
-    h+='<div class="card" style="margin-bottom:16px"><h3>'+esc((F.c.length?F.c:F.cl).join(', '))+'<small>everything in this period</small></h3><div class="row" style="gap:26px">'+[['Feedback',L.length],['Studybase',L.filter(r=>r.m==='Studybase').length],['Calls received',L.filter(r=>r.m==='Call').length],['Diary remarks',L.filter(r=>r.m==='Diary').length],['Front desk',L.filter(r=>r.m==='Desk').length],['Need follow-up',L.filter(r=>r.why.length&&!FU[r.id]).length]].map(x=>'<div><div class="mut" style="font-size:12px">'+x[0]+'</div><b style="font-size:24px;color:var(--navy)">'+x[1]+'</b></div>').join('')+(canCalls()?'<div style="cursor:pointer" data-a="flt" data-k="m" data-v="made"><div class="mut" style="font-size:12px">Calls made</div><b style="font-size:24px;color:var(--navy)">'+calls+'</b></div>':'')+'</div></div>';
-  }
-  if(!noClass&&!F.c.length)h+=summaryTable();
   h+='<div class="sec" style="margin:6px 0 10px"><h3 style="margin:0;font-size:15px;color:var(--navy)">'+(F.cs?esc(F.cs)+' · ':'')+'Latest first <span class="mut" style="font-weight:500">'+L.length.toLocaleString()+'</span></h3></div>';
   h+=L.length?listHTML(L)+(L.length>shown?'<div style="text-align:center;margin:14px 0"><button class="btn" data-a="more">Show more ('+(L.length-shown).toLocaleString()+' left)</button></div>':''):'<div class="empty card">No feedback for this selection.</div>';
   return h;
@@ -1220,7 +1235,7 @@ function dueFU(id){const b=FU[id].due>todayISO()?FU[id].due:todayISO();formModal
 function closeFU(id){formModal('Mark done',lab('Closing note (optional)','<textarea name="note" rows="3" placeholder="e.g. Child has improved, parent informed"></textarea>'),'Mark done',v=>{FU[id].st='closed';FU[id].closed={at:Date.now(),by:ME.name,note:v.note.trim()};saveFU(id);toast('Follow-up done')},dr(id))}
 function reopenFU(id){FU[id].st='open';delete FU[id].closed;if(FU[id].due<todayISO())FU[id].due=addDays(todayISO(),6);saveFU(id);toast('Reopened');render(true);if(document.querySelector('.drawer'))openDrawer(id)}
 function remAdd(id){
-  const ta=document.getElementById('rt-'+id),tx=ta&&ta.value.trim();if(!tx){toast('Write a remark first');return}
+  const ta=[...document.querySelectorAll('[id="rt-'+id+'"]')].find(x=>x.value.trim())||document.getElementById('rt-'+id),tx=ta&&ta.value.trim();if(!tx){toast('Write a remark first');return}
   REM[id]=REM[id]||{items:[]};REM[id].items.push({id:Date.now().toString(36),at:Date.now(),by:ME.name,role:roleLbl(),text:tx});saveREM(id);render(true);refreshThreads(id);toast('Remark added');
 }
 function remEdit(id,rid){const x=remItems(id).find(z=>z.id===rid);if(!x)return;formModal('Edit remark','<textarea name="t" rows="4">'+esc(x.text)+'</textarea>','Save',v=>{if(!v.t.trim())return false;x.text=v.t.trim();x.ed=Date.now();saveREM(id);setTimeout(()=>refreshThreads(id),0)})}
@@ -1245,7 +1260,9 @@ function reqCallModal(fid){
     (async()=>{for(const f of files){const i=await putImg(f);if(i)rec.imgs.push(i)}SEEN.add(id);CQ[id]=rec;mergeCalls();saveCQ(id);toast('Call requested for '+rec.n+(rec.urg==='Urgent'?' · urgent':''),4000);render(true)})();
   });
 }
-function callDoneModal(id){const c=D.cById[id];formModal('Call result: '+c.n,lab('Result',sel('out',[['ok','Spoke to parent. Call done'],['na','No answer. Try again'],['nr','Number not reachable. Try again'],['cb','Parent will call back. Try again']],'ok'))+lab('Note (optional)','<textarea name="note" rows="3" placeholder="e.g. Parent informed, will visit Monday"></textarea>')+'<div class="mut" style="margin-top:10px;font-size:12.5px">Saved with time: '+fmtT(Date.now())+' by '+esc(ME.name)+'</div>','Save',v=>{const prev=CS[id]||{},att=(prev.att||[]).concat([{at:Date.now(),by:ME.name,out:v.out,note:v.note.trim()}]);CS[id]=v.out==='ok'?{done:true,at:Date.now(),by:ME.name,note:v.note.trim(),out:'ok',att}:{done:false,at:Date.now(),by:ME.name,note:v.note.trim(),out:v.out,att};saveCS(id);toast(v.out==='ok'?'Call done':'Saved. Call stays in To call')})}
+function callDoneModal(id){const c=D.cById[id];formModal('Call result: '+c.n,lab('Call outcome',sel('out',[['ok','Spoke to parent. Call done'],['na','No answer. Try again'],['nr','Number not reachable. Try again'],['cb','Parent will call back. Try again']],'ok'))
+  +lab('Parent response',sel('resp',[['','Not applicable'],['Satisfied','Satisfied'],['Agreed to cooperate','Agreed to cooperate'],['Concerned','Concerned'],['Not satisfied','Not satisfied'],['Will visit school','Will visit school'],['Needs follow-up','Needs follow-up']],''))
+  +lab('Remark after call','<textarea name="note" rows="3" placeholder="e.g. Parent informed, will visit Monday"></textarea>')+'<div class="mut" style="margin-top:10px;font-size:12.5px">Saved with time: '+fmtT(Date.now())+' by '+esc(ME.name)+'. Every call attempt is kept.</div>','Save',v=>{const prev=CS[id]||{},rec={at:Date.now(),by:ME.name,out:v.out,resp:v.resp,note:v.note.trim()},att=(prev.att||[]).concat([rec]);CS[id]=(v.out==='ok'||prev.done)?{done:true,at:prev.done?prev.at:rec.at,by:prev.done?prev.by:ME.name,note:rec.note,resp:rec.resp,out:'ok',att}:{done:false,at:rec.at,by:ME.name,note:rec.note,resp:rec.resp,out:v.out,att};saveCS(id);toast(v.out==='ok'?'Call done':'Saved. Call stays in To call')})}
 function callUndo(id){const p=CS[id]||{};CS[id]={done:false,at:Date.now(),by:ME.name,note:'',att:p.att||[]};saveCS(id);render(true)}
 function viewAsModal(){
   const opts=[['admin:','Administration (all departments)']].concat(GROUPS.map(g=>['coord:'+g,'Coordinator / PL · '+g]),SUBJECTS.map(s=>['teacher:'+s,(s==='Class Teacher'?'Class teacher':s+' teacher')]));
@@ -1261,7 +1278,7 @@ function vLogin(){
   +'<div class="banner" style="margin-top:16px">Contains names of students and parents. Staff use only.</div>'
   +'<label class="lbl">Your name</label><input type="text" id="lgname"'+(window.GH?' readonly':'')+' value="'+esc(m.name)+'" placeholder="e.g. Mansi Sharma">'
   +'<label class="lbl">Choose your role</label><div class="roles">'+DESIG.filter(d=>!window.GH||GH.allowed().includes(d[1])).map(d=>'<button class="role '+((m.desig||(DESIG.find(x=>x[1]===m.role)||[])[0])===d[0]?'on':'')+'" data-a="role" data-v="'+d[0]+'"><b>'+d[3]+'</b><small>'+d[4]+'</small></button>').join('')+'</div>';
-  if(window.GH&&GH.scope())h+='<div class="scopebox"><b>You see:</b> '+esc(scopeTxt(GH.scope()))+'</div>';
+  if(window.GH&&GH.alloc())h+='<div class="scopebox"><b>You see:</b> your own subjects and sections</div>';if(window.GH&&GH.scope())h+='<div class="scopebox"><b>You see:</b> '+esc(scopeTxt(GH.scope()))+'</div>';
   if(m.role==='coord'&&!(window.GH&&GH.scope()))h+='<label class="lbl">My class group(s)</label><div class="chips">'+GROUPS.map(g=>'<button class="chip '+(m.groups.includes(g)?'on':'')+'" data-a="lgg" data-v="'+g+'">'+g+'</button>').join('')+'</div>';
   if(m.role==='teacher'){
     if((m.desig||'st')==='st')h+='<label class="lbl">My subject. Matching feedback reaches me automatically</label><div class="chips">'+SUBJECTS.map(s=>'<button class="chip '+(m.subject===s?'on':'')+'" data-a="lgs" data-v="'+s+'">'+s+'</button>').join('')+'</div>';
@@ -1269,7 +1286,7 @@ function vLogin(){
   }
   return h+'<div style="margin-top:20px"><button class="btn pri" data-a="enter">Enter Parent Connect</button>'+(window.GH?'<button class="btn" style="margin-left:8px" data-a="signout">Sign out</button>':'')+'</div></div></div>';
 }
-function scopeLabel(){if(ME.scope&&ME.scope.length)return scopeTxt(ME.scope);if(ME.role==='coord')return ME.groups.join(', ');if(ME.role==='teacher')return ME.subject+(ME.classes.length?' · '+ME.classes.join(', '):'');return ME.role==='director'?'Whole school':'All departments'}
+function scopeLabel(){if(ME.alloc&&!ME.va)return allocTxt();if(ME.scope&&ME.scope.length)return scopeTxt(ME.scope);if(ME.role==='coord')return ME.groups.join(', ');if(ME.role==='teacher')return ME.subject+(ME.classes.length?' · '+ME.classes.join(', '):'');return ME.role==='director'?'Whole school':'All departments'}
 const TITLES={ov:['Home','Cases by category. Latest first'],fb:['Feedback','Studybase, calls received, diary remarks, front desk and calls made'],fu:['Follow-ups','Daily checks. Who follows which child'],rq:['Requests','Books, notebooks, call to teacher, transport and co-curricular changes'],ca:['Calls','Call requests, calls made and calls received'],st:['Student','All feedback, calls and changes in one place'],cl:['Class Record','Every child, the Parent Insight card, all feedback and what the teacher did']};
 const newF=()=>({per:'7',from:'',to:'',cl:[],c:[],dp:'',ct:'',m:'',p:'',q:'',cs:'',ak:'',rb:''});
 function callBanner(p){
@@ -1281,6 +1298,7 @@ function render(keep){try{render0(keep)}finally{try{syncHistory();paintSync()}ca
 function render0(keep){
   const y=window.scrollY;
   if(!ME&&ME_WAIT){$('#app').innerHTML='<div class="empty">Opening Parent Connect…</div>';return}
+  if(window.GH&&ME&&!ME.va&&!ME.scope&&!ME.alloc)applyAlloc();
   if(!ME||view==='login'){view='login';$('#app').innerHTML=vLogin();return}
   const nOpen=Object.keys(FU).filter(id=>FU[id].st==='open'&&fuVisible(id)).length;
   const pend=callList().filter(c=>!callDone(c)&&(c.app||c.d>=addDays(todayISO(),-7))),nav=[['ov','Home'],['fb','Feedback'],['ca','Calls',pend.length],['rq','Requests'],['cl','Class Record'],['fu','Follow-ups',nOpen]]
@@ -1290,7 +1308,7 @@ function render0(keep){
   const ini=ME.name.split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
   $('#app').innerHTML='<div class="shell"><aside class="side"><div class="logo">'+MARK+'<div><b>Parent Connect</b><small>FIS · Bikaner</small></div></div>'
   +nav.map(n=>'<button class="nav '+(nv===n[0]?'on':'')+'" data-a="go" data-v="'+n[0]+'">'+ico(n[0])+n[1]+(n[2]?'<span class="cnt">'+n[2]+'</span>':'')+'</button>').join('')+'</aside>'
-  +'<div class="main"><div class="top"><div><h1>'+TITLES[view][0]+'</h1><div class="sub">'+TITLES[view][1]+'</div></div><span class="sp"></span><button class="btn pri sm" data-a="add">+ Add feedback</button><button class="btn sm" data-a="paste">Paste from Studybase</button>'+(isDir()&&!ME.va?'<button class="btn sm" data-a="va">View as…</button>':'')+((ME.role==='director'||ME.role==='admin')&&!ME.va?'<button class="btn sm" data-a="backup" title="Download everything staff saved as a CSV file">Backup</button>':'')+'<span class="sync" id="sync"></span><button class="sync" id="lv" data-a="lvref" title="Read the Feedback and Diary sheets from Google Drive now"></button><div class="pill-u" data-a="switch" title="Switch user"><div class="av">'+esc(ini)+'</div><div><b>'+esc(ME.name)+'</b><small>'+esc(roleLbl())+' · '+esc(scopeLabel())+'</small></div></div></div>'
+  +'<div class="main"><div class="top"><div><h1>'+TITLES[view][0]+'</h1><div class="sub">'+TITLES[view][1]+'</div></div><span class="sp"></span><span class="sync" id="sync"></span><button class="btn sm" data-a="menu">More</button><div class="pill-u" data-a="switch" title="Switch user"><div class="av">'+esc(ini)+'</div><div><b>'+esc(ME.name)+'</b><small>'+esc(roleLbl())+' · '+esc(scopeLabel())+'</small></div></div></div>'
   +'<div class="work">'+callBanner(pend)+(ME.va?'<div class="banner" style="margin-bottom:14px;display:flex;gap:12px;align-items:center">Viewing as '+esc(roleLbl()+' · '+scopeLabel())+'<span class="sp"></span><button class="btn sm navy" data-a="vaback">Back to Director</button></div>':'')+body+'</div></div></div>';
   paintSync();paintLive();if(keep)window.scrollTo(0,y);
 }
@@ -1331,10 +1349,14 @@ document.addEventListener('click',e=>{
     case'xo':document.querySelectorAll('.ov').forEach(x=>x.remove());break;
     case'fup':startFU(id);break;case'chk':checkFU(id);break;case'due':dueFU(id);break;case'cls':closeFU(id);break;case'reo':reopenFU(id);break;
     case'calldone':callDoneModal(id);break;case'callre':callUndo(id);break;
-    case'rto':RO[id]=!RO[id];render(true);break;
+    case'rto':{const ta=document.getElementById('rt-'+id);if(ta){ta.scrollIntoView({block:'center'});ta.focus()}break}
+    case'ovw':ovwModal(id);break;
+    case'menu':menuModal();break;
+    case'fopen':FOPEN=!FOPEN;render(true);break;
+    case'copen':COPEN=!COPEN;render(true);break;
     case'remadd':remAdd(id);break;case'remedit':remEdit(id,t.dataset.r);break;case'remdel':remDel(id,t.dataset.r);break;
-    case'add':addModal();break;
-    case'paste':pasteModal();break;
+    case'add':document.querySelectorAll('.ov').forEach(x=>x.remove());addModal();break;
+    case'paste':document.querySelectorAll('.ov').forEach(x=>x.remove());pasteModal();break;
     case'newreq':addModal({ct:'Request'});break;
     case'clsel':CLS=v;CST='';view='cl';loadIns(v);shown=30;render();window.scrollTo(0,0);break;
     case'clm':CLM=v;shown=30;render();break;
@@ -1351,7 +1373,7 @@ document.addEventListener('click',e=>{
     case'lgs':{window._lg.name=$('#lgname').value;window._lg.subject=v;render();break}
     case'lgc':{window._lg.name=$('#lgname').value;const g=window._lg.classes,i=g.indexOf(v);i<0?g.push(v):g.splice(i,1);render();break}
     case'stn':stStep(+v);break;
-    case'stact':stActModal(v);break;
+    case'stact':stActModal(v,null,t.dataset.ref);break;
     case'stedit':stActModal(v,t.dataset.id);break;
     case'stdel':{const key=stuKey(CLS,v),id=t.dataset.id;formModal('Delete this action?','<div class="mut">This cannot be undone.</div>','Delete',()=>{REM[key].items=REM[key].items.filter(z=>z.id!==id);saveREM(key)});break}
     case'backup':backupCSV();break;
@@ -1470,7 +1492,7 @@ function rosterOf(c){
   return m}
 const MOI=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
 function uptoISO(u){const m=/(\d{1,2})\s+([A-Za-z]{3})[a-z]*\s+(\d{4})/.exec(u||'');if(!m)return'';const k=MOI.indexOf(m[2].toLowerCase());return k<0?'':m[3]+'-'+pad(k+1)+'-'+pad(+m[1])}
-const stuKey=(c,n)=>'S:'+insKey(c)+':'+nk(n);
+const stuKey=(c,n)=>n==='__class'?'K:'+insKey(c):'S:'+insKey(c)+':'+nk(n);
 const stuNames=c=>Object.keys(rosterOf(c)).sort((x,y)=>x.localeCompare(y));
 const stuActs=(c,n)=>remItems(stuKey(c,n)).slice().sort((x,y)=>(y.when||y.at)-(x.when||x.at));
 const canEditAct=x=>x.by===ME.name||ME.role==='director'||ME.role==='admin';
@@ -1481,6 +1503,7 @@ function vClass(){
   loadIns(CLS);
   let h='<div class="scroll" style="margin-bottom:10px">'+L.map(c=>'<button class="chip '+(c===CLS?'on':'')+'" data-a="clsel" data-v="'+esc(c)+'">'+esc(c)+'</button>').join('')+'</div>';
   h+='<div class="scroll" style="margin-bottom:12px"><button class="chip '+(CLM!=='ac'?'on':'')+'" data-a="clm" data-v="ov">Students</button><button class="chip '+(CLM==='ac'?'on':'')+'" data-a="clm" data-v="ac">Cases and actions</button></div>';
+  h+=classActs();
   if(CLM==='ac')return h+clAction();
   const names=stuNames(CLS);if(!names.length)return h+'<div class="empty card">No children found for '+esc(CLS)+' yet.</div>';
   if(!CST||!names.includes(CST))CST=names[0];
@@ -1489,7 +1512,12 @@ function vClass(){
    +'<div class="mut rcpos">'+(ix+1)+' of '+names.length+' in '+esc(CLS)+'. Swipe left or right to change child.</div>';
   return h+clCard(CST);
 }
-const fbLine=r=>'<div class="fl"><div class="fh"><b>'+fmtDY(r.d)+'</b>'+srcP(r.m)+'</div><div class="ft2">'+esc(r.t)+'</div>'+imgsH(r)+'</div>';
+const fbLine=r=>'<div class="fl"><div class="fh"><b>'+fmtDY(r.d)+'</b>'+srcP(r.m)+'<span class="sp"></span><button class="btn sm" data-a="stact" data-v="'+esc(r.n)+'" data-ref="'+r.d+'">Action</button></div><div class="ft2">'+esc(r.t)+'</div>'+imgsH(r)+'</div>';
+function classActs(){
+  const a=stuActs(CLS,'__class');
+  return'<div class="card rcs" style="margin-bottom:12px"><div class="row"><h3 style="margin:0">Whole class actions<small>'+a.length+' · '+esc(CLS)+'</small></h3><span class="sp"></span><button class="btn pri sm" data-a="stact" data-v="__class">+ Class action</button></div>'
+   +(a.length?a.map(x=>'<div class="al"><div class="ah"><b>'+fmtT(x.when||x.at)+'</b><span class="mut">'+esc(x.by)+(x.role?' · '+esc(x.role):'')+'</span><span class="sp"></span>'+(canEditAct(x)?'<button class="lnk" data-a="stedit" data-v="__class" data-id="'+x.id+'">Edit</button><button class="lnk" data-a="stdel" data-v="__class" data-id="'+x.id+'">Delete</button>':'')+'</div><div class="ft2">'+esc(x.text)+'</div></div>').join(''):'<div class="mut" style="margin-top:8px">Nothing recorded for the whole class. Use this when you take an action on the full class, such as a notebook check or a talk to everyone.</div>')+'</div>';
+}
 function clCard(n){
   const c=CLS,rows=(rosterOf(c)[n]||[]).slice().sort((x,y)=>y.d<x.d?-1:y.d>x.d?1:0),e=INS[insKey(c)],up=e&&e.data?uptoISO(e.data.upto):'';
   const fresh=up?rows.filter(r=>r.d>up):[],acts=stuActs(c,n);
@@ -1502,11 +1530,11 @@ function clCard(n){
   return h;
 }
 function nowLocal(ms){const d=new Date(ms||Date.now());return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes())}
-function stActModal(n,id){
-  const key=stuKey(CLS,n),old=id?remItems(key).find(z=>z.id===id):null;
-  formModal(old?'Edit action: '+n:'Add action: '+n,
+function stActModal(n,id,ref){
+  const key=stuKey(CLS,n),old=id?remItems(key).find(z=>z.id===id):null,who=n==='__class'?'whole class '+CLS:n;
+  formModal(old?'Edit action: '+who:'Add action: '+who,
     '<div class="chips" style="margin-top:6px">'+QCH.map(x=>'<button type="button" class="chip qch">'+esc(x)+'</button>').join('')+'</div>'
-    +lab('What did you do?','<textarea name="t" rows="3" placeholder="e.g. Counselled about water bottle. Checked bag.">'+esc(old?old.text:'')+'</textarea>')
+    +lab('What did you do?','<textarea name="t" rows="3" placeholder="'+(n==='__class'?'e.g. Checked all notebooks. Spoke to the class about discipline.':'e.g. Counselled about water bottle. Checked bag.')+'">'+esc(old?old.text:(ref?'About the feedback of '+fmtDY(ref)+': ':''))+'</textarea>')
     +lab('Date and time of the action','<input type="datetime-local" name="w" value="'+nowLocal(old?(old.when||old.at):0)+'">')
     +'<div class="mut" style="margin-top:10px;font-size:12.5px">Saved under your name: '+esc(ME.name)+'. You can add as many actions as needed.</div>',old?'Save':'Add action',v=>{
       if(!v.t.trim()){toast('Write what you did');return false}
@@ -1535,13 +1563,6 @@ function clAction(){
   const all=caseRows(CLS),stA=stat(all);
   let rows=all.filter(r=>(!CF.st||actOf(r.id)===CF.st)&&(!CF.src||r.m===CF.src)&&(!CF.dp||r.dp===CF.dp)&&(!CF.stu||r.n===CF.stu)&&(!CF.q||(r.n+' '+r.t).toLowerCase().includes(CF.q.toLowerCase())));
   let h='<div class="hint">Cases from every source (Studybase, calls, diary, front desk, internal) for Class '+esc(CLS)+'. Record what you did, with date and time, so the work is visible. This shows effort in progress, it is not a score.</div>';
-  h+='<div class="tiles">'+tile('Cases',stA.n)+tile('No action yet',stA.none,stA.none?'#b3123f':'')+tile('In progress',stA.prog,'#b86e00')+tile('Done',stA.done,'#18794e')+tile('Last action',stA.last?fmtT(stA.last):'—')+tile('Waiting longest',stA.oldest?diffDays(stA.oldest,todayISO())+' days':'—')+'</div>';
-  const L=myClasses();
-  if(L.length>1){h+='<div class="card" style="margin-bottom:16px"><h3>All my classes<small>work in progress</small></h3><div class="tw"><table><thead><tr><th>Class</th><th>Cases</th><th>No action</th><th>In progress</th><th>Done</th><th>Actioned</th><th>Last action</th></tr></thead><tbody>'
-    +L.map(c=>{const s=stat(caseRows(c));return'<tr class="clk" data-a="clsel" data-v="'+esc(c)+'"><td><b>'+esc(c)+'</b></td><td>'+s.n+'</td><td>'+s.none+'</td><td>'+s.prog+'</td><td>'+s.done+'</td><td>'+(s.n?Math.round((s.prog+s.done)*100/s.n)+'%':'—')+'</td><td>'+(s.last?fmtT(s.last):'—')+'</td></tr>'}).join('')+'</tbody></table></div></div>'}
-  const byS={};all.forEach(r=>{(byS[r.n]=byS[r.n]||[]).push(r)});
-  h+='<div class="card" style="margin-bottom:16px"><h3>Children with cases<small>tap a name to filter</small></h3><div class="tw"><table><thead><tr><th>Child</th><th>Cases</th><th>No action</th><th>In progress</th><th>Done</th><th>Last action</th></tr></thead><tbody>'
-    +Object.keys(byS).sort((a,b)=>stat(byS[b]).none-stat(byS[a]).none||a.localeCompare(b)).map(n=>{const s=stat(byS[n]);return'<tr class="clk" data-a="cft" data-k="stu" data-v="'+esc(n)+'"><td><b>'+esc(n)+'</b></td><td>'+s.n+'</td><td>'+s.none+'</td><td>'+s.prog+'</td><td>'+s.done+'</td><td>'+(s.last?fmtT(s.last):'—')+'</td></tr>'}).join('')+'</tbody></table></div></div>';
   const sc=(k,arr,lbl)=>'<div class="scroll" style="margin-bottom:8px">'+arr.map(x=>'<button class="chip '+(CF[k]===x[0]?'on':'')+'" data-a="cft" data-k="'+k+'" data-v="'+esc(x[0])+'">'+esc(x[1])+'</button>').join('')+'</div>';
   const srcs=[...new Set(all.map(r=>r.m))],dps=[...new Set(all.map(r=>r.dp))].sort();
   h+=sc('st',[['','All status'],['none','No action yet'],['prog','In progress'],['done','Done']])+sc('src',[['','All sources']].concat(srcs.map(s=>[s,srcName(s)])))
