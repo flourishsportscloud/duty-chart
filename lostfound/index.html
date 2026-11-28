@@ -982,6 +982,14 @@ input, textarea, select, [contenteditable] { -webkit-user-select: text; user-sel
       '<div class="rsub">' + esc(note) + "</div>" +
       (list.length ? '<div class="list">' + list.slice(0, RMAX).map(function (r) { return reportRow(kind, r); }).join("") + "</div>" + (list.length > RMAX ? '<button type="button" class="btn block" data-more="1">Show 50 more (' + (list.length - RMAX) + " left)</button>" : "") : emptyBox("Nothing to show", "No records for this period.")) + "</section>";
   }
+  function recentHanded() {
+    if (RSEL === "ret") return "";
+    var d = new Date(); d.setDate(d.getDate() - 14); var from = dstr(d);
+    var list = S.found.filter(function (f) { return f.status === "returned" && retDate(f) >= from; }).sort(function (a, b) { return (b.returnedAt || 0) - (a.returnedAt || 0); });
+    return '<section class="stack listsec" id="recent"><div class="rhead k-ret"><h2>Handed Over: Last 15 Days</h2><span>' + list.length + "</span></div>" +
+      '<div class="rsub">Items given to their owners since ' + esc(fmtDate(from)) + ". Visible to everyone.</div>" +
+      (list.length ? '<div class="list">' + list.slice(0, 10).map(function (r) { return reportRow("ret", r); }).join("") + "</div>" + (list.length > 10 ? '<button type="button" class="btn block" data-sel="ret">See all returned items</button>' : "") : emptyBox("Nothing handed over yet", "Items given to owners in the last 15 days appear here.")) + "</section>";
+  }
   function renderHome() {
     saveView();
     var P = perSets(DPER), A = perSets("all");
@@ -1000,7 +1008,7 @@ input, textarea, select, [contenteditable] { -webkit-user-select: text; user-sel
       tile("ret", P.ret.length, "Returned", retAll.length + " till date") +
       tile("stock", P.stock.length, "Stock in Hand", stockAdded + " added in period · " + openC + " complaints open") + "</div>" +
       (S.canWrite ? '<div class="quick"><button type="button" class="btn primary" data-act="log-found">Log Found Item</button><button type="button" class="btn gold" data-act="log-comp">Log Lost Complaint</button></div>' : '<div class="notice">Type your name to log items and complaints.</div>') +
-      '<div id="homelist">' + listBlock(RSEL, true) + "</div>" +
+      '<div id="homelist">' + listBlock(RSEL, true) + "</div>" + recentHanded() +
       '<div class="actions"><button type="button" class="btn small" data-act="export">Export all records (CSV)</button>' + (demo && S.isAdmin ? '<button type="button" class="btn small danger" data-act="demo-delete">Delete demo records</button>' : "") + (!demo && S.isAdmin && !S.found.length && !S.comps.length ? '<button type="button" class="btn small" data-act="demo-load">Load demo records</button>' : "") + "</div></div>";
   }
   function renderReport(kind) {
