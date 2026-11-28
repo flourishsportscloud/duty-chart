@@ -611,7 +611,8 @@ GH.insightText=async function(id){
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let _qw=0;
-const LS={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){if(Date.now()-_qw>60000){_qw=Date.now();try{toast('Phone storage is full. Free some space. Your changes are still being sent to the server.',7000)}catch(x){}}}}};
+const LS={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){if(Date.now()-_qw>60000){_qw=Date.now();try{toast('Browser storage for this site is full. Your changes are still being saved to the server.',6000)}catch(x){}}}}};
+try{Object.keys(localStorage).filter(k=>k.indexOf('pc2_ins_')===0).forEach(k=>localStorage.removeItem(k))}catch(e){}
 const _lsq={};let _lst=null;
 function lsSet(k,v){_lsq[k]=v;clearTimeout(_lst);_lst=setTimeout(lsFlush,500)}
 function lsFlush(){Object.keys(_lsq).forEach(k=>{LS.set(k,_lsq[k]);delete _lsq[k]})}
@@ -1462,7 +1463,7 @@ function findFC(o,d){if(!o)return null;if(typeof o==='string'){const t=o.trim();
   if(typeof o==='object'&&(d||0)<7){if(typeof o.fileContent==='string')return o.fileContent;for(const k of Object.keys(o)){const r=findFC(o[k],(d||0)+1);if(r)return r}}return null}
 async function loadIns(c,force){
   const k=insKey(c);if(!INS_ID[k])return;const e=INS[k]=INS[k]||{};if(e.busy)return;
-  const ls=LS.get('pc2_ins_'+k);if(ls&&ls.d&&!e.data){e.data=ls.d;e.at=ls.at;e.st='ok'}
+  if(!e.data&&window.GH&&GH.cget){const ls=await GH.cget('ins_'+k);if(ls&&ls.d&&!e.data){e.data=ls.d;e.at=ls.at;e.st='ok'}}
   if(e.data&&!force&&Date.now()-e.at<6*3600e3)return;
   e.busy=1;if(!e.data)e.st='load';
   try{
@@ -1471,7 +1472,7 @@ async function loadIns(c,force){
     const r=await mcp.callTool('Google Drive','read_file_content',{fileId:INS_ID[k]},{cache:force?{staleTime:0,gcTime:60000,refresh:true}:{staleTime:600000,gcTime:3600000}});
     const tx=r&&r.gh?r.gh:findFC(r);if(!tx)throw{code:'unreadable'};
     const d=parseInsight(tx);if(!d.n)throw{code:'unreadable'};
-    e.data=d;e.at=Date.now();e.st='ok';LS.set('pc2_ins_'+k,{d,at:e.at});
+    e.data=d;e.at=Date.now();e.st='ok';try{GH.cset('ins_'+k,{d,at:e.at})}catch(_){}
   }catch(x){if(!e.data){e.st='err';e.msg=lvMsg(x&&x.code)}console.warn('insight failed',x)}
   finally{e.busy=0;if(view==='cl'||view==='st')softRender()}
 }
