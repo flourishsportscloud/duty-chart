@@ -330,7 +330,7 @@ input, textarea, select, [contenteditable] { -webkit-user-select: text; user-sel
   }
   function hasPh(arr) { return !!(arr && arr.length); }
   function pumpPh() {
-    if (!TOKEN || PHbusy >= 2) return;
+    if ((!TOKEN && !VIEW) || PHbusy >= 2) return;
     var ids = Object.keys(PHq).filter(function (k) { return PHq[k] === 1; }).slice(0, 6);
     if (!ids.length) return;
     ids.forEach(function (k) { PHq[k] = 2; }); PHbusy++;
@@ -371,7 +371,9 @@ input, textarea, select, [contenteditable] { -webkit-user-select: text; user-sel
       .then(function (r) { return r.json(); })
       .then(function (j) { if (!j.ok) throw new Error(j.err || "Something went wrong."); return j.v; });
   }
+  var VIEW = false;
   function tcall(fn, args) {
+    if (VIEW) { if (fn === "caseHistory") return Promise.resolve([]); if (fn === "handover") return Promise.resolve(null); if (fn === "state") return call("publicView", []); if (fn === "photo") return call("viewPhoto", [args && args[0]]); return Promise.reject(new Error("This page is view only.")); }
     return call(fn, [TOKEN].concat(args || [])).catch(function (e) { if (/log in again/i.test(e && e.message)) logout(true); throw e; });
   }
   function ref(col, id) { return { set: function (d) { return wr([{ op: "set", col: col, id: id, data: d }]); }, update: function (d, ex) { return wr([{ op: "update", col: col, id: id, data: d, expect: ex }]); } }; }
@@ -385,13 +387,13 @@ input, textarea, select, [contenteditable] { -webkit-user-select: text; user-sel
     if (quiet && S.me && busyUI()) { holdState(st); return; }
     lastSig = sig; heldState = null;
     if (!pollOn) { pollOn = true; schedulePoll(); }
-    S.me = st.me; S.name = st.me.name; S.profileName = true; S.isMgr = st.me.role !== "staff"; S.isAdmin = st.me.role === "admin"; S.users = st.users || []; S.codes = st.codes || {};
+    S.me = st.me; S.name = st.me.name; S.profileName = true; S.isMgr = st.me.role === "incharge" || st.me.role === "admin"; S.isAdmin = st.me.role === "admin"; S.canWrite = st.me.role !== "viewer"; S.users = st.users || []; S.codes = st.codes || {};
     S.found = st.found || []; S.comps = st.comps || []; S.hist = st.hist || []; S.rdy = { f: true, c: true, h: true }; S.fail = false;
     reapplyOB(); cacheState();
     refresh();
   }
   function logout(expired) {
-    TOKEN = ""; try { localStorage.removeItem("lf-token"); } catch (e) {}
+    TOKEN = ""; VIEW = false; try { localStorage.removeItem("lf-token"); sessionStorage.removeItem("lf-viewonly"); } catch (e) {}
     S.me = null; S.isMgr = false; S.isAdmin = false; S.rdy = { f: false, c: false, h: false }; S.found = []; S.comps = []; S.hist = []; S.proofs = {}; PH = {}; PHq = {}; lastSig = "";
     $("#case").hidden = true; S.caseId = ""; closeSheet(); setSync();
     renderAuth("open", expired ? "Please type your name to open the desk again." : "");
@@ -447,6 +449,7 @@ input, textarea, select, [contenteditable] { -webkit-user-select: text; user-sel
   }
   function reapplyOB() { OB.forEach(function (e) { if (!e.failed && e.by === S.name) e.ops.forEach(localApply); }); }
   function wr(ops) {
+    if (VIEW) { toast("This page is view only. Sign in to make changes."); return Promise.resolve(); }
     ops.forEach(function (o) { batch.push(o); });
     if (!batchTimer) batchTimer = setTimeout(commitBatch, 40);
     return Promise.resolve();
@@ -524,11 +527,11 @@ input, textarea, select, [contenteditable] { -webkit-user-select: text; user-sel
   function restoreFields(k) { Object.keys(k).forEach(function (id) { var el = document.getElementById(id); if (el && !el.value && k[id]) el.value = k[id]; }); }
   function cacheState() {
     clearTimeout(cacheT);
-    cacheT = setTimeout(function () { if (S.me) kvSet("state", { me: S.me, found: S.found.filter(function (x) { return !x._p; }), comps: S.comps, hist: S.hist.slice(0, 200), users: S.users, at: Date.now() }); }, 1200);
+    cacheT = setTimeout(function () { if (S.me && !VIEW) kvSet("state", { me: S.me, found: S.found.filter(function (x) { return !x._p; }), comps: S.comps, hist: S.hist.slice(0, 200), users: S.users, at: Date.now() }); }, 1200);
   }
   function schedulePoll() { clearTimeout(pollT); pollT = setTimeout(function () { poll(); schedulePoll(); }, 20000 + Math.random() * 10000); }
   function poll(force) {
-    if (!TOKEN || !S.me || (document.hidden && !force)) return;
+    if ((!TOKEN && !VIEW) || !S.me || (document.hidden && !force)) return;
     if (!force && Date.now() - lastPoll < 8000) return;
     lastPoll = Date.now();
     call("rev").then(function (r) {
@@ -751,6 +754,7 @@ input, textarea, select, [contenteditable] { -webkit-user-select: text; user-sel
   }
   function renderWho() {
     if (!S.me) { $("#who").innerHTML = ""; return; }
+    if (VIEW) { $("#who").innerHTML = "<b>View only</b> " + pill("p-grey", "No changes") + ' <button type="button" class="linkbtn" data-act="logout">Sign in to log</button>'; return; }
     var h = "Signed in as <b>" + esc(S.name) + "</b> " + pill("p-blue", S.isAdmin ? "Admin" : S.isMgr ? "Incharge" : "Staff");
     if (S.isAdmin) h += ' <button type="button" class="linkbtn" data-act="team">Team logins' + (S.users.some(function (u) { return u.status === "pending"; }) ? " (new)" : "") + "</button>";
     h += ' <button type="button" class="linkbtn" data-act="logout">Log out</button>';
@@ -1560,10 +1564,10 @@ input, textarea, select, [contenteditable] { -webkit-user-select: text; user-sel
         : fld("au-p", first ? "Choose a password (6 or more characters)" : "Password", '<input type="password" id="au-p" maxlength="60" autocomplete="' + (first ? "new-password" : "current-password") + '">')) +
       (first ? fld("au-r", "I am", '<select id="au-r"><option value="staff">Staff</option><option value="incharge">Incharge (manager)</option><option value="admin">Admin</option></select>') + '<p class="rsub">The admin approves every new personal login.</p>' : "") +
       '<p class="err" id="au-e" role="alert">' + esc(msg || "") + '</p><button type="submit" class="btn primary block" id="au-go">' + (open ? "Open the Desk" : byCode ? "Open" : first ? "Create login" : "Log in") + "</button>" +
-      (open || byCode ? '<button type="button" class="btn ghost block" data-sw="login">Admin / personal login</button>' :
+      (open || byCode ? '<button type="button" class="btn ghost block" data-sw="login">Admin / personal login</button><button type="button" class="btn ghost block" data-sw="view">Just look: view only, no name needed</button>' :
         '<button type="button" class="btn ghost block" data-sw="open">Back to the desk</button>' +
         '<button type="button" class="btn ghost block" data-sw="' + (first ? "login" : "setup") + '">' + (first ? "I already have a login" : "First time? Set password") + "</button>") + "</form></div>";
-    $("#af").addEventListener("click", function (e) { var b = e.target.closest("[data-sw]"); if (b) renderAuth(b.getAttribute("data-sw"), ""); });
+    $("#af").addEventListener("click", function (e) { var b = e.target.closest("[data-sw]"); if (b) { if (b.getAttribute("data-sw") === "view") startView(); else renderAuth(b.getAttribute("data-sw"), ""); } });
     $("#af").addEventListener("submit", function (e) {
       e.preventDefault();
       var n = val("au-n"), pwEl = document.getElementById("au-p"), pw = pwEl ? pwEl.value : "";
@@ -1617,13 +1621,18 @@ input, textarea, select, [contenteditable] { -webkit-user-select: text; user-sel
       });
     });
   }
+  function startView() {
+    VIEW = true; TOKEN = ""; try { sessionStorage.setItem("lf-viewonly", "1"); } catch (e) {}
+    $("#screen").innerHTML = emptyBox("Loading records", "One moment.");
+    call("publicView", []).then(function (st) { applyState(st); goRoute(); }, function (e) { VIEW = false; renderAuth("open", /Unknown action/i.test((e && e.message) || "") ? "The view-only page is not switched on yet. Ask the admin to update the desk server." : "Could not load. Check the internet and try again."); });
+  }
   async function start() {
     loadView(); initBack(); setupSW();
     renderWho(); renderBar();
     if (!API_URL) { S.noDb = true; renderScreen(); return; }
     try { TOKEN = localStorage.getItem("lf-token") || ""; } catch (e) {}
     OB = (await kvGet("outbox")) || [];
-    if (!TOKEN) { renderAuth("open", ""); return; }
+    if (!TOKEN) { var vo = false; try { vo = /[?&]view=1/.test(location.search) || sessionStorage.getItem("lf-viewonly") === "1"; } catch (e) {} if (vo) { startView(); return; } renderAuth("open", ""); return; }
     $("#screen").innerHTML = emptyBox("Loading records", "One moment.");
     try {
       var st = await tcall("state");
