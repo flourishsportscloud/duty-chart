@@ -413,7 +413,8 @@ const CT={'1A':'Sunita','1B':'Priyanshi Bhojak','1C':'Kanika','2A':'Deepmala','2
 const HT={A:'Geeta',B:'Preeti',C:'Anita'};
 const isHindi=s=>/^Hindi/.test(s);
 function teacherOf(s,cs){ if(isHindi(s)) return HT[cs.slice(-1)]; if(s==='Computer'&&+cs.slice(0,-1)>=3) return 'Himanshi'; return CT[cs]||'To be assigned'; }
-const ELEMS=[['lp','Lesson plan'],['viva','Viva'],['video','Video downloaded'],['epl','EPL prep'],['ppt','PPT review'],['key','Answer key'],['test','Test paper uploaded']];
+const ELEMS=[['lp','Lesson plan'],['viva','Viva'],['video','Video downloaded'],['epl','EPL prep'],['ppt','PPT review'],['key','Answer key'],['test','Test paper uploaded'],['book','Book annotation']];
+const ANNOT_FROM='2026-12-01';   // Book annotation is asked for lessons starting on or after this date
 function applies(s,c,k){
   if(k==='lp') return ['English I','EVS','Science','S.St.'].includes(s);
   if((s==='English II'||s==='Hindi II')&&(k==='epl'||k==='ppt'||k==='video')) return false;
@@ -439,7 +440,7 @@ function mkRec(kind,d,cs,s,l,testDate,items){
   const c=cs.slice(0,-1), g=isHindi(s)?'Hindi':'Class '+c, id=(kind==='prep'?'p|':'c|')+d+'|'+cs+'|'+s+'|'+l;
   const r={id,kind,key:kind+'|'+d+'|'+c+'|'+s+'|'+l,d,c,cs,s,l,g,t:teacherOf(s,cs),wing:'pri'};
   if(kind==='prep'){ r.due=addWork(d,-1); r.testDate=testDate||null; const td=testDate?addWork(testDate,-1):null;
-    r.els=ELEMS.filter(([k])=>applies(s,c,k)).map(([k,name])=>({id:id+'|'+k,name,due:k==='test'&&td?td:r.due})); }
+    r.els=ELEMS.filter(([k])=>applies(s,c,k)&&(k!=='book'||d>=ANNOT_FROM)).map(([k,name])=>({id:id+'|'+k,name,due:k==='test'&&td?td:r.due})); }
   else { r.due=addWork(d,2); r.els=(items||chkItems(s,c)).map(n=>({id:id+'|'+n,name:n,due:r.due})); }
   return r;
 }
@@ -554,7 +555,7 @@ function records(){
   .sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:(+a.c)-(+b.c)||(a.cs<b.cs?-1:1)); }
 const hash=s=>{let h=7;for(const ch of s)h=(h*31+ch.charCodeAt(0))>>>0;return h};
 function getSt(e,r){ const j=DOCS[r.dp], v=j&&j[slotOf(r,e)]; if(v) return v==='X'?'I':v; if(r.added||e.fresh) return 'P';
-  if(r.kind==='check') return PEND[e.id]?'P':(r.d<=LIST_DAY?'D':'P'); return r.d<=LIST_DAY?'D':'P'; }
+  const day0=(r.s==='GK'&&r.wing==='mid')?'2026-11-28':LIST_DAY; if(r.kind==='check') return PEND[e.id]?'P':(r.d<=day0?'D':'P'); return r.d<=day0?'D':'P'; }
 const NAME={P:'Pending',I:'In progress',D:'Done',N:'Not applicable'}, ICON={P:'○',I:'◐',D:'✓',N:'—'};
 const isOpen=v=>v==='P'||v==='I';
 function stat(r){ const notIn=r.kind==='check'&&r.d>TODAY&&!r.forceIn; let left=0,late=0,next=null;

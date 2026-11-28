@@ -411,6 +411,9 @@ const NEW = [ // [date, class, subject, lesson]
  ['2026-12-02','6','Hindi II','चित्र वर्णन + विलोम + पर्यायवाची'],['2026-12-02','6','Sanskrit','L-14 + लृट् लकार'],['2026-12-02','7','S.St.','Part II L-2'],['2026-12-02','8','English II','Notice Writing'],
  ['2026-12-03','6','Hindi I','L-16'],['2026-12-03','8','English II','L-10 (1st part)'],
  ['2026-12-04','6','English I','L-9'],['2026-12-04','7','Hindi II','L-16'],['2026-12-04','7','Sanskrit','L-14 + धातु, लृट् लकार']
+,
+ /* General Knowledge, from the November learning plans (pages grouped by week) */
+ ['2026-11-12','6','GK','Pages 37–38'],['2026-11-16','6','GK','Pages 39, 40, 49'],['2026-11-23','6','GK','Pages 50, 55, 56'],['2026-11-13','7','GK','Page 37'],['2026-11-16','7','GK','Pages 38–40, 49, 50, 55, 56'],['2026-11-12','8','GK','Pages 34–36'],['2026-11-16','8','GK','Pages 37–39'],['2026-11-25','8','GK','Pages 40, 41, 55, 57'],['2026-11-30','8','GK','Pages 62, 63']
 ];
 const TESTS = [ // [date, class, subject, lesson]
  ['2026-11-12','6','S.St.','L-8'],['2026-11-12','7','Hindi I','L-12'],['2026-11-12','8','Science','L-10'],['2026-11-12','8','Maths','L-7'],
@@ -466,8 +469,9 @@ function teacherOf(g,cs){ const c=cs.replace(/[A-C]$/,''), sec=cs.slice(-1);
   if(g==='GK') return BY_SEC[c==='8'?'Science':'S.St.'][sec];
   return (BY_SEC[g]||{})[sec]||'To be assigned';
 }
-const ELEMS=[['viva','Viva'],['video','Video downloaded'],['epl','EPL prep'],['ppt','PPT review'],['key','Answer key'],['test','Test paper uploaded'],['book','Booklet underlined']];
-function applies(s,c,k){ if((s==='English II'||s==='Hindi II')&&(k==='epl'||k==='ppt'||k==='video')) return false; if(+c>=9&&(k==='epl'||k==='ppt')) return false; return true; }
+const ELEMS=[['viva','Viva'],['video','Video downloaded'],['epl','EPL prep'],['ppt','PPT review'],['key','Answer key'],['test','Test paper uploaded'],['book','Booklet underlined'],['lp','Book annotation']];
+const ANNOT_FROM='2026-12-01';   // Book annotation is asked for lessons starting on or after this date
+function applies(s,c,k){ if(s==='GK') return k==='lp'||k==='ppt'||k==='viva'; if((s==='English II'||s==='Hindi II')&&(k==='epl'||k==='ppt'||k==='video')) return false; if(+c>=9&&(k==='epl'||k==='ppt')) return false; return true; }
 
 /* ---------- Dates ---------- */
 const pd=s=>{const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
@@ -486,7 +490,7 @@ function mkRec(kind,d,cs,s,l,testDate,items){
   const c=cs.replace(/[A-C]$/,''), g=groupOf(s), id=(kind==='prep'?'p|':'c|')+d+'|'+cs+'|'+s+'|'+l;
   const r={id,kind,key:kind+'|'+d+'|'+c+'|'+s+'|'+l,d,c,cs,s,l,g,t:teacherOf(g,cs),wing:+c>=9?'sen':'mid'};
   if(kind==='prep'){ r.due=addWork(d,-1); r.testDate=testDate||null; const td=testDate?addWork(testDate,-1):null;
-    r.els=ELEMS.filter(([k])=>applies(s,c,k)).map(([k,name])=>({id:id+'|'+k,name,due:k==='test'&&td?td:r.due})); }
+    r.els=ELEMS.filter(([k])=>applies(s,c,k)&&(k!=='lp'||d>=ANNOT_FROM)).map(([k,name])=>({id:id+'|'+k,name,due:k==='test'&&td?td:r.due})); }
   else { r.due=addWork(d,2); r.els=(items||['Notebook','Assignment','Test notebook']).map(n=>({id:id+'|'+n,name:n,due:r.due})); }
   return r;
 }
@@ -495,6 +499,7 @@ const findTest=(T,c,s,l,d)=>{const t=T.find(x=>x[1]===c&&x[2]===s&&x[0]>d&&(x[3]
 NEW.forEach(([d,c,s,l])=>SEC.forEach(sec=>BASE.push(mkRec('prep',d,c+sec,s,l,findTest(TESTS,c,s,l,d)))));
 SNEW.forEach(([d,cs,s,l])=>BASE.push(mkRec('prep',d,cs,s,l,findTest(STEST,cs,s,l,d))));
 TESTS.forEach(([d,c,s,l])=>SEC.forEach(sec=>BASE.push(mkRec('check',d,c+sec,s,l,null,s==='GK'?['Test notebook']:null))));
+[ {d:'2026-11-13',c:'6',s:'GK',l:'Pages 37–38',items:['Book']},{d:'2026-11-18',c:'6',s:'GK',l:'Pages 39, 40, 49',items:['Book']},{d:'2026-11-27',c:'6',s:'GK',l:'Pages 50, 55, 56',items:['Book']},{d:'2026-11-13',c:'7',s:'GK',l:'Page 37',items:['Book']},{d:'2026-11-21',c:'7',s:'GK',l:'Pages 38–40, 49, 50, 55, 56',items:['Book']},{d:'2026-11-13',c:'8',s:'GK',l:'Pages 34–36',items:['Book']},{d:'2026-11-20',c:'8',s:'GK',l:'Pages 37–39',items:['Book']},{d:'2026-11-28',c:'8',s:'GK',l:'Pages 40, 41, 55, 57',items:['Book']},{d:'2026-12-03',c:'8',s:'GK',l:'Pages 62, 63',items:['Book']} ].forEach(x=>EXTRA_CHECK.push(x));
 EXTRA_CHECK.forEach(x=>SEC.forEach(sec=>BASE.push(mkRec('check',x.d,x.c+sec,x.s,x.l,null,x.items))));
 STEST.forEach(([d,cs,s,l])=>BASE.push(mkRec('check',d,cs,s,l,null,s==='Maths'?['Notebook','Test notebook']:null)));
 
@@ -620,7 +625,7 @@ function records(){
   .sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:(+a.c)-(+b.c)||(a.cs<b.cs?-1:1)); }
 const hash=s=>{let h=7;for(const ch of s)h=(h*31+ch.charCodeAt(0))>>>0;return h};
 function getSt(e,r){ const j=DOCS[r.dp], v=j&&j[slotOf(r,e)]; if(v) return v==='X'?'I':v; if(r.added||e.fresh) return 'P';
-  if(r.kind==='check') return PEND[e.id]?'P':(r.d<=LIST_DAY?'D':'P'); return r.d<=LIST_DAY?'D':'P'; }
+  const day0=(r.s==='GK'&&r.wing==='mid')?'2026-11-28':LIST_DAY; if(r.kind==='check') return PEND[e.id]?'P':(r.d<=day0?'D':'P'); return r.d<=day0?'D':'P'; }
 const NAME={P:'Pending',I:'In progress',D:'Done',N:'Not applicable'}, ICON={P:'○',I:'◐',D:'✓',N:'—'};
 const isOpen=v=>v==='P'||v==='I';
 function stat(r){ const notIn=r.kind==='check'&&r.d>TODAY&&!r.forceIn; let left=0,late=0,next=null;
