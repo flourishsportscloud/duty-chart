@@ -46,6 +46,12 @@ function needMgr(u,what){if(!isMgr(u))fail("Only an incharge can "+what+".")}
 function parse_(json){try{return JSON.parse(json)}catch(e){return {}}}
 function docs_(sheetKey){return readAll_(SHEET_OF[sheetKey]).map(r=>Object.assign(parse_(r.json),{id:r.id}))}
 
+function scrubPublic_(found,comps){
+  return {
+    found:found.map(f=>f.restricted?Object.assign({},f,{title:"Restricted item (details with the incharge)",desc:"",nameOnItem:"",classOnItem:"",photos:[],collectedBy:"",collectedClass:""}):Object.assign({},f)),
+    comps:comps.map(c=>{const o=Object.assign({},c);delete o.contact;return o})
+  };
+}
 function publicState(ctx,me){
   if(!me)return {today:ctx.today,me:null,users:[],found:[],comps:[],hist:[]};
   const hist=docs_("history").sort((a,b)=>(b.at||0)-(a.at||0)).slice(0,HIST_LIMIT);
@@ -174,6 +180,17 @@ function applyOp_(ctx,me,op){
 }
 
 const API={
+  // read-only view for anyone with the link: no name, no token. Parent contact numbers, handover proofs and the details of restricted items are never sent.
+  publicView(ctx){
+    const hist=docs_("history").sort((a,b)=>(b.at||0)-(a.at||0)).slice(0,HIST_LIMIT);
+    const v=scrubPublic_(docs_("found"),docs_("complaints"));
+    return {today:ctx.today,me:{name:"Viewer",role:"viewer"},users:[],codes:null,found:v.found,comps:v.comps,hist:hist.map(h=>({id:h.id,caseId:h.caseId,caseType:h.caseType,code:h.code,title:h.title,action:h.action,detail:"",by:h.by,at:h.at}))};
+  },
+  viewPhoto(ctx,ids){
+    const ok={};docs_("found").forEach(f=>{if(!f.restricted)(f.photos||[]).forEach(p=>{ok[p]=1})});
+    const out={};(Array.isArray(ids)?ids:[]).slice(0,10).forEach(id=>{id=String(id);if(ok[id]){const v=loadPhoto_(id);if(v)out[id]=v}});
+    return out;
+  },
   // cheap change counter: phones ask this every 20-30 s and download the full state only when it moved
   rev(ctx){return {rev:PropertiesService.getScriptProperties().getProperty("REV")||"0"}},
   clientLog(ctx,token,msg,where){const me=needUser(ctx,token);ctx.log(me.name,"client error",str(where,80),str(msg,300));return true},
@@ -456,7 +473,7 @@ function doPost(e){
   const lock=LockService.getScriptLock();
   try{
     const req=JSON.parse(e.postData.contents||"{}");
-    const readOnly=req.fn==="rev"||req.fn==="clientLog"||req.fn==="state"||req.fn==="photo"||req.fn==="handover"||req.fn==="caseHistory";
+    const readOnly=req.fn==="publicView"||req.fn==="viewPhoto"||req.fn==="rev"||req.fn==="clientLog"||req.fn==="state"||req.fn==="photo"||req.fn==="handover"||req.fn==="caseHistory";
     if(!readOnly)lock.waitLock(20000);
     const DB=loadDB_(),dirty={},logs=[];
     const now=Date.now();
