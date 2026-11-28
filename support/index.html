@@ -171,6 +171,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .cc .cs{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:4px;font-size:12px;color:var(--mute);text-align:right;max-width:34%}
 .tl{border-left:3px solid var(--line);margin:12px 0 0 4px;padding-left:12px;display:grid;gap:10px;font-size:14px}
 .cact{display:grid;gap:8px}
+.pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}.pgrid .th{width:100%;height:auto;aspect-ratio:1;margin:0;object-fit:cover}
 </style>
 </head>
 <body>
@@ -436,11 +437,20 @@ async function getPhoto1(id){
 }
 function hydrate(){document.querySelectorAll('img[data-ph]').forEach(async im=>{const k=im.dataset.ph;if(im.dataset.k===k&&im.src)return;im.dataset.k=k;const d=await getPhoto(k);if(d)im.src=d})}
 const img=(id,cls='')=>id?`<img class="th ${cls}" data-ph="${esc(id)}" alt="photo" data-zoom="1">`:'';
+/* shrink one picture to a small JPEG (about 40-60 KB) so it saves fast on mobile data */
+function shrinkPhoto(f){return new Promise(res=>{const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,560/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.55))};im.onerror=()=>res(null);im.src=r.result};r.onerror=()=>res(null);r.readAsDataURL(f)})}
 function pickPhoto(){
   return new Promise(res=>{
     const i=document.createElement('input');i.type='file';i.accept='image/*';i.setAttribute('capture','environment');i.style.display='none';document.body.appendChild(i);
-    i.onchange=()=>{const f=i.files[0];i.remove();if(!f)return res(null);
-      const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,560/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.55))};im.onerror=()=>res(null);im.src=r.result};r.readAsDataURL(f)};
+    i.onchange=async()=>{const f=i.files[0];i.remove();res(f?await shrinkPhoto(f):null)};
+    i.click();
+  });
+}
+/* camera OR gallery, several pictures at once (up to n) */
+function pickPhotos(n){
+  return new Promise(res=>{
+    const i=document.createElement('input');i.type='file';i.accept='image/*';i.multiple=true;i.style.display='none';document.body.appendChild(i);
+    i.onchange=async()=>{const fs=[...i.files].slice(0,n);i.remove();const out=[];for(const f of fs){const d=await shrinkPhoto(f);if(d)out.push(d)}res(out)};
     i.click();
   });
 }
@@ -487,7 +497,7 @@ function sheet(o){
         return `<div class="fl">${esc(f.l)}</div><input id="f_${f.k}" data-i="${f.k}" type="${f.type||'text'}" value="${esc(st[f.k])}" placeholder="${esc(f.ph||'')}">`}).join('');
       let ph='';
       if(o.photo==='multi'||o.photo==='multireq'){
-        ph=`<div class="fl">Photos ${o.photo==='multireq'?'(at least one)':'(optional)'} · ${mp.length+mn.length}</div><div class="row">${mp.map((x,i)=>`<div style="position:relative"><img class="th s" data-ph="${esc(x)}" alt="photo"><button type="button" class="btn bad sm" data-rmo="${i}" style="min-height:28px;padding:0 8px;position:absolute;top:-6px;right:-6px">✕</button></div>`).join('')}${mn.map((x,i)=>`<div style="position:relative"><img class="th s" src="${x}" alt="new photo"><button type="button" class="btn bad sm" data-rmn="${i}" style="min-height:28px;padding:0 8px;position:absolute;top:-6px;right:-6px">✕</button></div>`).join('')}</div><button type="button" class="btn sec" id="spm" style="margin-top:8px">📷 Add photo</button>`;
+        ph=`<div class="fl">Photos ${o.photo==='multireq'?'(at least one)':'(optional)'} · ${mp.length+mn.length}</div><div class="row">${mp.map((x,i)=>`<div style="position:relative"><img class="th s" data-ph="${esc(x)}" alt="photo"><button type="button" class="btn bad sm" data-rmo="${i}" style="min-height:28px;padding:0 8px;position:absolute;top:-6px;right:-6px">✕</button></div>`).join('')}${mn.map((x,i)=>`<div style="position:relative"><img class="th s" src="${x}" alt="new photo"><button type="button" class="btn bad sm" data-rmn="${i}" style="min-height:28px;padding:0 8px;position:absolute;top:-6px;right:-6px">✕</button></div>`).join('')}</div>${mp.length+mn.length<(o.max||6)?`<div class="row" style="margin-top:8px"><button type="button" class="btn sec" id="spm" style="flex:1">📷 Camera</button><button type="button" class="btn sec" id="spg" style="flex:1">🖼 Gallery (many)</button></div><div class="hint" style="margin-top:4px">Up to ${o.max||6} photos.</div>`:`<div class="hint" style="margin-top:8px">${o.max||6} photos added (the most allowed).</div>`}`;
       }else if(o.photo&&o.photo!=='none'){
         ph=`<div class="fl">Photo ${o.photo==='req'?'(needed)':'(optional)'}</div><button type="button" class="btn sec" id="sp">📷 ${pic||pid?'Take again':'Take photo'}</button>${pic?`<img class="pv" src="${pic}" alt="new photo">`:pid?`<img class="pv" data-ph="${esc(pid)}" alt="photo">`:''}`;
       }
@@ -501,7 +511,9 @@ function sheet(o){
       L.querySelectorAll('.ch[data-mk]').forEach(b=>b.onclick=()=>{dirty=true;const a=st[b.dataset.mk],i=a.indexOf(b.dataset.mv);if(i>=0)a.splice(i,1);else a.push(b.dataset.mv);draw()});
       L.querySelectorAll('[data-i]').forEach(e=>e.oninput=()=>{dirty=true;st[e.dataset.i]=e.value});
       const sp=L.querySelector('#sp');if(sp)sp.onclick=async()=>{const d=await pickPhoto();if(d){dirty=true;pic=d;draw()}};
-      const spm=L.querySelector('#spm');if(spm)spm.onclick=async()=>{const d=await pickPhoto();if(d){dirty=true;mn.push(d);draw()}};
+      const room=()=>(o.max||6)-mp.length-mn.length;
+      const spm=L.querySelector('#spm');if(spm)spm.onclick=async()=>{const d=await pickPhoto();if(d&&room()>0){dirty=true;mn.push(d);draw()}};
+      const spg=L.querySelector('#spg');if(spg)spg.onclick=async()=>{const ds=await pickPhotos(room());const k=room();if(ds.length){dirty=true;ds.slice(0,k).forEach(d=>mn.push(d));draw();if(ds.length>k)toast('Only '+(o.max||6)+' photos allowed – extra ones left out')}};
       L.querySelectorAll('[data-rmo]').forEach(b=>b.onclick=()=>{dirty=true;mp.splice(+b.dataset.rmo,1);draw()});
       L.querySelectorAll('[data-rmn]').forEach(b=>b.onclick=()=>{dirty=true;mn.splice(+b.dataset.rmn,1);draw()});
       L.querySelector('#scn').onclick=()=>close(null);
@@ -528,17 +540,18 @@ async function visitFlow(p,v,pre){
   if(items.length)f.push({k:'astatus',l:'Area status now',type:'chips',o:['Not started','Working','Done'],val:''});
   f.push({k:'remark',l:'Remark – what did you see?',type:'ta',val:v?v.remark:'',ph:'Write in your own words'});
   if(v)f.push({k:'t',l:'Time',type:'time',val:v.t});
-  const r=await sheet({title:(v?'Edit visit – ':'Visit – ')+p.name,sub:v?'':'Time is saved automatically: '+hhmm(),fields:f,photo:PHOTO[g],photoId:v&&v.ph,del:!!v,ok:'Save visit',
+  const r=await sheet({title:(v?'Edit visit – ':'Visit – ')+p.name,sub:v?'':'Time is saved automatically: '+hhmm(),fields:f,photo:PHOTO[g]==='req'?'multireq':'multi',max:6,photoIds:v?(v.phs&&v.phs.length?v.phs.map(x=>x&&x.id||x):(v.ph?[v.ph]:[])):[],del:!!v,ok:'Save visit',
     validate:(s,pic,pid)=>{
       if(PHOTO[g]==='req'&&!pic&&!pid&&!Object.values(s).some(x=>/^Not found|^Not at post/.test(x)))return 'Take a photo (or choose "Not found")';
       return ''}});
   if(!r)return;
   if(r.del){del('visits',v.id);return}
-  const ph=r.pic?await savePhoto(r.pic):r.pid;
+  const phs=r.pids.slice();for(const d of r.pics)phs.push(await savePhoto(d));
+  const ph=phs[0]||'';
   const fv={};FORMS[g].forEach(x=>{if(r.st[x.k])fv[x.k]=r.st[x.k]});
   const base=v?clone(v):{id:'v'+uid(),date:S.date,t:hhmm(),by:S.me,ts:new Date().toISOString(),group:g,pid:p.id,name:p.name,type:'Visit'};
   if(v&&r.st.t)base.t=r.st.t;
-  save('visits',base.id,Object.assign(base,{f:fv,remark:r.st.remark||'',ph,area:r.st.area||''}));
+  save('visits',base.id,Object.assign(base,{f:fv,remark:r.st.remark||'',ph,phs,area:r.st.area||''}));
   if(r.st.area&&r.st.astatus){
     const it=items.find(i=>i.name===r.st.area);
     if(it)mutItems(p,base.date,a=>{const x=a.find(y=>y.id===it.id);if(x){x.st=r.st.astatus==='Not started'?'':r.st.astatus==='Done'?'done':'working';x.t=base.t}});
@@ -1260,7 +1273,7 @@ function vcard(v,showWho){
   fs.forEach(f=>{const val=v.f&&v.f[f.k];if(!val)return;const bad=f.o.indexOf('!'+val)>=0;tags.push(`<span class="tag ${bad?'bad':'ok'}">${esc(({where:'Found',doing:'Doing',posture:'Posture',uniform:'Uniform',phone:'Mobile',quality:'Quality',state:'Water point'})[f.k]||f.k)}: ${esc(val)}</span>`)});
   if(!v.f&&v.checks)Object.keys(v.checks).forEach(k=>{if(v.checks[k])tags.push(`<span class="tag ${v.checks[k]==='ok'?'ok':'bad'}">${esc(k)}</span>`)});
   if(!v.f&&v.where)tags.push(`<span class="tag">${esc(v.where)}</span>`);
-  const ph=v.ph?img(v.ph):(v.phs||[]).map(x=>img(x.id)).join('');
+  const pl=(v.phs&&v.phs.length?v.phs.map(x=>x&&x.id||x):(v.ph?[v.ph]:[])),ph=pl.length?`<div class="pgrid">${pl.map(x=>img(x)).join('')}</div>`:'';
   return `<button class="vis" ${sup()?`data-act="editvisit" data-v="${esc(v.id)}"`:''}><div class="h"><b>${esc(v.t)}</b><small>${showWho?g.ico+' '+esc(v.name)+' · ':''}by ${esc(v.by||'?')}</small></div>
    <div class="tg">${tags.join('')}</div>${v.remark?`<p>${esc(v.remark)}</p>`:''}${ph}</button>`;
 }
